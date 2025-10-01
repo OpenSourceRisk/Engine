@@ -46,7 +46,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactoryInput) {
+void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Bond Option: " << id());
 
     // ISDA taxonomy
@@ -57,8 +57,8 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     // propagate some parameters to underlying bond builder on a copy of engine factory
 
-    auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(*engineFactoryInput);
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
+    auto engineFactoryOverride = QuantLib::ext::make_shared<EngineFactory>(*engineFactory);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactoryOverride->builder("BondOption");
     auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
     std::vector<EngineFactory::ParameterOverride> overrides;
     overrides.push_back(EngineFactory::ParameterOverride{
@@ -72,13 +72,13 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
         {{"SpreadOnIncomeCurve", builder->engineParameter("SpreadOnIncomeCurve", {}, false, "true")}}});
     overrides.push_back(EngineFactory::ParameterOverride{
         "BondOption", isBond, {{"TimestepPeriod", builder->engineParameter("TimestepPeriod", {}, false, "3M")}}});
-    engineFactory->setEngineParameterOverrides(overrides);
-    engineFactory->setEngineParameterOverrides(overrides);
+    engineFactoryOverride->setEngineParameterOverrides(overrides);
+    engineFactoryOverride->setEngineParameterOverrides(overrides);
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactoryOverride->market();
     bondData_ = originalBondData_;
 
-    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactoryOverride->referenceData());
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> qlBondInstr;
 
@@ -90,9 +90,9 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
             // vanilla bond underlying
 
-            bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+            bondData_.populateFromBondReferenceData(engineFactoryOverride->referenceData());
             underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
-            underlying_->build(engineFactory);
+            underlying_->build(engineFactoryOverride);
             qlBondInstr =
                 QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
 
@@ -100,8 +100,8 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
             // non-vanilla bond underlying (callable bond etc.)
 
-            auto r =
-                BondFactory::instance().build(engineFactory, engineFactory->referenceData(), bondData_.securityId());
+            auto r = BondFactory::instance().build(engineFactoryOverride, engineFactoryOverride->referenceData(),
+                                                   bondData_.securityId());
             underlying_ = r.trade;
             qlBondInstr = r.bond;
             bondData_ = r.bondData;
@@ -196,13 +196,16 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     std::vector<Real> additionalMultipliers;
     string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
-                multiplier > 0.0 ? -1.0 : 1.0, currency, discountCurve, engineFactory,
+                multiplier > 0.0 ? -1.0 : 1.0, currency, discountCurve, engineFactoryOverride,
                 bondOptionBuilder->configuration(MarketContext::pricing));
 
     instrument_.reset(new VanillaInstrument(bondoption, multiplier, additionalInstruments, additionalMultipliers));
 
     // the required fixings are (at most) those of the underlying
     requiredFixings_ = underlying_->requiredFixings();
+
+    engineFactory->modelBuilders().insert(engineFactoryOverride->modelBuilders().begin(),
+                                          engineFactoryOverride->modelBuilders().end());
 }
 
 void BondOption::fromXML(XMLNode* node) {

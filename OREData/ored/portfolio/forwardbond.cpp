@@ -46,7 +46,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactoryInput) {
+void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("ForwardBond::build() called for trade " << id());
 
@@ -60,8 +60,8 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     // propagate some parameters to underlying bond builder on a copy of engine factory
 
-    auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(*engineFactoryInput);
-    QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
+    auto engineFactoryOverride = QuantLib::ext::make_shared<EngineFactory>(*engineFactory);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactoryOverride->builder("ForwardBond");
     auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
     std::vector<EngineFactory::ParameterOverride> overrides;
     overrides.push_back(EngineFactory::ParameterOverride{
@@ -75,12 +75,12 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         {{"SpreadOnIncomeCurve", builder_fwd->engineParameter("SpreadOnIncomeCurve", {}, false, "false")}}});
     overrides.push_back(EngineFactory::ParameterOverride{
         "ForwardBond", isBond, {{"TimestepPeriod", builder_fwd->engineParameter("TimestepPeriod", {}, false, "3M")}}});
-    engineFactory->setEngineParameterOverrides(overrides);
+    engineFactoryOverride->setEngineParameterOverrides(overrides);
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactoryOverride->market();
     bondData_ = originalBondData_;
 
-    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactoryOverride->referenceData());
 
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
@@ -92,17 +92,17 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
             // vanilla bond underlying
 
-            bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+            bondData_.populateFromBondReferenceData(engineFactoryOverride->referenceData());
             auto underlying = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
-            underlying->build(engineFactory);
+            underlying->build(engineFactoryOverride);
             bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
 
         } else {
 
             // non-vanilla bond underlying (callable bond etc.)
 
-            auto r =
-                BondFactory::instance().build(engineFactory, engineFactory->referenceData(), bondData_.securityId());
+            auto r = BondFactory::instance().build(engineFactoryOverride, engineFactoryOverride->referenceData(),
+                                                   bondData_.securityId());
             bond = r.bond;
             bondData_ = r.bondData;
         }
@@ -204,6 +204,9 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondNotional;
     additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondNotional;
+
+    engineFactory->modelBuilders().insert(engineFactoryOverride->modelBuilders().begin(),
+                                          engineFactoryOverride->modelBuilders().end());
 }
 
 void ForwardBond::fromXML(XMLNode* node) {
