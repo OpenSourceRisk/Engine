@@ -272,6 +272,8 @@ public:
     void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
     void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
+    void setXvaCgRegressionOrderDynamicIm(Size r) { xvaCgRegressionOrderDynamicIm_ = r; }
+    void setXvaCgRegressionVarianceCutoffDynamicIm(double c) { xvaCgRegressionVarianceCutoffDynamicIm_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
     void setXvaCgRegressionReportTimeStepsDynamicIM(const std::vector<Size>& s) {
         xvaCgRegressionReportTimeStepsDynamicIM_ = s;
@@ -282,6 +284,7 @@ public:
     void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
     void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = std::move(s); }
     void setXvaCgUsePythonIntegration(bool b) { xvaCgUsePythonIntegration_ = b; }
+    void setXvaCgUsePythonIntegrationDynamicIm(bool b) { xvaCgUsePythonIntegrationDynamicIm_ = b; }
     void setXvaCgSensiScenarioData(const std::string& xml);
     void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
@@ -727,6 +730,8 @@ public:
     Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
     double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
+    Size xvaCgRegressionOrderDynamicIm() const { return xvaCgRegressionOrderDynamicIm_; }
+    double xvaCgRegressionVarianceCutoffDynamicIm() const { return xvaCgRegressionVarianceCutoffDynamicIm_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
     const std::vector<Size>& xvaCgRegressionReportTimeStepsDynamicIM() const {
         return xvaCgRegressionReportTimeStepsDynamicIM_;
@@ -739,6 +744,7 @@ public:
     }
     const std::string& xvaCgExternalComputeDevice() const { return xvaCgExternalComputeDevice_; }
     bool xvaCgUsePythonIntegration() const { return xvaCgUsePythonIntegration_; }
+    bool xvaCgUsePythonIntegrationDynamicIm() const { return xvaCgUsePythonIntegrationDynamicIm_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() const { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
@@ -1165,6 +1171,8 @@ protected:
     Size xvaCgDynamicIMStepSize_ = 1;
     Size xvaCgRegressionOrder_ = 4;
     double xvaCgRegressionVarianceCutoff_ = Null<Real>();
+    Size xvaCgRegressionOrderDynamicIm_ = 4;
+    double xvaCgRegressionVarianceCutoffDynamicIm_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
     std::vector<Size> xvaCgRegressionReportTimeStepsDynamicIM_;
     bool xvaCgUseRedBlocks_ = true;
@@ -1174,6 +1182,7 @@ protected:
     bool xvaCgUseDoublePrecisionForExternalCalculation_ = false;
     string xvaCgExternalComputeDevice_;
     bool xvaCgUsePythonIntegration_ = false;
+    bool xvaCgUsePythonIntegrationDynamicIm_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
