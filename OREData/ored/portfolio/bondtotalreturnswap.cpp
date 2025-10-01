@@ -112,6 +112,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
             bondIndexBuilder =
                 BondIndexBuilder(bondData_.securityId(), useDirtyPrices_, false, NullCalendar(), false, engineFactory);
             bondIndex = bondIndexBuilder.bondIndex();
+            bondData_ = bondIndexBuilder.bondData();
         }
 
     } catch (...) {
