@@ -229,8 +229,9 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
         if (p.applies(effectiveTradeType)) {
             for (auto const& [k, v] : p.overrides) {
                 modelParams[k] = v;
-                DLOG("override model parameter '" << k << "' with value '" << v << "' in builder for product '"
-                                                  << tradeType << "'");
+                DLOG("override model parameter '" << k << "' with value '" << v << "' for builder '"
+                                                  << effectiveTradeType << "', override originates from '" << p.source
+                                                  << "'");
             }
         }
     }
@@ -239,8 +240,9 @@ QuantLib::ext::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tr
         if (p.applies(effectiveTradeType)) {
             for (auto const& [k, v] : p.overrides) {
                 engineParams[k] = v;
-                DLOG("override engine parameter '" << k << "' with value '" << v << "' in builder for product '"
-                                                   << tradeType << "'");
+                DLOG("override engine parameter '" << k << "' with value '" << v << "' for builder '"
+                                                   << effectiveTradeType << "', override originates from '" << p.source
+                                                   << "'");
             }
         }
     }
