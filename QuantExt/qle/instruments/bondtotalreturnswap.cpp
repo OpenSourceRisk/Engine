@@ -29,12 +29,12 @@ BondTRS::BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex
                  const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool payBondCashFlowsImmediately,
                  const Currency& fundingCurrency, const Currency& bondCurrency, const bool applyFXIndexFixingDays,
-                 const Period paymentLag)
+                 const Period& payLagPeriod, const Calendar& paymentCalendar)
     : bondIndex_(bondIndex), bondNotional_(bondNotional), initialPrice_(initialPrice), fundingLeg_(fundingLeg),
       payTotalReturnLeg_(payTotalReturnLeg), fxIndex_(fxIndex),
       payBondCashFlowsImmediately_(payBondCashFlowsImmediately), fundingCurrency_(fundingCurrency),
-      bondCurrency_(bondCurrency), valuationDates_(valuationDates), paymentDates_(paymentDates),
-      applyFXIndexFixingDays_(applyFXIndexFixingDays), paymentLag_(paymentLag) {
+      bondCurrency_(bondCurrency), applyFXIndexFixingDays_(applyFXIndexFixingDays), payLagPeriod_(payLagPeriod),
+      paymentCalendar_(paymentCalendar), valuationDates_(valuationDates), paymentDates_(paymentDates) {
 
     QL_REQUIRE(bondIndex, "BondTRS: no bond index given");
 
@@ -80,6 +80,8 @@ void BondTRS::setupArguments(PricingEngine::arguments* args) const {
     arguments->payBondCashFlowsImmediately = payBondCashFlowsImmediately_;
     arguments->fundingCurrency = fundingCurrency_;
     arguments->bondCurrency = bondCurrency_;
+    arguments->payLagPeriod = payLagPeriod_;
+    arguments->paymentCalendar = paymentCalendar_;
     arguments->valuationDates = valuationDates_;
     arguments->paymentDates = paymentDates_;
     arguments->paymentLag = paymentLag_;

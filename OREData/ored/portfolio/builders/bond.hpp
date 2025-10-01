@@ -40,11 +40,6 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder base class for Bonds
-/*! Pricing engines are cached by security id
-\ingroup builders
-*/
-
 class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
                                                              const string&, const string&> {
 protected:
@@ -67,13 +62,9 @@ public:
     BondDiscountingEngineBuilder() : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
-                                                                const string& securityId,
-                                                                const string& referenceCurveId,
-                                                                const string& incomeCurveId) override {
-
-        string tsperiodStr = engineParameter("TimestepPeriod");
-        Period tsperiod = parsePeriod(tsperiodStr);
+    virtual QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
+               const string& referenceCurveId, const string& incomeCurveId) override {
 
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
 
@@ -113,9 +104,14 @@ protected:
         bool includePastCashflows =
             parseBool(engineParameter("IncludePastCashflows", {}, false, "false"));
 
+        bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
+        bool treatSecuritySpreadAsCreditSpread =
+            parseBool(modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false"));
+        Period tsperiod = parsePeriod(engineParameter("TimestepPeriod", {}, false, "3M"));
+
         return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
-            yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true,
-            parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")));
+            yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true, spreadOnIncome,
+            treatSecuritySpreadAsCreditSpread);
     }
 };
 
@@ -134,7 +130,7 @@ protected:
                                                                 const string& securityId,
                                                                 const string& referenceCurveId,
                                                                 const string& incomeCurveId) override {
-        string tsperiodStr = engineParameter("TimestepPeriod");
+        string tsperiodStr = engineParameter("TimestepPeriod", {}, false, "3M");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<Quote> spread;

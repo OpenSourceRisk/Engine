@@ -70,13 +70,11 @@ class EngineBuilder {
 %shared_ptr(EngineFactory)
 class EngineFactory {
   public:
-    EngineFactory(const ext::shared_ptr<EngineData>& data,
-                  const ext::shared_ptr<Market>& market,
-                  const std::map<MarketContext, std::string>& configurations = std::map<MarketContext, std::string>(),
-                  const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                  const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
-                  const bool allowOverwrite = false);
+      EngineFactory(const ext::shared_ptr<EngineData>& data, const ext::shared_ptr<Market>& market,
+                    const std::map<MarketContext, std::string>& configurations = std::map<MarketContext, std::string>(),
+                    const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                    const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                    const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
 };
 
 // TradeFactory just needed as a return type, no construction, no member functions.

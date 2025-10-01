@@ -37,21 +37,26 @@ namespace data {
 -
 \ingroup builders
 */
-class CommoditySwapEngineBuilder : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&, const std::string&> {
+class CommoditySwapEngineBuilder : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&,
+                                                                      const QuantLib::Currency&, const std::string&> {
 public:
     CommoditySwapEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "CommoditySwapEngine", {"CommoditySwap"}) {}
 
 protected:
-    virtual std::string keyImpl(const Currency& ccy, const std::string& discountCurveName) override {
-        return ccy.code() + "_" + discountCurveName;
+    virtual std::string keyImpl(const Currency& ccy, const Currency& npvCcy,
+                                const std::string& discountCurveName) override {
+        return ccy.code() + "_" + npvCcy.code() + "_" + discountCurveName;
     }
 
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurveName) override {
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    engineImpl(const Currency& ccy, const Currency& npvCcy, const std::string& discountCurveName) override {
         Handle<YieldTermStructure> yts = discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(yts);
+        return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(
+            yts, QuantLib::ext::nullopt, Date(), Date(),
+            market_->fxRate(ccy.code() + npvCcy.code(), configuration(MarketContext::pricing)));
     };
 };
 

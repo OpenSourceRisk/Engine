@@ -1001,7 +1001,10 @@ public:
                                    const std::string& fixedConvention, const std::string& fixedDayCounter,
                                    const std::string& index, const std::string& eom = "",
                                    const std::string& strIsResettable = "",
-                                   const std::string& strFloatIndexIsResettable = "");
+                                   const std::string& strFloatIndexIsResettable = "",
+                                   const string& strIncludeSpread = "", const string& strLookback = "",
+                                   const string& strFixingDays = "", const string& strRateCutoff = "",
+                                   const string& strIsAveraged = "");
     //@}
 
     //! \name Inspectors
@@ -1017,6 +1020,13 @@ public:
     bool eom() const { return eom_; }
     bool isResettable() const { return isResettable_; }
     bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
+
+    // only OIS
+    boost::optional<bool> includeSpread() const { return includeSpread_; }
+    boost::optional<QuantLib::Period> lookback() const { return lookback_; }
+    boost::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
+    boost::optional<Size> rateCutoff() const { return rateCutoff_; }
+    boost::optional<bool> isAveraged() const { return isAveraged_; }
     //@}
 
     //! \name Serialisation interface
@@ -1055,6 +1065,19 @@ private:
 
     std::string strIsResettable_;
     std::string strFloatIndexIsResettable_;
+
+    std::string strIncludeSpread_;
+    std::string strLookback_;
+    std::string strFixingDays_;
+    std::string strRateCutoff_;
+    std::string strIsAveraged_;
+
+    // OIS Only
+    boost::optional<bool> includeSpread_;
+    boost::optional<QuantLib::Period> lookback_;
+    boost::optional<QuantLib::Size> fixingDays_;
+    boost::optional<Size> rateCutoff_;
+    boost::optional<bool> isAveraged_;
 };
 
 //! Container for storing Credit Default Swap quote conventions

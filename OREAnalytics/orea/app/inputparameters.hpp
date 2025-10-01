@@ -178,6 +178,7 @@ public:
     // Setters for curves/markets
     void setOutputCurves(bool b) { outputCurves_ = b; }
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
+    void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
     void setCalendarAdjustment(const std::string& xml);
@@ -550,6 +551,7 @@ public:
     void insertAnalytic(const std::string& s); 
     void removeAnalytic(const std::string& s);
 
+    void setPnlDateAdjustedRiskFactors(const std::string& s); // parse to vector<RiskFactorKey::KeyType>
 
 
     /***************************
@@ -631,6 +633,7 @@ public:
      ****************************/
     bool outputCurves() const { return outputCurves_; };
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
+    std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
     const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
     const std::string& curvesGrid() const { return curvesGrid_; }
 
@@ -978,6 +981,11 @@ public:
         return zeroToParShiftSensitivityScenarioData_;
     }
 
+    /****************************
+     * Getters for pnl analytics
+     ****************************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors() const { return pnlDateAdjustedRiskFactors_; }
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1068,6 +1076,7 @@ protected:
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     bool outputTodaysMarketCalibration_ = true;
+    std::size_t todaysMarketCalibrationPrecision_ = 8;
 
     /***********************************
      * CASHFLOW and CASHFLOWNPV analytic
@@ -1367,6 +1376,11 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaExplainSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
     double xvaExplainShiftThreshold_ = 0;
+
+    /*****************
+     * PNL analytic
+     *****************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
