@@ -185,6 +185,13 @@ string XMLSerializable::toXMLStringUnformatted() const {
     return doc.toStringUnformatted();
 }
 
+void XMLUtils::checkAnyNode(XMLNode* node, const vector<string> expectedNames) {
+    QL_REQUIRE(node, "XML Node is NULL (expected any of " << boost::algorithm::join(expectedNames, ", ") << ")");
+    bool found = std::find(expectedNames.begin(), expectedNames.end(), node->name()) != expectedNames.end();
+    QL_REQUIRE(found, "XML Node name " << node->name() << " does not match expected names "
+                                       << boost::algorithm::join(expectedNames, ", "));
+}
+
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {
     QL_REQUIRE(node, "XML Node is NULL (expected " << expectedName << ")");
     QL_REQUIRE(node->name() == expectedName,
@@ -286,6 +293,19 @@ void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& name
         addChild(doc, n, secondName, it->second);
     }
 }
+
+string XMLUtils::getAnyChildValue(XMLNode* node, const vector<string> names, bool mandatory, const string& defaultValue) {
+    
+    for (string name : names) {
+        xml_node<>* child = node->first_node(name.c_str());
+        if (child)
+            return getNodeValue(child);
+    }
+    QL_REQUIRE(!mandatory, "XMLNode is NULL (was looking for any child from " << boost::algorithm::join(names, ",") << ")");
+        
+    
+}
+
 
 string XMLUtils::getChildValue(XMLNode* node, const string& name, bool mandatory, const string& defaultValue) {
     QL_REQUIRE(node, "XMLNode is NULL (was looking for child " << name << ")");

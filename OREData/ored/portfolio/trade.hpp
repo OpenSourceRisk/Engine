@@ -145,6 +145,7 @@ public:
     //! Set the trade id
     string& id() { return id_; }
 
+    bool& isSubTrade() { return isSubTrade_; }
     //! Set the envelope with counterparty and portfolio info
     void setEnvelope(const Envelope& envelope);
 
@@ -230,6 +231,8 @@ public:
         return savedNumberOfPricings_ + (instrument_ != nullptr ? instrument_->getNumberOfPricings() : 0);
     }
 
+    bool isSubTrade() const { return isSubTrade_; }
+
     /* add additional data on product types, model, engine from builder */
     void addProductModelEngine(const EngineBuilder& builder);
     void addProductModelEngine(
@@ -266,7 +269,7 @@ protected:
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
-
+    bool isSubTrade_ = false;
     // Utility to add premiums such that they are taken into account in pricing and cash flow projection.
     // For example, an option premium flow is not covered by the underlying option instrument in
     // QuantLib and needs to be represented separately. This is done by inserting it as an additional instrument

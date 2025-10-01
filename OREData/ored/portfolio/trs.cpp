@@ -228,7 +228,7 @@ void TRS::fromXML(XMLNode* node) {
             }
         }
         QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
-        std::string tradeType = XMLUtils::getChildValue(t, "TradeType", true);
+        std::string tradeType = XMLUtils::getAnyChildValue(t, {"TradeType", "SubTradeType"}, true);
         auto u = TradeFactory::instance().build(tradeType);
         QL_REQUIRE(u, "No trade builder found for TRS derivative trade type '"
                           << tradeType << "' when processing underlying trade #" << (underlyingCounter + 1));

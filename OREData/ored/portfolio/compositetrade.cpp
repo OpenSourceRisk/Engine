@@ -157,9 +157,24 @@ void CompositeTrade::fromXML(XMLNode* node) {
     }
     if ((portfolioBasket_ && portfolioId_.empty()) || (!portfolioBasket_)) {
 
-        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(tradesNode, "Trade");
+        vector<XMLNode*> tradeNodes = XMLUtils::getChildrenNodes(tradesNode, "Trade");
+        vector<XMLNode*> subTradeNodes = XMLUtils::getChildrenNodes(tradesNode, "SubTrade");
+        vector<XMLNode*> nodes = vector<XMLNode*>();
+        nodes.insert(nodes.end(), tradeNodes.begin(), tradeNodes.end());
+        nodes.insert(nodes.end(), subTradeNodes.begin(), subTradeNodes.end());
+            
+        //vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(tradesNode, "Trade");
         for (Size i = 0; i < nodes.size(); i++) {
-            string tradeType = XMLUtils::getChildValue(nodes[i], "TradeType", true);
+            string tradeType = XMLUtils::getChildValue(nodes[i], "TradeType", false);
+            string subTradeType = XMLUtils::getChildValue(nodes[i], "SubTradeType", false);
+            if (tradeType.empty()) {
+                if (subTradeType.empty()) {
+                    std::cout << "No trade type or sub trade type found\n";
+                } else {
+                    tradeType = subTradeType;
+                }
+            }
+            
             string id = XMLUtils::getAttribute(nodes[i], "id");
             if (id == "") {
                 WLOG("Empty component trade id being overwritten in composite trade " << this->id() << ".");
@@ -171,6 +186,7 @@ void CompositeTrade::fromXML(XMLNode* node) {
             try {
                 trade = TradeFactory::instance().build(tradeType);
                 trade->id() = id;
+                trade->isSubTrade() = true;
                 Envelope componentEnvelope;
                 if (XMLNode* envNode = XMLUtils::getChildNode(nodes[i], "Envelope")) {
                     componentEnvelope.fromXML(envNode);
