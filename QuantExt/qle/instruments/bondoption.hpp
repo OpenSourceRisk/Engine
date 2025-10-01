@@ -52,6 +52,8 @@ public:
     class engine;
 
 private:
+    /* See Forward Bond on the justification of overriding calculate() here. */
+    void calculate() const override;
     void setupArguments(PricingEngine::arguments*) const override;
     const QuantLib::ext::shared_ptr<QuantLib::Bond> underlying_;
     const CallabilitySchedule putCallSchedule_;
