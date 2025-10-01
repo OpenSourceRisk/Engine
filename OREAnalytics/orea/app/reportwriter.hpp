@@ -107,8 +107,16 @@ public:
                                      const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& sensitivityCubes,
                                      QuantLib::Real outputThreshold = 0.0);
 
-    virtual void writeSensitivityReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
+    virtual void writeSensitivityReport(ore::data::Report& report,
+                                        const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0, QuantLib::Size outputPrecision = 2);
+
+    virtual void writeSensitivityReport(ore::data::Report& report,
+                                        const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
+                                        QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+                                        QuantLib::ext::shared_ptr<ore::data::Market> market,
+                                        const std::string& configuration, QuantLib::Real outputThreshold = 0.0,
+                                        QuantLib::Size outputPrecision = 2);
 
     virtual void writeXvaSensitivityReport(
         Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ssTrades,

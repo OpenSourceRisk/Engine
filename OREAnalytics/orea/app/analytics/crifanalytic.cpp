@@ -103,7 +103,8 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
         sensiAnalysis->sensiCubes(), analytic->configurations().simMarketParams->baseCcy());
     if (writeReports) {
         auto simmSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeSensitivityReport(*simmSensitivityReport, ss, inputs->sensiThreshold());
+        reportWriter.writeSensitivityReport(*simmSensitivityReport, ss, portfolio, analytic->market(),
+                                            Market::defaultConfiguration, inputs->sensiThreshold());
         sensiReports["crif_sensitivity"] = simmSensitivityReport;
     } else {
         LOG("Skipping SIMM sensitivity report, this is an optional report and writeOptionalReports is set to "
@@ -139,7 +140,8 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
     ss = QuantLib::ext::make_shared<ore::analytics::BufferedSensitivityStream>(ss);
     if (writeReports) {
         auto simmParSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeSensitivityReport(*simmParSensitivityReport, ss, inputs->sensiThreshold());
+        reportWriter.writeSensitivityReport(*simmParSensitivityReport, ss, portfolio, analytic->market(),
+                                            Market::defaultConfiguration, inputs->sensiThreshold());
         sensiReports["crif_par_sensitivity"] = simmParSensitivityReport;
     }
     MEM_LOG;

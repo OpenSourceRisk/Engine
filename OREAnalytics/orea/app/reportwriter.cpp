@@ -776,8 +776,8 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     // Make sure that we are starting from the start
     ss->reset();
     while (SensitivityRecord sr = ss->next()) {
-        if ((outputThreshold == Null<Real>()) || (fabs(sr.delta) > outputThreshold ||
-            (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
             report.next();
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
@@ -789,6 +789,79 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.add(sr.baseNpv);
             report.add(sr.delta);
             report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    report.end();
+    LOG("Sensitivity report finished");
+}
+
+void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
+                                          QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
+                                          QuantLib::ext::shared_ptr<ore::data::Market> market,
+                                          const std::string& configuration, Real outputThreshold, Size outputPrecision) {
+
+    LOG("Writing Sensitivity report");
+
+    Size shiftSizePrecision = outputPrecision < 6 ? 6 : outputPrecision;
+    Size amountPrecision = outputPrecision < 2 ? 2 : outputPrecision;
+
+    report.addColumn("TradeId", string());
+    report.addColumn("IsPar", string());
+    report.addColumn("Factor_1", string());
+    report.addColumn("ShiftSize_1", double(), shiftSizePrecision);
+    report.addColumn("Factor_2", string());
+    report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
+    report.addColumn("Currency", string());
+    report.addColumn("Base NPV", double(), amountPrecision);
+    report.addColumn("Delta", double(), amountPrecision);
+    report.addColumn("Gamma", double(), amountPrecision);
+    report.addColumn("Currency(Trade)", string());
+    report.addColumn("Base NPV(Trade)", double(), amountPrecision);
+    report.addColumn("Delta(Trade)", double(), amountPrecision);
+    report.addColumn("Gamma(Trade)", double(), amountPrecision);
+
+    std::unordered_map<std::string, std::string> tradeCcy;
+    tradeCcy.reserve(portfolio->trades().size());
+    for (const auto& kv : portfolio->trades())
+        tradeCcy.emplace(kv.first, kv.second->npvCurrency());
+
+    // Make sure that we are starting from the start
+    ss->reset();
+    while (SensitivityRecord sr = ss->next()) {
+        if ((outputThreshold == Null<Real>()) || (fabs(sr.delta) > outputThreshold ||
+            (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+
+            std::string npvCcy;
+            if (auto it = tradeCcy.find(sr.tradeId); it != tradeCcy.end())
+                npvCcy = it->second;
+
+            Real fx = 1.0;
+            if (npvCcy != sr.currency)
+                fx = market->fxRate(sr.currency + npvCcy, configuration)->value();
+
+            report.next();
+            report.add(sr.tradeId);
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+            report.add(npvCcy);
+            report.add(sr.baseNpv * fx);
+            report.add(sr.delta * fx);
+            if (sr.gamma == Null<Real>())
+                report.add(sr.gamma);
+            else
+                report.add(sr.gamma * fx);
+
         } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
             // TODO: Again, is this needed?
             ALOG("sensitivity record has infinite values: " << sr);
