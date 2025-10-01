@@ -308,8 +308,11 @@ std::set<string> CurveConfigurations::conventions() const {
             for (const auto& c : cc.second) {
                 auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(c.second);
                 if (icc) {
-                    if (icc->conventions() != "")
-                        conventions.insert(icc->conventions());
+                    for (const auto& s : icc->segments()) {
+                        if (!s.convention().empty()) {
+                            conventions.insert(s.convention());
+                        }
+                    }
                 }
             }
         }
@@ -376,8 +379,7 @@ CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveCo
     for (const auto& c : curves) {
         const auto& cc = get(CurveSpec::CurveType::Inflation, c);
         if (auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(cc)) {
-            InflationCurveConfig::Type t = icc->getType();
-            if (t == type) {
+            if (icc->type() == type) {
                 return cc;
             }
         }
