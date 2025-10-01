@@ -94,8 +94,13 @@ void PnlExplainReport::createReports(const QuantLib::ext::shared_ptr<MarketRiskR
     QL_REQUIRE(pnlExplainReport, "PNL report must be an InMemoryReport");
 
     pnlReportColumnSize_ = pnlReport->columns();
+    //copy pnl report colums to pnl explain report
     for (QuantLib::Size i = 0; i < pnlReportColumnSize_; i++) {
-        pnlExplainReport->addColumn(pnlReport->header(i), pnlReport->columnType(i));
+        //columns with double has 6 decimal digit
+        if (pnlReport->columnType(i).which() == 1)
+            pnlExplainReport->addColumn(pnlReport->header(i), pnlReport->columnType(i), 6);
+        else
+            pnlExplainReport->addColumn(pnlReport->header(i), pnlReport->columnType(i));
     }
 
     if (runRiskFactorDetail(reports))
