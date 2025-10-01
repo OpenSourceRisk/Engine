@@ -292,7 +292,7 @@ string curveSpecToName(CurveSpec::CurveType ct, const string& cId,
                        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs) { 
     if (ct == CurveSpec::CurveType::Inflation) {
         auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(curveConfigs->get(ct, cId));
-        auto conv = icc->conventions();
+        auto conv = icc->segments().front().convention();
         auto conventions = InstrumentConventions::instance().conventions();
         auto iconv = QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(conv));
         return iconv->indexName();
