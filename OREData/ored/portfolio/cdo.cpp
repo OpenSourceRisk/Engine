@@ -564,7 +564,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
-        basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint, indexCdsMaturity,
+        basket->setLossModel(cdoEngineBuilder->lossModel(creditCurveIdWithTerm(), recoveryRates, adjDetachPoint, indexCdsMaturity,
                                                          homogeneous, creditCurves, indexSubFamily,
                                                          enforceExpectedRecoveryEqualsMarketRecovery));
 
@@ -626,7 +626,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
-        basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint, indexCdsMaturity,
+        basket->setLossModel(cdoEngineBuilder->lossModel(creditCurveIdWithTerm(), recoveryRates, adjAttachPoint, indexCdsMaturity,
                                                          homogeneous, creditCurves, indexSubFamily,
                                                          enforceExpectedRecoveryEqualsMarketRecovery));
 

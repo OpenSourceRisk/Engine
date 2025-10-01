@@ -989,6 +989,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
         if (!settlementFxFixingDate_.empty())
             XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFxFixingDate_);
+        XMLUtils::appendNode(node, settlementDataNode);
     }
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
@@ -2643,11 +2644,11 @@ Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();
     // assume the leg is sorted
     // We just take the first coupon::nominal we find, otherwise return 0
+    
     for (auto cf : leg) {
-        if (cf->date() > today) {
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
-            if (coupon)
-                return coupon->nominal();
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
+        if ((coupon) && coupon->accrualEndDate() > today) {
+            return coupon->nominal();
         }
     }
     return 0;

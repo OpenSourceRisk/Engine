@@ -228,6 +228,7 @@ the list above.
     <Parameter name="grid">240,1M</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
     <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
+    <Parameter name="todaysMarketCalibrationPrecision">8</Parameter>
   </Analytic>
   <Analytic type="...">
     <!-- ... -->
@@ -277,6 +278,12 @@ section).  Key {\tt grid} defines the time grid on which the yield curves are ev
 240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on
 this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
 a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
+
+The {\tt outputTodaysMarketCalibration} parameter controls whether calibration information for the built market objects
+is written to a report. When set to Y, a detailed calibration report is generated. The {\tt todaysMarketCalibrationPrecision}
+parameter specifies the number of decimal places to use when formatting floating-point values in the market calibration
+report (default: 8). This allows users to control the precision of numerical output in the calibration report, similar to
+the {\tt additionalResultsReportPrecision} parameter for the NPV analytic.
 
 The additionalResults analytic writes a report containing any additional results generated for the portfolio. The results are pricing engine specific but Table \ref{additionalreport} shows the output for a vanilla swaption.
 
@@ -748,6 +755,7 @@ shows a typical configuration for sensitivity calculation.
    <Parameter name="outputJacobi">Y</Parameter>
    <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
    <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+   <Parameter name="decomposeIndexSensitivities">Y</Parameter>
  </Analytic>
 </Analytics>
 \end{minted}
@@ -778,7 +786,32 @@ The parameters have the following interpretation:
 \item {\tt outputJacobi}: If set to Y, then the relevant Jacobi and inverse Jacobi matrix is written to a file, see below
 \item {\tt jacobiOutputFile}: Output file name for the Jacobi matrix
 \item {\tt jacobiInverseOutputFile}: Output file name for the inverse Jacobi matrix
+\item {\tt decomposeIndexSensitivities}: Decompose Credit index and Equity and Commodity index sensitivities into constituent sensitivities 
 \end{itemize}
+
+The decomposition of index sensitivities is controlled as follows:
+
+\begin{itemize}
+    \item \textbf{Credit Index Decomposition:} Enabled via the \texttt{SensitivityDecomposition} flag in the pricing engine settings for \texttt{IndexCreditDefaultSwap}, \texttt{IndexCreditDefaultSwapOption}, and \texttt{SyntheticCDO} (see pricing engine parameterisation, Section~\ref{sec:configuration_pricingengines}).
+    \item \textbf{Equity and Commodity Index Decomposition:} Controlled at the trade level by adding the field \texttt{index\_decomposition} to the trade envelope's \texttt{AdditionalFields} section, as shown in Listing~\ref{lst:eq_index_decomposition}.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Envelope>
+  ...
+  <AdditionalFields>
+    <index_decomposition>true</index_decomposition>
+  </AdditionalFields>
+</Envelope>
+\end{minted}
+\caption{Trade envelope configuration for equity and commodity index decomposition}
+\label{lst:eq_index_decomposition}
+\end{listing}
+
+Equity index decomposition is supported for \texttt{EquitySwap} and \texttt{GenericTRS} trades, while commodity index decomposition is available for \texttt{GenericTRS} trades.
+
+To enable index decomposition, appropriate reference data for credit, equity, or commodity indices must be provided.
 
 The conversion of ``raw'' to ``par'' sensitivities, embedded above, can also be performed as a
 separate step by calling the {\tt zeroToParSensiConversion} analytic as shown in Listing
@@ -990,6 +1023,7 @@ The {\tt pnl} and {\tt pnlExplain} analytics provide computation of a single-per
       <Parameter name="conventionsMporFile">conventions.xml</Parameter>
       <Parameter name="portfolioMporFile">mporportfolio.xml</Parameter>
       <Parameter name="outputFileName">pnl.csv</Parameter>
+      <Parameter name="dateAdjustedRiskFactors">CommodityCurve</Parameter>
     </Analytic>
   </Analytics>
 \end{minted}
@@ -1007,6 +1041,7 @@ The parameters in Listing \ref{lst:ore_pnl} have the following interpretation:
 \item {\tt curveConfigMporFile}, {\tt conventionsMporFile}: Parametrisation to be applied at the mporDate; this may be different from the configuration on asofDate which is provided in the Setup section.
 \item {\tt conventionsMporFile}: Conventions applied at the mporDate
 \item {\tt portfolioMporFile} [Optional]: The portfolio on mporDate which is usually different from the portfolio on asofDate.  
+\item {\tt dateAdjustedRiskFactors} [Optional]: List of risk factor types (e.g., CommodityCurve) for which scenario dates at the mporDate are adjusted relative to the asofDate when computing P\&L Explain. This adjustment is particularly important for commodity curves, so that scenario dates reference the same future contracts at both mporDate and asofDate.
 \end{itemize}
 
 \begin{listing}[H]
@@ -1020,9 +1055,10 @@ The parameters in Listing \ref{lst:ore_pnl} have the following interpretation:
       <Parameter name="curveConfigMporFile">curveconfig.xml</Parameter>
       <Parameter name="conventionsMporFile">conventions.xml</Parameter>
       <Parameter name="portfolioMporFile">mporportfolio.xml</Parameter>
-      <Parameter name="outputFileName">pnl_explain.csv</Parameter>
+      <Parameter name="outputFileName">pnl_explain.csv</Parameter>	  
+      <Parameter name="dateAdjustedRiskFactors">CommodityCurve</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="parSensitivity">Y</Parameter>	  
+      <Parameter name="parSensitivity">Y</Parameter>
     </Analytic>
   </Analytics>
 \end{minted}

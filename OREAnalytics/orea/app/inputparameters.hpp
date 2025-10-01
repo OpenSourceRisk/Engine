@@ -178,6 +178,7 @@ public:
     // Setters for curves/markets
     void setOutputCurves(bool b) { outputCurves_ = b; }
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
+    void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
     void setCalendarAdjustment(const std::string& xml);
@@ -195,6 +196,7 @@ public:
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
     void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
     void setSensiLaxFxConversion(bool b) { sensiLaxFxConversion_ = b; }
+    void setSensiDecomposition(bool b) { sensiDecomposition_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -549,6 +551,7 @@ public:
     void insertAnalytic(const std::string& s); 
     void removeAnalytic(const std::string& s);
 
+    void setPnlDateAdjustedRiskFactors(const std::string& s); // parse to vector<RiskFactorKey::KeyType>
 
 
     /***************************
@@ -630,6 +633,7 @@ public:
      ****************************/
     bool outputCurves() const { return outputCurves_; };
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
+    std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
     const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
     const std::string& curvesGrid() const { return curvesGrid_; }
 
@@ -645,6 +649,7 @@ public:
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
     bool sensiLaxFxConversion() const { return sensiLaxFxConversion_; }
+    bool sensiDecomposition() const { return sensiDecomposition_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() const { return sensiSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
@@ -976,6 +981,11 @@ public:
         return zeroToParShiftSensitivityScenarioData_;
     }
 
+    /****************************
+     * Getters for pnl analytics
+     ****************************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors() const { return pnlDateAdjustedRiskFactors_; }
+
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1066,6 +1076,7 @@ protected:
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     bool outputTodaysMarketCalibration_ = true;
+    std::size_t todaysMarketCalibrationPrecision_ = 8;
 
     /***********************************
      * CASHFLOW and CASHFLOWNPV analytic
@@ -1086,6 +1097,7 @@ protected:
     QuantLib::Real sensiThreshold_ = 1e-6;
     bool sensiRecalibrateModels_ = true;
     bool sensiLaxFxConversion_ = false;
+    bool sensiDecomposition_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -1364,6 +1376,11 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaExplainSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
     double xvaExplainShiftThreshold_ = 0;
+
+    /*****************
+     * PNL analytic
+     *****************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

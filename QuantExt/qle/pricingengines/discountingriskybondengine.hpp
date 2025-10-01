@@ -58,20 +58,23 @@ public:
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
                                const bool includePastCashflows = false,
                                const Handle<YieldTermStructure>& incomeCurve = {},
-                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true);
+                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true,
+                               const bool treatSecuritySpreadAsCreditSpread = false);
 
     //! alternative constructor (does not require default curve or recovery rate)
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
                                const Handle<YieldTermStructure>& incomeCurve = {},
-                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true);
+                               const bool conditionalOnSurvival = true, const bool spreadOnIncome = true,
+                               const bool treatSecuritySpreadAsCreditSpread = false);
 
     void calculate() const override;
 
     //! ForwardEnabledBondEngine interface
     std::pair<Real, Real> forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
                                        const bool conditionalOnSurvival = true,
-                                       std::vector<CashFlowResults>* const cfResults = nullptr) const override;
+                                       std::vector<CashFlowResults>* const cfResults = nullptr,
+                                       QuantLib::Leg* const expectedCashflows = nullptr) const override;
 
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
@@ -82,11 +85,20 @@ public:
 protected:
     struct BondNPVCalculationResults {
 	// always provided in calculateNpv()
-        Real npv;
-        Real compoundFactorSettlement;
-        Real cashflowsBeforeSettlementValue;
-        Real accruedAmountSettlement;
+        Real npv = 0.0;
+        Real compoundFactorSettlement = 1.0;
+        Real cashflowsBeforeSettlementValue = 0.0;
+        Real accruedAmountSettlement = 0.0;
+        QuantLib::Leg expectedCashflows;
 	// only provided in calculateNpv() when additionalResults = true
+        std::vector<CashFlowResults> cashflowResults;
+    };
+
+    struct RecoveryContribution {
+        bool valid = false;
+        Real value = 0.0;
+        Real expectedAmount = 0.0;
+        Date expectedDate;
         std::vector<CashFlowResults> cashflowResults;
     };
 
@@ -100,6 +112,12 @@ protected:
                                            boost::optional<bool> includeSettlementDateFlows,
                                            const bool conditionalOnSurvival, const bool additionalResults) const;
 
+    DiscountingRiskyBondEngine::RecoveryContribution
+    recoveryContribution(const Real dfNpv, const Real spNpv, const Real effRecovery,
+                         const QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure>& effCreditCurve,
+                         const bool additionalResults, const Real nominal, const QuantLib::Date& startDate,
+                         const QuantLib::Date& endDate) const;
+
     Handle<YieldTermStructure> discountCurve_;
     mutable Handle<DefaultProbabilityTermStructure> defaultCurve_;
     mutable Handle<Quote> recoveryRate_;
@@ -110,6 +128,7 @@ protected:
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;
     bool spreadOnIncome_;
+    bool treatSecuritySpreadAsCreditSpread_;
 };
 
 } // namespace QuantExt

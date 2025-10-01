@@ -266,7 +266,8 @@ void OREApp::analytics() {
         if (inputs_->outputTodaysMarketCalibration()) {
             auto marketCalibrationReport =
                 QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
+                                                                       inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
@@ -542,7 +543,8 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
         if (inputs_->outputTodaysMarketCalibration()) {
             auto marketCalibrationReport =
                 QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
+                                                                       inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
@@ -932,6 +934,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setOutputTodaysMarketCalibration(parseBool(tmp));
 
+    tmp = params_->get("curves", "todaysMarketCalibrationPrecision", false);
+    if (tmp != "")
+        setTodaysMarketCalibrationPrecision(parseInteger(tmp));
+
     /*************
      * SENSITIVITY
      *************/
@@ -1003,6 +1009,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("sensitivity", "laxFxConversion", false);
         if (tmp != "")
             setSensiLaxFxConversion(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "decomposeIndexSensitivities", false);
+        if (tmp != "")
+            setSensiDecomposition(parseBool(tmp));
+
     }
 
     /************
@@ -1405,6 +1416,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnl", "portfolioMporFile", false);
         if (tmp != "")
             setMporPortfolioFromFile(tmp, inputPath_);
+
+
+        tmp = params_->get("pnl", "dateAdjustedRiskFactors", false);
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(tmp);
     }
 
     /****************
@@ -1469,6 +1485,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "portfolioMporFile", false);
         if (tmp != "")
             setMporPortfolioFromFile(tmp, inputPath_);
+
+        tmp = params_->get("pnlExplain", "dateAdjustedRiskFactors", false);
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(tmp);
     }
     /****************
      * SIMM and IM Schedule

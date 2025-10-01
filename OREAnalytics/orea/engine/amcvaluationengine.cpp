@@ -1023,8 +1023,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
                 auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(
                     edCopy, market, configurations, referenceData_, iborFallbackConfig_,
-                    EngineBuilderFactory::instance().generateAmcEngineBuilders(model, simDates, stickyCloseOutDates),
-                    true);
+                    EngineBuilderFactory::instance().generateAmcEngineBuilders(model, simDates, stickyCloseOutDates));
 
                 portfolio->build(engineFactory, "amc-val-engine", true);
 

@@ -1,0 +1,13 @@
+\subsubsection{Extended Fx Forward Swap}
+\label{pricing:extendedfxforwardswap}
+ 
+An Extended Fx Forward Swap is an exchange of notionals at multiple times in the future. We buy B and sell A
+$$
+\NPV= \sum N \cdot K - N \cdot X_A(T)
+$$
+Where:
+\begin{itemize}
+\item $N$: the notional amount in currency A
+\item $K$: the strike rate
+\item $X_A(T)$: the FX spot rate between currencies A and base currency at time T
+\end{itemize}

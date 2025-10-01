@@ -39,6 +39,7 @@ cashflows/cmbcoupon.cpp
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
+cashflows/nettedcommoditycashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/cpicoupon.cpp
 cashflows/cpicouponpricer.cpp
@@ -107,6 +108,7 @@ instruments/bondoption.cpp
 instruments/bondrepo.cpp
 instruments/bondtotalreturnswap.cpp
 instruments/brlcdiswap.cpp
+instruments/callablebond.cpp
 instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cbo.cpp
@@ -293,6 +295,7 @@ pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
 pricingengines/forwardenabledbondengine.cpp
@@ -317,6 +320,7 @@ pricingengines/midpointindexcdsengine.cpp
 pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
+pricingengines/numericlgmcallablebondengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
@@ -480,6 +484,7 @@ cashflows/cmbcoupon.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
+cashflows/nettedcommoditycashflow.hpp
 cashflows/couponpricer.hpp
 cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
@@ -611,6 +616,7 @@ instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
 instruments/brlcdiswap.hpp
+instruments/callablebond.hpp
 instruments/cashflowresults.hpp
 instruments/cashposition.hpp
 instruments/cashsettledeuropeanoption.hpp
@@ -852,6 +858,7 @@ pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
 pricingengines/discretizedconvertible.hpp
 pricingengines/fdblackscholesvanillaengine.hpp
+pricingengines/fdcallablebondevents.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
 pricingengines/forwardenabledbondengine.hpp
@@ -876,6 +883,7 @@ pricingengines/midpointindexcdsengine.hpp
 pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
+pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
@@ -946,6 +954,7 @@ termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
+termstructures/effectivebonddiscountcurve.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityannounceddividendcurve.hpp
 termstructures/equityforwardcurvestripper.hpp
