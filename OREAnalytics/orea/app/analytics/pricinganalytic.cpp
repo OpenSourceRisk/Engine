@@ -201,7 +201,9 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->market());
             }
 
-            ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+            ReportWriter(inputs_->reportNaString())
+                .writeSensitivityReport(*report, ss, analytic()->portfolio(), analytic()->market(), marketConfig,
+                                        inputs_->sensiThreshold());
 
             analytic()->addReport(type, "sensitivity", report);
 
@@ -258,7 +260,8 @@ void PricingAnalyticImpl::runAnalytic(
                 // performance. The cost for this is the memory footpring of the buffer.
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
-                    .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
+                    .writeSensitivityReport(*parSensiReport, pss, analytic()->portfolio(), analytic()->market(),
+                                            marketConfig, inputs_->sensiThreshold());
                 analytic()->addReport(type, "par_sensitivity", parSensiReport);
 
                 if (inputs_->outputJacobi()) {
