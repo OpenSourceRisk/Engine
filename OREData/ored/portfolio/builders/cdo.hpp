@@ -23,28 +23,25 @@
 
 #pragma once
 
-#include <qle/pricingengines/midpointcdoengine.hpp>
-
 // avoid compile error from homogeneouspooldef.hpp
 #include <boost/algorithm/string.hpp>
-
+#include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <qle/models/homogeneouspooldef.hpp>
 #include <qle/models/inhomogeneouspooldef.hpp>
 #include <qle/models/mcdefaultlossmodel.hpp>
 #include <qle/models/poollossmodel.hpp>
 #include <qle/pricingengines/indexcdstrancheengine.hpp>
+#include <qle/pricingengines/midpointcdoengine.hpp>
 #include <qle/quotes/basecorrelationquote.hpp>
-
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
-#include <ql/quotes/simplequote.hpp>
-
-#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace data {
@@ -284,7 +281,7 @@ public:
         Size nBuckets = parseInteger(engineParameter("buckets"));
         // Create the base correlation quote.
         Handle<QuantExt::BaseCorrelationTermStructure> bcts =
-            market_->baseCorrelation(qualifier, configuration(MarketContext::pricing));
+            indexTrancheBaseCorrelationCurve(market_, qualifier, configuration(MarketContext::pricing));
         RelinkableHandle<Quote> correlation;
         if (detachmentPoint < 1.0) {
             const Date& bctsRd = bcts->referenceDate();
@@ -326,7 +323,7 @@ public:
               const std::string& subIndexFamily, bool checkExpectedRecovery) override {
 
         Handle<QuantExt::BaseCorrelationTermStructure> bcts =
-            market_->baseCorrelation(qualifier, configuration(MarketContext::pricing));
+            indexTrancheBaseCorrelationCurve(market_, qualifier, configuration(MarketContext::pricing));
 
         // Create the base correlation quote.
         RelinkableHandle<Quote> correlation;
