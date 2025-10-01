@@ -302,7 +302,7 @@ string XMLUtils::getAnyChildValue(XMLNode* node, const vector<string> names, boo
             return getNodeValue(child);
     }
     QL_REQUIRE(!mandatory, "XMLNode is NULL (was looking for any child from " << boost::algorithm::join(names, ",") << ")");
-        
+    return defaultValue;   
     
 }
 
