@@ -87,4 +87,10 @@ void BondTRS::setupArguments(PricingEngine::arguments* args) const {
     arguments->paymentLag = paymentLag_;
 }
 
+void BondTRS::calculate() const {
+    Instrument::calculate();
+    setCalculated(true);
+}
+
+
 } // namespace QuantExt

@@ -257,7 +257,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate, continueOnCalibrationError, "", id, allowChangingFallbacks, allowModelFallbacks);
 
-    modelBuilders_.insert(std::make_pair(id, builder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 
     // build the pricing engine
 

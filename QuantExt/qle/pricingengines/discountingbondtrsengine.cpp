@@ -17,8 +17,8 @@
 */
 
 #include <qle/cashflows/bondtrscashflow.hpp>
-#include <qle/pricingengines/discountingbondtrsengine.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/pricingengines/discountingbondtrsengine.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
@@ -173,7 +173,7 @@ void DiscountingBondTRSEngine::calculate() const {
     Date start = bd->settlementDate(arguments_.valuationDates.front());
     Date end = bd->settlementDate(arguments_.valuationDates.back());
 
-    Real bondPayments = 0.0, bondRecovery = 0.0;
+    Real bondPayments = 0.0;
 
     // get the expected cashflows
 
@@ -280,12 +280,11 @@ void DiscountingBondTRSEngine::calculate() const {
 
     // 6 set results
 
-    results_.value = mult * (returnLeg + bondPayments + bondRecovery - fundingLeg);
+    results_.value = mult * (returnLeg + bondPayments - fundingLeg);
 
-    results_.additionalResults["returnLegNpv"] = mult * (returnLeg + bondPayments + bondRecovery);
+    results_.additionalResults["returnLegNpv"] = mult * (returnLeg + bondPayments);
     results_.additionalResults["returnLegNpvReturnPaymentsContribtion"] = mult * returnLeg;
     results_.additionalResults["returnLegNpvBondPaymentsContribtion"] = mult * bondPayments;
-    results_.additionalResults["returnLegNpvBondRecoveryContribution"] = mult * bondRecovery;
     results_.additionalResults["fundingLegNpv"] = -mult * fundingLeg;
 
     results_.additionalResults["cashFlowResults"] = cfResults;

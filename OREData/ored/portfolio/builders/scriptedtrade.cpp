@@ -1287,7 +1287,7 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id,
             modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
             iborFallbackConfig, calibration_, filteredStrikes, params_);
     }
-    modelBuilders_.insert(std::make_pair(id, builder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
 void ScriptedTradeEngineBuilder::buildFdBlackScholes(const std::string& id,
@@ -1301,7 +1301,7 @@ void ScriptedTradeEngineBuilder::buildFdBlackScholes(const std::string& id,
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
         iborFallbackConfig, calibration_, filteredStrikes, params_);
-    modelBuilders_.insert(std::make_pair(id, builder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
 void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig) {
@@ -1323,7 +1323,7 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
         iborFallbackConfig, "LocalVol", filteredStrikes, params_);
-    modelBuilders_.insert(std::make_pair(id, builder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
 void ScriptedTradeEngineBuilder::buildFdLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig) {
@@ -1345,7 +1345,7 @@ void ScriptedTradeEngineBuilder::buildFdLocalVol(const std::string& id, const Ib
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
         iborFallbackConfig, "LocalVol", filteredStrikes, params_);
-    modelBuilders_.insert(std::make_pair(id, builder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
 namespace {
@@ -1767,7 +1767,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     }
 
-    modelBuilders_.insert(std::make_pair(id, camBuilder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, camBuilder));
 }
 
 void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
@@ -1870,7 +1870,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
                                                        modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,
                                                        iborFallbackConfig, params_);
 
-    modelBuilders_.insert(std::make_pair(id, camBuilder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, camBuilder));
 }
 
 void ScriptedTradeEngineBuilder::buildAMCCGModel(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
