@@ -271,8 +271,7 @@ InflationCurve::CurveBuildResults
                            "MarketDatum " << md << " is not a valid inflation swap quote");
                 auto zcq = QuantLib::ext::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
                 QL_REQUIRE(zcq, "Could not cast to ZcInflationSwapQuote, internal error.");
-                bool interpolatedIndex_ = convention->interpolated();
-                CPI::InterpolationType observationInterpolation = interpolatedIndex_ ? CPI::Linear : CPI::Flat;
+                CPI::InterpolationType observationInterpolation = convention->interpolated() ? CPI::Linear : CPI::Flat;
                 Date maturity = swapStart + zcq->term();
                 DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
                                             << " quote " << zcq->quote()->value());
@@ -329,10 +328,12 @@ InflationCurve::CurveBuildResults
     QuantLib::ext::shared_ptr<ZeroInflationIndex> zcIndex;
     QuantLib::ext::shared_ptr<YoYInflationIndex> index;
     QuantLib::Period obsLagFromSegment = 0 * Days;
+    bool interpolatedIndex = false;
     for (const auto& segment : config->segments()) {
         auto convention =
             QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(segment.convention()));
         QL_REQUIRE(convention, "InflationSwap Conventions for " << segment.convention() << " not found.");
+        interpolatedIndex |= convention->interpolated();
         auto p = getStartAndLag(asof, *convention);
         Date swapStart = p.first;
         if (p.second != 0 * Days) {
@@ -344,7 +345,7 @@ InflationCurve::CurveBuildResults
         QL_REQUIRE(zcIndex == nullptr || zcIndex == convention->index(),
                    "all segments must use the same zero inflation index");
         zcIndex = convention->index();
-        index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcIndex, interpolatedIndex_);
+        index = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zcIndex, convention->interpolated());
         for (const auto& q : segment.quotes()) {
             auto md = loader.get(q, asof);
             QL_REQUIRE(md, "MarketDatum " << md << " required to build inflation curve " << config->curveID()
@@ -384,7 +385,7 @@ InflationCurve::CurveBuildResults
 
     QL_DEPRECATED_DISABLE_WARNING
     results.curve = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-        asof, baseDate, baseRate, curveObsLag, config->frequency(), interpolatedIndex_, config->dayCounter(),
+        asof, baseDate, baseRate, curveObsLag, config->frequency(), interpolatedIndex, config->dayCounter(),
         helpers, {}, config->tolerance()));
     QL_DEPRECATED_ENABLE_WARNING
     results.index = zcIndex;
@@ -401,7 +402,7 @@ InflationCurve::computeFairYoYQuote(const QuantLib::Date& swapStart, const Quant
     auto conversionIndex = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
         ziIndex->clone(Handle<ZeroInflationTermStructure>(
             QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(zcCurve))),
-        interpolatedIndex_);
+        conv->interpolated());
     QuantLib::ext::shared_ptr<InflationCouponPricer> yoyCpnPricer =
         QuantLib::ext::make_shared<YoYInflationCouponPricer>(nominalTs);
     // construct a yoy swap just as it is done in the yoy inflation helper

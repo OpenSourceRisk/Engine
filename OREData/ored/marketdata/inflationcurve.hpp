@@ -47,7 +47,7 @@ using namespace data;
 */
 class InflationCurve {
 public:
-    InflationCurve() : interpolatedIndex_(false) {}
+    InflationCurve() {}
     InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                    map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves, const bool buildCalibrationInfo);
 
@@ -57,8 +57,6 @@ public:
     const InflationCurveSpec& spec() const { return spec_; }
 
     const QuantLib::ext::shared_ptr<InflationTermStructure> inflationTermStructure() const { return curve_; }
-
-    const bool interpolatedIndex() const { return interpolatedIndex_; }
 
     QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
@@ -98,7 +96,6 @@ private:
 
     InflationCurveSpec spec_;
     QuantLib::ext::shared_ptr<InflationTermStructure> curve_;
-    bool interpolatedIndex_;
     QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo_;
 };
 
