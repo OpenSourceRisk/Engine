@@ -111,6 +111,13 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     nominalTermStructure_ = XMLUtils::getChildValue(node, "NominalTermStructure", true);
 
     string type = XMLUtils::getChildValue(node, "Type", true);
+    if (type == "ZC") {
+        type_ = Type::ZC;
+    } else if (type == "YY") {
+        type_ = Type::YY;
+    } else
+        QL_FAIL("Type " << type << " not recognized");
+        
     segments_.clear();
     XMLNode* segmentsNode = XMLUtils::getChildNode(node, "Segments");
     if (segmentsNode) {
