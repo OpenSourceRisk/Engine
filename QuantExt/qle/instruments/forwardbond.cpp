@@ -73,6 +73,11 @@ void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     arguments->dv01 = dv01_;
 }
 
+void ForwardBond::calculate() const {
+    Instrument::calculate();
+    setCalculated(true);
+}
+
 void ForwardBond::results::reset() {
     Instrument::results::reset();
 }

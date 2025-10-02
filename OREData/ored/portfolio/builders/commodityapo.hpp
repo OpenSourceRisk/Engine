@@ -101,7 +101,7 @@ protected:
         }
 
         auto modelBuilder = QuantLib::ext::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
-        modelBuilders_.insert(std::make_pair(id, modelBuilder));
+        engineFactory()->modelBuilders().insert(std::make_pair(id, modelBuilder));
 
         return QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOptionAnalyticalEngine>(
             yts, modelBuilder->model(), beta, modelType, displacement);
@@ -159,7 +159,7 @@ protected:
         }
 
         auto modelBuilder = QuantLib::ext::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
-        modelBuilders_.insert(std::make_pair(id, modelBuilder));
+        engineFactory()->modelBuilders().insert(std::make_pair(id, modelBuilder));
 
         return QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOptionMonteCarloEngine>(yts, modelBuilder->model(),
                                                                                          samples, beta);
