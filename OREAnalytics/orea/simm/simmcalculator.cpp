@@ -506,11 +506,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const Nett
         // Pair of iterators to start and end of IRCurve sensitivities with current qualifier
         auto pIrQualifier = crif.filterByQualifier(nettingSetDetails, pc, RiskType::IRCurve, qualifier);
 
-        // Iterator to Xccy basis element with current qualifier (expect zero or one element)
-        auto XccyCount = crif.countMatching(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
-        QL_REQUIRE(XccyCount <= 2, "SIMM Calcuator: Expected either 0, 1 or 2 elements for risk type "
-                                      << RiskType::XCcyBasis << " and qualifier " << qualifier << " but got "
-                                      << XccyCount);
+        // Iterator to Xccy basis element with current qualifier
         const auto& [itXccy, itXccyEnd] = crif.findBy(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
 
         // Iterator to inflation element with current qualifier (expect zero or one element)
