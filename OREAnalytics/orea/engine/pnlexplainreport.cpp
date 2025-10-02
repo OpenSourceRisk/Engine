@@ -104,8 +104,9 @@ void PnlExplainReport::createReports(const QuantLib::ext::shared_ptr<MarketRiskR
     }
 
     if (runRiskFactorDetail(reports))
-        pnlExplainReport->addColumn("RiskFactor", std::string())
-            .addColumn("ScenarioPnl", double(), 6)
+        pnlExplainReport->addColumn("RiskFactor", std::string());  
+        
+    pnlExplainReport->addColumn("ScenarioPnl", double(), 6)
             .addColumn("TotalDelta", double(), 6)
             .addColumn("TotalGamma", double(), 6)
             .addColumn("TotalVega", double(), 6)
@@ -126,30 +127,7 @@ void PnlExplainReport::createReports(const QuantLib::ext::shared_ptr<MarketRiskR
             .addColumn("CreditVega", double(), 6)
             .addColumn("CommDelta", double(), 6)
             .addColumn("CommGamma", double(), 6)
-            .addColumn("CommVega", double(), 6);
-    else
-        pnlExplainReport->addColumn("ScenarioPnl", double(), 6)
-            .addColumn("TotalDelta", double(), 6)
-            .addColumn("TotalGamma", double(), 6)
-            .addColumn("TotalVega", double(), 6)
-            .addColumn("IrDelta", double(), 6)
-            .addColumn("IrGamma", double(), 6)
-            .addColumn("IrVega", double(), 6)
-            .addColumn("EqDelta", double(), 6)
-            .addColumn("EqGamma", double(), 6)
-            .addColumn("EqVega", double(), 6)
-            .addColumn("FxDelta", double(), 6)
-            .addColumn("FxGamma", double(), 6)
-            .addColumn("FxVega", double(), 6)
-            .addColumn("InfDelta", double(), 6)
-            .addColumn("InfGamma", double(), 6)
-            .addColumn("InfVega", double(), 6)
-            .addColumn("CreditDelta", double(), 6)
-            .addColumn("CreditGamma", double(), 6)
-            .addColumn("CreditVega", double(), 6)
-            .addColumn("CommDelta", double(), 6)
-            .addColumn("CommGamma", double(), 6)
-            .addColumn("CommVega", double(), 6);
+            .addColumn("CommVega", double(), 6);      
 }
 
 void PnlExplainReport::handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
