@@ -508,7 +508,7 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const Nett
 
         // Iterator to Xccy basis element with current qualifier (expect zero or one element)
         auto XccyCount = crif.countMatching(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
-        QL_REQUIRE(XccyCount < 2, "SIMM Calcuator: Expected either 0 or 1 elements for risk type "
+        QL_REQUIRE(XccyCount <= 2, "SIMM Calcuator: Expected either 0 or 1 elements for risk type "
                                       << RiskType::XCcyBasis << " and qualifier " << qualifier << " but got "
                                       << XccyCount);
         const auto& [itXccy, itXccyEnd] = crif.findBy(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
