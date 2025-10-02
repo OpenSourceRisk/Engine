@@ -2350,7 +2350,8 @@
         <xs:element name="Derivative">
          <xs:complexType>
           <xs:sequence>
-           <xs:element type="xs:string" name="Id"/>
+           <xs:choice maxOccurs="unbounded">
+		   <xs:element type="xs:string" name="Id"/>
            <xs:element name="SubTrade">
             <xs:complexType>
              <xs:sequence>
@@ -2361,7 +2362,10 @@
              <xs:attribute type="xs:string" name="id"/>
             </xs:complexType>
            </xs:element>
-           <xs:element name="Trade">
+		   </xs:choice>
+		   <xs:choice maxOccurs="unbounded">
+           <xs:element type="xs:string" name="Id"/>
+		   <xs:element name="Trade">
             <xs:complexType>
              <xs:sequence>
               <xs:element type="oreTradeType" name="TradeType"/>
@@ -2371,6 +2375,7 @@
              <xs:attribute type="xs:string" name="id"/>
             </xs:complexType>
            </xs:element>
+		   </xs:choice>
           </xs:sequence>
          </xs:complexType>
         </xs:element>
