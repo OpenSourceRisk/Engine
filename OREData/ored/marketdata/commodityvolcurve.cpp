@@ -296,13 +296,35 @@ void CommodityVolCurve::buildVolatility(const Date& asof, const CommodityVolatil
         "MarketDatum instrument type '" << md->instrumentType() << "' <> 'MarketDatum::InstrumentType::COMMODITY_OPTION'");
     QuantLib::ext::shared_ptr<CommodityOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<CommodityOptionQuote>(md);
     QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CommodityOptionQuote");
+    QL_REQUIRE(q->quoteType() == MarketDatum::QuoteType::RATE_LNVOL ||
+                   q->quoteType() == MarketDatum::QuoteType::RATE_SLNVOL ||
+                   q->quoteType() == MarketDatum::QuoteType::RATE_NVOL,
+               "CommodityOptionQuote type '" << q->quoteType() << "' <> RATE_LNVOL or RATE_SLNVOL or RATE_NVOL");
     QL_REQUIRE(q->name() == cvc.quote(),
         "CommodityOptionQuote name '" << q->name() << "' <> ConstantVolatilityConfig quote '" << cvc.quote() << "'");
     TLOG("Found the constant volatility quote " << q->name());
+    Real displacementValue = 0.0;
     Real quoteValue = q->quote()->value();
 
+    if(cvc.quoteType() == MarketDatum::QuoteType::RATE_SLNVOL && !cvc.shiftQuote().empty()) {
+        auto shiftQuote = loader.get(cvc.shiftQuote(), asof); // will throw if not found
+        QL_REQUIRE(shiftQuote->quoteType() == MarketDatum::QuoteType::SHIFT,
+                   "Shift quote type '" << shiftQuote->quoteType() << "' <> SHIFT");
+        auto commodityShiftQuote = QuantLib::ext::dynamic_pointer_cast<CommodityOptionShiftQuote>(shiftQuote);
+        QL_REQUIRE(commodityShiftQuote, "Internal error: could not downcast MarketDatum '"
+                                            << shiftQuote->name() << "' to CommodityOptionShiftQuote");
+        QL_REQUIRE(commodityShiftQuote->commodityName() == q->commodityName(),
+                   "Shift quote commodity name '" << commodityShiftQuote->commodityName() << "' <> commodity name '"
+                                                  << q->commodityName() << "'");
+        displacementValue = shiftQuote->quote()->value();
+    }
+    
     DLOG("Creating BlackConstantVol structure");
-    volatility_ = QuantLib::ext::make_shared<BlackConstantVol>(asof, calendar_, quoteValue, dayCounter_);
+    volatility_ = QuantLib::ext::make_shared<BlackConstantVol>(asof, calendar_, quoteValue, dayCounter_,
+                                                               q->quoteType() == MarketDatum::QuoteType::RATE_NVOL
+                                                                   ? VolatilityType::Normal
+                                                                   : VolatilityType::ShiftedLognormal,
+                                                               displacementValue);
 
     LOG("CommodityVolCurve: finished building constant volatility structure");
 }
@@ -315,8 +337,11 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
     // Must have at least one quote
     QL_REQUIRE(vcc.quotes().size() > 0, "No quotes specified in config " << vc.curveID());
 
-    QL_REQUIRE(vcc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
-        " RATE_LNVOL is currently supported for 1-D commodity volatility curves.");
+    QL_REQUIRE(
+        vcc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL || vcc.quoteType() == MarketDatum::QuoteType::RATE_NVOL ||
+            vcc.quoteType() == MarketDatum::QuoteType::RATE_SLNVOL,
+        "CommodityVolCurve: only quote types"
+            << " RATE_LNVOL, RATE_SLNVOL and RATE_NVOL are currently supported for 1-D commodity volatility curves.");
 
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
@@ -324,7 +349,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
 
     // curveData will be populated with the expiry dates and volatility values.
     map<Date, Real> curveData;
-
+    Real shift = 0.0;
     // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
     if (wildcard) {
 
@@ -341,10 +366,11 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
             if (!q)
                 continue;
             QL_REQUIRE(q->quoteType() == vcc.quoteType(),
-                "CommodityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '" << vcc.quoteType() << "'");
+                       "CommodityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '"
+                                                     << vcc.quoteType() << "'");
 
             TLOG("The quote " << q->name() << " matched the pattern");
-
+            
             Date expiryDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
             if (expiryDate > asof) {
                 // Add the quote to the curve data
@@ -363,7 +389,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
 
         // Check that we have quotes in the end
         QL_REQUIRE(curveData.size() > 0, "No quotes found matching regular expression " << vcc.quotes()[0]);
-
+        
     } else {
 
         DLOG("Have " << vcc.quotes().size() << " explicit quotes");
@@ -384,13 +410,14 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
 
             Date expiryDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
             if (expiryDate > asof) {
+                
                 QL_REQUIRE(expiryDate > asof, "Commodity volatility quote '"
                                                   << q->name() << "' has expiry in the past ("
                                                   << io::iso_date(expiryDate) << ")");
                 QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the date "
-                                                                 << io::iso_date(expiryDate)
-                                                                 << " provided by commodity volatility config "
-                                                                 << vc.curveID());
+                                                             << io::iso_date(expiryDate)
+                                                             << " provided by commodity volatility config "
+                                                             << vc.curveID());
                 curveData[expiryDate] = q->quote()->value();
                 quotesAdded++;
                 TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
@@ -408,6 +435,17 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
                             << " but " << vcc.quotes().size() << " quotes were given in config.");
     }
 
+    if (vcc.volType() == VolatilityConfig::VolatilityType::ShiftedLognormal && !vcc.shiftQuote().empty()) {
+        auto shiftMd = loader.get(vcc.shiftQuote(), asof);
+        QL_REQUIRE(shiftMd->quoteType() == MarketDatum::QuoteType::SHIFT,
+                   "Shift quote type '" << shiftMd->quoteType() << "' <> SHIFT");
+        auto commodityShiftQuote = QuantLib::ext::dynamic_pointer_cast<CommodityOptionShiftQuote>(shiftMd);
+        QL_REQUIRE(commodityShiftQuote, "Internal error: could not downcast MarketDatum '"
+                                            << shiftMd->name() << "' to CommodityOptionShiftQuote");
+        shift = shiftMd->quote()->value();
+        DLOG("Using shifted lognormal shift of " << shift << " from quote " << vcc.shiftQuote());
+    }
+
     // Create the dates and volatility vector
     vector<Date> dates;
     vector<Volatility> volatilities;
@@ -421,7 +459,10 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
     if (!dates.empty())
         maxExpiry_ = dates.back();
     DLOG("Creating BlackVarianceCurve object.");
-    auto tmp = QuantLib::ext::make_shared<BlackVarianceCurve>(asof, dates, volatilities, dayCounter_);
+    auto volType = vcc.volType() == VolatilityConfig::VolatilityType::Normal ? VolatilityType::Normal
+                                                                             : VolatilityType::ShiftedLognormal;
+    auto tmp = QuantLib::ext::make_shared<BlackVarianceCurve>(
+        asof, dates, volatilities, dayCounter_, true, BlackVolTimeExtrapolation::FlatVolatility, volType, shift);
 
     // Set the interpolation.
     if (vcc.interpolation() == "Linear") {
@@ -506,9 +547,28 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         DLOG("Parsed " << configuredExpiries.size() << " unique configured expiries");
     }
 
+    VolatilityType volType = vssc.volType() == VolatilityConfig::VolatilityType::Normal
+                                 ? VolatilityType::Normal
+                                 : VolatilityType::ShiftedLognormal;
+    Real displacement = 0.0;
+    if (vssc.volType() == VolatilityConfig::VolatilityType::ShiftedLognormal) {
+        std::ostringstream ss;
+        ss << MarketDatum::InstrumentType::COMMODITY_OPTION << "/SHIFT/" << vc.curveID();
+        auto shiftMd = loader.get(std::make_pair(ss.str(), true), asof);
+        if (shiftMd != nullptr) {
+            QL_REQUIRE(shiftMd->quoteType() == MarketDatum::QuoteType::SHIFT,
+                       "Shift quote type '" << shiftMd->quoteType() << "' <> SHIFT");
+            auto commodityShiftQuote = QuantLib::ext::dynamic_pointer_cast<CommodityOptionShiftQuote>(shiftMd);
+            QL_REQUIRE(commodityShiftQuote, "Internal error: could not downcast MarketDatum '"
+                                                << shiftMd->name() << "' to CommodityOptionShiftQuote");
+            displacement = shiftMd->quote()->value();
+            DLOG("Using shifted lognormal shift of " << displacement << " from quote " << ss.str());
+        }
+    }
+
     // If there are no wildcard strikes or wildcard expiries, delegate to buildVolatilityExplicit.
     if (!expWc && !strkWc) {
-        buildVolatilityExplicit(asof, vc, vssc, loader, configuredStrikes);
+        buildVolatilityExplicit(asof, vc, vssc, loader, configuredStrikes, displacement);
         return;
     }
 
@@ -626,7 +686,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     TLOG("Prefer out of the money set to: " << ore::data::to_string(preferOutOfTheMoney) << ".");
 
     // Build the surface depending on the quote type.
-    if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
+    if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL || vssc.quoteType() == MarketDatum::QuoteType::RATE_SLNVOL ||
+        vssc.quoteType() == MarketDatum::QuoteType::RATE_NVOL) {
 
         DLOG("Creating the BlackVarianceSurfaceSparse object");
 
@@ -682,24 +743,24 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
                 volatility_ = QuantLib::ext::make_shared<
                     BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
                     asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                    timeExtrapolation);
+                    timeExtrapolation, volType, displacement);
             } else {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                        timeExtrapolation);
+                        timeExtrapolation, volType, displacement);
             }
         } else {
             if (vssc.timeInterpolation() == "Cubic") {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantExt::CubicSpline>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                        timeExtrapolation);
+                        timeExtrapolation, volType, displacement);
             } else {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
-                        timeExtrapolation);
+                        timeExtrapolation, volType, displacement);
             }
         } 
 
@@ -720,7 +781,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         DLOG("CommodityVolCurve: stripping volatility surface from the option premium surfaces.");
         auto coss = QuantLib::ext::make_shared<CommodityOptionSurfaceStripper>(
             pts_, yts_, cSurface, pSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
-            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions);
+            flatStrikeExtrap, timeExtrapolation, preferOutOfTheMoney, solverOptions, volType, displacement);
         volatility_ = coss->volSurface();
 
         // If data level logging, output the stripped volatilities.
@@ -763,12 +824,15 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
 void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolatilityConfig& vc,
                                                 const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                                const vector<Real>& configuredStrikes) {
+                                                const vector<Real>& configuredStrikes, const Real displacement) {
 
     LOG("CommodityVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
 
-    QL_REQUIRE(vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
-        " RATE_LNVOL is currently supported for 2-D volatility strike surface with explicit strikes and expiries.");
+    QL_REQUIRE(vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL ||
+                   vssc.quoteType() == MarketDatum::QuoteType::RATE_NVOL ||
+                   vssc.quoteType() == MarketDatum::QuoteType::RATE_SLNVOL,
+               "CommodityVolCurve: only quote type" << " RATE_LNVOL is currently supported for 2-D volatility strike "
+                                                       "surface with explicit strikes and expiries.");
 
     // Map to hold the rows of the commodity volatility matrix. The keys are the expiry dates and the values are the
     // vectors of volatilities, one for each configured strike.
@@ -908,9 +972,12 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     }
 
     DLOG("Creating BlackVarianceSurface object");
+    VolatilityType volType = vssc.volType() == VolatilityConfig::VolatilityType::Normal
+                                 ? VolatilityType::Normal
+                                 : VolatilityType::ShiftedLognormal;
     auto tmp = QuantLib::ext::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, configuredStrikes,
                                                                 volatilities, dayCounter_, strikeExtrap, strikeExtrap,
-                                                                timeExtrapolation);
+                                                                timeExtrapolation, volType, displacement);
 
     // Set the interpolation if configured properly. The default is Bilinear.
     if (!(vssc.timeInterpolation() == "Linear" && vssc.strikeInterpolation() == "Linear")) {
@@ -1006,6 +1073,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     std::ostringstream ss;
     ss << MarketDatum::InstrumentType::COMMODITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.curveID() << "/"
        << vc.currency() << "/*";
+    DLOG("Loading quotes with wildcard " << ss.str());
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
 
@@ -1852,11 +1920,12 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
 
         DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
-
+        
         if (auto vdsc = QuantLib::ext::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
             atmType = parseAtmType(vdsc->atmType());
             deltaType = parseDeltaType(vdsc->deltaType());
         }
+        
 
         info->dayCounter = to_string(dayCounter_);
         info->calendar = to_string(calendar_).empty() ? "na" : calendar_.name();
@@ -1921,6 +1990,7 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                 for (Size j = 0; j < deltas.size(); ++j) {
                     DeltaString d(deltas[j]);
                     try {
+                        
                         Real strike;
                         if (d.isAtm()) {
                             strike = QuantExt::getAtmStrike(dt, at, pts_->price(asof, true), yts_->discount(t),
@@ -1933,16 +2003,21 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                                                                   yts_->discount(t), pyts->discount(t), volatility_, t);
                         }
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
-                        callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);
-
+                        callPricesDelta[i][j] = volatility_->volType() == VolatilityType::Normal
+                                                    ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev)
+                                                    : blackFormula(Option::Call, strike, forwards[i], stddev, 1.0, volatility_->shift());
                         if (d.isPut()) {
                             info->deltaPutPrices[i][j] =
-                                blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                                volatility_->volType() == VolatilityType::Normal
+                                    ? bachelierBlackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t))
+                                    : blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t), volatility_->shift());
                         } else {
                             info->deltaCallPrices[i][j] =
-                                blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                                volatility_->volType() == VolatilityType::Normal
+                                    ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev,
+                                                            yts_->discount(t))
+                                    : blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t), volatility_->shift());
                         }
-
                         info->deltaGridStrikes[i][j] = strike;
                         info->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                     } catch (const std::exception& e) {
@@ -1953,7 +2028,8 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                 if (validSlice) {
                     try {
                         QuantExt::CarrMadanMarginalProbability cm(info->deltaGridStrikes[i], forwards[i],
-                                                                  callPricesDelta[i]);
+                                                                  callPricesDelta[i], volatility_->volType(),
+                                                                  volatility_->shift());
                         info->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
                         info->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
                         if (!cm.arbitrageFree())
@@ -1995,25 +2071,41 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                 Real t = times[i];
                 for (Size j = 0; j < moneyness.size(); ++j) {
                     try {
-                        Real strike = moneyness[j] * forwards[i];
+                        Real strike = volatility_->volType() == VolatilityType::ShiftedLognormal
+                                          ? moneyness[j] * (forwards[i] + volatility_->shift()) - volatility_->shift()
+                                          : moneyness[j] + forwards[i];
                         info->moneynessGridStrikes[i][j] = strike;
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
-                        callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                        VolatilityType vt = volatility_->volType();
+                        bool isNormalVol = vt == VolatilityType::Normal;
+                        callPricesMoneyness[i][j] =
+                            isNormalVol
+                                ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev)
+                                : blackFormula(Option::Call, strike, forwards[i], stddev, 1.0, volatility_->shift());
                         info->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
-                        if (moneyness[j] >= 1) {
-                            calibrationInfo_->moneynessCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t));
+                        if ((!isNormalVol && moneyness[j] >= 1) || (isNormalVol && moneyness[j] >= 0)) {
+                            calibrationInfo_->moneynessCallPrices[i][j] =
+                                isNormalVol ? bachelierBlackFormula(Option::Call, strike, forwards[i], stddev,
+                                                                    yts_->discount(t))
+                                            : blackFormula(Option::Call, strike, forwards[i], stddev, yts_->discount(t),
+                                                           volatility_->shift());
                         } else {
-                            calibrationInfo_->moneynessPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t));
+                            calibrationInfo_->moneynessPutPrices[i][j] =
+                                isNormalVol
+                                    ? bachelierBlackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t))
+                                    : blackFormula(Option::Put, strike, forwards[i], stddev, yts_->discount(t),
+                                                   volatility_->shift());
                         };
                     } catch (const std::exception& e) {
-                        TLOG("CommodityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
+                        TLOG("CommodityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": "
+                                                                  << e.what());
                     }
                 }
             }
             if (!times.empty() && !moneyness.empty()) {
                 try {
-                    QuantExt::CarrMadanSurface cm(times, moneyness, pts_->price(asof,true), forwards,
-                                                  callPricesMoneyness);
+                    QuantExt::CarrMadanSurface cm(times, moneyness, pts_->price(asof, true), forwards,
+                                                  callPricesMoneyness, volatility_->volType(), volatility_->shift());
                     for (Size i = 0; i < times.size(); ++i) {
                         info->moneynessGridProb[i] = cm.timeSlices()[i].density();
                     }

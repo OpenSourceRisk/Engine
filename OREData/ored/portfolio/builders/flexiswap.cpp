@@ -156,7 +156,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::m
         model = calib->model();
         calib->unfreeze();
     }
-    modelBuilders_.insert(std::make_pair(id, calib));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
 
     return model;
 }

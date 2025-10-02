@@ -317,7 +317,7 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     instrument_ = boost::make_shared<VanillaInstrument>(qlInstr, multiplier);
     npvCurrency_ = notionalCurrency_ = data_.bondData().currency();
     maturity_ = qlUnderlyingBond->maturityDate();
-    notional_ = qlUnderlyingBond->notional();
+    notional_ = qlUnderlyingBond->notional() * data_.bondData().bondNotional();
     legs_ = {qlUnderlyingBond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {data_.bondData().isPayer()};
@@ -355,6 +355,17 @@ BondBuilder::Result CallableBondBuilder::build(const boost::shared_ptr<EngineFac
     res.priceQuoteMethod = data.bondData().priceQuoteMethod();
     res.priceQuoteBaseValue = data.bondData().priceQuoteBaseValue();
     res.quotedDirtyPrices = data.bondData().quotedDirtyPrices();
+
+    auto builders = engineFactory->modelBuilders();
+    auto b =
+        std::find_if(builders.begin(), builders.end(),
+                     [&bond](const std::pair<const std::string&, const QuantLib::ext::shared_ptr<ModelBuilder>>& p) {
+                         return bond->id() == p.first;
+                     });
+    QL_REQUIRE(b != builders.end(), "ConvertibleBondBuilder: could not get model builder for bond '"
+                                        << bond->id() << "' from engine factory - this is an internal error.");
+    res.modelBuilder = b->second;
+
     return res;
 }
 
