@@ -432,6 +432,7 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                 }
             }
         }
+        }
         if (covarianceCalculator)
             covarianceCalculator->updateAccumulators(shiftCube, hisScenGen_->startDates()[i], hisScenGen_->endDates()[i], i);
     }
@@ -448,6 +449,6 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
         }
     }
 }
-    }
+
 } // namespace analytics
 } // namespace ore
