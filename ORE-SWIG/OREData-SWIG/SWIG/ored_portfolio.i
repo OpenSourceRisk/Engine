@@ -74,7 +74,8 @@ class EngineFactory {
                   const ext::shared_ptr<Market>& market,
                   const std::map<MarketContext, std::string>& configurations = std::map<MarketContext, std::string>(),
                   const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                  const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                     QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                   const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
                   const bool allowOverwrite = false);
 };

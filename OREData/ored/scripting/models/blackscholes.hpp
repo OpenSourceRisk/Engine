@@ -71,7 +71,8 @@ public:
         const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
         const std::set<Date>& simulationDates,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const std::string& calibration = "ATM", const std::map<std::string, std::vector<Real>>& calibrationStrikes = {},
         const Params& params = {});
 
@@ -79,7 +80,8 @@ public:
     BlackScholes(const Type Type, const Size size, const std::string& currency, const Handle<YieldTermStructure>& curve,
                  const std::string& index, const std::string& indexCurrency,
                  const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
-                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                 const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                     QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                  const std::string& calibration = "ATM", const std::vector<Real>& calibrationStrikes = {},
                  const Params& params = {});
 

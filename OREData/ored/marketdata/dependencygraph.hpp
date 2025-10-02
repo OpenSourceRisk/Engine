@@ -66,7 +66,8 @@ public:
         //! Description of curve compositions
         const QuantLib::ext::shared_ptr<const CurveConfigurations>& curveConfigs,
         //! Ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
         //! Reference data config required for base correlations
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr)
         : asof_(asof), params_(params), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig),
@@ -121,7 +122,7 @@ private:
     const Date asof_;
     const QuantLib::ext::shared_ptr<TodaysMarketParameters> params_;
     const QuantLib::ext::shared_ptr<const CurveConfigurations> curveConfigs_;
-    const IborFallbackConfig iborFallbackConfig_;
+    const QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
 };
 

@@ -175,7 +175,7 @@ BondFutureUtils::deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& 
             expiry = tmpExpiry;
         if (settlement == Date())
             settlement = tmpSettlement;
-        } catch(const std::exception& e) {
+        } catch(const std::exception&) {
             QL_FAIL("BondFutureUtils::deduceDates(): failed to deduce dates for contract '" << refData->id() << "'");
         }
     }
@@ -405,7 +405,7 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
         try {
             conversionFactor =
                 engineFactory->market()->conversionFactor(StructuredSecurityId(sec, futureContract))->value();
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             DLOG("no conversion factor provided from market, calculate internally");
             QL_REQUIRE(!b.bond->cashflows().empty(), "BondFutureUtils::identifyCtdBond(): bond has no coupons");
             auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(b.bond->cashflows().front());

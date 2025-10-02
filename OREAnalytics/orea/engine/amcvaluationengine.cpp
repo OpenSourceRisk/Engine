@@ -751,7 +751,7 @@ AMCValuationEngine::AMCValuationEngine(
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
     const std::string& amcPathDataInput, const std::string& amcPathDataOutput, bool amcIndividualTrainingInput,
     bool amcIndividualTrainingOutput, const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
-    const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
         cubeFactory,

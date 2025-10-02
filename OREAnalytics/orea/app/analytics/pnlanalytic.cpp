@@ -85,7 +85,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     t0SimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+        inputs_->continueOnError(), useSpreadedTermStructures(), false, false, inputs_->iborFallbackConfig());
     auto sgen = QuantLib::ext::make_shared<StaticScenarioGenerator>();
     t0SimMarket_->scenarioGenerator() = sgen;
 

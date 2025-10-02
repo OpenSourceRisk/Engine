@@ -324,7 +324,7 @@ XMLNode* BondTRS::toXML(XMLDocument& doc) const {
     if (!fxIndex_.empty()) {
         XMLNode* fxNode = doc.allocNode("FXTerms");
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
-        if (applyFxIndexFixingDays_ > 0)
+        if (applyFxIndexFixingDays_)
             XMLUtils::addChild(doc, fxNode, "ApplyFXIndexFixingDays", applyFxIndexFixingDays_);
         XMLUtils::appendNode(trsDataNode, fxNode);
     }

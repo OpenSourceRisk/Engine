@@ -42,7 +42,8 @@ public:
     DependencyMarket(
         const std::string& baseCcy, bool useFxDominance = true,
         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
         const bool recordSecuritySpecificCreditCurves = false)
         : ore::data::Market(true), baseCcy_(baseCcy), useFxDominance_(useFxDominance), curveConfigs_(curveConfigs),
           iborFallbackConfig_(iborFallbackConfig),
@@ -140,7 +141,7 @@ private:
     // needed in Index to determine fixings
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     // The ibor fallback config
-    ore::data::IborFallbackConfig iborFallbackConfig_;
+    const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     // Whether to record security specific credit curve names or normalize them to the original credit curve id
     bool recordSecuritySpecificCreditCurves_;
     //! \name helper functions
