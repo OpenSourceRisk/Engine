@@ -257,7 +257,7 @@ InflationCurve::CurveBuildResults
                 // from the curve config
                 obsLagFromSegment = obsLagFromSegment == 0 * Days ? p.second : std::max(obsLagFromSegment, p.second);
             }
-            QL_REQUIRE(index == nullptr || index == convention->index(),
+            QL_REQUIRE(index == nullptr || index->name() == convention->index()->name(),
                        "all segments must use the same zero inflation index");
             index = convention->index();
             
