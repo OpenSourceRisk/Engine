@@ -800,9 +800,9 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
 }
 
 void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
-                                          QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
                                           QuantLib::ext::shared_ptr<ore::data::Market> market,
-                                          const std::string& configuration, Real outputThreshold, Size outputPrecision) {
+                                          const std::string& configuration, Real outputThreshold,
+                                          Size outputPrecision) {
 
     LOG("Writing Sensitivity report");
 
@@ -824,24 +824,17 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     report.addColumn("Delta(Trade)", double(), amountPrecision);
     report.addColumn("Gamma(Trade)", double(), amountPrecision);
 
-    std::unordered_map<std::string, std::string> tradeCcy;
-    tradeCcy.reserve(portfolio->trades().size());
-    for (const auto& kv : portfolio->trades())
-        tradeCcy.emplace(kv.first, kv.second->npvCurrency());
-
     // Make sure that we are starting from the start
     ss->reset();
     while (SensitivityRecord sr = ss->next()) {
-        if ((outputThreshold == Null<Real>()) || (fabs(sr.delta) > outputThreshold ||
-            (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
-
-            std::string npvCcy;
-            if (auto it = tradeCcy.find(sr.tradeId); it != tradeCcy.end())
-                npvCcy = it->second;
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
 
             Real fx = 1.0;
-            if (npvCcy != sr.currency)
-                fx = market->fxRate(sr.currency + npvCcy, configuration)->value();
+            if (!sr.tradeCurrency.empty()) {
+                if (sr.tradeCurrency != sr.currency)
+                    fx = market->fxRate(sr.currency + sr.tradeCurrency, configuration)->value();
+            }
 
             report.next();
             report.add(sr.tradeId);
@@ -854,7 +847,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.add(sr.baseNpv);
             report.add(sr.delta);
             report.add(sr.gamma);
-            report.add(npvCcy);
+            report.add(sr.tradeCurrency);
             report.add(sr.baseNpv * fx);
             report.add(sr.delta * fx);
             if (sr.gamma == Null<Real>())

@@ -191,8 +191,13 @@ void PricingAnalyticImpl::runAnalytic(
             LOG("Sensi analysis - write sensitivity report in memory");
             auto baseCurrency = sensiAnalysis_->simMarketData()->baseCcy();
 
+            std::unordered_map<std::string, std::string> tradeCurrency;
+            tradeCurrency.reserve(analytic()->portfolio()->trades().size());
+            for (auto const& tr : analytic()->portfolio()->trades())
+                tradeCurrency.emplace(tr.first, tr.second->npvCurrency());
+
             QuantLib::ext::shared_ptr<SensitivityStream> ss =
-                QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency);
+                QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency, tradeCurrency);
 
             if (inputs_->sensiDecomposition()) {
                 ss = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
@@ -202,8 +207,7 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             ReportWriter(inputs_->reportNaString())
-                .writeSensitivityReport(*report, ss, analytic()->portfolio(), analytic()->market(), marketConfig,
-                                        inputs_->sensiThreshold());
+                .writeSensitivityReport(*report, ss, analytic()->market(), marketConfig, inputs_->sensiThreshold());
 
             analytic()->addReport(type, "sensitivity", report);
 
@@ -249,7 +253,7 @@ void PricingAnalyticImpl::runAnalytic(
                                                                          typesDisabled, true);
                 LOG("Sensi analysis - write par sensitivity report in memory");
                 QuantLib::ext::shared_ptr<SensitivityStream> pss =
-                    QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
+                    QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency, tradeCurrency);
                 if (inputs_->sensiDecomposition()) {
                     pss = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
                         pss, baseCurrency, analytic()->portfolio(), inputs_->refDataManager(),
@@ -260,8 +264,8 @@ void PricingAnalyticImpl::runAnalytic(
                 // performance. The cost for this is the memory footpring of the buffer.
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
-                    .writeSensitivityReport(*parSensiReport, pss, analytic()->portfolio(), analytic()->market(),
-                                            marketConfig, inputs_->sensiThreshold());
+                    .writeSensitivityReport(*parSensiReport, pss, analytic()->market(), marketConfig,
+                                            inputs_->sensiThreshold());
                 analytic()->addReport(type, "par_sensitivity", parSensiReport);
 
                 if (inputs_->outputJacobi()) {
