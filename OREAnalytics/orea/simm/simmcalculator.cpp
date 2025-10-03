@@ -594,7 +594,9 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const Nett
             if(XccyCount>1){
                 Real cumXccyAmount = 0;
                 for(auto it=itXccy;it!=itXccyEnd;it++){
-                    cumXccyAmount+=it->amountResultCurrency();
+                    if(it->riskType()==RiskType::XCcyBasis){
+                        cumXccyAmount+=it->amountResultCurrency();
+                    }
                 }
                 wsXccy = rwXccy * cumXccyAmount;
             }else{
