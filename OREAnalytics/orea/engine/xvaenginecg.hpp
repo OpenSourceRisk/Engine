@@ -74,13 +74,15 @@ public:
                     QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                 const bool bumpCvaSensis = false, const bool enableDynamicIM = false, const Size dynamicIMStepSize = 1,
                 const Size regressionOrder = 4, const double regressionVarianceCutoff = Null<Real>(),
+                const Size regressionOrderDynamicIm = 4, const double regressionVarianceCutoffDynamicIm = Null<Real>(),
                 const bool tradeLevelBreakDown = true, const std::vector<Size>& regressionReportTimeStepsDynamicIM = {},
                 const bool useRedBlocks = true, const bool useExternalComputeDevice = false,
                 const bool externalDeviceCompatibilityMode = false,
                 const bool useDoublePrecisionForExternalCalculation = false,
                 const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
-                const bool continueOnCalibrationError = true, const bool allowModelFallbacks = true,
-                const bool continueOnError = true, const std::string& context = "xva engine cg");
+                const bool usePythonIntegrationDynamicIm = false, const bool continueOnCalibrationError = true,
+                const bool allowModelFallbacks = true, const bool continueOnError = true,
+                const std::string& context = "xva engine cg");
 
     // if nullptr, no offset scenario to be applied, otherwise the base market will be shifted by that scenario
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario);
@@ -208,6 +210,8 @@ private:
     Size dynamicIMStepSize_;
     Size regressionOrder_;
     Real regressionVarianceCutoff_;
+    Size regressionOrderDynamicIm_;
+    Real regressionVarianceCutoffDynamicIm_;
     bool tradeLevelBreakDown_;
     std::vector<Size> regressionReportTimeStepsDynamicIM_;
     bool useRedBlocks_;
@@ -216,6 +220,7 @@ private:
     bool useDoublePrecisionForExternalCalculation_;
     std::string externalComputeDevice_;
     bool usePythonIntegration_;
+    bool usePythonIntegrationDynamicIm_;
     bool continueOnCalibrationError_;
     bool allowModelFallbacks_;
     bool continueOnError_;

@@ -48,6 +48,7 @@ namespace ore {
 namespace data {
 
 void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
     DLOG("BondTRS::build() called for trade " << id());
 
     // ISDA taxonomy
@@ -56,30 +57,90 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
-    QuantLib::ext::shared_ptr<EngineBuilder> builder_trs = engineFactory->builder("BondTRS");
+    // propagate some parameters to underlying bond builder on a copy of engine factory
+
+    auto engineFactoryOverride = QuantLib::ext::make_shared<EngineFactory>(*engineFactory);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactoryOverride->builder("BondTRS");
+    auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
+    std::vector<EngineFactory::ParameterOverride> overrides;
+    overrides.push_back(EngineFactory::ParameterOverride{
+        "BondTRS",
+        isBond,
+        {{"TreatSecuritySpreadAsCreditSpread",
+          builder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false")}}});
+    overrides.push_back(EngineFactory::ParameterOverride{
+        "BondTRS",
+        isBond,
+        {{"SpreadOnIncomeCurve", builder->engineParameter("SpreadOnIncomeCurve", {}, false, "true")}}});
+    overrides.push_back(EngineFactory::ParameterOverride{
+        "BondTRS", isBond, {{"TimestepPeriod", builder->engineParameter("TimestepPeriod", {}, false, "3M")}}});
+    engineFactoryOverride->setEngineParameterOverrides(overrides);
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactoryOverride->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder_trs = engineFactoryOverride->builder("BondTRS");
     bondData_ = originalBondData_;
-    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
-    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
-               "BondTRS: bond type " << bondType << " is not supported. Consider using TotalReturnSwap.");
-    bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+
+    QuantLib::ext::shared_ptr<BondIndex> bondIndex;
+
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactoryOverride->referenceData());
+
+    BondIndexBuilder bondIndexBuilder;
+
+    Real bondNotional = bondData_.bondNotional();
+
+    try {
+
+        if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
+
+            // vanilla bond underlying
+
+            bondData_.populateFromBondReferenceData(engineFactoryOverride->referenceData());
+
+            QL_REQUIRE(fundingLegData_.currency() != bondData_.currency() || fxIndex_.empty(),
+                       "if funding leg ccy (" << fundingLegData_.currency() << ") = bond ccy (" << bondData_.currency()
+                                              << "), no fx index must be given");
+            QL_REQUIRE(fundingLegData_.currency() == bondData_.currency() || !fxIndex_.empty(),
+                       "if funding leg ccy (" << fundingLegData_.currency() << ") != bond ccy (" << bondData_.currency()
+                                              << "), a fx index must be given");
+
+            // build bond index (absolute prices, conditional on survival set to false)
+            bondIndexBuilder =
+                BondIndexBuilder(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactoryOverride);
+            bondIndex = bondIndexBuilder.bondIndex();
+
+        } else {
+
+            // non-vanilla bond underlying (callable bond etc.)
+
+            bondIndexBuilder = BondIndexBuilder(bondData_.securityId(), useDirtyPrices_, false, NullCalendar(), false,
+                                                engineFactoryOverride);
+            bondIndex = bondIndexBuilder.bondIndex();
+            bondData_ = bondIndexBuilder.bondData();
+        }
+
+    } catch (...) {
+        // try to fill some fields for trade matching purposes although the trade build itself failed already
+        npvCurrency_ = fundingLegData_.currency();
+        notionalCurrency_ = bondData_.currency();
+        for (auto const& d : bondData_.coupons()) {
+            try {
+                auto s = makeSchedule(d.schedule());
+                maturity_ = std::max(maturity_, s.back());
+            } catch (...) {
+            }
+            if (!d.notionals().empty())
+                notional_ = d.notionals().front();
+        }
+        notional_ *= bondNotional;
+        throw;
+    }
 
     additionalData_["underlyingSecurityId"] = bondData_.securityId();
 
     Schedule schedule = makeSchedule(scheduleData_);
-    Calendar calendar = parseCalendar(bondData_.calendar());
 
     auto configuration = builder_trs->configuration(MarketContext::pricing);
-    auto legBuilder = engineFactory->legBuilder(fundingLegData_.legType());
-
-    // check currency restrictions
-
-    QL_REQUIRE(fundingLegData_.currency() != bondData_.currency() || fxIndex_.empty(),
-               "if funding leg ccy (" << fundingLegData_.currency() << ") = bond ccy (" << bondData_.currency()
-                                      << "), no fx index must be given");
-    QL_REQUIRE(fundingLegData_.currency() == bondData_.currency() || !fxIndex_.empty(),
-               "if funding leg ccy (" << fundingLegData_.currency() << ") != bond ccy (" << bondData_.currency()
-                                      << "), a fx index must be given");
+    auto legBuilder = engineFactoryOverride->legBuilder(fundingLegData_.legType());
 
     npvCurrency_ = fundingLegData_.currency();
     notionalCurrency_ = bondData_.currency();
@@ -93,7 +154,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         observationConvention_.empty() ? Unadjusted : parseBusinessDayConvention(observationConvention_);
 
     PaymentLag paymentLag = parsePaymentLag(paymentLag_);
-    Period plPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
+    Period payLagPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
     Calendar paymentCalendar = parseCalendar(paymentCalendar_);
     BusinessDayConvention paymentConvention =
         paymentConvention_.empty() ? Unadjusted : parseBusinessDayConvention(paymentConvention_);
@@ -103,7 +164,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     for (auto const& d : schedule.dates()) {
         valuationDates.push_back(observationCalendar.advance(d, -observationLag, observationConvention));
         if (d != schedule.dates().front())
-            paymentDates.push_back(paymentCalendar.advance(d, plPeriod, paymentConvention));
+            paymentDates.push_back(paymentCalendar.advance(d, payLagPeriod, paymentConvention));
     }
 
     if (!paymentDates_.empty()) {
@@ -128,13 +189,9 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     QuantLib::ext::shared_ptr<FxIndex> fxIndex;
     if (!fxIndex_.empty()) {
         fxIndex =
-            buildFxIndex(fxIndex_, fundingLegData_.currency(), bondData_.currency(), engineFactory->market(),
-                         engineFactory->configuration(MarketContext::pricing));
+            buildFxIndex(fxIndex_, fundingLegData_.currency(), bondData_.currency(), engineFactoryOverride->market(),
+                         engineFactoryOverride->configuration(MarketContext::pricing));
     }
-
-    // build bond index (absolute prices, conditional on survival set to false)
-    BondIndexBuilder bondIndexBuilder(bondData_, useDirtyPrices_, false, NullCalendar(), false, engineFactory);
-    auto bondIndex = bondIndexBuilder.bondIndex();
 
     // compute initial price taking into account the possible scaling with priceQuoteBaseValue and 100.0
     Real effectiveInitialPrice = bondIndexBuilder.priceAdjustment(initialPrice_);
@@ -153,8 +210,8 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
         // add bond indexing
         Indexing bondIndexing("BOND-" + bondIndex->securityName(), "", bondIndex->dirty(), bondIndex->relative(),
-                              bondIndex->conditionalOnSurvival(), bondData_.bondNotional(), effectiveInitialPrice,
-                              Null<Real>(), valuationSchedule, 0, "", "U", false);
+                              bondIndex->conditionalOnSurvival(), bondNotional, effectiveInitialPrice, Null<Real>(),
+                              valuationSchedule, 0, "", "U", false);
         fundingLegData_.indexing().push_back(bondIndexing);
 
         // add fx indexing, if applicable
@@ -174,7 +231,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
     // build funding leg (consisting of a coupon leg and (possibly) a notional leg
 
-    Leg fundingLeg = legBuilder->buildLeg(fundingLegData_, engineFactory, requiredFixings_, configuration);
+    Leg fundingLeg = legBuilder->buildLeg(fundingLegData_, engineFactoryOverride, requiredFixings_, configuration);
     Leg fundingNotionalLeg;
     if (fundingLegData_.notionalInitialExchange() || fundingLegData_.notionalFinalExchange() ||
         fundingLegData_.notionalAmortizingExchange()) {
@@ -188,13 +245,12 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
     QL_REQUIRE(fundingLegData_.isPayer() != payTotalReturnLeg_,
                "funding leg and total return lag are both rec or both pay");
-    DLOG("Before bondTRS");
     auto bondTRS = QuantLib::ext::make_shared<QuantExt::BondTRS>(
-        bondIndex, bondData_.bondNotional(), effectiveInitialPrice,
-        std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg}, payTotalReturnLeg_, valuationDates, paymentDates,
-        fxIndex, payBondCashFlowsImmediately_, parseCurrency(fundingLegData_.currency()),
-        parseCurrency(bondData_.currency()), applyFxIndexFixingDays_, plPeriod);
-    DLOG("After bondTRS");
+        bondIndex, bondNotional, effectiveInitialPrice, std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg},
+        payTotalReturnLeg_, valuationDates, paymentDates, fxIndex, payBondCashFlowsImmediately_,
+        parseCurrency(fundingLegData_.currency()), parseCurrency(bondData_.currency()), applyFxIndexFixingDays_,
+        payLagPeriod, paymentCalendar);
+
     QuantLib::ext::shared_ptr<BondTRSEngineBuilder> trsBondBuilder =
         QuantLib::ext::dynamic_pointer_cast<BondTRSEngineBuilder>(builder_trs);
     QL_REQUIRE(trsBondBuilder, "No Builder found for BondTRS: " << id());
@@ -205,7 +261,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     // maturity_ = std::max(valuationDates.back(), paymentDates.back());
     maturity_ = bondIndex->bond()->maturityDate();
     maturityType_ = "Bond Maturity Date";
-    notional_ = bondIndex->bond()->notional() * bondData_.bondNotional();
+    notional_ = bondIndex->bond()->notional() * bondNotional;
 
     // cashflows will be generated as additional results in the pricing engine
 
@@ -240,6 +296,9 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
             }
         }
     }
+
+    engineFactory->modelBuilders().insert(engineFactoryOverride->modelBuilders().begin(),
+                                          engineFactoryOverride->modelBuilders().end());
 }
 
 void BondTRS::fromXML(XMLNode* node) {

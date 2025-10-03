@@ -40,8 +40,7 @@ public:
         const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve =
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
-        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true,
-        const bool generateAdditionalResults = true);
+        const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true);
 
 protected:
     // inputs set in ctor
@@ -53,14 +52,15 @@ protected:
     Handle<QuantLib::YieldTermStructure> incomeCurve_;
     Handle<QuantLib::Quote> recoveryRate_;
     bool spreadOnIncome_;
-    bool generateAdditionalResults_;
 
     // inputs set for calculation in derived classes
     mutable Date npvDate_;
     mutable Date settlementDate_;
-    mutable bool conditionalOnSurvival_;
-    mutable std::vector<CashFlowResults>* cfResults_;
-    mutable CallableBond::arguments* instrArgs_;
+    mutable bool conditionalOnSurvival_ = true;
+    mutable std::vector<CashFlowResults>* cfResults_ = nullptr;
+    mutable Leg* expectedCashflows_ = nullptr;
+    mutable CallableBond::arguments* instrArgs_ = nullptr;
+    mutable bool generateAdditionalResults_ = false;
 
     // outputs
     mutable Real npv_, settlementValue_;
@@ -99,10 +99,12 @@ public:
     //! ForwardEnabledBondEngine interface
     std::pair<Real, Real> forwardPrice(const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
                                        const bool conditionalOnSurvival = true,
-                                       std::vector<CashFlowResults>* const cfResults = nullptr) const override;
+                                       std::vector<CashFlowResults>* const cfResults = nullptr,
+                                       QuantLib::Leg* const expectedCashflows = nullptr) const override;
 
 private:
     void calculate() const override;
+    bool generateAdditionalResultsInput_ = false;
 };
 
 } // namespace QuantExt

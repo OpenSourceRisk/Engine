@@ -2954,8 +2954,9 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(),
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
-                    swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    segment->pillarChoice());
+                    swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),true,
+                    segment->pillarChoice(), swapConvention->includeSpread(), swapConvention->lookback(),
+                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
             } else {
                 bool resetsOnFloatLeg = swapConvention->floatIndexIsResettable();
                 helper = QuantLib::ext::make_shared<CrossCcyFixFloatMtMResetSwapHelper>(
@@ -2963,7 +2964,9 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    resetsOnFloatLeg, segment->pillarChoice());
+                    true,
+                    resetsOnFloatLeg, segment->pillarChoice(), swapConvention->includeSpread(), swapConvention->lookback(), 
+                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
             }
             instruments.push_back(helper);
         }

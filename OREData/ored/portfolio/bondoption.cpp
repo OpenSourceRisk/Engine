@@ -55,39 +55,89 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     additionalData_["isdaSubProduct"] = string("Debt Option");
     additionalData_["isdaTransaction"] = string("");
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
-    bondData_ = originalBondData_;
-    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactory->referenceData());
-    QL_REQUIRE(bondType.empty() || bondType == BondReferenceDatum::TYPE,
-               "BondOption: bond type " << bondType << " is not supported.");
-    bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+    // propagate some parameters to underlying bond builder on a copy of engine factory
 
-    Calendar calendar = parseCalendar(bondData_.calendar());
+    auto engineFactoryOverride = QuantLib::ext::make_shared<EngineFactory>(*engineFactory);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactoryOverride->builder("BondOption");
+    auto isBond = [](const std::string& s) { return s.find("Bond") != std::string::npos; };
+    std::vector<EngineFactory::ParameterOverride> overrides;
+    overrides.push_back(EngineFactory::ParameterOverride{
+        "BondOption",
+        isBond,
+        {{"TreatSecuritySpreadAsCreditSpread",
+          builder->modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false")}}});
+    overrides.push_back(EngineFactory::ParameterOverride{
+        "BondOption",
+        isBond,
+        {{"SpreadOnIncomeCurve", builder->engineParameter("SpreadOnIncomeCurve", {}, false, "true")}}});
+    overrides.push_back(EngineFactory::ParameterOverride{
+        "BondOption", isBond, {{"TimestepPeriod", builder->engineParameter("TimestepPeriod", {}, false, "3M")}}});
+    engineFactoryOverride->setEngineParameterOverrides(overrides);
+    engineFactoryOverride->setEngineParameterOverrides(overrides);
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactoryOverride->market();
+    bondData_ = originalBondData_;
+
+    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactoryOverride->referenceData());
+
+    QuantLib::ext::shared_ptr<QuantLib::Bond> qlBondInstr;
+
+    Real bondNotional = bondData_.bondNotional();
+
+    try {
+
+        if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
+
+            // vanilla bond underlying
+
+            bondData_.populateFromBondReferenceData(engineFactoryOverride->referenceData());
+            underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
+            underlying_->build(engineFactoryOverride);
+            qlBondInstr =
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
+
+        } else {
+
+            // non-vanilla bond underlying (callable bond etc.)
+
+            auto r = BondFactory::instance().build(engineFactoryOverride, engineFactoryOverride->referenceData(),
+                                                   bondData_.securityId());
+            underlying_ = r.trade;
+            qlBondInstr = r.bond;
+            bondData_ = r.bondData;
+        }
+
+    } catch (...) {
+        // try to fill some fields for trade matching purposes although the trade build itself failed already
+        notionalCurrency_ = npvCurrency_ = bondData_.currency();
+        for (auto const& d : bondData_.coupons()) {
+            try {
+                auto s = makeSchedule(d.schedule());
+                maturity_ = std::max(maturity_, s.back());
+            } catch (...) {
+            }
+            if (!d.notionals().empty())
+                notional_ = d.notionals().front();
+        }
+        notional_ *= bondNotional;
+        throw;
+    }
+
     QuantLib::ext::shared_ptr<QuantExt::BondOption> bondoption;
 
     additionalData_["underlyingSecurityId"] = bondData_.securityId();
 
     // FIXME this won't work for zero bonds (but their implementation is incomplete anyhow, see bond.cpp)
-    underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
-
-    underlying_->build(engineFactory);
 
     legs_ = underlying_->legs();
     legCurrencies_ = underlying_->legCurrencies();
     legPayers_ = std::vector<bool>(legs_.size(), false); // always receive (long option view)
-    npvCurrency_ = underlying_->bondData().currency();
     notional_ = underlying_->notional();
-    notionalCurrency_ = underlying_->bondData().currency();
+    notionalCurrency_ = npvCurrency_ = underlying_->npvCurrency();
+
     maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), underlying_->maturity());
     maturityType_ =
         maturity_ == underlying_->maturity() ? "Underlying Bond Maturity Date" : "Option's Latest Premium Date";
-
-    auto qlBondInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
-    QL_REQUIRE(qlBondInstr, "BondOption::build(): could not cast to QuantLib::Bond");
-    for (auto const p : underlying_->legPayers()) {
-        QL_REQUIRE(!p, "BondOption::build(): underlying leg must be receiver");
-    }
 
     boost::variant<QuantLib::Bond::Price, QuantLib::InterestRate> callabilityPrice;
     if (strike_.type() == TradeStrike::Type::Price) {
@@ -126,7 +176,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     bondoption.reset(new QuantExt::BondOption(qlBondInstr, callabilitySchedule, knocksOut_));
 
-    Currency currency = parseCurrency(underlying_->bondData().currency());
+    Currency currency = parseCurrency(bondData_.currency());
 
     QuantLib::ext::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder =
         QuantLib::ext::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
@@ -140,20 +190,22 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     setSensitivityTemplate(*bondOptionBuilder);
     addProductModelEngine(*bondOptionBuilder);
 
-    Real multiplier =
-        bondData_.bondNotional() * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
+    Real multiplier = bondNotional * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
-                multiplier > 0.0 ? -1.0 : 1.0, currency, discountCurve, engineFactory,
+                multiplier > 0.0 ? -1.0 : 1.0, currency, discountCurve, engineFactoryOverride,
                 bondOptionBuilder->configuration(MarketContext::pricing));
 
     instrument_.reset(new VanillaInstrument(bondoption, multiplier, additionalInstruments, additionalMultipliers));
 
     // the required fixings are (at most) those of the underlying
     requiredFixings_ = underlying_->requiredFixings();
+
+    engineFactory->modelBuilders().insert(engineFactoryOverride->modelBuilders().begin(),
+                                          engineFactoryOverride->modelBuilders().end());
 }
 
 void BondOption::fromXML(XMLNode* node) {

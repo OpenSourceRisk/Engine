@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
@@ -127,6 +128,8 @@ std::string getBondReferenceDatumType(const std::string& id,
 
     if (refData->hasData(BondReferenceDatum::TYPE, id)) {
         return BondReferenceDatum::TYPE;
+    } else if (refData->hasData(CallableBondReferenceDatum::TYPE, id)) {
+        return CallableBondReferenceDatum::TYPE;
     } else if (refData->hasData(ConvertibleBondReferenceDatum::TYPE, id)) {
         return ConvertibleBondReferenceDatum::TYPE;
     }

@@ -76,8 +76,7 @@ class EngineFactory {
                   const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                      QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-                  const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
-                  const bool allowOverwrite = false);
+                  const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
 };
 
 // TradeFactory just needed as a return type, no construction, no member functions.

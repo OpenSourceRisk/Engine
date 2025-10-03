@@ -57,10 +57,13 @@
       <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
+      <Parameter name="xvaCgRegressionOrderDynamicIm">4</Parameter>
       <!-- regression variance cutoff in xva cg engine, the cutoff is disabled when the parameter is not given -->
       <!-- <Parameter name="xvaCgRegressionVarianceCutoff">0.01</Parameter> -->
+      <!-- <Parameter name="xvaCgRegressionVarianceCutoffDynamicIm">0.01</Parameter> -->
       <!-- whether to use python integration (conditional expectation calculation) -->
       <Parameter name="xvaCgUsePythonIntegration">false</Parameter>
+      <Parameter name="xvaCgUsePythonIntegrationDynamicIm">false</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
       <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
       <!-- enable memory management using red nodes in xva cg engine -->

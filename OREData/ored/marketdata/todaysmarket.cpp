@@ -866,7 +866,8 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
 
     std::set<Node> updatedNodes;
     for(auto u: reducedNode.nodes) {
-        u.built = true; 
+        u.built = true;
+        updatedNodes.insert(u);
     }
 
     reducedNode.nodes = updatedNodes;

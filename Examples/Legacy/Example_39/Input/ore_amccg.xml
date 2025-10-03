@@ -66,6 +66,7 @@
       <!-- <Parameter name="xvaCgRegressionReportTimeStepsDynamicIM">10,11</Parameter> -->
       <!-- regression order in xva cg engine -->
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
+      <Parameter name="xvaCgRegressionOrderDynamicIm">4</Parameter>
       <!-- enable trade level breakdown in xva cg engine -->
       <Parameter name="xvaCgTradeLevelBreakDown">true</Parameter>
       <!-- enable memory management using red nodes in xva cg engine -->
