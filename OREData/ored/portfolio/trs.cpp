@@ -213,6 +213,7 @@ void TRS::fromXML(XMLNode* node) {
                   (underlyingTradeNodes.size() > 1 ? "_" + std::to_string(underlyingCounter++) : "");
         u->fromXML(n);
         underlyingDerivativeId_.push_back(std::string());
+        u->isSubTrade() = true;
         underlying_.push_back(u);
     }
     for (auto const n : underlyingTradeNodes2) {
@@ -235,6 +236,7 @@ void TRS::fromXML(XMLNode* node) {
         u->id() = this->id() + "_underlying" +
                   (underlyingTradeNodes.size() > 1 ? "_" + std::to_string(underlyingCounter++) : "");
         u->fromXML(t);
+        u->isSubTrade() = true;
         underlying_.push_back(u);
     } 
     // read return data
@@ -883,6 +885,7 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
     underlying_.clear();
     for (Size i = 0; i < refData.size(); i++) {
         underlyingDerivativeId_.push_back((portfolioId_));
+        refData[i]->isSubTrade() = true;
         QL_REQUIRE(refData[i] != nullptr, "expected 'Trade' node under 'Derivative' node");
         underlying_.push_back(refData[i]);
     }
