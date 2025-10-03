@@ -501,12 +501,12 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const Nett
     map<string, QuantLib::Real> sumWeightedSensis;
 
     // Loop over the qualifiers i.e. currencies
-    // Loop over the qualifiers i.e. currencies
     for (const auto& qualifier : qualifiers) {
         // Pair of iterators to start and end of IRCurve sensitivities with current qualifier
         auto pIrQualifier = crif.filterByQualifier(nettingSetDetails, pc, RiskType::IRCurve, qualifier);
 
         // Iterator to Xccy basis element with current qualifier
+        auto XccyCount = crif.countMatching(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
         const auto& [itXccy, itXccyEnd] = crif.findBy(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
 
         // Iterator to inflation element with current qualifier (expect zero or one element)
@@ -590,7 +590,16 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const Nett
             // Risk weight
             QuantLib::Real rwXccy = simmConfiguration_->weight(RiskType::XCcyBasis, qualifier, itXccy->getLabel1());
             // Weighted sensitivity (no concentration risk here)
-            QuantLib::Real wsXccy = rwXccy * itXccy->amountResultCurrency();
+            QuantLib::Real wsXccy = 0;
+            if(XccyCount>1){
+                Real cumXccyAmount = 0;
+                for(auto it=itXccy;it!=itXccyEnd;it++){
+                    cumXccyAmount+=it->amountResultCurrency();
+                }
+                wsXccy = rwXccy * cumXccyAmount;
+            }else{
+                wsXccy = rwXccy * itXccy->amountResultCurrency();
+            }
             // Update weighted sensitivity sum
             sumWeightedSensis[qualifier] += wsXccy;
             // Add diagonal element to delta margin
