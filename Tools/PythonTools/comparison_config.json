@@ -153,22 +153,24 @@
           "ShiftSize_2",
           "Currency"
         ],
-        "column_settings": [
-          {
-            "names": [
-              "Base NPV",
-              "Delta"
-            ],
-            "abs_tol": 0.01,
-            "rel_tol": 1e-12
-          }
-        ],
 		"optional_cols": [
             "Currency(Trade)",
             "Base NPV(Trade)",
             "Delta(Trade)",
             "Gamma(Trade)"
         ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
       },
       "cva_sensitivities\\.csv": {
         "keys": [
@@ -214,21 +216,23 @@
           "Delta",
           "Gamma"
         ],
-        "column_settings": [
-          {
-            "names": [
-              "Base NPV",
-              "Delta"
-            ],
-            "abs_tol": 0.01,
-            "rel_tol": 1e-12
-          }
-        ],
 		"optional_cols": [
             "Currency(Trade)",
             "Base NPV(Trade)",
             "Delta(Trade)",
             "Gamma(Trade)"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
         ]
       },
       "sa_cva_pricer\\.csv": {
