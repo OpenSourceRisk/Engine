@@ -48,7 +48,7 @@ namespace analytics {
 
 class PNLCalculator {
 public:
-    PNLCalculator(ore::data::TimePeriod pnlPeriod) : pnlPeriod_(pnlPeriod) {}
+    PNLCalculator(ore::data::TimePeriod pnlPeriod, bool runRiskFactorLevel = false) : pnlPeriod_(pnlPeriod) {}
     virtual ~PNLCalculator() {}
     virtual void writePNL(QuantLib::Size scenarioIdx, bool isCall,
                           const RiskFactorKey& key_1, QuantLib::Real shift_1, QuantLib::Real delta,
@@ -69,6 +69,12 @@ public:
     const TradePnLStore& tradePnls() { return tradePnls_; }
     const TradePnLStore& foTradePnls() { return foTradePnls_; }
 
+    using RiskFactorTradePnLStore = std::vector<std::map<std::string, std::vector<QuantLib::Real>>>;
+    void populateRiskFactorTradePNLs(const RiskFactorTradePnLStore& allPnls, const RiskFactorTradePnLStore& foPnls);
+
+    const RiskFactorTradePnLStore& riskFactorTradePnls() { return riskFactorTradePnls_; }
+    const RiskFactorTradePnLStore& riskFactorFoTradePnls() { return riskFactorFoTradePnls_; }
+    
     void clear() { 
         pnls_.clear();
         foPnls_.clear();
@@ -81,6 +87,7 @@ protected:
     std::vector<QuantLib::Real> foPnls_;
     ore::data::TimePeriod pnlPeriod_;
     TradePnLStore tradePnls_, foTradePnls_;
+    RiskFactorTradePnLStore riskFactorTradePnls_, riskFactorFoTradePnls_;
 };
 
 class CovarianceCalculator {
@@ -120,7 +127,8 @@ public:
         const QuantLib::ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
         const std::vector<std::string>& tradeIds = {},
         const bool includeGammaMargin = true, const bool includeDeltaMargin = true, 
-        const bool tradeLevel = false);
+        const bool tradeLevel = false,
+        const bool runRiskFactorLevel = false);
 
     int getScenarioNumber() const { return hisScenGen_->numScenarios(); }
 

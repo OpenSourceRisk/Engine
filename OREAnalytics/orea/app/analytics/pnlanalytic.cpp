@@ -139,7 +139,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     std::vector<RFType> dateAdjustedRiskFactors = inputs_->pnlDateAdjustedRiskFactors();
     if (dateAdjustedRiskFactors.size() > 0) {
-        std::cout<< "PnlAnalytic::run: Adjusting tenors for risk factors: ";
         std::vector<QuantLib::Period> shiftedTenors;
         for (const auto& rt : dateAdjustedRiskFactors) {
             if (rt == RFType::CommodityCurve){
