@@ -1238,7 +1238,7 @@
             "names": [
               "Base NPV",
               "Delta",
-			  "Gamma"
+			  "Gamma",
 			  "Base NPV(Trade)",
 			  "Delta(Trade)",
 			  "Gamma(Trade)"
