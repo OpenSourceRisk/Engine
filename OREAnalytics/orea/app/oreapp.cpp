@@ -1489,6 +1489,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "dateAdjustedRiskFactors", false);
         if (tmp != "")
             setPnlDateAdjustedRiskFactors(tmp);
+
+        tmp = params_->get("pnlExplain", "riskFactorLevelReporting", false);
+        if (tmp != "")
+            setRiskFactorLevel(parseBool(tmp));
     }
     /****************
      * SIMM and IM Schedule

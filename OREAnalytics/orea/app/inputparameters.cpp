@@ -869,6 +869,10 @@ void InputParameters::setPnlDateAdjustedRiskFactors(const std::string& s) {
     pnlDateAdjustedRiskFactors_ = parseListOfValues<RiskFactorKey::KeyType>(s, &parseRiskFactorKeyType);
 }
 
+void InputParameters::setRiskFactorLevel(bool b) {
+    riskFactorLevel_ = b;
+}
+
 OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);
