@@ -1227,12 +1227,19 @@
           "ShiftSize_2",
           "Currency"
         ],
+		"optional_cols": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-              "Gamma"
+			  "Base NPV(Trade)",
+			  "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
