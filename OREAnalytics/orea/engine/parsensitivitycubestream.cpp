@@ -28,8 +28,10 @@ namespace analytics {
 
 // Note: iterator initialisation below works because currentDeltas_ is
 //       (empty) initialised before itCurrent_
-ParSensitivityCubeStream::ParSensitivityCubeStream(const QuantLib::ext::shared_ptr<ZeroToParCube>& cube, const string& currency)
-    : zeroCubeIdx_(0), cube_(cube), currency_(currency), itCurrent_(currentDeltas_.begin()) {
+ParSensitivityCubeStream::ParSensitivityCubeStream(
+    const QuantLib::ext::shared_ptr<ZeroToParCube>& cube,
+    const string& currency, const std::unordered_map<std::string, std::string>& tradeCurrency)
+    : zeroCubeIdx_(0), cube_(cube), currency_(currency), tradeCurrency_(tradeCurrency), itCurrent_(currentDeltas_.begin()) {
     QL_REQUIRE(!cube_->zeroCubes().empty(), "ParSensitivityCubeStream: cube contains no zero cubes");
     tradeIdx_ = cube_->zeroCubes().front()->tradeIdx().begin();
     init();
@@ -42,6 +44,7 @@ SensitivityRecord ParSensitivityCubeStream::next() {
     while (itCurrent_ == currentDeltas_.end() && tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
         // Move to next trade
         tradeIdx_++;
+        currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
         // update par deltas
         if (tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
             DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
@@ -56,6 +59,7 @@ SensitivityRecord ParSensitivityCubeStream::next() {
         sr.tradeId = tradeIdx_->first;
         sr.isPar = true;
         sr.currency = currency_;
+        sr.tradeCurrency = currentTradeCurrency_;
         sr.baseNpv = cube_->zeroCubes()[zeroCubeIdx_]->npv(tradeIdx_->second);
         if (itCurrent_ != currentDeltas_.end()) {
             DLOG("Processing par delta [" << itCurrent_->first << ", " << itCurrent_->second << "]");
@@ -91,6 +95,7 @@ void ParSensitivityCubeStream::init() {
     // If we have trade IDs in the underlying cube
     if (!cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().empty()) {
         tradeIdx_ = cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().begin();
+        currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
         DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
         currentDeltas_ = cube_->parDeltas(zeroCubeIdx_, tradeIdx_->second);
         itCurrent_ = currentDeltas_.begin();

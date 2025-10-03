@@ -113,7 +113,6 @@ public:
 
     virtual void writeSensitivityReport(ore::data::Report& report,
                                         const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
-                                        QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
                                         QuantLib::ext::shared_ptr<ore::data::Market> market,
                                         const std::string& configuration, QuantLib::Real outputThreshold = 0.0,
                                         QuantLib::Size outputPrecision = 2);

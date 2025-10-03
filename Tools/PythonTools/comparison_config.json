@@ -162,7 +162,13 @@
             "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
-        ]
+        ],
+		"optional_keys": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
       },
       "cva_sensitivities\\.csv": {
         "keys": [

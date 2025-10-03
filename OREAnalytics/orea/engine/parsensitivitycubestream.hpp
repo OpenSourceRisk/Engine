@@ -35,7 +35,8 @@ namespace analytics {
 class ParSensitivityCubeStream : public ore::analytics::SensitivityStream {
 public:
     /*! Constructor providing the sensitivity \p cube and currency of the sensitivities */
-    ParSensitivityCubeStream(const QuantLib::ext::shared_ptr<ZeroToParCube>& cube, const std::string& currency);
+    ParSensitivityCubeStream(const QuantLib::ext::shared_ptr<ZeroToParCube>& cube, const std::string& currency,
+                             const std::unordered_map<std::string, std::string>& tradeCurrency = {});
 
     /*! Returns the next SensitivityRecord in the stream
 
@@ -53,6 +54,10 @@ private:
     QuantLib::ext::shared_ptr<ZeroToParCube> cube_;
     //! Currency of the sensitivities in the SensitivityCube
     std::string currency_;
+    //! Trade Currency of the all trades in the portfolio
+    std::unordered_map<std::string, std::string> tradeCurrency_;
+    //! Trade Currency of the current trade
+    std::string currentTradeCurrency_;
     //! TradeId and index of current trade ID in the underlying cube
     std::map<std::string, QuantLib::Size>::const_iterator tradeIdx_;
     //! Par deltas for current trade ID

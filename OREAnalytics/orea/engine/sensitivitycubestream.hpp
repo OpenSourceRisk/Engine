@@ -37,9 +37,11 @@ namespace analytics {
 class SensitivityCubeStream : public SensitivityStream {
 public:
     /*! Constructor providing the sensitivity \p cube and currency of the sensitivities */
-    SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const std::string& currency);
-    /*! Constructor providing the sensitivity \p cubes and currency of the sensitivities */
-    SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes, const std::string& currency);
+    SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const std::string& currency,
+                          const std::unordered_map<std::string, std::string>& tradeCurrency = {});
+    /*! Constructor providing the sensitivity \p cubes, base currency of the sensitivities, and trade currency for each trade*/
+    SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes,
+                          const std::string& currency, const std::unordered_map<std::string, std::string>& tradeCurrency = {});
 
     /*! Returns the next SensitivityRecord in the stream
 
@@ -57,6 +59,9 @@ private:
     std::vector<QuantLib::ext::shared_ptr<SensitivityCube>> cubes_;
     //! Currency of the sensitivities in the SensitivityCubes
     std::string currency_;
+    // Trade currency of each trade by tradeId
+    std::unordered_map<std::string, std::string> tradeCurrency_;
+    std::string currentTradeCurrency_;
 
     //! Current cube index in vector
     Size currentCubeIdx_;
