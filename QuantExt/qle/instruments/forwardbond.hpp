@@ -67,6 +67,17 @@ public:
     //@}
 
 private:
+    /* The DiscountingForwardBondPricingEngine makes use of QuantExt::forwardPrice() with calls recalculate()
+       on the underlying bond. This triggers a notification of observers, i.e. the ForwardBond instrument
+       instance itself during LazyObject::performCalculations() so that ForwardBond is recalculated on each
+       call to NPV(), e.g. under each sensitivity scenario. See the discussion on
+
+       https://github.com/lballabio/QuantLib/issues/2340
+
+       Instead of setting calculated to true in LazyObject we do it here to keep the code change local to
+       the affected instruments until the status of the github issue is clarified. */
+    void calculate() const override;
+
     QuantLib::ext::shared_ptr<QuantLib::Bond> underlying_;
     Real strikeAmount_;                        // Null<Real>() for tlocks
     Real lockRate_;                            // Null<Real>() for vanilla forwards

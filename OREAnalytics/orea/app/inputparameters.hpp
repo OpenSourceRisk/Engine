@@ -556,6 +556,7 @@ public:
 
     void setPnlDateAdjustedRiskFactors(const std::string& s); // parse to vector<RiskFactorKey::KeyType>
 
+    void setRiskFactorLevel(bool b);
 
     /***************************
      * Getters for general setup
@@ -992,6 +993,12 @@ public:
      ****************************/
     vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors() const { return pnlDateAdjustedRiskFactors_; }
 
+    /****************************
+     * Getters for pnl explain analytics
+     ****************************/
+    bool riskFactorLevel() const { return riskFactorLevel_; }
+
+    
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1390,6 +1397,11 @@ protected:
      * PNL analytic
      *****************/
     vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors_;
+
+    /*****************
+     * PNL explain analytic
+     *****************/
+    bool riskFactorLevel_ = false; 
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {

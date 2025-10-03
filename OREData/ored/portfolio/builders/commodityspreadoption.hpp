@@ -92,7 +92,21 @@ protected:
             volatilityQualifiers.push_back(pair);
             volatilityQualifiers.push_back(pairReverse);
         }
-        bool useBachelierModel = modelParameter("Volatility", volatilityQualifiers, false, "lognormal") == "normal";
+
+        QuantLib::DiffusionModelType volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+        Real displacement = 0.0;
+        auto volTypeStr = this->modelParameter("Volatility", volatilityQualifiers, false, "AsInputVolatilityType");
+        boost::to_lower(volTypeStr);
+        auto displacementStr = this->modelParameter("Displacement", volatilityQualifiers, false, "0.0");
+        if (volTypeStr == "lognormal") {
+            volType = QuantLib::DiffusionModelType::Black;
+        } else if (volTypeStr == "shiftedlognormal") {
+            volType = QuantLib::DiffusionModelType::Black;
+            displacement = parseReal(displacementStr);
+        } else if (volTypeStr == "normal")
+            volType = QuantLib::DiffusionModelType::Bachelier;
+        else
+            volType = QuantLib::DiffusionModelType::AsInputVolatilityType;
 
         if (calendarSpread) {
             rho = Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(
@@ -103,7 +117,7 @@ protected:
                                           configuration(MarketContext::pricing));
         }
         return QuantLib::ext::make_shared<QuantExt::CommoditySpreadOptionAnalyticalEngine>(yts, volLong, volShort, rho,
-                                                                                           beta, useBachelierModel);
+                                                                                           beta, volType, displacement);
     }
 };
 } // namespace ore::data

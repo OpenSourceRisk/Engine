@@ -19,7 +19,8 @@
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <!-- can be multiple so we don't use calendar type -->
       <xs:element type="sequenceType" name="Sequence"/>
-      <xs:element type="xs:string" name="Scenario"/>
+      <!-- does not exist anymore, keep for schema backwards compatibility -->
+      <xs:element type="xs:string" name="Scenario" minOccurs="0"/>
       <!-- deprecated, this moved to crossAssetModel below -->
       <xs:element type="discretizationType" name="Discretization" minOccurs="0"/>
       <!-- FIXME: remove this -->
