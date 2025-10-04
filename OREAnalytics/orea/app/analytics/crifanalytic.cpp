@@ -34,6 +34,8 @@
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <iostream>
+
 using namespace ore::data;
 using namespace boost::filesystem;
 

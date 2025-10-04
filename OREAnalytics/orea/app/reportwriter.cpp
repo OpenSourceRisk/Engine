@@ -850,11 +850,11 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.add(sr.tradeCurrency);
             report.add(sr.baseNpv * fx);
             report.add(sr.delta * fx);
-            if (sr.gamma == Null<Real>())
+            if (sr.gamma == Null<Real>()) {
                 report.add(sr.gamma);
-            else
+            } else {
                 report.add(sr.gamma * fx);
-
+            }
         } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
             // TODO: Again, is this needed?
             ALOG("sensitivity record has infinite values: " << sr);
