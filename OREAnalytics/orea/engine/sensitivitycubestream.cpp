@@ -56,7 +56,6 @@ SensitivityCubeStream::SensitivityCubeStream(const std::vector<QuantLib::ext::sh
 }
 
 SensitivityRecord SensitivityCubeStream::next() {
-
     if (cubes_.size() == 0)
         return SensitivityRecord();
 
@@ -107,7 +106,6 @@ SensitivityRecord SensitivityCubeStream::next() {
         sr.gamma = cubes_[currentCubeIdx_]->crossGamma(tradeIdx_->first, *currentCrossGammaKey_);
         ++currentCrossGammaKey_;
     }
-
     TLOG("Next record is: " << sr);
     return sr;
 }
@@ -115,9 +113,11 @@ SensitivityRecord SensitivityCubeStream::next() {
 void SensitivityCubeStream::updateForNewTrade() {
     currentDeltaKeys_.clear();
     currentCrossGammaKeys_.clear();
-    currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
 
     if (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end()) {
+
+        // add trade currency
+        currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
 
         // add delta keys
 
