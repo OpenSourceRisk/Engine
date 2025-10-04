@@ -117,7 +117,8 @@ void SensitivityCubeStream::updateForNewTrade() {
     if (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end()) {
 
         // add trade currency
-        currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
+        if (!tradeCurrency_.empty())
+            currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
 
         // add delta keys
 

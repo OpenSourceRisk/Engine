@@ -46,7 +46,8 @@ SensitivityRecord ParSensitivityCubeStream::next() {
         tradeIdx_++;
         if (tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
             // update trade currency
-            currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
+            if (!tradeCurrency_.empty())
+                currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
             // update par deltas
             DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
             currentDeltas_ = cube_->parDeltas(zeroCubeIdx_, tradeIdx_->second);
@@ -96,7 +97,8 @@ void ParSensitivityCubeStream::init() {
     // If we have trade IDs in the underlying cube
     if (!cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().empty()) {
         tradeIdx_ = cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().begin();
-        currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
+        if (!tradeCurrency_.empty())
+            currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
         DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
         currentDeltas_ = cube_->parDeltas(zeroCubeIdx_, tradeIdx_->second);
         itCurrent_ = currentDeltas_.begin();
