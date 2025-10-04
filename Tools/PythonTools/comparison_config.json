@@ -1234,6 +1234,11 @@
           "ShiftSize_2",
           "Currency"
         ],
+		"use_cols": [
+          "Base NPV",
+          "Delta",
+          "Gamma"
+        ],
 		"optional_cols": [
             "Currency(Trade)",
             "Base NPV(Trade)",
