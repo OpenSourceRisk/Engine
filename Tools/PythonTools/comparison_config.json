@@ -159,6 +159,7 @@
             "Delta(Trade)",
             "Gamma(Trade)"
         ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -222,6 +223,7 @@
             "Delta(Trade)",
             "Gamma(Trade)"
         ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -1233,6 +1235,7 @@
             "Delta(Trade)",
             "Gamma(Trade)"
         ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
