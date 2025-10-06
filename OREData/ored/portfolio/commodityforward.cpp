@@ -75,27 +75,37 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
 
-    npvCurrency_ = fixingDate_ == Date() ? currency_ : payCcy_;
-
+    // if TradePnLCurrency is not given, npv currency is set to commodity floating leg ccy
+    npvCurrency_ = envelope().additionalField("TradePnLCurrency", false, currency_);
+   
     notional_ = strike_ * quantity_;
-    notionalCurrency_ = currency_;
-
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_;
-    additionalData_["strikeCurrency"] = currency_;
-    if (fixingDate_ != Date()) {
-        additionalData_["settlementCurrency"] = payCcy_;
-        additionalData_["fixingDate"] = fixingDate_;
-        additionalData_["fxIndex"] = fxIndex;
-    }
 
     maturity_ = parseDate(maturityDate_);
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     bool isFutureAccordingToConventions =
         InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
-
+    
+    Handle<PriceTermStructure> priceCurve = engineFactory->market()->commodityPriceCurve(commodityName_,  engineFactory->configuration(MarketContext::pricing));   
+    auto underlyingCcy = priceCurve->currency();
     // adjust the maturity date if not a valid fixing date for the index
     maturity_ = index->fixingCalendar().adjust(maturity_, Preceding);
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_;
+    additionalData_["strikeCurrency"] = underlyingCcy.code();
+    additionalData_["tradeCurrency"] = npvCurrency_;
+
+    // if settlement ccy is not given take it from trade ccy 
+    if (payCcy_ != "") {
+        additionalData_["settlementCurrency"] = payCcy_;
+        additionalData_["fixingDate"] = fixingDate_;
+        additionalData_["fxIndex"] = fxIndex;
+    }
+    else if (fixingDate_ != Date()) {
+        additionalData_["settlementCurrency"] = currency_;
+        additionalData_["fixingDate"] = fixingDate_;
+        additionalData_["fxIndex"] = fxIndex;
+    }
+
 
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
@@ -148,14 +158,17 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     Position::Type position = parsePositionType(position_);
     auto payCcy = Currency();
     if (!fxIndex_.empty()) {
-        payCcy = parseCurrency(payCcy_);
+        // if payCcy is not given, settlement currency is set to commodity floating leg ccy
+        if (payCcy_ != "")
+            payCcy = parseCurrency(payCcy_);
+        else
+            payCcy = currency;
         requiredFixings_.addFixingDate(fixingDate_, fxIndex_, paymentDate);
-        fxIndex = buildFxIndex(fxIndex_, payCcy.code(), currency.code(),engineFactory->market(),
+        fxIndex = buildFxIndex(fxIndex_, payCcy.code(), underlyingCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
-        npvCurrency_ = payCcy_;
     }
     QuantLib::ext::shared_ptr<Instrument> commodityForward = QuantLib::ext::make_shared<QuantExt::CommodityForward>(
-        index, currency, position, quantity_, maturity_, strike_, physicallySettled, paymentDate, payCcy, fixingDate_,
+        index, underlyingCcy, position, quantity_, maturity_, strike_, physicallySettled, paymentDate, payCcy, fixingDate_,
         fxIndex);
 
     if (paymentDate != Date())
@@ -168,9 +181,11 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     QuantLib::ext::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         QuantLib::ext::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
+    
+    Currency npvCurrency = parseCurrency(npvCurrency_);
     commodityForward->setPricingEngine(
-        commodityForwardEngineBuilder->engine(currency,
-        envelope().additionalField("discount_curve", false, std::string()))); // the engine accounts for NDF if settlement data are present
+        commodityForwardEngineBuilder->engine(payCcy, npvCurrency,
+        envelope().additionalField("discount_curve", false, std::string())));
     setSensitivityTemplate(*commodityForwardEngineBuilder);
     addProductModelEngine(*commodityForwardEngineBuilder);
 
@@ -237,7 +252,7 @@ void CommodityForward::fromXML(XMLNode* node) {
     if (XMLNode* settlementDataNode = XMLUtils::getChildNode(commodityDataNode, "SettlementData")) {
         // this node is used to provide data for NDF. This includes a fixing date, a settlement currency and the
         // quote/settlement fx index.
-        payCcy_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+        payCcy_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", false);
         fxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
         fixingDate_ = parseDate(XMLUtils::getChildValue(settlementDataNode, "FixingDate", true));
     }

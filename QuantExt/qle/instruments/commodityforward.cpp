@@ -37,7 +37,6 @@ CommodityForward::CommodityForward(const QuantLib::ext::shared_ptr<CommodityInde
     if (physicallySettled_) {
         QL_REQUIRE(paymentDate_ == Date(), "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
                                                                               ") should not be provided for physically settled commodity forwards.");
-        QL_REQUIRE(fxIndex_ == nullptr, "CommodityForward: settlement data should not be provided for physically settled commodity forwards.");
     }
 
     if (!physicallySettled_ && paymentDate_ != Date()) {
