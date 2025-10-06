@@ -100,11 +100,13 @@ private:
 
 class CarrMadanSurface {
 public:
-    /*! The moneyness is defined as K / F, K = strike, F = forward at the relevant time.
+    /*! The moneyness (lognormal) is defined as (K+displacement) / (F + displacement), K = strike, F = forward at the relevant time.
+        The moneyness (normal) is defined as K - F, K = strike, F = forward at the relevant time.
         The times and moneyness should be strictly increasing.
         The outer vectors for call prices and the calendarAbritrage() result represent times, the inner strikes. */
     CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneyness, const Real spot,
-                     const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices);
+                     const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices,
+                     const VolatilityType volType = ShiftedLognormal, const Real shift = 0.0);
 
     const std::vector<Real>& times() const;
     const std::vector<Real>& moneyness() const;

@@ -433,6 +433,11 @@ InitialMargin, Performance), e.g. for
 % - xvaCgDynamicIM
 % - xvaCgDynamicIMStepSize
 % - xvaCgRegressionOrder
+% - xvaCgRegressionOrderDynamicIm
+% - xvaCgRegressionVarianceCutoff
+% - xvaCgRegressionVarianceCutoffDynamicIm
+% - xvaCgPythonIntegration
+% - xvaCgPythonIntegrationDynamicIm
 % - xvaCgTradeLevelBreakDown
 % - xvaCgUseRedBlocks
 
@@ -1059,6 +1064,7 @@ The parameters in Listing \ref{lst:ore_pnl} have the following interpretation:
       <Parameter name="dateAdjustedRiskFactors">CommodityCurve</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="parSensitivity">Y</Parameter>
+      <Parameter name="riskFactorLevelReporting">Y</Parameter>
     </Analytic>
   </Analytics>
 \end{minted}
@@ -1071,6 +1077,7 @@ The additonal parameters in Listing \ref{lst:ore_pnlexplain} have the following 
 \begin{itemize}
 \item {\tt sensitivityConfigFile}: Sensitivity parameterisation for the sensitivity analysis on asofDate
 \item {\tt parSensitivity}: Boolean to specify whether par sesnitivities should be used in the P\&L explanation; ``raw'' sensitivities will be used by default.
+\item {\tt riskFactorLevelReporting}:  Enables P\&L explanation with decomposition by risk factor.
 \end{itemize}
 
 See the example in section \ref{example:marketrisk_pnl} for a demonstration of the P\&L and P\&L Explain analytics.

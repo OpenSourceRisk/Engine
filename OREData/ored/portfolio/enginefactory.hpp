@@ -52,6 +52,7 @@ using std::tuple;
 class Trade;
 class LegBuilder;
 class ReferenceDataManager;
+class EngineFactory;
 
 /*! Market configuration contexts. Note that there is only one pricing context.
   If several are needed (for different trade types, different collateral
@@ -128,18 +129,17 @@ public:
     /*! This method should not be called directly, it is called by the EngineFactory
      *  before it is returned.
      */
-    void init(const QuantLib::ext::shared_ptr<Market> market, const map<MarketContext, string>& configurations,
-              const map<string, string>& modelParameters, const map<string, string>& engineParameters,
+    void init(EngineFactory* const engineFactory, const QuantLib::ext::shared_ptr<Market> market,
+              const map<MarketContext, string>& configurations, const map<string, string>& modelParameters,
+              const map<string, string>& engineParameters,
               const std::map<std::string, std::string>& globalParameters = {}) {
+        engineFactory_ = engineFactory;
         market_ = market;
         configurations_ = configurations;
         modelParameters_ = modelParameters;
         engineParameters_ = engineParameters;
         globalParameters_ = globalParameters;
     }
-
-    //! return model builders
-    const set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
     virtual std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
@@ -151,6 +151,9 @@ public:
     /*! return global parameters */
     const std::map<std::string, std::string> globalParameters() const { return globalParameters_; }
 
+    //! return model builders
+    EngineFactory* engineFactory() const;
+
 protected:
     std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
                              const std::vector<std::string>& qs, const bool mandatory,
@@ -158,12 +161,12 @@ protected:
     string model_;
     string engine_;
     set<string> tradeTypes_;
+    EngineFactory* engineFactory_;
     QuantLib::ext::shared_ptr<Market> market_;
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
     std::map<std::string, std::string> globalParameters_;
-    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 
 //! Delegating Engine Builder
@@ -276,9 +279,10 @@ public:
     QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const LegType& legType);
 
     //! return model builders
-    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders() const;
+    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders();
 
     struct ParameterOverride {
+        std::string source;
         std::function<bool(string)> applies;
         std::map<string, string> overrides;
     };
@@ -301,6 +305,7 @@ private:
     IborFallbackConfig iborFallbackConfig_;
     std::vector<ParameterOverride> modelParameterOverrides_;
     std::vector<ParameterOverride> engineParameterOverrides_;
+    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 
 //! Leg builder

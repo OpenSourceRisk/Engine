@@ -815,7 +815,6 @@ void LegData::fromXML(XMLNode* node) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
             resetStartDate_ = XMLUtils::getChildValue(fxResetNode, "StartDate", false);
-            std::cout<<resetStartDate_;
             if (resetStartDate_.empty()) {
                 isNotResetXCCY_ = false;
                 foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount", true);

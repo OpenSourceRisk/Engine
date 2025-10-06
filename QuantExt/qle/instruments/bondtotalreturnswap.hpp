@@ -71,6 +71,8 @@ public:
     //@}
 
 private:
+    /* See Forward Bond on the justification of overriding calculate() here. */
+    void calculate() const override;
     QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex_;
     Real bondNotional_;
     Real initialPrice_;

@@ -1489,6 +1489,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "dateAdjustedRiskFactors", false);
         if (tmp != "")
             setPnlDateAdjustedRiskFactors(tmp);
+
+        tmp = params_->get("pnlExplain", "riskFactorLevelReporting", false);
+        if (tmp != "")
+            setRiskFactorLevel(parseBool(tmp));
     }
     /****************
      * SIMM and IM Schedule
@@ -1965,6 +1969,10 @@ void OREAppInputParameters::loadParameters() {
         if (!tmp.empty())
             setXvaCgUsePythonIntegration(parseBool(tmp));
 
+        tmp = params_->get("simulation", "xvaCgUsePythonIntegrationDynamicIm", false);
+        if (!tmp.empty())
+            setXvaCgUsePythonIntegrationDynamicIm(parseBool(tmp));
+
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
         if (!tmp.empty())
             setXvaCgBumpSensis(parseBool(tmp));
@@ -1984,6 +1992,14 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "xvaCgRegressionVarianceCutoff", false);
         if (!tmp.empty())
             setXvaCgRegressionVarianceCutoff(parseReal(tmp));
+
+        tmp = params_->get("simulation", "xvaCgRegressionOrderDynamicIm", false);
+        if (!tmp.empty())
+            setXvaCgRegressionOrderDynamicIm(parseInteger(tmp));
+
+        tmp = params_->get("simulation", "xvaCgRegressionVarianceCutoffDynamicIm", false);
+        if (!tmp.empty())
+            setXvaCgRegressionVarianceCutoffDynamicIm(parseReal(tmp));
 
         tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
         if (!tmp.empty())

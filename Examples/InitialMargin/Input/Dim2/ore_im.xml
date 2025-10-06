@@ -48,7 +48,9 @@
       <Parameter name="xvaCgDynamicIM">true</Parameter>
       <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
       <Parameter name="xvaCgRegressionOrder">4</Parameter>
+      <Parameter name="xvaCgRegressionOrderDynamicIm">4</Parameter>
       <Parameter name="xvaCgUsePythonIntegration">false</Parameter>
+      <Parameter name="xvaCgUsePythonIntegrationDynamicIm">false</Parameter>
       <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
       <Parameter name="xvaCgUseRedBlocks">false</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
