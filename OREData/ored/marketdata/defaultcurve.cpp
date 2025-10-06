@@ -380,6 +380,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
             try {
+                refData.type = "SpreadCDS";
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
                     cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
@@ -412,6 +413,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         // Currently same than SpreadCDS
         for (auto quote : quotes) {
             try {
+                refData.type = "ConvSpreadCDS";
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
                     cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
@@ -441,6 +443,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
             }
         }
     }else {
+        refData.type = "Upfront";
         for (auto quote : quotes) {
             // If there is no running spread encoded in the quote, the config must have one.
             runningSpread = quote.runningSpread;

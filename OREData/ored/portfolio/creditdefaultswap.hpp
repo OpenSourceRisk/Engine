@@ -51,9 +51,11 @@ public:
     const CreditDefaultSwapData& swap() const { return swap_; }
 
     const std::map<std::string,boost::any>& additionalData() const override;
+    void updateProductModelEngineAdditionalData() override;
 
 private:
     CreditDefaultSwapData swap_;
+    std::string type_;
 };
 
 } // namespace data

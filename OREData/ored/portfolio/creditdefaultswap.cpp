@@ -58,6 +58,8 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
 
+    type_ = market->defaultCurve(entity)->refData().type;
+
     auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();
 
@@ -184,6 +186,11 @@ const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() con
     additionalData_["notionalCurrency[1]"] = notionalCurrency_;
     additionalData_["notionalCurrency[2]"] = notionalCurrency_;
     return additionalData_;
+}
+
+void CreditDefaultSwap::updateProductModelEngineAdditionalData(){
+    Trade::updateProductModelEngineAdditionalData();
+    additionalData_["PricingConfigEngine"] = type_=="SpreadCDS" ? std::string("MidPointCdsEngine") : std::string("IsdaCdsEngine");
 }
 
 QuantLib::Real CreditDefaultSwap::notional() const {
