@@ -186,8 +186,8 @@ void NumericLgmCallableBondEngineBase::calculate() const {
     RandomVariable optionNpv(solver_->gridSize(), 0.0);
     RandomVariable provisionalNpv;
 
-    std::vector<Filter> exercised(grid.size(), Filter(solver_->gridSize(), false));
-    std::vector<RandomVariable> exerciseFlow(grid.size(), RandomVariable(solver_->gridSize(), 0.0));
+    std::vector<RandomVariable> exercisedCall(grid.size(), RandomVariable(solver_->gridSize(), 0.0));
+    std::vector<RandomVariable> exercisedPut(grid.size(), RandomVariable(solver_->gridSize(), 0.0));
 
     std::vector<RandomVariable> cache(cashflows.size());
 
@@ -251,16 +251,19 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
                 RandomVariable f = RandomVariable(
                     solver_->gridSize(), getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from)));
-                RandomVariable c = f / lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable num = lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable c = f / num;
 
                 RandomVariable tmp = c - (underlyingNpv + provisionalNpv);
                 optionNpv = min(tmp, optionNpv);
 
                 if (expectedCashflows_) {
-                    exercised[i] = close_enough(tmp, optionNpv);
-                    exerciseFlow[i] = f;
+                    Filter exercisedNow = close_enough(tmp, optionNpv);
+                    exercisedCall[i] = RandomVariable(solver_->gridSize(), 1.0) / num;
+                    exercisedCall[i] = applyFilter(exercisedCall[i], exercisedNow);
                     for (Size j = i + 1; j < grid.size(); ++j) {
-                        exercised[j] = exercised[j] && !exercised[i];
+                        exercisedCall[j] = applyInverseFilter(exercisedCall[j], exercisedNow);
+                        exercisedPut[j] = applyInverseFilter(exercisedPut[j], exercisedNow);
                     }
                 }
             }
@@ -269,20 +272,23 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
                 RandomVariable f = RandomVariable(
                     solver_->gridSize(), getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from)));
-                RandomVariable p = f / lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable num = lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable p = f / num;
 
                 RandomVariable tmp = p - underlyingNpv + provisionalNpv;
                 optionNpv = max(tmp, optionNpv);
 
                 if (expectedCashflows_) {
-                    exercised[i] = close_enough(tmp, optionNpv);
-                    exerciseFlow[i] = f;
+                    Filter exercisedNow = close_enough(tmp, optionNpv);
+                    exercisedPut[i] = RandomVariable(solver_->gridSize(), 1.0) / num;
+                    exercisedPut[i] = applyFilter(exercisedPut[i], exercisedNow);
+                    exercisedCall[i] = applyInverseFilter(exercisedPut[i], exercisedNow);
                     for (Size j = i + 1; j < grid.size(); ++j) {
-                        exercised[j] = exercised[j] && !exercised[i];
+                        exercisedCall[j] = applyInverseFilter(exercisedCall[j], exercisedNow);
+                        exercisedPut[j] = applyInverseFilter(exercisedPut[j], exercisedNow);
                     }
                 }
             }
-
         }
 
         // 9.4 roll back from t_i to t_{i-1}
@@ -295,7 +301,14 @@ void NumericLgmCallableBondEngineBase::calculate() const {
                     continue;
                 c = solver_->rollback(c, t_from, t_to);
             }
-            // need to roll back provisionalNpv only for part of the steps
+
+            // need to roll back all future exercise indicators
+            for (Size j = i; j < grid.size(); ++j) {
+                exercisedCall[j] = solver_->rollback(exercisedCall[j], t_from, t_to);
+                exercisedPut[j] = solver_->rollback(exercisedPut[j], t_from, t_to);
+            }
+
+            // need to roll back provisionalNpv, but only for part of the steps
             if (i == 1 || t_from <= t_fwd_cutoff)
                 provisionalNpv = solver_->rollback(provisionalNpv, t_from, t_to);
         }
@@ -305,22 +318,34 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
     if (expectedCashflows_) {
 
-        // 10.1 init a vector on the time grid with underlying bond cashflows
+        // 10.1 init a vector on the time grid with underlying discounted bond cashflows
 
-        std::vector<RandomVariable> rvCashflows(grid.size(), RandomVariable(solver_->gridSize(), 0.0));
+        std::vector<double> gridCashflows(grid.size(), 0.0);
 
         for (Size j = 0; j < cashflows.size(); ++j) {
             Size index = grid.closestIndex(events.time(cashflows[j].payDate));
-            if (grid[index] > t_fwd_cutoff)
-                rvCashflows[index] += RandomVariable(solver_->gridSize(), cashflows[j].qlCf->amount());
+            if (grid[index] > t_fwd_cutoff) {
+                gridCashflows[index] +=
+                    cashflows[j].qlCf->amount() * effDiscountCurve->discount(cashflows[j].qlCf->date());
+            }
         }
 
         // 10.2 incorporate call and put exercises
 
-        for (Size i = grid.size() - 1; i > 0; --i) {
-            rvCashflows[i] = conditionalResult(exercised[i], exerciseFlow[i], rvCashflows[i]);
-            if (grid[i] <= t_fwd_cutoff)
-                break;
+        double cumCallProb = 0.0;
+        double cumPutProb = 0.0;
+
+        for (Size i = 1; i < grid.size(); ++i) {
+
+            cumCallProb += exercisedCall[i].at(0) / effDiscountCurve->discount(grid[i]);
+            cumPutProb += exercisedPut[i].at(0) / effDiscountCurve->discount(grid[i]);
+
+            if (grid[i] > t_fwd_cutoff)
+                gridCashflows[i] = (1.0 - (cumCallProb + cumPutProb)) * gridCashflows[i] +
+                                   exercisedCall[i].at(0) *
+                                       getCallPriceAmount(events.getCallData(i), notional(grid[i]), accrual(grid[i])) +
+                                   exercisedPut[i].at(0) *
+                                       getCallPriceAmount(events.getPutData(i), notional(grid[i]), accrual(grid[i]));
         }
 
         // 10.3 allocate cashflows back to dates and store expectation in result vector
@@ -330,12 +355,14 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         for (Size i = grid.size() - 1; i > 0; --i) {
             if (Date tmp = events.getAssociatedDate(i); tmp != Date())
                 currentDate = tmp;
-            if (Real tmp = rvCashflows[i - 1].at(0); !QuantLib::close_enough(tmp, 0.0)) {
+            if (Real tmp = gridCashflows[i]; !QuantLib::close_enough(tmp, 0.0)) {
                 cf[currentDate] += tmp;
             }
         }
+
         for (auto& [d, v] : cf) {
-            expectedCashflows_->push_back(QuantLib::ext::make_shared<SimpleCashFlow>(v, d));
+            expectedCashflows_->push_back(
+                QuantLib::ext::make_shared<SimpleCashFlow>(v / effDiscountCurve->discount(d), d));
         }
 
     }
