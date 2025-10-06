@@ -97,24 +97,28 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis,
                          const bool enableDynamicIM, const Size dynamicIMStepSize, const Size regressionOrder,
-                         const Real regressionVarianceCutoff, const bool tradeLevelBreakDown,
+                         const Real regressionVarianceCutoff, const Size regressionOrderDynamicIm,
+                         const double regressionVarianceCutoffDynamicIm, const bool tradeLevelBreakDown,
                          const std::vector<Size>& regressionReportTimeStepsDynamicIM, const bool useRedBlocks,
                          const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
-                         const bool usePythonIntegration, const bool continueOnCalibrationError,
-                         const bool allowModelFallbacks, const bool continueOnError, const std::string& context)
+                         const bool usePythonIntegration, const bool usePythonIntegrationDynamicIm,
+                         const bool continueOnCalibrationError, const bool allowModelFallbacks,
+                         const bool continueOnError, const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
       marketConfigurationInCcy_(marketConfigurationInCcy), sensitivityData_(sensitivityData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), bumpCvaSensis_(bumpCvaSensis),
       enableDynamicIM_(enableDynamicIM), dynamicIMStepSize_(dynamicIMStepSize), regressionOrder_(regressionOrder),
-      regressionVarianceCutoff_(regressionVarianceCutoff), tradeLevelBreakDown_(tradeLevelBreakDown),
+      regressionVarianceCutoff_(regressionVarianceCutoff), regressionOrderDynamicIm_(regressionOrderDynamicIm),
+      regressionVarianceCutoffDynamicIm_(regressionVarianceCutoffDynamicIm), tradeLevelBreakDown_(tradeLevelBreakDown),
       regressionReportTimeStepsDynamicIM_(regressionReportTimeStepsDynamicIM), useRedBlocks_(useRedBlocks),
       useExternalComputeDevice_(useExternalComputeDevice),
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
+      usePythonIntegrationDynamicIm_(usePythonIntegrationDynamicIm),
       continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks),
       continueOnError_(continueOnError), context_(context) {}
 
@@ -1139,7 +1143,10 @@ RandomVariable XvaEngineCG::dynamicImCombineComponents(const std::vector<const R
 
     // combine the components
 
-    forwardEvaluation(*g, tmp, ops_, RandomVariable::deleter, false, {}, keepNodes, startNode, endNode + 1);
+    auto localOps =
+        getRandomVariableOps(model_->size(), regressionOrderDynamicIm_, QuantLib::LsmBasisSystem::Monomial, 0.0,
+                             regressionVarianceCutoffDynamicIm_, pfRegressorPosGroups_, usePythonIntegrationDynamicIm_);
+    forwardEvaluation(*g, tmp, localOps, RandomVariable::deleter, false, {}, keepNodes, startNode, endNode + 1);
 
     // populate regression report data (if requested)
 
@@ -1319,8 +1326,8 @@ void XvaEngineCG::calculateDynamicIM() {
         auto condExp = [this, &regressorGroups, i](const std::vector<const RandomVariable*>& args,
                                                    const std::string& label) {
             auto result = randomVariableOpConditionalExpectation(
-                model_->size(), regressionOrder_, QuantLib::LsmBasisSystem::Monomial, regressionVarianceCutoff_,
-                regressorGroups, usePythonIntegration_, args);
+                model_->size(), regressionOrderDynamicIm_, QuantLib::LsmBasisSystem::Monomial,
+                regressionVarianceCutoffDynamicIm_, regressorGroups, usePythonIntegrationDynamicIm_, args);
 
             if (std::find(regressionReportTimeStepsDynamicIM_.begin(), regressionReportTimeStepsDynamicIM_.end(), i) !=
                     regressionReportTimeStepsDynamicIM_.end() &&

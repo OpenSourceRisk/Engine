@@ -112,10 +112,12 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
         fixingDates_[i] = overnightIndex->fixingCalendar().advance(
             valueDates_[i], -static_cast<Integer>(FloatingRateCoupon::fixingDays()), Days, Preceding);
 
+    setPricer(ext::shared_ptr<FloatingRateCouponPricer>(new AverageONIndexedCouponPricer));
     // Populate the accrual periods.
     dt_.resize(numPeriods_);
+    const DayCounter& dc = overnightIndex->dayCounter();
     for (Size i = 0; i < numPeriods_; ++i)
-        dt_[i] = dayCounter.yearFraction(valueDates_[i], valueDates_[i + 1]);
+        dt_[i] = dc.yearFraction(valueDates_[i], valueDates_[i + 1]);
 
     // check that rate cutoff is < number of fixing dates
     QL_REQUIRE(rateCutoff_ < numPeriods_, "rate cutoff (" << rateCutoff_

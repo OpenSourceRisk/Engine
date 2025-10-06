@@ -39,6 +39,7 @@ cashflows/cmbcoupon.cpp
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
+cashflows/nettedcommoditycashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/cpicoupon.cpp
 cashflows/cpicouponpricer.cpp
@@ -483,6 +484,7 @@ cashflows/cmbcoupon.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
+cashflows/nettedcommoditycashflow.hpp
 cashflows/couponpricer.hpp
 cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp

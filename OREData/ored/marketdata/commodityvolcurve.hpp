@@ -102,7 +102,8 @@ private:
     */
     void buildVolatilityExplicit(const QuantLib::Date& asof, CommodityVolatilityConfig& vc,
                                  const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                 const std::vector<QuantLib::Real>& configuredStrikes);
+                                 const std::vector<QuantLib::Real>& configuredStrikes,
+                                 const Real displacement = 0.0);
 
     /*! Build a volatility surface from a collection of expiry and strike pairs where the strikes are defined in
         terms of option delta and ATM values.

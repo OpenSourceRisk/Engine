@@ -21,7 +21,10 @@ RUN apt-get update \
     libeigen3-dev \
     clang \
     swig \
+    lld \
     python3-dev \
     -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && mv /usr/bin/ld /usr/bin/ld.backup \
+  && ln -s /usr/bin/lld /usr/bin/ld

@@ -30,7 +30,7 @@
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
-
+#include <ql/pricingengines/diffusioncalculator.hpp>
 namespace QuantExt {
 
 /*! Commodity Spread Option Engine
@@ -46,7 +46,8 @@ public:
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volTSShortAsset,
                                           const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho,
                                           Real beta = 0.0,
-                                          bool useBachelierModel = false);
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                          Real displacement = 0.0);
     void calculate() const override;
 
 private:
@@ -54,6 +55,8 @@ private:
         Time tn;
         Real atm;
         Real sigma;
+        QuantLib::VolatilityType volType;
+        QuantLib::Real displacement;
         Real accruals;
         std::vector<QuantLib::Date> pricingDates;
         std::vector<std::string> indexNames;
@@ -78,7 +81,9 @@ protected:
     QuantLib::Handle<QuantLib::BlackVolTermStructure> volTSShortAsset_;
     const QuantLib::Handle<QuantExt::CorrelationTermStructure> rho_;
     QuantLib::Real beta_;
-    bool useBachelierModel_;
+    QuantLib::DiffusionModelType modelType_;
+    QuantLib::Real displacement_;
+    
 };
 
 } // namespace QuantExt

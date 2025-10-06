@@ -61,7 +61,10 @@ public:
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
         const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false, bool resetsOnFloatLeg = true,
-        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
+        bool telescopicValueDates = false, const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+        boost::optional<bool> includeSpread = boost::none, boost::optional<Period> lookback = boost::none,
+        boost::optional<Size> fixingDays = boost::none, boost::optional<Size> rateCutoff = boost::none,
+        boost::optional<bool> isAveraged = boost::none);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -97,7 +100,13 @@ protected:
     QuantLib::Handle<QuantLib::Quote> spread_;
     bool endOfMonth_;
     bool resetsOnFloatLeg_;
+    bool telescopicValueDates_;
     QuantLib::Pillar::Choice pillarChoice_;
+    boost::optional<bool> includeSpread_;
+    boost::optional<Period> lookback_;
+    boost::optional<Size> fixingDays_;
+    boost::optional<Size> rateCutoff_;
+    boost::optional<bool> isAveraged_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
 

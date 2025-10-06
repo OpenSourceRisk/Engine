@@ -130,3 +130,23 @@ where $F(t, T)$ is as defined in \eqref{eq:spot_forward_rate}. For $\Ex{A^2}$, u
          &= \frac{1}{n^2} \sum_{i,j=1}^{n} F(0, t_i) Z(0, t_i) F(0, t_j) Z(0, t_j) \exp \left\{ \int_{0}^{t_{\min(i,j)}} \sigma^2_S(u) du \right\}
 \end{split}
 \end{equation}
+
+Alternatively, the Bachelier model can be used when normal volatilities are preferred, particularly for commodities where prices may become negative. 
+In the Bachelier framework, the forward commodity price $F(t,T)$ follows a normal diffusion process:
+$$
+dF(t,T) = \sigma_N(t)\,dW
+$$
+where $\sigma_N(t)$ is the normal volatility. 
+
+In the normal case the discrete average is again normal distributed. Once we know the expected value and the variance of the average, we can 
+compute the option price with the Bachelier formula. The expected value is given as
+
+$$
+\mu_A = \frac{1}{n} \sum_{i=0}^n F(0, t_i)
+$$
+
+and the variance is
+
+$$
+var_A =  \frac{1}{n^2} \sum_{i,j=1}^n \rho_{T(t_i), T(t_j)} \sigma_{T(t_i)} \sigma_{T(t_j)} t_{\min(i,j)}.
+$$
