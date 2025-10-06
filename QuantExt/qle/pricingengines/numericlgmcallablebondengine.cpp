@@ -180,109 +180,213 @@ void NumericLgmCallableBondEngineBase::calculate() const {
         return accruals;
     };
 
-    // 7 set bounday value at last grid point
+    // 7 init variables for rollback with bounday value at last grid point
 
-    RandomVariable value(solver_->gridSize(), 0.0);
-    RandomVariable valueStripped(solver_->gridSize(), 0.0);
+    RandomVariable underlyingNpv(solver_->gridSize(), 0.0);
+    RandomVariable optionNpv(solver_->gridSize(), 0.0);
+    RandomVariable provisionalNpv;
+
+    std::vector<RandomVariable> exercisedCall(grid.size(), RandomVariable(solver_->gridSize(), 0.0));
+    std::vector<RandomVariable> exercisedPut(grid.size(), RandomVariable(solver_->gridSize(), 0.0));
+
+    std::vector<RandomVariable> cache(cashflows.size());
 
     // 8 determine fwd cutoff point for forward price calculation
 
     Real t_fwd_cutoff = solver_->model()->parametrization()->termStructure()->timeFromReference(npvDate_);
 
-    // 9 init cashflow variables for expected cashflow calculation if required
-
-    std::vector<RandomVariable> rvCashflows;
-
-    if (expectedCashflows_) {
-        rvCashflows.resize(grid.size() - 1, RandomVariable(solver_->gridSize(), 0.0));
-    }
-
-    // 10 perform the backward pricing using the backward solver
+    // 9 perform the backward pricing using the backward solver
 
     LgmVectorised lgmv(solver_->model()->parametrization());
 
     for (Size i = grid.size() - 1; i > 0; --i) {
 
-        // 7.1 we will roll back from t_i = t_from to t_{i-1} = t_to in this step
+        // 9.1 we will roll back from t_i = t_from to t_{i-1} = t_to in this step
 
         Real t_from = grid[i];
         Real t_to = grid[i - 1];
 
         if (t_from > t_fwd_cutoff) {
 
-            // 7.2 handle call, put on t_i (assume put overrides call, should both be exercised)
+            RandomVariable state = solver_->stateGrid(t_from);
+
+            // 9.2 update cashflows on current time
+
+            provisionalNpv = RandomVariable(solver_->gridSize(), 0.0);
+
+            for (Size j = 0; j < cashflows.size(); ++j) {
+                if (cashflowStatus[j] == CashflowStatus::Done)
+                    continue;
+
+                /* Compare this to NumericLgmMultilegOptionEngineBase:
+
+                   Since we incorporate an accrual payment in the call / put payments below, we do not consider
+                   the coupon ratio (exercise into short broken coupon) as in the swaption case. Instead we account
+                   for the full coupon value in the underlying. The only caveat is the case couponRatio = 0.0 where
+                   the coupon is still considered to be part of the underlying in the swaption case (but with
+                   weight 0.0) whereas the accruals that we add to the call / put price here are zero already.
+                   Therefore we need to exclude a coupon in this case from the underlying.
+                */
+
+                if (cashflows[j].isPartOfUnderlying(t_from) && cashflows[j].couponRatio(t_from) > 0.0) {
+                    if (cashflowStatus[j] == CashflowStatus::Cached) {
+                        underlyingNpv += cache[j];
+                        cache[j].clear();
+                        cashflowStatus[j] = CashflowStatus::Done;
+                    } else if (cashflows[j].canBeEstimated(t_from)) {
+                        underlyingNpv += cashflows[j].pv(lgmv, t_from, state, effDiscountCurve);
+                        cashflowStatus[j] = CashflowStatus::Done;
+                    } else {
+                        provisionalNpv += cashflows[j].pv(lgmv, t_from, state, effDiscountCurve);
+                    }
+                } else if (cashflows[j].mustBeEstimated(t_from) && cashflowStatus[j] == CashflowStatus::Open) {
+                    cache[j] = cashflows[j].pv(lgmv, t_from, state, effDiscountCurve);
+                    cashflowStatus[j] = CashflowStatus::Cached;
+                }
+            }
+
+            // 9.3 handle call, put on t_i (assume put overrides call, should both be exercised)
 
             if (events.hasCall(i)) {
 
-                RandomVariable c =
-                    RandomVariable(solver_->gridSize(),
-                                   getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from))) /
-                    lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable f = RandomVariable(
+                    solver_->gridSize(), getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from)));
+                RandomVariable num = lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable c = f / num;
 
-                value = min(c, value);
+                RandomVariable tmp = c - (underlyingNpv + provisionalNpv);
+                optionNpv = min(tmp, optionNpv);
 
                 if (expectedCashflows_) {
-                    Filter exercised = close_enough(c, value);
-                    rvCashflows[i - 1] = conditionalResult(exercised, c, rvCashflows[i - 1]);
-                    for (Size j = i + 1; j < grid.size(); ++j)
-                        rvCashflows[i - 1] = applyInverseFilter(rvCashflows[i - 1], exercised);
+                    Filter exercisedNow = close_enough(tmp, optionNpv);
+                    exercisedCall[i] = RandomVariable(solver_->gridSize(), 1.0) / num;
+                    exercisedCall[i] = applyFilter(exercisedCall[i], exercisedNow);
+                    for (Size j = i + 1; j < grid.size(); ++j) {
+                        exercisedCall[j] = applyInverseFilter(exercisedCall[j], exercisedNow);
+                        exercisedPut[j] = applyInverseFilter(exercisedPut[j], exercisedNow);
+                    }
                 }
             }
 
             if (events.hasPut(i)) {
 
-                RandomVariable c =
-                    RandomVariable(solver_->gridSize(),
-                                   getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from))) /
-                    lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable f = RandomVariable(
+                    solver_->gridSize(), getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from)));
+                RandomVariable num = lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
+                RandomVariable p = f / num;
 
-                value = max(c, value);
+                RandomVariable tmp = p - underlyingNpv + provisionalNpv;
+                optionNpv = max(tmp, optionNpv);
 
                 if (expectedCashflows_) {
-                    Filter exercised = close_enough(c, value);
-                    rvCashflows[i - 1] = conditionalResult(exercised, c, rvCashflows[i - 1]);
-                    for (Size j = i + 1; j < grid.size(); ++j)
-                        rvCashflows[i - 1] = applyInverseFilter(rvCashflows[i - 1], exercised);
-                }
-            }
-
-            // 7.3 handle bond cashflows on t_i
-
-            if (events.hasBondCashflow(i)) {
-
-                for (auto const& f : events.getBondCashflow(i)) {
-                    auto tmp = f.pv(lgmv, t_from, solver_->stateGrid(t_from), effDiscountCurve);
-                    value += tmp;
-
-                    if (generateAdditionalResults_)
-                        valueStripped += tmp;
-
-                    if (cfResults_)
-                        cfResults_->insert(cfResults_->begin(), standardCashFlowResults(f.qlCf, 1.0, std::string(), 0,
-                                                                                        Currency(), effDiscountCurve));
-
-                    if (expectedCashflows_) {
-                        rvCashflows[i - 1] = tmp;
+                    Filter exercisedNow = close_enough(tmp, optionNpv);
+                    exercisedPut[i] = RandomVariable(solver_->gridSize(), 1.0) / num;
+                    exercisedPut[i] = applyFilter(exercisedPut[i], exercisedNow);
+                    exercisedCall[i] = applyInverseFilter(exercisedPut[i], exercisedNow);
+                    for (Size j = i + 1; j < grid.size(); ++j) {
+                        exercisedCall[j] = applyInverseFilter(exercisedCall[j], exercisedNow);
+                        exercisedPut[j] = applyInverseFilter(exercisedPut[j], exercisedNow);
                     }
                 }
             }
         }
 
-        // 7.4 roll back from t_i to t_{i-1}
+        // 9.4 roll back from t_i to t_{i-1}
 
-        value = solver_->rollback(value, t_from, t_to, 1);
+        if (t_from != t_to) {
+            optionNpv = solver_->rollback(optionNpv, t_from, t_to, 1);
+            underlyingNpv = solver_->rollback(underlyingNpv, t_from, t_to, 1);
+            for (auto& c : cache) {
+                if (!c.initialised())
+                    continue;
+                c = solver_->rollback(c, t_from, t_to);
+            }
 
-        if (generateAdditionalResults_)
-            valueStripped = solver_->rollback(valueStripped, t_from, t_to, 1);
+            // need to roll back all future exercise indicators
+            for (Size j = i; j < grid.size(); ++j) {
+                exercisedCall[j] = solver_->rollback(exercisedCall[j], t_from, t_to);
+                exercisedPut[j] = solver_->rollback(exercisedPut[j], t_from, t_to);
+            }
 
-        for (auto c : rvCashflows) {
-            c = solver_->rollback(c, t_from, t_to, 1);
+            // need to roll back provisionalNpv, but only for part of the steps
+            if (i == 1 || t_from <= t_fwd_cutoff)
+                provisionalNpv = solver_->rollback(provisionalNpv, t_from, t_to);
         }
     }
 
-    // 11 set the result values
+    // 10 set expected cashflows if required
 
-    npv_ = value.at(0) / effIncomeCurve->discount(npvDate_);
+    if (expectedCashflows_) {
+
+        // 10.1 init a vector on the time grid with underlying discounted bond cashflows
+
+        std::vector<double> gridCashflows(grid.size(), 0.0);
+
+        for (Size j = 0; j < cashflows.size(); ++j) {
+            Size index = grid.closestIndex(events.time(cashflows[j].payDate));
+            if (grid[index] > t_fwd_cutoff) {
+                gridCashflows[index] +=
+                    cashflows[j].qlCf->amount() * effDiscountCurve->discount(cashflows[j].qlCf->date());
+            }
+        }
+
+        // 10.2 incorporate call and put exercises
+
+        double cumCallProb = 0.0;
+        double cumPutProb = 0.0;
+
+        for (Size i = 1; i < grid.size(); ++i) {
+
+            cumCallProb += exercisedCall[i].at(0) / effDiscountCurve->discount(grid[i]);
+            cumPutProb += exercisedPut[i].at(0) / effDiscountCurve->discount(grid[i]);
+
+            if (grid[i] > t_fwd_cutoff)
+                gridCashflows[i] = (1.0 - (cumCallProb + cumPutProb)) * gridCashflows[i] +
+                                   exercisedCall[i].at(0) *
+                                       getCallPriceAmount(events.getCallData(i), notional(grid[i]), accrual(grid[i])) +
+                                   exercisedPut[i].at(0) *
+                                       getCallPriceAmount(events.getPutData(i), notional(grid[i]), accrual(grid[i]));
+        }
+
+        // 10.3 allocate cashflows back to dates and store expectation in result vector
+
+        std::map<Date, Real> cf;
+        Date currentDate = events.latestRelevantDate();
+        for (Size i = grid.size() - 1; i > 0; --i) {
+            if (Date tmp = events.getAssociatedDate(i); tmp != Date())
+                currentDate = tmp;
+            if (Real tmp = gridCashflows[i]; !QuantLib::close_enough(tmp, 0.0)) {
+                cf[currentDate] += tmp;
+            }
+        }
+
+        for (auto& [d, v] : cf) {
+            expectedCashflows_->push_back(
+                QuantLib::ext::make_shared<SimpleCashFlow>(v / effDiscountCurve->discount(d), d));
+        }
+
+    }
+
+    // 11 set the cf results if required
+
+    if (cfResults_) {
+        for (Size j = 0; j < cashflows.size(); ++j) {
+            if (cashflows[j].payDate > npvDate_)
+                cfResults_->push_back(
+                    standardCashFlowResults(cashflows[j].qlCf, 1.0, std::string(), 0, Currency(), effDiscountCurve));
+        }
+    }
+
+    // 12 set the result values
+
+    Real totalUnderlyingNpv = underlyingNpv.at(0);
+    for (auto const& c : cache) {
+        if (c.initialised())
+            totalUnderlyingNpv += c.at(0);
+    }
+    totalUnderlyingNpv += provisionalNpv.at(0);
+
+    npv_ = (totalUnderlyingNpv + optionNpv.at(0)) / effIncomeCurve->discount(npvDate_);
 
     if (conditionalOnSurvival_)
         npv_ /= effCreditCurve->survivalProbability(npvDate_);
@@ -291,34 +395,19 @@ void NumericLgmCallableBondEngineBase::calculate() const {
                        effCreditCurve->survivalProbability(settlementDate_) *
                        effCreditCurve->survivalProbability(settlementDate_);
 
-    if (expectedCashflows_) {
-        std::map<Date, Real> cf;
-        Date currentDate = events.latestRelevantDate();
-        for (Size i = grid.size() - 1; i > 0; --i) {
-            if (Date tmp = events.getAssociatedDate(i); tmp != Date())
-                currentDate = tmp;
-            if (Real tmp = rvCashflows[i - 1].at(0); !QuantLib::close_enough(tmp, 0.0)) {
-                cf[currentDate] += tmp;
-            }
-        }
-        for (auto& [d, v] : cf) {
-            v /= effDiscountCurve->discount(d);
-            expectedCashflows_->push_back(QuantLib::ext::make_shared<SimpleCashFlow>(v, d));
-        }
-    }
 
-    // 12 set additional results if requested
+    // 13 set additional results if requested
 
     if (!generateAdditionalResults_)
         return;
 
-    // 12.1 additional results from lgm model
+    // 13.1 additional results from lgm model
 
     additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
 
-    // 12.2 stripped underlying bond, and call / put option
+    // 13.2 stripped underlying bond, and call / put option
 
-    Real npvStripped = valueStripped.at(0) / effIncomeCurve->discount(npvDate_);
+    Real npvStripped = totalUnderlyingNpv / effIncomeCurve->discount(npvDate_);
     if (conditionalOnSurvival_)
         npvStripped /= effCreditCurve->survivalProbability(npvDate_);
     Real settlementValueStripped = npvStripped / effIncomeCurve->discount(settlementDate_) /
@@ -329,7 +418,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
     additionalResults_["strippedBondSettlementValue"] = settlementValueStripped;
     additionalResults_["callPutValue"] = settlementValueStripped - settlementValue_;
 
-    // 12.3 event table
+    // 13.3 event table
 
     constexpr Size width = 12;
     std::ostringstream header;
