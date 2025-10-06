@@ -70,8 +70,6 @@ COPY --from=orebuild /usr/include/CL /usr/include/CL
 COPY --from=orebuild /oreswig /oreswig
 
 
-# COPY --from=orebuild /usr/bin/ /usr/bin/
-
 RUN ldconfig
 
 CMD bash
