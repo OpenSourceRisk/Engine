@@ -21,9 +21,11 @@
 #include <qle/instruments/cashflowresults.hpp>
 
 #include <ql/instrument.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/pricingengine.hpp>
 #include <ql/qldefines.hpp>
 #include <ql/time/date.hpp>
+#include <ql/cashflows/duration.hpp>
 
 namespace QuantExt {
 
@@ -32,12 +34,26 @@ struct ForwardEnabledBondEngine {
     // forwardNpv and settlement, do not call directly but via forwardPrice() function below
     std::pair<QuantLib::Real, QuantLib::Real> virtual forwardPrice(
         const QuantLib::Date& forwardNpvDate, const QuantLib::Date& settlementDate,
-        const bool conditionalOnSurvival = true, std::vector<CashFlowResults>* const cfResults = nullptr) const = 0;
+        const bool conditionalOnSurvival = true, std::vector<CashFlowResults>* const cfResults = nullptr,
+        QuantLib::Leg* const expectedCashflows = nullptr) const = 0;
 };
 
 std::pair<QuantLib::Real, QuantLib::Real>
 forwardPrice(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, const QuantLib::Date& forwardDate,
              const QuantLib::Date& settlementDate, const bool conditionalOnSurvival = true,
-             std::vector<CashFlowResults>* const cfResults = nullptr);
+             std::vector<CashFlowResults>* const cfResults = nullptr, QuantLib::Leg* const expectedCashflows = nullptr);
+
+QuantLib::Real yield(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Real price,
+                     const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
+                     QuantLib::Frequency frequency, QuantLib::Date forwardDate = QuantLib::Date(),
+                     QuantLib::Date settlementDate = QuantLib::Date(), QuantLib::Real accuracy = 1.0e-10,
+                     QuantLib::Size maxIterations = 100, QuantLib::Rate guess = 0.05,
+                     QuantLib::Bond::Price::Type priceType = QuantLib::Bond::Price::Clean);
+
+QuantLib::Real duration(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instrument, QuantLib::Rate yield,
+                        const QuantLib::DayCounter& dayCounter, QuantLib::Compounding compounding,
+                        QuantLib::Frequency frequency, QuantLib::Duration::Type type = QuantLib::Duration::Modified,
+                        QuantLib::Date forwardDate = QuantLib::Date(),
+                        QuantLib::Date settlementDate = QuantLib::Date());
 
 } // namespace QuantExt

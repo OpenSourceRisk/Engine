@@ -70,6 +70,8 @@ protected:
 
     //! Calculate the discounted value of the front end protection.
     QuantLib::Real fep() const;
+    QuantLib::Real unrealizedFep() const;
+    QuantLib::Real realizedFep() const;
 
     //! Store inputs
     std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> probabilities_;
@@ -85,6 +87,8 @@ protected:
 
     //! Store the underlying index CDS notional(s) during calculation.
     mutable std::vector<QuantLib::Real> notionals_;
+
+    mutable QuantLib::Real unrealizedFep_, realizedFep_, totalFep_;
 };
 
 } // namespace QuantExt

@@ -38,14 +38,18 @@ public:
     /*! The risk-free rate in the given process \p bsp is used for both forecasting and discounting.
      */
     AnalyticCashSettledEuropeanEngine(const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
-                                      const bool flipResults = false);
+                                      const bool flipResults = false,
+                                      QuantLib::DiffusionModelType model = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                      const double displacement = 0.0);
 
     /*! As usual, the risk-free rate from the given process \p bsp is used for forecasting the forward price. The
         \p discountCurve is used for discounting.
     */
     AnalyticCashSettledEuropeanEngine(const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
                                       const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                      const bool flipResults = false);
+                                      const bool flipResults = false,
+                                      QuantLib::DiffusionModelType model = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                      const double displacement = 0.0);
 
     //! \name PricingEngine interface
     //@{

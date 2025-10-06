@@ -163,6 +163,11 @@ void PNLCalculator::populateTradePNLs(const TradePnLStore& allPnls, const TradeP
     foTradePnls_ = foPnls;
 }
 
+void PNLCalculator::populateRiskFactorTradePNLs(const RiskFactorTradePnLStore& allPnls, const RiskFactorTradePnLStore& foPnls) {
+    riskFactorTradePnls_ = allPnls;
+    riskFactorFoTradePnls_ = foPnls;
+}
+
  const bool PNLCalculator::isInTimePeriod(Date startDate, Date endDate) {
     return pnlPeriod_.contains(startDate) && pnlPeriod_.contains(endDate);
 }
@@ -211,7 +216,7 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     const vector<ext::shared_ptr<PNLCalculator>>& pnlCalculators,
     const ext::shared_ptr<CovarianceCalculator>& covarianceCalculator,
     const vector<string>& tradeIds, const bool includeGammaMargin, 
-    const bool includeDeltaMargin, const bool tradeLevel) {    
+    const bool includeDeltaMargin, const bool tradeLevel, const bool riskFactorLevel) {
 
     // Set of relevant keys from sensitivity records, needed for covariance matrix
     // Add the index of the key location in sensi shift cube
@@ -270,6 +275,24 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
             foTradePnls.at(i).reserve(nScenarios);
         }
     }
+    using RiskFactorTradePnLStore = std::vector<std::map<std::string, std::vector<QuantLib::Real>>>;
+
+    //calculators, scenarios, map<risk factors,  trades>
+    std::vector<RiskFactorTradePnLStore> riskFactorTradePnls, riskFactorFoTradePnls;
+
+    bool runRiskFactorLevel = riskFactorLevel && sensitivityStream_;
+    if (runRiskFactorLevel){
+        riskFactorTradePnls.clear();
+        riskFactorTradePnls.reserve(nCalculators);
+        riskFactorFoTradePnls.clear();
+        riskFactorFoTradePnls.reserve(nCalculators);
+        for (Size i = 0; i < nCalculators; i++) {
+            riskFactorTradePnls.push_back(std::vector<std::map<std::string, std::vector<QuantLib::Real>>>());
+            riskFactorTradePnls.at(i).reserve(nScenarios);
+            riskFactorFoTradePnls.push_back(std::vector<std::map<std::string, std::vector<QuantLib::Real>>>());
+            riskFactorFoTradePnls.at(i).reserve(nScenarios);
+        }
+    }
 
     hisScenGen_->reset();
     QuantLib::ext::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
@@ -277,11 +300,11 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     // If we have been asked for a trade level P&L contribution report or detail report, store the trade level
     // sensitivities. We store them in a container here that is easily looked up in the loop below.
     TradeSensiCache tradeSensiCache;
-    if (runTradeLevel) {
+    if (runTradeLevel || runRiskFactorLevel) {
         cacheTradeSensitivities(tradeSensiCache, *sensitivityStream_, srs, tradeIds);
     }
 
-    // Loop over each historical scenario
+    // Loop over each historical
     for (Size i = 0; i < hisScenGen_->numScenarios(); i++) {
 
         // Add trade level P&L vector if needed.
@@ -292,6 +315,23 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                 if (inPeriod) {
                     tradePnls.at(j).push_back(vector<Real>(tradeIds.size(), 0.0));
                     foTradePnls.at(j).push_back(vector<Real>(tradeIds.size(), 0.0));
+                }
+            }
+        }
+
+        std::map<std::string, std::vector<QuantLib::Real>> riskFactorTradeMap;
+        if (runRiskFactorLevel){
+            for (Size j = 0; j < pnlCalculators.size(); j++) {
+                bool inPeriod =
+                    pnlCalculators.at(j)->isInTimePeriod(hisScenGen_->startDates()[i], hisScenGen_->endDates()[i]);
+                if (inPeriod) {
+                    for (const auto elem : srs | boost::adaptors::indexed(0)) {
+                        const auto& sr = elem.value();
+                        std::string riskFactorKey = QuantExt::reconstructFactor(sr.key_1, sr.desc_1);
+                        riskFactorTradeMap[riskFactorKey] = vector<Real>(tradeIds.size(), 0.0);
+                    }
+                    riskFactorTradePnls.at(j).push_back(riskFactorTradeMap);
+                    riskFactorFoTradePnls.at(j).push_back(riskFactorTradeMap);
                 }
             }
         }
@@ -341,6 +381,14 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                                         if (includeGammaMargin)
                                             tradePnls.at(k).back()[kv.first] += tradeGammaPnl;
                                     }
+                                    if (runRiskFactorLevel) {        
+                                        std::string riskFactorKey = QuantExt::reconstructFactor(sr.key_1, sr.desc_1);
+                                        riskFactorFoTradePnls.at(k).back()[riskFactorKey][kv.first] = tradeDeltaPnl;
+                                        if (includeDeltaMargin)
+                                            riskFactorTradePnls.at(k).back()[riskFactorKey][kv.first] = tradeDeltaPnl;
+                                        if (includeGammaMargin)
+                                            riskFactorTradePnls.at(k).back()[riskFactorKey][kv.first] += tradeGammaPnl;
+                                    }
                                 }
                             }
                         }
@@ -373,13 +421,17 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
                                     if (runTradeLevel && includeGammaMargin) {
                                         tradePnls.at(j).back()[kv.first] += tradeGammaPnl;
                                     }
-                                }
+                                    if (runRiskFactorLevel && includeGammaMargin) {        
+                                        std::string riskFactorKey = QuantExt::reconstructFactor(sr.key_1, sr.desc_1);
+                                        riskFactorTradePnls.at(j).back()[riskFactorKey][kv.first] += tradeGammaPnl;
+                                    }
                             }
                         }
                     }
 
                 }
             }
+        }
         }
         if (covarianceCalculator)
             covarianceCalculator->updateAccumulators(shiftCube, hisScenGen_->startDates()[i], hisScenGen_->endDates()[i], i);
@@ -392,6 +444,9 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
         pnlCalculators.at(j)->populatePNLs(allPnls, allFoPnls, hisScenGen_->startDates(), hisScenGen_->endDates());
         if (runTradeLevel)
             pnlCalculators.at(j)->populateTradePNLs(tradePnls.at(j), foTradePnls.at(j));
+        if (runRiskFactorLevel){
+            pnlCalculators.at(j)->populateRiskFactorTradePNLs(riskFactorTradePnls.at(j), riskFactorFoTradePnls.at(j));
+        }
     }
 }
 

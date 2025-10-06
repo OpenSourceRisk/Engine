@@ -29,8 +29,10 @@ BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::BlackVarianc
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter, bool lowerStrikeConstExtrap,
                                                        bool upperStrikeConstExtrap,
-                                                       QuantLib::BlackVolTimeExtrapolation timeExtrapolation)
-    : BlackVarianceTermStructure(referenceDate, cal),
+                                                       QuantLib::BlackVolTimeExtrapolation timeExtrapolation,
+                                                       const VolatilityType volType,
+                                                       const Real shift)
+    : BlackVarianceTermStructure(referenceDate, cal, Following, dayCounter, volType, shift),
       OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>(referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap),
       timeExtrapolation_(timeExtrapolation) {
 

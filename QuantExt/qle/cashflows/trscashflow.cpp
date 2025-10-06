@@ -21,10 +21,10 @@
 namespace QuantExt {
 
 TRSCashFlow::TRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
-                                 const Real notional, const QuantLib::ext::shared_ptr<Index>& index,
-                                 const Real initialPrice, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
-    : paymentDate_(paymentDate), fixingStartDate_(fixingStartDate), fixingEndDate_(fixingEndDate),
-      notional_(notional), index_(index), initialPrice_(initialPrice), fxIndex_(fxIndex) {
+                         const Real notional, const QuantLib::ext::shared_ptr<Index>& index, const Real initialPrice,
+                         const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const bool applyFXIndexFixingDays)
+    : paymentDate_(paymentDate), fixingStartDate_(fixingStartDate), fixingEndDate_(fixingEndDate), notional_(notional),
+      index_(index), initialPrice_(initialPrice), fxIndex_(fxIndex), applyFXIndexFixingDays_(applyFXIndexFixingDays) {
     registerWith(index_);
     registerWith(fxIndex_);
 }
@@ -42,11 +42,27 @@ void TRSCashFlow::accept(AcyclicVisitor& v) {
 }
 
 Real TRSCashFlow::fxStart() const {
-    return fxIndex_ ? fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(fixingStartDate_, Preceding)) : 1.0;
+    return fxIndex_ ? fxIndex_->fixing(fxFixingStartDate()) : 1.0;
 }
 
 Real TRSCashFlow::fxEnd() const {
-    return fxIndex_ ? fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(fixingEndDate_, Preceding)) : 1.0;
+    return fxIndex_ ? fxIndex_->fixing(fxFixingEndDate()) : 1.0;
+}
+
+Date TRSCashFlow::fxFixingStartDate() const {
+    if (fxIndex_ == nullptr){
+        return Date();
+    }
+    return applyFXIndexFixingDays_ ? fxIndex_->fixingDate(fixingStartDate_)
+                                   : fxIndex_->fixingCalendar().adjust(fixingStartDate_, Preceding);
+}
+
+Date TRSCashFlow::fxFixingEndDate() const {
+    if (fxIndex_ == nullptr){
+        return Date();
+    }
+    return applyFXIndexFixingDays_ ? fxIndex_->fixingDate(fixingEndDate_)
+                                   : fxIndex_->fixingCalendar().adjust(fixingEndDate_, Preceding);
 }
 
 Real TRSCashFlow::assetStart() const {
@@ -67,6 +83,11 @@ TRSLeg& TRSLeg::withInitialPrice(Real initialPrice) {
     return *this;
 }
 
+TRSLeg& TRSLeg::withApplyFXIndexFixingDays(bool applyFXIndexFixingDays) {
+    applyFXIndexFixingDays_ = applyFXIndexFixingDays;
+    return *this;
+}
+
 TRSLeg::operator Leg() const {
     Leg leg;
     Real initialPrice;
@@ -74,7 +95,7 @@ TRSLeg::operator Leg() const {
     for (Size i = 0; i < valuationDates_.size() - 1; ++i) {
         initialPrice = i == 0 ? initialPrice_ : Null<Real>();
         leg.push_back(QuantLib::ext::make_shared<TRSCashFlow>(paymentDates_[i], valuationDates_[i], valuationDates_[i + 1],
-                                                          notional_, index_, initialPrice, fxIndex_));
+                                                          notional_, index_, initialPrice, fxIndex_, applyFXIndexFixingDays_));
     }
     return leg;
 }

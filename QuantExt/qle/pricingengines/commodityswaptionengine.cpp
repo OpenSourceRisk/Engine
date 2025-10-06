@@ -79,6 +79,10 @@ CommoditySwaptionBaseEngine::CommoditySwaptionBaseEngine(const Handle<YieldTermS
                                                          const Handle<BlackVolTermStructure>& vol, Real beta)
     : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
+    QL_REQUIRE(!volStructure_.empty(), "no volatility structure provided");
+    QL_REQUIRE(volStructure_->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                   QuantLib::close_enough(volStructure_->shift(), 0.0),
+               "only lognormal volatilities are supported");
     registerWith(discountCurve_);
     registerWith(volStructure_);
 }

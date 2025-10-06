@@ -285,8 +285,8 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
   ORE\_ENABLE\_CUDA & Build the compute environment using CUDA, to utilise a GPU & OFF \\
   \hline
 % TODO: This is still in experimental stage, to be documented for release 14
-%  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF \\
-%  \hline
+  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF \\
+  \hline
   ORE\_USE\_ZLIB & Use compression for boost::iostreams, e.g. to write compressed cube files & OFF\\
   \hline
   ORE\_MULTITHREADING \_CPU\_AFFINITY & Set cpu affinitity in multithreaded calculations & OFF \\
@@ -510,3 +510,23 @@ do a ``pip install open-source-risk-engine'') are built on github using github w
 \medskip
 Typical usage of the Python module is shown in ORE's {\tt Examples/ORE-Python} directory adn described in user guide section
 \ref{example:orepython}.
+
+\subsection{ORE with Python Integration}\label{sec:orepythonintegration}
+
+This section describes a new (still experimental) feature of ORE that supports calls from ORE into Python in order to utilise
+some functionality that is readily available in Python so that we can avoid its implementation in C++ in ``core ORE'', e.g.
+for testing purposes. An example is the use of regression methods provided in the {\tt scikit-learn} and {\tt py-earth2}
+Python modules, as demonstrated in Example/InitialMargin where we have provided an option to utilise such methods
+embedded into American Monte Carlo as alternatives for the usual polynomial regression provided by QuantLib.
+
+Prerequisites for using this functionality are
+\begin{itemize}
+\item building ORE with the {\tt ORE\_PYTHON\_INTEGRATION} switch set to {\tt ON}, see section \ref{sec:build};
+\item specifying the {\tt Python\_ROOT} and {\tt Python\_LIBRARY} variables when calling {\tt cmake}
+  so that cmake finds the Python installation on your system, as in the case of building Python wheels \ref{sec:oreswig};
+\item extending the {\tt PYTHONPATH} environment variable to contain directory {\tt ore/PythonIntegration}
+  where ORE will be looking for the the script {\tt ore\_python\_integration.py} that contains the Python functions that
+  can be called from the C++ side of ORE.
+\end{itemize}
+
+See the Jupyter notebook Examples/InitialMargin/ore\_dynamicsimm.ipynb for a demonstration of this new feature.

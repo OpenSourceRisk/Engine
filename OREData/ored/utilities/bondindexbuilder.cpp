@@ -91,7 +91,7 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
     } catch (...) {
     }
 
-    // build and return the index
+    // build the index
     bondIndex_ = QuantLib::ext::make_shared<QuantExt::BondIndex>(
         securityId, dirty_, relative, fixingCalendar, bond_, discountCurve, defaultCurve, recovery, spread, incomeCurve,
         conditionalOnSurvival, parseDate(bondData_.issueDate()), bondData_.priceQuoteMethod(),
