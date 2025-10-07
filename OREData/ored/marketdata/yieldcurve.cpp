@@ -1316,15 +1316,22 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                         return h->pillarDate() < h->pillarDate();
                     });
                 minMaxDatePerSegment[i] = std::make_pair((*minIt)->pillarDate(), (*maxIt)->pillarDate());
+                DLOG("curve segment #" << i << " has min pillar date " << minMaxDatePerSegment[i].first
+                                       << ", max pillar date " << minMaxDatePerSegment[i].second);
             }
         }
 
         /* If there are two segments with different priorities and overlapping instruments, remove instruments as
          * appropriate */
 
+        DLOG("checking overlap of segments and remove instruments");
+
         for (Size i = 0; i < curveSegments_[index].size(); ++i) {
             if (i < curveSegments_[index].size() - 1 &&
                 curveSegments_[index][i]->priority() > curveSegments_[index][i + 1]->priority()) {
+                DLOG("checking overlap between segment #"
+                     << i << " with priority " << curveSegments_[index][i]->priority() << " and segment #" << (i + 1)
+                     << " with priority " << curveSegments_[index][i + 1]->priority());
                 for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
                     if ((*it)->pillarDate() >
                         minMaxDatePerSegment[i + 1].first - curveSegments_[index][i]->minDistance()) {
@@ -1340,6 +1347,9 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                 }
             }
             if (i > 0 && curveSegments_[index][i - 1]->priority() < curveSegments_[index][i]->priority()) {
+                DLOG("checking overlap between segment #"
+                     << i - 1 << " with priority " << curveSegments_[index][i - 1]->priority() << " and segment #" << i
+                     << " with priority " << curveSegments_[index][i]->priority());
                 for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
                     if ((*it)->pillarDate() <
                         minMaxDatePerSegment[i - 1].second + curveSegments_[index][i - 1]->minDistance()) {
@@ -1367,6 +1377,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
         Size mixedInterpolationSize = 0;
         for (Size i = 0; i < curveConfig_[index]->mixedInterpolationCutoff(); ++i)
             mixedInterpolationSize += instrumentsPerSegment[i].size();
+
+        DLOG("mixed interpolation size is " << mixedInterpolationSize);
 
         /* Now put all remaining instruments into a single vector. */
 

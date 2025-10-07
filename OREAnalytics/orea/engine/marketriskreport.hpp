@@ -229,11 +229,11 @@ public:
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
         std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
-        const bool requireTradePnl = false)
+        const bool requireTradePnl = false, const bool requireRiskFactorPnl = false)
         : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter), period_(period),
           hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
           fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
-          requireTradePnl_(requireTradePnl) {
+          requireTradePnl_(requireTradePnl), requireRiskFactorPnl_(requireRiskFactorPnl) {
     }
     virtual ~MarketRiskReport() {}
 
@@ -272,6 +272,8 @@ protected:
     bool breakdown_ = false;
     // Whether we require trade-level PnLs to use for later calculations
     bool requireTradePnl_ = false;
+    // Whether we require risk factor level PnLs to use for later calculations
+    bool requireRiskFactorPnl_ = false;
 
     QuantLib::ext::shared_ptr<MarketRiskGroupBaseContainer> riskGroups_;
     QuantLib::ext::shared_ptr<TradeGroupBaseContainer> tradeGroups_;
@@ -302,6 +304,7 @@ protected:
     virtual void registerProgressIndicators();
     virtual void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) = 0;
     virtual bool runTradeDetail(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) { return requireTradePnl_; };
+    virtual bool runRiskFactorDetail(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) { return requireRiskFactorPnl_; };
     virtual QuantLib::ext::shared_ptr<ScenarioFilter>
     createScenarioFilter(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup);
 

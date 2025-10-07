@@ -123,10 +123,18 @@ void DiscountingForwardBondEngine::calculate() const {
         }
     }
 
-    // relable cashflow results from underlying bond
+    // relabel cashflow results from underlying bond, scale with bond notional
 
     for (auto& r : cfResults) {
         r.type = "Bond_" + r.type;
+        if (r.amount != Null<Real>())
+            r.amount *= arguments_.bondNotional;
+        if (r.notional != Null<Real>())
+            r.notional *= arguments_.bondNotional;
+        if (r.presentValue != Null<Real>())
+            r.presentValue *= arguments_.bondNotional;
+        if (r.presentValueBase != Null<Real>())
+            r.presentValueBase *= arguments_.bondNotional;
     }
 
     // add cashflow for forward
