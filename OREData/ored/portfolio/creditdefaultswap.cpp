@@ -49,16 +49,22 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         if (creditRefDatum->creditData().entityType == "") {
             ALOG("EntityType is blank in credit reference data for entity " << entity);
         }
+        type_ = creditRefDatum->creditData().primaryPriceType;
     } else {
         ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
     }
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
 
-    type_ = market->defaultCurve(entity)->refData().type;
+    if(!refData || (refData && !refData->hasData("Credit", entity))){
+        // The try is needed when the CDS is a use_cp_trade = True
+        try{
+            type_ = market->defaultCurve(entity)->refData().type;
+        }catch(...){}
+    }
 
     auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();
