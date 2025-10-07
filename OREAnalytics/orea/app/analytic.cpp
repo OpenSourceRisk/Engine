@@ -207,7 +207,7 @@ QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
     return QuantLib::ext::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations,
                                              inputs_->refDataManager(),
-                                             *inputs_->iborFallbackConfig());
+                                             inputs_->iborFallbackConfig());
 }
 
 void Analytic::setUp() {
@@ -248,7 +248,7 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
             market_ = QuantLib::ext::make_shared<TodaysMarket>(
                 configurations().asofDate, configurations().todaysMarketParams, loader_, configurations().curveConfig,
                 inputs()->continueOnError(), false, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
-                *inputs()->iborFallbackConfig());
+                inputs()->iborFallbackConfig());
         } catch (const std::exception& e) {
             if (marketRequired) {
                 stopTimer("buildMarket()");
@@ -331,9 +331,9 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
         // always continue on error and always use lazy market building
         QuantLib::ext::shared_ptr<Market> market =
             QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, false, true,
-                                             params->refDataManager(), false, *params->iborFallbackConfig());
+                                             params->refDataManager(), false, params->iborFallbackConfig());
         return BondSpreadImply::implyBondSpreads(securities, params->refDataManager(), market, params->pricingEngine(),
-                                                 Market::defaultConfiguration, *params->iborFallbackConfig());
+                                                 Market::defaultConfiguration, params->iborFallbackConfig());
     } else {
         // no bonds that require a spread imply => return null ptr
         return QuantLib::ext::shared_ptr<Loader>();
@@ -349,7 +349,7 @@ void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Por
     if (!portfolio->isBuilt()) {
         PortfolioAnalyser(
             portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(), configurations().curveConfig,
-            inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            inputs_->refDataManager(), inputs_->iborFallbackConfig());
     }
 
     auto isFallbackFixingDateWithinLimit = [this](Date originalFixingDate, Date fallbackFixingDate) {

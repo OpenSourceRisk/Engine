@@ -76,6 +76,8 @@ class Conventions {
     void add(const ext::shared_ptr<Convention>& convention);
     void fromXMLString(const std::string& xmlString);
     void fromFile(const std::string& xmlFileName);
+    std::string toXMLString() const;
+    void toFile(const std::string& filename) const;
 };
 
 %shared_ptr(Convention)

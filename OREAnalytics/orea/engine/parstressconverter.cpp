@@ -167,7 +167,7 @@ ParStressTestConverter::computeParSensitivity(const std::set<RiskFactorKey::KeyT
         todaysMarket_, simMarketParams_, Market::defaultConfiguration,
         curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
         todaysMarketParams_ ? *todaysMarketParams_ : ore::data::TodaysMarketParameters(), true,
-        sensiScenarioData_->useSpreadedTermStructures(), false, true, *iborFallbackConfig_);
+        sensiScenarioData_->useSpreadedTermStructures(), false, true, iborFallbackConfig_);
     LOG("ParStressConverter: Build ScenarioGenerator");
     auto scnearioFactory = QuantLib::ext::make_shared<ore::analytics::DeltaScenarioFactory>(simMarket->baseScenario());
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(

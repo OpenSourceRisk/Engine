@@ -61,7 +61,7 @@ QuantLib::ext::shared_ptr<EngineFactory> CalibrationAnalyticImpl::engineFactory(
     std::vector<QuantLib::ext::shared_ptr<LegBuilder>> extraLegBuilders;
 
     engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
-        edCopy, analytic()->market(), configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        edCopy, analytic()->market(), configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
 
     return engineFactory_;
 }

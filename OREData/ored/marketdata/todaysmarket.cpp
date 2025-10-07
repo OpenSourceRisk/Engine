@@ -77,8 +77,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const QuantLib::ext::shared_ptr<Tod
                            const QuantLib::ext::shared_ptr<Loader>& loader,
                            const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs, const bool continueOnError,
                            const bool loadFixings, const bool lazyBuild,
-                           const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                           const bool preserveQuoteLinkage, const IborFallbackConfig& iborFallbackConfig,
+                           const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData, const bool preserveQuoteLinkage,
+                           const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig,
                            const bool buildCalibrationInfo, const bool handlePseudoCurrencies)
     : MarketImpl(handlePseudoCurrencies), params_(params), loader_(loader), curveConfigs_(curveConfigs),
       continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
@@ -326,8 +326,8 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration "
                                      << configuration);
                 auto tmpIndex = parseIborIndex(node.name, itr->second->handle(ycspec->name()));
-                if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
-                    auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
+                if (iborFallbackConfig_->isIndexReplaced(node.name, asof_)) {
+                    auto fallbackData = iborFallbackConfig_->fallbackData(node.name);
                     auto h = iborIndices_.find(std::make_pair(configuration, fallbackData.rfrIndex));
                     if (h == iborIndices_.end()) {
                         h = iborIndices_.find(std::make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
@@ -346,16 +346,16 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                     if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
                         tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
                             original, oi, fallbackData.spread, fallbackData.switchDate,
-                            iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                            iborFallbackConfig_->useRfrCurveInTodaysMarket());
                     else
                         tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
                             tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
-                            iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                            iborFallbackConfig_->useRfrCurveInTodaysMarket());
                     TLOG("built ibor fall back index for '" << node.name << "' in configuration " << configuration
                                                             << " using rfr index '" << fallbackData.rfrIndex
                                                             << "', spread " << fallbackData.spread
                                                             << ", will use rfr curve in t0 market: " << std::boolalpha
-                                                            << iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                                                            << iborFallbackConfig_->useRfrCurveInTodaysMarket());
                 }
                 iborIndices_[make_pair(configuration, node.name)] = Handle<IborIndex>(tmpIndex);
             } else {

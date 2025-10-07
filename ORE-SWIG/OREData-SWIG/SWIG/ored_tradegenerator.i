@@ -27,7 +27,7 @@
 %{
 using ore::data::Portfolio;
 using ore::data::TradeGenerator;
-using ore::data::LegData;void test(QuantLib::ext::optional<bool> test_);
+using ore::data::LegData;
 using ore::data::XMLUtils;
 using ore::data::XMLSerializable;
 %}

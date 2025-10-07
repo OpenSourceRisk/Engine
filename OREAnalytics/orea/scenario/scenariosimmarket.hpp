@@ -82,7 +82,8 @@ public:
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
                       const bool cacheSimData = false, const bool allowPartialScenarios = false,
-                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                      const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                          QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                       const bool handlePseudoCurrencies = true,
                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr);
 
@@ -94,7 +95,8 @@ public:
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
                       const bool cacheSimData = false, const bool allowPartialScenarios = false,
-                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                      const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                          QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                       const bool handlePseudoCurrencies = true,
                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr);
 
@@ -204,7 +206,7 @@ protected:
 
     bool cacheSimData_;
     bool allowPartialScenarios_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 
     // for delta scenario application
     std::set<ore::analytics::RiskFactorKey> diffToBaseKeys_;
