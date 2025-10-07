@@ -244,7 +244,8 @@ public:
         //! reference data
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         //! additional engine builders
         const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
 
@@ -265,7 +266,7 @@ public:
     //! Return the reference data used by this EngineFactory
     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
     //! Return the ibor fallback config
-    const IborFallbackConfig& iborFallbackConfig() const { return iborFallbackConfig_; }
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
 
     //! Get a builder by trade type
     /*! This will look up configured model/engine for that trade type
@@ -302,7 +303,7 @@ private:
     map<LegType, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
     std::vector<ParameterOverride> modelParameterOverrides_;
     std::vector<ParameterOverride> engineParameterOverrides_;
     set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;

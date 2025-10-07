@@ -44,7 +44,7 @@ FdGaussianCam::FdGaussianCam(
     const Handle<CrossAssetModel>& cam, const std::string& currency, const Handle<YieldTermStructure>& curve,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::set<Date>& simulationDates, const Size stateGridPoints, const Size timeStepsPerYear,
-    const IborFallbackConfig& iborFallbackConfig, const Params& params)
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const Params& params)
     : ModelImpl(Model::Type::FD, params, curve->dayCounter(), stateGridPoints, {currency}, irIndices, {}, {}, {},
                 simulationDates, iborFallbackConfig),
       cam_(cam), currency_(currency), curve_(curve), simulationDates_(simulationDates),

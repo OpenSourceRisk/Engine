@@ -63,7 +63,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                    const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory = nullptr,
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                    bool continueOnError = false, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr);
 
 void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -77,7 +78,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                    const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                    bool continueOnError = false, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr);
 
 
@@ -91,7 +93,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                    const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                    bool continueOnError = false, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr);
 
 } // namespace analytics

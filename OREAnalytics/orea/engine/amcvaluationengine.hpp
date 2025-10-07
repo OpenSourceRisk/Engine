@@ -65,7 +65,8 @@ public:
         const std::string& amcPathDataInput, const std::string& amcPathDataOutput, bool amcIndividualTrainingInput,
         bool amcIndividualTrainingOutput,
         const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const bool handlePseudoCurrenciesTodaysMarket = true,
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
@@ -126,7 +127,7 @@ private:
     std::string configurationCrCalibration_;
     std::string configurationFinalModel_;
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-    ore::data::IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     bool handlePseudoCurrenciesTodaysMarket_;
     std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>
