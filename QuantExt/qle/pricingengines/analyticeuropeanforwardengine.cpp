@@ -107,7 +107,7 @@ namespace QuantExt {
         bool useNormalModel = modelType_ == QuantLib::DiffusionModelType::Bachelier ||
                               (modelType_ == QuantLib::DiffusionModelType::AsInputVolatilityType &&
                                process_->blackVolatility()->volType() == QuantLib::VolatilityType::Normal);
-        double shift = modelType_ == QuantLib::DiffusionModelType::Bachelier
+        double shift = useNormalModel
                            ? 0.0
                            : (modelType_ == QuantLib::DiffusionModelType::Black ? displacement_
                                                                                 : process_->blackVolatility()->shift());
