@@ -70,7 +70,8 @@ public:
                 const string& marketConfigurationInCcy = Market::inCcyConfiguration,
                 const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                    QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                 const bool bumpCvaSensis = false, const bool enableDynamicIM = false, const Size dynamicIMStepSize = 1,
                 const Size regressionOrder = 4, const double regressionVarianceCutoff = Null<Real>(),
                 const Size regressionOrderDynamicIm = 4, const double regressionVarianceCutoffDynamicIm = Null<Real>(),
@@ -203,7 +204,7 @@ private:
     std::string marketConfigurationInCcy_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityData_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
     bool bumpCvaSensis_;
     bool enableDynamicIM_;
     Size dynamicIMStepSize_;

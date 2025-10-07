@@ -55,7 +55,8 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
            const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-           const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+           const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+               QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 
     // these are guaranteed to be set only after engine() was called
     const std::string& npvCurrency() const { return model_ ? model_->baseCcy() : modelCG_->baseCcy(); }
@@ -78,7 +79,7 @@ protected:
     void extractIndices(const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr);
     void deriveProductClass(const std::vector<ScriptedTradeValueTypeData>& indices);
     void populateModelParameters();
-    void populateFixingsMap(const IborFallbackConfig& iborFallbackConfig);
+    void populateFixingsMap(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
     void extractPayCcys();
     void determineBaseCcy();
     void compileModelCcyList();
@@ -88,16 +89,16 @@ protected:
     virtual void setupBlackScholesProcesses(); // hook for custom building of processes
     void setupIrReversions();
     void compileSimulationAndAddDates();
-    void buildBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildFdBlackScholes(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildFdLocalVol(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+    void buildBlackScholes(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildFdBlackScholes(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildLocalVol(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildFdLocalVol(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                           const std::vector<std::string>& conditionalExpectationModelStates);
-    void buildFdGaussianCam(const std::string& id, const IborFallbackConfig& iborFallbackConfig);
-    void buildGaussianCamAMC(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+    void buildFdGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildGaussianCamAMC(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                              const std::vector<std::string>& conditionalExpectationModelStates);
-    void buildAMCCGModel(const std::string& id, const IborFallbackConfig& iborFallbackConfig,
+    void buildAMCCGModel(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                          const std::vector<std::string>& conditionalExpectationModelStates);
     void addAmcGridToContext(QuantLib::ext::shared_ptr<Context>& context) const;
     void setupCalibrationStrikes(const ScriptedTradeScriptData& script, const QuantLib::ext::shared_ptr<Context>& context);

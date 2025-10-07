@@ -23,6 +23,7 @@
 %include ored_reports.i
 %include ored_curveconfigurations.i
 %include ored_referencedatamanager.i
+%include ored_iborfallbackconfig.i
 %include ored_log.i
 %include std_map.i
 %include std_set.i
@@ -84,6 +85,7 @@ class Parameters {
     //void add(const std::string& groupName, const std::string& paramName, const std::string& paramValue);
 };
 
+%shared_ptr(IborFallbackConfig)
 %shared_ptr(InputParameters)
 class InputParameters {
 public:
@@ -99,6 +101,11 @@ public:
     const std::string& marketDataLoaderOutput();
     const ext::shared_ptr<BasicReferenceDataManager>& refDataManager() const;
     const ext::shared_ptr<EngineData>& pricingEngine() const;
+    const ext::shared_ptr<Conventions>& conventions() const;
+    const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig() const;
+    const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const;
+    const ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs();
+    const ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs();
 
     // and Setters
     void setAsOfDate(const std::string& s); 
@@ -420,7 +427,8 @@ public:
                       const ext::shared_ptr<EngineData>& ed, const std::string& baseCcy,
                       const ext::shared_ptr<CurveConfigurations>& curveConfigs = nullptr,
                       const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                      const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                          ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                       bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
 
     bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const;

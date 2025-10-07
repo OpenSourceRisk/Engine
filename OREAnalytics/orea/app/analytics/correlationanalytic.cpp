@@ -96,7 +96,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
         analytic()->market(), analytic()->configurations().simMarketParams,
         QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
         *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
-        inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(), false, nullptr);
+        inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig(), false, nullptr);
     
     auto scenarios = buildHistoricalScenarioGenerator(
         inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),

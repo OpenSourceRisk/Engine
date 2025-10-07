@@ -107,14 +107,14 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                       analytic()->configurations().simMarketParams, inputs_->scenarioReader(), report, cfReport,
                       inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-                      inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
                       scenarioReport);
     } else {
         runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                       analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
                       inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-                      nullptr, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
                       scenarioReport);
     }
 

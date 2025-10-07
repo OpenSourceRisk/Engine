@@ -32,7 +32,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
                                      const QuantLib::ext::shared_ptr<EngineData>& ed, const string& baseCcy,
                                      const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                                     const IborFallbackConfig& iborFallbackConfig,
+                                     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                      bool recordSecuritySpecificCreditCurves, const std::string& baseCcyDiscountCurve)
     : portfolio_(p), baseCcy_(baseCcy), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig),
       baseCcyDiscountCurve_(baseCcyDiscountCurve) {

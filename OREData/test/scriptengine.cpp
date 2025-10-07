@@ -709,7 +709,8 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
         std::vector<std::string>(), std::vector<std::string>(), std::set<std::string>{"EUR"},
         Handle<BlackScholesModelWrapper>(QuantLib::ext::make_shared<BlackScholesModelWrapper>()),
         std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), std::set<Date>{},
-        IborFallbackConfig::defaultConfig(), "ATM", std::map<std::string, std::vector<Real>>(), params);
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM",
+        std::map<std::string, std::vector<Real>>(), params);
 
     auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["underlying"] = IndexVec{nPaths, indexName};
@@ -792,7 +793,8 @@ BOOST_AUTO_TEST_CASE(testProbFunctions) {
     auto model = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::MC, nPaths, "USD", yts0, "EQ-Dummy", "USD",
         BlackScholesModelBuilder(yts0, process, simulationDates, std::set<Date>(), 1).model(), simulationDates,
-        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+        "ATM", std::vector<Real>(), params);
 
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
@@ -938,7 +940,8 @@ BOOST_AUTO_TEST_CASE(testEuropeanOption) {
     auto model = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
         BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
-        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM", std::vector<Real>(),
+        params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
@@ -1050,7 +1053,8 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
     auto model = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
         BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
-        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM", std::vector<Real>(),
+        params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE(*context);
@@ -1148,7 +1152,8 @@ BOOST_AUTO_TEST_CASE(testAsianOption) {
     auto model = QuantLib::ext::make_shared<BlackScholes>(
         Model::Type::MC, nPaths, "USD", yts, "EQ-SP5", "USD",
         BlackScholesModelBuilder(yts, process, simulationDates, payDates, 1).model(), simulationDates,
-        IborFallbackConfig::defaultConfig(), "ATM", std::vector<Real>(), params);
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM", std::vector<Real>(),
+        params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
@@ -1323,7 +1328,8 @@ BOOST_AUTO_TEST_CASE(testAutocallable) {
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(), indicesStr,
         std::vector<std::string>(3, "USD"), std::set<std::string>{"USD"},
         BlackScholesModelBuilder({yts}, processesBs, simulationDates, payDates, 24).model(), correlations,
-        simulationDates, IborFallbackConfig::defaultConfig(), "ATM", std::map<string, std::vector<Real>>(), params);
+        simulationDates, QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM",
+        std::map<string, std::vector<Real>>(), params);
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);

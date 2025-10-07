@@ -36,7 +36,8 @@ void addMarketObjectDependencies(
     std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>>* objects,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const std::string& baseCcy,
     const std::string& baseCcyDiscountCurve,
-    const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 
 //! Generate the curve spec name for a market object
 /*!
