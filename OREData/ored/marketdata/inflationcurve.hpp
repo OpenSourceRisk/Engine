@@ -63,7 +63,8 @@ public:
 private:
     struct CurveBuildResults {
         QuantLib::ext::shared_ptr<InflationTermStructure> curve;
-        std::vector<Period> pillarDates;
+        std::vector<QuantLib::Date> pillarDates;
+        QuantLib::Date latestMaturity;
         QuantLib::ext::shared_ptr<ZeroInflationIndex> index;
     };
 

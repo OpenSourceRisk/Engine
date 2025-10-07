@@ -67,10 +67,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // We loop over all market data, looking for quotes that match the configuration
         auto seasonality = buildSeasonality(asof, loader, config);
         QuantExt::ext::shared_ptr<ZeroInflationIndex> zcIndex;
+        CurveBuildResults results;
         if (config->type() == InflationCurveConfig::Type::ZC) {
-            auto res = buildZeroInflationCurve(asof, loader, conventions, config, nominalTs, seasonality);
-            curve_ = res.curve;
-            zcIndex = res.index;
+            results = buildZeroInflationCurve(asof, loader, conventions, config, nominalTs, seasonality);
+            curve_ = results.curve;
+            zcIndex = results.index;
             // Force bootstrapping, throw errors now and not later
             auto zr =
                     QuantLib::ext::static_pointer_cast<QuantLib::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(
@@ -84,12 +85,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 DLOG("Derive YoY inflation quotes from ZC for curve " << spec.name());
                 auto res = buildZeroInflationCurve(asof, loader, conventions, config, nominalTs, seasonality);
                 zeroInflCurve_ = res.curve;
-                
-                
             }
-            auto res =
+            results =
                 buildYoYInflationCurve(asof, loader, conventions, config, nominalTs, seasonality, derive_yoy_from_zc, zeroInflCurve_);
-            curve_ = res.curve;
+            curve_ = results.curve;
             // Force bootstrapping, throw errors now and not later
             auto yoyRate = QuantLib::ext::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
             DLOG("YoY rate at base date " << curve_->baseDate() << " is " << yoyRate);
@@ -105,13 +104,13 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         curve_->unregisterWith(Settings::instance().evaluationDate());
         
         // set calibration info
-        std::vector<Date> pillarDates;
+        std::vector<QuantLib::Date> pillarDates = results.pillarDates;
         if (buildCalibrationInfo) {
 
             if (pillarDates.empty()) {
                 // default: fill pillar dates with monthly schedule up to last term given in the curve config (but max
                 // 60y)
-                Date maturity = curve_->maxDate();
+                Date maturity = results.latestMaturity;
                 for (Size i = 1; i < 60 * 12; ++i) {
                     Date current = inflationPeriod(curve_->baseDate() + i * Months, curve_->frequency()).first;
                     if (current + curve_->observationLag() <= maturity)
@@ -273,6 +272,8 @@ InflationCurve::CurveBuildResults
                 QL_REQUIRE(zcq, "Could not cast to ZcInflationSwapQuote, internal error.");
                 CPI::InterpolationType observationInterpolation = convention->interpolated() ? CPI::Linear : CPI::Flat;
                 Date maturity = swapStart + zcq->term();
+                results.latestMaturity =
+                    results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
                 DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
                                             << " quote " << zcq->quote()->value());
                 QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
@@ -370,11 +371,14 @@ InflationCurve::CurveBuildResults
                 term = zcq->term();
             }
             Date maturity = swapStart + term;
+            results.latestMaturity =
+                results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
             QuantLib::ext::shared_ptr<YoYInflationTraits::helper> instrument =
                 QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
                     quote, convention->observationLag(), maturity, convention->fixCalendar(),
                     convention->fixConvention(), convention->dayCounter(), index, nominalTs, swapStart);
             instrument->unregisterWith(Settings::instance().evaluationDate());
+            results.pillarDates.push_back(instrument->pillarDate());
             helpers.push_back(instrument);
         }
     }
@@ -389,6 +393,7 @@ InflationCurve::CurveBuildResults
         helpers, {}, config->tolerance()));
     QL_DEPRECATED_ENABLE_WARNING
     results.index = zcIndex;
+    
     return results;
 }
 
