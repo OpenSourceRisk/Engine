@@ -620,8 +620,11 @@
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="xs:string" name="NominalTermStructure" minOccurs="1" maxOccurs="1"/>
       <xs:element type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="quoteType" name="Quotes"/>
-      <xs:element type="xs:string" name="Conventions"/>
+      <!-- Legacy block: Quotes/Conventions OR new Segments block -->
+      <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+      <!-- New Segments block use instead of Quotes/Conventions-->
+      <xs:element type="inflSegmentsType" name="Segments" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
@@ -633,6 +636,19 @@
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="inflSegmentsType">
+    <xs:sequence>
+      <xs:element type="inlfSegmentType" name="Segment" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inlfSegmentType">
+    <xs:all>
+      <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
