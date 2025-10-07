@@ -41,6 +41,7 @@
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/app/analytics/correlationanalytic.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -51,9 +52,85 @@ using namespace boost::filesystem;
 namespace ore {
 namespace analytics {
 
+std::string XvaAnalyticImpl::mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF) {
+    std::vector<std::string> ir = {"DiscountCurve", "IndexCurve", "OptionletVolatility",
+                                    "SwaptionVolatility", "YieldVolatility"};
+    std::vector<std::string> fx = {"FXSpot", "FXVolatility"};
+    std::vector<std::string> inf = {"CPIIndex", "ZeroInflationCurve","YoYInflationCurve",
+                                    "YoYInflationCapFloorVolatility", "YoYInflationCapFloorVolatility"};
+    std::vector<std::string> cr = {"SurvivalProbability", "SurvivalWeight", "RecoveryRate",
+                                   "CDSVolatility", "SecuritySpread", "CPR"};
+    std::vector<std::string> eq = {"EquitySpot", "EquityVolatility", "DividendYield"};
+    std::vector<std::string> com = {"CommodityCurve", "CommodityVolatility"};
+    std::vector<std::string> crstate = {"CreditState"};
+
+    std::unordered_map<std::string, std::vector<std::string>> mapping;
+    mapping["IR"] = ir;
+    mapping["FX"] = fx;
+    mapping["INF"] = inf;
+    mapping["CR"] = cr;
+    mapping["EQ"] = eq;
+    mapping["COM"] = com;
+    mapping["CrState"] = crstate;
+
+    for (const auto& pair : mapping) {
+        const auto& keyMap = pair.first;
+        const auto& vec = pair.second;
+        if (std::find(vec.begin(), vec.end(), ore::data::to_string(keyF)) != vec.end()) {
+            return keyMap;
+        }
+    }
+    return "";
+}
+
 /******************************************************************************
  * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR, DIM, MVA
  ******************************************************************************/
+void XvaAnalyticImpl::buildDependencies() {
+    if(inputs_->generateCorrelations()){
+        auto correlationAnalytic =
+                AnalyticFactory::instance().build("CORRELATION", inputs_, analytic()->analyticsManager(), false);
+            if (correlationAnalytic.second)
+                addDependentAnalytic(corrLookupKey, correlationAnalytic.second);
+    }
+}
+
+void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData){
+    DLOG("Parse Correlation Matrix as Cross Asset Model Data Instantaneous Correlation.");
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationData;
+    correlationData = !corrData.empty()?corrData:inputs_->correlationData();
+
+    QL_REQUIRE(correlationData.size()>0," No Correlations.");
+    // Instantaneous Correlation is a pair of smth "IR:USD, IR:GBP, EQ:SP5 etc.
+    std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> mapInstantaneousCor;
+    std::vector<std::string> vecAssetType = {"DiscountCurve", "FXSpot", "EquitySpot", "SurvivalProbability", "ZeroInflationCurve", "CommodityCurve"};
+    for (auto const& cor : correlationData) {
+        RiskFactorKey pair1 = cor.first.first;
+        RiskFactorKey pair2 = cor.first.second;
+        //We filter the RiskFactorKey because the instantaneous correlation only have one IR, FX, INF etc
+        if (std::find(vecAssetType.begin(), vecAssetType.end(), ore::data::to_string(pair1.keytype)) !=
+                vecAssetType.end() &&
+            std::find(vecAssetType.begin(), vecAssetType.end(), ore::data::to_string(pair2.keytype)) !=
+                vecAssetType.end()) {
+            //We want to exclude the combination type DiscountCurve/USD/0 and DiscountCurve/USD/1
+            //We select only those riskfactor to be mapped to an asset type
+            if (!((pair1.name == pair2.name) &&
+                    (ore::data::to_string(pair1.keytype) == ore::data::to_string(pair2.keytype)))) {
+                string asset1 = mapRiskFactorToAssetType(pair1.keytype);
+                string asset2 = mapRiskFactorToAssetType(pair2.keytype);
+                CorrelationFactor corrFactor1{parseCamAssetType(asset1), pair1.name, pair1.index};
+                CorrelationFactor corrFactor2{parseCamAssetType(asset2), pair2.name, pair2.index};
+                std::pair<CorrelationFactor, CorrelationFactor> correlationKey =
+                    std::make_pair(corrFactor1, corrFactor2);
+                mapInstantaneousCor[correlationKey] =
+                    QuantLib::Handle<QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(cor.second));
+                TLOG("Replaced correlation: (" << corrFactor1 << "," << corrFactor2 << ") = " << cor.second << ".");
+            }
+        }
+    }
+    QuantLib::ext::shared_ptr<InstantaneousCorrelations> instantaneousCorrelation = ext::make_shared<InstantaneousCorrelations>(mapInstantaneousCor);
+    analytic()->configurations().crossAssetModelData->setCorrelations(instantaneousCorrelation);
+}
 
 void XvaAnalyticImpl::setUpConfigurations() {
     LOG("XvaAnalytic::setUpConfigurations() called");
@@ -61,6 +138,10 @@ void XvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->exposureSimMarketParams();
     analytic()->configurations().scenarioGeneratorData = inputs_->scenarioGeneratorData();
     analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+
+    if(analytic()->configurations().crossAssetModelData!=nullptr && inputs_->correlationData().size()>0){
+        feedCorrelationToCAM();
+    }
 }
 
 void XvaAnalyticImpl::checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
@@ -217,9 +298,9 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
 }
 
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError, const bool allowModelFallbacks) {
-    if (inputs_->scenarioReader()) {
+    if (inputs_->scenarioReader()&&!inputs_->generateCorrelations()) {
         auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(inputs_->scenarioReader());
-        auto slg = QuantLib::ext::make_shared<ScenarioLoaderGenerator>(loader, inputs_->asof(), grid_->dates(),
+        auto slg = QuantLib::ext::make_shared<ScenarioLoaderPathGenerator>(loader, inputs_->asof(), grid_->dates(),
                                                                        grid_->timeGrid());
         scenarioGenerator_ = slg;
     } else {
@@ -550,7 +631,7 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     ext::shared_ptr<ore::data::Market> market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, market, configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates, stickyCloseOutDates), true);
+        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates, stickyCloseOutDates));
     return factory;
 }
 
@@ -645,10 +726,12 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
-            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgRegressionOrderDynamicIm(), inputs_->xvaCgRegressionVarianceCutoffDynamicIm(),
+            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
+            inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
-            "xva analytic");
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -659,6 +742,9 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             engine.setDynamicIMOutputCube(nettingSetCube_);
         }
         engine.run();
+
+        if (engine.dynamicImRegressionReport())
+            analytic()->addReport(LABEL, "xvacg-regression", engine.dynamicImRegressionReport());
 
     } else {
 
@@ -879,6 +965,18 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
     LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
 
+    if(inputs_->generateCorrelations()){
+        auto corrAnalytic = dependentAnalytic(corrLookupKey);
+        corrAnalytic->runAnalytic(loader,{"CORRELATION"});
+        auto cai = static_cast<CorrelationAnalyticImpl*>(corrAnalytic->impl().get());
+        auto corrReportObject = cai->correlationReport();
+        const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData = corrReportObject->correlationData();
+        QL_REQUIRE(!corrData.empty(),"generateCorrelations returned empty Correlations");
+        feedCorrelationToCAM(corrData);
+        auto report = corrAnalytic->reports().at("CORRELATION").at("correlation");
+        analytic()->addReport(LABEL,"correlation",report);
+    }
+
     LOG("XVA analytic called with asof " << io::iso_date(inputs_->asof()));
     ProgressMessage("Running XVA Analytic", 0, 1).log();
 
@@ -905,7 +1003,6 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
-        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
@@ -914,16 +1011,20 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
-            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgRegressionOrderDynamicIm(), inputs_->xvaCgRegressionVarianceCutoffDynamicIm(),
+            inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
+            inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
-            "xva analytic");
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
 
         engine.run();
 
         analytic()->addReport(LABEL, "xvacg-exposure", engine.exposureReport());
         if (inputs_->xvaCgSensiScenarioData())
             analytic()->addReport(LABEL, "xvacg-cva-sensi-scenario", engine.sensiReport());
+        if(engine.dynamicImRegressionReport())
+            analytic()->addReport(LABEL, "xvacg-regression", engine.dynamicImRegressionReport());
         return;
     }
 
@@ -971,14 +1072,10 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
             doAmcRun = !amcPortfolio_->trades().empty();
             doClassicRun = !residualPortfolio->trades().empty();
-
-            analytic()->enrichIndexFixings(amcPortfolio_);
         } else {
             for (const auto& [tradeId, trade] : inputs_->portfolio()->trades())
                 residualPortfolio->add(trade);
         }
-
-        analytic()->enrichIndexFixings(residualPortfolio);
 
         /********************************************************************************
          * This is where we build cubes and the "classic" valuation work is done
@@ -1043,8 +1140,6 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         // the trades will NOT be removed from the portfolio and DO participate in the post-processing.
         // any genuine error should have been reported during simulation stage
         analytic()->buildPortfolio(!inputs_->buildFailedTrades());
-
-        analytic()->enrichIndexFixings(analytic()->portfolio());
 
         // ... and load a pre-built cube for post-processing
 
@@ -1208,7 +1303,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                 postProcess_->exportDimCube(*dimCubeReport);
                 analytic()->addReport(LABEL, "dim_cube", dimCubeReport);
 
-	// Generate DIM regression reports
+                // Generate DIM regression reports
                 vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
                 for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
                     auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());

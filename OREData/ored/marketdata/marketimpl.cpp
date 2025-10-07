@@ -259,6 +259,11 @@ Handle<Quote> MarketImpl::conversionFactor(const string& key, const string& conf
     return lookup<Handle<Quote>>(conversionFactors_, key, configuration, "conversion factor");
 }
 
+Handle<Quote> MarketImpl::securityPrice(const string& key, const string& configuration) const {
+    require(MarketObject::Security, key, configuration);
+    return lookup<Handle<Quote>>(securityPrices_, key, configuration, "security price");
+}
+
 Handle<QuantExt::CreditVolCurve> MarketImpl::cdsVol(const string& key, const string& configuration) const {
     require(MarketObject::CDSVol, key, configuration);
     return lookup<Handle<QuantExt::CreditVolCurve>>(cdsVols_, key, configuration, "cds vol curve");

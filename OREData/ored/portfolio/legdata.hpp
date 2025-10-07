@@ -935,6 +935,8 @@ public:
     const ScheduleData& paymentSchedule() const { return paymentSchedule_; }
     bool strictNotionalDates() const { return strictNotionalDates_; }
     const bool isSimmPlainVanillaIrLeg() const { return concreteLegData_->isSimmPlainVanillaIrLeg(); };
+    const string& settlementFxIndex() const { return settlementFxIndex_; }
+    const string& settlementFxFixingDate() const { return settlementFxFixingDate_; }
     //@}
 
     //! \name modifiers
@@ -951,7 +953,6 @@ public:
     std::vector<std::string>& paymentDates() { return paymentDates_; }
     string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
     bool& strictNotionalDates() { return strictNotionalDates_; }
-    void setPaymentLag(std::string paymentLag) { paymentLag_ = paymentLag; }
     void setForeignAmount(double foreignAmount) { foreignAmount_ = foreignAmount; }
     //@}
 
@@ -992,6 +993,8 @@ private:
     string lastPeriodDayCounter_;
     ScheduleData paymentSchedule_;
     bool strictNotionalDates_ = false;
+    string settlementFxIndex_;
+    string settlementFxFixingDate_;
 };
 
 //! \name Utilities for building QuantLib Legs

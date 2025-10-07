@@ -44,14 +44,18 @@ using std::string;
 namespace QuantExt {
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const bool flipResults)
-    : underlyingEngine_(bsp), bsp_(bsp), flipResults_(flipResults) {
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const bool flipResults,
+    QuantLib::DiffusionModelType model, double displacement)
+    : underlyingEngine_(bsp, model, displacement), bsp_(bsp), flipResults_(flipResults) {
     registerWith(bsp_);
 }
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const Handle<YieldTermStructure>& discountCurve, const bool flipResults)
-    : underlyingEngine_(bsp, discountCurve), bsp_(bsp), discountCurve_(discountCurve), flipResults_(flipResults) {
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp,
+    const Handle<YieldTermStructure>& discountCurve, const bool flipResults, QuantLib::DiffusionModelType model,
+    double displacement)
+    : underlyingEngine_(bsp, discountCurve, model, displacement), bsp_(bsp), discountCurve_(discountCurve),
+      flipResults_(flipResults) {
     registerWith(bsp_);
     registerWith(discountCurve_);
 }
@@ -164,8 +168,9 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         QL_REQUIRE(underlyingResults, "Underlying engine expected to have compatible results.");
 
         double fxRate = 1.0;
+        Date fixingDate = Date();
         if (arguments_.fxIndex != nullptr) {
-            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
+            fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
                                   ? *arguments_.cashSettlementFxFixingDate
                                   : arguments_.fxIndex->fixingDate(expiryDate);
             fxRate = arguments_.fxIndex->fixing(fixingDate, false);
@@ -194,6 +199,10 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         cfResults.back().payDate = arguments_.paymentDate;
         cfResults.back().legNumber = 0;
         cfResults.back().type = "ExpectedFlow";
+        if (fixingDate != Date()){
+            cfResults.back().fixingDate = fixingDate;
+            cfResults.back().fixingValue = fxRate;
+        }
         results_.additionalResults["cashFlowResults"] = cfResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
         results_.additionalResults["settlementFxFwd"] = fxRate;

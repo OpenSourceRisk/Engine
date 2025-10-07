@@ -122,6 +122,7 @@ Allowable values:  See section \ref{ss:premiums}
 \item \lstinline!BarrierData!: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
 Levels specified in BarrierData should be quoted as the amount in SoldCurrnecy per unit BoughtCurrency, with both currencies as defined in FxDoubleBarrierOptionData node.
 Changing the option from Call to Put or vice versa does not require switching the barrier levels. Two levels in ascending order should be defined in \lstinline!Levels!. \lstinline!Type! should be \emph{KnockOut} or \emph{KnockIn}.
+StrictComparison [Optional]: Define wether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
 
 \item \lstinline!StartDate! [Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
 

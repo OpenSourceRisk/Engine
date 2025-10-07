@@ -23,6 +23,7 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
+#include <ql/pricingengines/diffusioncalculator.hpp>
 
 using std::adjacent_difference;
 using std::exp;
@@ -40,13 +41,58 @@ namespace CommodityAveragePriceOptionMomementMatching {
 QuantLib::Real MomentMatchingResults::firstMoment() { return forward; }
 QuantLib::Real MomentMatchingResults::secondMoment() { return sigma * sigma * tn; }
 QuantLib::Real MomentMatchingResults::stdDev() { return std::sqrt(secondMoment()); }
-QuantLib::Time MomentMatchingResults::timeToExpriy() { return tn; }
+QuantLib::Time MomentMatchingResults::timeToExpiry() { return tn; }
+
+
+double
+calcEA2FutureContracts(const std::vector<double>& forwards, const std::vector<double>& futureVols,
+                       const std::vector<Date>& futureExpiries, const std::vector<Time>& pricingTimes,
+                       const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
+                       bool useBachelierModel = false) {
+    double EA2 = 0.0;
+    for (Size i = 0; i < forwards.size(); ++i) {
+        Date e_i = futureExpiries[i];
+        Volatility v_i = futureVols[i];
+        EA2 += useBachelierModel ? v_i * v_i * pricingTimes[i]
+                                 : forwards[i] * forwards[i] * exp(v_i * v_i * pricingTimes[i]);
+        for (Size j = 0; j < i; ++j) {
+            Date e_j = futureExpiries[j];
+            Volatility v_j = futureVols[j];
+            double corr = rho(e_i, e_j);
+            EA2 += useBachelierModel ? 2 * corr * v_i * v_j * pricingTimes[j]
+                                     : 2 * forwards[i] * forwards[j] * exp(corr * v_i * v_j * pricingTimes[j]);
+        }
+    }
+    return EA2;
+}
+
+double calcEA2Spot(const std::vector<double>& forwards, const std::vector<double>& spotVariances,
+                   bool useBachelierModel) {
+    double EA2 = 0.0;
+    for (Size i = 0; i < forwards.size(); ++i) {
+        EA2 += useBachelierModel ? spotVariances[i] : forwards[i] * forwards[i] * exp(spotVariances[i]);
+        for (Size j = 0; j < i; ++j) {
+            EA2 += useBachelierModel ? 2.0 * spotVariances[j] : 2 * forwards[i] * forwards[j] * exp(spotVariances[j]);
+        }
+    }
+    return EA2;
+}
+
+double calcualteSigma(const double EA, const double EA2, const double ttm, bool useBachelierModel) {
+    if (!useBachelierModel) {
+        double s = EA2 / (EA * EA);
+        return s < 1.0 || QuantLib::close_enough(s, 1.0) ? 0.0 : std::sqrt(std::log(s) / ttm);
+    }
+    return sqrt(EA2 / ttm);
+}
 
 MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
-    QuantLib::Real strike, const QuantLib::Date& exerciseDate) {
+    QuantLib::Real strike, const QuantLib::Date& exerciseDate, DiffusionModelType modelType,
+    const Real displacement) {
+
     Date today = Settings::instance().evaluationDate();
     MomentMatchingResults res;
     auto optionExerciseDate = exerciseDate == Date() ? flow->lastPricingDate() : exerciseDate;
@@ -79,15 +125,28 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
             double K = strike == Null<Real>() ? atmUnderlyingCcy : strike;
             if (flow->useFuturePrice()) {
                 Date expiry = index->expiryDate();
-                Date optionExpiry = index->optionExpiryDate(); 
+                Date optionExpiry = index->optionExpiryDate();
                 futureExpiries.push_back(expiry);
-                optionExpiries.push_back(optionExpiry);
-                if (futureVols.count(optionExpiry) == 0) {
-                    futureVols[optionExpiry] = vol->blackVol(optionExpiry, K);
+                Date volDate = optionExpiry <= today ? expiry : optionExpiry;
+                optionExpiries.push_back(volDate);
+                if (futureVols.count(volDate) == 0) {
+                    auto [volatility, volType, shift] =
+                        convertInputVolatility(modelType, displacement, vol->volType(), vol->shift(),
+                                               vol->blackVol(volDate, K), atmUnderlyingCcy, K, res.times.back());
+                    futureVols[volDate] = volatility;
+                    res.volType = volType;
+                    res.displacement = shift;
                 }
+                res.futureVols.push_back(futureVols[volDate]);
             } else {
-                spotVariances.push_back(vol->blackVariance(res.times.back(), K));
-                res.spotVols.push_back(std::sqrt(spotVariances.back() / res.times.back()));
+                auto tte = res.times.back();
+                auto [spotVol, volType, shift] =
+                    convertInputVolatility(modelType, displacement, vol->volType(), vol->shift(),
+                                           vol->blackVol(pricingDate, K), atmUnderlyingCcy, K, res.times.back());
+                res.volType = volType;
+                res.displacement = shift;
+                res.spotVols.push_back(spotVol);
+                spotVariances.push_back(spotVol * spotVol * tte);
             }
             EA += res.forwards.back();
         }
@@ -97,32 +156,12 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
 
     res.forward = EA;
 
-    double EA2 = 0.0;
+    bool useBachelierModel = res.volType == QuantLib::VolatilityType::Normal;
 
-    if (flow->useFuturePrice()) {
-        // References future prices
-        for (Size i = 0; i < res.forwards.size(); ++i) {
-            Date e_i = futureExpiries[i];
-            Date oe_i = optionExpiries[i];
-            Volatility v_i = futureVols.at(oe_i);
-            res.futureVols.push_back(v_i);
-            EA2 += res.forwards[i] * res.forwards[i] * exp(v_i * v_i * res.times[i]);
-            for (Size j = 0; j < i; ++j) {
-                Date e_j = futureExpiries[j];
-                Date oe_j = optionExpiries[j];
-                Volatility v_j = futureVols.at(oe_j);
-                EA2 += 2 * res.forwards[i] * res.forwards[j] * exp(rho(e_i, e_j) * v_i * v_j * res.times[j]);
-            }
-        }
-    } else {
-        // References spot prices
-        for (Size i = 0; i < res.forwards.size(); ++i) {
-            EA2 += res.forwards[i] * res.forwards[i] * exp(spotVariances[i]);
-            for (Size j = 0; j < i; ++j) {
-                EA2 += 2 * res.forwards[i] * res.forwards[j] * exp(spotVariances[j]);
-            }
-        }
-    }
+    double EA2 = flow->useFuturePrice() ? calcEA2FutureContracts(res.forwards, res.futureVols, futureExpiries,
+                                                                 res.times, rho, useBachelierModel)
+                                        : calcEA2Spot(res.forwards, spotVariances, useBachelierModel);
+
     EA2 /= std::pow(static_cast<double>(n), 2.0);
     res.EA2 = EA2;
 
@@ -132,34 +171,31 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     // Calculate value
     if (!res.times.empty()) {
         res.tn = res.times.back();
-        double s = EA2 / (EA * EA);
-        // if future vol = 0 for all dates, then EA2 = EA*EA, but
-        // due to numerical precision EA2 can be actually less than EA*EA 
-        if (s < 1.0 || QuantLib::close_enough(s, 1)) {
-            res.sigma = 0.0;
-        } else {
-            res.sigma = std::sqrt(std::log(s) / res.tn);
-        }
+        res.sigma = calcualteSigma(EA, EA2, res.tn, useBachelierModel);
     } else {
         res.tn = 0;
         res.sigma = 0;
     }
     return res;
 }
+
 } // namespace CommodityAveragePriceOptionMomementMatching
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
-    QuantLib::Real beta)
-    : discountCurve_(discountCurve), volStructure_(model->processes().front()->blackVolatility()), beta_(beta) {
+    QuantLib::Real beta, DiffusionModelType modelType, Real displacement)
+    : discountCurve_(discountCurve), volStructure_(model->processes().front()->blackVolatility()), beta_(beta), 
+      modelType_(modelType), displacement_(displacement) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(model);
 }
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, QuantLib::Real beta)
-    : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
+    const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, QuantLib::Real beta, DiffusionModelType modelType,
+    Real displacement)
+    : discountCurve_(discountCurve), volStructure_(vol), beta_(beta), modelType_(modelType),
+      displacement_(displacement) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volStructure_);
@@ -224,17 +260,17 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
         }
         // Update accrued where pricing date is on or before today
         Real fxRate{1.};
-        if(arguments_.fxIndex)
-            fxRate=arguments_.fxIndex->fixing(kv.first);
-        lastFixing = fxRate*kv.second->fixing(kv.first);
+        if (arguments_.fxIndex)
+            fxRate = arguments_.fxIndex->fixing(kv.first);
+        lastFixing = fxRate * kv.second->fixing(kv.first);
         if (arguments_.barrierStyle == Exercise::American)
-            barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false);
+            barrierTriggered = barrierTriggered || this->barrierTriggered(lastFixing, false, arguments_.strictBarrier);
     }
 
     if (arguments_.barrierStyle == Exercise::European)
-        barrierTriggered = this->barrierTriggered(lastFixing, false);
+        barrierTriggered = this->barrierTriggered(lastFixing, false, arguments_.strictBarrier);
 
-    if(barrierTriggered && (arguments_.barrierType == Barrier::DownOut || arguments_.barrierType == Barrier::UpOut)) {
+    if (barrierTriggered && (arguments_.barrierType == Barrier::DownOut || arguments_.barrierType == Barrier::UpOut)) {
         results_.value = 0.0;
         return false;
     }
@@ -242,14 +278,24 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent() const {
     return true;
 }
 
-bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice) const {
+bool CommodityAveragePriceOptionBaseEngine::barrierTriggered(const Real price, const bool logPrice,
+                                                             const int strictBarrier) const {
     if (arguments_.barrierLevel == Null<Real>())
         return false;
     Real tmp = logPrice ? logBarrier_ : arguments_.barrierLevel;
-    if (arguments_.barrierType == Barrier::DownIn || arguments_.barrierType == Barrier::DownOut)
-        return price <= tmp;
-    else if (arguments_.barrierType == Barrier::UpIn || arguments_.barrierType == Barrier::UpOut)
-        return price >= tmp;
+    if (arguments_.barrierType == Barrier::DownIn || arguments_.barrierType == Barrier::DownOut) {
+        if (arguments_.strictBarrier == 1) {
+            return price < tmp;
+        } else {
+            return price <= tmp;
+        }
+    } else if (arguments_.barrierType == Barrier::UpIn || arguments_.barrierType == Barrier::UpOut) {
+        if (arguments_.strictBarrier == 1) {
+            return price > tmp;
+        } else {
+            return price >= tmp;
+        }
+    }
     return false;
 }
 
@@ -276,7 +322,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["payment_date"] = arguments_.flow->date();
     mp["accrued"] = arguments_.accrued;
     mp["discount"] = discount;
-    if(arguments_.fxIndex)
+    if (arguments_.fxIndex)
         mp["FXIndex"] = arguments_.fxIndex->name();
 
     // If not model dependent, return early.
@@ -292,23 +338,29 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     QL_REQUIRE(effectiveStrike > 0.0, "calculateSpot: expected effectiveStrike to be positive");
 
     // Valuation date
-    
+
     auto matchedMoments = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
         arguments_.flow, *volStructure_,
-        std::bind(&CommodityAveragePriceOptionAnalyticalEngine::rho, this, std::placeholders::_1, std
-                  ::placeholders::_2), effectiveStrike);
-     
+        std::bind(&CommodityAveragePriceOptionAnalyticalEngine::rho, this, std::placeholders::_1,
+                  std ::placeholders::_2),
+        effectiveStrike, Date(), modelType_, displacement_);
+
     if (arguments_.flow->useFuturePrice()) {
         mp["futureVols"] = matchedMoments.futureVols;
     } else {
         mp["spotVols"] = matchedMoments.spotVols;
     }
 
-    // Populate results
-    results_.value = arguments_.quantity * arguments_.flow->gearing() *
+    if (matchedMoments.volType == QuantLib::VolatilityType::Normal) {
+        results_.value = arguments_.quantity * arguments_.flow->gearing() *
+                         bachelierBlackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
+                                               matchedMoments.stdDev(), discount);
+    } else {
+        // Populate results
+        results_.value = arguments_.quantity * arguments_.flow->gearing() *
                          blackFormula(arguments_.type, effectiveStrike, matchedMoments.firstMoment(),
-                                      matchedMoments.stdDev(), discount);
-
+                                      matchedMoments.stdDev(), discount, matchedMoments.displacement);
+    }
     std::vector<QuantExt::CashFlowResults> cfResults;
     cfResults.emplace_back();
     cfResults.back().amount = results_.value / discount;
@@ -321,9 +373,10 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["effective_strike"] = effectiveStrike;
     mp["forward"] = matchedMoments.forward;
     mp["exp_A_2"] = matchedMoments.EA2;
-    mp["tte"] = matchedMoments.timeToExpriy();
+    mp["tte"] = matchedMoments.timeToExpiry();
     mp["sigma"] = matchedMoments.sigma;
-    mp["npv"] = results_.value;
+    mp["quantity"] = arguments_.quantity;
+    mp["npv"] = results_.value * (arguments_.type == Option::Call ? 1 : -1);
     mp["times"] = matchedMoments.times;
     mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
@@ -381,11 +434,11 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
         fwdStdDev[i] = sqrt(expHalfFwdVar[i]);
         expHalfFwdVar[i] = exp(-expHalfFwdVar[i] / 2.0);
         Real fxRate{1.};
-        if(arguments_.flow->fxIndex())
-            fxRate = arguments_.flow->fxIndex()->fixing(dates[i+1]);
+        if (arguments_.flow->fxIndex())
+            fxRate = arguments_.flow->fxIndex()->fixing(dates[i + 1]);
         fwdRatio[i] = fxRate * arguments_.flow->index()->fixing(dates[i + 1]);
         if (i > 0) {
-            if(arguments_.flow->fxIndex())
+            if (arguments_.flow->fxIndex())
                 fxRate = arguments_.flow->fxIndex()->fixing(dates[i]);
             fwdRatio[i] /= (fxRate * arguments_.flow->index()->fixing(dates[i]));
         }
@@ -415,7 +468,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
             // check barrier
             if (arguments_.barrierStyle == Exercise::American)
-                barrierTriggered = barrierTriggered || this->barrierTriggered(price, false);
+                barrierTriggered = barrierTriggered || this->barrierTriggered(price, false, arguments_.strictBarrier);
         }
         // Average price on this sample
         samplePayoff /= m;
@@ -425,7 +478,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot() const {
 
         // account for barrier
         if (arguments_.barrierStyle == Exercise::European)
-            barrierTriggered = this->barrierTriggered(price, false);
+            barrierTriggered = this->barrierTriggered(price, false, arguments_.strictBarrier);
 
         if (!alive(barrierTriggered))
             samplePayoff = 0.0;
@@ -528,7 +581,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
         for (Size j = 0; j < dt.size(); ++j) {
             price = paths[futureIndex[j]][j];
             if (arguments_.barrierStyle == Exercise::American)
-                barrierTriggered = barrierTriggered || this->barrierTriggered(price, true);
+                barrierTriggered = barrierTriggered || this->barrierTriggered(price, true, arguments_.strictBarrier);
             samplePayoff += std::exp(price);
         }
 
@@ -540,7 +593,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture() const {
 
         // account for barrier
         if (arguments_.barrierStyle == Exercise::European)
-            barrierTriggered = this->barrierTriggered(price, true);
+            barrierTriggered = this->barrierTriggered(price, true, arguments_.strictBarrier);
 
         if (!alive(barrierTriggered))
             samplePayoff = 0.0;
@@ -592,9 +645,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outV
             // If expiry has not been encountered yet
             if (expiryDates.insert(expiry).second) {
                 Real fxRate{1.};
-                if(arguments_.flow->fxIndex())
+                if (arguments_.flow->fxIndex())
                     fxRate = arguments_.flow->fxIndex()->fixing(expiry);
-                prices.push_back(fxRate*p.second->fixing(today));//check if today should not be p.first
+                prices.push_back(fxRate * p.second->fixing(today)); // check if today should not be p.first
             }
             futureIndex.push_back(expiryDates.size() - 1);
             if (optionExpiryDates.insert(optionExpiry).second) {

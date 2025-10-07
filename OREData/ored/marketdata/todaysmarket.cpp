@@ -731,7 +731,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             break;
         }
 
-        // Security spread, rr, cpr
+        // Security spread, rr, cpr, conversion factor, price
         case CurveSpec::CurveType::Security: {
             QuantLib::ext::shared_ptr<SecuritySpec> securityspec =
                 QuantLib::ext::dynamic_pointer_cast<SecuritySpec>(spec);
@@ -753,6 +753,8 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                 cprs_[make_pair(configuration, node.name)] = itr->second->cpr();
             if (!itr->second->conversionFactor().empty())
                 conversionFactors_[make_pair(configuration, node.name)] = itr->second->conversionFactor();
+            if (!itr->second->price().empty())
+                securityPrices_[make_pair(configuration, node.name)] = itr->second->price();
             break;
         }
 
@@ -864,7 +866,8 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
 
     std::set<Node> updatedNodes;
     for(auto u: reducedNode.nodes) {
-        u.built = true; 
+        u.built = true;
+        updatedNodes.insert(u);
     }
 
     reducedNode.nodes = updatedNodes;

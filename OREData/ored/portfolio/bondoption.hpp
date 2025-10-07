@@ -72,7 +72,7 @@ private:
     string currency_;
     bool knocksOut_;
 
-    QuantLib::ext::shared_ptr<ore::data::Bond> underlying_;
+    QuantLib::ext::shared_ptr<ore::data::Trade> underlying_;
 };
 } // namespace data
 } // namespace ore

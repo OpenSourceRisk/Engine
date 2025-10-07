@@ -46,7 +46,7 @@ PythonFunctions::PythonFunctions() {
 
     PyObject* pName = PyUnicode_DecodeFSDefault("ore_python_integration");
     pModule_ = PyImport_Import(pName);
-    Py_DECREF(pName);
+    Py_XDECREF(pName);
 
     if (pModule_ == nullptr) {
         std::cerr << "error initializing ore_python_integration:" << std::endl;
@@ -81,6 +81,12 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
     QL_REQUIRE(!filter.initialised(), "PythonFunctions::conditionalExpectation() does not support non-empty filter");
     QL_REQUIRE(!regressor.empty(), "PythonFunctions::conditionalExpectation(): empty regressor not allowed.");
 
+    struct DecRef {
+        DecRef(PyObject* p) : p(p) {}
+        ~DecRef() { Py_XDECREF(p); }
+        PyObject* p;
+    };
+
     PyObject* xl = toPythonList(regressor);
     PyObject* yl = toPythonList({&r});
 
@@ -88,7 +94,11 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
     PyTuple_SetItem(pArgs, 0, xl);
     PyTuple_SetItem(pArgs, 1, yl);
 
+    DecRef decRefpArgs(pArgs);
+
     PyObject* result = PyObject_CallObject(pConditionalExpectation_, pArgs);
+
+    DecRef decRefResult(result);
 
     RandomVariable tmp;
 
@@ -101,8 +111,6 @@ RandomVariable PythonFunctions::conditionalExpectation(const RandomVariable& r,
     } else {
         QL_FAIL("PythonFunctions::conditionalExpectation(): no result returned.");
     }
-
-    Py_DECREF(pArgs);
 
     if (PyErr_Occurred()) {
         std::cerr << "PythonFunctions::conditionalExpectation(): an error occured." << std::endl;

@@ -41,37 +41,29 @@ public:
                                            const double indexSpread, const Handle<Quote>& indexRecoveryRate,
                                            const Handle<DefaultProbabilityTermStructure>& indexCurve,
                                            const Handle<YieldTermStructure>& discountCurve)
-        : indexStartDate_(indexStartDate), indexTenors_({indexTenor}), indexSpread_(indexSpread),
-          indexRecoveryRates_({indexRecoveryRate}), indexCurves_({indexCurve}), discountCurve_(discountCurve) {}
-
-    CreditIndexConstituentCurveCalibration(const Date& indexStartDate, const std::vector<Period> indexTenors,
-                                           const double indexSpread,
-                                           const std::vector<Handle<Quote>>& indexRecoveryRates,
-                                           const std::vector<Handle<DefaultProbabilityTermStructure>>& indexCurves,
-                                           const Handle<YieldTermStructure>& discountCurve)
-        : indexStartDate_(indexStartDate), indexTenors_(indexTenors), indexSpread_(indexSpread),
-          indexRecoveryRates_(indexRecoveryRates), indexCurves_(indexCurves), discountCurve_(discountCurve) {}
+        : indexStartDate_(indexStartDate), indexSpread_(indexSpread), indexTenor_(indexTenor),
+          indexRecoveryRate_(indexRecoveryRate), indexCurve_(indexCurve), discountCurve_(discountCurve) {}
 
     CalibrationResults calibratedCurves(const std::vector<std::string>& names,
                                         const std::vector<double>& remainingNotionals,
                                         const std::vector<Handle<DefaultProbabilityTermStructure>>& creditCurves,
                                         const std::vector<double>& recoveryRates) const;
-    const std::vector<Handle<QuantLib::DefaultProbabilityTermStructure>>& indexCurve() const { return indexCurves_; }
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& indexCurve() const { return indexCurve_; }
     const Handle<QuantLib::YieldTermStructure>& discountCurve() const { return discountCurve_; }
 
 protected:
-    double targetNpv(const ext::shared_ptr<Instrument>& indexCds, size_t i) const;
+    double targetNpv(const ext::shared_ptr<Instrument>& indexCds) const;
 
 private:
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
     buildShiftedCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
-                      const std::vector<QuantLib::Date>& maturities,
-                      const std::vector<QuantLib::ext::shared_ptr<SimpleQuote>>& calibrationFactors) const;
+                      const QuantLib::Date& maturity,
+                      const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor) const;
     Date indexStartDate_;
-    std::vector<Period> indexTenors_;
     double indexSpread_;
-    std::vector<Handle<Quote>> indexRecoveryRates_;
-    std::vector<Handle<DefaultProbabilityTermStructure>> indexCurves_;
+    Period indexTenor_;
+    Handle<Quote> indexRecoveryRate_;
+    Handle<DefaultProbabilityTermStructure> indexCurve_;
     Handle<YieldTermStructure> discountCurve_;
 };
 } // namespace QuantExt

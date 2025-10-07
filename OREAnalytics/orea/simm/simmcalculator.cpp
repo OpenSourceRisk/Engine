@@ -98,9 +98,29 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
                "SIMM Calculator: The result currency (" << resultCcy_ << ") must be a valid ISO currency code");
 
     timer_.start("Cleaning up CRIF input");
+    std::map<RiskType,std::map<std::string, std::set<string>>> qualifierBuckets;
+    std::map<RiskType,std::map<std::string, int>> nbQualiferBucket;
+    auto simmbucketmapper = simmConfiguration_->bucketMapper();
+
+    // We loop over the crif to extract (qualifier,bucket) per risk type
+    for (SlimCrifRecordContainer::iterator it = crif->begin(); it != crif->end(); it++) {
+        if (it->riskType() == RiskType::Empty || it->riskType() == RiskType::FX || it->getBucket()=="") {
+            continue;
+        }
+        qualifierBuckets[it->riskType()][it->getQualifier()].insert(it->getBucket());
+    }
+    // Now, count number of unique buckets per qualifier per risk type
+    // Meaning we want to detect if we have situation like CreditQ, qualifier = "None" having multiple buckets
+    for (const auto& riskType: qualifierBuckets) {
+        for(const auto& qualifBucket: riskType.second){
+            nbQualiferBucket[riskType.first][qualifBucket.first] = qualifBucket.second.size();
+        }
+    }
+    auto copyCrif = QuantLib::ext::make_shared<ore::analytics::Crif>();
     for (SlimCrifRecordContainer::iterator it = crif->begin(); it != crif->end(); it++) {
         // Remove empty
         if (it->riskType() == RiskType::Empty) {
+            copyCrif->insert(*it);
             continue;
         }
         // Remove Schedule-only CRIF records
@@ -111,6 +131,7 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
                                                          "Skipping over Schedule CRIF record")
                     .log();
             }
+            copyCrif->insert(*it);
             continue;
         }
 
@@ -139,7 +160,21 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
             it->setAmountResultCurrency(fxSpot * it->amount());
         }
         it->setResultCurrency(resultCcy_);
+        auto riskType = it->riskType();
+        string qualifierToUse = it->getQualifier();
+        if (nbQualiferBucket[riskType][qualifierToUse]>1) {
+            qualifierToUse = it->getQualifier() + "_" + it->getBucket();
+            simmbucketmapper->addMapping(riskType, qualifierToUse, it->getBucket());
+            ore::data::StructuredTradeWarningMessage(it->getTradeId(), "simmcalculator", "Qualifier Name Changed for risk type "+ore::data::to_string(riskType)+ " From "+ it->getQualifier() + " To " + qualifierToUse, 
+                                                    "A qualifier for a same risk type has different buckets within the CRIF.");
+            SlimCrifRecord recordCopy = *it;
+            recordCopy.setQualifier(qualifierToUse);
+            copyCrif->insert(recordCopy);
+        }else{
+            copyCrif->insert(*it);
+        }
     }
+
     timer_.stop("Cleaning up CRIF input");
 
     // Add CRIF records to each regulation under each netting set
@@ -147,7 +182,7 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
         LOG("SimmCalculator: Splitting up original CRIF records into their respective collect/post regulations");
     }
 
-    splitCrifByRegulationsAndPortfolios(enforceIMRegulations, crif);
+    splitCrifByRegulationsAndPortfolios(enforceIMRegulations, copyCrif);
 
     cleanDuplicateRegulations();
 
@@ -466,16 +501,12 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const Nett
     map<string, QuantLib::Real> sumWeightedSensis;
 
     // Loop over the qualifiers i.e. currencies
-    // Loop over the qualifiers i.e. currencies
     for (const auto& qualifier : qualifiers) {
         // Pair of iterators to start and end of IRCurve sensitivities with current qualifier
         auto pIrQualifier = crif.filterByQualifier(nettingSetDetails, pc, RiskType::IRCurve, qualifier);
 
-        // Iterator to Xccy basis element with current qualifier (expect zero or one element)
+        // Iterator to Xccy basis element with current qualifier
         auto XccyCount = crif.countMatching(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
-        QL_REQUIRE(XccyCount < 2, "SIMM Calcuator: Expected either 0 or 1 elements for risk type "
-                                      << RiskType::XCcyBasis << " and qualifier " << qualifier << " but got "
-                                      << XccyCount);
         const auto& [itXccy, itXccyEnd] = crif.findBy(nettingSetDetails, pc, RiskType::XCcyBasis, qualifier);
 
         // Iterator to inflation element with current qualifier (expect zero or one element)
@@ -559,7 +590,18 @@ pair<map<string, QuantLib::Real>, bool> SimmCalculator::irDeltaMargin(const Nett
             // Risk weight
             QuantLib::Real rwXccy = simmConfiguration_->weight(RiskType::XCcyBasis, qualifier, itXccy->getLabel1());
             // Weighted sensitivity (no concentration risk here)
-            QuantLib::Real wsXccy = rwXccy * itXccy->amountResultCurrency();
+            QuantLib::Real wsXccy = 0;
+            if(XccyCount>1){
+                Real cumXccyAmount = 0;
+                for(auto it = itXccy; it != itXccyEnd; it++){
+                    if(it->riskType() == RiskType::XCcyBasis){
+                        cumXccyAmount+=it->amountResultCurrency();
+                    }
+                }
+                wsXccy = rwXccy * cumXccyAmount;
+            }else{
+                wsXccy = rwXccy * itXccy->amountResultCurrency();
+            }
             // Update weighted sensitivity sum
             sumWeightedSensis[qualifier] += wsXccy;
             // Add diagonal element to delta margin

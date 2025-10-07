@@ -25,6 +25,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/bacvaanalytic.cpp
 app/analytics/calibrationanalytic.cpp
+app/analytics/correlationanalytic.cpp
 app/analytics/crifanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
@@ -37,7 +38,7 @@ app/analytics/pricinganalytic.cpp
 app/analytics/saccranalytic.cpp
 app/analytics/sacvaanalytic.cpp
 app/analytics/scenarioanalytic.cpp
-app/analytics/scenariostatisticsanalytic.cpp
+app/analytics/scenariogenerationanalytic.cpp
 app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
@@ -75,8 +76,9 @@ cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bacvacalculator.cpp
 engine/bufferedsensitivitystream.cpp
-engine/cashflowreportgenerator.cpp
+engine/correlationreport.cpp
 engine/cptycalculator.cpp
+engine/creditindexdecomposition.cpp
 engine/cvasensitivitycubestream.cpp
 engine/cvasensitivityrecord.cpp
 engine/decomposedsensitivitystream.cpp
@@ -231,6 +233,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/bacvaanalytic.hpp
 app/analytics/calibrationanalytic.hpp
+app/analytics/correlationanalytic.hpp
 app/analytics/crifanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
@@ -243,7 +246,7 @@ app/analytics/pricinganalytic.hpp
 app/analytics/saccranalytic.hpp
 app/analytics/sacvaanalytic.hpp
 app/analytics/scenarioanalytic.hpp
-app/analytics/scenariostatisticsanalytic.hpp
+app/analytics/scenariogenerationanalytic.hpp
 app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
@@ -289,8 +292,9 @@ cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
-engine/cashflowreportgenerator.hpp
+engine/correlationreport.hpp
 engine/cptycalculator.hpp
+engine/creditindexdecomposition.hpp
 engine/cvasensitivitycubestream.hpp
 engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp

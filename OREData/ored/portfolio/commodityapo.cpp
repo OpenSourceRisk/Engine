@@ -50,7 +50,7 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(
     const string& paymentCalendar, const string& paymentLag, const string& paymentConvention,
     const string& pricingCalendar, const string& paymentDate, Real gearing, Spread spread,
     CommodityQuantityFrequency commodityQuantityFrequency, CommodityPayRelativeTo commodityPayRelativeTo,
-    QuantLib::Natural futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
+    QuantLib::Integer futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
     const BarrierData& barrierData, const std::string& fxIndex)
     : Trade("CommodityAveragePriceOption", envelope), optionData_(optionData), barrierData_(barrierData),
       quantity_(quantity), strike_(strike), currency_(currency), name_(name), priceType_(priceType),
@@ -165,6 +165,7 @@ void CommodityAveragePriceOption::fromXML(XMLNode* node) {
     }
 
     futureMonthOffset_ = XMLUtils::getChildValueAsInt(apoNode, "FutureMonthOffset", false);
+    QL_REQUIRE(futureMonthOffset_ >= 0, "FutureMonthOffset must be positive for Commodity APO.");
     deliveryRollDays_ = XMLUtils::getChildValueAsInt(apoNode, "DeliveryRollDays", false);
 
     includePeriodEnd_ = true;
@@ -375,6 +376,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     Real barrierLevel = Null<Real>();
     Barrier::Type barrierType = Barrier::DownIn;
     Exercise::Type barrierStyle = Exercise::American;
+    int strictBarrier = 0;
     if (barrierData_.initialized()) {
         QL_REQUIRE(!barrierData_.overrideTriggered(),
                    "CommodityAveragePriceOption::build(): OverrideTriggered not supported by this instrument type.");
@@ -386,13 +388,16 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
             QL_REQUIRE(barrierStyle == Exercise::European || barrierStyle == Exercise::American,
                        "Commodity APO: Expected 'European' or 'American' as barrier style");
         }
+        if (barrierData_.strictComparison()) {
+            strictBarrier = boost::lexical_cast<int>(barrierData_.strictComparison().value());
+        }
     }
 
     // Create the APO instrument
     QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
     auto apo = QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOption>(
         apoFlow, exercise, apoFlow->periodQuantity(), strike_, parseOptionType(optionData_.callPut()),
-        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle, fxIndex);
+        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle, fxIndex, strictBarrier);
 
     // Set the pricing engine
     Currency ccy = parseCurrency(currency_);

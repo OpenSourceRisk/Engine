@@ -17,14 +17,19 @@
 */
 
 #include <ored/configuration/conventions.hpp>
+
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
+
+#include <ored/portfolio/bondutils.hpp>
+
 #include <qle/indexes/fxindex.hpp>
+
 #include <ql/time/imm.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -103,7 +108,7 @@ QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const Qu
 }
 
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
-    auto tmp = "__SECCRCRV_" + securityId + "_&_" + creditCurveId + "_&_";
+    auto tmp = "__SECCRCRV_" + StructuredSecurityId(securityId).securityId() + "_&_" + creditCurveId + "_&_";
     return tmp;
 }
 
@@ -291,10 +296,24 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const QuantLib::ext
     return market->defaultCurve(p.first, config);
 }
 
+Handle<QuantExt::BaseCorrelationTermStructure>
+indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                 const std::string& baseCorrelationCurveId, const std::string& configuration) {
+    Handle<QuantExt::BaseCorrelationTermStructure> curve;
+    try {
+        curve = market->baseCorrelation(baseCorrelationCurveId, configuration);
+    } catch (const std::exception&) {
+        DLOG("Could not find base correlation curve " << baseCorrelationCurveId
+                                                      << ", fall back on curve id without tenor.");
+    }
+    auto p = splitCurveIdWithTenor(baseCorrelationCurveId);
+    return market->baseCorrelation(p.first, configuration);
+}
+
 // will have to split the date into month and year in caller.  are there any utilities to do this?
 // Is the FutureConvention rule available from caller?
 std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear, QuantLib::Period tenor,
-                                              FutureConvention::DateGenerationRule rule) { 
+                                              FutureConvention::DateGenerationRule rule, const Calendar& calendar) {
     // Create a Overnight index future helper
     Date startDate, endDate;
     if (rule == FutureConvention::DateGenerationRule::IMM) {
@@ -303,8 +322,8 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
         startDate = IMM::nextDate(refStart, false);
         endDate = IMM::nextDate(refEnd, false);
     } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-        endDate = Date(1, expiryMonth, expiryYear) + 1 * Months;
-        startDate = endDate - tenor;
+        endDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months, Following);
+        startDate = calendar.adjust(endDate - tenor, Following);
     }
     return std::make_pair(startDate, endDate);
 }

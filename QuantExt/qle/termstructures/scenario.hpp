@@ -78,8 +78,7 @@ public:
         CommodityVolatility,
         SecuritySpread,
         Correlation,
-        CPR,
-        ConversionFactor
+        CPR
     };
 
     //! Constructor

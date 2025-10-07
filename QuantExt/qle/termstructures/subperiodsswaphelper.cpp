@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/utilities/null_deleter.hpp>
@@ -29,10 +31,12 @@ SubPeriodsSwapHelper::SubPeriodsSwapHelper(Handle<Quote> spread, const Period& s
                                            const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
                                            const DayCounter& floatDayCount,
                                            const Handle<YieldTermStructure>& discountingCurve,
-                                           QuantExt::SubPeriodsCoupon1::Type type)
+                                           QuantExt::SubPeriodsCoupon1::Type type,
+                                           QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spread), iborIndex_(iborIndex), swapTenor_(swapTenor), fixedTenor_(fixedTenor),
       fixedCalendar_(fixedCalendar), fixedDayCount_(fixedDayCount), fixedConvention_(fixedConvention),
-      floatPayTenor_(floatPayTenor), floatDayCount_(floatDayCount), type_(type), discountHandle_(discountingCurve) {
+      floatPayTenor_(floatPayTenor), floatDayCount_(floatDayCount), type_(type), pillarChoice_(pillarChoice),
+      discountHandle_(discountingCurve) {
 
     iborIndex_ = iborIndex_->clone(termStructureHandle_);
     iborIndex_->unregisterWith(termStructureHandle_);
@@ -63,24 +67,9 @@ void SubPeriodsSwapHelper::initializeDates() {
 
     // set earliest and latest
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
-
-    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->floatLeg().back());
-    if (IborCoupon::Settings::instance().usingAtParCoupons()) {
-        /* Subperiods coupons do not have a par approximation either... */
-        if (QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
-            Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-    } else {
-        /* May need to adjust latestDate_ if you are projecting libor based
-        on tenor length rather than from accrual date to accrual date. */
-        Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate);
-    }
+    maturityDate_ = swap_->maturityDate();
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs());
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void SubPeriodsSwapHelper::setTermStructure(YieldTermStructure* t) {

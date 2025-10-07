@@ -70,14 +70,47 @@ using namespace ore::data;
 class InputParameters {
 public:
     InputParameters();
-    virtual ~InputParameters() {}
+    virtual ~InputParameters() {} 
+        
+    //! load and convert an object from a string for the given (analytic, param) pair
+    template <typename T>
+    bool loadParameter(
+        T& obj, const std::string& analytic, const std::string& param, const bool mandatory = false,
+                       std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
+        string str = loadParameterString(analytic, param, mandatory);
+        if (str.empty() && !mandatory)
+            return false;
+        return tryParse(str, obj, parser);
+    }
 
-    /*********
+    //! load the XML object from an XML string for the given (analytic, param) pair
+    template <typename T>
+    bool loadParameterXML(
+        QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
+        const std::string& param, const bool mandatory = false) {
+        string str = loadParameterXMLString(analytic, param, mandatory);
+        obj = QuantLib::ext::make_shared<T>();
+        obj->fromXMLString(str);
+        return true;
+    }
+    
+    //! virtual function to load a parameter string for the given (analytic, param) pair
+    virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory);
+        
+    //! virtual function to load an XML string for the given (analytic, param) pair
+    virtual std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory);
+
+    void setParameter(std::string analytic, std::string parameter, std::string val) { 
+        parameters_.set(analytic, parameter, val);
+    }
+        
+     /*********
      * Setters
      *********/
     
     void setAsOfDate(const std::string& s); // parse to Date
     void setResultsPath(const std::string& s) { resultsPath_ = s; }
+    void setInputPath(const std::string& s) { inputPath_ = s; }
     void setBaseCurrency(const std::string& s) { baseCurrency_ = s; }
     void setContinueOnError(bool b) { continueOnError_ = b; }
     void setAllowModelBuilderFallbacks(bool b) { allowModelBuilderFallbacks_ = b; }
@@ -145,6 +178,7 @@ public:
     // Setters for curves/markets
     void setOutputCurves(bool b) { outputCurves_ = b; }
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
+    void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
     void setCalendarAdjustment(const std::string& xml);
@@ -162,6 +196,7 @@ public:
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
     void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
     void setSensiLaxFxConversion(bool b) { sensiLaxFxConversion_ = b; }
+    void setSensiDecomposition(bool b) { sensiDecomposition_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -221,6 +256,12 @@ public:
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
+    // Setters for Correlation
+    void setCorrelationMethod(const std::string& s) { correlationMethod_ = s; }
+    void setCorrelationData(ore::data::CSVReader& reader);
+    void setCorrelationDataFromFile(const std::string& fileName);
+    void setCorrelationDataFromBuffer(const std::string& xml);
+
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { exposureIncludeTodaysCashFlows_ = b; }
     void setExposureIncludeReferenceDateEvents(bool b) { exposureIncludeReferenceDateEvents_ = b; }
@@ -231,13 +272,19 @@ public:
     void setXvaCgDynamicIMStepSize(Size s) { xvaCgDynamicIMStepSize_ = s; }
     void setXvaCgRegressionOrder(Size r) { xvaCgRegressionOrder_ = r; }
     void setXvaCgRegressionVarianceCutoff(double c) { xvaCgRegressionVarianceCutoff_ = c; }
+    void setXvaCgRegressionOrderDynamicIm(Size r) { xvaCgRegressionOrderDynamicIm_ = r; }
+    void setXvaCgRegressionVarianceCutoffDynamicIm(double c) { xvaCgRegressionVarianceCutoffDynamicIm_ = c; }
     void setXvaCgTradeLevelBreakdown(bool b) { xvaCgTradeLevelBreakdown_ = b; }
+    void setXvaCgRegressionReportTimeStepsDynamicIM(const std::vector<Size>& s) {
+        xvaCgRegressionReportTimeStepsDynamicIM_ = s;
+    }
     void setXvaCgUseRedBlocks(bool b) { xvaCgUseRedBlocks_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
     void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
     void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = std::move(s); }
     void setXvaCgUsePythonIntegration(bool b) { xvaCgUsePythonIntegration_ = b; }
+    void setXvaCgUsePythonIntegrationDynamicIm(bool b) { xvaCgUsePythonIntegrationDynamicIm_ = b; }
     void setXvaCgSensiScenarioData(const std::string& xml);
     void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
@@ -469,11 +516,6 @@ public:
     void setParConversionInputBaseNpvColumn(const std::string& s) { parConversionInputBaseNpvColumn_ = s; }
     void setParConversionInputShiftSizeColumn(const std::string& s) { parConversionInputShiftSizeColumn_ = s; }
 
-    // Setters for ScenarioStatistics
-    void setScenarioDistributionSteps(const Size s) { scenarioDistributionSteps_ = s; }
-    void setScenarioOutputZeroRate(const bool b) { scenarioOutputZeroRate_ = b; }
-    void setScenarioOutputStatistics(const bool b) { scenarioOutputStatistics_ = b; }
-    void setScenarioOutputDistributions(const bool b) { scenarioOutputDistributions_ = b; }
     // Setters for par stress conversion
     void setParStressSimMarketParams(const std::string& xml);
     void setParStressSimMarketParamsFromFile(const std::string& fileName);
@@ -512,7 +554,9 @@ public:
     void insertAnalytic(const std::string& s); 
     void removeAnalytic(const std::string& s);
 
+    void setPnlDateAdjustedRiskFactors(const std::string& s); // parse to vector<RiskFactorKey::KeyType>
 
+    void setRiskFactorLevel(bool b);
 
     /***************************
      * Getters for general setup
@@ -574,6 +618,8 @@ public:
     bool mporForward() const { return mporForward_; }
     const std::string& marketDataLoaderOutput() { return marketDataLoaderOutput_; }
     const std::string& marketDataLoaderInput() { return marketDataLoaderInput_; }
+    bool deriveCounterpartyDefaultCurves() const { return deriveCounterpartyDefaultCurves_; }
+    const std::string& additionalMarketDataInput() const { return additionalMarketDataInput_; }
 
     /***************************
      * Getters for npv analytics
@@ -591,6 +637,7 @@ public:
      ****************************/
     bool outputCurves() const { return outputCurves_; };
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
+    std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
     const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
     const std::string& curvesGrid() const { return curvesGrid_; }
 
@@ -606,6 +653,7 @@ public:
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
     bool sensiLaxFxConversion() const { return sensiLaxFxConversion_; }
+    bool sensiDecomposition() const { return sensiDecomposition_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() const { return sensiSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
@@ -664,6 +712,12 @@ public:
     QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader() const { return scenarioReader_;};
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
+
+    /*************************
+     * Getters for Correlation
+     *************************/
+    const std::string& correlationMethod() const { return correlationMethod_; }
+    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& correlationData() const { return correlationData_; }
     
     /*********************************
      * Getters for exposure simulation 
@@ -677,7 +731,12 @@ public:
     Size xvaCgDynamicIMStepSize() const { return xvaCgDynamicIMStepSize_; }
     Size xvaCgRegressionOrder() const { return xvaCgRegressionOrder_; }
     double xvaCgRegressionVarianceCutoff() const { return xvaCgRegressionVarianceCutoff_; }
+    Size xvaCgRegressionOrderDynamicIm() const { return xvaCgRegressionOrderDynamicIm_; }
+    double xvaCgRegressionVarianceCutoffDynamicIm() const { return xvaCgRegressionVarianceCutoffDynamicIm_; }
     bool xvaCgTradeLevelBreakdown() const { return xvaCgTradeLevelBreakdown_; }
+    const std::vector<Size>& xvaCgRegressionReportTimeStepsDynamicIM() const {
+        return xvaCgRegressionReportTimeStepsDynamicIM_;
+    }
     bool xvaCgUseRedBlocks() const { return xvaCgUseRedBlocks_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
@@ -686,10 +745,11 @@ public:
     }
     const std::string& xvaCgExternalComputeDevice() const { return xvaCgExternalComputeDevice_; }
     bool xvaCgUsePythonIntegration() const { return xvaCgUsePythonIntegration_; }
+    bool xvaCgUsePythonIntegrationDynamicIm() const { return xvaCgUsePythonIntegrationDynamicIm_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() const { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
-    const std::string& amcPathDataOutput() const { return amcPathDataOutput_; }
+    const std::string amcPathDataOutput() const { return amcPathDataOutput_; }
     bool amcIndividualTrainingInput() const { return amcIndividualTrainingInput_; }
     bool amcIndividualTrainingOutput() const { return amcIndividualTrainingOutput_; }
     const std::string& exposureBaseCurrency() const { return exposureBaseCurrency_; }
@@ -706,6 +766,7 @@ public:
     bool storeSurvivalProbabilities() const { return storeSurvivalProbabilities_; }
     bool writeCube() const { return writeCube_; }
     bool writeScenarios() const { return writeScenarios_; }
+    bool generateCorrelations() const {return generateCorrelations_;}
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& exposureSimMarketParams() const { return exposureSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData() const { return scenarioGeneratorData_; }
     const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData() const { return crossAssetModelData_; }
@@ -716,6 +777,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
+    const QuantLib::Size& maxScenario() const { return maxScenario_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
   
     /*****************
@@ -869,12 +931,6 @@ public:
     const std::string& parConversionInputBaseNpvColumn() const { return parConversionInputBaseNpvColumn_; }
     const std::string& parConversionInputShiftSizeColumn() const { return parConversionInputShiftSizeColumn_; }
 
-    // Getters for ScenarioStatistics
-    const Size& scenarioDistributionSteps() const { return scenarioDistributionSteps_; }
-    const bool& scenarioOutputZeroRate() const { return scenarioOutputZeroRate_; }
-    const bool scenarioOutputStatistics() const { return scenarioOutputStatistics_; }
-    const bool scenarioOutputDistributions() const { return scenarioOutputDistributions_; }
-
     // Getters for ParStressConversion
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& parStressSimMarketParams() const {
         return parStressSimMarketParams_;
@@ -932,6 +988,17 @@ public:
         return zeroToParShiftSensitivityScenarioData_;
     }
 
+    /****************************
+     * Getters for pnl analytics
+     ****************************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors() const { return pnlDateAdjustedRiskFactors_; }
+
+    /****************************
+     * Getters for pnl explain analytics
+     ****************************/
+    bool riskFactorLevel() const { return riskFactorLevel_; }
+
+    
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -954,11 +1021,13 @@ protected:
     // Each analytic type comes with additional input requirements, see below
     std::set<std::string> analytics_;
 
+
     /***********************************
      * Basic setup, across all run types
      ***********************************/
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
+    std::filesystem::path inputPath_;
     std::string baseCurrency_ = "USD";
     std::string resultCurrency_;
     bool continueOnError_ = true;
@@ -972,6 +1041,8 @@ protected:
     Size ignoreFixingLag_ = 0;
     optional<bool> includeTodaysCashFlows_;
     bool includeReferenceDateEvents_ = false;
+        
+    Parameters parameters_;
   
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
@@ -1006,6 +1077,8 @@ protected:
     bool mporForward_ = true;
     std::string marketDataLoaderOutput_;
     std::string marketDataLoaderInput_;
+    bool deriveCounterpartyDefaultCurves_ = false;
+    std::string additionalMarketDataInput_;
 
     /**************
      * NPV analytic
@@ -1016,6 +1089,7 @@ protected:
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     bool outputTodaysMarketCalibration_ = true;
+    std::size_t todaysMarketCalibrationPrecision_ = 8;
 
     /***********************************
      * CASHFLOW and CASHFLOWNPV analytic
@@ -1036,6 +1110,7 @@ protected:
     QuantLib::Real sensiThreshold_ = 1e-6;
     bool sensiRecalibrateModels_ = true;
     bool sensiLaxFxConversion_ = false;
+    bool sensiDecomposition_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -1087,6 +1162,13 @@ protected:
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
 
+    /*****************
+     * CORRELATION analytics
+     *****************/
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationData_;
+    // Pearson, Kendall-Rank
+    std::string correlationMethod_ = "Pearson";
+
     /*******************
      * EXPOSURE analytic
      *******************/
@@ -1096,7 +1178,10 @@ protected:
     Size xvaCgDynamicIMStepSize_ = 1;
     Size xvaCgRegressionOrder_ = 4;
     double xvaCgRegressionVarianceCutoff_ = Null<Real>();
+    Size xvaCgRegressionOrderDynamicIm_ = 4;
+    double xvaCgRegressionVarianceCutoffDynamicIm_ = Null<Real>();
     bool xvaCgTradeLevelBreakdown_ = true;
+    std::vector<Size> xvaCgRegressionReportTimeStepsDynamicIM_;
     bool xvaCgUseRedBlocks_ = true;
     bool xvaCgBumpSensis_ = false;
     bool xvaCgUseExternalComputeDevice_ = false;
@@ -1104,6 +1189,7 @@ protected:
     bool xvaCgUseDoublePrecisionForExternalCalculation_ = false;
     string xvaCgExternalComputeDevice_;
     bool xvaCgUsePythonIntegration_ = false;
+    bool xvaCgUsePythonIntegrationDynamicIm_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
@@ -1122,6 +1208,7 @@ protected:
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
     bool writeScenarios_ = false;
+    bool generateCorrelations_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> exposureSimMarketParams_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
@@ -1137,6 +1224,7 @@ protected:
     bool fullInitialCollateralisation_ = false;
     std::string collateralCalculationType_ = "NoLag";
     std::string exposureAllocationMethod_ = "None";
+    QuantLib::Size maxScenario_ = QuantLib::Null<QuantLib::Size>();
     Real marginalAllocationLimit_ = 1.0;
     // intermediate results of the exposure simulation, before aggregation
     QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
@@ -1255,14 +1343,6 @@ protected:
     std::string parConversionInputBaseNpvColumn_ = "Base NPV";
     std::string parConversionInputShiftSizeColumn_ = "ShiftSize_1";
 
-    /***************
-     * Scenario Statistics analytic
-     ***************/
-    Size scenarioDistributionSteps_ = 20;
-    bool scenarioOutputZeroRate_ = false;
-    bool scenarioOutputStatistics_ = true;
-    bool scenarioOutputDistributions_ = true;
-
     /*****************
      * PAR STRESS CONVERSION analytic
      *****************/
@@ -1312,6 +1392,16 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaExplainSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
     double xvaExplainShiftThreshold_ = 0;
+
+    /*****************
+     * PNL analytic
+     *****************/
+    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors_;
+
+    /*****************
+     * PNL explain analytic
+     *****************/
+    bool riskFactorLevel_ = false; 
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
@@ -1357,7 +1447,8 @@ private:
     std::string parConversionJacobiInverseFileName_;
     std::string pnlOutputFileName_;
     std::string parStressTestConversionFile_;
-    std::string pnlExplainOutputFileName_;    
+    std::string pnlExplainOutputFileName_; 
+    std::string correlationOutputFileName_;
     std::string riskFactorsOutputFileName_;
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;

@@ -41,7 +41,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     Real quantity, const Date& startDate, const Date& endDate, const ext::shared_ptr<CommodityIndex>& index,
     Natural paymentLag, const Calendar& paymentCalendar, BusinessDayConvention paymentConvention, Natural pricingLag,
     const Calendar& pricingLagCalendar, Real spread, Real gearing, PaymentTiming paymentTiming, bool isInArrears,
-    bool useFuturePrice, bool useFutureExpiryDate, Natural futureMonthOffset,
+    bool useFuturePrice, bool useFutureExpiryDate, Integer futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, const QuantLib::Date& paymentDateOverride,
     const QuantLib::Date& pricingDateOverride, QuantLib::Natural dailyExpiryOffset,
     const ext::shared_ptr<FxIndex>& fxIndex, const bool isAveragingWithBalanceMonth,
@@ -62,6 +62,9 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
             QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future "
                                  << "expiry calculator when using first future");
             Date expiry = calc->expiryDate(pricingDate_, futureMonthOffset_);
+            QL_REQUIRE(expiry != Null<Date>(), "CommodityIndexedCashflow needs a valid contract month, found no "
+                                               "valid contract for pricing / contract date "
+                                                   << io::iso_date(pricingDate_));
             if (dailyExpiryOffset_ != Null<Natural>()) {
                 expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
             }
@@ -137,6 +140,9 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
         QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future expiry calculator when using "
                              << "the future settlement price as reference price");
         expiry = calc->expiryDate(contractDate, futureMonthOffset_);
+        QL_REQUIRE(expiry != Null<Date>(), "CommodityIndexedCashflow needs a valid contract month, found no "
+                                               "valid contract for contract date "
+                                                   << io::iso_date(contractDate));
         if (dailyExpiryOffset_ != Null<Natural>()) {
             expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
         }
@@ -270,7 +276,7 @@ CommodityIndexedLeg& CommodityIndexedLeg::useFutureExpiryDate(bool flag) {
     return *this;
 }
 
-CommodityIndexedLeg& CommodityIndexedLeg::withFutureMonthOffset(Natural futureMonthOffset) {
+CommodityIndexedLeg& CommodityIndexedLeg::withFutureMonthOffset(Integer futureMonthOffset) {
     futureMonthOffset_ = futureMonthOffset;
     return *this;
 }

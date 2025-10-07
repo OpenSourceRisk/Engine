@@ -65,12 +65,17 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_;
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
+            QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
+                QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ParStressTestConverter converter(
                 inputs_->asof(), analytic()->configurations().todaysMarketParams,
                 analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                 analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
-            scenarioData = converter.convertStressScenarioData(scenarioData);
+            scenarioData = converter.convertStressScenarioData(scenarioData, parScenarioReport);
             analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
+            if (parScenarioReport->rows() > 0) {
+                analytic()->addReport(label(), "stress_scenario_par_rates", parScenarioReport);
+            }
         } catch (const std::exception& e) {
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
@@ -117,6 +122,7 @@ void SensitivityStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_pt
                 auto newAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false).second;
                 newAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
                 newAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+                newAnalytic->setPortfolio(analytic()->portfolio());
                 auto sensitivityImpl = static_cast<PricingAnalyticImpl*>(newAnalytic->impl().get());
                 sensitivityImpl->setOffsetScenario(scenario);
                 sensitivityImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);

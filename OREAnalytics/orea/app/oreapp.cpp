@@ -266,7 +266,8 @@ void OREApp::analytics() {
         if (inputs_->outputTodaysMarketCalibration()) {
             auto marketCalibrationReport =
                 QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
+                                                                       inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
@@ -542,7 +543,8 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
         if (inputs_->outputTodaysMarketCalibration()) {
             auto marketCalibrationReport =
                 QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
+                                                                       inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
@@ -627,6 +629,18 @@ std::string OREApp::gitHash() {
     return hashStr;
 }
 
+std::string OREAppInputParameters::loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) {
+    return params_->get(analytic, param, mandatory);
+}
+
+std::string OREAppInputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
+    bool mandatory) {
+    string filename = loadParameterString(analytic, param, mandatory);
+    filesystem::path filepath = inputPath_ / filename;
+    XMLDocument doc(filepath.generic_string());
+    return doc.toString();
+}
+
 void OREAppInputParameters::loadParameters() {
     LOG("load OREAppInputParameters called");
 
@@ -639,13 +653,13 @@ void OREAppInputParameters::loadParameters() {
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
-    filesystem::path inputPath = params_->get("setup", "inputPath");
+    inputPath_ = params_->get("setup", "inputPath");
     std::string outputPath = params_->get("setup", "outputPath");
 
     // Load calendar adjustments
     std::string tmp = params_->get("setup", "calendarAdjustment", false);
     if (tmp != "") {
-        filesystem::path calendarAdjustmentFile = inputPath / tmp;
+        filesystem::path calendarAdjustmentFile = inputPath_ / tmp;
         LOG("Loading calendar adjustments from file: " << calendarAdjustmentFile);
         setCalendarAdjustmentFromFile(calendarAdjustmentFile.generic_string());
     } else {
@@ -655,7 +669,7 @@ void OREAppInputParameters::loadParameters() {
     // Load currency configs
     tmp = params_->get("setup", "currencyConfiguration", false);
     if (tmp != "") {
-        filesystem::path currencyConfigFile = inputPath / tmp;
+        filesystem::path currencyConfigFile = inputPath_ / tmp;
         LOG("Loading currency configurations from file: " << currencyConfigFile);
         setCurrencyConfigFromFile(currencyConfigFile.generic_string());
     } else {
@@ -756,7 +770,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("setup", "referenceDataFile", false);
     if (tmp != "") {
-        filesystem::path refDataFile = inputPath / tmp;
+        filesystem::path refDataFile = inputPath_ / tmp;
         LOG("Loading reference data from file: " << refDataFile);
         setRefDataManagerFromFile(refDataFile.generic_string());
     } else {
@@ -765,7 +779,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("setup", "scriptLibrary", false);
     if (tmp != "") {
-        filesystem::path scriptFile = inputPath / tmp;
+        filesystem::path scriptFile = inputPath_ / tmp;
         LOG("Loading script library from file: " << scriptFile);
         setScriptLibraryFromFile(scriptFile.generic_string());
     } else {
@@ -773,7 +787,7 @@ void OREAppInputParameters::loadParameters() {
     }
 
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
-        filesystem::path conventionsFile = inputPath / params_->get("setup", "conventionsFile");
+        filesystem::path conventionsFile = inputPath_ / params_->get("setup", "conventionsFile");
         LOG("Loading conventions from file: " << conventionsFile);
         setConventionsFromFile(conventionsFile.generic_string());
     } else {
@@ -781,7 +795,7 @@ void OREAppInputParameters::loadParameters() {
     }
 
     if (params_->has("setup", "iborFallbackConfig") && params_->get("setup", "iborFallbackConfig") != "") {
-        filesystem::path tmp = inputPath / params_->get("setup", "iborFallbackConfig");
+        filesystem::path tmp = inputPath_ / params_->get("setup", "iborFallbackConfig");
         LOG("Loading Ibor fallback config from file: " << tmp);
         setIborFallbackConfigFromFile(tmp.generic_string());
     } else {
@@ -789,7 +803,7 @@ void OREAppInputParameters::loadParameters() {
     }
 
     if (params_->has("setup", "baselTrafficLightConfig") && params_->get("setup", "baselTrafficLightConfig") != "") {
-        filesystem::path tmp = inputPath / params_->get("setup", "baselTrafficLightConfig");
+        filesystem::path tmp = inputPath_ / params_->get("setup", "baselTrafficLightConfig");
         LOG("Loading Basel Traffic Light from file: " << tmp);
         setBaselTrafficLightFromFile(tmp.generic_string());
     } else {
@@ -797,7 +811,7 @@ void OREAppInputParameters::loadParameters() {
     }
 
     if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
-        filesystem::path curveConfigFile = inputPath / params_->get("setup", "curveConfigFile");
+        filesystem::path curveConfigFile = inputPath_ / params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file: ");
         setCurveConfigsFromFile(curveConfigFile.generic_string());
     } else {
@@ -806,7 +820,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("setup", "pricingEnginesFile", false);
     if (tmp != "") {
-        filesystem::path pricingEnginesFile = inputPath / tmp;
+        filesystem::path pricingEnginesFile = inputPath_ / tmp;
         LOG("Load pricing engine data from file: " << pricingEnginesFile);
         setPricingEngineFromFile(pricingEnginesFile.generic_string());
     } else {
@@ -815,7 +829,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("setup", "marketConfigFile", false);
     if (tmp != "") {
-        filesystem::path marketConfigFile = inputPath / tmp;
+        filesystem::path marketConfigFile = inputPath_ / tmp;
         LOG("Loading today's market parameters from file" << marketConfigFile);
         setTodaysMarketParamsFromFile(marketConfigFile.generic_string());
     } else {
@@ -827,13 +841,13 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("setup", "portfolioFile", false);
     if (tmp != "") {
-        setPortfolioFromFile(tmp, inputPath);
+        setPortfolioFromFile(tmp, inputPath_);
     } else {
         WLOG("Portfolio data not provided");
     }
 
     if (params_->has("setup", "counterpartyFile") && params_->get("setup", "counterpartyFile") != "") {
-        filesystem::path counterpartyFile = inputPath / params_->get("setup", "counterpartyFile");
+        filesystem::path counterpartyFile = inputPath_ / params_->get("setup", "counterpartyFile");
         LOG("Loading counterparty manager from file: " << counterpartyFile);
         setCounterpartyManagerFromFile(counterpartyFile.generic_string());
     } else {
@@ -864,6 +878,11 @@ void OREAppInputParameters::loadParameters() {
 
     if (params_->has("setup", "marketDataLoaderInput"))
         setMarketDataLoaderInput(params_->get("setup", "marketDataLoaderInput"));
+
+    tmp = params_->get("setup", "enableScenarioInformation", false);
+    if (tmp != ""){
+        ScenarioInformation::instance().enable(ore::data::parseBool(tmp));
+    }
 
     /*************
      * NPV
@@ -915,6 +934,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setOutputTodaysMarketCalibration(parseBool(tmp));
 
+    tmp = params_->get("curves", "todaysMarketCalibrationPrecision", false);
+    if (tmp != "")
+        setTodaysMarketCalibrationPrecision(parseInteger(tmp));
+
     /*************
      * SENSITIVITY
      *************/
@@ -948,7 +971,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("sensitivity", "marketConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading sensitivity scenario sim market parameters from file" << file);
             setSensiSimMarketParamsFromFile(file);
         } else {
@@ -957,7 +980,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("sensitivity", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setSensiScenarioDataFromFile(file);
         } else {
@@ -966,7 +989,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("sensitivity", "pricingEnginesFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
             setSensiPricingEngineFromFile(file);
         } else {
@@ -986,6 +1009,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("sensitivity", "laxFxConversion", false);
         if (tmp != "")
             setSensiLaxFxConversion(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "decomposeIndexSensitivities", false);
+        if (tmp != "")
+            setSensiDecomposition(parseBool(tmp));
+
     }
 
     /************
@@ -998,7 +1026,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("scenario", "simulationConfigFile", false);
         if (tmp != "") {
-            string simulationConfigFile = (inputPath / tmp).generic_string();
+            string simulationConfigFile = (inputPath_ / tmp).generic_string();
             LOG("Loading scenario simulation config from file" << simulationConfigFile);
             setScenarioSimMarketParamsFromFile(simulationConfigFile);
         } else {
@@ -1020,16 +1048,22 @@ void OREAppInputParameters::loadParameters() {
         setStressPricingEngine(pricingEngine());
         tmp = params_->get("stress", "marketConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading stress test scenario sim market parameters from file" << file);
             setStressSimMarketParamsFromFile(file);
         } else {
             WLOG("ScenarioSimMarket parameters for stress testing not loaded");
         }
 
+        tmp = params_->get("stress", "scenarioFile", false);
+        if (tmp != "") {
+            std::string scenarioFile = (inputPath_ / tmp).generic_string();
+            setScenarioReader(scenarioFile);
+        }
+
         tmp = params_->get("stress", "stressConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load stress test scenario data from file" << file);
             setStressScenarioDataFromFile(file);
         } else {
@@ -1038,7 +1072,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("stress", "pricingEnginesFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
             setStressPricingEngineFromFile(file);
         } else {
@@ -1055,7 +1089,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("stress", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setStressSensitivityScenarioDataFromFile(file);
         } else {
@@ -1110,7 +1144,7 @@ void OREAppInputParameters::loadParameters() {
         setParStressPricingEngine(pricingEngine());
         tmp = params_->get("parStressConversion", "marketConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading parStressConversion test scenario sim market parameters from file" << file);
             setParStressSimMarketParamsFromFile(file);
         } else {
@@ -1119,7 +1153,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("parStressConversion", "stressConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load stress test scenario data from file" << file);
             setParStressScenarioDataFromFile(file);
         } else {
@@ -1128,7 +1162,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("parStressConversion", "pricingEnginesFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
             setParStressPricingEngineFromFile(file);
         } else {
@@ -1137,7 +1171,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("parStressConversion", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setParStressSensitivityScenarioDataFromFile(file);
         } else {
@@ -1184,7 +1218,7 @@ void OREAppInputParameters::loadParameters() {
         setZeroToParShiftPricingEngine(pricingEngine());
         tmp = params_->get("zeroToParShift", "marketConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading zero to par shift conversion scenario sim market parameters from file " << file);
             setZeroToParShiftSimMarketParamsFromFile(file);
         } else {
@@ -1193,7 +1227,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("zeroToParShift", "stressConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load zero to par shift conversion scenario data from file" << file);
             setZeroToParShiftScenarioDataFromFile(file);
         } else {
@@ -1202,7 +1236,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("zeroToParShift", "pricingEnginesFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load pricing engine data from file: " << file);
             setZeroToParShiftPricingEngineFromFile(file);
         } else {
@@ -1211,7 +1245,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("zeroToParShift", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setZeroToParShiftSensitivityScenarioDataFromFile(file);
         } else {
@@ -1257,13 +1291,13 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("parametricVar", "covarianceInputFile", false);
         QL_REQUIRE(tmp != "", "covarianceInputFile not provided");
-        std::string covFile = (inputPath / tmp).generic_string();
+        std::string covFile = (inputPath_ / tmp).generic_string();
         LOG("Load Covariance Data from file " << covFile);
         setCovarianceDataFromFile(covFile);
 
         tmp = params_->get("parametricVar", "sensitivityInputFile", false);
         QL_REQUIRE(tmp != "", "sensitivityInputFile not provided");
-        std::string sensiFile = (inputPath / tmp).generic_string();
+        std::string sensiFile = (inputPath_ / tmp).generic_string();
         LOG("Get sensitivity data from file " << sensiFile);
         setSensitivityStreamFromFile(sensiFile);
 
@@ -1282,12 +1316,12 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("historicalSimulationVar", "historicalScenarioFile", false);
         QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
-        std::string scenarioFile = (inputPath / tmp).generic_string();
+        std::string scenarioFile = (inputPath_ / tmp).generic_string();
         setScenarioReader(scenarioFile);
 
         tmp = params_->get("historicalSimulationVar", "simulationConfigFile", false);
         QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
-        string simulationConfigFile = (inputPath / tmp).generic_string();
+        string simulationConfigFile = (inputPath_ / tmp).generic_string();
         setHistVarSimMarketParamsFromFile(simulationConfigFile);
 
         tmp = params_->get("historicalSimulationVar", "historicalPeriod", false);
@@ -1353,7 +1387,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("pnl", "simulationConfigFile", false);
         if (tmp != "") {
-            string simulationConfigFile = (inputPath / tmp).generic_string();
+            string simulationConfigFile = (inputPath_ / tmp).generic_string();
             LOG("Loading scenario simulation config from file" << simulationConfigFile);
             // Should we check whether other analytics are setting this, too?
             setScenarioSimMarketParamsFromFile(simulationConfigFile);
@@ -1362,7 +1396,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("pnl", "conventionsMporFile", false);
         if (tmp != "") {
-            filesystem::path conventionsMporFile = inputPath / params_->get("pnl", "conventionsMporFile");
+            filesystem::path conventionsMporFile = inputPath_ / params_->get("pnl", "conventionsMporFile");
             LOG("Loading mpor conventions from file: " << conventionsMporFile);
 
             // Initialize the conventions singleton before loading the conventions from file,
@@ -1374,14 +1408,19 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("pnl", "curveConfigMporFile", false);
         if (tmp != "") {
-            filesystem::path curveConfigFile = inputPath / params_->get("pnl", "curveConfigMporFile");
+            filesystem::path curveConfigFile = inputPath_ / params_->get("pnl", "curveConfigMporFile");
             LOG("Load curve configurations from file: ");
             setCurveConfigsFromFile(curveConfigFile.generic_string(), "mpor");
         }
 
         tmp = params_->get("pnl", "portfolioMporFile", false);
         if (tmp != "")
-            setMporPortfolioFromFile(tmp, inputPath);
+            setMporPortfolioFromFile(tmp, inputPath_);
+
+
+        tmp = params_->get("pnl", "dateAdjustedRiskFactors", false);
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(tmp);
     }
 
     /****************
@@ -1397,13 +1436,13 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("pnlExplain", "historicalScenarioFile", false);
         if (tmp != "") {
-            std::string scenarioFile = (inputPath / tmp).generic_string();
+            std::string scenarioFile = (inputPath_ / tmp).generic_string();
             setScenarioReader(scenarioFile);
         }
 
         tmp = params_->get("pnlExplain", "simulationConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading sensitivity scenario sim market parameters from file" << file);
             setSensiSimMarketParamsFromFile(file);
             setScenarioSimMarketParamsFromFile(file);
@@ -1413,7 +1452,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("pnlExplain", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setSensiScenarioDataFromFile(file);
         } else {
@@ -1426,7 +1465,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("pnlExplain", "conventionsMporFile", false);
         if (tmp != "") {
-            filesystem::path conventionsMporFile = inputPath / tmp;
+            filesystem::path conventionsMporFile = inputPath_ / tmp;
             LOG("Loading mpor conventions from file: " << conventionsMporFile);
 
             // Initialize the conventions singleton before loading the conventions from file,
@@ -1438,14 +1477,22 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("pnlExplain", "curveConfigMporFile", false);
         if (tmp != "") {
-            filesystem::path curveConfigFile = inputPath / tmp;
+            filesystem::path curveConfigFile = inputPath_ / tmp;
             LOG("Load curve configurations from file: ");
             setCurveConfigsFromFile(curveConfigFile.generic_string(), "mpor");
         }
 
         tmp = params_->get("pnlExplain", "portfolioMporFile", false);
         if (tmp != "")
-            setMporPortfolioFromFile(tmp, inputPath);
+            setMporPortfolioFromFile(tmp, inputPath_);
+
+        tmp = params_->get("pnlExplain", "dateAdjustedRiskFactors", false);
+        if (tmp != "")
+            setPnlDateAdjustedRiskFactors(tmp);
+
+        tmp = params_->get("pnlExplain", "riskFactorLevelReporting", false);
+        if (tmp != "")
+            setRiskFactorLevel(parseBool(tmp));
     }
     /****************
      * SIMM and IM Schedule
@@ -1467,14 +1514,14 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("simm", "simmCalibration", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             if (boost::filesystem::exists(file))
                 setSimmCalibrationDataFromFile(file);
         }
 
         tmp = params_->get("simm", "crif", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
         }
 	else {
@@ -1482,7 +1529,7 @@ void OREAppInputParameters::loadParameters() {
             // using the CRIF analytic settings below
             tmp = params_->get("crif", "marketConfigFile", false);
             if (tmp != "") {
-                string file = (inputPath / tmp).generic_string();
+                string file = (inputPath_ / tmp).generic_string();
                 LOG("Loading sensitivity scenario sim market parameters from file" << file);
                 setSensiSimMarketParamsFromFile(file);
             } else {
@@ -1491,7 +1538,7 @@ void OREAppInputParameters::loadParameters() {
 
             tmp = params_->get("crif", "sensitivityConfigFile", false);
             if (tmp != "") {
-                string file = (inputPath / tmp).generic_string();
+                string file = (inputPath_ / tmp).generic_string();
                 LOG("Load sensitivity scenario data from file" << file);
                 setSensiScenarioDataFromFile(file);
             } else {
@@ -1501,7 +1548,7 @@ void OREAppInputParameters::loadParameters() {
             auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
             tmp = params_->get("crif", "nameMappingInputFile", false);
             if (tmp != "") {
-                string fileName = (inputPath / tmp).generic_string();
+                string fileName = (inputPath_ / tmp).generic_string();
                 LOG("simmNameMapper file name: " << fileName);
                 nameMapper->fromFile(fileName);
             }
@@ -1510,7 +1557,7 @@ void OREAppInputParameters::loadParameters() {
             auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
             tmp = params_->get("crif", "bucketMappingInputFile", false);
             if (tmp != "") {
-                string fileName = (inputPath / tmp).generic_string();
+                string fileName = (inputPath_ / tmp).generic_string();
                 LOG("simmBucketMapper file name: " << fileName);
                 bucketMapper->fromFile(fileName);
             }
@@ -1573,7 +1620,7 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "") {
             string tmpSimm = params_->get("simm", "crif", false);
             QL_REQUIRE(!doSimm || tmp == tmpSimm, "crif files for imschedule and simm should match");
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
         }
 
@@ -1633,11 +1680,68 @@ void OREAppInputParameters::loadParameters() {
         insertAnalytic("CALIBRATION");
         tmp = params_->get("calibration", "configFile", false);
         if (tmp != "") {
-            string configFile = (inputPath / tmp).generic_string();
+            string configFile = (inputPath_ / tmp).generic_string();
             LOG("Loading model config from file" << configFile);
             setCrossAssetModelDataFromFile(configFile);
         } else {
             ALOG("Simulation model data not loaded");
+        }
+    }
+
+    /*************
+    * Correlation
+    *************/
+    tmp = params_->get("correlation", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("CORRELATION");
+        tmp = params_->get("correlation", "historicalScenarioFile", false);
+        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
+        std::string scenarioFile = (inputPath_ / tmp).generic_string();
+        setScenarioReader(scenarioFile);
+
+        tmp = params_->get("correlation", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+        }
+
+        tmp = params_->get("correlation", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded");
+        }
+
+        tmp = params_->get("correlation", "historicalPeriod", false);
+        if (tmp != "")
+            setBenchmarkVarPeriod(tmp);
+
+        tmp = params_->get("correlation", "correlation_method", false);
+        if (tmp != "")
+            setCorrelationMethod(tmp);
+
+        tmp = params_->get("correlation", "mporDays", false);
+        if (tmp != "")
+            setMporDays(static_cast<Size>(parseInteger(tmp)));
+
+        tmp = params_->get("correlation", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
+
+        tmp = params_->get("correlation", "mporOverlappingPeriods", false);
+        if (tmp != "")
+            setMporOverlappingPeriods(parseBool(tmp));
+
+        tmp = params_->get("correlation", "correlationInputFile", false);
+        if (tmp != "") {
+            std::string corrFile = (inputPath_ / tmp).generic_string();
+            LOG("Load Correlation Data from file " << corrFile);
+            setCorrelationDataFromFile(corrFile);
         }
     }
 
@@ -1673,6 +1777,11 @@ void OREAppInputParameters::loadParameters() {
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA");
 
+    tmp = params_->get("xva", "generateCorrelations", false);
+    if (!tmp.empty()) {
+        generateCorrelations_ = parseBool(tmp);
+    }
+
     tmp = params_->get("pfe", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("PFE");
@@ -1702,7 +1811,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("simulation", "xvaCgSensitivityConfigFile", false);
     if (tmp != "") {
-        string file = (inputPath / tmp).generic_string();
+        string file = (inputPath_ / tmp).generic_string();
         LOG("Load xva cg sensitivity scenario data from file" << file);
         setXvaCgSensiScenarioDataFromFile(file);
     }
@@ -1729,7 +1838,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("simulation", "scenarioFile", false);
     if (tmp != "")
-        setScenarioReader((inputPath / tmp).generic_string());
+        setScenarioReader((inputPath_ / tmp).generic_string());
 
     setSimulationPricingEngine(pricingEngine());
     setExposureObservationModel(observationModel());
@@ -1741,7 +1850,7 @@ void OREAppInputParameters::loadParameters() {
         analytics().find("XVA_EXPLAIN") != analytics().end()) {
         tmp = params_->get("simulation", "simulationConfigFile", false);
         if (tmp != "") {
-            string simulationConfigFile = (inputPath / tmp).generic_string();
+            string simulationConfigFile = (inputPath_ / tmp).generic_string();
             LOG("Loading simulation config from file" << simulationConfigFile);
             setExposureSimMarketParamsFromFile(simulationConfigFile);
             setCrossAssetModelDataFromFile(simulationConfigFile);
@@ -1755,7 +1864,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("simulation", "pricingEnginesFile", false);
         if (tmp != "") {
-            string pricingEnginesFile = (inputPath / tmp).generic_string();
+            string pricingEnginesFile = (inputPath_ / tmp).generic_string();
             LOG("Load simulation pricing engine data from file: " << pricingEnginesFile);
             setSimulationPricingEngineFromFile(pricingEnginesFile);
         } else {
@@ -1764,7 +1873,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("simulation", "amcPricingEnginesFile", false);
         if (tmp != "") {
-            string pricingEnginesFile = (inputPath / tmp).generic_string();
+            string pricingEnginesFile = (inputPath_ / tmp).generic_string();
             ;
             LOG("Load amc pricing engine data from file: " << pricingEnginesFile);
             setAmcPricingEngineFromFile(pricingEnginesFile);
@@ -1775,7 +1884,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("simulation", "amcCgPricingEnginesFile", false);
         if (tmp != "") {
-            string pricingEnginesFile = (inputPath / tmp).generic_string();
+            string pricingEnginesFile = (inputPath_ / tmp).generic_string();
             ;
             LOG("Load amccg pricing engine data from file: " << pricingEnginesFile);
             setAmcCgPricingEngineFromFile(pricingEnginesFile);
@@ -1860,6 +1969,10 @@ void OREAppInputParameters::loadParameters() {
         if (!tmp.empty())
             setXvaCgUsePythonIntegration(parseBool(tmp));
 
+        tmp = params_->get("simulation", "xvaCgUsePythonIntegrationDynamicIm", false);
+        if (!tmp.empty())
+            setXvaCgUsePythonIntegrationDynamicIm(parseBool(tmp));
+
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
         if (!tmp.empty())
             setXvaCgBumpSensis(parseBool(tmp));
@@ -1880,9 +1993,21 @@ void OREAppInputParameters::loadParameters() {
         if (!tmp.empty())
             setXvaCgRegressionVarianceCutoff(parseReal(tmp));
 
+        tmp = params_->get("simulation", "xvaCgRegressionOrderDynamicIm", false);
+        if (!tmp.empty())
+            setXvaCgRegressionOrderDynamicIm(parseInteger(tmp));
+
+        tmp = params_->get("simulation", "xvaCgRegressionVarianceCutoffDynamicIm", false);
+        if (!tmp.empty())
+            setXvaCgRegressionVarianceCutoffDynamicIm(parseReal(tmp));
+
         tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
         if (!tmp.empty())
             setXvaCgTradeLevelBreakdown(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgRegressionReportTimeStepsDynamicIM", false);
+        if (!tmp.empty())
+            setXvaCgRegressionReportTimeStepsDynamicIM(parseListOfValues<Size>(tmp, parseInteger));
 
         tmp = params_->get("simulation", "xvaCgUseRedBlocks", false);
         if (!tmp.empty())
@@ -1924,13 +2049,13 @@ void OREAppInputParameters::loadParameters() {
     if (analytics().find("PFE") != analytics().end()) {
         tmp = params_->get("pfe", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
-        string csaFile = (inputPath / tmp).generic_string();
+        string csaFile = (inputPath_ / tmp).generic_string();
         LOG("Loading netting and csa data from file " << csaFile);
         setNettingSetManagerFromFile(csaFile);
 
         tmp = params_->get("pfe", "collateralBalancesFile", false);
         if (tmp != "") {
-            string collBalancesFile = (inputPath / tmp).generic_string();
+            string collBalancesFile = (inputPath_ / tmp).generic_string();
             LOG("Loading collateral balances from file " << collBalancesFile);
             setCollateralBalancesFromFile(collBalancesFile);
         }
@@ -2110,7 +2235,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("pfe", "deterministicInitialMarginFile", false);
     if (tmp != "") {
-        string imFile = (inputPath / tmp).generic_string();
+        string imFile = (inputPath_ / tmp).generic_string();
         LOG("Load initial margin evolution from file " << tmp);
         setDeterministicInitialMarginFromFile(imFile);
     }
@@ -2205,7 +2330,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("pfe", "creditMigrationConfig", false);
     if (tmp != "") {
-        string file = (inputPath / tmp).generic_string();
+        string file = (inputPath_ / tmp).generic_string();
         LOG("Loading credit migration config from file" << file);
         setCreditSimulationParametersFromFile(file);
     }
@@ -2254,13 +2379,13 @@ void OREAppInputParameters::loadParameters() {
         analytics().find("XVA_EXPLAIN") != analytics().end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
-        string csaFile = (inputPath / tmp).generic_string();
+        string csaFile = (inputPath_ / tmp).generic_string();
         LOG("Loading netting and csa data from file " << csaFile);
         setNettingSetManagerFromFile(csaFile);
 
         tmp = params_->get("xva", "collateralBalancesFile", false);
         if (tmp != "") {
-            string collBalancesFile = (inputPath / tmp).generic_string();
+            string collBalancesFile = (inputPath_ / tmp).generic_string();
             LOG("Loading collateral balances from file " << collBalancesFile);
             setCollateralBalancesFromFile(collBalancesFile);
         }
@@ -2292,6 +2417,38 @@ void OREAppInputParameters::loadParameters() {
         setMarketCubeFromFile(cubeFile);
         LOG("MktCube loading done");
     }
+
+    tmp = params_->get("xva", "marketConfigFile", false);
+    if (tmp != "" && generateCorrelations_) {
+        string file = (inputPath_ / tmp).generic_string();
+        LOG("Loading sensitivity scenario sim market parameters from file" << file);
+        setSensiSimMarketParamsFromFile(file);
+    } else {
+        WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
+    }
+    tmp = params_->get("xva", "sensitivityConfigFile", false);
+    if (tmp != "" && generateCorrelations_) {
+        string file = (inputPath_ / tmp).generic_string();
+        LOG("Load sensitivity scenario data from file" << file);
+        setSensiScenarioDataFromFile(file);
+    } else {
+        WLOG("Sensitivity scenario data not loaded");
+    }
+    tmp = params_->get("xva", "historicalScenarioFile", false);
+    if (tmp != "" && generateCorrelations_) {
+        std::string scenarioFile = (inputPath_ / tmp).generic_string();
+        setScenarioReader(scenarioFile);
+    }
+
+    tmp = params_->get("xva", "historicalPeriod", false);
+    if (tmp != "" && generateCorrelations_)
+        setBenchmarkVarPeriod(tmp);
+    tmp = params_->get("xva", "mporDays", false);
+    if (tmp != "")
+        setMporDays(parseInteger(tmp));
+    tmp = params_->get("xva", "mporCalendar", false);
+    if (tmp != "" && generateCorrelations_)
+        setMporCalendar(tmp);
 
     tmp = params_->get("xva", "flipViewXVA", false);
     if (tmp != "")
@@ -2440,7 +2597,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("xva", "deterministicInitialMarginFile", false);
     if (tmp != "") {
-        string imFile = (inputPath / tmp).generic_string();
+        string imFile = (inputPath_ / tmp).generic_string();
         LOG("Load initial margin evolution from file " << tmp);
         setDeterministicInitialMarginFromFile(imFile);
     }
@@ -2535,7 +2692,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("xva", "creditMigrationConfig", false);
     if (tmp != "") {
-        string file = (inputPath / tmp).generic_string();
+        string file = (inputPath_ / tmp).generic_string();
         LOG("Loading credit migration config from file" << file);
         setCreditSimulationParametersFromFile(file);
     }
@@ -2549,6 +2706,13 @@ void OREAppInputParameters::loadParameters() {
         setfirstMporCollateralAdjustment(parseBool(tmp));
     }
 
+    tmp = params_->get("xva", "correlationInputFile", false);
+    if (tmp != "") {
+        std::string corrFile = (inputPath_ / tmp).generic_string();
+        LOG("Loading correlation from file" << corrFile);
+        setCorrelationDataFromFile(corrFile);
+    }
+
     /*************
      * XVA Stress
      *************/
@@ -2556,7 +2720,7 @@ void OREAppInputParameters::loadParameters() {
     if (analytics().find("XVA_STRESS") != analytics().end()) {
         tmp = params_->get("xvaStress", "marketConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading xva stress test scenario sim market parameters from file" << file);
             setXvaStressSimMarketParamsFromFile(file);
         } else {
@@ -2565,7 +2729,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("xvaStress", "stressConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load xav stress test scenario data from file" << file);
             setXvaStressScenarioDataFromFile(file);
         } else {
@@ -2583,7 +2747,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("xvaStress", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setXvaStressSensitivityScenarioDataFromFile(file);
         } else {
@@ -2598,7 +2762,7 @@ void OREAppInputParameters::loadParameters() {
      if (analytics().find("SENSITIVITY_STRESS") != analytics().end()) {
         tmp = params_->get("sensitivityStress", "marketConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading sensitivity stress test scenario sim market parameters from file" << file);
             setSensitivityStressSimMarketParamsFromFile(file);
         } else {
@@ -2607,7 +2771,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("sensitivityStress", "stressConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity stress test scenario data from file" << file);
             setSensitivityStressScenarioDataFromFile(file);
         } else {
@@ -2616,7 +2780,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("sensitivityStress", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setSensitivityStressSensitivityScenarioDataFromFile(file);
         } else {
@@ -2641,7 +2805,7 @@ void OREAppInputParameters::loadParameters() {
 	analytics().find("SA_CVA") != analytics().end()) {
         tmp = params_->get("xvaSensitivity", "marketConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading xva sensitivity scenario sim market parameters from file" << file);
             setXvaSensiSimMarketParamsFromFile(file);
         } else {
@@ -2650,7 +2814,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("xvaSensitivity", "sensitivityConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load xva sensitivity scenario data from file" << file);
             setXvaSensiScenarioDataFromFile(file);
         } else {
@@ -2681,7 +2845,7 @@ void OREAppInputParameters::loadParameters() {
     if (analytics().find("XVA_EXPLAIN") != analytics().end()) {
         tmp = params_->get("xvaExplain", "marketConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading xva explain scenario sim market parameters from file" << file);
             setXvaExplainSimMarketParamsFromFile(file);
         } else {
@@ -2690,7 +2854,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("xvaExplain", "sensitivityConfigFile", false);
         if (!tmp.empty()) {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load xvaExplain sensitivity scenario data from file" << file);
             setXvaExplainSensitivityScenarioDataFromFile(file);
         } else {
@@ -2727,13 +2891,13 @@ void OREAppInputParameters::loadParameters() {
 
          tmp = params_->get("sacva", "saCvaNetSensitivitiesFile", false);
          if (!tmp.empty()) {
-             string file = (inputPath / tmp).generic_string();
+             string file = (inputPath_ / tmp).generic_string();
              LOG("Loading aggregated SA-CVA sensitivity input from file" << file);
              setSaCvaNetSensitivitiesFromFile(file);
          } else {
              tmp = params_->get("sacva", "cvaSensitivitiesFile", false);
              if (!tmp.empty()) {
-                 string file = (inputPath / tmp).generic_string();
+                 string file = (inputPath_ / tmp).generic_string();
                  LOG("Loading granular cva sensitivity input from file" << file);
                  setCvaSensitivitiesFromFile(file);
              }
@@ -2761,13 +2925,13 @@ void OREAppInputParameters::loadParameters() {
          if (!nettingSetManager()) {
              tmp = params_->get("saccr", "csaFile", false);
              QL_REQUIRE(tmp != "", "Netting set manager is required for SA-CCR");
-             string csaFile = (inputPath / tmp).generic_string();
+             string csaFile = (inputPath_ / tmp).generic_string();
              LOG("Loading netting and csa data from file " << csaFile);
              setNettingSetManagerFromFile(csaFile);
 	 }
          tmp = params_->get("saccr", "collateralBalancesFile", false);
          if (tmp != "") {
-             string collBalancesFile = (inputPath / tmp).generic_string();
+             string collBalancesFile = (inputPath_ / tmp).generic_string();
              if (!collateralBalances()) {
                  LOG("Loading collateral balances from file " << collBalancesFile);
 		 setCollateralBalancesFromFile(collBalancesFile);
@@ -2786,14 +2950,14 @@ void OREAppInputParameters::loadParameters() {
 
          tmp = params_->get("saccr", "simmNameMapping", false);
          if (tmp != "") {
-             string nameMappingFile = (inputPath / tmp).generic_string();
+             string nameMappingFile = (inputPath_ / tmp).generic_string();
              setSimmNameMapperFromFile(nameMappingFile);
              LOG("Loading SIMM bucket mapping from file " << nameMappingFile);
          }
 
          tmp = params_->get("saccr", "simmBucketMapping", false);
          if (tmp != "") {
-             string bucketMappingFile = (inputPath / tmp).generic_string();
+             string bucketMappingFile = (inputPath_ / tmp).generic_string();
              setSimmBucketMapperFromFile(bucketMappingFile);
              LOG("Loading SIMM bucket mapping from file " << bucketMappingFile);
          }
@@ -2810,14 +2974,14 @@ void OREAppInputParameters::loadParameters() {
          if (!nettingSetManager()) {
              tmp = params_->get("bacva", "csaFile", false);
              QL_REQUIRE(tmp != "", "Netting set manager is required for BA-CVA");
-             string csaFile = (inputPath / tmp).generic_string();
+             string csaFile = (inputPath_ / tmp).generic_string();
              LOG("Loading netting and csa data from file " << csaFile);
              setNettingSetManagerFromFile(csaFile);
 	 }
          if (!collateralBalances()) {
              tmp = params_->get("bacva", "collateralBalancesFile", false);
              if (tmp != "") {
-                 string collBalancesFile = (inputPath / tmp).generic_string();
+                 string collBalancesFile = (inputPath_ / tmp).generic_string();
                  LOG("Loading collateral balances from file " << collBalancesFile);
                  setCollateralBalancesFromFile(collBalancesFile);
              }
@@ -2854,7 +3018,7 @@ void OREAppInputParameters::loadParameters() {
 
          tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
          if (tmp != "") {
-             setParConversionInputFile((inputPath / tmp).generic_string());
+             setParConversionInputFile((inputPath_ / tmp).generic_string());
          }
 
          tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
@@ -2889,7 +3053,7 @@ void OREAppInputParameters::loadParameters() {
 
          tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
          if (tmp != "") {
-             string file = (inputPath / tmp).generic_string();
+             string file = (inputPath_ / tmp).generic_string();
              LOG("Loading par converions scenario sim market parameters from file" << file);
              setParConversionSimMarketParamsFromFile(file);
          } else {
@@ -2898,7 +3062,7 @@ void OREAppInputParameters::loadParameters() {
 
          tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
          if (tmp != "") {
-             string file = (inputPath / tmp).generic_string();
+             string file = (inputPath_ / tmp).generic_string();
              LOG("Load par conversion scenario data from file" << file);
              setParConversionScenarioDataFromFile(file);
          } else {
@@ -2907,7 +3071,7 @@ void OREAppInputParameters::loadParameters() {
 
          tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
          if (tmp != "") {
-             string file = (inputPath / tmp).generic_string();
+             string file = (inputPath_ / tmp).generic_string();
              LOG("Load pricing engine data from file: " << file);
              setParConversionPricingEngineFromFile(file);
          } else {
@@ -2921,54 +3085,15 @@ void OREAppInputParameters::loadParameters() {
          tmp = params_->get("zeroToParSensiConversion", "outputJacobi", false);
          if (tmp != "")
              setParConversionOutputJacobi(parseBool(tmp));
-    }
+    } 
 
-    /**********************
-     * Scenario_Statistics
-     **********************/
-
-    tmp = params_->get("scenarioStatistics", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
-        insertAnalytic("SCENARIO_STATISTICS");
-        tmp = params_->get("scenarioStatistics", "distributionBuckets", false);
-        if (tmp != "")
-            setScenarioDistributionSteps(parseInteger(tmp));
-
-        tmp = params_->get("scenarioStatistics", "outputZeroRate", false);
-        if (tmp != "")
-            setScenarioOutputZeroRate(parseBool(tmp));
-
-        tmp = params_->get("scenarioStatistics", "outputStatistics", false);
-        if (tmp != "")
-            setScenarioOutputStatistics(parseBool(tmp));
-
-        tmp = params_->get("scenarioStatistics", "outputDistributions", false);
-        if (tmp != "")
-            setScenarioOutputDistributions(parseBool(tmp));
-
-        tmp = params_->get("scenarioStatistics", "amcPathDataOutput", false);
-        if (tmp != "")
-            setAmcPathDataOutput(tmp);
-
-        tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
-        if (tmp != "") {
-            string simulationConfigFile = (inputPath / tmp).generic_string();
-            LOG("Loading simulation config from file" << simulationConfigFile);
-            setExposureSimMarketParamsFromFile(simulationConfigFile);
-            setCrossAssetModelDataFromFile(simulationConfigFile);
-            setScenarioGeneratorDataFromFile(simulationConfigFile);
-            auto grid = scenarioGeneratorData()->getGrid();
-            DLOG("grid size=" << grid->size() << ", dates=" << grid->dates().size() << ", valuationDates="
-                              << grid->valuationDates().size() << ", closeOutDates=" << grid->closeOutDates().size());
-        } else {
-            ALOG("Simulation market, model and scenario generator data not loaded");
-        }
-    }
+    tmp = params_->get("scenarioGeneration", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("SCENARIO_GENERATION");
 
     tmp = params_->get("portfolioDetails", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("PORTFOLIO_DETAILS");
-    }
 
     /*****************
      * CRIF Generation
@@ -2985,7 +3110,7 @@ void OREAppInputParameters::loadParameters() {
 	// FIXME: Warn if we override previous settings
         tmp = params_->get("crif", "marketConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Loading sensitivity scenario sim market parameters from file" << file);
             setSensiSimMarketParamsFromFile(file);
         } else {
@@ -2994,7 +3119,7 @@ void OREAppInputParameters::loadParameters() {
 
         tmp = params_->get("crif", "sensitivityConfigFile", false);
         if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
+            string file = (inputPath_ / tmp).generic_string();
             LOG("Load sensitivity scenario data from file" << file);
             setSensiScenarioDataFromFile(file);
         } else {
@@ -3012,7 +3137,7 @@ void OREAppInputParameters::loadParameters() {
 	auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
 	tmp = params_->get("crif", "nameMappingInputFile", false);
 	if (tmp != "") {
-	   string fileName = (inputPath / tmp).generic_string();
+	   string fileName = (inputPath_ / tmp).generic_string();
 	   LOG("simmNameMapper file name: " << fileName);
 	   nameMapper->fromFile(fileName);
 	}
@@ -3021,7 +3146,7 @@ void OREAppInputParameters::loadParameters() {
 	auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
 	tmp = params_->get("crif", "bucketMappingInputFile", false);
 	if (tmp != "") {
-	   string fileName = (inputPath / tmp).generic_string();
+	   string fileName = (inputPath_ / tmp).generic_string();
 	   LOG("simmBucketMapper file name: " << fileName);
 	   bucketMapper->fromFile(fileName);
 	}

@@ -217,7 +217,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
         size_t mandatoryFixings = 0;
         for (const auto& [index, requiredFixingDates] : m) {
             for (const auto& [date, mandatoryFixing] : requiredFixingDates) {
-                if (mandatoryFixing)
+                if (mandatoryFixing.first)
                     ++mandatoryFixings;
             }
         }

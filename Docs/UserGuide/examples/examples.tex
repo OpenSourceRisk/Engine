@@ -155,6 +155,13 @@ Note: When building ORE from sources on Windows platforms, make sure that you co
 directory {\tt App/bin/win32/} respectively {\tt App/bin/x64/}. Otherwise the examples may be run using the pre-compiled
 executables which come with the ORE release.
 
+\subsection{Testsuites}\label{example:testsuites}
+
+The build includes a set of testsuites for each of QuantLib, QuantExt, OREData, and OREAnalytics libraries. You can run 
+all tests by navigating into the Build folder and running the following command:
+{\tt ctest -C Release -j4 --timeout 3600}
+
+
 \subsection*{Python}
 
 Running any of the examples described in the following sections needs a python3 installation.
