@@ -32,6 +32,8 @@ void FdCallableBondEvents::registerBondCashflow(const NumericLgmMultiLegOptionEn
     if (c.payDate > today_) {
         registeredBondCashflows_.push_back(c);
         times_.insert(time(c.payDate));
+        if (c.requiredSimulationTime() != Null<Real>())
+            times_.insert(c.requiredSimulationTime());
     }
 }
 
