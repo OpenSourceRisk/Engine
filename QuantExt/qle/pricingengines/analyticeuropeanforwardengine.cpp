@@ -104,7 +104,10 @@ namespace QuantExt {
         DiscountFactor riskFreeDiscountForFwdEstimation =
             process_->riskFreeRate()->discount(arguments_.forwardDate);
         Real spot = process_->stateVariable()->value();
-        QL_REQUIRE(spot > 0.0, "negative or null underlying given");
+        bool useNormalModel = modelType_ == QuantLib::DiffusionModelType::Bachelier ||
+                              (modelType_ == QuantLib::DiffusionModelType::AsInputVolatilityType &&
+                               process_->blackVolatility()->volType() == QuantLib::VolatilityType::Normal);
+        QL_REQUIRE(useNormalModel || spot > 0.0, "negative or null underlying given");
         Real forwardPrice = spot * dividendDiscount / riskFreeDiscountForFwdEstimation;
 
 
