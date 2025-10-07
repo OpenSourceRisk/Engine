@@ -107,7 +107,11 @@ namespace QuantExt {
         bool useNormalModel = modelType_ == QuantLib::DiffusionModelType::Bachelier ||
                               (modelType_ == QuantLib::DiffusionModelType::AsInputVolatilityType &&
                                process_->blackVolatility()->volType() == QuantLib::VolatilityType::Normal);
-        QL_REQUIRE(useNormalModel || spot > 0.0, "negative or null underlying given");
+        double shift = modelType_ == QuantLib::DiffusionModelType::Bachelier
+                           ? 0.0
+                           : (modelType_ == QuantLib::DiffusionModelType::Black ? displacement_
+                                                                                : process_->blackVolatility()->shift());
+        QL_REQUIRE(useNormalModel || spot > -shift, "negative or null underlying given");
         Real forwardPrice = spot * dividendDiscount / riskFreeDiscountForFwdEstimation;
 
 
