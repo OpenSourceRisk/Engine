@@ -30,9 +30,19 @@ namespace analytics {
 //       (empty) initialised before itCurrent_
 ParSensitivityCubeStream::ParSensitivityCubeStream(
     const QuantLib::ext::shared_ptr<ZeroToParCube>& cube,
-    const string& currency, const std::unordered_map<std::string, std::string>& tradeCurrency)
-    : zeroCubeIdx_(0), cube_(cube), currency_(currency), tradeCurrency_(tradeCurrency), itCurrent_(currentDeltas_.begin()) {
+                                                   const string& currency,
+                                                   const const QuantLib::ext::shared_ptr<Portfolio>& portfolio)
+    : zeroCubeIdx_(0), cube_(cube), currency_(currency), portfolio_(portfolio), itCurrent_(currentDeltas_.begin()) {
     QL_REQUIRE(!cube_->zeroCubes().empty(), "ParSensitivityCubeStream: cube contains no zero cubes");
+
+    // Trade currency hashmap
+    // Create a trade currency map if portfolio is provided
+    if (portfolio_) {
+        tradeCurrency_.reserve(portfolio_->trades().size());
+        for (auto const& tr : portfolio_->trades())
+            tradeCurrency_.emplace(tr.first, tr.second->npvCurrency());
+    }
+
     tradeIdx_ = cube_->zeroCubes().front()->tradeIdx().begin();
     init();
 }
