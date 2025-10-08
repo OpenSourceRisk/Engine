@@ -42,6 +42,10 @@ public:
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void setNotionalAndCurrencies();
 
+    //! Trade interface
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
+
     //! \name Inspectors
     //@{
     const OptionData& option() const { return option_; }
@@ -86,6 +90,9 @@ protected:
 
     //! Store the (optional) payment date.
     QuantLib::Date paymentDate_;
+
+    //! Delegating engine builder
+    QuantLib::ext::shared_ptr<Trade> delegatingBuilderTrade_;
 };
 } // namespace data
 } // namespace ore

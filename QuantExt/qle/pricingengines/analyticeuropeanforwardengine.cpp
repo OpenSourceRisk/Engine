@@ -38,7 +38,7 @@
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 
 #include <ql/exercise.hpp>
-#include <ql/pricingengines/blackcalculator.hpp>
+#include <ql/pricingengines/diffusioncalculator.hpp>
 
 using QuantLib::Date;
 using QuantLib::DiscountFactor;
@@ -60,15 +60,19 @@ using QuantLib::Error;
 namespace QuantExt {
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
-             const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process)
-    : process_(process) {
+             const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
+             const QuantLib::DiffusionModelType modelType,
+             const QuantLib::Real displacement)
+    : process_(process), modelType_(modelType), displacement_(displacement) {
         registerWith(process_);
     }
 
     AnalyticEuropeanForwardEngine::AnalyticEuropeanForwardEngine(
              const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
-             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve)
-    : process_(process), discountCurve_(discountCurve) {
+             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve, 
+             const QuantLib::DiffusionModelType modelType,
+             const QuantLib::Real displacement)
+    : process_(process), discountCurve_(discountCurve), modelType_(modelType), displacement_(displacement) {
         registerWith(process_);
         registerWith(discountCurve_);
     }
@@ -89,10 +93,6 @@ namespace QuantExt {
             QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
         QL_REQUIRE(payoff, "non-striked payoff given");
 
-        Real variance =
-            process_->blackVolatility()->blackVariance(
-                                              arguments_.exercise->lastDate(),
-                                              payoff->strike());
         DiscountFactor dividendDiscount =
             process_->dividendYield()->discount(
                                              arguments_.forwardDate);
@@ -104,10 +104,23 @@ namespace QuantExt {
         DiscountFactor riskFreeDiscountForFwdEstimation =
             process_->riskFreeRate()->discount(arguments_.forwardDate);
         Real spot = process_->stateVariable()->value();
-        QL_REQUIRE(spot > 0.0, "negative or null underlying given");
+        bool useNormalModel = modelType_ == QuantLib::DiffusionModelType::Bachelier ||
+                              (modelType_ == QuantLib::DiffusionModelType::AsInputVolatilityType &&
+                               process_->blackVolatility()->volType() == QuantLib::VolatilityType::Normal);
+        double shift = useNormalModel
+                           ? 0.0
+                           : (modelType_ == QuantLib::DiffusionModelType::Black ? displacement_
+                                                                                : process_->blackVolatility()->shift());
+        QL_REQUIRE(useNormalModel || (spot > -shift),
+                   "underlying spot (" << spot << ") + displacement (" << shift << ") is not positive");
         Real forwardPrice = spot * dividendDiscount / riskFreeDiscountForFwdEstimation;
 
-        QuantLib::BlackCalculator black(payoff, forwardPrice, std::sqrt(variance),df);
+
+        auto [variance, volType, displacement] = convertInputVariance(
+            modelType_, displacement_, *process_->blackVolatility(), forwardPrice, payoff->strike(),
+            process_->blackVolatility()->timeFromReference(arguments_.exercise->lastDate()));
+
+        QuantLib::DiffusionCalculator black(payoff, forwardPrice, std::sqrt(variance),df, volType, displacement);
 
 
         results_.value = black.value();

@@ -240,11 +240,11 @@ QuantLib::ext::shared_ptr<EngineFactory> XvaAnalyticImpl::engineFactory() {
         // link to the sim market here
         QL_REQUIRE(simMarket_, "Simulaton market not set");
         engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
-            edCopy, simMarket_, configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            edCopy, simMarket_, configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
     } else {
         // we just link to today's market if simulation is not required
         engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
-            edCopy, analytic()->market(), configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            edCopy, analytic()->market(), configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
     }
     return engineFactory_;
 }
@@ -256,7 +256,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
         analytic()->market(), analytic()->configurations().simMarketParams,
         QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
         *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
-        inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(), false, offsetScenario_);
+        inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig(), false, offsetScenario_);
 
     if (offsetScenario_ == nullptr) {
         simMarketCalibration_ = simMarket_;
@@ -267,13 +267,13 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
             analytic()->market(), offsetSimMarketParams_,
             QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
             *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true,
-            inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(), false, offsetScenario_);
+            inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig(), false, offsetScenario_);
 
         // Create a third market used for AMC and Postprocessor, holds a larger simmarket, e.g. default curves
         offsetSimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), offsetSimMarketParams_, QuantLib::ext::make_shared<FixingManager>(inputs_->asof()),
             configuration, *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams,
-            inputs_->continueOnError(), true, true, inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(),
+            inputs_->continueOnError(), true, true, inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig(),
             false, offsetScenario_);
 
         TLOG("XvaAnalytic: Offset Scenario used in building SimMarket");
@@ -591,7 +591,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             inputs_->simulationPricingEngine(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
             analytic()->configurations().simMarketParams, false, false, QuantLib::ext::make_shared<ScenarioFilter>(),
-            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
+            inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
             cptyCubeFactory, "xva-simulation", offsetScenario_);
 
         engine.setAggregationScenarioData(scenarioData_);
@@ -630,8 +630,8 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
     ext::shared_ptr<ore::data::Market> market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
-        edCopy, market, configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates, stickyCloseOutDates), true);
+        edCopy, market, configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig(),
+        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates, stickyCloseOutDates));
     return factory;
 }
 
@@ -723,14 +723,15 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
-            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
+            inputs_->xvaCgRegressionOrderDynamicIm(), inputs_->xvaCgRegressionVarianceCutoffDynamicIm(),
             inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
-            "xva analytic");
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -791,7 +792,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
                 inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
                 inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
                 inputs_->amcIndividualTrainingInput(), inputs_->amcIndividualTrainingOutput(),
-                inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
+                inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
                 simMarketParams, continueOnCalibrationError, allowModelFallbacks);
 
             amcEngine.registerProgressIndicator(progressBar);
@@ -1002,20 +1003,20 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
-        // TODO expose dynamic delta var flag to config (hardcoded to true at the moment)
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
-            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgDynamicIM(), inputs_->xvaCgDynamicIMStepSize(),
             inputs_->xvaCgRegressionOrder(), inputs_->xvaCgRegressionVarianceCutoff(),
+            inputs_->xvaCgRegressionOrderDynamicIm(), inputs_->xvaCgRegressionVarianceCutoffDynamicIm(),
             inputs_->xvaCgTradeLevelBreakdown(), inputs_->xvaCgRegressionReportTimeStepsDynamicIM(),
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(), true, true, true,
-            "xva analytic");
+            inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
 
         engine.run();
 

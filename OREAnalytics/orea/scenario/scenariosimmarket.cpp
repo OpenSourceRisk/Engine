@@ -305,7 +305,8 @@ ScenarioSimMarket::ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& in
                                      const std::string& configuration, const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
-                                     const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig,
+                                     const bool allowPartialScenarios,
+                                     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                      const bool handlePseudoCurrencies,
                                      const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : ScenarioSimMarket(initMarket, parameters, QuantLib::ext::make_shared<FixingManager>(initMarket->asofDate()),
@@ -318,7 +319,8 @@ ScenarioSimMarket::ScenarioSimMarket(
     const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const std::string& configuration,
     const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
     const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
-    const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
+    const bool allowPartialScenarios, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : SimMarket(handlePseudoCurrencies), parameters_(parameters), fixingManager_(fixingManager),
       filter_(QuantLib::ext::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
       cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
@@ -489,9 +491,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             ich->enableExtrapolation();
 
                         QuantLib::ext::shared_ptr<IborIndex> i = index->clone(ich);
-                        if (iborFallbackConfig_.isIndexReplaced(name, asof_)) {
+                        if (iborFallbackConfig_->isIndexReplaced(name, asof_)) {
                             // handle ibor fallback indices
-                            auto fallbackData = iborFallbackConfig_.fallbackData(name);
+                            auto fallbackData = iborFallbackConfig_->fallbackData(name);
                             auto f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
                             QL_REQUIRE(f != iborIndices_.end(),
                                        "Could not build ibor fallback index '"
@@ -507,15 +509,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(i))
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
                                 original, rfrInd, fallbackData.spread, fallbackData.switchDate,
-                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                    iborFallbackConfig_->useRfrCurveInSimulationMarket());
                                         else
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
                                                 i, rfrInd, fallbackData.spread, fallbackData.switchDate,
-                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                                iborFallbackConfig_->useRfrCurveInSimulationMarket());
                             DLOG("built ibor fall back index '"
                                  << name << "' with rfr index '" << fallbackData.rfrIndex << "', spread "
-                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha
-                                 << iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha << iborFallbackConfig_->useRfrCurveInSimulationMarket());
                         }
                         iborIndices_.insert(
                             make_pair(make_pair(Market::defaultConfiguration, name), Handle<IborIndex>(i)));
@@ -3365,22 +3366,29 @@ void ScenarioSimMarket::applyCurveAlgebra() {
     for (auto const& a : parameters_->curveAlgebraData().data()) {
         DLOG("Applying operation type " << a.operationType());
         if (a.operationType() == "Spreaded") {
-            DLOG("curve " << a.key() << " is spreaded over " << a.argument(0));
-            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), getYieldCurve(a.argument(0)));
-        } else
-        // add more operations here...
-        {
+            std::vector<Handle<YieldTermStructure>> bases;
+            std::vector<double> multiplier;
+            for (auto const& arg : a.arguments()) {
+                auto v = parseListOfValues(arg);
+                bases.push_back(getYieldCurve(v[0]));
+                multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
+                DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier "
+                              << multiplier.back());
+            }
+            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), bases, multiplier);
+        } else {
             QL_FAIL("curve algebra rule type '" << a.operationType() << "' not recognized. Expected: 'Spreaded'.");
         }
     }
 }
 
 void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
-                                                           const Handle<YieldTermStructure>& base) {
+                                                            const std::vector<Handle<YieldTermStructure>>& bases,
+                                                            const std::vector<double>& multiplier) {
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else {
         QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
                 "supported curve types. Internal error, contact dev.");

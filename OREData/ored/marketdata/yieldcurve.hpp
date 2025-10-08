@@ -111,7 +111,8 @@ public:
         //! optional pointer to reference data, needed to build fitted bond curves
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! ibor fallback config
-        const IborFallbackConfig& iborfallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
         const bool preserveQuoteLinkage = false,
         //! build calibration info
@@ -175,7 +176,7 @@ private:
     map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
     const QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
     const bool preserveQuoteLinkage_;
     bool buildCalibrationInfo_;
     const Market* market_;

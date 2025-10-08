@@ -104,7 +104,6 @@ Report& InMemoryReport::add(const InMemoryReport& report) {
 
     if (i_ == headers_.size())
         next();
-        
     for (Size rowIdx = 0; rowIdx < report.rows(); rowIdx++) {
         for (Size columnIdx = 0; columnIdx < report.columns(); columnIdx++) {
             add(report.data(columnIdx, rowIdx));

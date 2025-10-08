@@ -114,7 +114,7 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::sha
                                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                                   const QuantLib::ext::shared_ptr<Market>& market,
                                   const QuantLib::ext::shared_ptr<EngineData>& engineData,
-                                  const std::string& configuration, const IborFallbackConfig& iborFallbackConfig) {
+                                  const std::string& configuration, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
 
     LOG("run bond spread imply");
 

@@ -39,23 +39,63 @@ std::ostream& operator<<(std::ostream& out, InflationCurveConfig::Type t) {
     }
 }
 
+
+InflationCurveSegment::InflationCurveSegment(const std::string& convention,
+                                             const std::vector<std::string>& quotes)
+    : convention_(convention), quotes_(quotes) {}
+
+void InflationCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "Segment");
+    convention_ = XMLUtils::getChildValue(node, "Conventions", true);
+    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+}
+
+XMLNode* InflationCurveSegment::toXML(XMLDocument& doc) const {
+    XMLNode* segmentNode = doc.allocNode("Segment");
+    XMLUtils::addChild(doc, segmentNode, "Conventions", convention_);
+    XMLUtils::addChildren(doc, segmentNode, "Quotes", "Quote", quotes_);
+    return segmentNode;
+}
+
+
 InflationCurveConfig::InflationCurveConfig(
-    const string& curveID, const string& curveDescription, const string& nominalTermStructure, const Type type,
+    const string& curveID, const string& curveDescription, const string& nominalTermStructure, const InflationCurveConfig::Type type,
     const vector<string>& swapQuotes, const string& conventions, const bool extrapolate, const Calendar& calendar,
     const DayCounter& dayCounter, const Period& lag, const Frequency& frequency, const Real baseRate,
     const Real tolerance, const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
-    const Frequency& seasonalityFrequency,
-    const vector<string>& seasonalityFactors, const vector<double>& overrideSeasonalityFactors,
-    const InterpolationVariable& interpolationVariable)
-    : CurveConfig(curveID, curveDescription), swapQuotes_(swapQuotes), nominalTermStructure_(nominalTermStructure),
-      type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar), dayCounter_(dayCounter),
-      lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
-      useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate),
+    const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
+    const vector<double>& overrideSeasonalityFactors, const InterpolationVariable& interpolationVariable)
+    : CurveConfig(curveID, curveDescription), nominalTermStructure_(nominalTermStructure),
+      type_(type), segments_({InflationCurveSegment(conventions, swapQuotes)}), extrapolate_(extrapolate), calendar_(calendar),
+      dayCounter_(dayCounter), lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
+      useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate), seasonalityBaseDate_(seasonalityBaseDate),
+      seasonalityFrequency_(seasonalityFrequency), seasonalityFactors_(seasonalityFactors),
+      overrideSeasonalityFactors_(overrideSeasonalityFactors), interpolationVariable_(interpolationVariable) {
+    initQuotes();
+}
+
+InflationCurveConfig::InflationCurveConfig(
+    const string& curveID, const string& curveDescription, const string& nominalTermStructure,
+    const InflationCurveConfig::Type type, const std::vector<InflationCurveSegment>& segments, bool extrapolate, const Calendar& calendar,
+    const DayCounter& dayCounter, const Period& lag, const Frequency& frequency, const Real baseRate,
+    const Real tolerance, const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
+    const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
+    const vector<double>& overrideSeasonalityFactors, const InterpolationVariable& interpolationVariable)
+    : CurveConfig(curveID, curveDescription), nominalTermStructure_(nominalTermStructure), type_(type), segments_(segments),
+      extrapolate_(extrapolate), calendar_(calendar), dayCounter_(dayCounter), lag_(lag), frequency_(frequency),
+      baseRate_(baseRate), tolerance_(tolerance), useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
       seasonalityFactors_(seasonalityFactors), overrideSeasonalityFactors_(overrideSeasonalityFactors),
       interpolationVariable_(interpolationVariable) {
-    quotes_ = swapQuotes;
-    quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end());
+    initQuotes();
+}
+
+void InflationCurveConfig::initQuotes() {
+    quotes_.clear();
+    for (const auto& s : segments_) {
+        quotes_.insert(quotes_.end(), s.quotes().begin(), s.quotes().end());
+    }
+    quotes_.insert(quotes_.end(), seasonalityFactors_.begin(), seasonalityFactors_.end());
 }
 
 void InflationCurveConfig::populateRequiredIds() const {
@@ -77,10 +117,24 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
         type_ = Type::YY;
     } else
         QL_FAIL("Type " << type << " not recognized");
+        
+    segments_.clear();
+    XMLNode* segmentsNode = XMLUtils::getChildNode(node, "Segments");
+    if (segmentsNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(segmentsNode); child; child = XMLUtils::getNextSibling(child)) {
+            if (XMLUtils::getNodeName(child) == "Segment") {
+                segments_.emplace_back();
+                segments_.back().fromXML(child);
+            }
+        }
+    } else {
+        // Legacy support for single segment curves
+        
+        vector<string> swapQuotes = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+        std::string conventions = XMLUtils::getChildValue(node, "Conventions", true);
+        segments_.push_back(InflationCurveSegment(conventions, swapQuotes));
+    }
 
-    swapQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
-
-    conventions_ = XMLUtils::getChildValue(node, "Conventions", true);
     extrapolate_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", false);
 
     string cal = XMLUtils::getChildValue(node, "Calendar", true);
@@ -118,15 +172,14 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     seasonalityBaseDate_ = QuantLib::Null<Date>();
     seasonalityFrequency_ = QuantLib::NoFrequency;
     seasonalityFactors_.clear();
-    quotes_ = swapQuotes_;
     if (seasonalityNode != nullptr) {
         seasonalityBaseDate_ = parseDate(XMLUtils::getChildValue(seasonalityNode, "BaseDate", true));
         seasonalityFrequency_ = parseFrequency(XMLUtils::getChildValue(seasonalityNode, "Frequency", true));
         seasonalityFactors_ = XMLUtils::getChildrenValues(seasonalityNode, "Factors", "Factor", false);
-        quotes_.insert(quotes_.end(), seasonalityFactors_.begin(), seasonalityFactors_.end());
         std::string overrideFctStr = XMLUtils::getChildValue(seasonalityNode, "OverrideFactors", false);
         overrideSeasonalityFactors_ = parseListOfValues<Real>(overrideFctStr, &parseReal);
     }
+    initQuotes();
 }
 
 XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
@@ -137,8 +190,13 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "NominalTermStructure", nominalTermStructure_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
 
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", swapQuotes_);
-    XMLUtils::addChild(doc, node, "Conventions", conventions_);
+    // Add the segments node.
+    XMLNode* segmentsNode = doc.allocNode("Segments");
+    XMLUtils::appendNode(node, segmentsNode);
+    for (const auto& segment : segments_) {
+        XMLUtils::appendNode(segmentsNode, segment.toXML(doc));
+    }
+
     string extrap = (extrapolate_ ? "true" : "false");
     XMLUtils::addChild(doc, node, "Extrapolation", extrap);
 

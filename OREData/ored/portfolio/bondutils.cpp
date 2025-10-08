@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
@@ -127,6 +128,8 @@ std::string getBondReferenceDatumType(const std::string& id,
 
     if (refData->hasData(BondReferenceDatum::TYPE, id)) {
         return BondReferenceDatum::TYPE;
+    } else if (refData->hasData(CallableBondReferenceDatum::TYPE, id)) {
+        return CallableBondReferenceDatum::TYPE;
     } else if (refData->hasData(ConvertibleBondReferenceDatum::TYPE, id)) {
         return ConvertibleBondReferenceDatum::TYPE;
     }
@@ -175,7 +178,7 @@ BondFutureUtils::deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& 
             expiry = tmpExpiry;
         if (settlement == Date())
             settlement = tmpSettlement;
-        } catch(const std::exception& e) {
+        } catch(const std::exception&) {
             QL_FAIL("BondFutureUtils::deduceDates(): failed to deduce dates for contract '" << refData->id() << "'");
         }
     }
@@ -405,7 +408,7 @@ std::pair<std::string, double> BondFutureUtils::identifyCtdBond(const ext::share
         try {
             conversionFactor =
                 engineFactory->market()->conversionFactor(StructuredSecurityId(sec, futureContract))->value();
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             DLOG("no conversion factor provided from market, calculate internally");
             QL_REQUIRE(!b.bond->cashflows().empty(), "BondFutureUtils::identifyCtdBond(): bond has no coupons");
             auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(b.bond->cashflows().front());

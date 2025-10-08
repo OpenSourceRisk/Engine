@@ -107,9 +107,11 @@ are {\tt BondData}, {\tt TotalReturnData} and {\tt FundingData}.
         currency (in the order defined in table \ref{tab:fxindex_data}, i.e. it does not matter which one is the bond currency and which is the funding currency)
         
         Allowable values: See Table \ref{tab:fxindex_data}
-     % \item FXIndexFixingDays [Optional]: The fixing days of the fx index
+      \item ApplyFXIndexFixingDays [Optional]: If set to \emph{true}, the FX fixing date is moved back by the usual number of fixing days (for example, 2 days before the valuation date), using the FX index calendar to skip holidays. 
+      If \emph{false}, the FX fixing date is the same as the valuation date.
+
+      Allowable values: \emph{true} (use fixing lag) or \emph{false} (use valuation date). Defaults to \emph{false} if left blank or omitted.
        
-     %   Allowable values: Non-negative whole numbers. Defaults to \emph{0} if left blank or omitted.
    %   \item FXIndexCalendar [Optional]: The fixing calendar for the fx index
         
     %    Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.

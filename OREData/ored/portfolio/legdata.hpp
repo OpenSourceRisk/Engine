@@ -953,7 +953,6 @@ public:
     std::vector<std::string>& paymentDates() { return paymentDates_; }
     string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
     bool& strictNotionalDates() { return strictNotionalDates_; }
-    void setPaymentLag(std::string paymentLag) { paymentLag_ = paymentLag; }
     void setForeignAmount(double foreignAmount) { foreignAmount_ = foreignAmount; }
     //@}
 

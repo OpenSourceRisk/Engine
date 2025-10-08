@@ -42,7 +42,8 @@ using namespace QuantExt;
 BlackScholes::BlackScholes(const Type type, const Size paths, const std::string& currency,
                            const Handle<YieldTermStructure>& curve, const std::string& index,
                            const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                           const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+                           const std::set<Date>& simulationDates,
+                           const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                            const std::string& calibration, const std::vector<Real>& calibrationStrikes,
                            const Params& params)
     : BlackScholes(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, model, {},
@@ -56,7 +57,8 @@ BlackScholes::BlackScholes(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
+    const std::set<Date>& simulationDates, const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const std::string& calibration,
     const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),

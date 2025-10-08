@@ -130,6 +130,7 @@ portfolio/builders/bond.cpp
 portfolio/builders/bondoption.cpp
 portfolio/builders/bondrepo.cpp
 portfolio/builders/bondtotalreturnswap.cpp
+portfolio/builders/callablebond.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capflooredaveragebmacouponleg.cpp
 portfolio/builders/capflooredaverageonindexedcouponleg.cpp
@@ -193,6 +194,8 @@ portfolio/builders/swap.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
+portfolio/callablebond.cpp
+portfolio/callablebondreferencedata.cpp
 portfolio/callableswap.cpp
 portfolio/capfloor.cpp
 portfolio/cashposition.cpp
@@ -535,6 +538,7 @@ portfolio/builders/bondoption.hpp
 portfolio/builders/bondrepo.hpp
 portfolio/builders/bondtotalreturnswap.hpp
 portfolio/builders/cachingenginebuilder.hpp
+portfolio/builders/callablebond.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capflooredaveragebmacouponleg.hpp
 portfolio/builders/capflooredaverageonindexedcouponleg.hpp
@@ -600,6 +604,8 @@ portfolio/builders/swaption.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
+portfolio/callablebond.hpp
+portfolio/callablebondreferencedata.hpp
 portfolio/callableswap.hpp
 portfolio/capfloor.hpp
 portfolio/cashposition.hpp

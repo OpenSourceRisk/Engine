@@ -67,6 +67,7 @@
       <xs:element type="multiLegOptionData" name="MultiLegOptionData"/>
       <xs:element type="ascotData" name="AscotData"/>
       <xs:element type="convertibleBondData" name="ConvertibleBondData"/>
+      <xs:element type="callableBondData" name="CallableBondData"/>
       <xs:element type="tlockData" name="TreasuryLockData"/>
       <xs:element type="rpaData" name="RiskParticipationAgreementData"/>
       <xs:element type="cbodata" name="CBOData"/>
@@ -88,6 +89,7 @@
       <xs:element type="basketVarianceSwapData2" name="EquityBasketVarianceSwapData"/>
       <xs:element type="basketVarianceSwapData2" name="FxBasketVarianceSwapData"/>
       <xs:element type="basketVarianceSwapData2" name="CommodityBasketVarianceSwapData"/>
+      <xs:element type="extendedFxForwardSwapData" name="ExtendedFxForwardSwapData"/>
       <xs:element type="varianceOptionData" name="VarianceOptionData"/>
       <xs:element type="varianceDispersionSwapData" name="VarianceDispersionSwapData"/>
       <xs:element type="kikoVarianceSwapData" name="KIKOVarianceSwapData"/>
@@ -96,6 +98,7 @@
       <xs:element type="kikoCorridorVarianceSwapData" name="KIKOCorridorVarianceSwapData"/>
       <xs:element type="corridorVarianceDispersionSwapData" name="CorridorVarianceDispersionSwapData"/>
       <xs:element type="koCorridorVarianceDispersionSwapData" name="KOCorridorVarianceDispersionSwapData"/>
+	  <xs:element type="pairwiseGeometricVarianceDispersionSwapData" name="PairwiseGeometricVarianceDispersionSwapData"/>
       <xs:element type="conditionalVarianceSwap01Data" name="ConditionalVarianceSwap01Data"/>
       <xs:element type="conditionalVarianceSwap02Data" name="ConditionalVarianceSwap02Data"/>
       <xs:element type="gammaSwapData" name="GammaSwapData"/>
@@ -247,6 +250,8 @@
 
   <xs:complexType name="swapData">
     <xs:sequence>
+      <xs:element type="xs:boolean" name="RoundNettedFloatingLegs" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="NettingPrecision" minOccurs="0" maxOccurs="1"/>
       <xs:element type="settlementType" name="Settlement" maxOccurs="1" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
@@ -384,6 +389,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
+      <xs:element type="xs:boolean" name="KnockOut" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -1101,6 +1107,8 @@
 
   <xs:complexType name="commoditySwapData">
     <xs:sequence>
+      <xs:element type="xs:boolean" name="RoundNettedFloatingLegs" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="NettingPrecision" minOccurs="0" maxOccurs="1"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="2"/>
     </xs:sequence>
   </xs:complexType>
@@ -1224,6 +1232,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="CompositeTrade"/>
       <xs:enumeration value="ConvertibleBond"/>
+      <xs:enumeration value="CallableBond"/>
       <xs:enumeration value="Ascot"/>
       <xs:enumeration value="TotalReturnSwap"/>
       <xs:enumeration value="ContractForDifference"/>
@@ -1470,7 +1479,7 @@
       <xs:enumeration value="FixingFloor"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="barrierCompare">
     <xs:restriction base="xs:string">
       <xs:enumeration value="0"/>
@@ -2206,6 +2215,7 @@
       <!-- just kept here for backward compatibility of the schema, these elements are not used any more -->
       <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:boolean" name="ApplyFXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -2257,6 +2267,80 @@
       <xs:element type="convertibleBondData" name="ConvertibleBondData"/>
       <xs:element type="optionData" name="OptionData"/>
       <xs:element type="fundingData" name="ReferenceSwapData" maxOccurs="1" minOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+ <xs:complexType name="callableBondCallData">
+    <xs:all>
+      <xs:element type="scheduleData" name="ScheduleData"/>
+      <xs:element name="Styles">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Style" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Prices">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Price" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="PriceTypes">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="PriceType" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="IncludeAccruals">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="IncludeAccrual"  maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="bool">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="callableBondData">
+    <xs:all>
+      <xs:element type="bondData" name="BondData"/>
+      <xs:element type="callableBondCallData" name="CallData" minOccurs="0"/>
+      <xs:element type="callableBondCallData" name="PutData" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -3019,6 +3103,22 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="extendedFxForwardSwapData">
+    <xs:all>
+      <xs:element type="stFreeStyleCurrency" name="Currency"/>
+      <xs:element type="stFreeStyleNumber" name="FixingAmount"/>
+      <xs:element type="stFreeStyleNumber" name="Strike"/>
+      <xs:element type="stFreeStyleNumber" name="ExtensionTrigger"/>
+      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCurrency"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationSettlementDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ConditionalObservationDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ConditionalSettlementDates"/>
+      <xs:element type="stFreeStyleEvent" name="ExtensionDecisionDate"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="varianceOptionData">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
@@ -3191,6 +3291,28 @@
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:complexType name="pairwiseGeometricVarianceDispersionSwapData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleNumber" name="PairCount"/>
+	  <xs:element type="stFreeStyleNumber" name="BasketCount"/>
+      <xs:element type="stFreeStyleNumberVector" name="Notionals"/>
+	  <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleNumberVector" name="StrikesVS"/>
+      <xs:element type="stFreeStyleNumberVector" name="StrikesBVS"/>
+      <xs:element type="stFreeStyleNumberVector" name="BasketWeights"/>
+      <xs:element type="stFreeStyleNumberVector" name="VarianceWeights"/>
+      <xs:element type="stFreeStyleNumber" name="Lag"/>
+	  <xs:element type="stFreeStyleNumber" name="CapAmountMultiplier"/>
+	  <xs:element type="stFreeStyleNumber" name="Cap"/>
+	  <xs:element type="stFreeStyleNumber" name="Floor"/>
+	  <xs:element type="stFreeStyleBool" name="DividendAdjustment"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ValuationSchedule"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
 
   <xs:complexType name="conditionalVarianceSwap01Data">
     <xs:all>
@@ -3279,7 +3401,7 @@
       <xs:element type="stFreeStyleCurrency" name="Currency"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="strikeResettableOptionData">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
@@ -4544,7 +4666,7 @@
       <xs:element type="underlying" name="Underlying"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="strikeResettableOptionData2">
     <xs:all>
       <xs:element type="longShort" name="LongShort"/>
@@ -4836,7 +4958,7 @@
       <xs:element type="stFreeStyleEventSchedule" name="FixingSchedule"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="cashPositionData">
     <xs:all>
       <xs:element type="extendedCurrencyCode" name="Currency"/>
