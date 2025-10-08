@@ -344,9 +344,8 @@ Swap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& r
     for (const auto& ld : legData_) {
         for (auto ind : ld.indices()) {
             // only handle equity and commodity for now
-            //if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-" &&
-            //    (ind.find("CPI") != string::npos && ind.find("HICP") != string::npos))
-            //    continue;
+            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
+                continue;
 
             QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
 
@@ -354,13 +353,6 @@ Swap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& r
                 result[AssetClass::EQ].insert(ei->name());
             } else if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());
-            } else if (auto iri = QuantLib::ext::dynamic_pointer_cast<QuantLib::InterestRateIndex>(index)) {
-                result[AssetClass::IR].insert(iri->name());
-            } else if (auto ii = QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationIndex>(index)) {
-                // Some QL names have spaces, but we tend not to use spaces, so this does not play well with ORE's naming.
-                string iiName = ii->name();
-                iiName.erase(std::remove(iiName.begin(), iiName.end(), ' '), iiName.end());
-                result[AssetClass::INF].insert(iiName);
             }
         }
     }
