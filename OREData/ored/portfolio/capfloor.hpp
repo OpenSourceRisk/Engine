@@ -57,9 +57,6 @@ public:
 
     const std::map<std::string, boost::any>& additionalData() const override;
 
-    std::map<AssetClass, std::set<std::string>> underlyingIndices(
-        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
-
 private:
     string longShort_;
     LegData legData_;
