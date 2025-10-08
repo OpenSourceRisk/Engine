@@ -46,8 +46,9 @@ public:
     static QuantLib::ext::shared_ptr<Loader>
     implyBondSpreads(const std::map<std::string, QuantLib::ext::shared_ptr<Security>>& securities,
                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
-                     const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<EngineData>& engineData,
-                     const std::string& configuration, const IborFallbackConfig& iborFallbackConfig);
+                     const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<EngineData>& engineData, 
+                     const std::string& configuration,
+                     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
 
 private:
     //! helper function that computes a single implied spread for a bond

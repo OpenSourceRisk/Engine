@@ -181,7 +181,7 @@ EngineFactory::EngineFactory(const QuantLib::ext::shared_ptr<EngineData>& engine
                              const QuantLib::ext::shared_ptr<Market>& market,
                              const map<MarketContext, string>& configurations,
                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                             const IborFallbackConfig& iborFallbackConfig,
+                             const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                              const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders)
     : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData),
       extraEngineBuilders_(extraEngineBuilders), iborFallbackConfig_(iborFallbackConfig) {}

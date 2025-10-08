@@ -102,7 +102,7 @@ QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSi
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
         inputs_->continueOnError(), analytic()->configurations().sensiScenarioData->useSpreadedTermStructures(), false,
-        overrideTenors, *inputs_->iborFallbackConfig(), true);
+        overrideTenors, inputs_->iborFallbackConfig(), true);
     return simMarket;
 }
 

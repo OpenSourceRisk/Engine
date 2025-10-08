@@ -450,6 +450,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     RandomVariable underlyingNpv(solver_->gridSize(), 0.0);
     RandomVariable optionNpv(solver_->gridSize(), 0.0);
     RandomVariable provisionalNpv(solver_->gridSize(), 0.0);
+    RandomVariable provisionalNpvNonCached(solver_->gridSize(), 0.0);
 
     std::vector<RandomVariable> cache(cashflows.size());
 
@@ -463,6 +464,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // update cashflows on current time
 
         provisionalNpv = RandomVariable(solver_->gridSize(), 0.0);
+        provisionalNpvNonCached = RandomVariable(solver_->gridSize(), 0.0);
 
         for (Size i = 0; i < cashflows.size(); ++i) {
             if (cashflowStatus[i] == CashflowStatus::Done)
@@ -488,7 +490,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
                         cashflowStatus[i] = CashflowStatus::Done;
                     }
                 } else {
-                    provisionalNpv += cashflows[i].pv(lgm, t_from, state, discountCurve_) * cpnRatio;
+                    provisionalNpvNonCached += cashflows[i].pv(lgm, t_from, state, discountCurve_) * cpnRatio;
                 }
             } else if (cashflows[i].mustBeEstimated(t_from) && cashflowStatus[i] == CashflowStatus::Open) {
                 cache[i] = cashflows[i].pv(lgm, t_from, state, discountCurve_);
@@ -502,7 +504,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
             auto rebateNpv =
                 getRebatePv(lgm, t_from, state, discountCurve_, rebatedExercise,
                             exercise_->type() == Exercise::American ? Null<Date>() : optionDates.at(t_from));
-            optionNpv = max(optionNpv, underlyingNpv + provisionalNpv + rebateNpv);
+            optionNpv = max(optionNpv, underlyingNpv + provisionalNpv + provisionalNpvNonCached + rebateNpv);
         }
 
         // roll back
@@ -515,9 +517,10 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
                     continue;
                 c = solver_->rollback(c, t_from, t_to);
             }
-            // need to roll back provisionalNpv only for the last step t_1 -> t_0 = 0
+            /* need to roll back provisionalNpvNonCached for the last step t_1 -> t_0 = 0 since
+               it is added to the underlying value below */
             if (it == std::next(timeGrid.rend(), -1))
-                provisionalNpv = solver_->rollback(provisionalNpv, t_from, t_to);
+                provisionalNpvNonCached = solver_->rollback(provisionalNpvNonCached, t_from, t_to);
         }
     }
 
@@ -529,7 +532,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         if (c.initialised())
             underlyingNpv_ += c.at(0);
     }
-    underlyingNpv_ += provisionalNpv.at(0);
+    underlyingNpv_ += provisionalNpvNonCached.at(0);
 
     additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
 
