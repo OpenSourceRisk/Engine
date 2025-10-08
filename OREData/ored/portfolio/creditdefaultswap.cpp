@@ -59,12 +59,9 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
 
-    if(!refData || (refData && !refData->hasData("Credit", entity))){
-        // The try is needed when the CDS is a use_cp_trade = True
-        try{
-            type_ = market->defaultCurve(entity)->refData().type;
-        }catch(...){}
-    }
+    try{
+        type_ = market->defaultCurve(entity)->refData().type;
+    }catch(...){}
 
     auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();
