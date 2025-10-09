@@ -56,9 +56,9 @@ RUN mkdir -p html \
 
 
 RUN mkdir -p /boostlibs && \
-    find /usr/lib -type f -name 'libboost*' -exec cp {} /boostlibs/
+    find /usr/lib -type f -name 'libboost*' -exec cp {} /boostlibs/ \;
 RUN mkdir -p /opencllibs && \
-    find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/
+    find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
 
 
 ARG DEBIAN_TAG
