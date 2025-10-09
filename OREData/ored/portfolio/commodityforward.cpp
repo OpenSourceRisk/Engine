@@ -71,31 +71,32 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
+    // if TradePnLCurrency is not given, npv currency is set to settlement currency ( <PayCcy> if exists, else <Currency> )
+    npvCurrency_ = envelope().additionalField("TradePnLCurrency", false, payCcy_ != "" ? payCcy_ : currency_);
+    Currency npvCurrency = parseCurrency(npvCurrency_);
+    notional_ = strike_ * quantity_;    
+    notionalCurrency_ = npvCurrency_;
+
     // Create the underlying commodity index for the forward
     const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
 
-    // if TradePnLCurrency is not given, npv currency is set to settlement currency ( <PayCcy> if exists, else <Currency> )
-    npvCurrency_ = envelope().additionalField("TradePnLCurrency", false, payCcy_ != "" ? payCcy_ : currency_);
-    
     maturity_ = parseDate(maturityDate_);
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     bool isFutureAccordingToConventions =
         InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
     
-    Handle<PriceTermStructure> priceCurve = engineFactory->market()->commodityPriceCurve(commodityName_,  engineFactory->configuration(MarketContext::pricing));   
-    auto underlyingCcy = priceCurve->currency();
-    notional_ = strike_ * quantity_;
-    //notional ccy is in underlying currency
-    notionalCurrency_ = underlyingCcy.code();
-
     // adjust the maturity date if not a valid fixing date for the index
     maturity_ = index->fixingCalendar().adjust(maturity_, Preceding);
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_;
-    additionalData_["strikeCurrency"] = underlyingCcy.code();
 
-     
+    Handle<PriceTermStructure> priceCurve = engineFactory->market()->commodityPriceCurve(commodityName_,  engineFactory->configuration(MarketContext::pricing));   
+    auto underlyingCcy = priceCurve->currency();
+    //notional ccy is in underlying currency
+    notionalCurrency_ = underlyingCcy.code();
+    additionalData_["strikeCurrency"] = underlyingCcy.code();
+    
     if (payCcy_ != "") {
         additionalData_["settlementCurrency"] = payCcy_;
         additionalData_["fixingDate"] = fixingDate_;
@@ -106,7 +107,6 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         additionalData_["fixingDate"] = fixingDate_;
         additionalData_["fxIndex"] = fxIndex;
     }
-
 
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
@@ -172,6 +172,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         payCcy = currency;
     else
         QL_FAIL("Quanto cashflow is not supported. Underlying commodity index currency "<< underlyingCcy.code() <<" is diffferent than the settlement currency "<<currency);
+    
     QuantLib::ext::shared_ptr<Instrument> commodityForward = QuantLib::ext::make_shared<QuantExt::CommodityForward>(
         index, underlyingCcy, position, quantity_, maturity_, strike_, physicallySettled, paymentDate, payCcy, fixingDate_,
         fxIndex);
@@ -187,7 +188,6 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     QuantLib::ext::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         QuantLib::ext::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
     
-    Currency npvCurrency = parseCurrency(npvCurrency_);
     commodityForward->setPricingEngine(
         commodityForwardEngineBuilder->engine(payCcy, npvCurrency,
         envelope().additionalField("discount_curve", false, std::string())));
