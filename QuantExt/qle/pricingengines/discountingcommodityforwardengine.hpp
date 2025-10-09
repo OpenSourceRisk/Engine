@@ -50,7 +50,8 @@ public:
     */
     DiscountingCommodityForwardEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                       boost::optional<bool> includeSettlementDateFlows = boost::none,
-                                      const QuantLib::Date& npvDate = QuantLib::Date());
+                                      const QuantLib::Date& npvDate = QuantLib::Date(),
+                                      const Handle<Quote>& npvFxConversion = {});
     //@}
 
     //! \name PricingEngine interface
@@ -67,6 +68,7 @@ private:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     boost::optional<bool> includeSettlementDateFlows_;
     QuantLib::Date npvDate_;
+    Handle<Quote> npvFxConversion_;
 };
 } // namespace QuantExt
 
