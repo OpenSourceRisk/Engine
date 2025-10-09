@@ -76,7 +76,8 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
         const bool nonShiftedBaseCurrencyConversion = false,
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const bool continueOnError = false, bool dryRun = false);
 
     //! Constructor using multi-threaded engine
@@ -92,7 +93,8 @@ public:
                         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
                         const bool nonShiftedBaseCurrencyConversion = false,
                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                         const bool continueOnError = false, bool dryRun = false,
                         const std::string& context = "sensi analysis");
 
@@ -165,7 +167,7 @@ private:
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)

@@ -292,7 +292,7 @@ string curveSpecToName(CurveSpec::CurveType ct, const string& cId,
                        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs) { 
     if (ct == CurveSpec::CurveType::Inflation) {
         auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(curveConfigs->get(ct, cId));
-        auto conv = icc->conventions();
+        auto conv = icc->segments().front().convention();
         auto conventions = InstrumentConventions::instance().conventions();
         auto iconv = QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(conv));
         return iconv->indexName();
@@ -328,8 +328,8 @@ bool checkMarketObject(std::map<std::string, std::map<ore::data::MarketObject, s
 }
 
 void addMarketObjectDependencies(map<string, map<ore::data::MarketObject, set<string>>>* objects,
-    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy,
-    const string& baseCcyDiscountCurve, const IborFallbackConfig& iborFallbackConfig) {
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy, 
+    const string& baseCcyDiscountCurve, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
 
     Date asof = QuantLib::Settings::instance().evaluationDate();
     for (const auto& [config, mp] : *objects) {
@@ -449,9 +449,9 @@ void addMarketObjectDependencies(map<string, map<ore::data::MarketObject, set<st
                         }
                     }
                     // handle ibor fallback dependency
-                    if (mo == MarketObject::IndexCurve && iborFallbackConfig.isIndexReplaced(name, asof)) {
+                    if (mo == MarketObject::IndexCurve && iborFallbackConfig->isIndexReplaced(name, asof)) {
                         auto ct3 = marketObjectToCurveType(mo);
-                        auto id = iborFallbackConfig.fallbackData(name).rfrIndex;
+                        auto id = iborFallbackConfig->fallbackData(name).rfrIndex;
                         if (!checkMarketObject(objects, ct3, id, curveConfigs, ct.second))
                             newDependencies[make_pair(ct3, ct.second)].insert(id);
                     }

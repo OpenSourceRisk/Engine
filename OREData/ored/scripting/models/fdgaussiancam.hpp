@@ -44,7 +44,8 @@ public:
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                   const std::set<Date>& simulationDates, const Size stateGridPoints = 50,
                   const Size timeStepsPerYear = 24,
-                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                  const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                      QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                   const Params& params = {});
 
     // Model interface implementation
@@ -83,7 +84,7 @@ private:
     std::set<Date> simulationDates_;
     Size stateGridPoints_;
     Size timeStepsPerYear_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 
     // computed values
     mutable Date referenceDate_;                        // the model reference date

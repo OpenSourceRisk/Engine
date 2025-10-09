@@ -83,7 +83,7 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
             analytic()->market(), configs.simMarketParams, inputs_->marketConfig("pricing"),
             configs.curveConfig ? *configs.curveConfig : ore::data::CurveConfigurations(),
             configs.todaysMarketParams ? *configs.todaysMarketParams : ore::data::TodaysMarketParameters(), true,
-            configs.sensiScenarioData->useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+            configs.sensiScenarioData->useSpreadedTermStructures(), false, false, inputs_->iborFallbackConfig());
 
         auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
             configs.sensiScenarioData, simMarket->baseScenario(), configs.simMarketParams, simMarket,

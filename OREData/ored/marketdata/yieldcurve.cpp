@@ -313,7 +313,8 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                        const map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                       const IborFallbackConfig& iborFallbackConfig, const bool preserveQuoteLinkage,
+                       const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+                       const bool preserveQuoteLinkage,
                        const bool buildCalibrationInfo, const Market* market)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), requiredYieldCurves_(requiredYieldCurves),
       requiredDefaultCurves_(requiredDefaultCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData),
@@ -1082,14 +1083,14 @@ void YieldCurve::buildIborFallbackCurve(const std::size_t index) {
     auto it = requiredYieldCurveHandles_.find(segment->rfrCurve());
     QL_REQUIRE(it != requiredYieldCurveHandles_.end(), "Could not find rfr curve: '" << segment->rfrCurve() << "')");
     QL_REQUIRE(
-        (segment->rfrIndex() && segment->spread()) || iborFallbackConfig_.isIndexReplaced(segment->iborIndex()),
+        (segment->rfrIndex() && segment->spread()) || iborFallbackConfig_->isIndexReplaced(segment->iborIndex()),
         "buildIborFallbackCurve(): ibor index '"
             << segment->iborIndex()
             << "' must be specified in ibor fallback config, if RfrIndex or Spread is not specified in curve config");
     std::string rfrIndexName =
-        segment->rfrIndex() ? *segment->rfrIndex() : iborFallbackConfig_.fallbackData(segment->iborIndex()).rfrIndex;
+        segment->rfrIndex() ? *segment->rfrIndex() : iborFallbackConfig_->fallbackData(segment->iborIndex()).rfrIndex;
     Real spread =
-        segment->spread() ? *segment->spread() : iborFallbackConfig_.fallbackData(segment->iborIndex()).spread;
+        segment->spread() ? *segment->spread() : iborFallbackConfig_->fallbackData(segment->iborIndex()).spread;
     // we don't support convention based indices here, this might change with ore ticket 1758
     Handle<YieldTermStructure> dummyCurve(
         QuantLib::ext::make_shared<FlatForward>(asofDate_, 0.0, zeroDayCounter_[index]));
@@ -1316,15 +1317,22 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                         return h->pillarDate() < h->pillarDate();
                     });
                 minMaxDatePerSegment[i] = std::make_pair((*minIt)->pillarDate(), (*maxIt)->pillarDate());
+                DLOG("curve segment #" << i << " has min pillar date " << minMaxDatePerSegment[i].first
+                                       << ", max pillar date " << minMaxDatePerSegment[i].second);
             }
         }
 
         /* If there are two segments with different priorities and overlapping instruments, remove instruments as
          * appropriate */
 
+        DLOG("checking overlap of segments and remove instruments");
+
         for (Size i = 0; i < curveSegments_[index].size(); ++i) {
             if (i < curveSegments_[index].size() - 1 &&
                 curveSegments_[index][i]->priority() > curveSegments_[index][i + 1]->priority()) {
+                DLOG("checking overlap between segment #"
+                     << i << " with priority " << curveSegments_[index][i]->priority() << " and segment #" << (i + 1)
+                     << " with priority " << curveSegments_[index][i + 1]->priority());
                 for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
                     if ((*it)->pillarDate() >
                         minMaxDatePerSegment[i + 1].first - curveSegments_[index][i]->minDistance()) {
@@ -1340,6 +1348,9 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                 }
             }
             if (i > 0 && curveSegments_[index][i - 1]->priority() < curveSegments_[index][i]->priority()) {
+                DLOG("checking overlap between segment #"
+                     << i - 1 << " with priority " << curveSegments_[index][i - 1]->priority() << " and segment #" << i
+                     << " with priority " << curveSegments_[index][i]->priority());
                 for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
                     if ((*it)->pillarDate() <
                         minMaxDatePerSegment[i - 1].second + curveSegments_[index][i - 1]->minDistance()) {
@@ -1367,6 +1378,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
         Size mixedInterpolationSize = 0;
         for (Size i = 0; i < curveConfig_[index]->mixedInterpolationCutoff(); ++i)
             mixedInterpolationSize += instrumentsPerSegment[i].size();
+
+        DLOG("mixed interpolation size is " << mixedInterpolationSize);
 
         /* Now put all remaining instruments into a single vector. */
 
