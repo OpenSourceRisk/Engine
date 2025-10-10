@@ -31,6 +31,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 #include <map>
 #include <set>
@@ -55,15 +56,46 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
                    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                    const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
-                   const boost::shared_ptr<ore::data::Report>& report,
-                   const boost::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
                    const Size precision = 2, const bool includePastCashflows = false,
                    const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                    const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                   QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = {},
+                   const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory = nullptr,
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                   bool continueOnError = false);
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                   bool continueOnError = false, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr);
+
+void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                   const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+                   const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+                   const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                   const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
+                   const Size precision = 2, const bool includePastCashflows = false,
+                   const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                   const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                   bool continueOnError = false, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr);
+
+
+void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const Date& asof,
+                   const QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket, const string& marketConfiguration,
+                   const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData, const string& baseCcy,
+                   const QuantLib::ext::shared_ptr<ShiftScenarioGenerator>& scenarioGenerator,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                   const QuantLib::ext::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
+                   const Size precision = 2, const bool includePastCashflows = false,
+                   const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                   const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                   const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                       QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                   bool continueOnError = false, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport = nullptr);
 
 } // namespace analytics
 } // namespace ore

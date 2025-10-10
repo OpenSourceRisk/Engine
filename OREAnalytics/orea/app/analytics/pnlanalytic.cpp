@@ -85,14 +85,12 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     t0SimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+        inputs_->continueOnError(), useSpreadedTermStructures(), false, false, inputs_->iborFallbackConfig());
     auto sgen = QuantLib::ext::make_shared<StaticScenarioGenerator>();
     t0SimMarket_->scenarioGenerator() = sgen;
 
     analytic()->setMarket(t0SimMarket_);
     analytic()->buildPortfolio();
-
-    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     QuantLib::ext::shared_ptr<InMemoryReport> t0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
@@ -137,8 +135,24 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     auto mporAnalytic = dependentAnalytic(mporLookupKey);
     mporAnalytic->configurations().asofDate = mporDate();
     mporAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    mporAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> mporSimMarketParams = analytic()->configurations().simMarketParams;
 
+    std::vector<RFType> dateAdjustedRiskFactors = inputs_->pnlDateAdjustedRiskFactors();
+    if (dateAdjustedRiskFactors.size() > 0) {
+        std::vector<QuantLib::Period> shiftedTenors;
+        for (const auto& rt : dateAdjustedRiskFactors) {
+            if (rt == RFType::CommodityCurve){
+                DLOG("PnlAnalytic::run: Using date adjusted risk factors for " << rt);
+                for (const auto& commodityName : mporSimMarketParams->commodityNames()) {
+                    shiftedTenors = getShiftedTenors(mporSimMarketParams->commodityCurveTenors(commodityName), inputs_->asof(), mporDate());
+                    mporSimMarketParams->setCommodityCurveTenors(commodityName, shiftedTenors);
+                }
+            }
+            else 
+                WLOG("PnlAnalytic::run: Date adjusted risk factor is not supported for "<< rt);
+        }
+    }
+    mporAnalytic->configurations().simMarketParams = mporSimMarketParams;
     // Run the mpor analytic to generate the market scenario as of t1
     mporAnalytic->runAnalytic(loader);
 
@@ -172,8 +186,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // Build the portfolio, linked to the shifted market
     analytic()->buildPortfolio();
-
-    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     // This hook allows modifying the portfolio in derived classes before running the analytics below
     analytic()->modifyPortfolio();
@@ -212,8 +224,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     simMarket1->update(d1);
     analytic()->buildPortfolio();
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     QuantLib::ext::shared_ptr<InMemoryReport> t1NpvLaggedReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
         .writeNpv(*t1NpvLaggedReport, effectiveResultCurrency, analytic()->market(), marketConfig,
@@ -242,8 +252,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     simMarket1->update(d1);
 
     analytic()->buildPortfolio();
-
-    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     QuantLib::ext::shared_ptr<InMemoryReport> t1Npvt0PortReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
@@ -278,8 +286,6 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         analytic()->setPortfolio(inputs_->mporPortfolio());
         analytic()->buildPortfolio();
-
-        analytic()->enrichIndexFixings(analytic()->portfolio());
 
         t1NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())

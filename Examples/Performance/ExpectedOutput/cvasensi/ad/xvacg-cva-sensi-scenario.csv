@@ -1,6 +1,4 @@
 #TradeId,Factor,Up/Down,Base NPV,ShiftSize_1,ShiftSize_2,Scenario NPV,Difference
-CVA,DiscountCurve/EUR/1/1M,Up,296464.42,0.000001,#N/A,296464.42,0.00
-CVA,DiscountCurve/EUR/2/3M,Up,296464.42,0.000001,#N/A,296464.42,0.00
 CVA,DiscountCurve/EUR/3/6M,Up,296464.42,0.000001,#N/A,296464.42,0.00
 CVA,DiscountCurve/EUR/4/1Y,Up,296464.42,0.000001,#N/A,296464.41,0.00
 CVA,DiscountCurve/EUR/5/2Y,Up,296464.42,0.000001,#N/A,296464.40,-0.01

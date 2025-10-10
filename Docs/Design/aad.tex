@@ -276,7 +276,7 @@ scripted trade framework configurable, i.e. we can switch AAD on and off without
 code base. How this works is discussed briefly in the following.
 
 The {\tt ComputationGraph} object is defined in qle/math/ad/computationgraph.*pp, alongside
-essential operations on the graph -- forward valuation, forward and backward derivative propagation.
+essential operations on the graph -{}- forward valuation, forward and backward derivative propagation.
 It is recommended to review the compact implementation of the these functions in qle/math/ad,
 see listings \ref{lst:forwardvaluation}, \ref{lst:forwardderivatives} and \ref{lst:backwardderivatives}.
 
@@ -723,7 +723,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
-            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
         return;
     }
 \end{minted}
@@ -753,3 +753,392 @@ i.e. it replaces the entire XVA analytic and the post processing of the NPV cube
 
 For testing/validation purposes (accuracy of results, performance) we can activate bump \& revalue sensitivity
 calculation by setting the hard coded boolean {\tt bumpCvaSensis=true} in orea/engine/xvaenginecg.cpp.
+
+%-----------------------------------------------------------------------------------------------------
+\subsection{Dynamic Delta with AAD}
+%-----------------------------------------------------------------------------------------------------
+
+The Dynamic Delta sensitivity calculation for IM modeling using AAD is in development in ORE and in an experimental,
+proof of concept state at the time of writing this text.
+
+\subsubsection{General Setup}
+
+The starting point are the conditional portfolio npvs on valuation times $t$
+
+$$
+E\left( \sum_i \frac{X_i S_i(t_i)}{N(t_i)} \bigg| \mathcal{F}_t \right)
+$$
+
+where $X_i$ are future flows paid at $t_i > t$, $S(t_i)$ is the fx rate to convert flow to base currency and $N(t_i)$ is
+the numeraire at time $t_i$ and $\mathcal{F}_t$ is the filtration representing the infomration at time $t$. The goal is
+to compute sensitivities
+
+$$
+\frac{\partial}{\partial p}E\left( \sum_i \frac{X_i S_i(t_i)}{N(t_i)} \bigg| \mathcal{F}_t \right)
+$$
+
+w.r.t. a vector of par market risk factors $p$. We write
+
+$$
+\bar{X} := \sum_i \frac{X_i S_i(t_i)}{N(t_i)}
+$$
+
+in what follows. We decompose the calculation of derivatives of $\bar{X}$ to par market risk factors into
+
+\begin{itemize}
+\item computing derivatives of the conditional portfolio npvs to model parameters $m$
+\item computing derivatives of model parameters $m$ to zero market risk factors $z$
+\item computing derivatives of zero market risk factors $z$ to par market risk factors $p$
+\end{itemize}
+
+and using the multivariate chain rule to combine the results, i.e.
+
+$$
+\frac{\partial}{\partial p} = \frac{\partial}{\partial m} \frac{\partial m}{\partial z} \frac{\partial z}{\partial p}
+$$
+
+Note: We generally decompose a portfolio into subportfolios and compute the dynamic delta on each subportfolio
+separately. See \ref{aad:dynamic_delta_subportfolios}
+
+\subsubsection{Model Parameters}
+
+Table \ref{tab:aad_modelparams} lists the model parameters that we use\footnote{see modelcg.hpp, we only list
+non-derived parameters and those used in GaussianCamCG}. Model parameters are generally identified by their type and a
+subset of additional keys (qualifier1, qualifier2, date, date2, date3, index, index2, hash).
+
+\begin{table}[htb]
+  \begin{tabular}{l|l}
+            parameter name   & meaning \\
+    \hline
+            fix               & historical index fixing \\
+            dsc               & T0 ir discount \\
+            lgm\_H            & lgm1f parameter \\
+            lgm\_Hprime       & lgm1f parameter \\
+            lgm\_zeta,        & lgm1f parameter \\
+            fxbs\_sigma,      & fxbs parameter \\
+            logFxSpot,        & T0 log fx spot \\
+            sqrtCorr,         & model sqrt correlation \\
+            sqrtCov,          & model sqrt covariance \\
+            corr,             & model correlation \\
+            cov,              & model cov \\
+            cam\_corrzz,      & ir-ir corr \\
+            cam\_corrzx,      & ir-fx corr \\
+    \hline
+\end{tabular}
+\caption{Model parameters used by GaussianCamCG}
+\label{tab:aad_modelparams}
+\end{table}
+
+\subsubsection{Computing derivatives of conditional portfolio npvs to model parameters $m$}
+
+We use
+
+$$
+\frac{\partial}{\partial m}E\left( \bar{X} \bigg| \mathcal{F}_t \right) = E\left( \frac{\partial \bar{X}}{\partial m} \bigg| \mathcal{F}_t \right)
+$$
+
+and rely on the backward derivatives algorithm to compute pathwise derivatives
+
+$$
+\frac{\partial \bar{X}}{\partial m}
+$$
+
+to model parameters $m$.
+
+
+\subsubsection{Computing derivatives of model parameters $m$ to zero market risk factors $z$}
+
+The relevant model parameters are dsc, lgm\_zeta, fxbs\_sigma and logFxSpot.
+
+\underline{IR zero rate deltas}
+
+Suppose we have a sensitivity $s$ of $\bar{X}$ to a model parameter of type dsc referencing a maturity time $T$, $T >
+t$, i.e.
+
+$$
+s = \frac{\partial\bar{X}}{\partial P(0,T)}
+$$
+
+with the deterministic T0 discount factor $P(0,T)$. The aim is to convert $s$ to a sensitivity to the conditional zero
+rate as seen from $t$ with maturity $T-t$. We write
+
+$$
+Q(t,T,x(t)) := P(t,T) d
+$$
+
+for the conditional zero bond with maturity $T$ as seen from $t$ conditional on the model state $x(t)$. In the LGM1F
+model we have
+
+$$
+d = e^{-(H(T)-H(t))x(t) - \frac{1}{2}( H(T)^2 - H(t)^2 ) \zeta(t)}
+$$
+
+but the calculation goes through for any model where we can decompose $Q(t,T)$ as $P(t,T)\cdot d$. We write the deterministic zero bond
+
+$$
+P(t,T) = e^{-z\cdot(T-t)}
+$$
+
+in terms of the deterministic zero rate $z$ and the conditional zero bond as
+
+$$
+Q(t,T,x(t)) = e^{-z (T-t)} d =: e^{-\tilde{z} (T-t)}
+$$
+
+We are ultimately interested in the derivative of $\bar{X}$ w.r.t. $\tilde{z}$. We have:
+
+$$
+\frac{\partial \bar{X}}{\partial{\tilde{z}}} = \frac{\partial \bar{X}}{\partial P(t,T)} \frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{\partial Q(t,T,x)}{\partial \tilde{z}}
+$$
+
+Since
+
+$$
+\frac{\partial P(t,T)}{\partial Q(t,T,x)} \frac{\partial Q(t,T,x)}{\partial \tilde{z}} = \frac{1}{d} \left[ -(T-t) Q(t,T,x) \right] = -(T-t)P(t,T)
+$$
+
+we get
+
+$$
+\frac{\partial \bar{X}}{\partial{\tilde{z}}} = -(T-t) \frac{\partial \bar{X}}{\partial P(t,T)} P(t,T)
+$$
+
+and since
+
+$$
+\frac{\partial \bar{X}}{\partial P(t,T)} = \frac{\partial \bar{X}}{\partial P(0,T)} \frac{\partial P(0,T)}{\partial P(t,T)} =  \frac{\partial \bar{X}}{\partial P(0,T)} P(0,t)
+$$
+
+we get the final formula to convert $s$ to a market zero risk factor sensitivity:
+
+$$
+\frac{\partial \bar{X}}{\partial{\tilde{z}}} = -(T-t) P(0,T) \frac{\partial \bar{X}}{\partial P(0,T)} = -(T-t) P(0,T) s
+$$
+
+As a final step, we distribute the sensitivity on predefined buckets linearly.
+
+\underline{FX deltas}
+
+Assume a sensitivity $s$ of $\bar{X}$ to a model parameter of type logFxSpot:
+
+$$
+s = \frac{\partial\bar{X}}{\partial \ln S(0)}
+$$
+
+with $S(0)$ the T0 FX Spot rate. The log FX Spot rate $S(t)$ at time $t$ is given by
+
+$$
+\ln S(t) = \ln S(0) + \int_0^t \left( r(s) - d(s) - \frac{\sigma(s)^2}{2} \right) ds + \int_0^t \sigma(s) dW(s)
+$$
+
+where $r(s)$ and $d(s)$ are the instantaneous, stochastic domestic and foreign short rates and $\sigma(s)$ is the
+volatility of $S(t)$. We are assuming $S(t)$ follows a GBM here, but the argument is valid more generally. We get
+
+$$
+\frac{\partial \ln S(t)}{\partial \ln S(0)} = 1
+$$
+
+and therefore
+
+$$
+\frac{\partial \bar{X}}{\partial \ln S(t)} = \frac{\partial \bar{X}}{\partial \ln S(0)}
+$$
+
+Note also that this is the derivative w.r.t. to a relative shift in $S(t)$ resp. $S(0)$.
+
+\underline{IR vegas}
+
+A sensitivity $s$ of $\bar{X}$ to a model parameter of type lgm\_zeta
+
+$$
+s = \frac{\partial\bar{X}}{\partial \zeta(T)}
+$$
+
+with $T>t$ is directly distributed on the defined bucket structure linearly. The conversion to a market vega is done in
+par-conversion step, see below.
+
+
+\underline{FX vegas}
+
+A sensitivity $s$ of $\bar{X}$ to a model parameter of type fxbs\_sigma
+
+$$
+s = \frac{\partial\bar{X}}{\partial \sigma(T)}
+$$
+
+with $T>t$ is converted to a market vega in the par-conversion step, see below.
+
+
+\subsubsection{Computing derivatives of zero market risk factors $z$ to par market risk factors $p$}
+
+\underline{IR zero to par rate deltas}
+
+The conversion of IR zero to par rate deltas follow the usual procedure via Jacobian transformation. There are possible simplifications that can be exploited to speed up the conversion. We currently apply both of them in ore:
+
+\begin{itemize}
+\item state-independent par conversion
+\item time-independent par conversion
+\end{itemize}
+
+\underline{IR vega par conversion}
+
+The conversion of sensitivities to the lgm\_zeta parameter to sensitivities to implied swaption vol is done in analogy
+to the IR delta par conversion by specifying a set of swaptions and calculating the Jaocbian of these swaptions to the
+lgm zeta parameter. The same possible simplifications as for IR par delta conversion exist and we apply both in ore
+currently:
+
+\begin{itemize}
+\item state-independent par conversion
+\item time-independent par conversion
+\end{itemize}
+
+\underline{FX vega par conversion}
+
+The conversion of sensitivities to the fxbs\_sigma parameter to sensitivities to implied fx option vols is done in
+analogy to the IR delta par conversion by specifying a set of fx options and calculating the Jacobian of these fx
+swaptions to the fx bs sigma parameter. The same possible simplifications as for IR par delta conversion exist and we
+apply both in ore currently:
+
+\begin{itemize}
+\item state-independent par conversion
+\item time-independent par conversion
+\end{itemize}
+
+\subsubsection{Portfolio decomposition}\label{aad:dynamic_delta_subportfolios}
+
+In general the calculations described in the previous sections are performed on suitable subsets of the whole
+portfolio. First of all, if the dynamic delta is required for each individual trade, these subsets consist of a single
+trade. If the dynamic delta is only required on the portfolio level, the porfolio is first decomposed into
+
+\begin{itemize}
+\item ``plain vanilla'' trades for which the calculations can be done on an the level of aggregated npvs
+\item complex trades which require an individual calculation for each trade
+\end{itemize}
+
+Linear trades like vanilla ir single and cross currency swaps and fx forwards fall into the first category while trades
+involving optionality and other exotic features fall into the second category.
+
+\subsubsection{Portfolio decomposition: Plain Vanilla Part}
+
+The plain vanilla part of the portfolio can be further subdivided by common regressor sets required to calculate
+conditional expectations. In general, conditional expectations for both values and derivatives of plain vanilla trades
+can be calculated using a simple linear regression with polynomial basis functions, as assposed to complex trades that
+might require more advanced models. The complexity of e.g. QR or SVD underlying the linear regression analysis is
+$O(mn^2)$ with $m$ the number of observations, $n$ the number of regressor variables, $m > n$, i.e. quadratic in the
+number of regressors. Therefore it is reasonable to run the regression analyses on subportfolios with a smallest
+possible set of regressors instead of combining trades with disjoint regressors.
+\subsubsection{Portfolio decomposition: Complex Part}
+
+The trades falling into the complex part of the portfolio are calculated one by one. As an example we consider a
+Bermudan swaption, i.e. an option to enter a vanilla underlying at multiple exercise times. Denote the exercise times by
+
+$$
+{ t_1, t_2, \ldots, t_n }
+$$
+
+For each exercise time the Longstaff-Schwartz algorithm yields an exercise indicator $e_i$, $i=1,\ldots,n$, which is $1$
+if the option is exercised at time $t_i$ and $0$ otherwise. We introduce
+
+$$
+E_i := \sum_{j=1}^i e_j
+$$
+
+indicating that the option was exercised on or before time $t_i$. Now consider a simulation time $t_{sim}$ with an
+associated exercised value $v_e$ representing the path value of the exercised-into underlying at $t_{sim}$ and a
+future option value $f_e$ representing the continuation value of the option at $t_{sim}$ in case the option was not
+yet exercised. We proceed with calculating conditional expectations of $v_e$
+
+\begin{equation}\label{aad:calc1}
+V_e := E( v_e | \mathcal{F}_t )
+\end{equation}
+
+and $f_e$
+
+\begin{equation}\label{aad:calc2}
+F_e := E( f_e | \mathcal{F}_t )
+\end{equation}
+
+at $t = t_{sim}$ using an appropriate regression analysis. We set the trade exposure $T$ at $t_{sim}$ to
+
+\begin{equation}\label{aad:calc3}
+T := E_i V_e + 1_{F_e > 0} (1 - E_i) F_e
+\end{equation}
+
+where $i$ is determined such that $E_i$ is the relevant exercise indicator (set $i=0$ and $E_0 := 0$ if $t_{sim} <
+t_1$). Not that we floor $F_e$ at $0$ which is not guaranteed due to artifacts of the regression model.
+
+For the purpose of dynamic delta calculation we differentiate $V_e$ and $F_e$ w.r.t. a model parameter $m$
+by taking the conditional expectations of the derivatives of $v_e$
+
+\begin{equation}\label{aad:calc4}
+\frac{\partial V_e}{\partial m} = E \left( \frac{\partial}{\partial m} v_e \bigg| \mathcal{F}_t \right)
+\end{equation}
+
+and of $f_e$
+
+\begin{equation}\label{aad:calc5}
+\frac{\partial F_e}{\partial m} = E \left( \frac{\partial}{\partial m} f_e \bigg| \mathcal{F}_t \right)
+\end{equation}
+
+to recombine these to the derivative of $T$
+
+\begin{equation}\label{aad:calc6}
+\frac{\partial T}{\partial m} = E_i \frac{\partial V_e}{\partial m} + 1_{F_e > 0} (1 - E_i) \frac{\partial F_e}{\partial m}
+\end{equation}
+
+Note on indicator derivatives: We do not consider non-trivial indicator derivatives of $E_i$ since this is an indicator
+of {\em past} exercise. The treatment of derivatives for {\em future} exercise indicators that are implicit in the
+calculation of $F_e$ are not detailled here, we refer to the known result that such indicators do not require
+differentiation, see e.g. the discussion in \cite{piterbarg_deltas_callable_libor_exotics}, section 10. Finally, we do
+not consider derivatives of $1_{F_e > 0}$ because this indicator reflects regression model artifcats only.
+
+Note on decomposition: One may ask why we do not directly consider the path value $T'$ of the exotic trade, i.e.
+
+$$
+T' := E_i v_e + (1- E_i) f_e
+$$
+
+and the partial derivative
+
+$$
+\frac{\partial T'}{\partial m} = E_i \frac{\partial v_e}{\partial m} + (1- E_i) \frac{\partial f_e}{\partial m}
+$$
+
+and then take the conditional expectation,
+
+\begin{equation}\label{aad:calc7}
+E\left( \frac{\partial T'}{\partial m} \bigg| \mathcal{F}_t \right)  =
+E\left( E_i \frac{\partial v_e}{\partial m} + (1- E_i) \frac{\partial f_e}{\partial m} \bigg| \mathcal{F}_t \right)
+\end{equation}
+
+This would be more consistent with the plan vanilla trades and would not require a distinction of vanilla and exotic
+trades in the implementation. However, it would also not allow to floor $F_e$ at zero as in \ref{aad:calc3} and - much
+more importantly - this would also require to include suitable regressors to explain past exercise decisions represented
+by $E_i$, such as e.g. suitable model states at all past exercise times $t_1, t_2, \ldots, t_i$, since $E_i$ is part of
+the regressand, i.e. inside the conditional expectation operator in \ref{aad:calc7} as opposed to \ref{aad:calc6} where
+it is not part of the regressand.
+
+To keep the implementation of the above decomposition approach as general as possible, we introduce
+
+\begin{itemize}
+\item component path values of the exotic trade $c_1, c_2, \ldots, c_N$
+\item a mini computation graph representing the calculation of the target exposure value $T = T(c_1,\ldots,c_N)$ as of
+  function of the components $c_i$
+\end{itemize}
+
+The components in the example above are $c_1 = v_e$ and $c_2 = f_e$ and the mini computation graph represents the
+calculations in equations \ref{aad:calc1}, \ref{aad:calc2}, \ref{aad:calc3}. The derivatives calculation then assigns
+$\partial V_e \partial m$ and $\partial F_e\partial m$ to $c_1$ resp. $c_2$ and replays the mini
+computation graph on these values to arrive at $\partial T\partial m$ from equation \ref{aad:calc6}.
+
+To give another example, for a TaRF we would have one component $c_1$ representing the path value $f_e$ of the TaRF under the
+assumption that it was not terminated before the current simulation time. The function $T$ would be given by
+
+$$
+T(c_1) := (1-E_i) E( c_1 | \mathcal{F}_t )
+$$
+
+where $E_i$ denotes the indicator that is $1$ if the structured was terminated before the simulation time. In addition
+we note that the regression model to calculate $E(c_1|\mathcal{F}_t )$ should include the accumulated profit of the TaRF
+as a regressor since this is important to explain the future termination probability.
+

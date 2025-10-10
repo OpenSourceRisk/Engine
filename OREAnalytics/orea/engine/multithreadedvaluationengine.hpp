@@ -37,7 +37,7 @@ namespace analytics {
 class MultiThreadedValuationEngine : public ore::data::ProgressReporter {
 public:
     /* if no cube factories are given, we create default ones as follows
-       - cubeFactory          : creates DoublePrecisionInMemoryCube
+       - cubeFactory          : creates InMemoryCubeOp<double>
        - nettingSetCubeFactory: creates nullptr
        - cptyCubeFactory:       creates nullptr */
     MultiThreadedValuationEngine(
@@ -54,7 +54,8 @@ public:
         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter =
             QuantLib::ext::make_shared<ore::analytics::ScenarioFilter>(),
         const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
         const bool handlePseudoCurrenciesTodaysMarket = true, const bool handlePseudoCurrenciesSimMarket = true,
         const bool recalibrateModels = true,
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
@@ -111,7 +112,7 @@ private:
     bool cacheSimData_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter> scenarioFilter_;
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-    ore::data::IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     bool handlePseudoCurrenciesTodaysMarket_;
     bool handlePseudoCurrenciesSimMarket_;
     bool recalibrateModels_;

@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
@@ -28,35 +30,36 @@ BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period
                                        // Long tenor swap
                                        Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
                                        const DayCounter& longFixedDayCount,
-                                       const QuantLib::ext::shared_ptr<IborIndex>& longIndex,
+                                       const QuantLib::ext::shared_ptr<IborIndex>& longIndex, bool longIndexGiven,
                                        // Short tenor swap
                                        Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
                                        const DayCounter& shortFixedDayCount,
                                        const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort,
+                                       bool shortIndexGiven,
                                        // Discount curve
-                                       const Handle<YieldTermStructure>& discountingCurve)
+                                       const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven,
+                                       const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), calendar_(calendar),
       longFixedFrequency_(longFixedFrequency), longFixedConvention_(longFixedConvention),
-      longFixedDayCount_(longFixedDayCount), longIndex_(longIndex), shortFixedFrequency_(shortFixedFrequency),
-      shortFixedConvention_(shortFixedConvention), shortFixedDayCount_(shortFixedDayCount), shortIndex_(shortIndex),
-      longMinusShort_(longMinusShort), discountHandle_(discountingCurve) {
+      longFixedDayCount_(longFixedDayCount), longIndex_(longIndex), longIndexGiven_(longIndexGiven),
+      shortFixedFrequency_(shortFixedFrequency), shortFixedConvention_(shortFixedConvention),
+      shortFixedDayCount_(shortFixedDayCount), shortIndex_(shortIndex), longMinusShort_(longMinusShort),
+      shortIndexGiven_(shortIndexGiven), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven),
+      pillarChoice_(pillarChoice) {
 
     QL_REQUIRE(longIndex_->tenor() >= shortIndex_->tenor(),
                "Tenor of longIndex should be at least tenor of shortIndex.");
 
-    bool longIndexHasCurve = !longIndex_->forwardingTermStructure().empty();
-    bool shortIndexHasCurve = !shortIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(longIndexHasCurve && shortIndexHasCurve && haveDiscountCurve),
-               "Have all curves nothing to solve for.");
+    QL_REQUIRE(!(longIndexGiven_ && shortIndexGiven_ && discountCurveGiven_),
+               "BasisTwoSwaphelper: Have all curves nothing to solve for.");
 
-    if (longIndexHasCurve && !shortIndexHasCurve) {
+    if (longIndexGiven_ && !shortIndexGiven_) {
         shortIndex_ = shortIndex_->clone(termStructureHandle_);
         shortIndex_->unregisterWith(termStructureHandle_);
-    } else if (!longIndexHasCurve && shortIndexHasCurve) {
+    } else if (!longIndexGiven_ && shortIndexGiven_) {
         longIndex_ = longIndex_->clone(termStructureHandle_);
         longIndex_->unregisterWith(termStructureHandle_);
-    } else if (!longIndexHasCurve && !shortIndexHasCurve) {
+    } else if (!longIndexGiven_ && !shortIndexGiven_) {
         QL_FAIL("Need at least one of the indices to have a valid curve.");
     }
 
@@ -91,26 +94,11 @@ void BasisTwoSwapHelper::initializeDates() {
                      .withFloatingLegCalendar(calendar_);
 
     earliestDate_ = std::min(longSwap_->startDate(), shortSwap_->startDate());
-    latestDate_ = std::max(longSwap_->maturityDate(), shortSwap_->maturityDate());
-
-/* May need to adjust latestDate_ if you are projecting libor based
-   on tenor length rather than from accrual date to accrual date. */
-    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
-        if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
-            QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(shortSwap_->floatingLeg().back());
-            Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-        if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
-            QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(longSwap_->floatingLeg().back());
-            Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = longIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-    }
+    maturityDate_ = std::max(longSwap_->maturityDate(), shortSwap_->maturityDate());
+    latestRelevantDate_ =
+        std::max(determineLatestRelevantDate(shortSwap_->legs(), {!shortIndexGiven_, !shortIndexGiven_}),
+                 determineLatestRelevantDate(longSwap_->legs(), {!longIndexGiven_, !longIndexGiven_}));
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {
@@ -120,7 +108,7 @@ void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {
     QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);

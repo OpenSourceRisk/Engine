@@ -62,8 +62,6 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
     analytic()->modifyPortfolio();
@@ -74,12 +72,17 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try{
+            QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
+                QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ParStressTestConverter converter(
             inputs_->asof(), analytic()->configurations().todaysMarketParams,
             analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
             analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
-            scenarioData = converter.convertStressScenarioData(scenarioData);
+            scenarioData = converter.convertStressScenarioData(scenarioData, parScenarioReport);
             analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
+            if (parScenarioReport->rows() > 0) {
+                analytic()->addReport(label(), "stress_scenario_par_rates", parScenarioReport);
+            }
         } catch(const std::exception& e){
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
@@ -94,12 +97,26 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     QuantLib::ext::shared_ptr<InMemoryReport> cfReport =
         inputs_->stressGenerateCashflows() ? QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize())
                                            : nullptr;
-
-    runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                  analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
-                  inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
-                  *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, nullptr,
-                  inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError());
+    
+    QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    analytic()->addReport(label(), "stress_scenarios", scenarioReport);
+    
+    if (inputs_->scenarioReader()) {        
+        runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                      analytic()->configurations().simMarketParams, inputs_->scenarioReader(), report, cfReport,
+                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                      *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+                      inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      scenarioReport);
+    } else {
+        runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
+                      analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
+                      inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
+                      *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+                      nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      scenarioReport);
+    }
 
     analytic()->addReport(label(), "stress", report);
     if (cfReport) {

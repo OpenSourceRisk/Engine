@@ -1,0 +1,1782 @@
+<CurrencyConfig>
+  <Currency>
+    <Name>United Arab Emirates dirham</Name>
+    <ISOCode>AED</ISOCode>
+    <NumericCode>784</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Afghan afghani</Name>
+    <ISOCode>AFN</ISOCode>
+    <NumericCode>971</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Albanian lek</Name>
+    <ISOCode>ALL</ISOCode>
+    <NumericCode>8</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Armenian dram</Name>
+    <ISOCode>AMD</ISOCode>
+    <NumericCode>51</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Netherlands Antillean guilder</Name>
+    <ISOCode>ANG</ISOCode>
+    <NumericCode>532</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Angolan kwanza</Name>
+    <ISOCode>AOA</ISOCode>
+    <NumericCode>973</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Argentine peso</Name>
+    <ISOCode>ARS</ISOCode>
+    <NumericCode>32</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Australian dollar</Name>
+    <ISOCode>AUD</ISOCode>
+    <NumericCode>36</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Aruban florin</Name>
+    <ISOCode>AWG</ISOCode>
+    <NumericCode>533</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Azerbaijani manat</Name>
+    <ISOCode>AZN</ISOCode>
+    <NumericCode>944</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bosnia and Herzegovina convertible mark</Name>
+    <ISOCode>BAM</ISOCode>
+    <NumericCode>977</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Barbados dollar</Name>
+    <ISOCode>BBD</ISOCode>
+    <NumericCode>52</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bangladeshi taka</Name>
+    <ISOCode>BDT</ISOCode>
+    <NumericCode>50</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bulgarian lev</Name>
+    <ISOCode>BGN</ISOCode>
+    <NumericCode>975</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bahraini dinar</Name>
+    <ISOCode>BHD</ISOCode>
+    <NumericCode>48</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>3</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Burundian franc</Name>
+    <ISOCode>BIF</ISOCode>
+    <NumericCode>108</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bermudian dollar</Name>
+    <ISOCode>BMD</ISOCode>
+    <NumericCode>60</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Brunei dollar</Name>
+    <ISOCode>BND</ISOCode>
+    <NumericCode>96</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Boliviano</Name>
+    <ISOCode>BOB</ISOCode>
+    <NumericCode>68</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bolivian Mvdol (funds code)</Name>
+    <ISOCode>BOV</ISOCode>
+    <NumericCode>984</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Brazilian real</Name>
+    <ISOCode>BRL</ISOCode>
+    <NumericCode>986</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bahamian dollar</Name>
+    <ISOCode>BSD</ISOCode>
+    <NumericCode>44</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Bhutanese ngultrum</Name>
+    <ISOCode>BTN</ISOCode>
+    <NumericCode>64</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Botswana pula</Name>
+    <ISOCode>BWP</ISOCode>
+    <NumericCode>72</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Belarusian ruble</Name>
+    <ISOCode>BYN</ISOCode>
+    <NumericCode>933</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Belize dollar</Name>
+    <ISOCode>BZD</ISOCode>
+    <NumericCode>84</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Canadian dollar</Name>
+    <ISOCode>CAD</ISOCode>
+    <NumericCode>124</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Congolese franc</Name>
+    <ISOCode>CDF</ISOCode>
+    <NumericCode>976</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>WIR euro (complementary currency)</Name>
+    <ISOCode>CHE</ISOCode>
+    <NumericCode>947</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Swiss franc</Name>
+    <ISOCode>CHF</ISOCode>
+    <NumericCode>756</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>WIR franc (complementary currency)</Name>
+    <ISOCode>CHW</ISOCode>
+    <NumericCode>948</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Unidad de Fomento (funds code)</Name>
+    <ISOCode>CLF</ISOCode>
+    <NumericCode>990</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>10000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>4</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Chilean peso</Name>
+    <ISOCode>CLP</ISOCode>
+    <NumericCode>152</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Offshore Chinese Yuan traded in Hong Kong (Non-ISO)</Name>
+    <ISOCode>CNH</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Offshore Chinese Yuan traded in Taiwan (Non-ISO)</Name>
+    <ISOCode>CNT</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Chinese yuan</Name>
+    <ISOCode>CNY</ISOCode>
+    <NumericCode>156</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Colombian peso</Name>
+    <ISOCode>COP</ISOCode>
+    <NumericCode>170</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Unidad de Valor Real (UVR) (funds code)</Name>
+    <ISOCode>COU</ISOCode>
+    <NumericCode>970</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Costa Rican colon</Name>
+    <ISOCode>CRC</ISOCode>
+    <NumericCode>188</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Cuban convertible peso</Name>
+    <ISOCode>CUC</ISOCode>
+    <NumericCode>931</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Cuban peso</Name>
+    <ISOCode>CUP</ISOCode>
+    <NumericCode>192</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Cape Verdean escudo</Name>
+    <ISOCode>CVE</ISOCode>
+    <NumericCode>132</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Czech koruna</Name>
+    <ISOCode>CZK</ISOCode>
+    <NumericCode>203</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Djiboutian franc</Name>
+    <ISOCode>DJF</ISOCode>
+    <NumericCode>262</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Danish krone</Name>
+    <ISOCode>DKK</ISOCode>
+    <NumericCode>208</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Dominican peso</Name>
+    <ISOCode>DOP</ISOCode>
+    <NumericCode>214</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Algerian dinar</Name>
+    <ISOCode>DZD</ISOCode>
+    <NumericCode>12</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Egyptian pound</Name>
+    <ISOCode>EGP</ISOCode>
+    <NumericCode>818</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Eritrean nakfa</Name>
+    <ISOCode>ERN</ISOCode>
+    <NumericCode>232</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Ethiopian birr</Name>
+    <ISOCode>ETB</ISOCode>
+    <NumericCode>230</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Euro</Name>
+    <ISOCode>EUR</ISOCode>
+    <NumericCode>978</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Fiji dollar</Name>
+    <ISOCode>FJD</ISOCode>
+    <NumericCode>242</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Falkland Islands pound</Name>
+    <ISOCode>FKP</ISOCode>
+    <NumericCode>238</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Pound sterling</Name>
+    <ISOCode>GBP</ISOCode>
+    <NumericCode>826</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Georgian lari</Name>
+    <ISOCode>GEL</ISOCode>
+    <NumericCode>981</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Guernsey Pound (Non-ISO)</Name>
+    <ISOCode>GGP</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Ghanaian cedi</Name>
+    <ISOCode>GHS</ISOCode>
+    <NumericCode>936</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Gibraltar pound</Name>
+    <ISOCode>GIP</ISOCode>
+    <NumericCode>292</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Gambian dalasi</Name>
+    <ISOCode>GMD</ISOCode>
+    <NumericCode>270</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Guinean franc</Name>
+    <ISOCode>GNF</ISOCode>
+    <NumericCode>324</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Guatemalan quetzal</Name>
+    <ISOCode>GTQ</ISOCode>
+    <NumericCode>320</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Guyanese dollar</Name>
+    <ISOCode>GYD</ISOCode>
+    <NumericCode>328</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Hong Kong dollar</Name>
+    <ISOCode>HKD</ISOCode>
+    <NumericCode>344</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Honduran lempira</Name>
+    <ISOCode>HNL</ISOCode>
+    <NumericCode>340</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Croatian kuna</Name>
+    <ISOCode>HRK</ISOCode>
+    <NumericCode>191</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Haitian gourde</Name>
+    <ISOCode>HTG</ISOCode>
+    <NumericCode>332</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Hungarian forint</Name>
+    <ISOCode>HUF</ISOCode>
+    <NumericCode>348</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Indonesian rupiah</Name>
+    <ISOCode>IDR</ISOCode>
+    <NumericCode>360</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Israeli new shekel</Name>
+    <ISOCode>ILS</ISOCode>
+    <NumericCode>376</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Isle of Man Pound (Non-ISO)</Name>
+    <ISOCode>IMP</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Indian rupee</Name>
+    <ISOCode>INR</ISOCode>
+    <NumericCode>356</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Iraqi dinar</Name>
+    <ISOCode>IQD</ISOCode>
+    <NumericCode>368</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>3</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Iranian rial</Name>
+    <ISOCode>IRR</ISOCode>
+    <NumericCode>364</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Icelandic krona</Name>
+    <ISOCode>ISK</ISOCode>
+    <NumericCode>352</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Jersey Pound (Non-ISO)</Name>
+    <ISOCode>JEP</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Jamaican dollar</Name>
+    <ISOCode>JMD</ISOCode>
+    <NumericCode>388</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Jordanian dinar</Name>
+    <ISOCode>JOD</ISOCode>
+    <NumericCode>400</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>3</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Japanese yen</Name>
+    <ISOCode>JPY</ISOCode>
+    <NumericCode>392</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Kenyan shilling</Name>
+    <ISOCode>KES</ISOCode>
+    <NumericCode>404</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Kyrgyzstani som</Name>
+    <ISOCode>KGS</ISOCode>
+    <NumericCode>417</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Cambodian riel</Name>
+    <ISOCode>KHR</ISOCode>
+    <NumericCode>116</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Kiribati dollar (Non-ISO)</Name>
+    <ISOCode>KID</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Comoro franc</Name>
+    <ISOCode>KMF</ISOCode>
+    <NumericCode>174</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>North Korean won</Name>
+    <ISOCode>KPW</ISOCode>
+    <NumericCode>408</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>South Korean won</Name>
+    <ISOCode>KRW</ISOCode>
+    <NumericCode>410</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Kuwaiti dinar</Name>
+    <ISOCode>KWD</ISOCode>
+    <NumericCode>414</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>3</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Cayman Islands dollar</Name>
+    <ISOCode>KYD</ISOCode>
+    <NumericCode>136</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Kazakhstani tenge</Name>
+    <ISOCode>KZT</ISOCode>
+    <NumericCode>398</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Lao kip</Name>
+    <ISOCode>LAK</ISOCode>
+    <NumericCode>418</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Lebanese pound</Name>
+    <ISOCode>LBP</ISOCode>
+    <NumericCode>422</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Sri Lankan rupee</Name>
+    <ISOCode>LKR</ISOCode>
+    <NumericCode>144</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Liberian dollar</Name>
+    <ISOCode>LRD</ISOCode>
+    <NumericCode>430</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Lesotho loti</Name>
+    <ISOCode>LSL</ISOCode>
+    <NumericCode>426</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Libyan dinar</Name>
+    <ISOCode>LYD</ISOCode>
+    <NumericCode>434</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>3</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Moroccan dirham</Name>
+    <ISOCode>MAD</ISOCode>
+    <NumericCode>504</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Moldovan leu</Name>
+    <ISOCode>MDL</ISOCode>
+    <NumericCode>498</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Malagasy ariary</Name>
+    <ISOCode>MGA</ISOCode>
+    <NumericCode>969</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Macedonian denar</Name>
+    <ISOCode>MKD</ISOCode>
+    <NumericCode>807</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Myanmar kyat</Name>
+    <ISOCode>MMK</ISOCode>
+    <NumericCode>104</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Mongolian toegroeg</Name>
+    <ISOCode>MNT</ISOCode>
+    <NumericCode>496</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Macanese pataca</Name>
+    <ISOCode>MOP</ISOCode>
+    <NumericCode>446</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Mauritanian ouguiya</Name>
+    <ISOCode>MRU</ISOCode>
+    <NumericCode>929</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Mauritian rupee</Name>
+    <ISOCode>MUR</ISOCode>
+    <NumericCode>480</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Maldivian rufiyaa</Name>
+    <ISOCode>MVR</ISOCode>
+    <NumericCode>462</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Malawian kwacha</Name>
+    <ISOCode>MWK</ISOCode>
+    <NumericCode>454</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Mexican peso</Name>
+    <ISOCode>MXN</ISOCode>
+    <NumericCode>484</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Mexican Unidad de Inversion (UDI) (funds code)</Name>
+    <ISOCode>MXV</ISOCode>
+    <NumericCode>979</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Malaysian ringgit</Name>
+    <ISOCode>MYR</ISOCode>
+    <NumericCode>458</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Mozambican metical</Name>
+    <ISOCode>MZN</ISOCode>
+    <NumericCode>943</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Namibian dollar</Name>
+    <ISOCode>NAD</ISOCode>
+    <NumericCode>516</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Nigerian naira</Name>
+    <ISOCode>NGN</ISOCode>
+    <NumericCode>566</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Nicaraguan cordoba</Name>
+    <ISOCode>NIO</ISOCode>
+    <NumericCode>558</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Norwegian krone</Name>
+    <ISOCode>NOK</ISOCode>
+    <NumericCode>578</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Nepalese rupee</Name>
+    <ISOCode>NPR</ISOCode>
+    <NumericCode>524</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>New Zealand dollar</Name>
+    <ISOCode>NZD</ISOCode>
+    <NumericCode>554</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Omani rial</Name>
+    <ISOCode>OMR</ISOCode>
+    <NumericCode>512</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>3</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Panamanian balboa</Name>
+    <ISOCode>PAB</ISOCode>
+    <NumericCode>590</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Peruvian sol</Name>
+    <ISOCode>PEN</ISOCode>
+    <NumericCode>604</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Papua New Guinean kina</Name>
+    <ISOCode>PGK</ISOCode>
+    <NumericCode>598</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Philippine peso</Name>
+    <ISOCode>PHP</ISOCode>
+    <NumericCode>608</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Pakistani rupee</Name>
+    <ISOCode>PKR</ISOCode>
+    <NumericCode>586</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Polish z_oty</Name>
+    <ISOCode>PLN</ISOCode>
+    <NumericCode>985</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Paraguayan guarani</Name>
+    <ISOCode>PYG</ISOCode>
+    <NumericCode>600</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Qatari riyal</Name>
+    <ISOCode>QAR</ISOCode>
+    <NumericCode>634</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Romanian leu</Name>
+    <ISOCode>RON</ISOCode>
+    <NumericCode>946</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Serbian dinar</Name>
+    <ISOCode>RSD</ISOCode>
+    <NumericCode>941</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Russian ruble</Name>
+    <ISOCode>RUB</ISOCode>
+    <NumericCode>643</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Rwandan franc</Name>
+    <ISOCode>RWF</ISOCode>
+    <NumericCode>646</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Saudi riyal</Name>
+    <ISOCode>SAR</ISOCode>
+    <NumericCode>682</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Solomon Islands dollar</Name>
+    <ISOCode>SBD</ISOCode>
+    <NumericCode>90</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Seychelles rupee</Name>
+    <ISOCode>SCR</ISOCode>
+    <NumericCode>690</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Sudanese pound</Name>
+    <ISOCode>SDG</ISOCode>
+    <NumericCode>938</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Swedish krona/kronor</Name>
+    <ISOCode>SEK</ISOCode>
+    <NumericCode>752</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Singapore dollar</Name>
+    <ISOCode>SGD</ISOCode>
+    <NumericCode>702</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Saint Helena pound</Name>
+    <ISOCode>SHP</ISOCode>
+    <NumericCode>654</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Sierra Leonean leone</Name>
+    <ISOCode>SLL</ISOCode>
+    <NumericCode>694</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Somali shilling</Name>
+    <ISOCode>SOS</ISOCode>
+    <NumericCode>706</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Surinamese dollar</Name>
+    <ISOCode>SRD</ISOCode>
+    <NumericCode>968</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>South Sudanese pound</Name>
+    <ISOCode>SSP</ISOCode>
+    <NumericCode>728</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Sao Tome and Principe dobra</Name>
+    <ISOCode>STN</ISOCode>
+    <NumericCode>930</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Salvadoran colon</Name>
+    <ISOCode>SVC</ISOCode>
+    <NumericCode>222</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Syrian pound</Name>
+    <ISOCode>SYP</ISOCode>
+    <NumericCode>760</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Swazi lilangeni</Name>
+    <ISOCode>SZL</ISOCode>
+    <NumericCode>748</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Thai baht</Name>
+    <ISOCode>THB</ISOCode>
+    <NumericCode>764</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Tajikistani somoni</Name>
+    <ISOCode>TJS</ISOCode>
+    <NumericCode>972</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Turkmenistan manat</Name>
+    <ISOCode>TMT</ISOCode>
+    <NumericCode>934</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Tunisian dinar</Name>
+    <ISOCode>TND</ISOCode>
+    <NumericCode>788</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>3</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Tongan pa_anga</Name>
+    <ISOCode>TOP</ISOCode>
+    <NumericCode>776</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Turkish lira</Name>
+    <ISOCode>TRY</ISOCode>
+    <NumericCode>949</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Trinidad and Tobago dollar</Name>
+    <ISOCode>TTD</ISOCode>
+    <NumericCode>780</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>New Taiwan dollar</Name>
+    <ISOCode>TWD</ISOCode>
+    <NumericCode>901</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Tanzanian shilling</Name>
+    <ISOCode>TZS</ISOCode>
+    <NumericCode>834</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Ukrainian hryvnia</Name>
+    <ISOCode>UAH</ISOCode>
+    <NumericCode>980</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Ugandan shilling</Name>
+    <ISOCode>UGX</ISOCode>
+    <NumericCode>800</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>United States dollar</Name>
+    <ISOCode>USD</ISOCode>
+    <NumericCode>840</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>United States dollar (next day) (funds code)</Name>
+    <ISOCode>USN</ISOCode>
+    <NumericCode>997</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Uruguay Peso en Unidades Indexadas (URUIURUI) (funds code)</Name>
+    <ISOCode>UYI</ISOCode>
+    <NumericCode>940</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Uruguayan peso</Name>
+    <ISOCode>UYU</ISOCode>
+    <NumericCode>858</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Unidad previsional</Name>
+    <ISOCode>UYW</ISOCode>
+    <NumericCode>927</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>10000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>4</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Uzbekistan som</Name>
+    <ISOCode>UZS</ISOCode>
+    <NumericCode>860</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Venezuelan bolivar soberano</Name>
+    <ISOCode>VES</ISOCode>
+    <NumericCode>928</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Vietnamese dong</Name>
+    <ISOCode>VND</ISOCode>
+    <NumericCode>704</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Vanuatu vatu</Name>
+    <ISOCode>VUV</ISOCode>
+    <NumericCode>548</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Samoan tala</Name>
+    <ISOCode>WST</ISOCode>
+    <NumericCode>882</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>CFA franc BEAC</Name>
+    <ISOCode>XAF</ISOCode>
+    <NumericCode>950</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Silver (one troy ounce)</Name>
+    <ISOCode>XAG</ISOCode>
+    <NumericCode>961</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Gold (one troy ounce)</Name>
+    <ISOCode>XAU</ISOCode>
+    <NumericCode>959</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>East Caribbean dollar</Name>
+    <ISOCode>XCD</ISOCode>
+    <NumericCode>951</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>CFA franc BCEAO</Name>
+    <ISOCode>XOF</ISOCode>
+    <NumericCode>952</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Palladium (one troy ounce)</Name>
+    <ISOCode>XPD</ISOCode>
+    <NumericCode>964</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>CFP franc (franc Pacifique)</Name>
+    <ISOCode>XPF</ISOCode>
+    <NumericCode>953</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>1</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>0</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Platinum (one troy ounce)</Name>
+    <ISOCode>XPT</ISOCode>
+    <NumericCode>962</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>SUCRE</Name>
+    <ISOCode>XSU</ISOCode>
+    <NumericCode>994</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>ADB Unit of Account</Name>
+    <ISOCode>XUA</ISOCode>
+    <NumericCode>965</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Yemeni rial</Name>
+    <ISOCode>YER</ISOCode>
+    <NumericCode>886</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>South African rand</Name>
+    <ISOCode>ZAR</ISOCode>
+    <NumericCode>710</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Zambian kwacha</Name>
+    <ISOCode>ZMW</ISOCode>
+    <NumericCode>967</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+  <Currency>
+    <Name>Zimbabwean dollar</Name>
+    <ISOCode>ZWL</ISOCode>
+    <NumericCode>932</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+  </Currency>
+</CurrencyConfig>

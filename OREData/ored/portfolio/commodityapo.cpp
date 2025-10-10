@@ -50,7 +50,7 @@ CommodityAveragePriceOption::CommodityAveragePriceOption(
     const string& paymentCalendar, const string& paymentLag, const string& paymentConvention,
     const string& pricingCalendar, const string& paymentDate, Real gearing, Spread spread,
     CommodityQuantityFrequency commodityQuantityFrequency, CommodityPayRelativeTo commodityPayRelativeTo,
-    QuantLib::Natural futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
+    QuantLib::Integer futureMonthOffset, QuantLib::Natural deliveryRollDays, bool includePeriodEnd,
     const BarrierData& barrierData, const std::string& fxIndex)
     : Trade("CommodityAveragePriceOption", envelope), optionData_(optionData), barrierData_(barrierData),
       quantity_(quantity), strike_(strike), currency_(currency), name_(name), priceType_(priceType),
@@ -114,6 +114,7 @@ void CommodityAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFa
     legs_.push_back(leg);
     legPayers_.push_back(false);
     legCurrencies_.push_back(currency_);
+    legCashflowInclusion_[legs_.size() - 1] = Trade::LegCashflowInclusion::Never;
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityAveragePriceOption::underlyingIndices(
@@ -139,12 +140,12 @@ void CommodityAveragePriceOption::fromXML(XMLNode* node) {
     priceType_ = parseCommodityPriceType(XMLUtils::getChildValue(apoNode, "PriceType", true));
     startDate_ = XMLUtils::getChildValue(apoNode, "StartDate", true);
     endDate_ = XMLUtils::getChildValue(apoNode, "EndDate", true);
-    paymentCalendar_ = XMLUtils::getChildValue(apoNode, "PaymentCalendar", true);
-    paymentLag_ = XMLUtils::getChildValue(apoNode, "PaymentLag", true);
-    paymentConvention_ = XMLUtils::getChildValue(apoNode, "PaymentConvention", true);
-    pricingCalendar_ = XMLUtils::getChildValue(apoNode, "PricingCalendar", true);
+    pricingCalendar_ = XMLUtils::getChildValue(apoNode, "PricingCalendar", false, "NullCalendar");
 
     paymentDate_ = XMLUtils::getChildValue(apoNode, "PaymentDate", false);
+    paymentCalendar_ = XMLUtils::getChildValue(apoNode, "PaymentCalendar", paymentDate_.empty());
+    paymentLag_ = XMLUtils::getChildValue(apoNode, "PaymentLag", paymentDate_.empty());
+    paymentConvention_ = XMLUtils::getChildValue(apoNode, "PaymentConvention", paymentDate_.empty());
 
     gearing_ = 1.0;
     if (XMLNode* n = XMLUtils::getChildNode(apoNode, "Gearing")) {
@@ -164,6 +165,7 @@ void CommodityAveragePriceOption::fromXML(XMLNode* node) {
     }
 
     futureMonthOffset_ = XMLUtils::getChildValueAsInt(apoNode, "FutureMonthOffset", false);
+    QL_REQUIRE(futureMonthOffset_ >= 0, "FutureMonthOffset must be positive for Commodity APO.");
     deliveryRollDays_ = XMLUtils::getChildValueAsInt(apoNode, "DeliveryRollDays", false);
 
     includePeriodEnd_ = true;
@@ -238,7 +240,7 @@ Leg CommodityAveragePriceOption::buildLeg(const QuantLib::ext::shared_ptr<Engine
     // Create the LegData. All defaults are as in the LegData ctor.
     vector<string> paymentDates = paymentDate_.empty() ? vector<string>() : vector<string>(1, paymentDate_);
     LegData legData(commLegData, true, currency_, scheduleData, "", vector<Real>(), vector<string>(),
-                    paymentConvention_, false, false, false, true, "", 0, "", vector<AmortizationData>(), 
+                    paymentConvention_, false, false, false, true, "", 0, "", "", vector<AmortizationData>(), 
                     paymentLag_, "", paymentCalendar_, paymentDates);
 
     // Get the leg builder, set the allAveraging_ flag and build the leg
@@ -374,6 +376,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     Real barrierLevel = Null<Real>();
     Barrier::Type barrierType = Barrier::DownIn;
     Exercise::Type barrierStyle = Exercise::American;
+    int strictBarrier = 0;
     if (barrierData_.initialized()) {
         QL_REQUIRE(!barrierData_.overrideTriggered(),
                    "CommodityAveragePriceOption::build(): OverrideTriggered not supported by this instrument type.");
@@ -385,18 +388,21 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
             QL_REQUIRE(barrierStyle == Exercise::European || barrierStyle == Exercise::American,
                        "Commodity APO: Expected 'European' or 'American' as barrier style");
         }
+        if (barrierData_.strictComparison()) {
+            strictBarrier = boost::lexical_cast<int>(barrierData_.strictComparison().value());
+        }
     }
 
     // Create the APO instrument
     QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
     auto apo = QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOption>(
         apoFlow, exercise, apoFlow->periodQuantity(), strike_, parseOptionType(optionData_.callPut()),
-        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle, fxIndex);
+        Settlement::Physical, Settlement::PhysicalOTC, barrierLevel, barrierType, barrierStyle, fxIndex, strictBarrier);
 
     // Set the pricing engine
     Currency ccy = parseCurrency(currency_);
     auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommodityApoBaseEngineBuilder>(builder);
-    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, envelope().additionalField("discount_curve", false, std::string()), name_, id(), apo);
     apo->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
     addProductModelEngine(*engineBuilder);
@@ -408,8 +414,9 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     // Take care of fees
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(),
-                positionType == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
+                positionType == Position::Long ? -1.0 : 1.0, ccy, discountCurve, engineFactory,
                 engineBuilder->configuration(MarketContext::pricing));
 
     // Populate instrument wrapper

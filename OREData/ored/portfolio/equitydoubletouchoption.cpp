@@ -83,6 +83,7 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     DoubleBarrier::Type barrierType = parseDoubleBarrierType(barrier_.type());
     bool payoffAtExpiry = option_.payoffAtExpiry();
     double rebate = barrier_.rebate();
+    int strictBarrier = barrier_.strictComparison() ? boost::lexical_cast<int>(barrier_.strictComparison().value()) : 0;
     Position::Type positionType = parsePositionType(option_.longShort());
 
     QL_REQUIRE(rebate == 0, "Rebates not supported for EquityDoubleTouchOptions");
@@ -135,15 +136,16 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(
         additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_, option_.premiumData(),
-        isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
+        isLong ? -1.0 : 1.0, ccy, discountCurve, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
         doubleTouch, isLong, expiryDate, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, ccy,
         start, eqIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers,
-        barrier_.overrideTriggered());
+        barrier_.overrideTriggered(), nullptr, nullptr, strictBarrier);
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;

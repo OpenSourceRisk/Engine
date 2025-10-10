@@ -43,8 +43,41 @@ public:
     TestMarket() : MarketImpl(false) {
         asof_ = Date(2, January, 2017);
 
+        vector<pair<string, Real>> indexData = {
+            {"EUR-EONIA", 0.01},    {"EUR-EURIBOR-3M", 0.015}, {"EUR-EURIBOR-6M", 0.02}
+        };
+    
+        for (auto id : indexData) {
+            Handle<IborIndex> h(parseIborIndex(id.first, flatRateYts(id.second)));
+            iborIndices_[make_pair(Market::defaultConfiguration, id.first)] = h;
+    
+            // set up dummy fixings for the past 400 days
+            for (Date d = asof_ - 400; d < asof_; d++) {
+                if (h->isValidFixingDate(d))
+                    h->addFixing(d, 0.01);
+            }
+        }
+        QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
+            "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));    
+        conventions->add(swapEURConv);
+
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURConv(
+            new ore::data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
+        QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
+            new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
+    
+        conventions->add(swapIndexEURConv);
+        conventions->add(swapIndexEURLongConv);
+        InstrumentConventions::instance().setConventions(conventions);
+
         // build discount
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.03);
+
+        addSwapIndex("EUR-CMS-2Y", "EUR-EONIA", Market::defaultConfiguration);
+        addSwapIndex("EUR-CMS-30Y", "EUR-EONIA", Market::defaultConfiguration);
+
+        swaptionIndexBases_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = std::make_pair("EUR-CMS-2Y", "EUR-CMS-30Y");
 
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatSwaptionVol(0.30);

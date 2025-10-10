@@ -1,0 +1,38 @@
+#TradeId,ResultId,ResultType,ResultValue
+FX_TaRF,PricingConfigEngine,string,Generic
+FX_TaRF,PricingConfigModel,string,Generic
+FX_TaRF,PricingConfigProductType,string,ScriptedTrade
+FX_TaRF,isdaAssetClass,string,Foreign Exchange
+FX_TaRF,isdaBaseProduct,string,Complex Exotic
+FX_TaRF,isdaSubProduct,string,Generic
+FX_TaRF,isdaTransaction,string,
+FX_TaRF,NPV_MCErrEst,double,2182.710960
+FX_TaRF,cashFlowResults[0],cashflows,3629.319605 USD @ 2023-02-22
+FX_TaRF,cashFlowResults[1],cashflows,8000.619374 USD @ 2023-03-22
+FX_TaRF,cashFlowResults[2],cashflows,9291.730187 USD @ 2023-04-24
+FX_TaRF,cashFlowResults[3],cashflows,6963.564603 USD @ 2023-05-23
+FX_TaRF,cashFlowResults[4],cashflows,4319.711317 USD @ 2023-06-22
+FX_TaRF,cashFlowResults[5],cashflows,1842.224242 USD @ 2023-07-24
+FX_TaRF,cashFlowResults[6],cashflows,-332.446808 USD @ 2023-08-22
+FX_TaRF,cashFlowResults[7],cashflows,-2196.767829 USD @ 2023-09-22
+FX_TaRF,cashFlowResults[8],cashflows,-3845.518561 USD @ 2023-10-24
+FX_TaRF,cashFlowResults[9],cashflows,-5287.946320 USD @ 2023-11-22
+FX_TaRF,cashFlowResults[10],cashflows,-6567.130935 USD @ 2023-12-22
+FX_TaRF,cashFlowResults[11],cashflows,-7589.118475 USD @ 2024-01-23
+FX_TaRF,cashFlowResults[12],cashflows,-8759.278090 USD @ 2024-02-22
+FX_TaRF,cashflow_0_10_MCErrEst,double,309.187860
+FX_TaRF,cashflow_0_11_MCErrEst,double,326.597555
+FX_TaRF,cashflow_0_12_MCErrEst,double,345.259125
+FX_TaRF,cashflow_0_13_MCErrEst,double,370.679059
+FX_TaRF,cashflow_0_1_MCErrEst,double,84.213562
+FX_TaRF,cashflow_0_2_MCErrEst,double,153.937273
+FX_TaRF,cashflow_0_3_MCErrEst,double,181.006003
+FX_TaRF,cashflow_0_4_MCErrEst,double,183.345815
+FX_TaRF,cashflow_0_5_MCErrEst,double,198.403216
+FX_TaRF,cashflow_0_6_MCErrEst,double,217.240606
+FX_TaRF,cashflow_0_7_MCErrEst,double,239.326813
+FX_TaRF,cashflow_0_8_MCErrEst,double,262.626769
+FX_TaRF,cashflow_0_9_MCErrEst,double,288.567566
+FX_TaRF,instMultiplier,double,1.000000
+FX_TaRF,isTriggered,double,0.525600
+FX_TaRF,isTriggered_MCErrEst,double,0.004993

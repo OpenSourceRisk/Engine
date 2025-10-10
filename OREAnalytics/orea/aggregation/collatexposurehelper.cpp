@@ -186,7 +186,7 @@ void CollateralExposureHelper::updateMarginCall(const QuantLib::ext::shared_ptr<
     }
 }
 
-QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> CollateralExposureHelper::collateralBalancePaths(
+vector<QuantLib::ext::shared_ptr<CollateralAccount>> CollateralExposureHelper::collateralBalancePaths(
     const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef, const Real& nettingSetPv, const Date& date_t0,
     const vector<vector<Real>>& nettingSetValues, const Date& nettingSet_maturity, const vector<Date>& dateGrid,
     const Real& csaFxTodayRate, const vector<vector<Real>>& csaFxScenarioRates, const Real& csaTodayCollatCurve,
@@ -217,16 +217,15 @@ QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> 
         CollateralAccount baseAcc(csaDef, bal_t0, date_t0);
         DLOG("base current collateral balance: " << bal_t0 << ", " << baseAcc.accountBalance());
 
-        // step 3; build an empty container for the return value(s)
-        QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> scenarioCollatPaths(
-            new vector<QuantLib::ext::shared_ptr<CollateralAccount>>());
-
-        // step 4; start loop over scenarios
+        // step 3; build the container for the return value(s)
         Size numScenarios = nettingSetValues.front().size();
         QL_REQUIRE(numScenarios == csaFxScenarioRates.front().size(), "netting values -v- scenario FX rate mismatch");
+        vector<QuantLib::ext::shared_ptr<CollateralAccount>> scenarioCollatPaths(numScenarios);
+
+        // step 4; start loop over scenarios
         Date simEndDate = std::min(nettingSet_maturity, dateGrid.back()) + csaDef->csaDetails()->marginPeriodOfRisk();
         for (unsigned i = 0; i < numScenarios; i++) {
-            QuantLib::ext::shared_ptr<CollateralAccount> collat(new CollateralAccount(baseAcc));
+            auto collat = QuantLib::ext::make_shared<CollateralAccount>(baseAcc);
             Date tmpDate = date_t0; // the date which gets evolved
             Date nextMarginReqDateUs = date_t0;
             Date nextMarginReqDateCtp = date_t0;
@@ -255,7 +254,7 @@ QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> 
                            << tmpDate << ", " << simEndDate << ")");
             // set account balance to zero after maturity of portfolio
             collat->closeAccount(simEndDate + Period(1, Days));
-            scenarioCollatPaths->push_back(collat);
+            scenarioCollatPaths[i] = collat;
         }
         return scenarioCollatPaths;
     } catch (const std::exception& e) {

@@ -263,7 +263,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableE
         modelTimeStepsPerYear, modelStateGridPoints, modelMesherEpsilon, modelMesherScaling, modelMesherConcentration,
         bootstrapMode, false, calibrate, adjustEquityVolatility, adjustEquityForward);
 
-    modelBuilders_.insert(std::make_pair(id, modelBuilder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, modelBuilder));
 
     return QuantLib::ext::make_shared<FdDefaultableEquityJumpDiffusionConvertibleBondEngine>(
         modelBuilder->model(), referenceCurve, treatSecuritySpreadAsCreditSpread ? Handle<Quote>() : spread,

@@ -60,7 +60,7 @@ void applyFixings(const set<Fixing>& fixings) {
             TLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
             ++count;
         } catch (const std::exception& e) {
-            WLOG("Error during adding fixing for " << f.name << ": " << e.what());
+            DLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
     }
     timer.stop();

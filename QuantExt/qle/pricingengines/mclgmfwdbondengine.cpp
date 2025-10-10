@@ -88,7 +88,9 @@ void McLgmFwdBondEngine::calculate() const {
     double forwardBondValue = resultUnderlyingNpv_ / incomeCurve_->discount(incomeCurveDate_);
 
     // vanilla forward bond calculation
-    double forwardContractForwardValue = (*arguments_.payoff)((forwardBondValue - accruedAmount_) * arguments_.bondNotional);
+    double forwardContractForwardValue = (arguments_.isLong ? 1.0 : -1.0) *
+                                         (forwardBondValue - accruedAmount_ - arguments_.strikeAmount) *
+                                         arguments_.bondNotional;
 
     // builder ensures we calculate with a clean price or we divide by one
     forwardContractForwardValue /= conversionFactor();
@@ -137,20 +139,12 @@ McLgmFwdBondEngine::overwritePathValueUndDirty(double t, const RandomVariable& p
 
         RandomVariable forwardBondValue = pathValueUndDirty * numeraire_bonddiscount / incomeCompounding;
 
-        // vanilla forward bond calculation at fwdMaturity : differentiate between long/short
-        boost::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
-            boost::dynamic_pointer_cast<ForwardBondTypePayoff>(arguments_.payoff);
-        QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
+        RandomVariable strikePayment = RandomVariable(samples, arguments_.strikeAmount / arguments_.bondNotional);
 
-        RandomVariable strikePayment = RandomVariable(samples, fwdBndPayOff->strike() / arguments_.bondNotional);
-
-        RandomVariable forwardContractForwardValueRV;
-        if (fwdBndPayOff->forwardType() == Position::Type::Long)
-            forwardContractForwardValueRV =
-                (forwardBondValue - RandomVariable(samples, accruedAmount_)) - strikePayment;
-        else
-            forwardContractForwardValueRV =
-                strikePayment - (forwardBondValue - RandomVariable(samples, accruedAmount_));
+        RandomVariable forwardContractForwardValueRV =
+            RandomVariable(samples, arguments_.isLong ? 1.0 : -1.0) *
+                (forwardBondValue - RandomVariable(samples, accruedAmount_)) -
+            strikePayment;
 
         return forwardContractForwardValueRV / numeraire_contract;
 

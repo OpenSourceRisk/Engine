@@ -81,7 +81,11 @@ in listing \ref{lst:peconfig_Bond_DiscountedCashflows_DiscountingRiskyBondEngine
 The parameters have the following meaning:
 
 \begin{itemize}
-\item TimestepPeriod: discretization interval for zero bond pricing
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
+\item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
 \end{itemize}
@@ -90,10 +94,14 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="Bond">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
+    </ModelParameters>
     <Engine>DiscountingRiskyBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
         <Parameter name="IncludePastCashflows">true</Parameter>
     </EngineParameters>
@@ -126,7 +134,10 @@ Black/BlackBondOptionEngine builds a BlackBondOptionEngine. A sample configurati
 The parameters have the following meaning:
 
 \begin{itemize}
-\item TimestepPeriod: discretization interval for zero bond pricing
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -134,16 +145,146 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="BondOption">
     <Model>Black</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
+    </ModelParameters>
     <Engine>BlackBondOptionEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
 \caption{Configuration for Product BondOption, Model Black, Engine BlackBondOptionEngine}
 \label{lst:peconfig_BondOption_Black_BlackBondOptionEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: CallableBond}
+%--------------------------------------------------------
+
+Used by trade type: CallableBond
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item LGM/Grid
+\item LGM/FD
+\end{itemize}
+
+Engine description:
+
+LGM/Grid builds a NumericLgmCallableBondEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
+``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
+listing \ref{lst:peconfig_CallableBond_LGM_Grid}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalATM
+\item ReferenceCalibrationGrid: Mandatory calibration grid
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
+\item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
+\item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
+\item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CallableBOnd">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+        <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+        <Parameter name="sy">5.0</Parameter>
+        <Parameter name="ny">30</Parameter>
+        <Parameter name="sx">5.0</Parameter>
+        <Parameter name="nx">30</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CallableBond, Model LGM, Engine Grid}
+\label{lst:peconfig_CallableBond_LGM_Grid}
+\end{longlisting}
+
+LGM/FD builds a NumericLgmCallableBondEngine using LgmFdSolver as a solver using finite difference. A sample
+configuration is shown in listing \ref{lst:peconfig_CallableBond_LGM_FD}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalATM
+\item ReferenceCalibrationGrid: Mandatory calibration grid
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
+\item Scheme: The finite difference scheme to use
+\item StateGridPoints: The number of grid points in state direction
+\item TimeStepsPerYear: The number of time steps per year to use
+\item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CallableBond">
+    <Model>LGM</Model>
+    <ModelParameters>
+        <Parameter name="Calibration">Bootstrap</Parameter>
+        <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+        <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+        <Parameter name="Reversion">0.0</Parameter>
+        <Parameter name="ReversionType">HullWhite</Parameter>
+        <Parameter name="Volatility">0.01</Parameter>
+        <Parameter name="VolatilityType">Hagan</Parameter>
+        <Parameter name="ShiftHorizon">0.5</Parameter>
+        <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="StateGridPoints">64</Parameter>
+        <Parameter name="TimeStepsPerYear">24</Parameter>
+        <Parameter name="MesherEpsilon">1E-4</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product CallableBond, Model LGM, Engine FD}
+\label{lst:peconfig_CallableBond_LGM_FD}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -358,7 +499,7 @@ The parameters have the following meaning:
 \label{lst:peconfig_EuropeanSwaption_BlackBachelier_BlackBachelierSwaptionEngine}
 \end{longlisting}
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_EuropeanSwaption_LGM_Grid}
 
@@ -366,7 +507,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -418,7 +559,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -426,6 +567,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
@@ -447,6 +590,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
         <EngineParameters>
@@ -469,7 +613,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -551,7 +695,7 @@ details.
 %--------------------------------------------------------
 
 \label{sec:EuropeanSwaption_ns_pt}
-A pricing product type very similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
+A pricing product type similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
 
 The ``NonStandard'' product type accessed here represents the case of swaptions that do not fullfill
 the standard case of a fixed-against-floating swaption. 
@@ -589,7 +733,7 @@ Available Model/Engine pairs:
 
 Engine description:
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and Bermudan exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_BermudanSwaption_LGM_Grid}
 
@@ -597,7 +741,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -605,6 +749,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -624,6 +770,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -646,7 +793,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -654,6 +801,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
@@ -675,6 +824,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
     <EngineParameters>
@@ -696,7 +846,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -806,7 +956,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -814,8 +964,11 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item Scheme: The finite difference scheme to use
 \item StateGridPoints: The number of grid points in state direction
+\item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
 \item TimeStepsPerYear: The number of time steps per year to use
 \item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -835,6 +988,8 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+        <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
     </ModelParameters>
     <Engine>FD</Engine>
     <EngineParameters>
@@ -849,7 +1004,7 @@ The parameters have the following meaning:
 \label{lst:peconfig_AmericanSwaption_LGM_FD}
 \end{longlisting}
 
-LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvoluationSolver as a solver. The rollback follows the paper
+LGM/Grid builds a NumericLgmMultiLegOptionEngine using LgmConvolutionSolver as a solver. The rollback follows the paper
 ``Hagan, P: Methodology for callable swaps and American exercise into swaptions''. A sample configuration is shown in
 listing \ref{lst:peconfig_AmericanSwaption_LGM_Grid}. Not recommended due to inferior performance.
 
@@ -857,7 +1012,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -865,6 +1020,9 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
+\item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -884,6 +1042,8 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
+        <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -906,7 +1066,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item Calibration: Bootstrap, BestFit, None
-\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM
+\item CalibrationStrategy: CoterminalDealStrike, CoterminalATM, DeltaGammaAdjusted
 \item ReferenceCalibrationGrid: An optional grid, only one calibration instrument per interval is kept
 \item Reversion: The mean reversion
 \item ReversionType: Hagan, HullWhite
@@ -1045,7 +1205,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-Product type="BondRepo">
+<Product type="BondRepo">
     <Model>Accrual</Model>
     <ModelParameters>
         <Parameter name="IncludeSecurityLeg">true</Parameter>
@@ -1075,7 +1235,10 @@ DiscountedCashflows/DiscountingBondTRSEngine builds a DisountingBondTRSEngine. A
 The parameters have the following meaning:
 
 \begin{itemize}
-\item TreatSecuritySpreadAsCreditSpread [optional]: defaults to false. If true, the security spread is included in the
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to true
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
   discounting of intermediate bond cashflows.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
@@ -1085,10 +1248,12 @@ The parameters have the following meaning:
 <Product type="BondTRS">
     <Model>DiscountedCashflows</Model>
     <ModelParameters>
-        <Parameter name="TreatSecuritySpreadAsCreditSpread">true</Parameter>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
     </ModelParameters>
     <Engine>DiscountingBondTRSEngine</Engine>
     <EngineParameters>
+        <Parameter name="TimestepPeriod">3M</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -1356,8 +1521,21 @@ Available Model/Engine pairs:
 
 Engine description:
 
-Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. The correlation between two future
-contracts is parametrized as
+Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. 
+
+Model Parameters:
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities = bachelier model, lognormal volatilities = moment-matching approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed convert vols in shifted lognormal vols with a given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+The correlation between two future contracts is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$
 
@@ -1369,6 +1547,12 @@ The parameters have the following meaning:
 \begin{itemize}
 \item beta: parameter in correlation parametrization
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+You can set \texttt{beta}, \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{beta\_NYMEX:CL} sets beta for Average Price Options with NYMEX:CL underlying.
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price Average Price Options with NYMEX:CL underlying.
 \end{itemize}
 
 \begin{longlisting}
@@ -1414,6 +1598,8 @@ The parameters have the following meaning:
 \caption{Configuration for Product CommodityAveragePriceOption, Model Black, Engine MonteCarlo}
 \label{lst:peconfig_CommodityAveragePriceOption_Black_MonteCarlo}
 \end{longlisting}
+
+Only Lognormal input volatilities are supported in the MonteCarlo pricer.
 
 %--------------------------------------------------------
 \subsection{Product Type: CommodityAveragePriceBarrierOption}
@@ -1651,19 +1837,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>Black</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>BlackIndexCdsOptionEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model Black, Engine BlackIndexCdsOptionEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_Black_BlackIndexCdsOptionEngine}
 \end{longlisting}
 
@@ -1682,19 +1868,19 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="IndexCreditDefaultSwapOption">
-    <Model>DiscountedCashflows</Model>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>LognormalAdjustedIndexSpread</Model>
     <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
+    <Engine>NumericalIntegrationEngine</Engine>
     <EngineParameters>
-        <Parameter name="Curve">Index</Parameter>
-        <Parameter name="FepCurve">Index</Parameter>
-        <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
-</Product>
+  </Product>
 \end{minted}
-\caption{Configuration for Product CreditDefaultSwap, Model DiscountedCashflows, Engine MidPointIndexCdsEngine}
+\caption{Configuration for Product IndexCreditDefaultSwapOption, Model LognormalAdjustedIndexSpread, Engine NumericalIntegrationEngine}
 \label{lst:peconfig_CreditDefaultSwapOption_LognormalAdjustedIndexSpread_NumericalIntegrationEngine}
 \end{longlisting}
 
@@ -1877,7 +2063,7 @@ The parameters have the following meaning:
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Prooduct type="CMS">
+<Product type="CMS">
     <Model>LinearTSR</Model>
     <ModelParameters/>
     <Engine>LinearTSRPricer</Engine>
@@ -1924,7 +2110,7 @@ The parameters have the following meaning:
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
 \item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
 \item recoveryRateGrid: recovery rate grid for the recovery rate grid
-\item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
+\item recoveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
 \item nSimulations: number of simulations in the Monte Carlo Simulation
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
@@ -2149,7 +2335,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2253,7 +2439,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2334,7 +2520,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2464,7 +2650,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -2550,11 +2736,24 @@ Used by trade type: CommoditySpreadOption
 
 Available Model/Engine pairs: BlackScholes/CommoditySpreadOptionEngine
 
+Model Parameters:
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities use Bachelier model, lognormal volatilities use Kirk Approximation)
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use Kirk approximation where both underlyings following a shifted lognormal process, if needed and possible input vols are converted into a shifted lognormal vols with a given displacement.
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
 Engine description:
 
-BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Kirk
-approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two commodities
-resp. the intra-asset correlation between two future contracts is parametrized as
+BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Bachelier model or the Kirk
+approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two different commodities are
+taken from correlation termstructure and the the intra-asset correlation between two future contracts of the same underlying (calendar spread) 
+is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$
 
@@ -2568,14 +2767,33 @@ The parameters have the following meaning:
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
+You can set \texttt{beta}, \texttt{volatility} and \texttt{displacement} for each underlying or spread pair individually:
+\begin{itemize}
+    \item \texttt{beta\_NYMEX:CL} sets beta for WTI calendar spreads.
+    \item For spreads between two different underlyings, use \texttt{volatility\_underlying1\_underlying2} as the parameter name.
+\end{itemize}
+
+Example configuration:
+\begin{itemize}
+    \item NYMEX:CL calendar spreads use the Bachelier model (\texttt{Volatility = normal}) with beta 3.05.
+    \item All other calendar spreads use the Kirk approximation (\texttt{Volatility = lognormal}) with beta 2.05.
+    \item Spreads between NYMEX:CL and ICE:B also use the Bachelier model.
+    \item All other spread pairs default to use the Kirk approximation.
+\end{itemize}
+
+
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="CommoditySpreadOption">
     <Model>BlackScholes</Model>
-    <ModelParameters/>
+    <ModelParameters>
+        <Parameter name="Volatility_NYMEX:CL">normal</Parameter>
+        <Parameter name="Volatility_NYMEX:CL_ICE:B">normal</Parameter>
+    </ModelParameters>
     <Engine>CommoditySpreadOptionEngine</Engine>
     <EngineParameters>
         <Parameter name="beta">2.05</Parameter>
+        <Parameter name="beta_NYMEX:CL">3.05</Parameter>
         <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
     </EngineParameters>
     </Product>
@@ -2591,6 +2809,24 @@ The parameters have the following meaning:
 Used by trade type: CommodityOption
 
 Available Model/Engine pairs: BlackScholes/AnalyticEuropeanEngine
+
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+\end{itemize}
 
 Engine description:
 
@@ -2626,6 +2862,24 @@ Used by trade type: CommodityOption if a future is referenced
 
 Available Model/Engine pairs: BlackScholes/AnalyticEuropeanForwardEngine
 
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+\end{itemize}
+
 Engine description:
 
 BlackScholes/AnalyticEuropeanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in listing
@@ -2660,6 +2914,24 @@ Used by trade type: CommodityOption if cash settled
 
 Available Model/Engine pairs: BlackScholes/AnalyticCashSettledEuropeanEngine
 
+Model Parameters
+\begin{itemize}
+    \item Volatility [optional]: Selects the pricing model. If omitted, defaults to AsInputVolatilityType.
+    \begin{itemize}
+        \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
+        \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+    \end{itemize}
+    \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
+\end{itemize}
+
+You can set \texttt{volatility} and \texttt{displacement} for each underlying individually:
+\begin{itemize}
+    \item \texttt{volatility\_NYMEX:CL} sets the model used to price options with NYMEX:CL as underlying.
+    \item \texttt{displacement\_NYMEX:CL} set the displacement parameter for the shifted Black model for options with NYMEX:CL as underlying.
+\end{itemize}
+
 Engine description:
 
 BlackScholes/AnalyticCashSettledEuropeanEngine builds a AnalyticCashSettledEuropeanEngine. A sample configuration is shown in listing
@@ -2690,7 +2962,7 @@ The parameters have the following meaning:
 \subsection{Product Type: CommodityOptionAmerican}
 %--------------------------------------------------------
 
-Used by trade type: CommodityOption if exercise stly is american
+Used by trade type: CommodityOption if exercise style is american
 
 Available Model/Engine pairs:
 
@@ -2899,7 +3171,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3003,7 +3275,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3084,7 +3356,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3214,7 +3486,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -3505,7 +3777,7 @@ The parameters have the following meaning:
     </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EquiytForward, Model DiscountedCashflows, Engine DiscountingEquityForwardEngine}
+\caption{Configuration for Product EquityForward, Model DiscountedCashflows, Engine DiscountingEquityForwardEngine}
 \label{lst:peconfig_EquityForward_DiscountedCashflows_DiscountingEquityForwardEngine}
 \end{longlisting}
 
@@ -3539,7 +3811,7 @@ The parameters have the following meaning:
   </EngineParameters>
 </Product>
 \end{minted}
-\caption{Configuration for Product EquiytFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
+\caption{Configuration for Product EquityFutureOption, Model BlackScholes, Engine AnalyticEuropeanForwardEngine}
 \label{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwardEngine}
 \end{longlisting}
 
@@ -3693,7 +3965,7 @@ The parameters have the following meaning:
 \subsection{Product Type: EquityOptionAmerican}
 %--------------------------------------------------------
 
-Used by trade type: EquityOption if exercise stly is american
+Used by trade type: EquityOption if exercise style is american
 
 Available Model/Engine pairs:
 
@@ -3764,6 +4036,55 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: QuantoEquityOptionAmerican}
+%--------------------------------------------------------
+
+Used by trade type: EquityOption if exercise style is american and the payoff Currency is different than currency the underlying equity is quoted in.
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+\item BlackScholesMerton/FdBlackScholesVanillaEngine
+\end{itemize}
+
+Engine description:
+
+BlackScholesMerton/FdBlackScholesVanillaEngine builds a FdBlackScholesVanillaEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Scheme: The finite difference scheme to use
+\item TimeStepsPerYear: Time grid specification
+\item XGrid: State grid specification
+\item DampingSteps: Number of damping steps taken by FD solver
+\item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
+\item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
+\item SensitivityTemplate [optional]: the sensitivity template to use 
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="QuantoEquityOptionAmerican">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+        <Parameter name="Scheme">Douglas</Parameter>
+        <Parameter name="TimeGridPerYear">100</Parameter>
+        <Parameter name="XGrid">100</Parameter>
+        <Parameter name="DampingSteps">0</Parameter>
+        <Parameter name="EnforceMonotoneVariance">true</Parameter>
+        <Parameter name="SensitivityTemplate">COMM_FD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product QuantoEquityOptionAmerican, Model BlackScholesMerton, Engine FdBlackScholesVanillaEngine}
+\label{lst:peconfig_EquityOptionAmerican_BlackScholesMerton_FdBlackScholesVanillaEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsection{Product Type: EquityTouchOption, FxTouchOption}
 %--------------------------------------------------------
 
@@ -3816,26 +4137,65 @@ in listing \ref{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardB
 The parameters have the following meaning:
 
 \begin{itemize}
-\item TimestepPeriod: discretization interval for zero bond pricing
-\item SensitivityTemplate [optional]: the sensitivity template to use
 \item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
+\item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
+  as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
+\item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
+  discounting of intermediate bond cashflows.
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="ForwardBond">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">false</Parameer>
+    </ModelParameters>
     <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
         <Parameter name="SpreadOnIncomeCurve">true</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
 \caption{Configuration for Product ForwardBond, Model DiscountedCashflows, Engine DiscountingForwardBondEngine}
 \label{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingForwardBondEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsection{Product Type: BondFuture}
+%--------------------------------------------------------
+
+Used by trade type: BondFuture
+
+Available Model/Engine pairs: DiscountedCashflows/DiscountingBondFutureEngine
+
+Engine description:
+
+DiscountedCashflows/DiscountingBondFutureEngine builds a DiscountingBondFutureEngine. A sample configuration is shown
+in listing \ref{lst:peconfig_BondFuture_DiscountedCashflows_DiscountingBondFutureEngine}.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="BondFuture">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingBondFutureEngine</Engine>
+    <EngineParameters/>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product BondFuture, Model DiscountedCashflows, Engine BondFutureEngine}
+\label{lst:peconfig_ForwardBond_DiscountedCashflows_DiscountingBondFutureEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -3961,7 +4321,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4065,7 +4425,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4146,7 +4506,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4276,7 +4636,7 @@ The parameters have the following meaning:
 \item AntitheticVariate: whether to use antithetic variates for MC simulation
 \item ControlVariate: whether to use control variate for MC simulation
 \item RequiredSamples: minimum number of samples for MC simulation, if 0 (not specified) RequiredTolerance must be given
-\item RequiredTolernace: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
+\item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -4641,7 +5001,7 @@ The parameters have the following meaning:
 \subsection{Product Type: FxOptionAmerican}
 %--------------------------------------------------------
 
-Used by trade type: FxOption if exercise stly is american
+Used by trade type: FxOption if exercise style is american
 
 Available Model/Engine pairs:
 
@@ -5193,6 +5553,10 @@ In addition to product specific settings there is also a block with global param
 \item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
   LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
   anyway. Optional, defaults to false.
+\item AllowModelFallbacks: If set to true a missing market object during the build of a model will not cause the build
+  to fail. Instead, a fallback will be used. For example, if a volatility surface is missing during the build of the LGM
+  or CAM model, a zero volatility surface might be used as a fallback and the calculation continues. Optional, defaults
+  to false.
 \item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
   only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
   true.

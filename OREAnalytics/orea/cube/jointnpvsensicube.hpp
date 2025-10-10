@@ -70,6 +70,8 @@ public:
     void removeT0(Size id) override;
     void remove(Size id, Size sample, bool useT0) override;
 
+    bool usesDoublePrecision() const override;
+
 private:
     const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>& cubeAndId(Size id) const;
     std::map<std::string, Size> idIdx_;

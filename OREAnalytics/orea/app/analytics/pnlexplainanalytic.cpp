@@ -63,8 +63,6 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     auto pnlexplainAnalytic = static_cast<PnlExplainAnalytic*>(analytic());
     QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PnlExplainAnalytic");
 
@@ -118,10 +116,10 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
         QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
             QuantLib::ext::make_shared<HistoricalScenarioLoader>(histScens, pnlDates);
-        
+
         auto zeroScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
-            scenarioLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(), adjFactors,
-            ReturnConfiguration(), "hs_");
+            scenarioLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(),
+            QuantLib::ext::make_shared<ReturnConfiguration>(), adjFactors, "hs_");
 
         zeroScenarios->baseScenario() = t0Scenario;
 
@@ -155,9 +153,10 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         } else
             scenarios = zeroScenarios;
     } else {
-        auto scenarios = buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors, pnlDates,
-                                                          analytic()->configurations().simMarketParams,
-                                                          analytic()->configurations().todaysMarketParams);
+        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+        auto scenarios = buildHistoricalScenarioGenerator(
+            inputs_->scenarioReader(), adjFactors, pnlDates, analytic()->configurations().simMarketParams,
+            analytic()->configurations().todaysMarketParams, defaultReturnConfig);
         scenarios->baseScenario() = t0Scenario;
     }
 
@@ -169,16 +168,18 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
     auto pnlExplainReport =
         ext::make_shared<PnlExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
-                                           period, pnlReport, scenarios, std::move(sensiArgs), nullptr, nullptr, true);
+                                           period, pnlReport, scenarios, std::move(sensiArgs), nullptr, nullptr, true, inputs_->riskFactorLevel());
 
     LOG("Call PNL Explain calculation");
     CONSOLEW("Risk: PNL Explain Calculation");
     ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
     QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainOutput = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     reports->add(pnlReport);
+    reports->add(sensireport);
+    reports->add(pnlExplainOutput);
 
     pnlExplainReport->calculate(reports);
-    analytic()->addReport(label_, "pnl_explain", pnlReport);
+    analytic()->addReport(label_, "pnl_explain", pnlExplainOutput);
 }
 
 } // namespace analytics

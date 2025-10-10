@@ -89,7 +89,8 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const bool useSpreadedTermStructures, const bool cacheSimData,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter,
     const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
-    const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool handlePseudoCurrenciesTodaysMarket,
     const bool handlePseudoCurrenciesSimMarket, const bool recalibrateModels,
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                                    const std::vector<QuantLib::Date>&,
@@ -123,7 +124,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     if (!cubeFactory_)
         cubeFactory_ = [](const QuantLib::Date& asof, const std::set<std::string>& ids,
                           const std::vector<QuantLib::Date>& dates, const Size samples) {
-            return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionInMemoryCube>(asof, ids, dates, samples);
+            return QuantLib::ext::make_shared<ore::analytics::InMemoryCubeOpt<double>>(asof, ids, dates, samples);
         };
 
     if (!nettingSetCubeFactory_)

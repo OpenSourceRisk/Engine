@@ -180,7 +180,7 @@ public:
     QuantLib::ext::shared_ptr<Scenario> baseScenario() const { return scenarios_.front(); }
 
 protected:
-    const QuantLib::ext::shared_ptr<Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenario_;
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     const QuantLib::ext::weak_ptr<ScenarioSimMarket> simMarket_;
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios_;
@@ -192,17 +192,21 @@ protected:
     std::map<std::string, RiskFactorKey> factorToKey_;
 };
 
+// A simple scenario generator that returns scenarios from a scenario loader
+class ShiftScenarioLoaderGenerator : public ShiftScenarioGenerator {
+public:
+    ShiftScenarioLoaderGenerator(const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+                                  const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                  const QuantLib::ext::weak_ptr<ScenarioSimMarket>& simMarket);
+
+    const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader() const { return scenarioReader_; }
+
+private:
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+};
+
 std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription);
-
-//! Retrieve the RiskFactorKey and index description from the result of ScenarioDescription::factor1() or
-//! ScenarioDescription::factor2()
-std::pair<RiskFactorKey, std::string> deconstructFactor(const std::string& factor);
-
-//! Reconstruct the string description from a risk factor \p key and its index description \p desc
-std::string reconstructFactor(const RiskFactorKey& key, const std::string& desc);
-
-//! risk factor key parser that takes into account additional tokens occurring in sensitivity risk factor keys
-QuantLib::ext::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
 
 inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs,
                       const ShiftScenarioGenerator::ScenarioDescription& rhs) {

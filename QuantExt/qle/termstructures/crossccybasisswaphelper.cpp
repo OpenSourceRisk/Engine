@@ -15,34 +15,38 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/utilities/null_deleter.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
-
-#include <boost/make_shared.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 
 CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
     const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
-    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& flatIndex, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& spreadIndex,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& flatIndex,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& spreadIndex,
     const Handle<YieldTermStructure>& flatDiscountCurve, const Handle<YieldTermStructure>& spreadDiscountCurve,
-    bool eom, bool flatIsDomestic, boost::optional<Period> flatTenor, boost::optional<Period> spreadTenor,
-    Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing, const Calendar& flatCalendar,
-    const Calendar& spreadCalendar, const std::vector<Natural>& spotFXSettleDaysVec,
+    const bool flatIndexGiven, const bool spreadIndexGiven, const bool flatDiscountCurveGiven,
+    const bool spreadDiscountCurveGiven, bool eom, bool flatIsDomestic, boost::optional<Period> flatTenor,
+    boost::optional<Period> spreadTenor, Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing,
+    const Calendar& flatCalendar, const Calendar& spreadCalendar, const std::vector<Natural>& spotFXSettleDaysVec,
     const std::vector<Calendar>& spotFXSettleCalendarVec, Size paymentLag, Size flatPaymentLag,
     boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
     boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged, boost::optional<bool> flatIncludeSpread,
     boost::optional<Period> flatLookback, boost::optional<Size> flatFixingDays, boost::optional<Size> flatRateCutoff,
-    boost::optional<bool> flatIsAveraged, const bool telescopicValueDates)
+    boost::optional<bool> flatIsAveraged, const bool telescopicValueDates, const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
-      spreadDiscountCurve_(spreadDiscountCurve), eom_(eom), flatIsDomestic_(flatIsDomestic),
-      flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()),
+      spreadDiscountCurve_(spreadDiscountCurve), flatIndexGiven_(flatIndexGiven), spreadIndexGiven_(spreadIndexGiven),
+      flatDiscountCurveGiven_(flatDiscountCurveGiven), spreadDiscountCurveGiven_(spreadDiscountCurveGiven), eom_(eom),
+      flatIsDomestic_(flatIsDomestic), flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()),
       spreadTenor_(spreadTenor ? *spreadTenor : spreadIndex_->tenor()), spreadOnFlatLeg_(spreadOnFlatLeg),
       flatGearing_(flatGearing), spreadGearing_(spreadGearing), flatCalendar_(flatCalendar),
       spreadCalendar_(spreadCalendar), spotFXSettleDaysVec_(spotFXSettleDaysVec),
@@ -50,17 +54,12 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
       isAveraged_(isAveraged), flatIncludeSpread_(flatIncludeSpread), flatLookback_(flatLookback),
       flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff), flatIsAveraged_(flatIsAveraged),
-      telescopicValueDates_(telescopicValueDates) {
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();
 
-    bool flatIndexHasCurve = !flatIndex_->forwardingTermStructure().empty();
-    bool spreadIndexHasCurve = !spreadIndex_->forwardingTermStructure().empty();
-    bool haveFlatDiscountCurve = !flatDiscountCurve_.empty();
-    bool haveSpreadDiscountCurve = !spreadDiscountCurve_.empty();
-
-    QL_REQUIRE(!(flatIndexHasCurve && spreadIndexHasCurve && haveFlatDiscountCurve && haveSpreadDiscountCurve),
+    QL_REQUIRE(!(flatIndexGiven_ && spreadIndexGiven_ && flatDiscountCurveGiven_ && spreadDiscountCurveGiven_),
                "Have all curves, "
                "nothing to solve for.");
 
@@ -80,13 +79,13 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
 
     /* Link the curve being bootstrapped to the index if the index has
        no projection curve */
-    if (flatIndexHasCurve && haveFlatDiscountCurve) {
-        if (!spreadIndexHasCurve) {
+    if (flatIndexGiven_ && flatDiscountCurveGiven_) {
+        if (!spreadIndexGiven_) {
             spreadIndex_ = spreadIndex_->clone(termStructureHandle_);
             spreadIndex_->unregisterWith(termStructureHandle_);
         }
-    } else if (spreadIndexHasCurve && haveSpreadDiscountCurve) {
-        if (!flatIndexHasCurve) {
+    } else if (spreadIndexGiven_ && spreadDiscountCurveGiven_) {
+        if (!flatIndexGiven_) {
             flatIndex_ = flatIndex_->clone(termStructureHandle_);
             flatIndex_->unregisterWith(termStructureHandle_);
         }
@@ -166,32 +165,9 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
-
-/* May need to adjust latestDate_ if you are projecting libor based
-   on tenor length rather than from accrual date to accrual date. */
-    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
-        if (termStructureHandle_ == spreadIndex_->forwardingTermStructure()) {
-            Size numCashflows = swap_->leg(0).size();
-            if (numCashflows > 2) {
-                QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                    QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(0)[numCashflows - 2]);
-                Date fixingValueDate = spreadIndex_->valueDate(lastFloating->fixingDate());
-                Date endValueDate = spreadIndex_->maturityDate(fixingValueDate);
-                latestDate_ = std::max(latestDate_, endValueDate);
-            }
-        }
-        if (termStructureHandle_ == flatIndex_->forwardingTermStructure()) {
-            Size numCashflows = swap_->leg(1).size();
-            if (numCashflows > 2) {
-                QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                    QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[numCashflows - 2]);
-                Date fixingValueDate = flatIndex_->valueDate(lastFloating->fixingDate());
-                Date endValueDate = flatIndex_->maturityDate(fixingValueDate);
-                latestDate_ = std::max(latestDate_, endValueDate);
-            }
-        }
-    }
+    maturityDate_ = swap_->maturityDate();
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {!spreadIndexGiven_, !flatIndexGiven_});
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
@@ -201,12 +177,12 @@ void CrossCcyBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     termStructureHandle_.linkTo(temp, observer);
 
-    if (flatDiscountCurve_.empty())
+    if (!flatDiscountCurveGiven_)
         flatDiscountRLH_.linkTo(temp, observer);
     else
         flatDiscountRLH_.linkTo(*flatDiscountCurve_, observer);
 
-    if (spreadDiscountCurve_.empty())
+    if (!spreadDiscountCurveGiven_)
         spreadDiscountRLH_.linkTo(temp, observer);
     else
         spreadDiscountRLH_.linkTo(*spreadDiscountCurve_, observer);

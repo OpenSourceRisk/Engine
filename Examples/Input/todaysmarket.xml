@@ -3,21 +3,26 @@
   <Configuration id="default">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
     <YieldCurvesId>xois_eur</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="collateral_inccy">
     <DiscountingCurvesId>ois</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
     <YieldCurvesId>ois</YieldCurvesId>
   </Configuration>
   <Configuration id="xois_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="xois_usd">
     <DiscountingCurvesId>xois_usd</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
     <YieldCurvesId>inccy_swap</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <!-- yield curve definition (in ccy swap discounting) -->
   <YieldCurves id="default">

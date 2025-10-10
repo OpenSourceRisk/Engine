@@ -19,33 +19,19 @@
 #ifndef orea_scenario_i
 #define orea_scenario_i
 
+#include qle_termstructures.i
 %include ored_xmlutils.i
 
 %{
-
-using ore::analytics::parseShiftScheme;
-using ore::analytics::parseShiftType;
-using ore::analytics::ShiftScheme;
-using ore::analytics::ShiftType;
-using ore::analytics::parseShiftScheme;
-using ore::analytics::parseShiftType;
 using ore::analytics::StressTestScenarioData;
 using ore::analytics::SensitivityScenarioData;
-using ore::analytics::RiskFactorKey;
 using QuantLib::Period;
 using QuantLib::Real;
 using ore::data::XMLSerializable;
-
 %}
 
 %template(PeriodVectorRealMap) std::map<Period, std::vector<Real>>;
 %template(PeriodPairsRealMap) std::map<pair<Period, Period>, Real>;
-
-enum class ShiftScheme { Forward, Backward, Central };
-enum class ShiftType { Absolute, Relative };
-
-ShiftScheme parseShiftScheme(const std::string& s);
-ShiftType parseShiftType(const std::string& s);
 
 %shared_ptr(StressTestScenarioData);
 %shared_ptr(StressTestScenarioData::CurveShiftData);

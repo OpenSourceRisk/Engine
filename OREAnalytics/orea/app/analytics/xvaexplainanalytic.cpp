@@ -284,7 +284,7 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
     auto sw = ScenarioWriter(nullptr, scenarioReport);
     sw.writeScenario(todayScenario, true);
     sw.writeScenario(mporScenario, false);
-    analytic()->reports()[label()]["par_scenarios"] = scenarioReport;
+    analytic()->addReport(label(), "par_scenarios", scenarioReport);
 
     Settings::instance().evaluationDate() = inputs_->asof();
     const auto& simParameters = analytic()->configurations().simMarketParams;

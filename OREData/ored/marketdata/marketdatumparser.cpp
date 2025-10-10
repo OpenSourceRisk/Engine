@@ -68,6 +68,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
         {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
         {"BOND", MarketDatum::InstrumentType::BOND},
+        {"BOND_FUTURE", MarketDatum::InstrumentType::BOND_FUTURE},
         {"BOND_OPTION", MarketDatum::InstrumentType::BOND_OPTION},
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
@@ -147,18 +148,23 @@ static FXForwardQuote::FxFwdString parseFxString(const string& s) {
     }
 }
 
-boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString> parseFxPeriod(const string& s) {
-    bool isPeriod = isdigit(s.front());
-    if (isPeriod)
-        return parsePeriod(s);
-    else
+boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> parseFxPeriod(const string& s) {
+    Date d;
+    Period p;
+    if (tryParse(s, d, std::function<Date(const string&)>(parseDate))) {
+        return d;
+    } else if (tryParse(s, p, std::function<Period(const string&)>(parsePeriod))) {
+        return p;
+    } else {
         return parseFxString(s);
+    }
 }
 
 namespace {
 
 struct FxTenorGetter : boost::static_visitor<Period> {
     FxTenorGetter() {}
+    Period operator()(const Date&) const { QL_FAIL("FxTenorGetter: internal error, can not convert date to period"); }
     Period operator()(const Period& p) const { return p; }
     Period operator()(const FXForwardQuote::FxFwdString& p) const { 
         // These are all overnight rates
@@ -169,8 +175,12 @@ struct FxTenorGetter : boost::static_visitor<Period> {
 struct FxStartTenorGetter : boost::static_visitor<Period> {
     
     FxStartTenorGetter(const QuantLib::ext::shared_ptr<FXConvention>& fxConvention) :
-        fxConvention(fxConvention) {}    
-    
+        fxConvention(fxConvention) {}
+
+    Period operator()(const Date&) const {
+        QL_FAIL("FxStartTenorGetter: internal error, can not convert date to period");
+    }
+
     Period operator()(const Period& p) const { 
         Integer days = 0;
         if (fxConvention)
@@ -191,9 +201,17 @@ struct FxStartTenorGetter : boost::static_visitor<Period> {
     QuantLib::ext::shared_ptr<FXConvention> fxConvention;
 };
 
+struct FxDateGetter : boost::static_visitor<Date> {
+    Date operator()(const Period& p) const { return Date(); }
+    Date operator()(const FXForwardQuote::FxFwdString& p) const { return Date(); }
+    Date operator()(const Date& d) const { return d; }
+};
+
 struct FxFwdStringCompare : boost::static_visitor<bool> {
 
     FxFwdStringCompare(FXForwardQuote::FxFwdString fxFwdString) : fxFwdString(fxFwdString) {}
+
+    bool operator()(const Date&) const { return false; }
 
     bool operator()(const Period& p) const { return false; }
 
@@ -206,18 +224,34 @@ struct FxFwdStringCompare : boost::static_visitor<bool> {
 
 } // namespace
 
-QuantLib::Period fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term) {
+QuantLib::Period
+fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term) {
     return boost::apply_visitor(FxTenorGetter(), term);
 }
 
-QuantLib::Period fxFwdQuoteStartTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
-                                      const QuantLib::ext::shared_ptr<FXConvention>& fxConvention) {
+QuantLib::Period
+fxFwdQuoteStartTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term,
+                     const QuantLib::ext::shared_ptr<FXConvention>& fxConvention) {
     return boost::apply_visitor(FxStartTenorGetter(fxConvention), term);
 }
 
-bool matchFxFwdStringTerm(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
-                     const FXForwardQuote::FxFwdString& fxfwdString) {
+QuantLib::Date
+fxFwdQuoteDate(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term) {
+    return boost::apply_visitor(FxDateGetter(), term);
+}
+
+bool matchFxFwdStringTerm(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term,
+                          const FXForwardQuote::FxFwdString& fxfwdString) {
     return boost::apply_visitor(FxFwdStringCompare(fxfwdString), term);
+}
+
+bool matchFxFwdDate(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term,
+                    const Date& d) {
+    return fxFwdQuoteDate(term) == d;
+}
+
+bool isFxFwdDateBased(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term) {
+    return fxFwdQuoteDate(term) != Date();
 }
 
 //! Function to parse a market datum
@@ -545,7 +579,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& unitCcy = tokens[2];
         const string& ccy = tokens[3];
-        boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString> term = parseFxPeriod(tokens[4]);
+        boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> term = parseFxPeriod(tokens[4]);
         return QuantLib::ext::make_shared<FXForwardQuote>(value, asof, datumName, quoteType, unitCcy, ccy, term);
     }
 
@@ -666,14 +700,30 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
     }
 
     case MarketDatum::InstrumentType::BOND: {
-        QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
-        if (quoteType == MarketDatum::QuoteType::YIELD_SPREAD)
+        if (quoteType == MarketDatum::QuoteType::YIELD_SPREAD) {
             return QuantLib::ext::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
-        else if (quoteType == MarketDatum::QuoteType::PRICE)
+        } else if (quoteType == MarketDatum::QuoteType::PRICE) {
             return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
-        else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR)
-            return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID);
+        } else {
+            QL_FAIL("invalid quote type " << quoteType << " for instrument type BOND in datum " << datumName
+                                          << ", expected YIELD_SPREAD or PRICE");
+        }
+    }
+
+    case MarketDatum::InstrumentType::BOND_FUTURE: {
+        const string& securityID = tokens[2];
+        if (quoteType == MarketDatum::QuoteType::PRICE) {
+            return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
+        } else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR) {
+            QL_REQUIRE(tokens.size() >= 3, "4 tokens expected in " << datumName);
+            std::string futureContract = tokens[3];
+            return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID,
+                                                                          futureContract);
+        } else {
+            QL_FAIL("invalid quote type " << quoteType << " for instrument type BOND_FUTURE in datum " << datumName
+                                          << ", expected PRICE or CONVERSION_FACTOR");
+        }
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {
@@ -787,11 +837,20 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // Expects one of the following forms:
         // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>
         // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>/<OT>
-        // where QT = RATE_LNVOL or PRICE and OT = C (for Call) or P (for Put)
+        // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/DEL/<DELTA_TYPE>/<PUT/CALL>/<DELTA>
+        // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/ATM/<ATM_TYPE>/DEL/<DELTA_TYPE>
+        // COMMODITY_OPTION/SHIFT/<COMDTY_NAME>
+        // where QT = RATE_NVOL, RATE_LNVOL, RATE_SLNVOL or PRICE and OT = C (for Call) or P (for Put)
         using QT = MarketDatum::QuoteType;
-        QL_REQUIRE(tokens.size() >= 6, "At least 6 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == QT::RATE_LNVOL || quoteType == QT::PRICE,
-                   "Quote type for " << datumName << " should be 'RATE_LNVOL' or 'PRICE'");
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() >= 6, "3 or at least 6 tokens are expected in " << datumName);
+        QL_REQUIRE(((quoteType == QT::RATE_LNVOL || quoteType == QT::PRICE || quoteType == QT::RATE_NVOL ||
+                     quoteType == QT::RATE_SLNVOL) && tokens.size() >= 6) ||
+                       (quoteType == QT::SHIFT && tokens.size() == 3),
+                   "Quote type for " << datumName << " should be 'RATE_LNVOL', 'RATE_NVOL', 'RATE_SLNVOL', 'PRICE' or 'SHIFT'");
+
+        if (quoteType == QT::SHIFT) {
+            return QuantLib::ext::make_shared<CommodityOptionShiftQuote>(value, asof, datumName, quoteType, tokens[2]);
+        }
 
         QuantLib::ext::shared_ptr<Expiry> expiry = parseExpiry(tokens[4]);
 

@@ -56,19 +56,16 @@ void BlackBondOptionEngine::calculate() const {
 
     QL_REQUIRE(!underlyingReferenceCurve_.empty(), "BlackBondOptionEngine::calculate(): empty reference curve");
 
-    auto fwdBondEngine = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(
-        underlyingReferenceCurve_, defaultCurve_, recoveryRate_, securitySpread_, timestepPeriod_);
-    auto bondNpvResults = fwdBondEngine->calculateNpv(exerciseDate, arguments_.underlying->settlementDate(exerciseDate),
-                                              arguments_.underlying->cashflows());
-    
-    for (auto& cfRes : bondNpvResults.cashflowResults) {
+    std::vector<CashFlowResults> cfResults;
+    Real fwdNpv = forwardPrice(arguments_.underlying, exerciseDate, arguments_.underlying->settlementDate(exerciseDate),
+                               true, &cfResults)
+                      .first;
+
+    for (auto& cfRes : cfResults) {
         cfRes.legNumber = 0;
         cfRes.type = "Underlying_Bond__" + cfRes.type;
     }
-    
-    Real fwdNpv = bondNpvResults.npv;
 
-   
     Real knockOutProbability = defaultCurve_.empty() ? 0.0 : 1.0 - defaultCurve_->survivalProbability(exerciseDate);
 
     // adjust forward if option does not knock out (option is on the recovery value if bond defaults before expiry)
@@ -79,11 +76,10 @@ void BlackBondOptionEngine::calculate() const {
     }
 
     // hard code yield compounding convention to annual
-    Rate fwdYtm = CashFlows::yield(arguments_.underlying->cashflows(), fwdNpv, volatility_->dayCounter(), Compounded,
-                                   Annual, false, exerciseDate, exerciseDate);
-    InterestRate fwdRate(fwdYtm, volatility_->dayCounter(), Compounded, Annual);
-    Time fwdDur = CashFlows::duration(arguments_.underlying->cashflows(), fwdRate, Duration::Modified, false,
-                                      exerciseDate, exerciseDate);
+    Rate fwdYtm = QuantExt::yield(arguments_.underlying, fwdNpv / arguments_.underlying->notional(exerciseDate) * 100.0,
+                                  volatility_->dayCounter(), Compounded, Annual, exerciseDate, exerciseDate);
+    Time fwdDur = QuantExt::duration(arguments_.underlying, fwdYtm, volatility_->dayCounter(), Compounded, Annual,
+                                     Duration::Modified, exerciseDate, exerciseDate);
 
     QL_REQUIRE(arguments_.putCallSchedule.size() == 1, "BlackBondOptionEngine: only European bond options allowed");
 
@@ -148,10 +144,10 @@ void BlackBondOptionEngine::calculate() const {
     optionFlow.discountFactor = discountCurve_->discount(exerciseDate);
     optionFlow.presentValue = optionValue;
 
-    bondNpvResults.cashflowResults.push_back(optionFlow);
+    cfResults.push_back(optionFlow);
 
     results_.additionalResults["knockOutProbability"] = knockOutProbability;
-    results_.additionalResults["cashFlowResults"] = bondNpvResults.cashflowResults;
+    results_.additionalResults["cashFlowResults"] = cfResults;
     results_.additionalResults["CashStrike"] = cashStrike;
     results_.additionalResults["FwdCashPrice"] = fwdNpv;
     results_.additionalResults["PriceVol"] = fwdPriceVol;

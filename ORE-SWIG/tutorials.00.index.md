@@ -12,7 +12,5 @@ ORE python wrappers and wheels.
 
 [Building ORE Python Wrappers on Posix Systems (e.g. MacOS and Linux)](tutorials.04.build_posix.md)
 
-[Managing Wheels](tutorials.05.wheels.md)
-
 [Run Jupyter Notebook Examples using the published ORE Python module](tutorials.06.notebooks.md)
 

@@ -71,6 +71,8 @@ FILE* FileIO::fopen(const char* filename, const char* mode) {
             em.set("retry_count", i);
             Real backoffMillis = currentBackoff * 1000;
             em.set("retry_interval", backoffMillis);
+            em.set("errno", errno);
+            em.set("strerror", std::string(std::strerror(errno)));
             em.log();
             std::this_thread::sleep_for(std::chrono::duration<Real>(currentBackoff));
             Real nextBackoff = currentBackoff * 2;

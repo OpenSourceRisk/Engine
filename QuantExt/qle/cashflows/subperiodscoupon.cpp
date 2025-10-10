@@ -63,6 +63,9 @@ SubPeriodsCoupon1::SubPeriodsCoupon1(const Date& paymentDate, Real nominal, cons
     for (Size i = 0; i < numPeriods_; ++i) {
         accrualFractions_[i] = dayCounter.yearFraction(valueDates_[i], valueDates_[i + 1]);
     }
+
+    // set fixing end date
+    fixingEndDate_ = index_->maturityDate(*std::next(valueDates_.end(), -2));
 }
 
 const std::vector<Rate>& SubPeriodsCoupon1::indexFixings() const {
@@ -84,6 +87,8 @@ void SubPeriodsCoupon1::accept(AcyclicVisitor& v) {
         FloatingRateCoupon::accept(v);
     }
 }
+
+const Date& SubPeriodsCoupon1::fixingEndDate() const { return fixingEndDate_; }
 
 SubPeriodsLeg1::SubPeriodsLeg1(const Schedule& schedule, const QuantLib::ext::shared_ptr<InterestRateIndex>& index)
     : schedule_(schedule), index_(index), notionals_(std::vector<Real>(1, 1.0)), paymentAdjustment_(Following),

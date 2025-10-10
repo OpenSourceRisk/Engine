@@ -74,9 +74,9 @@ class EngineFactory {
                   const ext::shared_ptr<Market>& market,
                   const std::map<MarketContext, std::string>& configurations = std::map<MarketContext, std::string>(),
                   const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                  const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
-                  const bool allowOverwrite = false);
+                  const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                     QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
+                  const std::vector<ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
 };
 
 // TradeFactory just needed as a return type, no construction, no member functions.
@@ -130,7 +130,9 @@ class Portfolio : public XMLSerializable {
     const std::map<std::string, ext::shared_ptr<Trade>>& trades() const;
     bool remove(const std::string& tradeID);
     void fromFile(const std::string& fileName);
-    void fromXMLString(const std::string& xmlString);
+    void fromXMLString(const std::string& xmlString);    
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     std::string toXMLString();
     void build(const ext::shared_ptr<EngineFactory>& factory,
                const std::string& context = "unspecified",

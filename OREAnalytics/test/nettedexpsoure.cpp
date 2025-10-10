@@ -356,8 +356,8 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
     // Calculate Cube
     boost::timer::cpu_timer t;
     //BOOST_TEST_MESSAGE("dg->numDates() " << dateGrid->valuationDates().size()<<", " <<"dg->dates() "<<dateGrid->dates().size());
-    QuantLib::ext::shared_ptr<NPVCube> cube =
-        QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+        today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
 
     vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
     QuantLib::ext::shared_ptr<NPVCalculator> npvCalc = QuantLib::ext::make_shared<NPVCalculator>("EUR");
@@ -501,6 +501,16 @@ std::map<tuple<string, string, string, string, string, string>, vector<Real>> cl
 
 };
 
+class TestInputParameters : public InputParameters {
+public:
+    TestInputParameters() {}
+    std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) override {
+        return string();
+    }
+    std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory) override {
+        return string();
+    }
+};
 
 BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
 
@@ -603,11 +613,11 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         if (withCloseOutGrid[k]) {
             fileName = "scenarioData_closeout.csv";
             asd = loadAggregationScenarioData(fileName);
-            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, true, dateGrid);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, true, false, dateGrid);
         } else {
             fileName = "scenarioData.csv";
             asd = loadAggregationScenarioData(fileName);
-            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, false);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, false, false);
         }
 
         if (!withCompounding){
@@ -617,7 +627,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         }
 
         vector<string> regressors = {"EUR-EURIBOR-6M"};
-        QuantLib::ext::shared_ptr<InputParameters> inputs = QuantLib::ext::make_shared<InputParameters>();
+        QuantLib::ext::shared_ptr<InputParameters> inputs = QuantLib::ext::make_shared<TestInputParameters>();
         QuantLib::ext::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator =
             QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
                 inputs, portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);

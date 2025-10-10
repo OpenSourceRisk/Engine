@@ -40,7 +40,7 @@ EquityDoubleBarrierOption::vanillaPricingEngine(const QuantLib::ext::shared_ptr<
     setSensitivityTemplate(*eqOptBuilder);
     addProductModelEngine(*eqOptBuilder);
 
-    return eqOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
+    return eqOptBuilder->engine(equityName(), tradeCurrency(), envelope().additionalField("discount_curve", false, std::string()), expiryDate);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>

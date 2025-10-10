@@ -19,6 +19,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
+#include <orea/engine/creditindexdecomposition.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -29,18 +30,53 @@ namespace {} // namespace
 
 DecomposedSensitivityStream::DecomposedSensitivityStream(
     const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
-    std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights,
-    const std::set<std::string>& eqComDecompositionTradeIds,
-    const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities,
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
     const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
     const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket)
-    : ss_(ss), baseCurrency_(baseCurrency), defaultRiskDecompositionWeights_(defaultRiskDecompositionWeights),
-      eqComDecompositionTradeIds_(eqComDecompositionTradeIds),
-      currencyHedgedIndexQuantities_(currencyHedgedIndexQuantities), refDataManager_(refDataManager),
-      curveConfigs_(curveConfigs), ssd_(scenarioData), todaysMarket_(todaysMarket) {
+    : ss_(ss), baseCurrency_(baseCurrency), refDataManager_(refDataManager), curveConfigs_(curveConfigs),
+      ssd_(scenarioData), todaysMarket_(todaysMarket) {
     reset();
+    for (const auto& [tradeId, trade] : portfolio->trades()) {
+        bool decomposeCredit = false;
+        std::map<string, double> sensitivityDecompositionWeights;
+        const map<string, string>& additionalFields = trade->envelope().additionalFields();
+        auto itAddFields = additionalFields.find("index_decomposition");
+        bool decomposeEquityCommodities = false;
+
+        if (itAddFields != additionalFields.end() && !itAddFields->second.empty()) {
+            try {
+                decomposeEquityCommodities = ore::data::parseBool(itAddFields->second);
+            } catch (const std::exception& e) {
+                StructuredAnalyticsWarningMessage("DecomposedSensitivityStream",
+                                                  "index_decomposition field parse error",
+                                                  "Cannot parse index_decomposition field for trade: " + tradeId +
+                                                      ". Continuing without decomposition.")
+                    .log();
+            }
+            if (decomposeEquityCommodities) {
+                eqComDecompositionTradeIds_.insert(tradeId);
+            }
+        }
+        if (decomposeEquityCommodities &&
+            (trade->tradeType() == "TotalReturnSwap" || trade->tradeType() == "ContractForDifference")) {
+            std::map<std::string, double> decompositionIndexQuanities;
+            for (const auto& [datum, value] : trade->additionalData()) {
+                if (!value.empty() && boost::starts_with(datum, "underlying_quantity_")) {
+                    decompositionIndexQuanities[datum.substr(20)] = boost::any_cast<double>(value);
+                }
+            }
+            if (!decompositionIndexQuanities.empty()) {
+                currencyHedgedIndexQuantities_[tradeId] = decompositionIndexQuanities;
+            }
+        }
+
+        decomposeCreditIndex(trade, todaysMarket_, sensitivityDecompositionWeights, decomposeCredit);
+        if (decomposeCredit) {
+            defaultRiskDecompositionWeights_[tradeId] = sensitivityDecompositionWeights;
+        }
+    }
     decompose_ = !defaultRiskDecompositionWeights_.empty() || !eqComDecompositionTradeIds_.empty();
 }
 
@@ -129,7 +165,10 @@ DecomposedSensitivityStream::decomposeSurvivalProbability(const SensitivityRecor
     for (const auto& [constituent, weight] : defaultRiskDecompositionWeights_.at(record.tradeId)) {
         decompRecord.key_1 = RiskFactorKey(record.key_1.keytype, constituent, record.key_1.index);
         decompRecord.delta = record.delta * weight;
-        decompRecord.gamma = record.gamma * weight;
+        decompRecord.gamma = record.gamma;
+        if (decompRecord.gamma != QuantLib::Null<QuantLib::Real>()) {
+            decompRecord.gamma *= weight;
+        }
         results.push_back(decompRecord);
     }
     return results;
@@ -284,7 +323,7 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
                    "CurrencyHedgedIndexDecomposition failed, there is no market given quantity for trade "
                        << sr.tradeId);
 
-        Date today = QuantLib::Settings::instance().evaluationDate();
+        QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
 
         auto quantity = currencyHedgedIndexQuantities_.at(sr.tradeId).find("EQ-" + indexName)->second;
 

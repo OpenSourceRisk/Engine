@@ -890,7 +890,7 @@ public:
             const std::vector<string>& notionalDates = std::vector<string>(), const string& paymentConvention = "F",
             const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
-            const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
+            const string& foreignCurrency = "", const double foreignAmount = 0, const string& resetStartDate = "", const string& fxIndex = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const string& paymentLag = "", const string& notionalPaymentLag = "",
             const std::string& paymentCalendar = "",
@@ -919,6 +919,7 @@ public:
     bool isNotResetXCCY() const { return isNotResetXCCY_; }
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
+    const string& resetStartDate() const { return resetStartDate_; }
     const string& fxIndex() const { return fxIndex_; }
     const string& paymentLag() const { return paymentLag_; }
     const string& notionalPaymentLag() const { return notionalPaymentLag_; }
@@ -934,6 +935,8 @@ public:
     const ScheduleData& paymentSchedule() const { return paymentSchedule_; }
     bool strictNotionalDates() const { return strictNotionalDates_; }
     const bool isSimmPlainVanillaIrLeg() const { return concreteLegData_->isSimmPlainVanillaIrLeg(); };
+    const string& settlementFxIndex() const { return settlementFxIndex_; }
+    const string& settlementFxFixingDate() const { return settlementFxFixingDate_; }
     //@}
 
     //! \name modifiers
@@ -950,7 +953,7 @@ public:
     std::vector<std::string>& paymentDates() { return paymentDates_; }
     string& lastPeriodDayCounter() { return lastPeriodDayCounter_; }
     bool& strictNotionalDates() { return strictNotionalDates_; }
-    void setPaymentLag(std::string paymentLag) { paymentLag_ = paymentLag; }
+    void setForeignAmount(double foreignAmount) { foreignAmount_ = foreignAmount; }
     //@}
 
     virtual QuantLib::ext::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
@@ -979,6 +982,7 @@ private:
     bool isNotResetXCCY_ = true;
     string foreignCurrency_;
     double foreignAmount_ = 0.0;
+    string resetStartDate_;
     string fxIndex_;
     std::vector<AmortizationData> amortizationData_;
     string paymentLag_, notionalPaymentLag_;
@@ -989,6 +993,8 @@ private:
     string lastPeriodDayCounter_;
     ScheduleData paymentSchedule_;
     bool strictNotionalDates_ = false;
+    string settlementFxIndex_;
+    string settlementFxFixingDate_;
 };
 
 //! \name Utilities for building QuantLib Legs

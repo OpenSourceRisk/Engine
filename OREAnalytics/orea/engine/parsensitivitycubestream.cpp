@@ -21,7 +21,6 @@
 #include <orea/engine/sensitivityrecord.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 
-using ore::analytics::deconstructFactor;
 using ore::analytics::SensitivityRecord;
 
 namespace ore {
@@ -62,7 +61,7 @@ SensitivityRecord ParSensitivityCubeStream::next() {
             DLOG("Processing par delta [" << itCurrent_->first << ", " << itCurrent_->second << "]");
             sr.key_1 = itCurrent_->first;
             auto fullDescription = cube_->zeroCubes()[zeroCubeIdx_]->factorDescription(sr.key_1);
-            sr.desc_1 = deconstructFactor(fullDescription).second;
+            sr.desc_1 = QuantExt::deconstructFactor(fullDescription).second;
             sr.shift_1 = cube_->zeroCubes()[zeroCubeIdx_]->targetShiftSize(sr.key_1);
             sr.delta = itCurrent_->second;
             sr.gamma = Null<Real>();

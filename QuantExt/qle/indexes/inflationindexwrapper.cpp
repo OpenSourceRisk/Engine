@@ -34,6 +34,12 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
 }
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
+                                                   const Handle<YoYInflationTermStructure>& ts)
+    : YoYInflationIndex(zeroIndex, ts), zeroIndex_(zeroIndex) {
+    registerWith(zeroIndex_);
+}
+
+YoYInflationIndexWrapper::YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
                                                    const bool interpolated, const Handle<YoYInflationTermStructure>& ts)
     : YoYInflationIndex(zeroIndex, interpolated, ts),
       zeroIndex_(zeroIndex) {

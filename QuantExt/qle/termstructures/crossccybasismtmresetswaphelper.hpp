@@ -58,7 +58,8 @@ public:
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
         const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
-        const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
+        const Handle<YieldTermStructure>& domesticCcyDiscountCurve, const bool foreignIndexGiven,
+        const bool domesticIndexGiven, const bool foreignDiscountCurveGiven, const bool domesticDiscountCurveGiven,
         const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
         const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
         bool spreadOnForeignCcy = true, boost::optional<QuantLib::Period> foreignTenor = boost::none,
@@ -69,7 +70,8 @@ public:
         boost::optional<bool> domesticIncludeSpread = boost::none,
         boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
         boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none,
-        const bool telescopicValueDates = false);
+        const bool telescopicValueDates = false,
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -96,6 +98,10 @@ protected:
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> domesticCcyIndex_;
     Handle<YieldTermStructure> foreignCcyDiscountCurve_;
     Handle<YieldTermStructure> domesticCcyDiscountCurve_;
+    bool foreignIndexGiven_;
+    bool domesticIndexGiven_;
+    bool foreignDiscountCurveGiven_;
+    bool domesticDiscountCurveGiven_;
     Handle<YieldTermStructure> foreignCcyFxFwdRateCurve_;
     Handle<YieldTermStructure> domesticCcyFxFwdRateCurve_;
     bool eom_, spreadOnForeignCcy_;
@@ -127,6 +133,7 @@ protected:
     RelinkableHandle<YieldTermStructure> domesticCcyFxFwdRateCurveRLH_;
 
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 };
 } // namespace QuantExt
 

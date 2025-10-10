@@ -3,7 +3,7 @@
 import subprocess as p
                               # Legacy Examples
 cases = [ "run_biweekly.py",  # 10
-	  "run_closeout.py",  # 31, 60
+	  "run_closeout.py",  # 31
           "run_firstmpor.py"  # 72
          ]
 

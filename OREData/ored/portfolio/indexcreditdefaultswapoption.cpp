@@ -222,11 +222,11 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // We apply an automatic correction to a common mistake in the input data, where the full index underlying
     // is provided and not only the part of the underlying into which we exercise.
     if (legData.schedule().rules().size() == 1 && legData.schedule().dates().empty()) {
-        // The start date should be >= exercise date, this will produce correct coupons for both
+        // The start date should be > exercise date, this will produce correct coupons for both
         // - post big bang rules CDS, CDS2015 (full first coupon) and
         // - pre big bang rules (short first coupon)
-        if (parseDate(legData.schedule().rules().front().startDate()) < exerciseDate) {
-            legData.schedule().modifyRules().front().modifyStartDate() = ore::data::to_string(exerciseDate);
+        if (parseDate(legData.schedule().rules().front().startDate()) <= exerciseDate) {
+            legData.schedule().modifyRules().front().modifyStartDate() = ore::data::to_string(exerciseDate + 1);
         }
     }
 
@@ -238,19 +238,19 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     QL_REQUIRE(!schedule.dates().empty(),
                "IndexCreditDefaultSwapOption: underlying swap schedule does not contain any dates");
     Date underlyingTradeDate =
-        swap_.tradeDate() == Date() ? std::max(exerciseDate, schedule.dates().front()) : swap_.tradeDate();
+        swap_.tradeDate() == Date() ? std::max(exerciseDate, schedule.dates().front() - 1) : swap_.tradeDate();
     Date underlyingProtectionStart;
     if (swap_.protectionStart() != Date()) {
         underlyingProtectionStart = swap_.protectionStart();
     } else if (legData.schedule().rules().size() == 1 && legData.schedule().dates().empty()) {
         auto rule = parseDateGenerationRule(legData.schedule().rules().front().rule());
         if (rule == DateGeneration::CDS || rule == DateGeneration::CDS2015) {
-            underlyingProtectionStart = std::max(exerciseDate, schedule.dates().front());
+            underlyingProtectionStart = std::max(exerciseDate + 1, schedule.dates().front());
         } else {
             underlyingProtectionStart = schedule.dates().front();
         }
     } else {
-        underlyingProtectionStart = std::max(exerciseDate, schedule.dates().front());
+        underlyingProtectionStart = std::max(exerciseDate + 1, schedule.dates().front());
     }
 
     // get engine builders for option and underlying swap
@@ -334,9 +334,10 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
-                                       option_.premiumData(), -indicatorLongShort, ccy, engineFactory,
-                                       configuration);
+                                       option_.premiumData(), -indicatorLongShort, ccy, discountCurve,
+                                       engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
@@ -570,7 +571,7 @@ void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<strin
 
     QL_REQUIRE(refData, "Building index CDS option " << id() << " ReferenceDataManager is null.");
     QL_REQUIRE(refData->hasData(CreditIndexReferenceDatum::TYPE, iCdsId),
-               "No CreditIndex reference data for " << iCdsId);
+               "No CreditIndex constituents data for " << iCdsId);
     auto referenceData = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
         refData->getData(CreditIndexReferenceDatum::TYPE, iCdsId));
     DLOG("Got CreditIndexReferenceDatum for id " << iCdsId);

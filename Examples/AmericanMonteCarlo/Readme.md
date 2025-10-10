@@ -33,7 +33,8 @@ Run with <code>python run_forwardbond.py</code>
 
 ## Overlapping Close-Out Grid
 
-TODO: Add description here and in the User Guide.
+Demonstrates the case where the primary and close-out grid overlap, with a daily simulation grid
+up to 15 days; not allowed before ORE v13
 
 Run with <code>python run_overlapping.py</code>
 

@@ -37,7 +37,7 @@ namespace analytics {
 class CubeCsvReader {
 public:
     //! ctor
-    CubeCsvReader(const std::string& filename);
+    explicit CubeCsvReader(const std::string& filename, const bool useDoublePrecision = false);
 
     //! Return the filename this reader is reader from
     const std::string& filename() const { return filename_; }
@@ -47,6 +47,7 @@ public:
 
 private:
     std::string filename_;
+    bool useDoublePrecision_ = false;
 };
 } // namespace analytics
 } // namespace ore

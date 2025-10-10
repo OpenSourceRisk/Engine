@@ -41,12 +41,15 @@ public:
                        // Long tenor swap
                        Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
                        const DayCounter& longFixedDayCount, const QuantLib::ext::shared_ptr<IborIndex>& longIndex,
+                       bool longIndexGiven,
                        // Short tenor swap
                        Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
                        const DayCounter& shortFixedDayCount, const QuantLib::ext::shared_ptr<IborIndex>& shortIndex,
-                       bool longMinusShort = true,
+                       bool longMinusShort, bool shortIndexGiven,
                        // Discount curve
-                       const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>());
+                       const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
+                       bool discountCurveGiven = false,
+                       const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
 
     //! \name RateHelper interface
     //@{
@@ -72,18 +75,22 @@ protected:
     BusinessDayConvention longFixedConvention_;
     DayCounter longFixedDayCount_;
     QuantLib::ext::shared_ptr<IborIndex> longIndex_;
+    bool longIndexGiven_;
     // Short tenor swap
     Frequency shortFixedFrequency_;
     BusinessDayConvention shortFixedConvention_;
     DayCounter shortFixedDayCount_;
     QuantLib::ext::shared_ptr<IborIndex> shortIndex_;
     bool longMinusShort_;
+    bool shortIndexGiven_;
 
     QuantLib::ext::shared_ptr<VanillaSwap> longSwap_;
     QuantLib::ext::shared_ptr<VanillaSwap> shortSwap_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
+    bool discountCurveGiven_;
+    QuantLib::Pillar::Choice pillarChoice_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
 };
 

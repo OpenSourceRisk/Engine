@@ -23,15 +23,17 @@
 
 #pragma once
 
+#include <qle/ad/computationgraph.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_ops.hpp>
-#include <qle/ad/computationgraph.hpp>
 
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/timegrid.hpp>
 
 #include <boost/any.hpp>
+
 #include <optional>
 
 namespace QuantExt {
@@ -53,19 +55,22 @@ public:
 
     class ModelParameter {
     public:
+        /* '*derived*' model parameters depend on other more fundamental nodes and parameters and are
+           only there to cache results in a convenient way, i.e. we could use a separate class for them */
         enum class Type {
             none,                    // type not set (= model param is not initialized)
-            fix,                     // fixing, historical (non-derived param) or projected (derived)
+            fix,                     // fixing, historical (non-derived param) or projected (*derived*)
+            complexRate,             // complex ir rate (on, cms, ...), only gcam, *derived*
             dsc,                     // T0 ir discount
             fwdCompAvg,              // T0 compounded / avg ir rate (only bs)
             div,                     // T0 div yield dsc factor (only bs)
-            rfr,                     // T0 rfr       dsc factor (only gs)
+            rfr,                     // T0 rfr       dsc factor (only bs)
             defaultProb,             // T0 default prob
             lgm_H,                   // lgm1f parameters (only gcam)
             lgm_Hprime,              // ...
             lgm_zeta,                // ...
             fxbs_sigma,              // fxbs vol parameter (only gcam)
-            logX0,                   // stoch process log initial value
+            logX0,                   // stoch process log initial value (only bs)
             logFxSpot,               // log fx spot (initial value from T0)
             sqrtCorr,                // model sqrt correlation
             sqrtCov,                 // model sqrt covariance
@@ -73,19 +78,19 @@ public:
             cov,                     // model cov
             cam_corrzz,              // gcam ir-ir corr
             cam_corrzx,              // gcam ir-fx corr
-            // types that are only used to cache calculated nodes
-            lgm_numeraire,           // lgm1f parameters (only gcam)
-            lgm_discountBond,        // 
-            lgm_reducedDiscountBond, // 
-            interpolated_undpath,    // interpolated underlying path value (only gcam)
-            interpolated_irstate     // interpolated ir state value (only gcam)
+            lgm_numeraire,           // lgm1f parameters (only gcam), *derived*
+            lgm_discountBond,        // dito, *derived*
+            lgm_reducedDiscountBond, // dito, *derived*
+            interpolated_undpath,    // interpolated underlying path value (only gcam), *derived*
+            interpolated_irstate     // interpolated ir state value (only gcam), *derived*
         };
 
         ~ModelParameter() = default;
         ModelParameter() = default;
         ModelParameter(const Type type, const std::string& qualifier, const std::string& qualifier2 = {},
                        const QuantLib::Date& date = {}, const QuantLib::Date& date2 = {},
-                       const QuantLib::Date& date3 = {}, const std::size_t index = 0, const std::size_t index2 = 0);
+                       const QuantLib::Date& date3 = {}, const std::size_t index = 0, const std::size_t index2 = 0,
+                       const std::size_t hash = 0, const double time = 0.0);
         ModelParameter(const ModelParameter& p) = default;
         ModelParameter(ModelParameter&& p) = default;
         ModelParameter& operator=(ModelParameter&& p) = default;
@@ -99,8 +104,10 @@ public:
         const QuantLib::Date& date() const { return date_; }
         const QuantLib::Date& date2() const { return date2_; }
         const QuantLib::Date& date3() const { return date3_; }
+        double time() const { return time_; }
         std::size_t index() const { return index_; }
         std::size_t index2() const { return index2_; }
+        std::size_t hash() const { return hash_; }
         double eval() const { return functor_ ? functor_() : 0.0; }
         std::size_t node() const { return node_; }
 
@@ -117,6 +124,8 @@ public:
         QuantLib::Date date3_;
         std::size_t index_;
         std::size_t index2_;
+        std::size_t hash_;
+        double time_;
         // functor, only filled for primary model parameters, not filled for cached parameters
         mutable std::function<double(void)> functor_;
         // node in cg, this is filled for primary model parameters and cached parameters
@@ -130,7 +139,7 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> computationGraph() { return g_; }
 
     // model type
-    virtual Type type() const = 0;
+    virtual ModelCG::Type type() const = 0;
 
     // number of paths
     virtual QuantLib::Size size() const { return n_; }
@@ -240,9 +249,11 @@ public:
     // add a model parameer if not yet present, return node in any case
     std::size_t addModelParameter(const ModelCG::ModelParameter& p, const std::function<double(void)>& f) const;
 
-    // linear interpolation helper method, d must not lie outside knownDates
+    // linear interpolation helper method, d must not lie outside knownDates resp. knownTimes
     std::tuple<QuantLib::Date, QuantLib::Date, std::size_t, std::size_t>
     getInterpolationWeights(const QuantLib::Date& d, const std::set<Date>& knownDates) const;
+    std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>
+    getInterpolationWeights(const double t, const QuantLib::TimeGrid& knownTimes) const;
 
 protected:
     // map with additional results provided by this model instance

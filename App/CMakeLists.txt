@@ -8,7 +8,7 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-find_package (Boost REQUIRED COMPONENTS regex date_time serialization filesystem timer OPTIONAL_COMPONENTS chrono)
+find_package (Boost REQUIRED COMPONENTS date_time serialization filesystem timer OPTIONAL_COMPONENTS chrono)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
@@ -30,6 +30,9 @@ target_link_libraries(ore ${ORED_LIB_NAME})
 target_link_libraries(ore ${QLE_LIB_NAME})
 target_link_libraries(ore ${QL_LIB_NAME})
 target_link_libraries(ore ${Boost_LIBRARIES})
+if (ORE_PYTHON_INTEGRATION)
+    target_link_libraries(ore ${Python_LIBRARIES})
+endif()
 
 if(MSVC AND MSVC_WHOLE_PROGRAM_OPTIMIZATION)
     target_compile_options(ore PRIVATE "$<$<CONFIG:RelWithDebInfo>:/GL>")

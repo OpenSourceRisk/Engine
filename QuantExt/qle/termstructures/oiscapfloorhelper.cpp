@@ -187,4 +187,10 @@ Real OISCapFloorHelper::npv(Real quoteValue) {
     }
 }
 
+Real OISCapFloorHelper::atmStrike() const{
+    QL_REQUIRE(!discountHandle_.empty() && discountHandle_.currentLink() != nullptr,
+               "OISCapFloorHelper::atmStrike: discountHandle is empty");
+    return CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
+}
+
 } // namespace QuantExt

@@ -36,7 +36,6 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
       equityId_(equityId), dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
       preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
@@ -79,7 +78,9 @@ void EquityVolatilityCurveConfig::populateQuotes() {
     }
 }
 
-void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
+void EquityVolatilityCurveConfig::populateRequiredIds() const {
+    requiredCurveIds_[CurveSpec::CurveType::Equity].insert(curveID_);
+    requiredNames_[std::make_pair(MarketObject::DiscountCurve, std::string())].insert(ccy_);
     for (auto vc : volatilityConfig_) {
         if (auto p = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
             requiredCurveIds_[CurveSpec::CurveType::Equity].insert(p->proxyVolatilityCurve());
@@ -170,7 +171,6 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) const {

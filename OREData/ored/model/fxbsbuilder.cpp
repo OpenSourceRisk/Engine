@@ -184,7 +184,8 @@ Real FxBsBuilder::optionStrike(const Size j) const {
     Real strikeValue;
     BlackDeltaCalculator bdc(Option::Type::Call, DeltaVolQuote::DeltaType::Spot, fxSpot_->value(),
                              ytsDom_->discount(expiryDate), ytsFor_->discount(expiryDate),
-                             fxVol_->blackVol(expiryDate, Null<Real>()) * sqrt(fxVol_->timeFromReference(expiryDate)));
+                             fxVol_->blackVol(expiryDate, Null<Real>()) *
+                                 std::sqrt(fxVol_->timeFromReference(expiryDate)));
 
     // TODO: Extend strike type coverage
     if (strike.type == ore::data::Strike::Type::ATMF)

@@ -56,7 +56,7 @@ public:
         const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
         //! Market data object to access e.g. discounting and funding curves
         const QuantLib::ext::shared_ptr<Market>& market,
-	    //! Flag to indicate exposure termination at the next break date
+        //! Flag to indicate exposure termination at the next break date
         const bool exerciseNextBreak,
         //! Expression currency for all results
         const string& baseCurrency,
@@ -66,14 +66,14 @@ public:
         const Real quantile,
         //! Collateral calculation type to be used, see class %CollateralExposureHelper
         const CollateralExposureHelper::CalculationType calcType,
-	    //! Flag to indicate exposure evaluation with dynamic credit
+        //! Flag to indicate exposure evaluation with dynamic credit
         const bool multiPath,
         //! Flag to indicate flipped xva calculation
-        const bool flipViewXVA,
-        const bool exposureProfilesUseCloseOutValues_ = false,
+        const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues_ = false,
         //! Continue with the calculation if possible when there is an error
-        bool continueOnError = false
-    );
+        bool continueOnError = false,
+        //! use double precision cube
+        bool useDoublePrecisionCubes = false);
 
     virtual ~ExposureCalculator() {}
 

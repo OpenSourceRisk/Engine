@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <YieldCurvesId>xois_eur</YieldCurvesId>
+  </Configuration>
+  <Configuration id="collateral_inccy">
+    <DiscountingCurvesId>ois</DiscountingCurvesId>
+    <YieldCurvesId>ois</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <Configuration id="xois_eur">
+    <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <Configuration id="xois_usd">
+    <DiscountingCurvesId>xois_usd</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  
+  <Configuration id="libor">
+    <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
+    <YieldCurvesId>inccy_swap</YieldCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <!-- yield curve definition (in ccy swap discounting) -->
+  <YieldCurves id="default">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
+  <!-- yield curve definition (in ccy ois discounting) -->
+  <YieldCurves id="ois">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
+  <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
+  <YieldCurves id="xois_eur">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
+  <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
+  <YieldCurves id="inccy_swap">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
+  <!-- discounting curve definition (in ccy swap discounting) -->
+  <DiscountingCurves id="inccy_swap">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD3M</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP6M</DiscountingCurve>
+  </DiscountingCurves>
+  <!-- discounting curve definition (in ccy ois discounting) -->
+  <DiscountingCurves id="ois">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
+  </DiscountingCurves>
+  <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
+  <DiscountingCurves id="xois_eur">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-EUR</DiscountingCurve>
+  </DiscountingCurves>
+  <DiscountingCurves id="xois_usd">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-USD</DiscountingCurve>
+  </DiscountingCurves>
+  
+  <!-- index forwarding curve definition -->
+  <IndexForwardingCurves id="default">
+    <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+    <Index name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+    <Index name="USD-FedFunds">Yield/USD/USD1D</Index>
+    <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+    <Index name="GBP-SONIA">Yield/GBP/GBP1D</Index>
+    <Index name="GBP-LIBOR-3M">Yield/GBP/GBP3M</Index>
+    <Index name="GBP-LIBOR-6M">Yield/GBP/GBP6M</Index>
+    </IndexForwardingCurves>
+  <SwapIndexCurves id="default">
+    <SwapIndex name="EUR-CMS-1Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-2Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-10Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-30Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="USD-CMS-1Y">
+      <Discounting>USD-FedFunds</Discounting>
+    </SwapIndex>
+    <SwapIndex name="USD-CMS-30Y">
+      <Discounting>USD-FedFunds</Discounting>
+    </SwapIndex>
+    <SwapIndex name="GBP-CMS-1Y">
+      <Discounting>GBP-SONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="GBP-CMS-30Y">
+      <Discounting>GBP-SONIA</Discounting>
+    </SwapIndex>
+  </SwapIndexCurves>
+  <!-- inflation index definition -->
+  <ZeroInflationIndexCurves id="default">
+  </ZeroInflationIndexCurves>
+  <YYInflationIndexCurves id="default">
+  </YYInflationIndexCurves>
+  <!-- fx spot definition -->
+  <FxSpots id="default">
+    <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+    <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
+  </FxSpots>
+  <!-- fx volatility definition -->
+  <FxVolatilities id="default">
+    <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+    <FxVolatility pair="EURGBP">FXVolatility/EUR/GBP/EURGBP</FxVolatility>
+  </FxVolatilities>
+  <!-- swaption volatility definition -->
+  <SwaptionVolatilities id="default">
+    <SwaptionVolatility currency="EUR">SwaptionVolatility/EUR/EUR_SW_N</SwaptionVolatility>
+    <SwaptionVolatility currency="USD">SwaptionVolatility/USD/USD_SW_N</SwaptionVolatility>
+    <SwaptionVolatility currency="GBP">SwaptionVolatility/GBP/GBP_SW_N</SwaptionVolatility>
+  </SwaptionVolatilities>
+  <!-- cap volatility definition -->
+  <CapFloorVolatilities id="default">
+  </CapFloorVolatilities>
+  <!-- default curves definition -->
+  <DefaultCurves id="default">
+    <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
+    <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
+  </DefaultCurves>
+  <!-- inflation volatility curves definition -->
+  <YYInflationCapFloorVolatilities id="default">
+  </YYInflationCapFloorVolatilities>
+  <ZeroInflationCapFloorVolatilities id="default">
+  </ZeroInflationCapFloorVolatilities>
+  <EquityCurves id="default">
+  </EquityCurves>
+  <EquityVolatilities id="default">
+  </EquityVolatilities>
+  <Securities id="collateral_eur">
+  </Securities>
+  <Securities id="default">
+  </Securities>
+  <CommodityCurves id="default">
+  </CommodityCurves>
+  <CommodityVolatilities id="default">
+  </CommodityVolatilities>
+</TodaysMarket>

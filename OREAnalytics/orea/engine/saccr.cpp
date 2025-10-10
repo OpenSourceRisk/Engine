@@ -59,11 +59,10 @@
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/tuple.hpp>
 
-#include <boost/regex.hpp>
-
 #include <cmath>
 #include <algorithm>
 #include <iomanip>
+#include <regex>
 
 using namespace QuantLib;
 using std::make_pair;
@@ -518,6 +517,9 @@ const map<string, string> commodityQualifierMapping = {{"Coal Americas", "Coal"}
                                                        {"EU Power UK", "Power"}};
 
 string SACCR::getCommodityName(const string& index, bool withPrefix) {
+    static boost::mutex mutex_;
+    boost::lock_guard<boost::mutex> lock(mutex_);
+
     std::string commodity = index;
 
     // Remove prefix
@@ -531,7 +533,7 @@ string SACCR::getCommodityName(const string& index, bool withPrefix) {
     Date expiry;
     if (commodity.size() > 10) {
         string test = commodity.substr(commodity.size() - 10);
-        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+        if (std::regex_match(test, std::regex("\\d{4}-\\d{2}-\\d{2}"))) {
             expiry = parseDate(test);
             commodity = commodity.substr(0, commodity.size() - test.size() - 1);
         }
@@ -540,7 +542,7 @@ string SACCR::getCommodityName(const string& index, bool withPrefix) {
     // Remove expiry of form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
     if (expiry == Date() && commodity.size() > 7) {
         string test = commodity.substr(commodity.size() - 7);
-        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
+        if (std::regex_match(test, std::regex("\\d{4}-\\d{2}"))) {
             expiry = parseDate(test + "-01");
             commodity = commodity.substr(0, commodity.size() - test.size() - 1);
         }

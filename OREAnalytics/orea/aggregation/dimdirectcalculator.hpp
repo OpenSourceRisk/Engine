@@ -51,7 +51,7 @@ public:
         //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
 	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
 
-    map<string, Real> unscaledCurrentDIM() override { return unscaledCurrentDIM_; }
+    const map<string, Real>& unscaledCurrentDIM() const override { return unscaledCurrentDIM_; }
     void build() override;
     void exportDimEvolution(ore::data::Report& dimEvolutionReport) const override;
 

@@ -26,6 +26,7 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
 
 namespace ore {
@@ -36,19 +37,24 @@ namespace data {
     \ingroup builders
  */
 class CommodityForwardEngineBuilder
-    : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&> {
+    : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&, const QuantLib::Currency&, const std::string&> {
 public:
     CommodityForwardEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "DiscountingCommodityForwardEngine", {"CommodityForward"}) {}
 
 protected:
-    virtual std::string keyImpl(const QuantLib::Currency& ccy) override {
-        return ccy.code();
+    virtual std::string keyImpl(const Currency& ccy, const Currency& npvCcy,
+                                const std::string& discountCurveName) override {
+        return ccy.code() + "_" + npvCcy.code() + "_" + discountCurveName;
     }
 
-    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const QuantLib::Currency& ccy) override {
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const QuantLib::Currency& ccy, const QuantLib::Currency& npvCcy, const std::string& discountCurveName) override {
         return QuantLib::ext::make_shared<QuantExt::DiscountingCommodityForwardEngine>(
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));
+            discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing)),  
+            boost::none, Date(),
+            market_->fxRate(ccy.code() + npvCcy.code(), configuration(MarketContext::pricing)));
     }
 };
 

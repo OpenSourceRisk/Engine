@@ -84,7 +84,8 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
     const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
     const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
-    const std::string& referenceCalibrationGrid, const std::string& id, const bool allowChangingFallbacksUnderScenarios)
+    const std::string& referenceCalibrationGrid, const std::string& id, const bool allowChangingFallbacksUnderScenarios,
+    const bool allowModelFallbacks)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -93,25 +94,32 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
       dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid), id_(id),
       allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios),
+      allowModelFallbacks_(allowModelFallbacks),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
+
     buildModel();
+
     // register with sub builders
     for (auto okv : subBuilders_) {
         for (auto ikv : okv.second) {
             registerWith(ikv.second);
         }
     }
+
     // register with market handle (will be notified when handle is relinked)
     marketHandleObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     marketHandleObserver_->addObservable(market_);
     registerWith(marketHandleObserver_);
+
     // register market observer with correlations
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     for (auto const& c : config->correlations())
         marketObserver_->addObservable(c.second);
+
     // reset market observer's updated flag
     marketObserver_->hasUpdated(true);
+
     // register with market observer
     registerWith(marketObserver_);
 }
@@ -234,7 +242,7 @@ void CrossAssetModelBuilder::relinkIrDiscountCurves(const std::vector<QuantLib::
 void CrossAssetModelBuilder::buildModel() const {
 
     LOG("Start building CrossAssetModel");
-
+    
     QL_REQUIRE(market_.value() != NULL, "CrossAssetModelBuilder: no market given");
 
     DLOG("configurations: LgmCalibration "
@@ -311,7 +319,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
                     market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_, BlackCalibrationHelper::RelativePriceError,
-                    allowChangingFallbacksUnderScenarios_);
+                    allowChangingFallbacksUnderScenarios_, allowModelFallbacks_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
@@ -584,8 +592,8 @@ void CrossAssetModelBuilder::buildModel() const {
 
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
 
-    TLOG("CAM correlation matrix:");
-    TLOGGERSTREAM(corrMatrix);
+    DLOG("CAM correlation matrix:");
+    DLOGGERSTREAM(corrMatrix);
 
     /*****************************
      * Build the cross asset model
@@ -669,10 +677,10 @@ void CrossAssetModelBuilder::buildModel() const {
             fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    TLOGGERSTREAM("Calibration details:");
-                    TLOGGERSTREAM(
+                    DLOGGERSTREAM("Calibration details:");
+                    DLOGGERSTREAM(
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
-                    TLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
+                    DLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "FX BS " + fx->foreignCcy() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
@@ -738,10 +746,10 @@ void CrossAssetModelBuilder::buildModel() const {
             eqOptionCalibrationErrors_[i] = getCalibrationError(eqOptionBaskets_[i]);
             if (eq->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    TLOGGERSTREAM("Calibration details:");
-                    TLOGGERSTREAM(
+                    DLOGGERSTREAM("Calibration details:");
+                    DLOGGERSTREAM(
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
-                    TLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
+                    DLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "EQ BS " + eq->eqName() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
@@ -973,9 +981,9 @@ void CrossAssetModelBuilder::calibrateInflation(
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(cb);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
-            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
+            DLOGGERSTREAM("Calibration details:");
+            DLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
+            DLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + data.index() + " index " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
@@ -1142,20 +1150,20 @@ void CrossAssetModelBuilder::calibrateInflation(
     }
 
     // Log the calibration details.
-    TLOG("INF (JY) " << data.index() << " model parameters after calibration:");
-    TLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
-    TLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
-    TLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
-    TLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
-    TLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
-    TLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
+    DLOG("INF (JY) " << data.index() << " model parameters after calibration:");
+    DLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
+    DLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
+    DLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
+    DLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
+    DLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
+    DLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
-            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
+            DLOGGERSTREAM("Calibration details:");
+            DLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
+            DLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
             ss << "INF (JY) " << data.index() << " index " << modelIdx << " calibration error " << std::scientific

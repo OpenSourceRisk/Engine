@@ -36,8 +36,9 @@ public:
     //! Constructor
     CloneScenarioFactory(const QuantLib::ext::shared_ptr<Scenario>& baseScenario);
     //! returns a new scenario, using the base scenario as a starting point
-    const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, bool isAbsolute,
-        bool isPar = false,const std::string& label = "", Real numeraire = 0.0) const override;
+    const QuantLib::ext::shared_ptr<Scenario> buildScenario(QuantLib::Date asof, bool isAbsolute, bool isPar = false,
+                                                            const std::string& label = "",
+                                                            QuantLib::Real numeraire = 0.0) const override;
 
 private:
     QuantLib::ext::shared_ptr<Scenario> baseScenario_;

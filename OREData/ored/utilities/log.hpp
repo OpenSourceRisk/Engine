@@ -281,8 +281,12 @@ protected:
     IndependentLogger(const std::string& name) : name_(name) {}
     std::vector<std::string> messages_;
 
+    //! mutex to acquire locks
+    boost::shared_mutex& mutex() { return mutex_; }
+
 private:
     std::string name_;
+    mutable boost::shared_mutex mutex_;
 };
 
 //! ProgressLogger
@@ -681,7 +685,7 @@ class StructuredMessage : public JSONMessage {
 public:
     enum class Category { Error, Warning, Unknown };
 
-    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Input, Unknown };
+    enum class Group { Analytics, Configuration, Model, Curve, Convention, Trade, Fixing, Logging, ReferenceData, Input, Unknown };
 
     StructuredMessage(const Category& category, const Group& group, const std::string& message,
                       const std::map<std::string, std::string>& subFields = std::map<std::string, std::string>());

@@ -29,6 +29,7 @@
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
 #include <orea/simm/simmconfigurationisdav2_6.hpp>
 #include <orea/simm/simmconfigurationisdav2_6_5.hpp>
+#include <orea/simm/simmconfigurationisdav2_7_2412.hpp>
 #include <orea/simm/simmconfigurationcalibration.hpp>
 
 #include <ored/utilities/log.hpp>
@@ -40,8 +41,10 @@
 #include <ored/portfolio/bondrepo.hpp>
 #include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/callablebond.hpp>
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/fxderivative.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -55,9 +58,9 @@
 #include <ql/utilities/null.hpp>
 
 #include <boost/make_shared.hpp>
-#include <boost/regex.hpp>
 
 #include <fstream>
+#include <regex>
 
 using std::map;
 using std::set;
@@ -196,6 +199,7 @@ SimmVersion parseSimmVersion(const string& version) {
                                                   {"2.4", SimmVersion::V2_3_8},
                                                   {"2.6", SimmVersion::V2_6},
                                                   {"2.7", SimmVersion::V2_6_5},
+                                                  {"2.7+2412", SimmVersion::V2_7_2412},
                                                   // old names for backwards compatibility
                                                   {"ISDA_V315", SimmVersion::V1_0},
                                                   {"ISDA_V329", SimmVersion::V1_3},
@@ -261,6 +265,9 @@ QuantLib::ext::shared_ptr<SimmConfiguration> buildSimmConfiguration(const string
     case SimmVersion::V2_6_5:
         return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_6_5>(simmBucketMapper, mporDays);
         break;
+    case SimmVersion::V2_7_2412:
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_7_2412>(simmBucketMapper, mporDays);
+        break;
     default:
         break;
     }
@@ -323,6 +330,7 @@ static const map<string, CrifRecord::ProductClass> tradeProductClassMap = {
     {"BondRepo", CrifRecord::ProductClass::Rates},
     {"BondTRS", CrifRecord::ProductClass::Rates},
     {"CallableSwap", CrifRecord::ProductClass::Rates},
+    {"CallableBond", CrifRecord::ProductClass::Rates},
     {"CapFloor", CrifRecord::ProductClass::Rates},
     {"CashPosition", CrifRecord::ProductClass::FX},
     {"CBO", CrifRecord::ProductClass::Credit},
@@ -438,8 +446,6 @@ bool isIsin(const string& s) {
     if (s[11] < '0' || s[11] > '9')
         return false;
     return true;
-    // boost::regex isinPattern("^[A-Z]{2}[A-Z0-9]{9}[0-9]{1}");
-    // return boost::regex_match(s, isinPattern);
 }
   
 std::string simmStandardCurrency(const std::string& ccy) {
@@ -498,12 +504,16 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
     } else if (trade->tradeType() == "ConvertibleBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::ConvertibleBond>(trade),
                                 CrifRecord::ProductClass::Equity);
+    } else if (trade->tradeType() == "CallableBond") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::CallableBond>(trade));
     } else if (trade->tradeType() == "BondOption") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondOption>(trade));
     } else if (trade->tradeType() == "BondTRS") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondTRS>(trade));
     } else if (trade->tradeType() == "ForwardBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ForwardBond>(trade));
+    } else if (trade->tradeType() == "BondFuture") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondFuture>(trade));
     } else if (trade->tradeType() == "BondRepo") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondRepo>(trade));
     } else if (trade->tradeType() == "FxForward") {
@@ -540,8 +550,7 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
         if (auto it = tradeProductClassMap.find(trade->tradeType()); it != tradeProductClassMap.end())
             return it->second;
         else {
-            QL_FAIL("simm/scheduleProductClassFromOrePlusTrade: tradeType '" << trade->tradeType()
-                                                                             << "' not recognised");
+            QL_FAIL("simm/scheduleProductClassFromOreTrade: tradeType '" << trade->tradeType() << "' not recognised");
         }
     }
 }

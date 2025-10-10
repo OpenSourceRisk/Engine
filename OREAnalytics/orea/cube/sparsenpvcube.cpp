@@ -128,6 +128,7 @@ template void SparseNpvCube<Real>::setT0(Real value, Size i, Size d);
 template Real SparseNpvCube<Real>::get(Size i, Size j, Size k, Size d) const;
 template void SparseNpvCube<Real>::set(Real value, Size i, Size j, Size k, Size d);
 template void SparseNpvCube<Real>::check(Size i, Size j, Size k, Size d) const;
+template<> bool SparseNpvCube<double>::usesDoublePrecision() const { return true; }
 
 template SparseNpvCube<float>::SparseNpvCube();
 template SparseNpvCube<float>::SparseNpvCube(const Date& asof, const std::set<std::string>& ids,
@@ -145,6 +146,7 @@ template void SparseNpvCube<float>::setT0(Real value, Size i, Size d);
 template Real SparseNpvCube<float>::get(Size i, Size j, Size k, Size d) const;
 template void SparseNpvCube<float>::set(Real value, Size i, Size j, Size k, Size d);
 template void SparseNpvCube<float>::check(Size i, Size j, Size k, Size d) const;
+template<> bool SparseNpvCube<float>::usesDoublePrecision() const { return false; }
 
 } // namespace analytics
 } // namespace ore

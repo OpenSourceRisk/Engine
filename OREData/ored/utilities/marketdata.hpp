@@ -87,6 +87,14 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const QuantLib::ext
                                                              const std::string& creditCurveId,
                                                              const std::string& config);
 
+/* Get base correlation from market:
+    -if baseCorrelationCurveId ends on _5Y (or any other term), use that to get the curve from the market
+    -if such a curve is not available, fall back to baseCorrelationCurveId without that suffix
+*/
+Handle<QuantExt::BaseCorrelationTermStructure>
+indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                 const std::string& baseCorrelationCurveId, const std::string& configuration);
+
 /*! Pretty print an internal curve name occuring (once or several times) in a string (e.g. in a risk factor name). */
 std::string prettyPrintInternalCurveName(std::string name);
 
@@ -98,8 +106,8 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
 std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
 
 std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
-                                              QuantLib::Period tenor,
-                                              FutureConvention::DateGenerationRule rule);
+                                              QuantLib::Period tenor, FutureConvention::DateGenerationRule rule,
+                                              const QuantLib::Calendar& calendar);
 
 Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
 

@@ -770,7 +770,7 @@ LegData::LegData(const QuantLib::ext::shared_ptr<LegAdditionalData>& concreteLeg
                  const std::vector<string>& notionalDates, const string& paymentConvention,
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
-                 const double foreignAmount, const string& fxIndex,
+                 const double foreignAmount, const string& resetStartDate, const string& fxIndex,
                  const std::vector<AmortizationData>& amortizationData, const string& paymentLag,
                  const string& notionalPaymentLag, const string& paymentCalendar, const vector<string>& paymentDates,
                  const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
@@ -780,7 +780,7 @@ LegData::LegData(const QuantLib::ext::shared_ptr<LegAdditionalData>& concreteLeg
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-      fxIndex_(fxIndex), amortizationData_(amortizationData), paymentLag_(paymentLag),
+      resetStartDate_(resetStartDate), fxIndex_(fxIndex), amortizationData_(amortizationData), paymentLag_(paymentLag),
       notionalPaymentLag_(notionalPaymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates),
       indexing_(indexing), indexingFromAssetLeg_(indexingFromAssetLeg), lastPeriodDayCounter_(lastPeriodDayCounter) {
 
@@ -814,11 +814,19 @@ void LegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Notionals")) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
-            isNotResetXCCY_ = false;
-            foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
-            foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount", true);
-            fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
-            indices_.insert(fxIndex_);
+            resetStartDate_ = XMLUtils::getChildValue(fxResetNode, "StartDate", false);
+            if (resetStartDate_.empty()) {
+                isNotResetXCCY_ = false;
+                foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount", true);
+                foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
+                fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
+                indices_.insert(fxIndex_); 
+            } else {
+                isNotResetXCCY_ = false;
+                foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
+                fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
+                indices_.insert(fxIndex_);
+            }
             if (XMLUtils::getChildNode(node, "FixingDays")) {
                 WLOG("LegData::fromXML, node FixingDays has been deprecated, fixing days are "
                      "taken from conventions.");
@@ -876,6 +884,11 @@ void LegData::fromXML(XMLNode* node) {
             indexing_.back().fromXML(i);
         }
     }
+    if (auto tmp = XMLUtils::getChildNode(node, "SettlementData")) {
+        settlementFxIndex_ = XMLUtils::getChildValue(tmp, "FXIndex", true);
+        settlementFxFixingDate_ = XMLUtils::getChildValue(tmp, "FixingDate", false);
+    
+    }
 
     lastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
 
@@ -913,9 +926,15 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
 
     if (!isNotResetXCCY_) {
         XMLNode* resetNode = doc.allocNode("FXReset");
-        XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
-        XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
-        XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
+        if (!resetStartDate_.empty()) {
+            XMLUtils::addChild(doc, resetNode, "StartDate", resetStartDate_);
+            XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
+            XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
+        }else{
+            XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
+            XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
+            XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
+        }
         XMLUtils::appendNode(notionalsNodePtr, resetNode);
     }
 
@@ -963,6 +982,14 @@ XMLNode* LegData::toXML(XMLDocument& doc) const {
 
     if (!lastPeriodDayCounter_.empty())
         XMLUtils::addChild(doc, node, "LastPeriodDayCounter", lastPeriodDayCounter_);
+
+    if (!settlementFxIndex_.empty()) {
+        XMLNode* settlementDataNode = doc.allocNode("SettlementData");
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", settlementFxIndex_);
+        if (!settlementFxFixingDate_.empty())
+            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", settlementFxFixingDate_);
+        XMLUtils::appendNode(node, settlementDataNode);
+    }
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
     return node;
@@ -1374,6 +1401,8 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
         QuantLib::setCouponPricer(tmpLeg, couponPricer);
         if (productModelEngines)
             productModelEngines->insert(std::make_tuple(builder->tradeTypes(), builder->model(), builder->engine()));
+    } else {
+        QuantLib::setCouponPricer(tmpLeg, QuantLib::ext::make_shared<BlackIborCouponPricer>());
     }
 
     // build naked option leg if required
@@ -1409,7 +1438,13 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
         }
     }
 
-    Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
+    Schedule paymentSchedule;
+    Schedule schedule;
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, tmp);
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+    
     auto n = schedule.size();
     QL_REQUIRE(n >= 2, "Floating (OIS) leg must have 2 or more dates, found " << n << ".");
     DayCounter dc = parseDayCounter(data.dayCounter());
@@ -1418,7 +1453,10 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
 
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
-    if (!data.paymentDates().empty()) {
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    }
+    else if(!data.paymentDates().empty()) {
         BusinessDayConvention paymentDatesConvention =
             data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
         Calendar paymentDatesCalendar =
@@ -1570,6 +1608,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar;
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1594,6 +1633,7 @@ Leg makeBMALeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::BM
                   .withPaymentDayCounter(dc)
                   .withPaymentCalendar(paymentCalendar)
                   .withPaymentAdjustment(bdc)
+                  .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                   .withGearings(gearings);
 
     // try to set the rate computation period based on the schedule tenor
@@ -2543,18 +2583,29 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
     Natural fixingDays = eqLegData->fixingDays();
     PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
-    ScheduleBuilder scheduleBuilder;
-
-    ScheduleData scheduleData = data.schedule();
+    Schedule paymentSchedule;
     Schedule schedule;
-    scheduleBuilder.add(schedule, scheduleData);
-
+    ScheduleBuilder scheduleBuilder;
+    scheduleBuilder.add(schedule, data.schedule());
+    scheduleBuilder.add(paymentSchedule, data.paymentSchedule());
     ScheduleData valuationData = eqLegData->valuationSchedule();
     Schedule valuationSchedule;
     if (valuationData.hasData())
         scheduleBuilder.add(valuationSchedule, valuationData);
-
     scheduleBuilder.makeSchedules(openEndDateReplacement);
+
+    vector<Date> paymentDates;
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
+        BusinessDayConvention paymentDatesConvention =
+            data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
+        Calendar paymentDatesCalendar =
+            data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
+        paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
+        for (Size i = 0; i < paymentDates.size(); i++)
+            paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
+    }
     auto n = schedule.size();
     QL_REQUIRE(n >= 2, "Equity leg must have 2 or more dates, found " << n << ".");
 
@@ -2580,7 +2631,8 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
                   .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
                   .withNotionalReset(notionalReset)
                   .withFixingDays(fixingDays)
-                  .withValuationSchedule(valuationSchedule);
+                  .withValuationSchedule(valuationSchedule)
+                  .withPaymentDates(paymentDates);
 
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
@@ -2591,11 +2643,11 @@ Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();
     // assume the leg is sorted
     // We just take the first coupon::nominal we find, otherwise return 0
+    
     for (auto cf : leg) {
-        if (cf->date() > today) {
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
-            if (coupon)
-                return coupon->nominal();
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
+        if ((coupon) && coupon->accrualEndDate() > today) {
+            return coupon->nominal();
         }
     }
     return 0;
@@ -2819,9 +2871,9 @@ void applyIndexing(Leg& leg, const LegData& data, const QuantLib::ext::shared_pt
                                             tmp->fixingCalendar());
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying
-                QuantLib::ext::shared_ptr<BondIndex> bi = parseBondIndex(indexing.index());
-                QL_REQUIRE(!(QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(bi)),
-                           "BondFuture Legs are not yet supported");
+                QuantLib::ext::shared_ptr<BondIndex> bi =
+                    QuantLib::ext::dynamic_pointer_cast<BondIndex>(parseBondIndex(indexing.index()));
+                QL_REQUIRE(bi, "BondFuture Legs are not yet supported");
                 BondData bondData(bi->securityName(), 1.0);
                 BondIndexBuilder bondIndexBuilder(bondData.securityId(), indexing.indexIsDirty(),
                                                   indexing.indexIsRelative(), parseCalendar(indexing.fixingCalendar()),
@@ -2887,7 +2939,6 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
     if (!data.isNotResetXCCY()) {
         // If we have an FX resetting leg, add the notional amount at the start and end of each coupon period.
         DLOG("Building Resetting XCCY Notional leg");
-        Real foreignNotional = data.foreignAmount();
 
         QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
         auto fxIndex =
@@ -2900,7 +2951,6 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
 
         Leg resettingLeg;
         for (Size j = 0; j < leg.size(); j++) {
-
             QuantLib::ext::shared_ptr<Coupon> c = QuantLib::ext::dynamic_pointer_cast<Coupon>(leg[j]);
             QL_REQUIRE(c, "Expected each cashflow in FX resetting leg to be of type Coupon");
 
@@ -2920,14 +2970,14 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 if (data.notionals().size() == 0) {
                     fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     if (data.notionalInitialExchange()) {
-                        outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional,
-                                                                             fxIndex);
+                        outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -data.foreignAmount(),
+                                fxIndex); 
                     }
                     // if there is only one period we generate the cash flow at the period end
                     // only if there is a final notional exchange
                     if (leg.size() > 1 || data.notionalFinalExchange()) {
-                        inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional,
-                                                                            fxIndex);
+                        inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, data.foreignAmount(),
+                                fxIndex);
                     }
                 } else {
                     if (data.notionalInitialExchange()) {
@@ -2939,12 +2989,17 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 }
             } else {
                 fixingDate = fxIndex->fixingDate(c->accrualStartDate());
-                outCf =
-                    QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -foreignNotional, fxIndex);
+                if(!data.resetStartDate().empty()){
+                    requiredFixings.addFixingDate(parseDate(data.resetStartDate()), data.fxIndex());
+                }
+                Real domesticNotional = !data.notionals().empty()?data.notionals()[0]:Null<Real>();
+                outCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(initFlowDate, fixingDate, -data.foreignAmount(),
+                        fxIndex, parseDate(data.resetStartDate()), -domesticNotional);
+
                 // we don't want a final one, unless there is notional exchange
                 if (j < leg.size() - 1 || data.notionalFinalExchange()) {
-                    inCf =
-                        QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, foreignNotional, fxIndex);
+                    inCf = QuantLib::ext::make_shared<FXLinkedCashFlow>(finalFlowDate, fixingDate, data.foreignAmount(),
+                            fxIndex, parseDate(data.resetStartDate()), domesticNotional);
                 }
             }
 

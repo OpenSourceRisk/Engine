@@ -42,10 +42,9 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(
       optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId),
       quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
-void CommodityVolatilityConfig::populateRequiredCurveIds() {
+void CommodityVolatilityConfig::populateRequiredIds() const {
     if (!priceCurveId().empty())
         requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(parseCurveSpec(priceCurveId())->curveConfigID());
     if (!yieldCurveId().empty())
@@ -148,7 +147,6 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
         reportConfig_.fromXML(tmp);
     }
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {

@@ -239,6 +239,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             // Populate zero and par shift size for the current risk factor
             populateShiftSizes(p.first, parRate, simMarket);
+            auto shiftSize = shiftSizes_.at(p.first).second;
+            parRatesBaseAndScenarioValue_[p.first] = std::make_pair(parRate, parRate + shiftSize);
 
         } catch (const std::exception& e) {
             QL_FAIL("could not imply quote for par helper " << p.first << ": " << e.what());
@@ -251,18 +253,36 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
                    "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
         QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
-
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parCapsYts_.at(c.first), 0.01,
-            instruments_.parCapsVts_.at(c.first)->volatilityType(), instruments_.parCapsVts_.at(c.first)->displacement());
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                     << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
+
+    for (auto& c : instruments_.oisParCaps_) {
+
+        QL_REQUIRE(instruments_.parCapsYts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap yts found for key " << c.first);
+        QL_REQUIRE(instruments_.parCapsVts_.count(c.first) > 0,
+                   "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
+
+        Volatility parVol = impliedVolatility(c.first, instruments_);
+        parCapVols[c.first] = parVol;
+        TLOG("Fair implied cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
+                                                    << parVol << ".");
+
+        // Populate zero and par shift size for the current risk factor
+        populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
+    }
+
+
 
     for (auto& c : instruments_.parYoYCaps_) {
 
@@ -273,17 +293,15 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
         QL_REQUIRE(instruments_.parYoYCapsVts_.count(c.first) > 0,
                    "computeParInstrumentSensitivities(): no cap vts found for key " << c.first);
 
-        Real price = c.second->NPV();
-        Volatility parVol = impliedVolatility(
-            *c.second, price, instruments_.parYoYCapsYts_.at(c.first), 0.01,
-            instruments_.parYoYCapsVts_.at(c.first)->volatilityType(),
-            instruments_.parYoYCapsVts_.at(c.first)->displacement(), instruments_.parYoYCapsIndex_.at(c.first));
+        Volatility parVol = impliedVolatility(c.first, instruments_);
         parCapVols[c.first] = parVol;
         TLOG("Fair implied yoy cap volatility for key " << c.first << " is " << std::fixed << std::setprecision(12)
                                                         << parVol << ".");
 
         // Populate zero and par shift size for the current risk factor
         populateShiftSizes(c.first, parVol, simMarket);
+        auto shiftSize = shiftSizes_.at(c.first).second;
+        parRatesBaseAndScenarioValue_[c.first] = std::make_pair(parVol, parVol + shiftSize);
     }
 
     LOG("Caching base scenario par rates and float vols done.");
@@ -429,6 +447,33 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
         }
+
+        // process ois par caps
+
+        for (auto const& p : instruments_.oisParCaps_) {
+
+            if (p.second->isCalculated() && p.first != desc[i].key1())
+                continue;
+
+            auto fair = impliedVolatility(p.first, instruments_);
+            auto base = parCapVols.find(p.first);
+            QL_REQUIRE(base != parCapVols.end(), "internal error: did not find parCapVols[" << p.first << "]");
+
+            Real tmp = (fair - base->second) / shiftSize;
+
+            // see par caps
+
+            if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
+                WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
+                                                           << " to 0.01 (got " << tmp << ")");
+                tmp = 0.01;
+            }
+
+            // write sensitivity
+
+            writeSensitivity(p.first, desc[i].key1(), tmp, parSensi_, parKeysNonZero, rawKeysNonZero);
+        }
+
 
         // process par yoy caps
 
@@ -580,6 +625,28 @@ void ParSensitivityAnalysis::populateShiftSizes(const RiskFactorKey& key, Real p
 
     TLOG("Zero and par shift size for risk factor '" << key << "' is (" << std::fixed << std::setprecision(12)
                                                      << zeroShiftSize << "," << parShiftSize << ")");
+}
+
+void ParSensitivityAnalysis::writeParRatesReport(ore::data::Report& report) {
+    
+    // Report headers
+    report.addColumn("ParKey", string());
+    report.addColumn("BaseParRate", double(), 12);
+    report.addColumn("ScenarioParRate", double(), 12);
+
+    // Report body
+    for (const auto& p : parRatesBaseAndScenarioValue_) {
+        RiskFactorKey key = p.first;
+        Real base = p.second.first;
+        Real scenario = p.second.second;
+
+        report.next();
+        report.add(to_string(key));
+        report.add(base);
+        report.add(scenario);
+    }
+
+    report.end();
 }
 
 set<RiskFactorKey::KeyType> ParSensitivityAnalysis::parTypes_ = {

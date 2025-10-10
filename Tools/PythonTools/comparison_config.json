@@ -128,6 +128,21 @@
           }
         ]
       },
+      "simm_sensitivity_config.csv": {
+        "keys": [
+          "Key"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseValue",
+              "ShiftSize"
+            ],
+            "abs_tol": 1E-7,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "simm_sensitivity\\.csv": {
         "keys": [
           "TradeId",
@@ -491,6 +506,23 @@
         ]
       },
       "frtb_rrao.csv": {
+        "keys": [
+          "CorrelationScenario",
+          "CapitalRequirement",
+          "RiskClass",
+          "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "FrtbCharge"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "frtb_drc.csv": {
         "keys": [
           "CorrelationScenario",
           "CapitalRequirement",
@@ -955,6 +987,67 @@
           }
         ]
       },
+      "scenario_par_rates\\.csv": {
+        "keys": [
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseParRate",
+              "ScenarioParRate"
+            ],
+            "abs_tol": 1e-04,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "stress_scenario_par_rates\\.csv": {
+        "keys": [
+          "Scenario",
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseParRate",
+              "ScenarioParRate"
+            ],
+            "abs_tol": 1e-04,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "simm_scenario_par_rates\\.csv": {
+        "keys": [
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseParRate",
+              "ScenarioParRate"
+            ],
+            "abs_tol": 1e-04,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "crif_scenario_par_rates\\.csv": {
+        "keys": [
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "BaseParRate",
+              "ScenarioParRate"
+            ],
+            "abs_tol": 1e-04,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
       ".*scenariostatistics.*\\.csv": {
         "keys": [
           "Date",
@@ -1320,8 +1413,8 @@
               "EffectiveCapVolatility_Base",
               "EffectiveCapVolatility_Scen"
             ],
-            "abs_tol": 1e-08,
-            "rel_tol": 1e-08
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
           }
         ]
       },
@@ -1454,7 +1547,9 @@
               "FBAexOwnSP",
               "FCAexOwnSP",
               "FBAexAllSP",
-              "FCAexAllSP"
+              "FCAexAllSP",
+              "BaselEPE",
+              "BaselEEPE"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -1871,6 +1966,7 @@
           {
             "names": [
               "data/discountFactor",
+              "data/forwardRate",
               "data/time",
               "data/zeroRate",
               "data/cpi"
@@ -1890,11 +1986,12 @@
           {
             "names": [
               "data/time",
+              "data/yoyRate",
               "data/zeroRate",
               "data/cpi"
             ],
             "abs_tol": 1e-15,
-            "rel_tol": 1e-09
+            "rel_tol": 1e-08
           }
         ]
       },

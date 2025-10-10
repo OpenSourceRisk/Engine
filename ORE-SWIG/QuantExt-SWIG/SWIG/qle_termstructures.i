@@ -44,7 +44,17 @@ using QuantExt::CreditVolCurveWrapper;
 using QuantLib::Observer;
 using QuantLib::VolatilityTermStructure;
 using QuantExt::convertSwaptionVolatility;
+using QuantExt::ShiftScheme;
+using QuantExt::ShiftType;
+using QuantExt::parseShiftScheme;
+using QuantExt::parseShiftType;
 %}
+
+enum class ShiftScheme { Forward, Backward, Central };
+enum class ShiftType { Absolute, Relative };
+
+ShiftScheme parseShiftScheme(const std::string& s);
+ShiftType parseShiftType(const std::string& s);
 
 %shared_ptr(PriceTermStructure)
 class PriceTermStructure : public TermStructure {

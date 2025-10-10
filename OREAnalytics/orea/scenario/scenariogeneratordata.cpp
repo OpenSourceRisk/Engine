@@ -130,6 +130,8 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
         }
     }
 
+    timeStepsPerYear_ = XMLUtils::getChildValueAsInt(node, "TimeStepsPerYear", false, Null<Size>());
+
     LOG("ScenarioGeneratorData done.");
 }
 
@@ -162,6 +164,9 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) const {
     } else {
         XMLUtils::addChild(doc, pNode, "MporMode", "ActualDate");
     }
+
+    if(timeStepsPerYear_ != Null<Size>())
+        XMLUtils::addChild(doc, pNode, "TimeStepsPerYear", to_string(timeStepsPerYear_));
 
     return node;
 }

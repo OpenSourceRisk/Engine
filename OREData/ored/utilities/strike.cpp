@@ -20,87 +20,82 @@
 #include <ored/utilities/strike.hpp>
 
 #include <ql/errors.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/lock_guard.hpp>
-#include <boost/regex.hpp>
+#include <regex>
 
 namespace ore {
 namespace data {
 
 Strike parseStrike(const std::string& s) {
-    static boost::mutex mutex_;
-    boost::lock_guard<boost::mutex> lock(mutex_);
-
-    boost::regex m1("^(ATM|atm)");
-    boost::regex m1b("^(ATMF|atmf)");
-    boost::regex m2("^(ATM|atm)(\\+|\\-)([0-9]+[.]?[0-9]*)");
-    boost::regex m3("^(\\+|\\-)?([0-9]+[.]?[0-9]*)");
-    boost::regex m4("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(d|D)");
-    boost::regex m4b("(d|D)");
-    boost::regex m5("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(c|C)");
-    boost::regex m5b("^(c|C)");
-    boost::regex m6("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(p|P)");
-    boost::regex m6b("^(p|P)");
-    boost::regex m7("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(bf|BF)");
-    boost::regex m7b("^(bf|BF)");
-    boost::regex m8("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(rr|RR)");
-    boost::regex m8b("^(rr|RR)");
-    boost::regex m9("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(ATMF|atmf)");
-    boost::regex m9b("(ATMF|atmf)");
-    boost::regex m10("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(ATM|atm)");
-    boost::regex m10b("(ATM|atm)");
+    std::regex m1("^(ATM|atm)");
+    std::regex m1b("^(ATMF|atmf)");
+    std::regex m2("^(ATM|atm)(\\+|\\-)([0-9]+[.]?[0-9]*)");
+    std::regex m3("^(\\+|\\-)?([0-9]+[.]?[0-9]*)");
+    std::regex m4("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(d|D)");
+    std::regex m4b("(d|D)");
+    std::regex m5("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(c|C)");
+    std::regex m5b("^(c|C)");
+    std::regex m6("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(p|P)");
+    std::regex m6b("^(p|P)");
+    std::regex m7("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(bf|BF)");
+    std::regex m7b("^(bf|BF)");
+    std::regex m8("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(rr|RR)");
+    std::regex m8b("^(rr|RR)");
+    std::regex m9("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(ATMF|atmf)");
+    std::regex m9b("(ATMF|atmf)");
+    std::regex m10("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(ATM|atm)");
+    std::regex m10b("(ATM|atm)");
     Strike result;
-    if (boost::regex_match(s, m1)) {
+    if (std::regex_match(s, m1)) {
         result.type = Strike::Type::ATM;
         result.value = 0.0;
         return result;
     }
-    if (boost::regex_match(s, m1b)) {
+    if (std::regex_match(s, m1b)) {
         result.type = Strike::Type::ATMF;
         result.value = 0.0;
         return result;
     }
-    if (boost::regex_match(s, m2)) {
+    if (std::regex_match(s, m2)) {
         result.type = Strike::Type::ATM_Offset;
         result.value = parseReal(regex_replace(s, m1, std::string("")));
         return result;
     }
-    if (boost::regex_match(s, m3)) {
+    if (std::regex_match(s, m3)) {
         result.type = Strike::Type::Absolute;
         result.value = parseReal(s);
         return result;
     }
-    if (boost::regex_match(s, m4)) {
+    if (std::regex_match(s, m4)) {
         result.type = Strike::Type::Delta;
         result.value = parseReal(regex_replace(s, m4b, std::string("")));
         return result;
     }
-    if (boost::regex_match(s, m5)) {
+    if (std::regex_match(s, m5)) {
         result.type = Strike::Type::DeltaCall;
         result.value = parseReal(regex_replace(s, m5b, std::string("")));
         return result;
     }
-    if (boost::regex_match(s, m6)) {
+    if (std::regex_match(s, m6)) {
         result.type = Strike::Type::DeltaPut;
         result.value = parseReal(regex_replace(s, m6b, std::string("")));
         return result;
     }
-    if (boost::regex_match(s, m7)) {
+    if (std::regex_match(s, m7)) {
         result.type = Strike::Type::BF;
         result.value = parseReal(regex_replace(s, m7b, std::string("")));
         return result;
     }
-    if (boost::regex_match(s, m8)) {
+    if (std::regex_match(s, m8)) {
         result.type = Strike::Type::RR;
         result.value = parseReal(regex_replace(s, m8b, std::string("")));
         return result;
     }
-    if (boost::regex_match(s, m9)) {
+    if (std::regex_match(s, m9)) {
         result.type = Strike::Type::ATMF_Moneyness;
         result.value = parseReal(regex_replace(s, m9b, std::string("")));
         return result;
     }
-    if (boost::regex_match(s, m10)) {
+    if (std::regex_match(s, m10)) {
         result.type = Strike::Type::ATM_Moneyness;
         result.value = parseReal(regex_replace(s, m10b, std::string("")));
         return result;

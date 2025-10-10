@@ -1,17 +1,10 @@
 include(CheckCXXCompilerFlag)
-if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-    include(CheckLinkerFlag)
-endif()
+include(CheckLinkerFlag)
 
 include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
 
-option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
-option(MSVC_PARALLELBUILD "Use flag /MP" ON)
-
-option(QL_USE_PCH OFF)
-
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
-set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_ENABLE_ASSERTIONS=1 -g -O2")
+set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2")
 
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
@@ -32,8 +25,8 @@ macro(add_linker_flag flag supportsFlag)
     endif()
 endmacro()
 
-# use CXX 17, disable gnu extensions
-set(CMAKE_CXX_STANDARD 17)
+# use CXX 20, disable gnu extensions
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
 # If available, use PIC for shared libs and PIE for executables
@@ -54,6 +47,11 @@ endif()
 # set compiler macro if CUDA is enabled
 if (ORE_ENABLE_CUDA)
   add_compile_definitions(ORE_ENABLE_CUDA)
+endif()
+
+# set compiler macro if ORE_PYTHON_INTEGRATION is set
+if (ORE_PYTHON_INTEGRATION)
+  add_compile_definitions(ORE_PYTHON_INTEGRATION)
 endif()
 
 # set compiler macro if zlib is enabled
@@ -142,8 +140,11 @@ else()
 
     # add pthread flag
     add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
-        add_linker_flag("-pthread" usePThreadLinkerFlag)
+    add_linker_flag("-pthread" usePThreadLinkerFlag)
+
+    # use flat namespace to fix symbol lookup issues and align with linux more closely
+    if (APPLE)
+        add_linker_flag("-flat_namespace" supportsFlatNameSpace)
     endif()
 
     if(QL_USE_PCH)
@@ -165,7 +166,7 @@ else()
     add_compiler_flag("-Werror=non-virtual-dtor" supportsNonVirtualDtor)
     # the line below breaks the linux build
     #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
-    add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
+    #add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
     add_compiler_flag("-Werror=reorder" supportsReorder)
     #add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
     add_compiler_flag("-Werror=unused-but-set-variable" supportsUnusedButSetVariable)

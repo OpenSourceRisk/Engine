@@ -39,6 +39,7 @@ cashflows/cmbcoupon.cpp
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
+cashflows/nettedcommoditycashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/cpicoupon.cpp
 cashflows/cpicouponpricer.cpp
@@ -68,6 +69,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 cashflows/trscashflow.cpp
+cashflows/typedcashflow.cpp
 cashflows/yoyinflationcoupon.cpp
 cashflows/zerofixedcoupon.cpp
 currencies/africa.cpp
@@ -101,10 +103,12 @@ instruments/ascot.cpp
 instruments/averageois.cpp
 instruments/balanceguaranteedswap.cpp
 instruments/bondbasket.cpp
+instruments/bondfuture.cpp
 instruments/bondoption.cpp
 instruments/bondrepo.cpp
 instruments/bondtotalreturnswap.cpp
 instruments/brlcdiswap.cpp
+instruments/callablebond.cpp
 instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cbo.cpp
@@ -277,6 +281,7 @@ pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
+pricingengines/discountingbondfutureengine.cpp
 pricingengines/discountingbondrepoengine.cpp
 pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
@@ -291,8 +296,11 @@ pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
+pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
+pricingengines/forwardenabledbondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
@@ -314,6 +322,7 @@ pricingengines/midpointindexcdsengine.cpp
 pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
+pricingengines/numericlgmcallablebondengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
@@ -326,6 +335,7 @@ processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
@@ -394,6 +404,7 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
+termstructures/scenario.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
@@ -427,6 +438,7 @@ utilities/commodity.cpp
 utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
 utilities/inflation.cpp
+utilities/ratehelpers.cpp
 utilities/time.cpp)
 
 # hpp files, this list is maintained manually
@@ -474,6 +486,7 @@ cashflows/cmbcoupon.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
+cashflows/nettedcommoditycashflow.hpp
 cashflows/couponpricer.hpp
 cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
@@ -506,6 +519,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 cashflows/trscashflow.hpp
+cashflows/typedcashflow.hpp
 cashflows/yoyinflationcoupon.hpp
 cashflows/zerofixedcoupon.hpp
 currencies/africa.hpp
@@ -599,10 +613,12 @@ instruments/ascot.hpp
 instruments/averageois.hpp
 instruments/balanceguaranteedswap.hpp
 instruments/bondbasket.hpp
+instruments/bondfuture.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
 instruments/brlcdiswap.hpp
+instruments/callablebond.hpp
 instruments/cashflowresults.hpp
 instruments/cashposition.hpp
 instruments/cashsettledeuropeanoption.hpp
@@ -661,6 +677,7 @@ math/cudaenvironment.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/discretedistribution.hpp
+math/distributioncount.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
@@ -829,6 +846,7 @@ pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
+pricingengines/discountingbondfutureengine.hpp
 pricingengines/discountingbondrepoengine.hpp
 pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
@@ -843,8 +861,11 @@ pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
 pricingengines/discretizedconvertible.hpp
+pricingengines/fdblackscholesvanillaengine.hpp
+pricingengines/fdcallablebondevents.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
+pricingengines/forwardenabledbondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
@@ -866,6 +887,7 @@ pricingengines/midpointindexcdsengine.hpp
 pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
+pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
@@ -879,6 +901,7 @@ processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
 quotes/exceptionquote.hpp
@@ -935,6 +958,7 @@ termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
+termstructures/effectivebonddiscountcurve.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityannounceddividendcurve.hpp
 termstructures/equityforwardcurvestripper.hpp
@@ -991,6 +1015,7 @@ termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
+termstructures/scenario.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp
@@ -1038,7 +1063,9 @@ utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp
+utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
 utilities/time.hpp
@@ -1064,6 +1091,10 @@ if (ORE_ENABLE_CUDA)
   target_link_libraries(${QLE_LIB_NAME} CUDA::nvrtc)
   target_link_libraries(${QLE_LIB_NAME} CUDA::curand)
   target_link_libraries(${QLE_LIB_NAME} CUDA::cusolver)
+endif()
+
+if (ORE_PYTHON_INTEGRATION)
+  target_link_libraries(${QLE_LIB_NAME} ${Python_LIBRARIES})
 endif()
 
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)

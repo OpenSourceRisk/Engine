@@ -136,6 +136,7 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         barrier = QuantLib::ext::make_shared<QuantLib::DoubleBarrierOption>(boost::get<DoubleBarrier::Type>(barrierType),
             barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, payoff, exercise);
     }
+    int strictBarrier = barrier_.strictComparison() ? boost::lexical_cast<int>(barrier_.strictComparison().value()) : 0;
 
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricingEngine(engineFactory, expiryDate, payDate);
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricingEngine(engineFactory, expiryDate, payDate);
@@ -152,14 +153,14 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<Barrier::Type>(barrierType), spot,
             barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_, tradeMultiplier(),
             tradeMultiplier(), additionalInstruments, additionalMultipliers, barrier_.overrideTriggered(),
-            getLowIndex(), getHighIndex());
+            getLowIndex(), getHighIndex(), strictBarrier);
     } else {
         instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
             barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<DoubleBarrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_,
             index, calendar_, tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers,
-            barrier_.overrideTriggered(), getLowIndex(), getHighIndex());
+            barrier_.overrideTriggered(), getLowIndex(), getHighIndex(), strictBarrier);
     }
     instrument_ = instWrapper;
 
@@ -180,8 +181,9 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     // Add additional premium payments
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, bsInd * tradeMultiplier(), option_.premiumData(), -bsInd,
-                tradeCurrency(), engineFactory, engineFactory->configuration(MarketContext::pricing));
+                tradeCurrency(), discountCurve, engineFactory, engineFactory->configuration(MarketContext::pricing));
 }
 
 

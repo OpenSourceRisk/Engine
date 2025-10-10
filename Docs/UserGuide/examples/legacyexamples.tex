@@ -2204,11 +2204,11 @@ The portfolio used in this example includes zero sensitivities of
 \item CapFloor volatilities
 \end{itemize}
 
-ORE reads the raw sensitivites from the csv input file *sensitivityInputFile*. The input file needs to have six  columns, the column names can be user configured. Here is a description of each of the columns:
+ORE reads the raw sensitivities from the csv input file *sensitivityInputFile*. The input file needs to have six  columns, the column names can be user configured. Here is a description of each of the columns:
 
 \begin{enumerate}
 \item idColumn : Column with a unique identifier for the trade / nettingset / portfolio.
-\item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
+\item riskFactorColumn: Column with the identifier of the zero/raw sensitivity. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\
 \item deltaColumn: The raw sensitivity of the trade/nettingset / portfolio with respect to the risk factor
 \item currencyColumn: The currency in which the raw sensitivity is expressed, need to be the same as the BaseCurrency in the simulation settings.
 \item shiftSizeColumn: The shift size applied to compute the raw sensitivity, need to be consistent to the sensitivity configuration.

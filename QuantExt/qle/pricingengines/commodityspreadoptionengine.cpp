@@ -22,6 +22,7 @@
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/pricingengines/commodityspreadoptionengine.hpp>
@@ -40,9 +41,15 @@ namespace QuantExt {
 CommoditySpreadOptionAnalyticalEngine::CommoditySpreadOptionAnalyticalEngine(
     const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volLong,
     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volShort,
-    const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta)
-    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta) {
+    const QuantLib::Handle<QuantExt::CorrelationTermStructure>& rho, Real beta, QuantLib::DiffusionModelType modelType, Real displacement)
+    : discountCurve_(discountCurve), volTSLongAsset_(volLong), volTSShortAsset_(volShort), rho_(rho), beta_(beta),
+      modelType_(modelType), displacement_(displacement) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
+    QL_REQUIRE(!volTSLongAsset_.empty(), "volTSLongAsset not set");
+    QL_REQUIRE(!volTSShortAsset_.empty(), "volTSShortAsset not set");
+    QL_REQUIRE(modelType_ != QuantLib::DiffusionModelType::AsInputVolatilityType ||
+                   (volTSLongAsset_->volType() == volTSShortAsset_->volType()),
+               "If modelType is AsInputVolatilityType, both volatilities must have the same type");
     registerWith(discountCurve_);
     registerWith(volTSLongAsset_);
     registerWith(volTSShortAsset_);
@@ -69,18 +76,27 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     Time ttp = discountCurve_->timeFromReference(paymentDate);
     Time tte = discountCurve_->timeFromReference(exerciseDate);
 
-    auto parameterFlow1 =
-        derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, arguments_.longAssetFxIndex);
+    auto parameterFlow1 = derivePricingParameterFromFlow(arguments_.longAssetFlow, *volTSLongAsset_, exerciseDate,
+                                                         arguments_.longAssetFxIndex);
 
-    auto parameterFlow2 =
-        derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, arguments_.shortAssetFxIndex);
+    auto parameterFlow2 = derivePricingParameterFromFlow(arguments_.shortAssetFlow, *volTSShortAsset_, exerciseDate,
+                                                         arguments_.shortAssetFxIndex);
 
+    QL_REQUIRE(parameterFlow1.volType == parameterFlow2.volType,
+               "Volatility types of long and short asset must be the same, got " << parameterFlow1.volType << " and "
+                                                                                 << parameterFlow2.volType);
+    QL_REQUIRE(parameterFlow1.volType == VolatilityType::Normal ||
+                   QuantLib::close_enough(parameterFlow1.displacement, parameterFlow2.displacement),
+               "Displacements of long and short asset must be the same, got " << parameterFlow1.displacement << " and "
+                                                                              << parameterFlow2.displacement);
     double F1 = parameterFlow1.atm;
     double F2 = parameterFlow2.atm;
     double sigma1 = parameterFlow1.sigma;
     double sigma2 = parameterFlow2.sigma;
-    double obsTime1 = parameterFlow1.tn;
-    double obsTime2 = parameterFlow2.tn;
+    double pricingTime1 = parameterFlow1.tn;
+    double pricingTime2 = parameterFlow2.tn;
+    double obsTime1 = std::min(tte, pricingTime1);
+    double obsTime2 = std::min(tte, pricingTime2);
     double accruals1 = parameterFlow1.accruals;
     double accruals2 = parameterFlow2.accruals;
 
@@ -94,7 +110,8 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     // Adjust strike for past fixings
     double effectiveStrike = arguments_.effectiveStrike - w1 * accruals1 + w2 * accruals2;
     Real correlation = QuantLib::Null<Real>();
-
+    
+    bool useBachelier = parameterFlow1.volType == VolatilityType::Normal;
     if (exerciseDate <= today && paymentDate <= today) {
         results_.value = 0;
     } else if (exerciseDate <= today && paymentDate > today) {
@@ -104,39 +121,52 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
 
         results_.value = df * arguments_.quantity * omega * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
 
-    } else if (effectiveStrike + F2 * w2 < 0) {
+    } else if (effectiveStrike + F2 * w2 < 0 && !useBachelier) {
         // Effective strike can be become negative if accrueds large enough
         if (arguments_.type == Option::Call) {
             results_.value = df * arguments_.quantity * std::max(w1 * F1 - w2 * F2 - effectiveStrike, 0.0);
         } else {
             results_.value = 0.0;
         }
-
     } else {
-        sigma1 = sigma1 * std::min(1.0, std::sqrt(obsTime1 / tte));
-        sigma2 = sigma2 * std::min(1.0, std::sqrt(obsTime2 / tte));
+        sigma1 = sigma1 * std::sqrt(obsTime1 / tte);
+        sigma2 = sigma2 * std::sqrt(obsTime2 / tte);
+
         correlation = rho();
-        // KirkFormula
-        Y = (F2 * w2 + effectiveStrike);
-        Z = w1 * F1 / Y;
-        sigmaY = sigma2 * F2 * w2 / Y;
+        if (useBachelier) {
+            sigma = std::sqrt(w1 * w1 * sigma1 * sigma1 + w2 * w2 * sigma2 * sigma2 -
+                              2.0 * w1 * w2 * correlation * sigma1 * sigma2);
+            stdDev = sigma * std::sqrt(tte);
+            results_.value = bachelierBlackFormula(arguments_.type, effectiveStrike, w1 * F1 - w2 * F2, stdDev, df) *
+                             arguments_.quantity;
+        } else {
+            // KirkFormula
+            Y = (F2 + displacement_) * w2 + effectiveStrike + (w1 - w2) * displacement_;
+            Z = w1 * (F1 + displacement_) / Y;
+            sigmaY = sigma2 * F2 * w2 / Y;
 
-        sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
+            sigma = std::sqrt(std::pow(sigma1, 2.0) + std::pow(sigmaY, 2.0) - 2 * sigma1 * sigmaY * correlation);
 
-        stdDev = sigma * sqrt(tte);
+            stdDev = sigma * sqrt(tte);
 
-        results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
+            results_.value = arguments_.quantity * Y * blackFormula(arguments_.type, 1, Z, stdDev, df);
+        }
     }
 
     // Calendar spread adjustment if observation period is before the exercise date
+    mp["eff_strike"] = effectiveStrike;
     mp["F1"] = F1;
     mp["accruals1"] = accruals1;
     mp["sigma1"] = sigma1;
+    mp["sigma1_without_time_adjustment"] = parameterFlow1.sigma;
     mp["obsTime1"] = obsTime1;
+    mp["pricingTime1"] = pricingTime1;
     mp["F2"] = F2;
     mp["accruals2"] = accruals2;
     mp["sigma2"] = sigma2;
+    mp["sigma2_without_time_adjustment"] = parameterFlow2.sigma;
     mp["obsTime2"] = obsTime2;
+    mp["pricingTime2"] = pricingTime2;
     mp["tte"] = tte;
     mp["ttp"] = ttp;
     mp["df"] = df;
@@ -160,38 +190,65 @@ void CommoditySpreadOptionAnalyticalEngine::calculate() const {
     mp["index2_index"] = parameterFlow2.indexNames;
     mp["index2_index_expiry"] = parameterFlow2.expiries;
     mp["index2_fixing"] = parameterFlow2.fixings;
+
+    vector<CashFlowResults> cfResults;
+    cfResults.emplace_back();
+    cfResults.back().amount = results_.value / df;
+    cfResults.back().payDate = paymentDate;
+    cfResults.back().legNumber = 0;
+    cfResults.back().type = "ExpectedFlow";
+
+    mp["cashFlowResults"] = cfResults;
 }
 
 CommoditySpreadOptionAnalyticalEngine::PricingParameter
 CommoditySpreadOptionAnalyticalEngine::derivePricingParameterFromFlow(const ext::shared_ptr<CommodityCashFlow>& flow,
                                                                       const ext::shared_ptr<BlackVolTermStructure>& vol,
+                                                                      const Date& exerciseDate,
                                                                       const ext::shared_ptr<FxIndex>& fxIndex) const {
     PricingParameter res;
+    res.volType = modelType_ == QuantLib::DiffusionModelType::AsInputVolatilityType
+                      ? vol->volType()
+                      : (modelType_ == QuantLib::DiffusionModelType::Black ? VolatilityType::ShiftedLognormal
+                                                                           : VolatilityType::Normal);
+    res.displacement = modelType_ == QuantLib::DiffusionModelType::AsInputVolatilityType
+                           ? vol->shift()
+                           : (modelType_ == QuantLib::DiffusionModelType::Black ? displacement_ : 0.0);
     if (auto cf = ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(flow)) {
         res.accruals = 0.0;
-        res.tn = vol->timeFromReference(cf->pricingDate());
+        // In case exercise is after future expiry (e.g. calendar spreads)
+        auto pricingDate = std::min(exerciseDate, cf->pricingDate());
+        res.tn = std::max(vol->timeFromReference(pricingDate), 0.0);
         double fxSpot = 1.0;
         if (fxIndex) {
-            fxSpot = fxIndex->fixing(cf->pricingDate());
+            fxSpot = fxIndex->fixing(pricingDate);
         }
-        double atmUnderlyingCurrency = cf->index()->fixing(cf->pricingDate());
+        double atmUnderlyingCurrency = cf->index()->fixing(pricingDate);
         res.atm = atmUnderlyingCurrency * fxSpot;
-        res.sigma = res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)
-                        ? vol->blackVol(res.tn, atmUnderlyingCurrency, true)
-                        : 0.0;
+        res.sigma = 0;
+        if (res.tn > 0 && !QuantLib::close_enough(res.tn, 0.0)) {
+            auto [volatility, volType, displacement] =
+                convertInputVolatility(modelType_, displacement_, vol, res.atm, res.atm, res.tn);
+            res.sigma = volatility;
+            res.volType = volType;
+            res.displacement = displacement;
+        }
         res.indexNames.push_back(cf->index()->name());
         res.expiries.push_back(cf->index()->expiryDate());
         res.fixings.push_back(atmUnderlyingCurrency);
-        res.pricingDates.push_back(cf->pricingDate());
+        res.pricingDates.push_back(pricingDate);
     } else if (auto avgCf = ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(flow)) {
         auto parameter = CommodityAveragePriceOptionMomementMatching::matchFirstTwoMomentsTurnbullWakeman(
             avgCf, vol,
             std::bind(&CommoditySpreadOptionAnalyticalEngine::intraAssetCorrelation, this, std::placeholders::_1,
-                      std::placeholders::_2, vol));
+                      std::placeholders::_2, vol),
+            Null<Real>(), exerciseDate, modelType_, displacement_);
         res.tn = parameter.tn;
         res.atm = parameter.forward;
         res.accruals = parameter.accruals;
         res.sigma = parameter.sigma;
+        res.volType = parameter.volType;
+        res.displacement = parameter.displacement;
         res.indexNames = parameter.indexNames;
         res.expiries = parameter.indexExpiries;
         res.fixings = parameter.fixings;
@@ -218,7 +275,7 @@ Real CommoditySpreadOptionAnalyticalEngine::rho() const {
         return rho_->correlation(arguments_.exercise->lastDate());
     } else {
         return intraAssetCorrelation(arguments_.shortAssetLastPricingDate, arguments_.longAssetLastPricingDate,
-                                      *volTSLongAsset_);
+                                     *volTSLongAsset_);
     }
 }
 

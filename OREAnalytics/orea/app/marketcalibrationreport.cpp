@@ -37,7 +37,8 @@ std::string getCurveName(const std::string& spec) {
 namespace ore {
 namespace analytics {
 
-MarketCalibrationReportBase::MarketCalibrationReportBase(const std::string& calibrationFilter) {
+MarketCalibrationReportBase::MarketCalibrationReportBase(const std::string& calibrationFilter, std::size_t precision)
+    : precision_(precision) {
     calibrationFilters_ = CalibrationFilters(calibrationFilter);
 }
 
@@ -148,8 +149,8 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
 }
 
 MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
-    const QuantLib::ext::shared_ptr<ore::data::Report>& report)
-    : ore::analytics::MarketCalibrationReportBase(calibrationFilter), report_(report) {
+    const QuantLib::ext::shared_ptr<ore::data::Report>& report, std::size_t precision)
+    : ore::analytics::MarketCalibrationReportBase(calibrationFilter, precision), report_(report) {
     report_->addColumn("MarketObjectType", string())
         .addColumn("MarketObjectId", string())
         .addColumn("ResultId", string())
@@ -168,7 +169,7 @@ QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCalibrationRepo
 void MarketCalibrationReport::addRowReport(const std::string& moType, const std::string& moId,
                         const std::string& resId, const std::string& key1, const std::string& key2,
                         const std::string& key3, const boost::any& value) {
-    auto p = parseBoostAny(value);
+    auto p = parseBoostAny(value, precision_);
     report_->next().add(moType).add(moId).add(resId).add(key1).add(key2).add(key3).add(p.first).add(p.second);
 }
 
@@ -316,7 +317,7 @@ void MarketCalibrationReportBase::addCommodityCurve(const QuantLib::Date& refdat
     if (info == nullptr)
         return;
 
-    const string commodityStr = "commodityCuve";
+    const string commodityStr = "commodityCurve";
 
     // check if we have already processed this curve
     if (checkCalibrations(label, commodityStr, id)) {

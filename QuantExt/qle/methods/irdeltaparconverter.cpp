@@ -106,7 +106,7 @@ IrDeltaParConverter::IrDeltaParConverter(const std::vector<QuantLib::Period>& te
     // remove todays fixings
 
     Date today = indexBase->iborIndex()->forwardingTermStructure()->referenceDate();
-
+    QL_DEPRECATED_DISABLE_WARNING
     struct FixingRemover {
         FixingRemover(const Date& today, const QuantLib::ext::shared_ptr<Index>& index) : today(today), index(index) {
             TimeSeries<Real> s = IndexManager::instance().getHistory(index->name());
@@ -123,7 +123,7 @@ IrDeltaParConverter::IrDeltaParConverter(const std::vector<QuantLib::Period>& te
         QuantLib::ext::shared_ptr<Index> index;
         Real savedFixing;
     } FixingRemover(today, indexBase->iborIndex());
-
+    QL_DEPRECATED_ENABLE_WARNING
     // compute jacobian and its inverse
 
     constexpr Real shift = 1E-4;

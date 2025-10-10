@@ -1,22 +1,14 @@
 # syntax = docker/dockerfile:1.2
-ARG debian_tag
-FROM debian:${debian_tag}
+ARG ORE_BUILD_VERSION
+FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as orebuild
 
-MAINTAINER Quaternion Risk Management
-LABEL Description="Build QuantLib and add to the Boost build environment"
+LABEL Quaternion Risk Management
+LABEL Description="Build ORE"
 
-# Argument for number of cores to use while building
-ARG num_cores
-
-# Argument that chooses cmake build type
-ARG cmake_build_type
-
-RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev autoconf libtool cmake ninja-build zlib1g-dev opencl-headers ocl-icd-opencl-dev libboost-all-dev doxygen graphviz ccache libeigen3-dev \
-  && apt-get clean
+ARG NUM_CORES
+ARG CMAKE_BUILD_TYPE
 
 # Exclusions are performed by .dockerignore
-COPY QuantLib /ore/QuantLib
 COPY CMakeLists.txt /ore/CMakeLists.txt
 COPY QuantLib /ore/QuantLib
 COPY QuantExt /ore/QuantExt
@@ -26,6 +18,12 @@ COPY App /ore/App
 COPY ThirdPartyLibs /ore/ThirdPartyLibs
 COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
+COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
+COPY ORE-SWIG/test /ore/ORE-SWIG/test
+COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
+COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
+COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
+COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
 
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
@@ -36,11 +34,11 @@ ENV CCACHE_MAXSIZE="10G"
 # - add  -fpch-preprocess to CMAKE_CXX_FLAGS when QL_USE_PCH is set to ON
 RUN cd /ore \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DORE_BUILD_SWIG=OFF -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -DORE_ENABLE_OPENCL=ON -DORE_MULTITHREADING_CPU_AFFINITY=ON
+  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" -DORE_BUILD_SWIG=ON -DCMAKE_C_COMPILER=/usr/bin/clang -DORE_PYTHON_INTEGRATION=ON -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER $([ "$(uname -m)" = "x86_64" ] && echo "-mavx2")" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -DORE_ENABLE_OPENCL=ON -DORE_MULTITHREADING_CPU_AFFINITY=ON 
  
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ ccache -z \
-  && cmake --build . -- -j ${num_cores} install \
+  && cmake --build . -- -j ${NUM_CORES} install \
   && ccache -s \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
@@ -51,6 +49,28 @@ RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
   && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
+  && mkdir -p oreswig/pythonlib \
+  && mv /ore/build.ore/ORE-SWIG/ORE.py /oreswig/pythonlib \
+  && mv /ore/build.ore/ORE-SWIG/_OREP.so /oreswig/pythonlib \
   && rm -rf ore
 
+
+
+ARG DEBIAN_TAG
+FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
+
+COPY --from=orebuild /usr/local/include /usr/local/include
+COPY --from=orebuild /usr/local/lib/ /usr/local/lib
+COPY --from=orebuild /usr/local/bin/ /usr/local/bin
+COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libboost* /usr/lib/x86_64-linux-gnu
+COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-gnu
+COPY --from=orebuild /usr/lib/llvm-19/ /usr/lib/llvm-19
+COPY --from=orebuild /usr/include/boost/ /usr/include/boost
+COPY --from=orebuild /usr/include/CL /usr/include/CL
+COPY --from=orebuild /oreswig /oreswig
+
+
+RUN ldconfig
+
 CMD bash
+

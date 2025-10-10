@@ -305,7 +305,8 @@ ScenarioSimMarket::ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& in
                                      const std::string& configuration, const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
-                                     const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig,
+                                     const bool allowPartialScenarios,
+                                     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                      const bool handlePseudoCurrencies,
                                      const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : ScenarioSimMarket(initMarket, parameters, QuantLib::ext::make_shared<FixingManager>(initMarket->asofDate()),
@@ -318,7 +319,8 @@ ScenarioSimMarket::ScenarioSimMarket(
     const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const std::string& configuration,
     const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
     const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
-    const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
+    const bool allowPartialScenarios, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : SimMarket(handlePseudoCurrencies), parameters_(parameters), fixingManager_(fixingManager),
       filter_(QuantLib::ext::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
       cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
@@ -489,9 +491,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             ich->enableExtrapolation();
 
                         QuantLib::ext::shared_ptr<IborIndex> i = index->clone(ich);
-                        if (iborFallbackConfig_.isIndexReplaced(name, asof_)) {
+                        if (iborFallbackConfig_->isIndexReplaced(name, asof_)) {
                             // handle ibor fallback indices
-                            auto fallbackData = iborFallbackConfig_.fallbackData(name);
+                            auto fallbackData = iborFallbackConfig_->fallbackData(name);
                             auto f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
                             QL_REQUIRE(f != iborIndices_.end(),
                                        "Could not build ibor fallback index '"
@@ -507,15 +509,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(i))
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
                                 original, rfrInd, fallbackData.spread, fallbackData.switchDate,
-                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                    iborFallbackConfig_->useRfrCurveInSimulationMarket());
                                         else
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
                                                 i, rfrInd, fallbackData.spread, fallbackData.switchDate,
-                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                                iborFallbackConfig_->useRfrCurveInSimulationMarket());
                             DLOG("built ibor fall back index '"
                                  << name << "' with rfr index '" << fallbackData.rfrIndex << "', spread "
-                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha
-                                 << iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha << iborFallbackConfig_->useRfrCurveInSimulationMarket());
                         }
                         iborIndices_.insert(
                             make_pair(make_pair(Market::defaultConfiguration, name), Handle<IborIndex>(i)));
@@ -675,6 +676,43 @@ ScenarioSimMarket::ScenarioSimMarket(
                     } catch (const std::exception& e) {
                         DLOG("skipping this object: " << e.what());
                     }
+
+                    try {
+                        DLOG("Adding security conversion factor " << name << " from configuration " << configuration);
+                        Real v = initMarket->conversionFactor(name, configuration)->value();
+                        auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
+                        if(useSpreadedTermStructures_) {
+                            auto m = [v](Real x) { return x * v; };
+                            conversionFactors_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name),
+                                          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(
+                                              Handle<Quote>(q), m))));
+                        } else {
+                            conversionFactors_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
+                        }
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
+                    }
+
+                    try {
+                        DLOG("Adding security price " << name << " from configuration " << configuration);
+                        Real v = initMarket->securityPrice(name, configuration)->value();
+                        auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
+                        if(useSpreadedTermStructures_) {
+                            auto m = [v](Real x) { return x * v; };
+                            securityPrices_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name),
+                                          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(
+                                              Handle<Quote>(q), m))));
+                        } else {
+                            securityPrices_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
+                        }
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
+                    }
+
                 }
                 break;
 
@@ -843,23 +881,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = parameters_->swapVolSmileDynamics(name) == "StickyStrike";
                                 QuantLib::ext::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 QuantLib::ext::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
-                                if (!stickyStrike) {
+                                if (!swapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(swapIndexBase);
+                                        simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
+                                }
+                                if (!shortSwapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(shortSwapIndexBase);
+                                        simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
-                                    simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
-                                    simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
-                                    if (simSwapIndex == nullptr || simShortSwapIndex == nullptr)
-                                        stickyStrike = true;
                                 }
                                 if (!swapIndexBase.empty())
                                     swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
@@ -1276,7 +1314,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+                        DLOG("Adding recovery rate " << name << " from configuration " << configuration);
                         Real v = initMarket->recoveryRate(name, configuration)->value();
                         auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
                         if(useSpreadedTermStructures_) {
@@ -2847,36 +2885,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::ConversionFactor:
-                for (const auto& name : param.second.second) {
-                    bool simDataWritten = false;
-                    try {
-                        DLOG("Adding ConversionFactor " << name << " from configuration " << configuration);
-                        Real v;
-                        try {
-                            v = initMarket->conversionFactor(name, configuration)->value();
-                        } catch (...) {
-                            DLOG("ConversionFactor " << name << " uses default value of 1.0.");
-                            v = 1.0;
-                        }
-
-                        auto q = QuantLib::ext::make_shared<SimpleQuote>(v);
-                        conversionFactors_.insert(
-                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
-
-                        if (param.second.first) // is set to false within ScenarioSimMarketParameters::fromXML
-                            simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
-                                               std::forward_as_tuple(q));
-
-                        writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {});
-                        simDataWritten = true;
-                    } catch (const std::exception& e) {
-                        processException(e, name, param.first, simDataWritten);
-                        gotException = true;
-                    }
-                }
-                break;
-
             case RiskFactorKey::KeyType::SurvivalWeight:
                 // nothing to do, these are written to asd
                 break;
@@ -3007,6 +3015,12 @@ ScenarioSimMarket::ScenarioSimMarket(
         baseScenarioAbsolute_ = tmpAbs;
     }
     LOG("building base scenario done");
+
+    if (ScenarioInformation::instance().isEnabled()) {
+        scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(baseScenarioAbsolute_);
+    }
 }
 
 void ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName) {
@@ -3044,9 +3058,22 @@ void ScenarioSimMarket::reset() {
     filter_ = filterBackup;
 }
 
-void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& s) {
 
+    auto scenario = s;
+    if (useSpreadedTermStructures_ && scenario->isAbsolute())
+        scenario = absoluteToSpreadedScenario(s, baseScenarioAbsolute_, parameters_);
+    
     currentScenario_ = scenario;
+
+    if (ScenarioInformation::instance().isEnabled()){
+        QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
+        if (!currentScenario_->isAbsolute())
+            currentScenarioAbsolute =
+                addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
+    }
 
     // 1 handle delta scenario
 
@@ -3339,22 +3366,29 @@ void ScenarioSimMarket::applyCurveAlgebra() {
     for (auto const& a : parameters_->curveAlgebraData().data()) {
         DLOG("Applying operation type " << a.operationType());
         if (a.operationType() == "Spreaded") {
-            DLOG("curve " << a.key() << " is spreaded over " << a.argument(0));
-            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), getYieldCurve(a.argument(0)));
-        } else
-        // add more operations here...
-        {
+            std::vector<Handle<YieldTermStructure>> bases;
+            std::vector<double> multiplier;
+            for (auto const& arg : a.arguments()) {
+                auto v = parseListOfValues(arg);
+                bases.push_back(getYieldCurve(v[0]));
+                multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
+                DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier "
+                              << multiplier.back());
+            }
+            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), bases, multiplier);
+        } else {
             QL_FAIL("curve algebra rule type '" << a.operationType() << "' not recognized. Expected: 'Spreaded'.");
         }
     }
 }
 
 void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
-                                                           const Handle<YieldTermStructure>& base) {
+                                                            const std::vector<Handle<YieldTermStructure>>& bases,
+                                                            const std::vector<double>& multiplier) {
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else {
         QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
                 "supported curve types. Internal error, contact dev.");

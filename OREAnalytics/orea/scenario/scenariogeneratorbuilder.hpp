@@ -57,7 +57,7 @@ public:
     ScenarioGeneratorBuilder() {}
 
     //! Constructor
-    ScenarioGeneratorBuilder(QuantLib::ext::shared_ptr<ScenarioGeneratorData> data) : data_(data) {}
+    explicit ScenarioGeneratorBuilder(const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& data) : data_(data) {}
 
     //! Build function
     QuantLib::ext::shared_ptr<ScenarioGenerator>

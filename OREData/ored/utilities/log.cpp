@@ -112,6 +112,7 @@ ProgressLogger::ProgressLogger() : IndependentLogger(name) {
 
     // Use formatter to intercept and store the message.
     auto formatter = [this](const logging::record_view& rec, logging::formatting_ostream& strm) {
+        boost::unique_lock<boost::shared_mutex> lock(this->mutex());
         this->messages().push_back(rec[lexpr::smessage]->c_str());
 
         // If a file sink exists, then send the log record to it.
@@ -192,6 +193,7 @@ StructuredLogger::StructuredLogger() : IndependentLogger(name) {
 
     // Use formatter to intercept and store the message.
     auto formatter = [this](const logging::record_view& rec, logging::formatting_ostream& strm) {
+        boost::unique_lock<boost::shared_mutex> lock(this->mutex());
         const string& msg = rec[lexpr::smessage]->c_str();
 
         // Emit log record if it has not been logged before

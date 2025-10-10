@@ -50,7 +50,8 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"Security", CurveSpec::CurveType::Security},
         {"Commodity", CurveSpec::CurveType::Commodity},
         {"Correlation", CurveSpec::CurveType::Correlation},
-        {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility}};
+        {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility},
+        {"SwapIndex", CurveSpec::CurveType::SwapIndex}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -69,7 +70,7 @@ QuantLib::ext::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
     vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
 
-    QL_REQUIRE(tokens.size() > 1, "number of tokens too small in curve spec " << s);
+    QL_REQUIRE(tokens.size() > 0, "number of tokens too small in curve spec " << s);
 
     CurveSpec::CurveType curveType = parseCurveSpecType(tokens[0]);
 
@@ -234,7 +235,14 @@ QuantLib::ext::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         return QuantLib::ext::make_shared<CorrelationCurveSpec>(id);
     }
 
-        // TODO: the rest...
+    case CurveSpec::CurveType::SwapIndex: {
+        // Expected format: CurveConfigID
+        QL_REQUIRE(tokens.size() == 1, "Unexpected number"
+                                       " of tokens in yield curve spec "
+                                           << s);
+        return QuantLib::ext::make_shared<SwapIndexCurveSpec>(tokens[0]);
+    }
+        
     }
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");

@@ -8,9 +8,14 @@ option(ORE_BUILD_DOC "Build documentation" ON)
 option(ORE_BUILD_EXAMPLES "Build examples" ON)
 option(ORE_BUILD_TESTS "Build test suite" ON)
 option(ORE_BUILD_APP "Build app" ON)
+option(ORE_BUILD_SWIG "Build ORE Python" ON)
+option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
+option(MSVC_PARALLELBUILD "Use flag /MP" ON)
+option(QL_USE_PCH "Use precompiled headers" OFF)
+option(ORE_PYTHON_INTEGRATION "Build ORE with Python Integration" OFF)
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 option(ORE_MULTITHREADING_CPU_AFFINITY "Set cpu affinitity in multithreaded calculations" OFF)
-option(ORE_BUILD_SWIG "Build ORE Python" ON)
+option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
 
 include(CTest)
 
@@ -36,5 +41,5 @@ endif()
 
 # add examples testsuite
 if (ORE_BUILD_EXAMPLES AND ORE_BUILD_TESTS)
-add_test(NAME examples WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Examples COMMAND nosetests run_examples_testsuite.py)
+add_test(NAME examples WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Examples COMMAND pytest run_examples_testsuite.py)
 endif()

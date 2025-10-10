@@ -80,9 +80,6 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     // Check that we have a valid configuration
     validate();
 
-    // Populate required curve ids
-    populateRequiredCurveIds();
-
     // Populate quotes
     populateQuotes();
 }
@@ -90,13 +87,12 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const std::string& curveID, const std::string& curveDescription, const std::string& proxySourceCurveId,
     const std::string& proxySourceIndex, const std::string& proxyTargetIndex,
-    const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod)
+    const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod,
+    double proxyScalingFactor)
     : CurveConfig(curveID, curveDescription), proxySourceCurveId_(proxySourceCurveId),
       proxySourceIndex_(proxySourceIndex), proxyTargetIndex_(proxyTargetIndex),
       proxySourceRateComputationPeriod_(proxySourceRateComputationPeriod),
-      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod) {
-    populateRequiredCurveIds();
-}
+      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod), proxyScalingFactor_(proxyScalingFactor) {}
 
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
@@ -123,7 +119,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             parsePeriod(XMLUtils::getChildValue(target, "RateComputationPeriod", false, "0D"));
         onCapSettlementDays_ = parseInteger(XMLUtils::getChildValue(target, "ONCapSettlementDays", false, "0"));
 
-        populateRequiredCurveIds();
+        proxyScalingFactor_ = XMLUtils::getChildValueAsDouble(p, "ScalingFactor", false, 1.0);
 
     } else {
         // read in quote-based config
@@ -239,9 +235,6 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         // Populate quotes
         populateQuotes();
 
-        // Populate required curve ids
-        populateRequiredCurveIds();
-
         // Output vol type
         string outVolType = XMLUtils::getChildValue(node, "OutputVolatilityType", false);
         if (outVolType.empty())
@@ -286,6 +279,8 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
             XMLUtils::addChild(doc, source, "RateComputationPeriod", proxySourceRateComputationPeriod_);
         if (proxyTargetRateComputationPeriod_ != 0 * Days)
             XMLUtils::addChild(doc, target, "RateComputationPeriod", proxyTargetRateComputationPeriod_);
+        if (proxyScalingFactor_ != 1.0)
+            XMLUtils::addChild(doc, proxy, "ScalingFactor", proxyScalingFactor_);
     } else {
         // write out quote based config
         XMLUtils::addChild(doc, node, "VolatilityType", toString(volatilityType_));
@@ -340,16 +335,18 @@ string CapFloorVolatilityCurveConfig::toString(VolatilityType type) const {
     return volatilityTypeMap.right.at(type);
 }
 
-void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
+void CapFloorVolatilityCurveConfig::populateRequiredIds() const {
     if (!discountCurve().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
+    if (!index_.empty())
+        requiredNames_[std::make_pair(MarketObject::IndexCurve, std::string())].insert(index_);
     if (!proxySourceCurveId_.empty())
         requiredCurveIds_[CurveSpec::CurveType::CapFloorVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());
     if (!proxySourceIndex_.empty())
-        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(proxySourceIndex_);
+        requiredNames_[std::make_pair(MarketObject::IndexCurve, std::string())].insert(proxySourceIndex_);
     if (!proxyTargetIndex_.empty())
-        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(proxyTargetIndex_);
+        requiredNames_[std::make_pair(MarketObject::IndexCurve, std::string())].insert(proxyTargetIndex_);
 }
 
 string CapFloorVolatilityCurveConfig::indexTenor() const {

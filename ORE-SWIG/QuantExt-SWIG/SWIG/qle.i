@@ -37,6 +37,7 @@
 %include qle_ratehelpers.i
 %include qle_ccyswap.i
 %include qle_equityforward.i
+%include qle_futureexpirycalculator.i
 %include qle_averageois.i
 %include qle_tenorbasisswap.i
 %include qle_oiccbasisswap.i

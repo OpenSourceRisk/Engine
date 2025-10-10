@@ -6,6 +6,5 @@
   <DefaultCurves id="default">
     <DefaultCurve name="RED:8B69AP|SNRFOR|USD|CR-UPFRONT">Default/USD/RED:8B69AP|SNRFOR|USD|CR-UPFRONT</DefaultCurve>
     <DefaultCurve name="RED:8B69AP|SNRFOR|USD|CR-PAR_SPREAD">Default/USD/RED:8B69AP|SNRFOR|USD|CR-PAR_SPREAD</DefaultCurve>
-    <DefaultCurve name="RED:8B69AP|SNRFOR|USD|CR-CONV_SPREAD">Default/USD/RED:8B69AP|SNRFOR|USD|CR-CONV_SPREAD</DefaultCurve>
   </DefaultCurves>
 </TodaysMarket>

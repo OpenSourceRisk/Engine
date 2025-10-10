@@ -48,6 +48,9 @@ public:
 
     /* the underlying model */
     virtual const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model() const = 0;
+
+    /* time steps per year, can be 0 if the method does not require a particular grid */
+    virtual Size timeStepsPerYear() const = 0;
 };
 
 } // namespace QuantExt

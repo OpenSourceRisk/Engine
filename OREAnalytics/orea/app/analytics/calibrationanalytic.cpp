@@ -61,14 +61,15 @@ QuantLib::ext::shared_ptr<EngineFactory> CalibrationAnalyticImpl::engineFactory(
     std::vector<QuantLib::ext::shared_ptr<LegBuilder>> extraLegBuilders;
 
     engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
-        edCopy, analytic()->market(), configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        edCopy, analytic()->market(), configurations, inputs_->refDataManager(), inputs_->iborFallbackConfig());
 
     return engineFactory_;
 }
 
-void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
-    LOG("Calibration: Build Simulation Model (continueOnCalibrationError = " << std::boolalpha
-                                                                             << continueOnCalibrationError << ")");
+void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError,
+                                                   const bool allowModelFallbacks) {
+    LOG("Calibration: Build Simulation Model (continueOnCalibrationError = "
+        << std::boolalpha << continueOnCalibrationError << ", allowModelFallbacks = " << allowModelFallbacks << ")");
     ext::shared_ptr<Market> market = analytic()->market();
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
@@ -76,7 +77,8 @@ void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrat
         market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
-        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "", "xva cam building");
+        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "", "xva cam building", false,
+        allowModelFallbacks);
 
     model_ = *builder_->model();
 }
@@ -104,10 +106,14 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     LOG(msg);
     CONSOLEW(msg);
     ProgressMessage(msg, 0, 1).log();
+    auto continueOnErr = false;
+    auto allowModelFallbacks = false;
     auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
-    auto continueOnCalErr = globalParams.find("ContinueOnCalibrationError");
-    bool continueOnErr = (continueOnCalErr != globalParams.end()) && parseBool(continueOnCalErr->second);
-    buildCrossAssetModel(continueOnErr);
+    if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
+        continueOnErr = parseBool(c->second);
+    if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
+        allowModelFallbacks = parseBool(c->second);
+    buildCrossAssetModel(continueOnErr, allowModelFallbacks);
     CONSOLE("OK");
     ProgressMessage(msg, 1, 1).log();
 
@@ -127,7 +133,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             DLOG("CamData, updating IrLgm1fParametrization:"
                  << " name=" << irData->name() << " qualifier=" << irData->qualifier());
             QL_REQUIRE(lgmPara->numberOfParameters() == 2, "2 lgm1f model parameters expected");
-            ext::shared_ptr<LgmData> lgmData = boost::dynamic_pointer_cast<LgmData>(irData);
+            ext::shared_ptr<LgmData> lgmData = ext::dynamic_pointer_cast<LgmData>(irData);
             QL_REQUIRE(lgmData, "Failed to cast IrModelData to LgmData");
             // overwrite initial values with calibration results
             times = lgmPara->parameterTimes(0);
@@ -211,7 +217,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             LOG("CamData, updating InfDkParametrization:"
                 << " ccy=" << infData->currency() << " index=" << infData->index());
             QL_REQUIRE(infPara->numberOfParameters() == 2, "2 model parameters for INF DK");
-            ext::shared_ptr<InfDkData> dkData = boost::dynamic_pointer_cast<InfDkData>(infData);
+            ext::shared_ptr<InfDkData> dkData = ext::dynamic_pointer_cast<InfDkData>(infData);
             QL_REQUIRE(dkData, "Failed to cast InflationModelData to InfDkData");
             // FIXME: Check order or model parameters
             times = infPara->parameterTimes(0);
@@ -231,7 +237,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             LOG("CamData, updating InfJyParametrization:"
                 << " ccy=" << infData->currency() << " index=" << infData->index());
             QL_REQUIRE(infPara->numberOfParameters() == 3, "3 model parameters expected for INF JY");
-            ext::shared_ptr<InfJyData> jyData = boost::dynamic_pointer_cast<InfJyData>(infData);
+            ext::shared_ptr<InfJyData> jyData = ext::dynamic_pointer_cast<InfJyData>(infData);
             QL_REQUIRE(jyData, "Failed to cast InflationModelData to InfJyData");
             times = infPara->realRate()->parameterTimes(0);
             values = infPara->realRate()->parameterValues(0);

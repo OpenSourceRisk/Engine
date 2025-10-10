@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2017)); // T=2
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(Date(10, July, 2017)); // T=2
     //double T = 2.0;
     double vol = 0.02; 
     Date startDate(15, July, 2017);
@@ -214,15 +214,15 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     QuantLib::ext::shared_ptr<PricingEngine> engineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
     QuantLib::ext::shared_ptr<PricingEngine> engineBach = QuantLib::ext::make_shared<BachelierSwaptionEngine>(eurYtsHandle, vola);
 
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, 
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, 
             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
         Real npv = swaption->NPV();         
@@ -243,9 +243,9 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptions ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
              schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
         Real npv = swaption->NPV();
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2017));
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(Date(10, July, 2017));
     double T = 2.0;
     double vol = 0.0100; 
     Date startDate(15, July, 2017);
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
 
     QuantLib::ext::shared_ptr<PricingEngine> engineLgm = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
     Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     double Annuity=0.0;
@@ -323,9 +323,9 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     BOOST_TEST_MESSAGE("Checking Receiver Swaptions ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
              schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
         Real npv = swaption->NPV(); 
@@ -345,9 +345,9 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     BOOST_TEST_MESSAGE("Checking Payer Swaptionss ...");
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
              schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
         Real npv = swaption->NPV();
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date expiryDate(10, July, 2017);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate); // T=2
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(expiryDate); // T=2
     double vol = 0.02; 
     Date startDate(15, July, 2017);
     Settings::instance().evaluationDate() = settlementDate;
@@ -425,11 +425,11 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
     {
         // Get Lgm Price
         QuantLib::ext::shared_ptr<PricingEngine> lgmEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-        boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+        ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
         
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
         swaption->setPricingEngine(lgmEngine);
         Real lgmPrice = swaption->NPV(); 
 
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
-        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
+        ext::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
         QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         std::vector<Leg> legs = {floatLeg, fixedLeg};
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
 
         BermudanExercise exe(exDates, payoffAtExpiry);
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<BermudanExercise>(exe);
-        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
+        ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
@@ -484,10 +484,10 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
     {
         // Get Lgm Price
         QuantLib::ext::shared_ptr<PricingEngine> lgmEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-        boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), 
+        ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), 
             schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
         swaption->setPricingEngine(lgmEngine);
         Real lgmPrice = swaption->NPV(); 
 
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
-        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
+        ext::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
         QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         std::vector<Leg> legs = {floatLeg, fixedLeg};
@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEngines) {
 
         BermudanExercise exe(exDates, payoffAtExpiry);
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<BermudanExercise>(exe);
-        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
+        ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
     Date expiryDate(10, July, 2017);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate); // T=2
+    ext::shared_ptr<Exercise> exercise = ext::make_shared<EuropeanExercise>(expiryDate); // T=2
     double vol = 0.02; 
     Date startDate(15, July, 2017);
     Settings::instance().evaluationDate() = settlementDate;
@@ -597,11 +597,11 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
     {
         // Get Lgm Price
         QuantLib::ext::shared_ptr<PricingEngine> lgmEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-        boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+        ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
         
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
         swaption->setPricingEngine(lgmEngine);
         Real lgmPrice = swaption->NPV(); 
 
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
-        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
+        ext::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
         QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         std::vector<Leg> legs = {floatLeg, fixedLeg};
@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
 
         BermudanExercise exe(exDates, payoffAtExpiry);
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<BermudanExercise>(exe);
-        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
+        ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 
@@ -659,10 +659,10 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
     {
         // Get Lgm Price
         QuantLib::ext::shared_ptr<PricingEngine> lgmEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-        boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), 
+        ext::shared_ptr<IborIndex> EURIBOR6m = ext::make_shared<Euribor6M>(eurYtsHandle);
+        ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), 
             schedule, EURIBOR6m,  0.0, Actual365Fixed());        
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise); 
+        ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
         swaption->setPricingEngine(lgmEngine);
         Real lgmPrice = swaption->NPV(); 
 
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
         Leg fixedLeg = FixedRateLeg(schedule).withNotionals(1.0).withCouponRates(strike, Actual365Fixed())
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         Period period(6, Months);
-        boost::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
+        ext::shared_ptr<IborIndex> liborIndex(new Euribor(period, eurYtsHandle));
         QuantLib::IborLeg floatLeg = QuantLib::IborLeg(schedule, liborIndex).withNotionals(1.0)
             .withPaymentAdjustment(ModifiedFollowing).withPaymentLag(2).withPaymentCalendar(TARGET());
         std::vector<Leg> legs = {floatLeg, fixedLeg};
@@ -679,7 +679,7 @@ BOOST_AUTO_TEST_CASE(testBermudanEnginesEdgeCase) {
 
         BermudanExercise exe(exDates, payoffAtExpiry);
         QuantLib::ext::shared_ptr<Exercise> exercise =QuantLib::ext::make_shared<BermudanExercise>(exe);
-        boost::shared_ptr<MultiLegOption> swaptionMulti= boost::make_shared<MultiLegOption> (legs, payer, currency, exercise);
+        ext::shared_ptr<MultiLegOption> swaptionMulti= ext::make_shared<MultiLegOption> (legs, payer, currency, exercise);
 
         QuantLib::ext::shared_ptr<Integrator> inte=QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
         QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm = QuantLib::ext::make_shared<LinearGaussMarkovModel>(model, QuantExt::HwModel::Measure::LGM, 

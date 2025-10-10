@@ -98,23 +98,25 @@ public:
 
     void setCurrency(const string& currency) { currency_ = currency; }
     void setCalendar(const string& calendar) { calendar_ = calendar; }
+    void setOutputType(const Type& type) { outputType_ = type; }
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     vector<string> fwdQuotes_;
     string forecastingCurve_;
     string currency_;
     string calendar_;
-    Type type_;
+    Type type_ = Type::NoDividends;
     string equitySpotQuoteID_;
     string dayCountID_;
     string divInterpVariable_;
     string divInterpMethod_;
-    bool dividendExtrapolation_;
-    bool extrapolation_;
-    QuantLib::Exercise::Type exerciseStyle_;
+    Type outputType_ = Type::NoDividends;
+    bool dividendExtrapolation_ = false;
+    bool extrapolation_ = false;
+    QuantLib::Exercise::Type exerciseStyle_ = QuantLib::Exercise::Type::European;
 };
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);

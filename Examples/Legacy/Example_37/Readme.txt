@@ -79,7 +79,7 @@ eigenvalues is given by
 |2     |0.0029743701250966414      |
 +------+---------------------------+
 
-matching the prescribed input values of 0.0070 and 0.0030 quite well. The correpsonding eigenvectors are given by
+matching the prescribed input values of 0.0070 and 0.0030 quite well. The corresponding eigenvectors are given by
 
 +-----+-------------------+--------------------+
 |tenor|eigenvector_1      |eigenvector_2       |
@@ -102,6 +102,6 @@ matching the prescribed input values of 0.0070 and 0.0030 quite well. The correp
 +-----+-------------------+--------------------+
 
 again matching the input principal components quite well. The second eigenvector is the negative of the input vector
-here (the principal compoennt analysis can not distinguish these of course).
+here (the principal component analysis can not distinguish these of course).
 
 The example also produces a plot comparing the input eigenvectors and the model implied eigenvectors.

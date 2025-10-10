@@ -37,12 +37,13 @@ class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon, public FXL
 public:
     //! FloatingRateFXLinkedNotionalCoupon
     FloatingRateFXLinkedNotionalCoupon(const Date& fxFixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex,
-                                       const QuantLib::ext::shared_ptr<FloatingRateCoupon>& underlying)
+                                       const QuantLib::ext::shared_ptr<FloatingRateCoupon>& underlying,
+                                       const Date& fxResetStart = Null<Date>(), Real domesticAmount = Null<Real>())
         : FloatingRateCoupon(underlying->date(), Null<Real>(), underlying->accrualStartDate(),
                              underlying->accrualEndDate(), underlying->fixingDate(), underlying->index(),
                              underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                              underlying->referencePeriodEnd(), underlying->dayCounter(), underlying->isInArrears()),
-          FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
+          FXLinked(fxFixingDate, foreignAmount, fxIndex, fxResetStart, domesticAmount), underlying_(underlying) {
         fixingDays_ = underlying->fixingDays() == Null<Natural>()
                           ? (underlying->index() ? underlying->index()->fixingDays() : 0)
                                                                   : underlying->fixingDays();

@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/report/report.hpp>
 #include <orea/engine/marketriskreport.hpp>
+#include <ored/report/report.hpp>
 
 namespace ore {
 namespace analytics {
@@ -35,32 +35,33 @@ public:
     VarCalculator() {}
     virtual ~VarCalculator() {}
 
-    virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true, 
-        const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) = 0;
+    virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true,
+                               const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) const = 0;
 };
 
 class VarReport : public MarketRiskReport {
 public:
-    VarReport(const std::string& baseCurrency,
-        const QuantLib::ext::shared_ptr<Portfolio> & portfolio,
-        const std::string& portfolioFilter,
-        const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
-        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
-        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, 
-        const bool breakdown = false);
+    VarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+              const std::string& portfolioFilter, const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+              const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+              std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
+              const bool breakdown = false);
 
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     virtual void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports){};
 
     const std::vector<Real>& p() const { return p_; }
 
- protected:
+protected:
     QuantLib::ext::shared_ptr<VarCalculator> varCalculator_;
-    
+
+    virtual void writeHeader(const QuantLib::ext::shared_ptr<Report>& report) const = 0;
+    virtual std::vector<Real> calcVarsForQuantiles() const = 0;
+
     virtual void createVarCalculator() = 0;
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
-                         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
-                         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+                      const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                      const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
     virtual void writeAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,

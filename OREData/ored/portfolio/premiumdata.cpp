@@ -68,6 +68,11 @@ void PremiumData::fromXML(XMLNode* node) {
             d.amount = XMLUtils::getChildValueAsDouble(n, "Amount", true);
             d.ccy = XMLUtils::getChildValue(n, "Currency", true);
             d.payDate = parseDate(XMLUtils::getChildValue(n, "PayDate", true));
+            if (XMLNode* settlementDataNode = XMLUtils::getChildNode(n, "SettlementData")) {
+                d.payCurrency = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", false);
+                d.fxIndex = XMLUtils::getChildValue(settlementDataNode, "FXIndex", false);
+                d.fixingDate = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
+            }
             premiumData_.push_back(d);
         }
     }
@@ -80,6 +85,18 @@ XMLNode* PremiumData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, p, "Amount", d.amount);
         XMLUtils::addChild(doc, p, "Currency", d.ccy);
         XMLUtils::addChild(doc, p, "PayDate", ore::data::to_string(d.payDate));
+        if (!d.payCurrency.empty() || !d.fxIndex.empty() || !d.fixingDate.empty()) {
+            XMLNode* settlementDataNode = XMLUtils::addChild(doc, p, "SettlementData");
+            if (!d.payCurrency.empty()) {
+                XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", d.payCurrency);
+            }
+            if (!d.fxIndex.empty()) {
+                XMLUtils::addChild(doc, settlementDataNode, "FXIndex", d.fxIndex);
+            }
+            if (!d.fixingDate.empty()) {
+                XMLUtils::addChild(doc, settlementDataNode, "FixingDate", d.fixingDate);
+            }
+        }
     }
     return node;
 }

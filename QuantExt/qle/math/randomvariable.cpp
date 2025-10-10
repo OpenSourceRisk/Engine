@@ -177,13 +177,13 @@ void Filter::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
     resumeCalcStats();
-    for (Size i = 0; i < n_; ++i) {
-        if (data_[i] != constantData_) {
-            stopCalcStats(i);
+    for (Size i = 1; i < n_; ++i) {
+        if (data_[i] != data_[0]) {
+            stopCalcStats(i - 1);
             return;
         }
     }
-    setAll(constantData_);
+    setAll(data_[0]);
     stopCalcStats(n_);
 }
 
@@ -466,14 +466,14 @@ void RandomVariable::clear() {
 void RandomVariable::updateDeterministic() {
     if (deterministic_ || !initialised())
         return;
-    for (Size i = 0; i < n_; ++i) {
+    for (Size i = 1; i < n_; ++i) {
         resumeCalcStats();
-        if (!QuantLib::close_enough(data_[i], constantData_)) {
-            stopCalcStats(i);
+        if (!QuantLib::close_enough(data_[i], data_[0])) {
+            stopCalcStats(i - 1);
             return;
         }
     }
-    setAll(constantData_);
+    setAll(data_[0]);
     stopCalcStats(n_);
 }
 
@@ -889,16 +889,14 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match x size (" << x.size() << ")");
     QL_REQUIRE(f.size() == y.size(),
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match y size (" << y.size() << ")");
-    x.checkTimeConsistencyAndUpdate(y.time());
     if (f.deterministic()) {
         if (f.at(0))
             return x;
         else {
-            RandomVariable tmp(y);
-            tmp.setTime(x.time());
-            return tmp;
+            return y;
         }
     }
+    x.checkTimeConsistencyAndUpdate(y.time());
     resumeCalcStats();
     x.expand();
     for (Size i = 0; i < f.size(); ++i) {
@@ -1368,7 +1366,7 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
         // logistic function
         // f(x)  = 1 / (1 + exp(-x / delta))
         // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2)
-        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(x / delta) )
+        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(-x / delta) )
         tmp.set(i, 1.0 / (delta * (2.0 + std::exp(1.0 / delta * x[i]) + std::exp(-1.0 / delta * x[i]))));
     }
 

@@ -49,18 +49,11 @@ class LgmBuilder : public QuantExt::ModelBuilder {
 public:
     // We apply certain fallback rules to ensure a robust calibration:
 
-    enum class FallbackType { NoFallback, FallbackRule1, FallbackRule2, FallbackRule3 };
+    enum class FallbackType { NoFallback, FallbackRule1 };
 
     /* Rule 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
               calibration strike closer to the ATM level */
     static constexpr Real maxAtmStdDev = 3.0;
-
-    /* Rule 2 If the helper value is lower than mmv, replace it with a "more reasonable" helper. We replace
-              the helper with a helper that has the ATM strike. */
-    static constexpr Real mmv = 1.0E-20;
-
-    /* Rule 3 Switch to PriceError if helper's market value is below smv */
-    static constexpr Real smv = 1.0E-8;
 
     /*! The configuration refers to the configuration to read swaption vol and swap index from the market.
         The discounting curve to price calibrating swaptions is derived from the swap index directly though,
@@ -72,7 +65,7 @@ public:
         const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
         const bool setCalibrationInfo = false, const std::string& id = "unknown",
         BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
-        const bool allowChangingFallbacksUnderScenarios = false);
+        const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false);
     //! Return calibration error
     Real error() const;
 
@@ -112,13 +105,17 @@ private:
     Real getStrike(const Size j) const;
 
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
-    const std::string configuration_;
+    std::string configuration_;
     QuantLib::ext::shared_ptr<IrLgmData> data_;
-    const Real bootstrapTolerance_;
-    const bool continueOnError_;
-    const std::string referenceCalibrationGrid_;
-    const bool setCalibrationInfo_;
-    const std::string id_;
+    Real bootstrapTolerance_;
+    bool continueOnError_;
+    std::string referenceCalibrationGrid_;
+    bool setCalibrationInfo_;
+    std::string id_;
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+    bool allowChangingFallbacksUnderScenarios_;
+
+    bool allowModelFallbacks_ = false;
     bool requiresCalibration_ = false;
     std::string currency_; // derived from data->qualifier()
 
@@ -148,9 +145,6 @@ private:
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
-    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
-
-    bool allowChangingFallbacksUnderScenarios_;
 
     // Cache the swaption volatilities
     mutable std::vector<QuantLib::Real> swaptionVolCache_;

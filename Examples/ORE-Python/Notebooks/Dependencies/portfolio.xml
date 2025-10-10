@@ -1,0 +1,22 @@
+<Portfolio>
+	<Trade id="1_USD-EUR_FX_FORWARD">
+		<TradeType>FxForward</TradeType>
+		<Envelope>
+			<CounterParty>CP</CounterParty>
+			<NettingSetId>NS</NettingSetId>
+			<PortfolioIds/>
+			<AdditionalFields/>
+		</Envelope>
+		<FxForwardData>
+			<ValueDate>2030-05-27</ValueDate>
+			<BoughtCurrency>EUR</BoughtCurrency>
+			<BoughtAmount>1100</BoughtAmount>
+			<SoldCurrency>USD</SoldCurrency>
+			<SoldAmount>1000</SoldAmount>
+			<Settlement>Physical</Settlement>
+			<SettlementData>
+				<Rules/>
+			</SettlementData>
+		</FxForwardData>
+	</Trade>
+</Portfolio>

@@ -4,7 +4,7 @@
 This tutorial is aimed at the Windows user who wants to install and use the ORE
 Python libraries and example scripts.  No compilation is necessary.
 
-[Back to tutorials index](tutorials.00.index.md)
+[Back to tutorials index](../tutorials_index.md)
 
 ## Introduction
 

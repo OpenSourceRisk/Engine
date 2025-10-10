@@ -24,6 +24,7 @@
 #include <numeric>
 
 #include <functional>
+#include <algorithm>
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
 

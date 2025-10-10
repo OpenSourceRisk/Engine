@@ -44,5 +44,6 @@ DeltaScenarioFactory::buildScenario(QuantLib::Date asof, bool isAbsolute, bool i
     QL_REQUIRE((label == incremental->label()) || (label == ""), "DeltaScenarioFactory has not updated scenario label");
     return QuantLib::ext::make_shared<DeltaScenario>(baseScenario_, incremental);
 }
+
 } // namespace sensitivity
 } // namespace ore

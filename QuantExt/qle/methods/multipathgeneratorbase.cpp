@@ -191,6 +191,11 @@ MultiPathGeneratorT0Only::MultiPathGeneratorT0Only(const QuantLib::ext::shared_p
     MultiPathGeneratorT0Only::reset();
 }
 
+const TimeGrid& MultiPathGeneratorT0Only::timeGrid() const {
+    static TimeGrid g({0.0});
+    return g;
+}
+
 void MultiPathGeneratorT0Only::reset() {}
 
 const Sample<MultiPath>& MultiPathGeneratorT0Only::next() const {

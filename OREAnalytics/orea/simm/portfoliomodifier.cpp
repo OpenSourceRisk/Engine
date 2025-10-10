@@ -64,7 +64,8 @@ namespace {
 LegData copyLegData(const LegData& ld, bool initialExchange = false, bool finalExchange = false) {
     return LegData(ld.concreteLegData(), ld.isPayer(), ld.currency(), ld.schedule(), ld.dayCounter(), ld.notionals(),
                    ld.notionalDates(), ld.paymentConvention(), initialExchange, finalExchange, false,
-                   ld.isNotResetXCCY(), ld.foreignCurrency(), ld.foreignAmount(), ld.fxIndex(), ld.amortizationData(), ld.paymentLag());
+                   ld.isNotResetXCCY(), ld.foreignCurrency(), ld.foreignAmount(), ld.resetStartDate(), ld.fxIndex(),
+                   ld.amortizationData(), ld.paymentLag());
 }
 
 } // namespace

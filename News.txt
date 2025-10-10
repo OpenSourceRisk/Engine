@@ -1,3 +1,76 @@
+Changes for the 13th ORE release:
+=================================
+
+ORE v13 includes the following notable changes (May 2024 to May 2025):
+
+INSTRUMENTS & PRICING
+
+- add Callable Swap and Swaption with mid coupon exercise
+- add pricing method to additional results report
+- support n-of-m triggers (e.g. 20-of-30) for convertible bond soft call rights
+
+MARKETS & TERMSTRUCTURES
+
+- SABR model: imply alpha from ATM volatility
+- improve stability of the FX BF/RR vol surface calibration, expose butterfly error tolerance
+- add market data loading from binary file
+- make output vol types and shifts configurable for IR vol surfaces
+- weighted FX vol interpolation for holidays and events
+- speed up loading of historical fixings in QuantLib
+- add MonotonicLogCubicSpline interpolation method for rate curves
+
+ANALYTICS
+
+- Add SA-CCR, BA-CVA and SA-CVA analytics (see Examples/CreditRisk and Examples/XvaRisk)
+- AMC exposure framework supporting AAD based xva sensitivies and dynamic SIMM (Examples/InitialMargin and Examples/XvaRisk)
+- Add IR/FX CRIF analytic to support the Dynamic SIMM model validation (used in Examples/InitialMargin)
+- expose indicator smoothing parameters in scripted trade / AAD framework 
+- AMC with optional recalibration on close-out dates
+- serialization / deserilization of AMC path data and AMC trade regression models (Examples/AmericanMonteCarlo)
+- add scenario dump for AMC expsoure simulation
+- add equity to the AMC simulation framework
+- cover exercise fees for Bermudan swaptions in AMC simulations
+- optional static regression models for scripted trade scenario calculations
+- optional recalibration of scripted trade under scenario calculations
+- add decorrelated market risk backtesting following Piterbarg and Nowaczyk:
+  "Backtesting correlated quantities, Risk, September 2024"
+- add stressed cashflows report
+- add settlement delay to AMC simulation
+- add cpu affinity setting in multithreaded valuation engine
+- extend the Inflation JY model calibration for scripted exotics
+- add CAM calibration analytic and report (Examples/Exposure)
+- add PFE analytic, carved out from the broader XVA analytic 
+- add portfolio details analyic (see Example/Products)
+- optional caching of large in memory reports on disk
+- speed up the Cross Asset Model analytics (integral()) thanks to Dmitri Goloubentsev for the heads up
+- populate the fixing date in cashflow reports for scripted trades
+- optimize memory footprint of the exposure cube
+
+DOCUMENTATION
+
+- split the documentation into three parts: (1) user guide (ORE examples and parametrisation),
+  (2) products (trade type description and input), (3) methodology
+  thanks to Fredrik Fredrik Gerdin Boerjesson and Roland Kapl for contributions to this
+- release notes removed from the user guide to avoid overlap with News.txt
+
+EXAMPLES
+
+- reorganise examples, now grouped by subject, see Examples/Readme.md
+- numbered "legacy" examples still accessible in Examples/Legacy for the time being
+- user guide discussion follows new grouping
+  
+LANGUAGE BINDINGS & PYTHON MODULE
+
+- ORE-SWIG project integrated into the OpenSourceRisk/Engine repository (get all with a single git clone)
+- Jupyter notebook examples moved to ORE-Python examples section
+
+OTHER
+
+- upgrade to version 1.38 of QuantLib and QuantLib-SWIG
+- add a trade generator class with support for basic Swap and Option trades (IR, FX, Equity, Commodity)
+- add functions to support curve and market data dependency identification
+
+
 Changes for the 12th ORE release:
 =================================
 

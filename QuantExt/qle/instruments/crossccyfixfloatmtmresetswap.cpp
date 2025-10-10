@@ -25,6 +25,9 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -35,14 +38,18 @@ CrossCcyFixFloatMtMResetSwap::CrossCcyFixFloatMtMResetSwap(
     Natural fixedPaymentLag, const Calendar& fixedPaymentCalendar, const Currency& floatCurrency,
     const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
     const BusinessDayConvention& floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
-    const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg, bool receiveFixed)
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg, bool receiveFixed,
+    boost::optional<bool> floatIncludeSpread, boost::optional<Period> floatLookback,
+    boost::optional<Size> floatFixingDays, boost::optional<Size> floatRateCutoff, boost::optional<bool> floatIsAveraged)
     : CrossCcySwap(3), nominal_(nominal), fixedCurrency_(fixedCurrency),
     fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount), 
     fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
     floatCurrency_(floatCurrency), floatSchedule_(floatSchedule), floatIndex_(floatIndex),
     floatSpread_(floatSpread), floatPaymentBdc_(floatPaymentBdc),
     floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar),
-    fxIndex_(fxIdx), resetsOnFloatLeg_(resetsOnFloatLeg), receiveFixed_(receiveFixed) {
+      fxIndex_(fxIdx), resetsOnFloatLeg_(resetsOnFloatLeg), receiveFixed_(receiveFixed),
+      floatIncludeSpread_(floatIncludeSpread), floatLookback_(floatLookback), floatFixingDays_(floatFixingDays),
+      floatRateCutoff_(floatRateCutoff), floatIsAveraged_(floatIsAveraged) {
 
     registerWith(floatIndex_);
     registerWith(fxIndex_);
@@ -62,12 +69,37 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
     }
 
     // Build the float leg
-    Leg floatLeg = IborLeg(floatSchedule_, floatIndex_)
-        .withNotionals(floatNotional)
-        .withSpreads(floatSpread_)
-        .withPaymentAdjustment(floatPaymentBdc_)
-        .withPaymentLag(floatPaymentLag_)
-        .withPaymentCalendar(floatPaymentCalendar_);
+
+    Leg floatLeg;
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(floatIndex_)) {
+        if (floatIsAveraged_ && *floatIsAveraged_) {
+            floatLeg = QuantExt::AverageONLeg(floatSchedule_, on)
+                           .withNotional(floatNotional)
+                           .withSpread(floatSpread_)
+                           .withPaymentLag(floatPaymentLag_)
+                           .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
+        } else {
+            floatLeg = QuantExt::OvernightLeg(floatSchedule_, on)
+                           .withNotionals(floatNotional)
+                           .withSpreads(floatSpread_)
+                           .withPaymentLag(floatPaymentLag_)
+                           .includeSpread(floatIncludeSpread_ ? *floatIncludeSpread_ : false)
+                           .withLookback(floatLookback_ ? *floatLookback_ : 0 * Days)
+                           .withFixingDays(floatFixingDays_ ? *floatFixingDays_ : 0)
+                           .withRateCutoff(floatRateCutoff_ ? *floatRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
+        }
+    } else {
+        floatLeg = IborLeg(floatSchedule_, floatIndex_)
+                       .withNotionals(floatNotional)
+                       .withSpreads(floatSpread_)
+                       .withPaymentAdjustment(floatPaymentBdc_)
+                       .withPaymentLag(floatPaymentLag_)
+                       .withPaymentCalendar(floatPaymentCalendar_);
+    }
 
     // Register with each floating rate coupon
     for (Leg::const_iterator it = floatLeg.begin(); it < floatLeg.end(); ++it)

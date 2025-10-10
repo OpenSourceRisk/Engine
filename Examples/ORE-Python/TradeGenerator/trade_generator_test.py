@@ -1,7 +1,7 @@
 import sys
 #add path to compiled version of ORE.py, _OREP.pyd
-sys.path.append(r"..\..\..\..\build\ore\ORE-SWIG\OREAnalytics-SWIG\Python")
-sys.path.append(r"..\..\..\..\build\ore\ORE-SWIG\OREAnalytics-SWIG\Python\RelWithDebInfo")
+sys.path.append(r"..\..\..\..\build\ore\ORE-SWIG")
+sys.path.append(r"..\..\..\..\build\ore\ORE-SWIG\RelWithDebInfo")
 sys.path.append(r"..\..\input")
 
 from ORE import *
@@ -16,10 +16,10 @@ curveConfigs = ip.curveConfigs().curveConfigurations()
 curveConfig = curveConfigs[curveConfigs.keys()[0]]
 
 tg = TradeGenerator(curveConfig, refData, "CP", "NS")
-tg.buildSwap("GBP-SONIA", 1000, "1Y", 0.01, True, "SWAPPY-SWAP")
+tg.buildSwap("GBP-SONIA", 1000, "1Y", 0.01, True, "", "Swappy-Swap")
 tg.buildInflationSwap("UKRPI", 1000, "5Y", "GBP-SONIA", 200, 0.02, True, "inflation swap!")
 tg.buildFxForward("USD", 1000, "EUR", 1100, "5Y", True)
-tg.buildSwap("USD-FedFunds", 1000, "5Y", "USD-LIBOR-3M", 0.01, True)
+tg.buildSwap("USD-FedFunds", 1000, "5Y", "USD-LIBOR-3M", 0.01, True, "1W", "1W Start Lag Swap")
 tg.buildSwap("USD-LIBOR-3M", 1000, "5Y", 0.01, False)
 tg.buildCapFloor("USD-LIBOR-3M", 0.01, 1000, "2Y", True, True)
 tg.buildEquitySwap("SP5", "Total", 1000, "USD-FedFunds", 1000, "10Y", True)

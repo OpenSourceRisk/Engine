@@ -25,10 +25,12 @@
       <xs:element type="creditIndexReferenceDatum" name="CreditIndexReferenceData"/>
       <xs:element type="bondReferenceDatum" name="BondReferenceData"/>
       <xs:element type="cboReferenceDatum" name="CboReferenceData"/>
+      <xs:element type="bondFutureReferenceDatum" name="BondFutureReferenceData"/>
       <xs:element type="convertibleBondReferenceDatum" name="ConvertibleBondReferenceData"/>
+      <xs:element type="callableBondReferenceDatum" name="CallableBondReferenceData"/>
       <xs:element type="bondBasketData" name="BondBasketData"/>
       <xs:element type="referenceDatum" name="CreditReferenceData"/>
-      <xs:element type="referenceDatum" name="EquityReferenceData"/>
+      <xs:element type="equityReferenceDatum" name="EquityReferenceData"/>
       <xs:element type="portfolioBasketReferenceDatum" name="PortfolioBasketReferenceData"/>
     </xs:choice>
   </xs:group>
@@ -43,6 +45,22 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="equityReferenceDatum">
+    <xs:sequence>
+      <xs:element name="EquityId" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="EquityName" minOccurs="0" maxOccurs="1" />
+      <xs:element name="Currency" minOccurs="1" maxOccurs="1" />
+      <xs:element name="ScalingFactor"  minOccurs="0" maxOccurs="1"/>
+      <xs:element name="ExchangeCode" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="IsIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="EquityStartDate" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="ProxyIdentifier" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="SimmBucket" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="CrifQualifier" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="ProxyVolatilityId" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -102,6 +120,24 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="bondFutureReferenceDatum">
+    <xs:all>
+      <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
+      <xs:element type="deliveryBasket" name="DeliveryBasket" minOccurs="0"/>
+      <xs:element type="xs:string" name="DeliverableGrade" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastTradingDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="LastDeliveryDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="Settlement" minOccurs="0"/>
+      <xs:element type="xs:string" name="DirtyQuotation" minOccurs="0"/>
+      <xs:element type="xs:string" name="ContractMonth" minOccurs="0"/>
+      <xs:element type="xs:string" name="RootDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryBasis" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementBasis" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExpiryLag" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementLag" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="convertibleBondReferenceDatum">
     <xs:all>
       <xs:element type="bondReferenceDatum" name="BondData"/>
@@ -110,6 +146,14 @@
       <xs:element type="cbConversionData" name="ConversionData"/>
       <xs:element type="cbDividendProtectionData" name="DividendProtectionData" minOccurs="0"/>
       <xs:element type="bool" name="Detachable" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="callableBondReferenceDatum">
+    <xs:all>
+      <xs:element type="bondReferenceDatum" name="BondData"/>
+      <xs:element type="callableBondCallData" name="CallData" minOccurs="0"/>
+      <xs:element type="callableBondCallData" name="PutData" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

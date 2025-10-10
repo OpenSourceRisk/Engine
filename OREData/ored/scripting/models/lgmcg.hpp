@@ -61,6 +61,24 @@ public:
     std::size_t fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Date& t,
                        const std::size_t x) const;
 
+    /* Exact if no cap/floors are present and t <= first value date.
+       Approximations are applied for t > first value date or when cap / floors are present. */
+    std::size_t compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
+                                    const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
+                                    const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
+                                    const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
+                                    const bool localCapFloor, const bool nakedOption, const Date& t,
+                                    const std::size_t x) const;
+
+    /* Exact if no cap/floors are present and t <= first value date.
+       Approximations are applied for t > first value date or when cap / floors are present. */
+    std::size_t averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
+                               const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
+                               const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
+                               const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
+                               const bool localCapFloor, const bool nakedOption, const Date& t,
+                               const std::size_t x) const;
+
 private:
     std::string qualifier_;
     QuantExt::ComputationGraph& g_;

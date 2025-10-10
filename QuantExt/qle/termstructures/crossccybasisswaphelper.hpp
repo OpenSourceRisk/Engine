@@ -54,8 +54,10 @@ public:
         const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
         const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& flatIndex,
-        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& spreadIndex, const Handle<YieldTermStructure>& flatDiscountCurve,
-        const Handle<YieldTermStructure>& spreadDiscountCurve, bool eom = false, bool flatIsDomestic = true,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& spreadIndex,
+        const Handle<YieldTermStructure>& flatDiscountCurve, const Handle<YieldTermStructure>& spreadDiscountCurve,
+        const bool flatIndexGiven, const bool spreadIndexGiven, const bool flatDiscountCurveGiven,
+        const bool spreadDiscountCurveGiven, bool eom = false, bool flatIsDomestic = true,
         boost::optional<QuantLib::Period> flatTenor = boost::none,
         boost::optional<QuantLib::Period> spreadTenor = boost::none, Real spreadOnFlatLeg = 0.0, Real flatGearing = 1.0,
         Real spreadGearing = 1.0, const Calendar& flatCalendar = Calendar(),
@@ -67,7 +69,8 @@ public:
         boost::optional<Size> rateCutoff = boost::none, boost::optional<bool> isAveraged = boost::none,
         boost::optional<bool> flatIncludeSpread = boost::none, boost::optional<Period> flatLookback = boost::none,
         boost::optional<Size> flatFixingDays = boost::none, boost::optional<Size> flatRateCutoff = boost::none,
-        boost::optional<bool> flatIsAveraged = boost::none, const bool telescopicValueDates = false);
+        boost::optional<bool> flatIsAveraged = boost::none, const bool telescopicValueDates = false,
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -94,6 +97,10 @@ protected:
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> spreadIndex_;
     Handle<YieldTermStructure> flatDiscountCurve_;
     Handle<YieldTermStructure> spreadDiscountCurve_;
+    bool flatIndexGiven_;
+    bool spreadIndexGiven_;
+    bool flatDiscountCurveGiven_;
+    bool spreadDiscountCurveGiven_;
     bool eom_;
     bool flatIsDomestic_;
     QuantLib::Period flatTenor_;
@@ -129,6 +136,7 @@ protected:
     RelinkableHandle<YieldTermStructure> spreadDiscountRLH_;
 
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 };
 } // namespace QuantExt
 

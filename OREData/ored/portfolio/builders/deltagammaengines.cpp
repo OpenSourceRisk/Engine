@@ -25,7 +25,7 @@ namespace data {
 
 QuantLib::ext::shared_ptr<PricingEngine>
 EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                          const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                          const std::vector<Date>& maturities, const std::vector<Real>& strikes, const bool isAmerican,
                                           const std::string& discountCurve, const std::string& securitySpread) {
 
     std::vector<Time> bucketTimesDeltaGamma = parseListOfValues<Time>(engineParameter("BucketTimesDeltaGamma"), &parseReal);
@@ -45,12 +45,12 @@ EuropeanSwaptionEngineBuilderDeltaGamma::engineImpl(const string& id, const stri
     switch (svts->volatilityType()) {
     case ShiftedLognormal:
         LOG("Build BlackSwaptionEngineDeltaGamma for currency " << ccyCode);
-        return boost::make_shared<QuantExt::BlackSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
+        return ext::make_shared<QuantExt::BlackSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
                                                                            bucketTimesVegaOpt, bucketTimesVegaUnd,
                                                                            computeDeltaVega, computeGamma);
     case Normal:
         LOG("Build BachelierSwaptionEngineDeltaGamma for currency " << ccyCode);
-        return boost::make_shared<QuantExt::BachelierSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
+        return ext::make_shared<QuantExt::BachelierSwaptionEngineDeltaGamma>(yts, svts, bucketTimesDeltaGamma,
                                                                                bucketTimesVegaOpt, bucketTimesVegaUnd,
                                                                                computeDeltaVega, computeGamma);
     default:
