@@ -344,7 +344,7 @@ QuantLib::ext::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 class F : public TopLevelFixture {
 public:
     F() {}
-    //~F() { clearOutput(TEST_OUTPUT_PATH); }
+    ~F() { clearOutput(TEST_OUTPUT_PATH); }
 };
 } // namespace
 
