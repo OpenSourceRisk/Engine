@@ -787,7 +787,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
 
             Real fx = 1.0;
             std::string tradeCcy;
-            if (!sr.tradeCurrency.empty()) {
+            if (market && !sr.tradeCurrency.empty()) {
                 tradeCcy = sr.tradeCurrency;
                 if (sr.tradeCurrency != sr.currency)
                     fx = market->fxRate(sr.currency + sr.tradeCurrency, configuration)->value();
