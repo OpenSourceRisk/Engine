@@ -716,6 +716,16 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="Seasonality">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="paramTypeType" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="CalibrationOptions" minOccurs="0">
         <xs:complexType>
           <xs:all>
