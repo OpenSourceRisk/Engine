@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
             singlePath.push_back(state[0]);
         }
 
-        pathSet.push_back(move(singlePath));
+        pathSet.push_back(std::move(singlePath));
     }
 
     // Calculate swaption payoff
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
         idxPay.push_back(static_cast<int>(t / dt));
     }
 
-    int counter = 0; // initialise counter for debugging
+//    int counter = 0; // initialise counter for debugging
     for (const auto& path : pathSet) {
        
         vector<double> ZCBs;
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
 
         sumPayoffs += (payoff * df_0_T0);
 
-        counter += 1;
+        // counter += 1;
     }
 
     Real mcPrice = sumPayoffs / static_cast<Real>(paths);
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
             singlePath.push_back(state[0]);
         }
 
-        pathSet.push_back(move(singlePath));
+        pathSet.push_back(std::move(singlePath));
     }
 
     // Store indexes for payment dates
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
         idxPay.push_back(static_cast<int>(t / dt));
     }
 
-    int counter = 0;
+    // int counter = 0;
 
     for (const auto& path : pathSet) {
 
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
         Real df_0_T0 = DF(path, 0, idxExp, dt);
 
         sumPayoffs += (payoff * df_0_T0);
-        counter += 1;
+        // counter += 1;
     }
 
     Real mcPrice = sumPayoffs / static_cast<Real>(paths);
