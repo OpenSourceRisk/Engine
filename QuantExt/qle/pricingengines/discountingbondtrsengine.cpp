@@ -141,14 +141,25 @@ void DiscountingBondTRSEngine::calculate() const {
         /* the return leg is based on a bond index unconditional on default and therefore
            contains recovery in the forward estimation of the bond price */
 
-        returnLeg += c->amount() * discountCurve_->discount(c->date());
+        /* TODO review the weighting of the return payment with the survival prob */
+
+        Real S = 1.0;
+
+        if (survivalWeightedFundingReturnCashflows_) {
+            S = (treatSecuritySpreadAsCreditSpread_
+                     ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
+                     : 1.0) *
+                bondDefaultCurve->survivalProbability(c->date());
+        }
+
+        returnLeg += c->amount() * discountCurve_->discount(c->date()) * S;
 
         cfResults.emplace_back();
         cfResults.back().amount = mult * c->amount();
         cfResults.back().payDate = c->date();
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 0;
-        cfResults.back().discountFactor = discountCurve_->discount(c->date());
+        cfResults.back().discountFactor = discountCurve_->discount(c->date()) * S;
         cfResults.back().type = "Return";
         if (auto bc = QuantLib::ext::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
             cfResults.back().fixingDate = bc->fixingEndDate();
