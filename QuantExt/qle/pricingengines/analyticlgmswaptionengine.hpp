@@ -113,7 +113,6 @@ public:
     void resetZetaShift();
 
 private:
-    Real flatAmount(const Size k) const;
     Real yStarHelper(const Real y) const;
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
     Handle<YieldTermStructure> c_;
@@ -132,7 +131,9 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m);
-  
+
+Real flatAmount(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& f, const Handle<YieldTermStructure>& c);
+
 } // namespace QuantExt
 
 #endif
