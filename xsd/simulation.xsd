@@ -716,7 +716,7 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
-      <xs:element name="Seasonality">
+      <xs:element name="Seasonality" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="bool" name="Calibrate"/>
