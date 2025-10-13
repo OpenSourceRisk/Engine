@@ -116,7 +116,13 @@ public:
     void setBuildFailedTrades(bool b);
     void setObservationModel(const std::string& s);
     void setImplyTodaysFixings(bool b);
-    void setMarketConfig(const std::string& config, const std::string& context);
+    void setMarketConfig(const std::string& config, const std::string& context); 
+    void setResultsPath(boost::filesystem::path resultsPath);
+    void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);
+    void setBaselTrafficLight(const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight);
+    void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);
+    void setSensitivityScenarioData(
+        const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData);
     void setRefDataManager(const std::string& xml);
     void setRefDataManagerFromFile(const std::string& fileName);
     void setConventions(const std::string& xml);

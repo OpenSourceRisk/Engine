@@ -107,7 +107,21 @@ public:
      /*********
      * Setters
      *********/
-    
+    void setResultsPath(boost::filesystem::path resultsPath) { resultsPath_ = resultsPath; }
+    void setRefDataManager(const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager) {
+        refDataManager_ = refDataManager;
+    }
+    void setBaselTrafficLight(const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight) {
+        baselTrafficLightConfig_ = baselTrafficLight;
+    }
+    void setTodaysMarketParams(const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams) {
+        todaysMarketParams_ = todaysMarketParams;
+    }
+    void setSensitivityScenarioData(
+        const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData) {
+        sensiScenarioData_ = sensiScenarioData;
+    }
+
     void setAsOfDate(const std::string& s); // parse to Date
     void setResultsPath(const std::string& s) { resultsPath_ = s; }
     void setInputPath(const std::string& s) { inputPath_ = s; }
@@ -580,6 +594,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
     const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
     const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const { return baselTrafficLightConfig_; }
+    
     CurveConfigurationsManager& curveConfigs() { return curveConfigs_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& pricingEngine() const { return pricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() const { return todaysMarketParams_; }
