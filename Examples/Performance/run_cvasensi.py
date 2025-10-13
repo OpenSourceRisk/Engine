@@ -12,9 +12,6 @@ print("+----------------------------------------+")
 print("| CVA Sensis using AMC, AAD and GPU      |")
 print("+----------------------------------------+")
 
-oreex.print_headline("Run AMC Legacy")
-oreex.run("Input/ore_amc_legacy.xml")
-
 oreex.print_headline("Run CVA Sensi with bump & reval")
 oreex.run("Input/ore_cvasensi_bump.xml")
 

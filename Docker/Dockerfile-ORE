@@ -55,6 +55,11 @@ RUN mkdir -p html \
   && rm -rf ore
 
 
+RUN mkdir -p /boostlibs && \
+    find /usr/lib -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \;
+RUN mkdir -p /opencllibs && \
+    find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
+
 
 ARG DEBIAN_TAG
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
@@ -62,8 +67,8 @@ FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 COPY --from=orebuild /usr/local/include /usr/local/include
 COPY --from=orebuild /usr/local/lib/ /usr/local/lib
 COPY --from=orebuild /usr/local/bin/ /usr/local/bin
-COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libboost* /usr/lib/x86_64-linux-gnu
-COPY --from=orebuild /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-gnu
+COPY --from=orebuild /boostlibs/ /usr/local/lib/
+COPY --from=orebuild /opencllibs/ /usr/local/lib/
 COPY --from=orebuild /usr/lib/llvm-19/ /usr/lib/llvm-19
 COPY --from=orebuild /usr/include/boost/ /usr/include/boost
 COPY --from=orebuild /usr/include/CL /usr/include/CL
