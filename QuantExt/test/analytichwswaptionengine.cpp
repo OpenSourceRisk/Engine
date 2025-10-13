@@ -16,10 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-//#include "utilities.hpp"
-//
-//#include "toplevelfixture.hpp"
+#include "utilities.hpp"
+#include "toplevelfixture.hpp"
+
 #include <boost/test/unit_test.hpp>
+
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
@@ -110,6 +111,9 @@ double DF(const vector<double>& path, int t0, int t1, Time dt) {
     return exp(-accumulate(path.begin() + t0, path.begin() + t1, 0.0) * dt);
 }
 
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(AnalyticHwSwaptionEngineTest)
 
 BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
     /* 
@@ -264,7 +268,7 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
 
     auto hwAdaptor = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), ts, sigmaDates,
                                                                                           sigmaLgm, kappaDates, kappa);
-    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(*swaptionHw, model);
+    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(model);
     QuantLib::ext::shared_ptr<PricingEngine> lgmEngine =
         QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(hwAdaptor);
     
@@ -422,7 +426,7 @@ BOOST_AUTO_TEST_CASE(testDiscountFactorsFullPath) {
 
     auto hwAdaptor = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), ts, sigmaDates,
                                                                                           sigmaLgm, kappaDates, kappa);
-    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(*swaptionHw, model);
+    auto analyticEngine = ext::make_shared<AnalyticHwSwaptionEngine>(model);
     QuantLib::ext::shared_ptr<PricingEngine> lgmEngine =
         QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(hwAdaptor);
     
@@ -480,7 +484,7 @@ BOOST_AUTO_TEST_CASE(testBuildinMethods) {
     auto swaptionHw = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
     auto swaptionLgm = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
 
-    ext::shared_ptr<PricingEngine> hwEngine = boost::make_shared<AnalyticHwSwaptionEngine>(*swaptionHw, model, ts);
+    ext::shared_ptr<PricingEngine> hwEngine = boost::make_shared<AnalyticHwSwaptionEngine>(model, ts);
     QuantLib::ext::shared_ptr<PricingEngine> lgmEngine =
          QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(hwAdaptor);
 
@@ -569,4 +573,8 @@ BOOST_AUTO_TEST_CASE(testBuildinMethods) {
     cout << "MC Price: " << expectedPayoff << endl;
     cout << "Analytic Price: " << analyticalPrice << endl;
     cout << "LGM Adaptor Price: " << analyticalLgmPrice << endl;
-};
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
