@@ -146,9 +146,9 @@ BOOST_AUTO_TEST_CASE(testAnalyticalZCB) {
     auto index2 = ext::make_shared<Euribor6M>(curve);
 
     Schedule fixedSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following, DateGeneration::Forward, false);
-    Schedule floatSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following, DateGeneration::Forward, false);
+    Schedule floatSchedule(exerciseDate, maturityDate, Period(Semiannual), cal, Following, Following, DateGeneration::Forward, false);
     auto underlying = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, 1.0, fixedSchedule,
-        0.02, Thirty360(Thirty360::BondBasis), floatSchedule, index2, 0.02, Actual360());
+        0.02, Thirty360(Thirty360::BondBasis), floatSchedule, index2, 0.0, Actual360());
     
     auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
     auto swaptionHw = QuantLib::ext::make_shared<Swaption>(underlying, exercise);
