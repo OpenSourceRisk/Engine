@@ -119,10 +119,7 @@ void AnalyticHwSwaptionEngine::calculate() const {
         Real tmp = flatAmount(floatingLeg[k], c_);
         flatFloatLegNpv += tmp * c_->discount(floatingLeg[k]->date());
         floatLegNpv += floatingLeg[k]->amount() * c_->discount(floatingLeg[k]->date());
-        std::cout << "k=" << k << " flat = " << tmp << " non-flat " << floatingLeg[k]->amount() << std::endl;
     }
-
-    std::cout << "float leg npv = " << floatLegNpv << " flat " << flatFloatLegNpv << std::endl;
 
     // 4 calculate an effective t0 fixed rate corrected by the actual / flat float leg npv
 
@@ -151,10 +148,6 @@ void AnalyticHwSwaptionEngine::calculate() const {
 
     // 7 calculate the swaption npv
 
-    std::cout << "engine: swaption npv: annuity = " << annuity << ", fixed rate = " << effectiveFixedRate
-              << ", fair rae = " << effectiveFairSwapRate << " vol " << std::sqrt(variance / optionExpiryTime)
-              << std::endl;
-
     results_.value =
         QuantLib::bachelierBlackFormula(type, effectiveFixedRate, effectiveFairSwapRate, std::sqrt(variance), annuity);
 }
@@ -173,7 +166,8 @@ Array AnalyticHwSwaptionEngine::q(const Time t) const {
                 model_->discountBond(t, fixedAccrualTimes_.back(), x, c_)) /
                A;
 
-    // slight generalization of Piterbarg, 12.1.6.2, we can use payment times != accrual end times here
+    /* slight generalization of Piterbarg, 12.1.6.2, we can use payment times != accrual end times here,
+       coming from the annuity calculation */
 
     Array sum(p_->n(), 0.0);
     for (Size i = 0; i < fixedAccrualFractions_.size(); ++i) {
