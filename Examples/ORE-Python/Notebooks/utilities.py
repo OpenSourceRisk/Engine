@@ -212,9 +212,9 @@ def wait_for_gzip_ready(filepath, retries=5, delay=1):
                 for _ in f:
                     pass
             print(f"✅ Gzip file is ready after {attempt + 1} attempt(s).")
-            return
-        except EOFError:
-            print(f"⏳ Gzip file not ready (attempt {attempt + 1}/{retries}), retrying...")
+            return        
+        except (EOFError, OSError, gzip.BadGzipFile) as e:
+            print(f"⏳ Gzip file not ready (attempt {attempt + 1}/{retries}): {e}")
             time.sleep(delay)
     raise RuntimeError(f"❌ Gzip file {filepath} is not readable after {retries} retries.")
 
