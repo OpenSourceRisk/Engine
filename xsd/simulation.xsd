@@ -719,10 +719,10 @@
       <xs:element name="Seasonality" minOccurs="0">
         <xs:complexType>
           <xs:all>
-            <xs:element type="bool" name="Calibrate"/>
-            <xs:element type="paramTypeType" name="ParamType"/>
-            <xs:element type="xs:string" name="TimeGrid"/>
-            <xs:element type="xs:string" name="InitialValue"/>
+            <xs:element type="bool" name="Calibrate" minOccurs="0"/>
+            <xs:element type="paramTypeType" name="ParamType" minOccurs="0"/>
+            <xs:element type="xs:string" name="TimeGrid" minOccurs="0"/>
+            <xs:element type="xs:string" name="InitialValue" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
