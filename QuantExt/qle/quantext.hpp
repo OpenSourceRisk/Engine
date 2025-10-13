@@ -68,6 +68,7 @@
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/mcgaussianformulabasedcouponpricer.hpp>
+#include <qle/cashflows/nettedcommoditycashflow.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
@@ -173,10 +174,12 @@
 #include <qle/instruments/averageois.hpp>
 #include <qle/instruments/balanceguaranteedswap.hpp>
 #include <qle/instruments/bondbasket.hpp>
+#include <qle/instruments/bondfuture.hpp>
 #include <qle/instruments/bondoption.hpp>
 #include <qle/instruments/bondrepo.hpp>
 #include <qle/instruments/bondtotalreturnswap.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
+#include <qle/instruments/callablebond.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashposition.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
@@ -402,6 +405,7 @@
 #include <qle/pricingengines/cpicapfloorengines.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
+#include <qle/pricingengines/discountingbondfutureengine.hpp>
 #include <qle/pricingengines/discountingbondrepoengine.hpp>
 #include <qle/pricingengines/discountingbondtrsengine.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
@@ -416,8 +420,11 @@
 #include <qle/pricingengines/discountingriskybondenginemultistate.hpp>
 #include <qle/pricingengines/discountingswapenginedeltagamma.hpp>
 #include <qle/pricingengines/discretizedconvertible.hpp>
+#include <qle/pricingengines/fdblackscholesvanillaengine.hpp>
+#include <qle/pricingengines/fdcallablebondevents.hpp>
 #include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
+#include <qle/pricingengines/forwardenabledbondengine.hpp>
 #include <qle/pricingengines/indexcdsoptionbaseengine.hpp>
 #include <qle/pricingengines/indexcdstrancheengine.hpp>
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
@@ -439,6 +446,7 @@
 #include <qle/pricingengines/nullamccalculator.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericlgmbgsflexiswapengine.hpp>
+#include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmflexiswapengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
@@ -509,6 +517,7 @@
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
+#include <qle/termstructures/effectivebonddiscountcurve.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityannounceddividendcurve.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
@@ -613,6 +622,7 @@
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/ratehelpers.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <qle/utilities/scenarioinformation.hpp>
 #include <qle/utilities/serializationdate.hpp>

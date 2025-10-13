@@ -159,6 +159,7 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         Real npv = 0.0;
         auto w = matcher.representativeSwaption(evalDates[i],
                                                 RepresentativeSwaptionMatcher::InclusionCriterion::PayDateGtExercise);
+
         if (w) {
             w->setPricingEngine(blackEngine);
             npv = w->NPV();

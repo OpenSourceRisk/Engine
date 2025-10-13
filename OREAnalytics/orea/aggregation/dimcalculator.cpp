@@ -51,7 +51,7 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
     const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
-    const std::map<std::string, Real>& currentIM)
+    const std::map<std::string, Real>& currentIM, Size dimCubeDepth)
     : inputs_(inputs), portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
       quantile_(quantile), horizonCalendarDays_(horizonCalendarDays), currentIM_(currentIM) {
 
@@ -60,6 +60,8 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
     QL_REQUIRE(cubeInterpretation_, "cube interpretation is null");
     QL_REQUIRE(scenarioData_, "aggregation scenario data is null");
 
+    DLOG("IM Cube Depth " << dimCubeDepth);
+    
     cubeIsRegular_ = !cubeInterpretation_->withCloseOutLag();
     datesLoopSize_ = cubeIsRegular_ ? cube_->dates().size() - 1 : cube_->dates().size();
 
@@ -101,10 +103,10 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     if (cube_->usesDoublePrecision()) {
         dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(cube_->asof(), nettingSetIds_, cube_->dates(),
-                                                                       cube_->samples());
+                                                                       cube_->samples(), dimCubeDepth);
     } else {
         dimCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(cube_->asof(), nettingSetIds_, cube_->dates(),
-                                                                      cube_->samples());
+                                                                      cube_->samples(), dimCubeDepth);
     }
 }
 
@@ -202,34 +204,56 @@ void DynamicInitialMarginCalculator::exportDimCube(ore::data::Report& dimCubeRep
 
     Size samples = dimCube_->samples();
     Date asof = cube_->asof();
-    
+
     dimCubeReport.addColumn("Portfolio", string())
         .addColumn("Sample", Size())
-        .addColumn("DateIndex", Size())
         .addColumn("AsOfDate", Date())
         .addColumn("Time", Real(), 6)
         .addColumn("InitialMargin", Real(), 6)
         .addColumn("Currency", string())
-        .addColumn("SimmSide", string());
+        .addColumn("SimmSide", string())
+        .addColumn("Depth", Size());
 
     for (const auto& [nettingSet, _] : dimCube_->idsAndIndexes()) {
 
+        auto ns = dimCube_->idsAndIndexes().find(nettingSet);
+        QL_REQUIRE(ns != dimCube_->idsAndIndexes().end(), "DynamicInitialMarginCalculator: netting set '"
+                                                              << nettingSet
+                                                              << "' not found in dim cube. Internal error.");
+        Size nsi = ns->second;
+
         for (Size j = 0; j < samples; ++j) {
 
-            for (Size i = 0; i < datesLoopSize_; ++i) {
-
-                Date d = dimCube_->dates()[i];
-                Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, d);
-                Real dim = nettingSetDIM_.at(nettingSet).at(i).at(j);
+            for (Size d = 0; d < dimCube_->depth(); ++d) {
+                Real m = dimCube_->getT0(nsi, d);
                 dimCubeReport.next()
                     .add(nettingSet)
                     .add(j)
-                    .add(i)
-                    .add(d)
-                    .add(t)
-                    .add(dim)
-                    .add("") // currency
-                    .add("Call");
+                    .add(asof)
+                    .add(0.0)
+                    .add(m)
+                    .add("") // FIXME: currency
+                    .add("Call")
+                    .add(d);
+            }
+
+            for (Size i = 0; i < datesLoopSize_; ++i) {
+
+                Date date = dimCube_->dates()[i];
+                Time time = ActualActual(ActualActual::ISDA).yearFraction(asof, date);
+
+                for (Size d = 0; d < dimCube_->depth(); ++d) {
+                    Real m = dimCube_->get(nsi, i, j, d);
+                    dimCubeReport.next()
+                        .add(nettingSet)
+                        .add(j)
+                        .add(date)
+                        .add(time)
+                        .add(m)
+                        .add("") // FIXME: currency
+                        .add("Call")
+                        .add(d);
+                }
             }
         }
     }

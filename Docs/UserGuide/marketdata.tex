@@ -667,7 +667,8 @@ Example:
   \label{tab:cdsspread_quote}
 \end{table}
 
-There are two possible quote types to allow for the presence of two CDS spread types in the market data. In particular, there is typically a conventional CDS spread and a par CDS spread quoted in the market. The quote type distinction here would allow the conventional spreads to be stored with quote type set to \lstinline!CONV_CREDIT_SPREAD! and the par spreads to be stored with quote type set to \lstinline!CREDIT_SPREAD!. As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
+Currently, only par CDS spreads (quote type \lstinline!CREDIT_SPREAD!) are supported. Conventional CDS spreads (quote type \lstinline!CONV_CREDIT_SPREAD!) are not supported at this time. 
+As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y/100!
@@ -1461,7 +1462,8 @@ Examples:
   \label{tab:bondprice_quote}
 \end{table}
 
-This quote provides the clean price for a specified bond in units.
+This quote provides the price for a specified bond. The reference data of the bond specifies the further characteristics
+of the price, i.e. type (clean or dirty) and quote method (percentage of par or currency per unit).
 
 \medskip
 Examples:
@@ -1470,7 +1472,7 @@ Examples:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Bond Conversion Factor}
+\subsection{Bond Future Price}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -1478,20 +1480,46 @@ Examples:
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
   \hline
   {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{BOND} & \\ \hline
-    Quote Type & \emph{CONVERSION\_FACTOR} & \\ \hline
-    Name & String & Identifying name of the bond \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE} & \\ \hline
+    Quote Type & \emph{PRICE} & \\ \hline
+    Name & String & Identifying name of the future contract \\ \hline
   \end{tabular}
-  \caption{Bond Conversion Factor}
-  \label{tab:bond_conversion_factor}
+  \caption{Bond Future Prices}
+  \label{tab:bondfutureprice_quote}
 \end{table}
 
-This quote provides the conversion factor for a bond future contract.
+This quote provides the price for a specified bond future contract.
 
 \medskip
 Examples:
 \begin{itemize}
-	\item BOND/CONVERSION\_FACTOR/SECURITY\_1
+	\item BOND\_FUTURE/PRICE/TYH25
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Future Conversion Factor}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND\_FUTURE} & \\ \hline
+    Quote Type & \emph{CONVERSION\_FACTOR} & \\ \hline
+    Name & String & Identifying name of the bond \\ \hline
+    FutureContract & String & Identifying name of the future contract \\ \hline
+  \end{tabular}
+  \caption{Bond Conversion Factor}
+  \label{tab:bond_future_conversion_factor}
+\end{table}
+
+This quote provides the conversion factor for a deliverable bond of a bond future contract.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item BOND\_FUTURE/CONVERSION\_FACTOR/ISIN:US91282CNF40/TYU25
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

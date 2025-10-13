@@ -41,8 +41,10 @@
 #include <ored/portfolio/bondrepo.hpp>
 #include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/callablebond.hpp>
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/fxderivative.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -56,9 +58,9 @@
 #include <ql/utilities/null.hpp>
 
 #include <boost/make_shared.hpp>
-#include <boost/regex.hpp>
 
 #include <fstream>
+#include <regex>
 
 using std::map;
 using std::set;
@@ -328,6 +330,7 @@ static const map<string, CrifRecord::ProductClass> tradeProductClassMap = {
     {"BondRepo", CrifRecord::ProductClass::Rates},
     {"BondTRS", CrifRecord::ProductClass::Rates},
     {"CallableSwap", CrifRecord::ProductClass::Rates},
+    {"CallableBond", CrifRecord::ProductClass::Rates},
     {"CapFloor", CrifRecord::ProductClass::Rates},
     {"CashPosition", CrifRecord::ProductClass::FX},
     {"CBO", CrifRecord::ProductClass::Credit},
@@ -443,8 +446,6 @@ bool isIsin(const string& s) {
     if (s[11] < '0' || s[11] > '9')
         return false;
     return true;
-    // boost::regex isinPattern("^[A-Z]{2}[A-Z0-9]{9}[0-9]{1}");
-    // return boost::regex_match(s, isinPattern);
 }
   
 std::string simmStandardCurrency(const std::string& ccy) {
@@ -503,12 +504,16 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
     } else if (trade->tradeType() == "ConvertibleBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::ConvertibleBond>(trade),
                                 CrifRecord::ProductClass::Equity);
+    } else if (trade->tradeType() == "CallableBond") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::CallableBond>(trade));
     } else if (trade->tradeType() == "BondOption") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondOption>(trade));
     } else if (trade->tradeType() == "BondTRS") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondTRS>(trade));
     } else if (trade->tradeType() == "ForwardBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ForwardBond>(trade));
+    } else if (trade->tradeType() == "BondFuture") {
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondFuture>(trade));
     } else if (trade->tradeType() == "BondRepo") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondRepo>(trade));
     } else if (trade->tradeType() == "FxForward") {
@@ -545,8 +550,7 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
         if (auto it = tradeProductClassMap.find(trade->tradeType()); it != tradeProductClassMap.end())
             return it->second;
         else {
-            QL_FAIL("simm/scheduleProductClassFromOrePlusTrade: tradeType '" << trade->tradeType()
-                                                                             << "' not recognised");
+            QL_FAIL("simm/scheduleProductClassFromOreTrade: tradeType '" << trade->tradeType() << "' not recognised");
         }
     }
 }

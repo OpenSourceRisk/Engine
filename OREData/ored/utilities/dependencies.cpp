@@ -70,8 +70,12 @@ string marketObjectToCurveSpec(const MarketObject& mo, const string& name, const
 
     switch (ct) {
     case CurveSpec::CurveType::Yield: {
-        auto cc = curveConfigs->yieldCurveConfig(name);
-        cs = new YieldCurveSpec(cc->currency(), name);
+        string ccy;
+        if (curveConfigs->hasYieldCurveConfig(name))
+            ccy = curveConfigs->yieldCurveConfig(name)->currency();
+        else
+            ccy = name.substr(0, 3); // assume the first 3 chars are the currency code
+        cs = new YieldCurveSpec(ccy, name);
         break;
     }
     case CurveSpec::CurveType::FX: {
@@ -288,7 +292,7 @@ string curveSpecToName(CurveSpec::CurveType ct, const string& cId,
                        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs) { 
     if (ct == CurveSpec::CurveType::Inflation) {
         auto icc = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(curveConfigs->get(ct, cId));
-        auto conv = icc->conventions();
+        auto conv = icc->segments().front().convention();
         auto conventions = InstrumentConventions::instance().conventions();
         auto iconv = QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(conv));
         return iconv->indexName();
@@ -323,12 +327,13 @@ bool checkMarketObject(std::map<std::string, std::map<ore::data::MarketObject, s
 	return false;
 }
 
-void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>>* objects,
-    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy,
-    const string& baseCcyDiscountCurve) {
+void addMarketObjectDependencies(map<string, map<ore::data::MarketObject, set<string>>>* objects,
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs, const string& baseCcy, 
+    const string& baseCcyDiscountCurve, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
 
+    Date asof = QuantLib::Settings::instance().evaluationDate();
     for (const auto& [config, mp] : *objects) {
-        std::map<CurveSpec::CurveType, std::set<string>> dependencies;
+        map<pair<CurveSpec::CurveType, string>, set<string>> dependencies;
 
         for (const auto& [o, s] : mp) {
             auto ct = marketObjectToCurveType(o);
@@ -404,7 +409,15 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
                     for (const auto& [ct1, ids1] : deps) {
                         for (const auto& id : ids1) {
                             if (!checkMarketObject(objects, ct1, id, curveConfigs, config))
-                                dependencies[ct1].insert(id);
+                                dependencies[make_pair(ct1, config)].insert(id);
+                        }
+                    }
+                    auto deps2 = curveConfigs->requiredNames(ct, cId, config);
+                    for (const auto& [mo, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(mo);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, config))
+                                dependencies[make_pair(ct2, config)].insert(id);
                         }
                     }
                 }
@@ -412,24 +425,39 @@ void addMarketObjectDependencies(std::map<std::string, std::map<ore::data::Marke
         }
         Size i = 0; // check to prevent infinite loop
         while (dependencies.size() > 0 && i < 1000) {
-            std::map<CurveSpec::CurveType, std::set<string>> newDependencies;
+            map<pair<CurveSpec::CurveType, string>, set<string>> newDependencies;
             for (const auto& [ct, ids] : dependencies) {
                 for (const auto& cId : ids) {
-                    MarketObject mo = curveTypeToMarketObject(ct, cId, curveConfigs);
-                    string name = curveSpecToName(ct, cId, curveConfigs);
+                    MarketObject mo = curveTypeToMarketObject(ct.first, cId, curveConfigs);
+                    string name = curveSpecToName(ct.first, cId, curveConfigs);
                     if (mo == MarketObject::IndexCurve && isGenericIborIndex(name))
                         continue;
                     (*objects)[config][mo].insert(name);
-                    auto deps = curveConfigs->requiredCurveIds(ct, cId);
+                    auto deps = curveConfigs->requiredCurveIds(ct.first, cId);
                     for (const auto& [ct1, ids1] : deps) {
                         for (const auto& id : ids1) {
-                            if (!checkMarketObject(objects, ct1, id, curveConfigs, config))
-                                newDependencies[ct1].insert(id);
+                            if (!checkMarketObject(objects, ct1, id, curveConfigs, ct.second))
+                                newDependencies[make_pair(ct1, ct.second)].insert(id);
                         }
+                    }
+                    auto deps2 = curveConfigs->requiredNames(ct.first, cId);
+                    for (const auto& [o, ids2] : deps2) {
+                        auto ct2 = marketObjectToCurveType(o.first);
+                        for (const auto& id : ids2) {
+                            if (!checkMarketObject(objects, ct2, id, curveConfigs, o.second))
+                                newDependencies[make_pair(ct2, o.second)].insert(id);
+                        }
+                    }
+                    // handle ibor fallback dependency
+                    if (mo == MarketObject::IndexCurve && iborFallbackConfig->isIndexReplaced(name, asof)) {
+                        auto ct3 = marketObjectToCurveType(mo);
+                        auto id = iborFallbackConfig->fallbackData(name).rfrIndex;
+                        if (!checkMarketObject(objects, ct3, id, curveConfigs, ct.second))
+                            newDependencies[make_pair(ct3, ct.second)].insert(id);
                     }
                     // for SwapIndexes we are still missing the discount curve dependency
                     if (mo == MarketObject::SwapIndexCurve)
-                        newDependencies[CurveSpec::CurveType::Yield].insert(
+                        newDependencies[make_pair(CurveSpec::CurveType::Yield, ct.second)].insert(
                             swapIndexDiscountCurve(name.substr(0, 3), baseCcy, name));
                 }
             }

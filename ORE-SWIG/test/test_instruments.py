@@ -10,6 +10,7 @@ class CrossCcyBasisSwapTest(unittest.TestCase):
     def setUp(self):
         """ Set-up CrossCcyBasisSwap """
         self.todays_date = Date(11, November, 2018)
+        Settings.instance().evaluationDate = self.todays_date
         self.pay_nominal = 10000000
         self.rec_nominal = 12000000
         self.pay_currency = USDCurrency()

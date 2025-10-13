@@ -34,8 +34,6 @@ void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->buildMarket(loader);
     analytic()->buildPortfolio();
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     auto detailReport = QuantLib::ext::make_shared<InMemoryReport>();
     auto summaryReport = QuantLib::ext::make_shared<InMemoryReport>();
     auto smrc = QuantLib::ext::make_shared<SMRC>(analytic()->portfolio(), analytic()->market(), inputs_->baseCurrency(),

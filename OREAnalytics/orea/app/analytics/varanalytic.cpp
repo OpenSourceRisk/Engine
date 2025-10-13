@@ -58,8 +58,6 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     setVarReport(loader);
     QL_REQUIRE(varReport_, "No Var Report created");
     
@@ -127,7 +125,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
             *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false,
-            false, false, *inputs_->iborFallbackConfig());
+            false, false, inputs_->iborFallbackConfig());
         simMarket->scenarioGenerator() = scenarios;
         scenarios->baseScenario() = simMarket->baseScenario();
 
@@ -175,12 +173,12 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
-        false, *inputs_->iborFallbackConfig());
+        false, inputs_->iborFallbackConfig());
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 
     std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
-        simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
 
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 

@@ -51,7 +51,7 @@ namespace {
 template <class T, class K> Handle<T> getHandle(const string& spec, const map<string, QuantLib::ext::shared_ptr<K>>& m) {
     auto it = m.find(spec);
     QL_REQUIRE(it != m.end(), "FXVolCurve: Can't find spec " << spec);
-    return it->second->handle();
+    return it->second->handle(spec);
 }
 
 } // namespace

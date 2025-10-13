@@ -37,12 +37,6 @@ public:
 
     static bool instrumentIsHandled(const MultiLegOption& m, std::vector<std::string>& messages);
 
-protected:
-    static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                                    const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
-                                    const Settlement::Type& settlementType, const Settlement::Method& settlementMethod,
-                                    std::vector<std::string>& messages);
-
     struct CashflowInfo {
         bool isPartOfUnderlying(const Real optionTime) const;
         bool canBeEstimated(const Real optionTime) const;
@@ -51,18 +45,32 @@ protected:
         Real couponRatio(const Real time) const;
         RandomVariable pv(const LgmVectorised& lgm, const Real t, const RandomVariable& state,
                           const Handle<YieldTermStructure>& discountCurve) const;
-        Real couponStartTime_ = Null<Real>();            // filled for classes derived from Coupon
-        Real couponEndTime_ = Null<Real>();              // filled for classes derived from Coupon
-        Real belongsToUnderlyingMaxTime_ = Null<Real>(); // this is always filled
-        Real maxEstimationTime_ = Null<Real>();          // either this or exactEstimationTime is filled
-        Real exactEstimationTime_ = Null<Real>();        // ...
+        QuantLib::ext::shared_ptr<QuantLib::CashFlow> qlCf; // always filled, source cf
+        Date payDate;                                       // always filled
+        Real couponStartTime_ = Null<Real>();               // filled for classes derived from Coupon
+        Real couponEndTime_ = Null<Real>();                 // filled for classes derived from Coupon
+        Real belongsToUnderlyingMaxTime_ = Null<Real>();    // this is always filled
+        Real maxEstimationTime_ = Null<Real>();             // either this or exactEstimationTime is filled
+        Real exactEstimationTime_ = Null<Real>();           // ...
         Real midCouponExerciseSettlementLag_ = 0.0;
         std::function<RandomVariable(const LgmVectorised&, const Real, const RandomVariable&,
                                      const Handle<YieldTermStructure>&)>
             calculator_; // always a valid function
     };
 
-    CashflowInfo buildCashflowInfo(const Size i, const Size j) const;
+    static CashflowInfo
+    buildCashflowInfo(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& c, const QuantLib::Real payrec,
+                      const std::function<QuantLib::Real(const QuantLib::Date&)>& timeFromReference,
+                      const QuantLib::Exercise::Type exerciseType, const bool midCouponExercise,
+                      const QuantLib::Period& noticePeriod, const QuantLib::Calendar& noticeCalendar,
+                      const QuantLib::BusinessDayConvention noticeConvention, const std::string& cashflowDescription);
+
+protected:
+    static bool instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
+                                    const std::vector<Currency>& currency,
+                                    const QuantLib::ext::shared_ptr<Exercise>& exercise,
+                                    const Settlement::Type& settlementType, const Settlement::Method& settlementMethod,
+                                    std::vector<std::string>& messages);
 
     void calculate() const;
 
@@ -92,12 +100,13 @@ class NumericLgmMultiLegOptionEngine
     : public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,
       public NumericLgmMultiLegOptionEngineBase {
 public:
-    NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
-                                   const Real sx, const Size nx,
+    NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+                                   const Size ny, const Real sx, const Size nx,
                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                                    const Size americanExerciseTimeStepsPerYear = 24);
 
-    NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real maxTime = 50.0,
+    NumericLgmMultiLegOptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
+                                   const Real maxTime = 50.0,
                                    const QuantLib::FdmSchemeDesc scheme = QuantLib::FdmSchemeDesc::Douglas(),
                                    const Size stateGridPoints = 64, const Size timeStepsPerYear = 24,
                                    const Real mesherEpsilon = 1E-4,
@@ -110,8 +119,8 @@ public:
 class NumericLgmSwaptionEngine : public QuantLib::GenericEngine<Swaption::arguments, Swaption::results>,
                                  public NumericLgmMultiLegOptionEngineBase {
 public:
-    NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
-                             const Real sx, const Size nx,
+    NumericLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+                             const Size ny, const Real sx, const Size nx,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                              const Size americanExerciseTimeStepsPerYear = 24);
 

@@ -43,6 +43,9 @@ public:
         double amount = QuantLib::Null<double>();
         string ccy;
         QuantLib::Date payDate;
+        string payCurrency;
+        string fxIndex;
+        string fixingDate;
     };
 
     PremiumData() {}

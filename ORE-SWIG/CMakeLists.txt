@@ -6,6 +6,7 @@ cmake_policy(SET CMP0086 NEW)
 
 project(ORE-SWIG)
 
+set(CMAKE_SWIG_FLAGS "-fastdispatch")
 option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(${PROJECT_SOURCE_DIR}/../cmake/commonSettings.cmake)
@@ -31,7 +32,7 @@ get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
 # To build the module, we moreover need Boost, Swig, Python
-set(BOOST_COMPONENT_LIST serialization date_time regex filesystem system timer thread log)
+set(BOOST_COMPONENT_LIST serialization date_time filesystem system timer thread log)
 if(ORE_USE_ZLIB)
     list(APPEND BOOST_COMPONENT_LIST iostreams)
     if(MSVC)

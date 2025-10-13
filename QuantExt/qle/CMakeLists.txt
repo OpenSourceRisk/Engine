@@ -39,6 +39,7 @@ cashflows/cmbcoupon.cpp
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
+cashflows/nettedcommoditycashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/cpicoupon.cpp
 cashflows/cpicouponpricer.cpp
@@ -102,10 +103,12 @@ instruments/ascot.cpp
 instruments/averageois.cpp
 instruments/balanceguaranteedswap.cpp
 instruments/bondbasket.cpp
+instruments/bondfuture.cpp
 instruments/bondoption.cpp
 instruments/bondrepo.cpp
 instruments/bondtotalreturnswap.cpp
 instruments/brlcdiswap.cpp
+instruments/callablebond.cpp
 instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cbo.cpp
@@ -276,6 +279,7 @@ pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
+pricingengines/discountingbondfutureengine.cpp
 pricingengines/discountingbondrepoengine.cpp
 pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
@@ -290,8 +294,11 @@ pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingriskybondenginemultistate.cpp
 pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discretizedconvertible.cpp
+pricingengines/fdblackscholesvanillaengine.cpp
+pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
+pricingengines/forwardenabledbondengine.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
@@ -313,6 +320,7 @@ pricingengines/midpointindexcdsengine.cpp
 pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
+pricingengines/numericlgmcallablebondengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
@@ -428,6 +436,7 @@ utilities/commodity.cpp
 utilities/creditcurves.cpp
 utilities/creditindexconstituentcurvecalibration.cpp
 utilities/inflation.cpp
+utilities/ratehelpers.cpp
 utilities/time.cpp)
 
 # hpp files, this list is maintained manually
@@ -475,6 +484,7 @@ cashflows/cmbcoupon.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
+cashflows/nettedcommoditycashflow.hpp
 cashflows/couponpricer.hpp
 cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
@@ -601,10 +611,12 @@ instruments/ascot.hpp
 instruments/averageois.hpp
 instruments/balanceguaranteedswap.hpp
 instruments/bondbasket.hpp
+instruments/bondfuture.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
 instruments/brlcdiswap.hpp
+instruments/callablebond.hpp
 instruments/cashflowresults.hpp
 instruments/cashposition.hpp
 instruments/cashsettledeuropeanoption.hpp
@@ -830,6 +842,7 @@ pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
+pricingengines/discountingbondfutureengine.hpp
 pricingengines/discountingbondrepoengine.hpp
 pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
@@ -844,8 +857,11 @@ pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
 pricingengines/discountingswapenginedeltagamma.hpp
 pricingengines/discretizedconvertible.hpp
+pricingengines/fdblackscholesvanillaengine.hpp
+pricingengines/fdcallablebondevents.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
+pricingengines/forwardenabledbondengine.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
@@ -867,6 +883,7 @@ pricingengines/midpointindexcdsengine.hpp
 pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
+pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
@@ -937,6 +954,7 @@ termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
+termstructures/effectivebonddiscountcurve.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityannounceddividendcurve.hpp
 termstructures/equityforwardcurvestripper.hpp
@@ -1041,6 +1059,7 @@ utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp
 utilities/serializationdate.hpp

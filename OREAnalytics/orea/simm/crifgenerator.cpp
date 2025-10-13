@@ -37,13 +37,13 @@
 #include <qle/utilities/inflation.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 
 #include <ql/tuple.hpp>
 #include <ql/errors.hpp>
 
 #include <iomanip>
 #include <map>
+#include <regex>
 
 using namespace ore::analytics;
 

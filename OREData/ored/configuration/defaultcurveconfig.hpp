@@ -187,10 +187,10 @@ public:
 
 private:
     void populateQuotes();
-    void populateRequiredCurveIds();
-    void populateRequiredCurveIds(const std::string& discountCurveID, const std::string& benchmarkCurveID,
-                                  const std::string& sourceCurveID,
-                                  const std::vector<std::string>& multiSectionSourceCurveIds);
+    void populateRequiredIds() const override;
+    void populateRequiredIds(const std::string& discountCurveID, const std::string& benchmarkCurveID,
+                             const std::string& sourceCurveID,
+                             const std::vector<std::string>& multiSectionSourceCurveIds) const;
     std::string currency_;
     std::map<int, Config> configs_;
 };

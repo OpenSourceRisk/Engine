@@ -96,7 +96,6 @@ public:
     Handle<QuantExt::CreditCurve> defaultCurve(const string&,
                                   const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> recoveryRate(const string&, const string& configuration = Market::defaultConfiguration) const override;
-    Handle<Quote> conversionFactor(const string&, const string& configuration = Market::defaultConfiguration) const override;
 
     //! CDS volatilities
     Handle<QuantExt::CreditVolCurve> cdsVol(const string& name,
@@ -143,9 +142,11 @@ public:
     Handle<YieldTermStructure> equityForecastCurve(const string& eqName,
                                                    const string& configuration = Market::defaultConfiguration) const override;
 
-    //! Bond Spreads
+    //! Security Spreads
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> conversionFactor(const string&, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> securityPrice(const string&, const string& configuration = Market::defaultConfiguration) const override;
 
     //! Cpi Base Quotes
     Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
@@ -217,7 +218,6 @@ protected:
     mutable map<pair<string, string>, Handle<QuantExt::CreditVolCurve>> cdsVols_;
     mutable map<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
-    mutable map<pair<string, string>, Handle<Quote>> conversionFactors_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
     mutable map<pair<string, string>, std::pair<string, QuantLib::Period>> capFloorIndexBase_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
@@ -227,6 +227,8 @@ protected:
     mutable map<pair<string, string>, Handle<Quote>> equitySpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     mutable map<pair<string, string>, Handle<Quote>> securitySpreads_;
+    mutable map<pair<string, string>, Handle<Quote>> conversionFactors_;
+    mutable map<pair<string, string>, Handle<Quote>> securityPrices_;
     mutable map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     mutable map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::CommodityIndex>> commodityIndices_;

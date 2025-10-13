@@ -207,7 +207,7 @@ public:
 
 private:
     //! Populate any dependent curve IDs.
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     //! Process price segments when configuring a Piecewise curve.
     void processSegments(std::vector<PriceSegment> priceSegments);

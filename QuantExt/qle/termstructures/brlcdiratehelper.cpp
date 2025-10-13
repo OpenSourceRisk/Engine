@@ -26,16 +26,16 @@ using namespace QuantLib;
 namespace QuantExt {
 
 BRLCdiRateHelper::BRLCdiRateHelper(const Period& swapTenor, const Handle<Quote>& fixedRate,
-                                   const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex,
-                                   const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates)
+                                   const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex, const bool brlCdiIndexGiven,
+                                   const Handle<YieldTermStructure>& discountingCurve, const bool discountCurveGiven,
+                                   const bool telescopicValueDates)
     : RelativeDateRateHelper(fixedRate), swapTenor_(swapTenor), brlCdiIndex_(brlCdiIndex),
-      telescopicValueDates_(telescopicValueDates), discountHandle_(discountingCurve) {
+      brlCdiIndexGiven_(brlCdiIndexGiven), telescopicValueDates_(telescopicValueDates),
+      discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven) {
 
-    bool onIndexHasCurve = !brlCdiIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
+    QL_REQUIRE(!(brlCdiIndexGiven_ && discountCurveGiven_), "Have both curves nothing to solve for.");
 
-    if (!onIndexHasCurve) {
+    if (!brlCdiIndexGiven_) {
         QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(brlCdiIndex_->clone(termStructureHandle_));
         brlCdiIndex_ = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
         brlCdiIndex_->unregisterWith(termStructureHandle_);
@@ -80,7 +80,7 @@ void BRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
     QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);
@@ -103,16 +103,16 @@ void BRLCdiRateHelper::accept(AcyclicVisitor& v) {
 
 DatedBRLCdiRateHelper::DatedBRLCdiRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
                                              const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex,
+                                             const bool brlCdiIndexGiven,
                                              const Handle<YieldTermStructure>& discountingCurve,
-                                             bool telescopicValueDates)
-    : RateHelper(fixedRate), brlCdiIndex_(brlCdiIndex), telescopicValueDates_(telescopicValueDates),
-      discountHandle_(discountingCurve) {
+                                             const bool discountCurveGiven, bool telescopicValueDates)
+    : RateHelper(fixedRate), brlCdiIndex_(brlCdiIndex), brlCdiIndexGiven_(brlCdiIndexGiven),
+      telescopicValueDates_(telescopicValueDates), discountHandle_(discountingCurve),
+      discountCurveGiven_(discountCurveGiven) {
 
-    bool onIndexHasCurve = !brlCdiIndex_->forwardingTermStructure().empty();
-    bool haveDiscountCurve = !discountHandle_.empty();
-    QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), "Have both curves nothing to solve for.");
+    QL_REQUIRE(!(brlCdiIndexGiven_ && discountCurveGiven_), "Have both curves nothing to solve for.");
 
-    if (!onIndexHasCurve) {
+    if (!brlCdiIndexGiven_) {
         QuantLib::ext::shared_ptr<IborIndex> clonedIborIndex(brlCdiIndex_->clone(termStructureHandle_));
         brlCdiIndex_ = QuantLib::ext::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
         brlCdiIndex_->unregisterWith(termStructureHandle_);
@@ -138,7 +138,7 @@ void DatedBRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
     QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (discountHandle_.empty())
+    if (!discountCurveGiven_)
         discountRelinkableHandle_.linkTo(temp, observer);
     else
         discountRelinkableHandle_.linkTo(*discountHandle_, observer);

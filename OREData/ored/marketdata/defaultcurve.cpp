@@ -109,6 +109,8 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
             auto q = QuantLib::ext::dynamic_pointer_cast<CdsQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CdsQuote");
             if (wc.matches(q->name())) {
+                QL_REQUIRE(mdqt != MDQT::CONV_CREDIT_SPREAD, 
+                   "Conventional credit spread are currently not supported for default curves");
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause(), q->runningSpread());
             }
@@ -173,6 +175,8 @@ set<QuoteData> getExplicitQuotes(const vector<pair<string, bool>>& quotes, const
             if (type == DCCT::SpreadCDS || type == DCCT::Price) {
                 auto q = QuantLib::ext::dynamic_pointer_cast<CdsQuote>(md);
                 QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a CdsQuote");
+                QL_REQUIRE(q->quoteType() != MarketDatum::QuoteType::CONV_CREDIT_SPREAD,
+                           "Conventional credit spread are currently not supported for default curves");
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
                          q->docClause(), q->runningSpread());
             } else {
@@ -320,7 +324,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     QL_REQUIRE(it != yieldCurves.end(), "The discount curve, " << config.discountCurveID()
                                                                << ", required in the building of the curve, "
                                                                << spec.name() << ", was not found.");
-    Handle<YieldTermStructure> discountCurve = it->second->handle();
+    Handle<YieldTermStructure> discountCurve = it->second->handle(config.discountCurveID());
 
     // Get the CDS spread / price curve quotes
     set<QuoteData> quotes = getConfiguredQuotes(curveID, config, asof, loader);
@@ -639,9 +643,9 @@ void DefaultCurve::buildBenchmarkCurve(const std::string& curveID, const Default
     Date spot = cal.advance(asof, spotLag * Days);
     for (Size i = 0; i < pillars.size(); ++i) {
         dates.push_back(cal.advance(spot, pillars[i]));
-        Real tmp = dates[i] == asof
-                       ? 1.0
-                       : sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i]);
+        Real tmp = dates[i] == asof ? 1.0
+                                    : sourceCurve->handle(config.sourceCurveID())->discount(dates[i]) /
+                                          benchmarkCurve->handle(config.benchmarkCurveID())->discount(dates[i]);
         // if a non-zero recovery rate is given, we adjust the implied surv probability according to a market value
         // recovery model (see the documentation of the benchmark curve in the user guide for more details)
         impliedSurvProb.push_back(std::pow(tmp, 1.0 / (1.0 - recoveryRate_)));

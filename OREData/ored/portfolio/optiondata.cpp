@@ -84,6 +84,12 @@ void OptionData::fromXML(XMLNode* node) {
 
     midCouponExercise_ =
         parseBool(XMLUtils::getChildValue(node, "MidCouponExercise", false, style_ == "American" ? "true" : "false"));
+
+    if (XMLNode* settlementDataNode = XMLUtils::getChildNode(node, "SettlementData")) {
+        cashSettlementCurrency_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+        cashSettlementFxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
+        cashSettlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
+    }
 }
 
 XMLNode* OptionData::toXML(XMLDocument& doc) const {
@@ -139,6 +145,15 @@ XMLNode* OptionData::toXML(XMLDocument& doc) const {
 
     if ((style_ == "American" && !midCouponExercise_) || (style_ != "American" && midCouponExercise_)) {
         XMLUtils::addChild(doc, node, "MidCouponExercise", midCouponExercise_);
+    }
+
+    if (!cashSettlementCurrency_.empty() || !cashSettlementFxIndex_.empty() || !cashSettlementFixingDate_.empty()) {
+        XMLNode* settlementDataNode = XMLUtils::addChild(doc, node, "SettlementData");
+        XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", cashSettlementCurrency_);
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", cashSettlementFxIndex_);
+        if (!cashSettlementFixingDate_.empty()) {
+            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", cashSettlementFixingDate_);
+        }
     }
 
     return node;

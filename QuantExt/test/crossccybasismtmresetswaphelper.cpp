@@ -121,7 +121,7 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
     vars.helper.reset(new CrossCcyBasisMtMResetSwapHelper(
         Handle<Quote>(vars.spreadQuote), Handle<Quote>(vars.spotFxQuote), vars.settlementDays, vars.payCalendar,
         vars.tenor, vars.payConvention, vars.foreignIndex, vars.domesticIndex, Handle<YieldTermStructure>(),
-        vars.domesticDiscCurve));
+        vars.domesticDiscCurve, true, true, false, true));
     helpers[0] = vars.helper;
 
     // Build yield curve referencing the helper

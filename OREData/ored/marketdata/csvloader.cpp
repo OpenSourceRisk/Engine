@@ -118,10 +118,11 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on);
 
             // TODO: should we try, catch and log any invalid lines?
+            QL_REQUIRE(tokens.size() == 3 || dataType == DataType::Dividend,
+                       "Invalid CSVLoader line, expected 3 columns, got " << tokens.size() << ": " << line);
             QL_REQUIRE(tokens.size() >= 3 || tokens.size() <= 5,
-                       "Invalid CSVLoader line, between 3 and 5 tokens expected " << line);
-            if (tokens.size() == 4)
-                QL_REQUIRE(dataType == DataType::Dividend, "CSVLoader, dataType must be of type Dividend");
+                       "Invalid CSVLoader line, between 3 and 5 tokens expected, got " << tokens.size() << ": "
+                                                                                       << line);
             Date date = parseDate(tokens[0]);
             const string& key = tokens[1];
             Real value = parseReal(tokens[2]);
@@ -185,7 +186,7 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                                                 << " - this is already present.");
                 }
             } else {
-                QL_FAIL("unknown data type");
+                QL_FAIL("CSVLoader: unknown data type (" << static_cast<int>(dataType) << ").");
             }
         }
     }

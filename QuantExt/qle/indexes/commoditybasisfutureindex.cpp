@@ -28,7 +28,7 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(const std::string& underlyi
                                                      const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve,
                                                      const bool addBasis, const QuantLib::Size monthOffset,
                                                      const bool baseIsAveraging, const bool priceAsHistoricalFixing)
-    : CommodityFuturesIndex(underlyingName, expiryDate, fixingCalendar, priceCurve), basisFec_(basisFec),
+    : CommodityFuturesIndex(underlyingName, expiryDate, fixingCalendar, priceCurve, QuantLib::Date()), basisFec_(basisFec),
       baseIndex_(baseIndex), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset),
       baseIsAveraging_(baseIsAveraging), priceAsHistoricalFixing_(priceAsHistoricalFixing) {
     QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected for CommodityFuturesIndex");
@@ -53,6 +53,7 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(
 
 QuantLib::ext::shared_ptr<CommodityIndex>
 CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
+                                 const QuantLib::Date& optionExpiryDate,
                                  const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;

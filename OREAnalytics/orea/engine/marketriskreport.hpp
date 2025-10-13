@@ -29,6 +29,7 @@
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/scenario/scenariofilter.hpp>
+#include <ored/configuration/baseltrafficlightconfig.hpp>
 
 #include <vector>
 
@@ -174,7 +175,7 @@ public:
         QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
         QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
         QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-        ore::data::IborFallbackConfig iborFallbackConfig_;
+        QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
         bool dryRun_ = false;
         //! True to enable cube writing
         bool writeCube_ = false;
@@ -188,7 +189,8 @@ public:
         FullRevalArgs(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& sm,
                       const QuantLib::ext::shared_ptr<ore::data::EngineData>& ed,
                       const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& rd = nullptr,
-                      const ore::data::IborFallbackConfig ifc = ore::data::IborFallbackConfig::defaultConfig(),
+                      const QuantLib::ext::shared_ptr<IborFallbackConfig>& ifc =
+                          QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                       const bool dr = false)
             : simMarket_(sm), engineData_(ed), referenceData_(rd), iborFallbackConfig_(ifc), dryRun_(dr) {}
     };
@@ -228,11 +230,11 @@ public:
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
         std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
-        const bool requireTradePnl = false)
+        const bool requireTradePnl = false, const bool requireRiskFactorPnl = false)
         : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter), period_(period),
           hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
           fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
-          requireTradePnl_(requireTradePnl) {
+          requireTradePnl_(requireTradePnl), requireRiskFactorPnl_(requireRiskFactorPnl) {
     }
     virtual ~MarketRiskReport() {}
 
@@ -271,6 +273,8 @@ protected:
     bool breakdown_ = false;
     // Whether we require trade-level PnLs to use for later calculations
     bool requireTradePnl_ = false;
+    // Whether we require risk factor level PnLs to use for later calculations
+    bool requireRiskFactorPnl_ = false;
 
     QuantLib::ext::shared_ptr<MarketRiskGroupBaseContainer> riskGroups_;
     QuantLib::ext::shared_ptr<TradeGroupBaseContainer> tradeGroups_;
@@ -301,6 +305,7 @@ protected:
     virtual void registerProgressIndicators();
     virtual void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) = 0;
     virtual bool runTradeDetail(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) { return requireTradePnl_; };
+    virtual bool runRiskFactorDetail(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) { return requireRiskFactorPnl_; };
     virtual QuantLib::ext::shared_ptr<ScenarioFilter>
     createScenarioFilter(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup);
 

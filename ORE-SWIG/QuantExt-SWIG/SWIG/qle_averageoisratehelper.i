@@ -34,18 +34,20 @@ using QuantExt::AverageOISRateHelper;
 class AverageOISRateHelper : public RateHelper {
 public:
     AverageOISRateHelper(const QuantLib::Handle<QuantLib::Quote>& fixedRate,
-                         const QuantLib::Period& spotLagTenor,
-                         const QuantLib::Period& swapTenor,
-                         const QuantLib::Period& fixedTenor,
-                         const QuantLib::DayCounter& fixedDayCounter,
-                         const QuantLib::Calendar& fixedCalendar,
-                         QuantLib::BusinessDayConvention fixedConvention,
-                         QuantLib::BusinessDayConvention fixedPaymentAdjustment,
-                         ext::shared_ptr<OvernightIndex>& overnightIndex,
-                         const QuantLib::Period& onTenor,
-                         const QuantLib::Handle<QuantLib::Quote>& onSpread,
-                         QuantLib::Natural rateCutoff,
-                         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = QuantLib::Handle<QuantLib::YieldTermStructure>());
+                        const QuantLib::Period& spotLagTenor, 
+                        const QuantLib::Period& swapTenor,
+                        const QuantLib::Period& fixedTenor, 
+                        const QuantLib::DayCounter& fixedDayCounter,
+                        const QuantLib::Calendar& fixedCalendar,
+                        QuantLib::BusinessDayConvention fixedConvention,
+                        QuantLib::BusinessDayConvention fixedPaymentAdjustment,
+                        const ext::shared_ptr<OvernightIndex>& overnightIndex, const bool onIndexGiven,
+                        const QuantLib::Period& onTenor, 
+                        const QuantLib::Handle<QuantLib::Quote>& onSpread,
+                        QuantLib::Natural rateCutoff,
+                        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve
+                            = QuantLib::Handle<QuantLib::YieldTermStructure>(),
+                        const bool discountCurveGiven = false, const bool telescopicValueDates = false);
     QuantLib::Real onSpread() const;
     ext::shared_ptr<AverageOIS> averageOIS() const;
 };

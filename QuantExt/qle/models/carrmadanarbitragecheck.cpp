@@ -180,7 +180,8 @@ template std::string arbitrageAsString(const CarrMadanMarginalProbability& cm);
 template std::string arbitrageAsString(const CarrMadanMarginalProbabilitySafeStrikes& cm);
 
 CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneyness, const Real spot,
-                                   const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices)
+                                   const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices,
+                                   const VolatilityType volType, const Real shift)
     : times_(times), moneyness_(moneyness), spot_(spot), forwards_(forwards), callPrices_(callPrices) {
 
     // checks
@@ -216,8 +217,13 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
     for (Size i = 0; i < times_.size(); ++i) {
         std::vector<Real> strikes(moneyness_.size());
         Real f = forwards_[i];
-        std::transform(moneyness_.begin(), moneyness_.end(), strikes.begin(), [&f](Real m) { return m * f; });
-        timeSlices_.push_back(CarrMadanMarginalProbability(strikes, forwards_[i], callPrices_[i]));
+        if (volType == ShiftedLognormal) {
+            std::transform(moneyness_.begin(), moneyness_.end(), strikes.begin(),
+                           [&f, &shift](Real m) { return m * (f + shift) - shift; });
+        } else {
+            std::transform(moneyness_.begin(), moneyness_.end(), strikes.begin(), [&f](Real m) { return m + f; });
+        }
+        timeSlices_.push_back(CarrMadanMarginalProbability(strikes, forwards_[i], callPrices_[i], volType, shift));
         surfaceIsArbitrageFree_ = surfaceIsArbitrageFree_ && timeSlices_.back().arbitrageFree();
         callSpreadArbitrage_.push_back(timeSlices_.back().callSpreadArbitrage());
         butterflyArbitrage_.push_back(timeSlices_.back().butterflyArbitrage());

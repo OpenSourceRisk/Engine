@@ -19,6 +19,7 @@
 #include <orea/engine/marketriskbacktest.hpp>
 #include <qle/math/stoplightbounds.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <orea/cube/cubewriter.hpp>
@@ -192,7 +193,7 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
     SummaryResults sr = {pnls.size(), 0.0, 0, 0.0, 0, {}, 0, 0, {}};
 
     sr.callValue = callValue(data);
-    sr.postValue = postValue(data);    
+    sr.postValue = postValue(data);
 
     auto pnlScenDates = hisScenGen_->filteredScenarioDates(btArgs_->backtestPeriod_);
     QL_REQUIRE(pnlScenDates.size() == pnls.size(), "Backtest::calculateSummary(): internal error, pnlScenDates ("
@@ -302,10 +303,28 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
     // Now calculate the [red, amber] and [amber, green] bounds
     if (hisScenGen_->overlapping()) {
         try {
+            QL_REQUIRE(btArgs_->baselTrafficLight_, "No BaselTrafficLight data provided.");
+            auto baselTrafficLightMatrix = btArgs_->baselTrafficLight_->baselTrafficLightData();
+            auto it = baselTrafficLightMatrix.find(hisScenGen_->mporDays());
+            if (it == baselTrafficLightMatrix.end()) {
+                LOG("Couldn't parse BaselTrafficLight for " << hisScenGen_->mporDays()
+                                                            << " mporDays, defaulting to 10.");
+                it = baselTrafficLightMatrix.find(10);
+            }
+
+            ore::data::BaselTrafficLightData::ObservationData trafficLightObs;
+            if (it != baselTrafficLightMatrix.end())
+                trafficLightObs = it->second;
+            else
+                QL_FAIL("Could not find tabulated stop light bounds" );
+
             sr.bounds = QuantExt::stopLightBoundsTabulated(btArgs_->ragLevels_, sr.observations,
-                                                           hisScenGen_->mporDays(), btArgs_->confidence_);
+                                                           hisScenGen_->mporDays(), btArgs_->confidence_,
+                                                           trafficLightObs.observationCount, trafficLightObs.amberLimit, trafficLightObs.redLimit);
         } catch (const std::exception& e) {
-            ALOG("error while retrieving tabulated stop light bounds: " << e.what());
+            StructuredConfigurationWarningMessage("BaselTrafficLight data", "",
+                                                  "Error while retrieving tabulated stop light bounds.", e.what())
+                .log();
         }
         sr.boundsDecorrelated = QuantExt::stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
     } else {

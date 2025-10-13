@@ -683,9 +683,6 @@ public:
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
-
-    set<string> requiredCurveIds(const CurveSpec::CurveType& curveType) const override;
-    map<CurveSpec::CurveType, set<string>> requiredCurveIds() const override;
     //@}
 
     //! \name Setters
@@ -702,7 +699,7 @@ public:
     const vector<string>& quotes() override;
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     // Mandatory members
     string currency_;

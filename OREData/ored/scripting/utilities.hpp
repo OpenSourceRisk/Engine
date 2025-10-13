@@ -114,10 +114,10 @@ public:
     QuantLib::ext::shared_ptr<InterestRateIndex> ir() const { return ir_; }
     QuantLib::ext::shared_ptr<IborIndex> irIbor() const { return irIbor_; }
     // nullptr if it is no ibor fallback index
-    QuantLib::ext::shared_ptr<FallbackIborIndex> irIborFallback(const IborFallbackConfig& iborFallbackConfig,
+    QuantLib::ext::shared_ptr<FallbackIborIndex> irIborFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                                         const Date& asof = QuantLib::Date::maxDate()) const;
     // nullptr if it is no overnight fallback index
-    QuantLib::ext::shared_ptr<FallbackOvernightIndex> irOvernightFallback(const IborFallbackConfig& iborFallbackConfig,
+    QuantLib::ext::shared_ptr<FallbackOvernightIndex> irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 								  const Date& asof = QuantLib::Date::maxDate()) const;
     QuantLib::ext::shared_ptr<SwapIndex> irSwap() const { return irSwap_; }
     QuantLib::ext::shared_ptr<ZeroInflationIndex> inf() const { return inf_; }
