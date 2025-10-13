@@ -153,11 +153,25 @@
           "ShiftSize_2",
           "Currency"
         ],
+		"use_cols": [
+          "Base NPV",
+          "Delta",
+          "Gamma"
+        ],
+		"optional_cols": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
-              "Delta"
+              "Delta",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -208,11 +222,20 @@
           "Delta",
           "Gamma"
         ],
+		"optional_cols": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
-              "Delta"
+              "Delta",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -1211,12 +1234,27 @@
           "ShiftSize_2",
           "Currency"
         ],
+		"use_cols": [
+          "Base NPV",
+          "Delta",
+          "Gamma"
+        ],
+		"optional_cols": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-              "Gamma"
+			  "Gamma",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)",
+			  "Gamma(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
