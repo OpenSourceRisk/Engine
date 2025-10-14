@@ -46,6 +46,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
@@ -55,6 +56,7 @@
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/genericindex.hpp>
+#include <qle/indexes/interpolatediborindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
 
 using namespace QuantLib;
@@ -543,6 +545,14 @@ void FixingDateGetter::visit(IborCoupon& c) {
         requiredFixings_.addFixingDate(bma->adjustedFixingDate(c.fixingDate()),
                                        IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), true);
     } else {
+        if (auto interpolatedIbor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborIndex>(c.index())) {
+            requiredFixings_.addFixingDate(c.fixingDate(),
+                                           IndexNameTranslator::instance().oreName(interpolatedIbor->shortIndex()->name()),
+                                           c.date(), true);
+            requiredFixings_.addFixingDate(c.fixingDate(),
+                                           IndexNameTranslator::instance().oreName(interpolatedIbor->longIndex()->name()),
+                                           c.date(), true);
+        }
         auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(c.index());
         if (fallback != nullptr && c.fixingDate() >= fallback->switchDate()) {
             requiredFixings_.addFixingDates(fallback->onCoupon(c.fixingDate())->fixingDates(),
@@ -840,6 +850,15 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
                                            IndexNameTranslator::instance().oreName(fx->name()), bc.date(), false);
         }
     }
+}
+
+void FixingDateGetter::visit(InterpolatedIborCoupon& c) {
+    requiredFixings_.addFixingDate(c.fixingDate(),
+                                   IndexNameTranslator::instance().oreName(c.interpolatedIborIndex()->shortIndex()->name()),
+                                   c.date(), true);
+    requiredFixings_.addFixingDate(c.fixingDate(),
+                                   IndexNameTranslator::instance().oreName(c.interpolatedIborIndex()->longIndex()->name()),
+                                   c.date(), true);
 }
 
 void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {

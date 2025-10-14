@@ -223,14 +223,24 @@ public:
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
                     bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
-                    const std::map<QuantLib::Date, double>& historicalFixings = {})
+                    const std::map<QuantLib::Date, double>& historicalFixings = {},
+                    const string& frontStubShortIndex = std::string(), const string& frontStubLongIndex = std::string(),
+                    const string& frontStubRounding = std::string(), const string& frontStubRoundingType = std::string(),
+                    const string& backStubShortIndex = std::string(), const string& backStubLongIndex = std::string(),
+                    const string& backStubRounding = std::string(), const string& backStubRoundingType = std::string(),
+                    bool stubUseOriginalCurve = false)
         : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
           fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
           isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
           lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar),
-          telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings) {
+          telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings),
+          frontStubShortIndex_(frontStubShortIndex), frontStubLongIndex_(frontStubLongIndex),
+          frontStubRounding_(frontStubRounding), frontStubRoundingType_(frontStubRoundingType),
+          backStubShortIndex_(backStubShortIndex), backStubLongIndex_(backStubLongIndex),
+          backStubRounding_(backStubRounding), backStubRoundingType_(backStubRoundingType),
+          stubUseOriginalCurve_(stubUseOriginalCurve) {
         indices_.insert(index_);
     }
 
@@ -260,6 +270,15 @@ public:
     ScheduleData fixingSchedule() const { return fixingSchedule_; }
     ScheduleData resetSchedule() const { return resetSchedule_; }
     const std::map<QuantLib::Date, double>& historicalFixings() const { return historicalFixings_; }
+    const string& frontStubShortIndex() const { return frontStubShortIndex_; }
+    const string& frontStubLongIndex() const { return frontStubLongIndex_; }
+    const string& frontStubRounding() const { return frontStubRounding_; }
+    const string& frontStubRoundingType() const { return frontStubRoundingType_; }
+    const string& backStubShortIndex() const { return backStubShortIndex_; }
+    const string& backStubLongIndex() const { return backStubLongIndex_; }
+    const string& backStubRounding() const { return backStubRounding_; }
+    const string& backStubRoundingType() const { return backStubRoundingType_; }
+    bool stubUseOriginalCurve() const { return stubUseOriginalCurve_; }
     //@}
 
     //! \name Modifiers
@@ -303,6 +322,15 @@ private:
     ScheduleData fixingSchedule_;
     ScheduleData resetSchedule_;
     std::map<QuantLib::Date, double> historicalFixings_;
+    string frontStubShortIndex_;
+    string frontStubLongIndex_;
+    string frontStubRounding_;
+    string frontStubRoundingType_;
+    string backStubShortIndex_;
+    string backStubLongIndex_;
+    string backStubRounding_;
+    string backStubRoundingType_;
+    bool stubUseOriginalCurve_;
 };
 
 //! Serializable CPI Leg Data
@@ -1219,6 +1247,12 @@ Leg joinLegs(const std::vector<Leg>& legs);
 // build a notional leg for a given coupon leg, returns an empty Leg if not applicable
 Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requiredFixings,
                      const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration);
+
+// replace given Ibor coupon by interpolated Ibor coupon
+void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
+                            const std::string& roundingStr, const std::string& roundingTypeStr,
+                            const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                            const bool useOriginalIndexCurve, const Size accrualDays = Null<Size>());
 
 } // namespace data
 } // namespace ore
