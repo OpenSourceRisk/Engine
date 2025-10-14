@@ -44,7 +44,7 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
       baseCcy_(baseCcy) {
 
-    optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
+    optionActive_ = std::vector<bool>(data->optionExpiries().size(), false);
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
     string name = data->name();
@@ -69,12 +69,33 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
     alwaysForwardNotifications();
 
     // build option basket and derive parametrization from it
-    if (data->calibrateSigma() || data->calibrateKappa())
+    if (data->calibrateSigma() || data->calibrateKappa() || data->calibrateSeasonality())
         buildOptionBasket();
 
+    Array seasonalityTimes_a, seasonalityValues_a;
+
+    if (data->seasonalityParamType()  == ParamType::Constant ){
+        QL_REQUIRE(data->seasonalityTimes().size() == 0, "empty seasonality time grid expected");
+        QL_REQUIRE(data->seasonalityValues().size() == 1, "initial seasonality grid size 1 expected");
+        seasonalityTimes_a = Array(0);
+        seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
+    } else {
+        if (data->calibrateSeasonality()) { // override
+            QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
+            // the last expiry is taken, as a(T) is calibrated not \int_{0}^T \sigma_{T-1}(u)du
+            seasonalityTimes_a = Array(optionExpiries_.begin(), optionExpiries_.end()); 
+            seasonalityValues_a = Array(seasonalityTimes_a.size() + 1, data->seasonalityValues()[0]);
+        } else {
+            // use input time grid and input alpha array otherwise
+            seasonalityTimes_a = Array(data->seasonalityTimes().begin(), data->seasonalityTimes().end());
+            seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
+            QL_REQUIRE(seasonalityValues_a.size() == seasonalityTimes_a.size() + 1, "seasonality grids do not match");
+        }
+    }
     parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzParametrization>(ccy, name, curve_, fxSpot_,
-                                                                                      data->sigmaValue(), data->kappaValue(),
-                                                                                      data->driftFreeState());
+        data->sigmaValue(), data->kappaValue(),
+        data->driftFreeState(),
+        seasonalityTimes_a, seasonalityValues_a);
     model_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
     params_ = model_->params();
 }
@@ -106,70 +127,15 @@ bool CommoditySchwartzModelBuilder::requiresRecalibration() const {
 void CommoditySchwartzModelBuilder::performCalculations() const {
     if (requiresRecalibration()) {
         DLOG("COM model requires recalibration");
-
-        // reset market observer updated flag
-        marketObserver_->hasUpdated(true);
-        // build option basket
         buildOptionBasket();
-        // update vol cache
-        volSurfaceChanged(true);
-
-        // attach pricing engine to helpers
-        QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzFutureOptionEngine> engine =
-            QuantLib::ext::make_shared<QuantExt::CommoditySchwartzFutureOptionEngine>(model_);
-        for (Size j = 0; j < optionBasket_.size(); j++)
-            optionBasket_[j]->setPricingEngine(engine);
-
-        QL_REQUIRE(data_->calibrationType() != CalibrationType::Bootstrap, "Bootstrap COM calibration not supported yet");
-
-        if (data_->calibrationType() == CalibrationType::None ||
-            (data_->calibrateSigma() == false && data_->calibrateKappa() == false)) {
-            LOG("COM calibration is deactivated in the CommoditySchwartzModelData for name " << data_->name());
-            return;
-        }
-
-        // check which parameters are kept fixed
-        std::vector<bool> fix(model_->parametrization()->numberOfParameters(), true);
-        std::vector<Real> weights;
-        Size freeParams = 0;
-        if (data_->calibrateSigma()) {
-            fix[0] = false;
-            freeParams++;
-            LOG("CommoditySchwartzModel: calibrate sigma for name " << data_->name());
-        }
-        if (data_->calibrateKappa()) {
-            fix[1] = false;
-            freeParams++;
-            LOG("CommoditySchwartzModel: calibrate kappa for name " << data_->name());
-        }
-        if (freeParams == 0) {
-            WLOG("CommoditySchwartzModel: skip calibration for name " << data_->name() << ", no free parameters");
-            error_ = 0.0;
-            return;
-        }
-
-        // use identical start values for each calibration to ensure identical results for identical baskets
-        model_->setParams(params_);
-
-        LOG("CommoditySchwartzModel for name " << data_->name() << " before calibration:"
-            << " sigma=" << parametrization_->sigmaParameter()
-            << " kappa=" << parametrization_->kappaParameter());
-
-        model_->calibrate(optionBasket_, *data_->optimizationMethod(), data_->endCriteria(), data_->constraint(), weights, fix);
-
-        LOG("CommoditySchwartzModel for name " << data_->name() << " after calibration:"
-            << " sigma=" << parametrization_->sigmaParameter()
-            << " kappa=" << parametrization_->kappaParameter());
-
-        error_ = getCalibrationError(optionBasket_);
-        LOG("CommoditySchwartzModel calibration rmse error " << error_ << " for name " << data_->name());
-        try {
-            auto d = getCalibrationDetails(optionBasket_, parametrization_);
-            DLOG(d);
-        } catch (const std::exception& e) {
-            WLOG("An error occurred: " << e.what());
-        }
     }
+}
+
+void CommoditySchwartzModelBuilder::setCalibrationDone() const {
+    // reset market observer updated flag
+    marketObserver_->hasUpdated(true);
+    // update vol cache
+    volSurfaceChanged(true);
 }
 
 Real CommoditySchwartzModelBuilder::optionStrike(const Size j) const {

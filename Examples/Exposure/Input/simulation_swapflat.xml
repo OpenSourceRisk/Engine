@@ -222,6 +222,7 @@
           <Calibrate>false</Calibrate>
           <InitialValue>0.0</InitialValue>
         </Kappa>
+        <Seasonality/>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
           <Strikes/>
