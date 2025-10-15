@@ -172,7 +172,7 @@ QuantLib::Array HwPiecewiseParametrization<TS>::g(const QuantLib::Time t, const 
     return g;
 }
 
-// template <class TS> const Array& HwPiecewiseParametrization<TS>::parameterTimes(const Size) const { return times_; }
+template <class TS> const Array& HwPiecewiseParametrization<TS>::parameterTimes(const Size) const { return times_; }
 
 // typedef
 
