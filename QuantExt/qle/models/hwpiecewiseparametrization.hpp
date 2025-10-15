@@ -40,6 +40,7 @@ public:
     QuantLib::Array kappa(const QuantLib::Time t) const override;
     QuantLib::Matrix y(const QuantLib::Time t) const override;
     QuantLib::Array g(const QuantLib::Time t, const QuantLib::Time T) const override;
+    const Array& parameterTimes(const Size) const override;
 
 private:
     static constexpr QuantLib::Real zeroKappaCutoff_ = 1.0E-6;
@@ -170,6 +171,8 @@ QuantLib::Array HwPiecewiseParametrization<TS>::g(const QuantLib::Time t, const 
 
     return g;
 }
+
+// template <class TS> const Array& HwPiecewiseParametrization<TS>::parameterTimes(const Size) const { return times_; }
 
 // typedef
 
