@@ -88,9 +88,50 @@ BOOST_AUTO_TEST_CASE(testPiecewiseConstructor) {
     BOOST_TEST(piecewiseParams->sigma_x(25.93) == piecewiseSigma[1]);
 }
 
+namespace {
+template <typename T> void check_close(const T& a, const T& b, const double tol) {
+    auto it1 = a.begin();
+    auto it2 = b.begin();
+    while (it1 != a.end()) {
+        BOOST_CHECK_CLOSE(*it1, *it2, tol);
+        it1++;
+        it2++;
+    }
+}
+}
+
 BOOST_AUTO_TEST_CASE(testPiecewiseVsConstantParametrization) {
 
     BOOST_TEST_MESSAGE("testing hw piecewise parametrization vs. constant parametrization ...");
+
+    Handle<YieldTermStructure> ts;
+
+    Array times{1.0, 2.0, 3.0};
+    Array kappa{0.01, 0.25, 0.85};
+    Matrix sigma{{0.0070, 0.0080, 0.0020}, {0.0060, 0.0090, 0.0040}};
+
+    auto pc = ext::make_shared<IrHwConstantParametrization>(USDCurrency(), ts, sigma, kappa);
+    auto pw = ext::make_shared<IrHwPiecewiseParametrization>(USDCurrency(), ts, times,
+                                                             std::vector<Matrix>(times.size() + 1, sigma),
+                                                             std::vector<Array>(times.size() + 1, kappa));
+
+    std::vector<double> checkTimes = {0.0, 0.5, 0.7, 1.0, 1.5, 2.0, 2.2, 2.5, 3.0, 3.5, 4.0, 10.0};
+
+    double tol = 1E-10;
+
+    for (auto const& t : checkTimes) {
+
+        check_close(pc->sigma_x(t), pw->sigma_x(t), tol);
+        check_close(pc->kappa(t), pw->kappa(t), tol);
+        check_close(pc->y(t), pw->y(t), tol);
+        check_close(pc->kappa(t), pw->kappa(t), tol);
+
+        for (auto const& T : checkTimes) {
+            if (T < t)
+                continue;
+            check_close(pc->g(t, T), pw->g(t, T), tol);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testPiecewiseAsConstant) {
@@ -200,6 +241,8 @@ BOOST_AUTO_TEST_CASE(testPiecewiseConstant, *boost::unit_test::disabled()) {
     BOOST_TEST_MESSAGE("Price of piecewise constant swaption: " << price);
 
     // TODO: continue testing here...
+
+    BOOST_CHECK(true); // to avoid a warning during test runs
 }
 
 BOOST_AUTO_TEST_SUITE_END()
