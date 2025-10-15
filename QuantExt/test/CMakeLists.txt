@@ -3,6 +3,7 @@
 set(QuantExt-Test_SRC ad.cpp
 analyticcashsettledeuropeanengine.cpp
 analyticeuropeanenginedeltagamma.cpp
+analytichwswaptionengine.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
@@ -60,6 +61,7 @@ forwardbond.cpp
 fxvolsmile.cpp
 fxvoltimeweighting.cpp
 hullwhitebucketing.cpp
+hwpiecewiseparametrization.cpp
 index.cpp
 inflationcurve.cpp
 inflationvol.cpp
@@ -93,7 +95,6 @@ strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolconstantspread.cpp
 testsuite.cpp
-analytichwswaptionengine.cpp
 transitionmatrix.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
