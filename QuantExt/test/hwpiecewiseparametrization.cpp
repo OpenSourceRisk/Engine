@@ -160,9 +160,9 @@ BOOST_AUTO_TEST_CASE(testPiecewiseAsConstant) {
         ext::make_shared<HwModel>(piecewiseParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
 
     ext::shared_ptr<PricingEngine> hwConstantEngine =
-        boost::make_shared<AnalyticHwSwaptionEngine>(*swaptionConstant, constantModel, ts);
+        boost::make_shared<AnalyticHwSwaptionEngine>(constantModel, ts);
     ext::shared_ptr<PricingEngine> hwPiecewiseEngine =
-        boost::make_shared<AnalyticHwSwaptionEngine>(*swaptionPiecewise, piecewiseModel, ts);
+        boost::make_shared<AnalyticHwSwaptionEngine>(piecewiseModel, ts);
 
 
 
@@ -212,8 +212,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseConstant) {
     ext::shared_ptr<HwModel> piecewiseModel =
         ext::make_shared<HwModel>(piecewiseParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
 
-    ext::shared_ptr<PricingEngine> hwPiecewiseEngine =
-        boost::make_shared<AnalyticHwSwaptionEngine>(*swaption, piecewiseModel, ts);
+    ext::shared_ptr<PricingEngine> hwPiecewiseEngine = boost::make_shared<AnalyticHwSwaptionEngine>(piecewiseModel, ts);
 
     swaption->setPricingEngine(hwPiecewiseEngine);
     Real price = swaption->NPV();
