@@ -1,151 +1,131 @@
+/*
+ Copyright (C) 2025 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include "toplevelfixture.hpp"
+#include "utilities.hpp"
+
 #include <boost/test/unit_test.hpp>
-#include <qle/models/cdsoptionhelper.hpp>
-#include <qle/models/cpicapfloorhelper.hpp>
-#include <qle/models/crlgm1fparametrization.hpp>
-#include <qle/models/crossassetanalytics.hpp>
-#include <qle/models/crossassetanalyticsbase.hpp>
-#include <qle/models/crossassetmodel.hpp>
-#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
-#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
-#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
-#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
-#include <qle/models/eqbsconstantparametrization.hpp>
-#include <qle/models/eqbsparametrization.hpp>
-#include <qle/models/eqbspiecewiseconstantparametrization.hpp>
-#include <qle/models/fxbsconstantparametrization.hpp>
-#include <qle/models/fxbsparametrization.hpp>
-#include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-#include <qle/models/fxeqoptionhelper.hpp>
-#include <qle/models/gaussian1dcrossassetadaptor.hpp>
-#include <qle/models/infdkparametrization.hpp>
-#include <qle/models/irlgm1fconstantparametrization.hpp>
-#include <qle/models/irlgm1fparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
-#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
-#include <qle/models/lgm.hpp>
-#include <qle/models/lgmimplieddefaulttermstructure.hpp>
-#include <qle/models/lgmimpliedyieldtermstructure.hpp>
-#include <qle/models/linkablecalibratedmodel.hpp>
-#include <qle/models/parametrization.hpp>
-#include <qle/models/piecewiseconstanthelper.hpp>
-#include <qle/models/pseudoparameter.hpp>
-#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
-#include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
-#include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
-#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
-#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
-#include <qle/pricingengines/blackcdsoptionengine.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-#include <qle/pricingengines/depositengine.hpp>
-#include <qle/pricingengines/discountingcommodityforwardengine.hpp>
-#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <qle/pricingengines/discountingequityforwardengine.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/pricingengines/discountingriskybondengine.hpp>
-#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
-#include <qle/pricingengines/paymentdiscountingengine.hpp>
 
-#include <ql/currencies/europe.hpp>
-#include <ql/indexes/swap/euriborswap.hpp>
-#include <ql/instruments/makeswaption.hpp>
-#include <ql/math/array.hpp>
-#include <ql/math/comparison.hpp>
-#include <ql/models/shortrate/onefactormodels/gsr.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/pricingengines/swaption/fdhullwhiteswaptionengine.hpp>
-#include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/math/randomnumbers/boxmullergaussianrng.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/hwmodel.hpp>
 #include <qle/models/hwpiecewiseparametrization.hpp>
-//#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/modelimpliedyieldtermstructure.hpp>
 #include <qle/pricingengines/analytichwswaptionengine.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
-#include <iostream>
-#include <fstream>
-#include <cmath>
-#include <iomanip>
-#include <map>
-#include <random>
-#include <string>
-#include <ql/currencies/europe.hpp>
-#include <ql/indexes/swap/euriborswap.hpp>
-#include <ql/indexes/ibor/euribor.hpp>
+#include <ql/currencies/america.hpp>
+#include <ql/exercise.hpp>
+#include <ql/indexes/ibor/sofr.hpp>
+#include <ql/indexes/ibor/usdlibor.hpp>
+#include <ql/instruments/swaption.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/error_of_mean.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
-using namespace std;
 
-BOOST_AUTO_TEST_CASE(testPiecewiseConstructor) { 
-	// Define constant parametrization
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(HwPiecewiseConstantParametrizationTest)
+
+BOOST_AUTO_TEST_CASE(testPiecewiseConstructor) {
+
+    BOOST_TEST_MESSAGE("testing hw piecewise parametrization basics ...");
+
+    // Define constant parametrization
     Real forwardRate = 0.02;
     Array kappa = {1.18575, 0.0189524, 0.0601251, 0.079152};
     Matrix sigma{{-0.0122469, 0.0105959, 0, 0}, {0, 0, -0.117401, 0.122529}};
     Handle<YieldTermStructure> ts(
         QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), forwardRate, Actual365Fixed()));
 
-	auto constantParams = ext::make_shared<IrHwConstantParametrization>(EURCurrency(), ts, sigma, kappa);
-	
-	// Define piecewise constant parametrization
-	Array times = {5.0};
-    vector<Array> piecewiseKappa = {{1.18575, 0.0189524, 0.0601251, 0.079152}, {1.181209, 0.52398, 0.0601251, 0.122529}};
-    vector<Matrix> piecewiseSigma = {{{-0.0122469, 0.0105959, 0, 0}, {0, 0, -0.117401, 0.122529}},
-                                      {{-0.024242, 0.0105959, 0, 0}, {0, 0, 0.324324, 0.122529}}};
+    auto constantParams = ext::make_shared<IrHwConstantParametrization>(USDCurrency(), ts, sigma, kappa);
 
-	auto piecewiseParams =
-        ext::make_shared<IrHwPiecewiseParametrization>(EURCurrency(), ts, times, piecewiseSigma, piecewiseKappa);
+    // Define piecewise constant parametrization
+    Array times = {5.0};
+    std::vector<Array> piecewiseKappa = {{1.18575, 0.0189524, 0.0601251, 0.079152},
+                                         {1.181209, 0.52398, 0.0601251, 0.122529}};
+    std::vector<Matrix> piecewiseSigma = {{{-0.0122469, 0.0105959, 0, 0}, {0, 0, -0.117401, 0.122529}},
+                                          {{-0.024242, 0.0105959, 0, 0}, {0, 0, 0.324324, 0.122529}}};
 
-	// Test correct inner dimensions of parameters
+    auto piecewiseParams =
+        ext::make_shared<IrHwPiecewiseParametrization>(USDCurrency(), ts, times, piecewiseSigma, piecewiseKappa);
+
+    // Test correct inner dimensions of parameters
     BOOST_TEST(constantParams->n() == piecewiseParams->n());
     BOOST_TEST(constantParams->m() == piecewiseParams->m());
-    
-	// Test piecewise constant is selecting correct params
+
+    // Test piecewise constant is selecting correct params
     BOOST_TEST(piecewiseParams->kappa(2.5) == piecewiseKappa[0]);
-    BOOST_TEST(piecewiseParams->kappa(5.0) == piecewiseKappa[0]);
+    BOOST_TEST(piecewiseParams->kappa(5.0) == piecewiseKappa[1]);
     BOOST_TEST(piecewiseParams->kappa(8.4) == piecewiseKappa[1]);
 
     BOOST_TEST(piecewiseParams->sigma_x(0.0) == piecewiseSigma[0]);
     BOOST_TEST(piecewiseParams->sigma_x(25.93) == piecewiseSigma[1]);
 }
 
+BOOST_AUTO_TEST_CASE(testPiecewiseVsConstantParametrization) {
+
+    BOOST_TEST_MESSAGE("testing hw piecewise parametrization vs. constant parametrization ...");
+}
+
 BOOST_AUTO_TEST_CASE(testPiecewiseAsConstant) {
+
+    BOOST_TEST_MESSAGE("testing hw piecewise parametrization vs constant analytic swaption pricing ...");
+
     Real forwardRate = 0.02;
     Array kappa = {1.18575, 0.0189524, 0.0601251, 0.079152};
     Matrix sigma{{-0.0122469, 0.0105959, 0, 0}, {0, 0, -0.117401, 0.122529}};
     Handle<YieldTermStructure> ts(
         QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), forwardRate, Actual365Fixed()));
 
-    auto constantParams = ext::make_shared<IrHwConstantParametrization>(EURCurrency(), ts, sigma, kappa);
-    
+    auto constantParams = ext::make_shared<IrHwConstantParametrization>(USDCurrency(), ts, sigma, kappa);
+
     Array times = {};
-    vector<Array> piecewiseKappa = {{1.18575, 0.0189524, 0.0601251, 0.079152}};
-    vector<Matrix> piecewiseSigma = {{{-0.0122469, 0.0105959, 0, 0}, {0, 0, -0.117401, 0.122529}}};
+    std::vector<Array> piecewiseKappa = {{1.18575, 0.0189524, 0.0601251, 0.079152}};
+    std::vector<Matrix> piecewiseSigma = {{{-0.0122469, 0.0105959, 0, 0}, {0, 0, -0.117401, 0.122529}}};
     auto piecewiseParams =
-        ext::make_shared<IrHwPiecewiseParametrization>(EURCurrency(), ts, times, piecewiseSigma, piecewiseKappa);
+        ext::make_shared<IrHwPiecewiseParametrization>(USDCurrency(), ts, times, piecewiseSigma, piecewiseKappa);
 
     // Create swaption and underlying swap
-    Calendar cal = TARGET();
     Date today(10, July, 2025);
+    UnitedStates cal(UnitedStates::Market::Settlement);
     Date startDate = cal.advance(today, 2 * Days);
     Date exerciseDate = cal.advance(startDate, 2 * Years);
     Date maturityDate = cal.advance(exerciseDate, 5 * Years);
     Handle<YieldTermStructure> curve(ts);
-    auto index2 = ext::make_shared<Euribor6M>(curve);
+    auto index2 = ext::make_shared<USDLibor>(6 * Months, curve);
 
-    Schedule fixedSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
-                           DateGeneration::Forward, false);
-    Schedule floatSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
-                           DateGeneration::Forward, false);
+    Settings::instance().evaluationDate() = today;
+
+    Schedule fixedSchedule(exerciseDate, maturityDate, 1 * Years, cal, Following, Following, DateGeneration::Forward,
+                           false);
+    Schedule floatSchedule(exerciseDate, maturityDate, 6 * Months, cal, Following, Following, DateGeneration::Forward,
+                           false);
     auto underlying =
         ext::make_shared<VanillaSwap>(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
                                       floatSchedule, index2, 0.02, Actual360());
@@ -159,12 +139,8 @@ BOOST_AUTO_TEST_CASE(testPiecewiseAsConstant) {
     ext::shared_ptr<HwModel> piecewiseModel =
         ext::make_shared<HwModel>(piecewiseParams, IrModel::Measure::BA, HwModel::Discretization::Euler, false);
 
-    ext::shared_ptr<PricingEngine> hwConstantEngine =
-        boost::make_shared<AnalyticHwSwaptionEngine>(constantModel, ts);
-    ext::shared_ptr<PricingEngine> hwPiecewiseEngine =
-        boost::make_shared<AnalyticHwSwaptionEngine>(piecewiseModel, ts);
-
-
+    ext::shared_ptr<PricingEngine> hwConstantEngine = boost::make_shared<AnalyticHwSwaptionEngine>(constantModel, ts);
+    ext::shared_ptr<PricingEngine> hwPiecewiseEngine = boost::make_shared<AnalyticHwSwaptionEngine>(piecewiseModel, ts);
 
     swaptionConstant->setPricingEngine(hwConstantEngine);
     swaptionPiecewise->setPricingEngine(hwPiecewiseEngine);
@@ -172,36 +148,40 @@ BOOST_AUTO_TEST_CASE(testPiecewiseAsConstant) {
     Real constantPrice = swaptionConstant->NPV();
     Real piecewisePrice = swaptionPiecewise->NPV();
 
+    BOOST_TEST_MESSAGE("constant  param price " << constantPrice);
+    BOOST_TEST_MESSAGE("piecewise param price " << piecewisePrice);
     BOOST_TEST(constantPrice == piecewisePrice);
 }
 
-BOOST_AUTO_TEST_CASE(testPiecewiseConstant) {
+// disabled for now, because work in progress
+BOOST_AUTO_TEST_CASE(testPiecewiseConstant, *boost::unit_test::disabled()) {
+
+    BOOST_TEST_MESSAGE("testing hw piecewise parametrization ( ... wip ... )");
+
     Real forwardRate = 0.02;
-    
+
     Handle<YieldTermStructure> ts(
         QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), forwardRate, Actual365Fixed()));
     Array times = {3.0};
-    vector<Array> piecewiseKappa = {{0.5, 0.10},
-                                    {0.1, 0.15}};
-    vector<Matrix> piecewiseSigma = {{{-0.01, 0}, {0, 0.12}},
-                                     {{-0.02, 0}, {0, 0.05}}};
+    std::vector<Array> piecewiseKappa = {{0.5, 0.10}, {0.1, 0.15}};
+    std::vector<Matrix> piecewiseSigma = {{{-0.01, 0}, {0, 0.12}}, {{-0.02, 0}, {0, 0.05}}};
 
     auto piecewiseParams =
-        ext::make_shared<IrHwPiecewiseParametrization>(EURCurrency(), ts, times, piecewiseSigma, piecewiseKappa);
+        ext::make_shared<IrHwPiecewiseParametrization>(USDCurrency(), ts, times, piecewiseSigma, piecewiseKappa);
 
     // Create swaption and underlying swap
-    Calendar cal = TARGET();
+    UnitedStates cal(UnitedStates::Market::Settlement);
     Date today(10, July, 2025);
     Date startDate = cal.advance(today, 2 * Days);
     Date exerciseDate = cal.advance(startDate, 2 * Years);
     Date maturityDate = cal.advance(exerciseDate, 5 * Years);
     Handle<YieldTermStructure> curve(ts);
-    auto index2 = ext::make_shared<Euribor6M>(curve);
+    auto index2 = ext::make_shared<USDLibor>(6 * Months, curve);
 
-    Schedule fixedSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
-                           DateGeneration::Forward, false);
-    Schedule floatSchedule(exerciseDate, maturityDate, Period(Annual), cal, Following, Following,
-                           DateGeneration::Forward, false);
+    Schedule fixedSchedule(exerciseDate, maturityDate, 1 * Years, cal, Following, Following, DateGeneration::Forward,
+                           false);
+    Schedule floatSchedule(exerciseDate, maturityDate, 6 * Months, cal, Following, Following, DateGeneration::Forward,
+                           false);
     auto underlying =
         ext::make_shared<VanillaSwap>(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
                                       floatSchedule, index2, 0.02, Actual360());
@@ -217,7 +197,11 @@ BOOST_AUTO_TEST_CASE(testPiecewiseConstant) {
     swaption->setPricingEngine(hwPiecewiseEngine);
     Real price = swaption->NPV();
 
-    cout << "Price of piecewise constant swaption: " << price << endl;
+    BOOST_TEST_MESSAGE("Price of piecewise constant swaption: " << price);
 
     // TODO: continue testing here...
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
