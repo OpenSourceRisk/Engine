@@ -321,23 +321,29 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if (inputs_->outputAdditionalResults())
         analytic()->addReport(LABEL, "pnl_additional_results_t1_m0_p1", t1m0p1AddReport);
 
-    auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
-    sensiAnalytic->setMarket(simMarket1);
-
     // remove existing trades from t1 portfolio
     auto mporPortfolioNew = QuantLib::ext::make_shared<Portfolio>();
-    for (const auto& [tradeId, trade] : inputs_->mporPortfolio()->trades())
-        if (!inputs_->portfolio()->has(tradeId))
-            mporPortfolioNew->add(trade);
-    mporPortfolioNew->build(analytic()->impl()->engineFactory(), "portfolio_t1_m0_p1_new");
-    sensiAnalytic->setPortfolio(mporPortfolioNew);
-    sensiAnalytic->buildPortfolio();
+    if (inputs_->mporPortfolio())
+        for (const auto& [tradeId, trade] : inputs_->mporPortfolio()->trades())
+            if (!inputs_->portfolio()->has(tradeId))
+                mporPortfolioNew->add(trade);
 
-    sensiAnalytic->runAnalytic(loader, {"SENSITIVITY"});
-    QuantLib::ext::shared_ptr<InMemoryReport> sensireport;
-    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parSensiAnalysis;
-    sensireport = sensiAnalytic->getReport("SENSITIVITY", "sensitivity");
-    analytic()->addReport(label_, "sensitivity_t1_m0_p1", sensireport);
+    // create sensi analytic
+    if (analytic()->configurations().sensiScenarioData && !mporPortfolioNew->empty()) {
+        auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
+        sensiAnalytic->setMarket(simMarket1);
+        sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+        sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+        mporPortfolioNew->build(analytic()->impl()->engineFactory(), "portfolio_t1_m0_p1_new");
+        sensiAnalytic->setPortfolio(mporPortfolioNew);
+        sensiAnalytic->buildPortfolio();
+
+        sensiAnalytic->runAnalytic(loader, {"SENSITIVITY"});
+        QuantLib::ext::shared_ptr<InMemoryReport> sensireport;
+        QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parSensiAnalysis;
+        sensireport = sensiAnalytic->getReport("SENSITIVITY", "sensitivity");
+        analytic()->addReport(label_, "sensitivity_t1_m0_p1", sensireport);
+    }
 
     /***************************************************************************************
      *
