@@ -19,7 +19,9 @@
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/scenarioutilities.hpp>
@@ -48,6 +50,10 @@ void PnlAnalyticImpl::buildDependencies() {
         sai->setUseSpreadedTermStructures(true);
         addDependentAnalytic(mporLookupKey, mporAnalytic.second);
     }
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
 }
 
 void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -278,6 +284,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     /***************************************************************************************
      *
      * 7. Price the t1 portfolio as of t1 using the t0 market for Day1 P&L calculation
+     *    Run Sensi(t1,m0,p1)
      *
      ***************************************************************************************/
 
@@ -313,6 +320,24 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->addReport(LABEL, "pnl_npv_t1_m0_p1", t1m0p1NpvReport);
     if (inputs_->outputAdditionalResults())
         analytic()->addReport(LABEL, "pnl_additional_results_t1_m0_p1", t1m0p1AddReport);
+
+    auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
+    sensiAnalytic->setMarket(simMarket1);
+
+    // remove existing trades from t1 portfolio
+    auto mporPortfolioNew = QuantLib::ext::make_shared<Portfolio>();
+    for (const auto& [tradeId, trade] : inputs_->mporPortfolio()->trades())
+        if (!inputs_->portfolio()->has(tradeId))
+            mporPortfolioNew->add(trade);
+    mporPortfolioNew->build(analytic()->impl()->engineFactory(), "portfolio_t1_m0_p1_new");
+    sensiAnalytic->setPortfolio(mporPortfolioNew);
+    sensiAnalytic->buildPortfolio();
+
+    sensiAnalytic->runAnalytic(loader, {"SENSITIVITY"});
+    QuantLib::ext::shared_ptr<InMemoryReport> sensireport;
+    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parSensiAnalysis;
+    sensireport = sensiAnalytic->getReport("SENSITIVITY", "sensitivity");
+    analytic()->addReport(label_, "sensitivity_t1_m0_p1", sensireport);
 
     /***************************************************************************************
      *
