@@ -39,7 +39,7 @@ BlackVolatilityWithATM::BlackVolatilityWithATM(const QuantLib::ext::shared_ptr<B
 }
 
 Volatility BlackVolatilityWithATM::blackVolImpl(Time t, Real strike) const {
-    if (strike == Null<Real>() || strike == 0) {
+    if (strike == Null<Real>()) {
         // calculate fwd(t)
         strike = spot_->value();
         if (!yield1_.empty() && !yield2_.empty())

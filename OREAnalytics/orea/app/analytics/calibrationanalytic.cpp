@@ -274,12 +274,18 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
         if (auto comPara = ext::dynamic_pointer_cast<CommoditySchwartzParametrization>(para)) {
             LOG("CamData, updating CommoditySchwartzParametrization:"
                 << " ccy=" << comData->currency() << " name=" << comData->name());
-            QL_REQUIRE(comPara->numberOfParameters() == 2, "2 model parameters for COM");
+            QL_REQUIRE(comPara->numberOfParameters() == 3, "3 model parameters for COM");
             // overwrite initial values with calibration results
             comData->sigmaValue() = comPara->parameterValues(0).front();
             comData->kappaValue() = comPara->parameterValues(1).front();
+            std::vector<double> seasonalityValues;
+            for (int i = 0; i < comPara->parameterValues(2).size(); ++i){
+                seasonalityValues.push_back(comPara->parameterValues(2)[i]);
+            }
+            comData->seasonalityValues() = seasonalityValues;
             comData->calibrateSigma() = false;
             comData->calibrateKappa() = false;
+            comData->calibrateSeasonality() = false;
         } else {
             StructuredAnalyticsWarningMessage(
                 "CalibrationAnalytic", "Parametrization not processed.",

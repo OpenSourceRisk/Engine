@@ -16,15 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/commodityschwartzmodel.hpp>
+#include <qle/models/commodityschwartzseasonalitymodel.hpp>
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 
 namespace QuantExt {
 
-CommoditySchwartzModel::CommoditySchwartzModel(const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization, 
-                                               const Discretization discretization)
+    CommoditySchwartzSeasonalityModel::CommoditySchwartzSeasonalityModel(const QuantLib::ext::shared_ptr<CommoditySchwartzSeasonalityParametrization>& parametrization, 
+                                               const CommoditySchwartzModel::Discretization discretization)
     : parametrization_(parametrization), discretization_(discretization) {
-    QL_REQUIRE(parametrization_ != nullptr, "CommoditySchwartzModel: parametrization is null");
+    QL_REQUIRE(parametrization_ != nullptr, "CommoditySchwartzSeasonalityModel: parametrization is null");
     arguments_.resize(3);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
@@ -32,25 +32,25 @@ CommoditySchwartzModel::CommoditySchwartzModel(const QuantLib::ext::shared_ptr<C
     stateProcess_ = QuantLib::ext::make_shared<CommoditySchwartzStateProcess>(parametrization_, discretization_);
 }
 
-QuantLib::Real CommoditySchwartzModel::forwardPrice(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& state,
+QuantLib::Real CommoditySchwartzSeasonalityModel::forwardPrice(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& state,
                                                     const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve) const {
-    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in CommoditySchwartzModel::forwardPrice");
+    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in CommoditySchwartzSeasonalityModel::forwardPrice");
     Real f0T = priceCurve.empty() ? parametrization_->priceCurve()->price(T) : priceCurve->price(T);
     Real VtT = parametrization_->VtT(t, T);
     Real V0T = parametrization_->VtT(0, T);
     Real mT = parametrization_->m(T);
     Real k = parametrization_->kappaParameter();
     if (parametrization_->driftFreeState())
-        return f0T * std::exp(state[0] * mT * std::exp(-k*T) - 0.5 * (V0T - VtT));
+        return f0T * std::exp(-state[0] * mT * std::exp(-k*T) - 0.5 * (V0T - VtT));
     else
-        return f0T * std::exp(state[0] * mT * std::exp(-k*(T-t)) - 0.5 * (V0T - VtT));
+        return f0T * std::exp(-state[0] * mT * std::exp(-k*(T-t)) - 0.5 * (V0T - VtT));
 }
 
-void CommoditySchwartzModel::update() {
+void CommoditySchwartzSeasonalityModel::update() {
     parametrization_->update();
     notifyObservers();
 }
 
-void CommoditySchwartzModel::generateArguments() { update(); }
+void CommoditySchwartzSeasonalityModel::generateArguments() { update(); }
 
 } // namespace QuantExt
