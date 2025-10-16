@@ -50,7 +50,7 @@ private:
     double sigmaComp(const QuantLib::Size i, const QuantLib::Size j) const;
     double kappaComp(const QuantLib::Size i) const;
 
-    const QuantLib::ext::shared_ptr<PseudoParameter> sigma_, kappa_;
+    QuantLib::ext::shared_ptr<PseudoParameter> sigma_, kappa_;
 };
 
 // implementation
