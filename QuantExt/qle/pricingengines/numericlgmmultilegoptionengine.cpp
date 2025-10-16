@@ -30,6 +30,7 @@
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/payoff.hpp>
 
 #include <boost/algorithm/string/join.hpp>
@@ -128,6 +129,18 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                                             on->valueDates(), on->dt(), on->rateCutoff(), on->includeSpread(),
                                             on->spread(), on->gearing(), on->lookback(), Null<Real>(), Null<Real>(),
                                             false, false, t, x) *
+                       RandomVariable(x.size(), on->accrualPeriod() * on->nominal() * payrec) *
+                       lgm.reducedDiscountBond(t, T, x, discountCurve);
+            };
+            done = true;
+        } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(cpn)) {
+            info.maxEstimationTime_ = timeFromReference(on->fixingDates().front());
+            info.calculator_ = [on, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                               const Handle<YieldTermStructure>& discountCurve) {
+                return lgm.compoundedOnRate(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(on->index()),
+                                            on->fixingDates(), on->valueDates(), on->dt(), on->lockoutDays(), false,
+                                            on->spread(), on->gearing(), 0 * Days, Null<Real>(), Null<Real>(), false,
+                                            false, t, x) *
                        RandomVariable(x.size(), on->accrualPeriod() * on->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
@@ -331,6 +344,7 @@ bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
             if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
                 if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) || QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c) ||
