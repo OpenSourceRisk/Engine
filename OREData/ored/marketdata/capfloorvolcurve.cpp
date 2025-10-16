@@ -81,15 +81,18 @@ CapFloorVolCurve::CapFloorVolCurve(
         // The configuration
         const QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig>& config =
             curveConfigs.capFloorVolCurveConfig(spec_.curveConfigID());
-
         if (!config->proxySourceCurveId().empty()) {
             // handle proxy vol surfaces
             buildProxyCurve(*config, sourceIndex, targetIndex, requiredCapFloorVolCurves);
         } else {
-            QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(iborIndex) == nullptr,
-                       "CapFloorVolCurve: BMA/SIFMA index in '"
-                           << spec_.curveConfigID()
-                           << " not allowed  - vol surfaces for SIFMA can only be proxied from Ibor / OIS");
+            if (QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(iborIndex)) {
+                QL_REQUIRE(config->type() == CfgType::OptionletSurface ||
+                               config->type() == CfgType::OptionletSurfaceWithAtm ||
+                               config->type() == CfgType::OptionletAtm,
+                           "CapFloorVolCurve: BMA/SIFMA index in '"
+                               << spec_.curveConfigID()
+                               << "' only allowed with optionlet vol surfaces or poxied from Ibor / OIS");
+            }
 
             // Read the shift early if the configured volatility type is shifted lognormal
             Real shift = 0.0;
