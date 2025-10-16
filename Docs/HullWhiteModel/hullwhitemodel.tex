@@ -1,0 +1,802 @@
+\documentclass{amsart}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[miktex]{gnuplottex}
+\usepackage{epstopdf}
+\usepackage{minted}
+\usepackage{color,soul}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{plain}
+\newtheorem{acknowledgement}{Acknowledgement}
+\newtheorem{algorithm}{Algorithm}
+\newtheorem{axiom}{Axiom}
+\newtheorem{case}{Case}
+\newtheorem{claim}{Claim}
+\newtheorem{conclusion}{Conclusion}
+\newtheorem{condition}{Condition}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{corollary}{Corollary}
+\newtheorem{criterion}{Criterion}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{exercise}{Exercise}
+\newtheorem{lemma}{Lemma}
+\newtheorem{notation}{Notation}
+\newtheorem{problem}{Problem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\newtheorem{solution}{Solution}
+\newtheorem{summary}{Summary}
+\numberwithin{equation}{section}
+%--------------------------------------------------------
+
+\begin{document}
+
+\title{Hull-White n-factor model}
+
+\date{10 Nov 2022}
+
+\begin{abstract}
+Specification of Hull-White n-factor model.
+\end{abstract}
+\maketitle
+
+\tableofcontents
+
+\section{General Gaussian multi-factor Interest Rate Model}\label{sec:general_gaussian_nfactor_model}
+
+\subsection{Development from HJM Analysis}
+
+We follow \cite{Andersen_Piterbarg_2010}. They develop the model starting from the general class of n dimensional HJM
+models, given by (formula 4.31 in \cite{Andersen_Piterbarg_2010})
+
+\begin{equation}\label{hjm_bondprice}
+dP(t,T) / P(t,T) = r(t) dt - \sigma_P(t,T)^T dW(t)
+\end{equation}
+
+under the bank account meausre, where $P(t,T)$ is the zero bond price with maturity $T$ as seen from time $t$, $r(t)$ is
+the short rate at time $t$ and $\sigma_p(t,T,\omega)$ is a $m$ dimensional process adapted to the filtration generated
+by a $m$-dimensional Brownian motion $W(t)$.
+
+In terms of instantaneous forward rates \ref{hjm_bondprice} reads
+
+\begin{equation}\label{hjm_forwards}
+df(t,T) = \sigma_f(t,T)^T \int_t^T \sigma_f(t,u) du dt + \sigma_f(t,T)^T dW(t)
+\end{equation}
+
+where
+
+\begin{equation}
+\sigma_f(t,T) = \frac{\partial}{\partial T}\sigma_P(t,T)
+\end{equation}
+
+see \cite{Andersen_Piterbarg_2010}, formula 4.38. The class of Gaussian n-factor models ($n\geq m$) is retrieved by the
+{\em separability} restriction
+
+\begin{equation}
+\sigma_f(t,T) = g(t)h(T)
+\end{equation}
+
+for a deterministic $m \times n$ matrix valued function $g$ and a deterministic $n$-dimensional vector valued function
+$h$. In this class we can write a specific model as (see \cite{Andersen_Piterbarg_2010} proposition 12.1.2):
+
+\begin{eqnarray}
+  \label{sde_x}
+  dx(t) & = & (y(t)  {\bf 1} - \kappa x(t)) dt + \sigma_x(t)^T dW(t) \\
+  f(t,T) & = & f(0,T) + m(t,T)^T \left( x(t) + y(t) \int_t^T m(t,u) du \right) \\
+  \label{representation_r}
+  r(t) & = & f(0,t) + \sum_{i=1}^n x_i(t)
+\end{eqnarray}
+
+where ${\bf 1}$ is a column vector containing $1$ at each component and with a $n \times n$ diagonal mean reversion
+matrix
+
+\begin{equation}
+\kappa = \text{diag}(\kappa_1,\ldots,\kappa_n)
+\end{equation}
+
+which we use to parametrize $H(t)$ via
+
+\begin{eqnarray}
+  H(t)   &=& \text{diag}(h_1(t), \ldots, h_n(t)) \\
+  h_i(t) &=& e^{-\int_0^t \kappa_i(s) ds}
+\end{eqnarray}
+
+i.e. we have set
+
+\begin{equation}
+  \kappa_i(t) = - \frac{h_i'(t)}{h_i(t)}
+\end{equation}
+
+Furthermore, the volatility $\sigma_x$ is given by the $m \times n$ matrix valued function
+
+\begin{equation}\label{sigma_g}
+\sigma_x(t) = g(t)H(t)
+\end{equation}
+
+and
+
+\begin{eqnarray}
+  m(t,T) & := & H(T)H(t)^{-1}{\bf 1} \\
+  \label{representation_x}
+  x(t) & := & H(t) \int_0^t g(s)^Tg(s) \int_s^t h(u) du ds + H(t) z(t) \\
+  \label{representation_y}
+  y(t) & := & H(t) \left( \int_0^t g(s)^T g(s) ds \right) H(t) \\
+  z(t) & := & \int_0^t g(s)^T dW(s)
+\end{eqnarray}
+
+The model is fully specified by the mean reversion $\kappa(t)$ and volatility $\sigma_x(t)$, since from that we can
+compute $y(t)$ and $M(t,T)$ as
+
+\begin{eqnarray}
+  m(t,T) &=& \left( e^{-\int_t^T \kappa_1(s) ds}, e^{-\int_t^T \kappa_2(s) ds}, \ldots, e^{-\int_t^T \kappa_n(s) ds} \right)^T \\
+  M(t,T) &=& \text{diag}(m_1, \ldots, m_n)
+\end{eqnarray}
+
+and
+
+\begin{equation}\label{representation_y_2}
+y(t) = \int_0^t M(s,t) \sigma_x(s)^T \sigma_x(s) M(s,t) ds
+\end{equation}
+
+since $g(s) =\sigma_x(s)H^{-1}(s)$. This allows to evolve $x(t)$. We have a bond reconstruction formula (see
+\cite{Andersen_Piterbarg_2010} Corrolary 12.1.3)
+
+\begin{eqnarray}
+  P(t,T) = \frac{P(0,T)}{P(0,t)}e^{-g(t,T)^T x(t) - \frac{1}{2}g(t,T)^Ty(t)g(t,T)}
+\end{eqnarray}
+
+where we define
+
+\begin{eqnarray} 
+  g(t,T) &:=& \int_t^T m(t,u) du \\
+  G(t,T) &:=& \int_t^T M(t,u) du \\
+\end{eqnarray}
+
+Using the results in section 1.6 of \cite{Andersen_Piterbarg_2010} for the solution of linear SDEs applied to \ref{sde_x}
+on the time interval $[t_i, u]$ we get
+
+\begin{equation}
+x(u) = M(t_i,u) x(t_i) + \int_{t_i}^u M(s,u) y(s) ds + \int_{t_i}^u M(s,u) \sigma_x(s)^T dW(s)
+\end{equation}
+
+Furthermore we can write \ref{representation_y_2} as
+
+\begin{equation}
+y(s) = y(t_i) + \int_{t_i}^s M(v,s) \sigma_x(s)^T \sigma_x(v) M(v,s) dv
+\end{equation}
+
+This allows us to write the integral of $x(u)$ between $t_i$ and $t_{i+1}$ as
+
+\begin{equation}
+  \begin{split}
+    \int_{t_i}^{t_{i+1}} x(u) du =& \left( \int_{t_i}^{t_{i+1}} M(t_i,u) du \right) x(t_i) + \\
+     & \int_{t_i}^{t_{i+1}} \int_{t_i}^u M(s,u) y(s) ds du + \\
+     & \int_{t_i}^{t_{i+1}} \int_{t_i}^u M(s,u) \sigma_x(s)^T dW(s) du
+  \end{split}
+\end{equation}
+
+The first summand can be directly written as $G(t_i, t_{i+1}) x(t_i)$ using the definition of $G$. Applying Fubini's
+theorem to the second and third summand gives
+
+\begin{equation}
+  \begin{split}
+    \int_{t_i}^{t_{i+1}} x(u) du =& G(t_i, t_{i+1}) x(t_i) + \\
+     & \int_{t_i}^{t_{i+1}} G(s,t_{i+1}) y(s) ds + \\
+     & \int_{t_i}^{t_{i+1}} G(s,t_{i+1}) \sigma_x(s) dW(s)
+  \end{split}
+\end{equation}
+
+\hl{TODO derive an exact scheme to evolve $x$, $B$ from this, similar to Piterbarg Lemma 10.1.1, which allows for a more
+  precise (and unbiased) evolution of the state process and bank account numeraire}
+
+Notice that this together with \ref{representation_r} also yields a representation of the bank account since
+
+\begin{equation}\label{representation_B}
+B(t) = \frac{1}{P(0,t)} \exp \left( {\bf 1}^T \int_0^t x(s) ds \right)
+\end{equation}
+
+\subsection{Cross Currency Extension}
+
+We consider a domestic interest rate process driven by $m_d$ Brownians with $n_d$ states and likewise a foreign interest
+rate process driven by $m_f$ Brownians and $n_f$ states. The interest rate processes are coupled by an FX Spot process
+$S$. The SDE system for this setup under the domestic bank account measure can be written as follows.
+
+\begin{eqnarray}
+  dx_d(t) & = & (y_d(t)  {\bf 1} - \kappa_d x_d(t)) dt + \sigma_{x,d}(t)^T dW_d(t) \\
+  dx_f(t) & = & (y_f(t)  {\bf 1} - \kappa_f x_f(t) - \sigma_S(t) \sigma_{x,f}^T(t) \rho_{fS} ) dt + \sigma_{x,f}(t)^T dW_f(t) \\
+  dS &=& (r_d(t) - r_f(t)) S dt + \sigma_S(t) S dW_S(t)
+\end{eqnarray}
+
+Here $- \sigma_S(t) \sigma_{x,f}^T(t) \rho_{fS}$ is a drift reflecting the measure change from the foreign to the domestic
+bank account measure, which we will derive momentarily. Notice that the drift of the FX Spot process under the domestic
+bank account measure is known from general principles, see \cite{Andersen_Piterbarg_2010}, section 4.3.2.
+
+The driving Brownians are coupled via correlations given by
+
+\begin{eqnarray}
+  \begin{pmatrix} 
+    dW_d \\
+    dW_f \\
+    dW_S
+  \end{pmatrix} \begin{pmatrix}
+    dW_d & dW_f & dW_S
+  \end{pmatrix} = \begin{pmatrix}
+    I_{m_d}      &   \rho_{df}  & \rho_{dS} \\
+    \rho_{df}^T  & I_{m_f}      & \rho_{fS} \\
+    \rho_{dS}^T  &  \rho_{fS}   & 1
+    \end{pmatrix}
+\end{eqnarray}
+
+where $I_n$ denotes the $n$ dimensional unity matrix (remember that the Brownians within the multi-factor interest rate
+model are independent), $\rho_{df}$ is an $m_d \times m_f$ matrix, $\rho_{dS}$ is an $m_d \times 1$ matrix, $\rho_{fS}$
+is an $m_f \times 1 $ matrix representing the correlations between the domestic, the foreign and the FX Spot processes.
+
+To determine the unknown drift $\mu(t)$ we consider the measure change from the foreign bank to the domestic bank
+account measure which has a Radon-Nikodyn derivative
+
+\begin{equation}
+  \zeta(t) = \frac{B_d(t) S(0)}{B_f(t) S(t)}
+\end{equation}
+
+
+see \cite{Andersen_Piterbarg_2010}, Lemma 4.3.1. From Ito's Lemma we get
+
+\begin{equation}
+\ln \zeta(t) = -\frac{1}{2} \int_0^t \sigma_S(s)^2 ds - \int_0^t{\sigma_S(s) dW_S(s)}
+\end{equation}
+
+Notice that the contributions from $r_d$ and $r_f$ cancel out, for concreteness one might have \ref{representation_B} in
+the back of our heads, although the result holds quite generally. We write the original Brownian motions in terms of
+uncorrelated Brownians $dW_1$, $dW_2$, $dW_3$ of dimension $m_d$, $m_f$, $1$:
+
+\begin{equation}
+  \begin{pmatrix}
+    dW_d \\
+    dW_f \\
+    dW_S
+  \end{pmatrix} =
+  \sqrt{
+    \begin{pmatrix}
+      I_{m_d}      &   \rho_{df}  & \rho_{dS} \\
+      \rho_{df}^T  & I_{m_f}      & \rho_{fS} \\
+      \rho_{dS}^T  &  \rho_{fS}   & 1
+    \end{pmatrix}
+  }
+  \begin{pmatrix}
+    dW_1 \\
+    dW_2 \\
+    dW_3
+  \end{pmatrix} =:
+  \sqrt{\rho} dW
+\end{equation}
+
+and the density as
+
+\begin{equation}
+\ln \zeta(t) = -\frac{1}{2} \int_0^t \sigma_S(s)^2 ds - \int_0^t \begin{pmatrix}0& 0& \sigma_S(s)\end{pmatrix} (\sqrt{\rho}\, dW)
+\end{equation}
+
+where $\begin{pmatrix}0& 0& \sigma_S(s)\end{pmatrix}$ is a $m_d + m_f + 1$ dimensional row vector with zeros at the
+components belonging to $W_d$ and $W_f$. We compare this last representation with the density arising from a drift
+$\theta(s)$ using Girsanov's theorem
+
+\begin{equation}
+\ln \zeta(t) = -\frac{1}{2} \int_0^t \theta(s)^T\theta(s) ds - \int_0^t \theta(s)^T dW(s)
+\end{equation}
+
+from which we conclude
+
+\begin{equation}
+\begin{pmatrix}0& 0& \sigma_S(s)\end{pmatrix} \sqrt{\rho} = \theta(s)^T
+\end{equation}
+
+or
+
+\begin{equation}
+\theta(s) = \sqrt{\rho}^T \begin{pmatrix}0\\ 0\\ \sigma_S(s)\end{pmatrix}
+\end{equation}
+
+We now consider the drift change associated to the measure change
+
+\begin{equation}
+  \begin{pmatrix}
+    dW_d \\
+    dW_f \\
+    dW_s
+  \end{pmatrix} \rightarrow
+  \begin{pmatrix}
+    dW_d \\
+    dW_f \\
+    dW_s  
+  \end{pmatrix} + \sqrt{\rho} \theta dt
+\end{equation}
+
+
+which implies
+
+\begin{equation}
+dW_f \rightarrow dW_f + \sigma_S(t) \rho_{fS} dt
+\end{equation}
+
+and therefore we have, under the domestic measure (denoting the new Brownian after the measure change again as $dW_f(t)$)
+
+\begin{equation}
+  dx_f(t) = (y_f(t)  {\bf 1} - \kappa_f x_f(t) - \sigma_S(t) \sigma_{x,f}^T(t) \rho_{fS} ) dt + \sigma_{x,f}(t)^T dW_f(t)
+\end{equation}
+
+\subsection{T-Forward and Rolling Spot Measure}
+
+\hl{TODO}
+
+\subsection{Constaant parameters}
+
+If $\sigma_x$ and $\kappa$ are constant it is straightforward to calculate
+
+\begin{equation}
+  m_i(t,T) = \exp ( -\kappa_i (T-t) ) \\
+\end{equation}
+
+and
+
+\begin{equation}
+  g_i(t,T) = \begin{cases}
+    \frac{1 - \exp ( -\kappa_i (T-t) )}{\kappa_i} & \kappa_i \neq 0 \\
+    T-t & \kappa_i = 0
+  \end{cases}
+\end{equation}
+
+and
+
+\begin{equation}
+  y_{i,j}(t) = \begin{cases}
+    \sum_{k=1}^m \sigma_{k,i}\sigma_{k,j}\frac{1 - \exp ( -(\kappa_i+\kappa_j)t )}{\kappa_i+\kappa_j} & \kappa_i + \kappa_j \neq 0 \\
+    \sum_{k=1}^m \sigma_{k,i}\sigma_{k,j}t & \kappa_i + \kappa_j = 0
+  \end{cases}
+\end{equation}
+
+for $i,j =1,\ldots,n$.
+
+\section{Statistical Interest Rate Model}\label{stat_ir_model}
+
+\subsection{Model development}
+
+We follow \cite{Andersen_Piterbarg_2010}, 12.1.5 ``Multi-Factor Statistical Gaussian Model''. We assume a tenor
+structure $\tau_1, \ldots, \tau_{N_\tau}$ to discretize a single rate curve, i.e. we choose one currency and one
+representative curve in that currency. We have continuously compounded forward yields
+
+\begin{equation}\label{cont_comp_forward}
+f_j = \frac{-\log \left( \frac{P(0, \tau_j)}{P(0, \tau_{j-1})} \right)}{ \tau_j - \tau_{j-1} }
+\end{equation}
+
+for $j=1,\ldots,N_\tau$, where we set $\tau_0 := 0$. Let $\Sigma_r$ denote an estimate of the covariance matrix of
+absolute daily returns $r_j(t) := f_j(t) - f_j(t-1)$ sourced from time series data. We assume that the mean of these
+returns is approximately zero. We furthermore assume that $\Sigma_r$ is normalized to {\em annual volatilities}. See
+section \ref{sec:covariance_matrix_estimation} for more details.
+
+Spectral decomposition (PCA) yields a orthogonal coordinate transform $\Gamma$
+
+\begin{equation}
+\Sigma_r = \Gamma \Lambda \Gamma^T
+\end{equation}
+
+with $\Lambda = \text{diag}(\lambda_1, \ldots, \lambda_{N_\tau})$ a diagonal matrix containing the eigenvalues of
+$\Sigma_r$ and the columns of $\Gamma$ being the eigenvectors of $\Sigma_r$ with norm 1. We can assume that the columns
+of $\Gamma$ are sorted in a way that $\lambda_1 \geq \lambda_2 \geq \ldots \geq \lambda_{N_\tau}$.
+
+$\Gamma$ defines a linear coordinate transform
+
+\begin{eqnarray}\label{coordinate_transform}
+r^* = \Gamma^T r \\
+r = \Gamma r^*
+\end{eqnarray}
+
+translating the original returns $r$ to (independent) returns $r^*$ in terms of the principal component coordinates and
+vice versa. The $j$th eigenvector $\gamma_j$ of $\Gamma$ is also called the jth vector of {\em loadings} and translates
+a return $(0,\ldots,0,1,0,\ldots,0)^T$ in new coordinates with $1$ at the $j$th component to the corresponding return in
+original coordinates
+
+\begin{eqnarray}
+  r = \gamma_j = \Gamma \begin{pmatrix}
+    0 \\
+    \ldots \\
+    0 \\
+    1 \\
+    0 \\
+    \ldots \\
+    0
+    \end{pmatrix}
+\end{eqnarray}
+
+We now pick a number $m \leq N_\tau$ and only keep the components $1,\ldots,m$ of $\Gamma$. \hl{Do we want to rescale
+  the $\lambda_i$ so that we still match to total variance given by all components, i.e. avoid leaking the variance of
+  the components that we throw away?}
+
+In the interest rate model we aim to develop in this section the $j$th principal component is driven by $z_j$ with
+
+\begin{equation}
+dz_j = \sigma_j(t) dW_j(t)
+\end{equation}
+
+with $j=1,\ldots,m$. If we wish to derive $\sigma_j(t)$ from historical time series data, we set
+
+\begin{equation}\label{hist_factor_vols}
+\sigma_j(t) \equiv \sqrt{\lambda_j}
+\end{equation}
+
+independent of $t$. Alternatively, we can leave $\sigma_j(t)$ unspecified at this point and calibrate to market option
+quotes after having specified the reversion parameters of the model. To connect the loadings $\gamma_j$ with the mean
+reversion parameters of the model we consider \cite{Andersen_Piterbarg_2010} formula (12.35)
+
+\begin{equation}\label{piterbarg_12_35}
+l_j(\tau) = \sum_{i=1}^{n_j} v_{j,i} e^{-\kappa_{j,i} \tau}
+\end{equation}
+
+First we have to integrate \ref{piterbarg_12_35} over $\tau$ to translate the loadings $l_j(\tau)$ for the instantaneous
+forward rate at $t+\tau$ as seen from $t$ to loadings $l_j'(k)$ of the continuously compounded forward yield $f_j$ in
+\ref{cont_comp_forward}. This means we have to compute
+
+\begin{equation}
+  l_j'(k) = \frac{1}{\tau_k - \tau_{k-1}} \int_{\tau_{k-1}}^{\tau_k} l_j(\tau) d \tau = \sum_{i=1}^{n_j} \frac{v_{j,i} }{\tau_k - \tau_{k-1}} \int_{\tau_{k-1}}^{\tau_k} e^{-\kappa_{j,i} \tau} d \tau
+\end{equation}
+
+for $k=1,\ldots,N_{\tau}$. This is
+
+\begin{equation}
+  l_j'(k) = \sum_{i=1}^{n_j} v_{j,i} \frac{e^{-\kappa_{j,i} \tau_{k-1}} - e^{-\kappa_{j,i} \tau_k}}{\kappa_{j,i}( \tau_k - \tau_{k-1} )}
+\end{equation}
+
+The next step is to determine the parameters $v_{j,i}$ and $\kappa_{j,i}$ such that the model implied loadings $l'_j(k)$
+match the loadings $\gamma_j$ from the PCA as closely as possible:
+
+\begin{equation}
+  l_j' \approx \gamma_j
+\end{equation}
+
+Here, the parameter $n_j$ is the number of ``basis functions'' available to approximate $\gamma_j$. We specify $n_j$ as
+a fixed external parameter, while $v_{j,i}$ and $\kappa_{j,i}$ have to be determined in an numerical optimization
+procedure. Notice that the total number of state variables in the final model will be $n = \sum_{j=1}^m n_j$ and the
+numerical optimization will be run over $2n$ free parameters, i.e. there is a trade off between the accuracy of the
+approximation of the PCA loadings and the number of state variables in the model. Also notice that the number of driving
+Brownian motions in the model will be $m$.
+
+\cite{Andersen_Piterbarg_2010}, proposition 12.15 summarizes the model dynamics we arrive at. The short rate is given by
+
+\begin{equation}
+r(t) = f(0,t) + (1,1,\ldots,1) x(t)
+\end{equation}
+
+where the driving vector $x(t)$ of size $n$ follows the dynamics
+
+\begin{equation}
+dx(t) = (y(t) (1,1,\ldots,1)^T - \kappa x(t)) dt + \sigma_x(t)^T dW(t)
+\end{equation}
+
+with an m-dimensional vector $W(t)$ of independent Brownian motions, a diagonal $n \times n$ mean reversion matrix
+$\kappa$
+
+\begin{equation}
+\kappa = \text{diag}( \kappa_{1,1}, \ldots, \kappa_{1,n_1}, \ldots, \kappa_{m,1}, \ldots, \kappa_{m,n_m} )
+\end{equation}
+
+containing the calibrated mean reversion parameters from from \ref{piterbarg_12_35}, a diagonal $n \times n$ matrix
+$\sigma$
+
+\begin{equation}
+\sigma = \text{diag}( \sigma_{1}, \ldots, \sigma_{1}, \ldots, \sigma_{m}, \ldots, \sigma_{m} )
+\end{equation}
+
+containing the historical volatilities of the $m$ factors from \ref{hist_factor_vols} or unspecified values to be
+calibrated to market option quotes, a column vector $h$ of size $n$
+
+\begin{equation}
+h(t) = ( e^{-\kappa_{1,1}t}, \ldots, e^{-\kappa_{1,n_1}}, \ldots, e^{-\kappa_{m,1}}, \ldots, e^{-\kappa_{m,n_m}} )^T
+\end{equation}
+
+The $m \times n$ matrix $\sigma_x$ is given by
+
+\begin{equation}
+\sigma_x(t) = v \sigma(t)
+\end{equation}
+
+where $v$ is a $m \times n$ matrix containing the calibrated parameters from \ref{piterbarg_12_35} in the following form
+
+\begin{equation}
+  v = \begin{pmatrix}
+       v_{1,1} & \ldots & v_{1,n_1} & 0      & \ldots & 0        & \ldots & 0      & \ldots & 0 \\
+       0      & \ldots & 0        & v_{2,1} & \ldots & v_{2,n_2} & \ldots & \vdots & \vdots & \vdots \\
+       \vdots & \ddots & \vdots   & \vdots & \ddots & \vdots   & \ddots & 0      & \vdots & 0 \\
+       0      & \ldots & 0        & 0      & \ldots & 0        & \ldots & v_{m,1} & \ldots & v_{m,n_m}
+       \end{pmatrix}
+\end{equation}
+
+The $n \times n$ matrix $y$ is given by
+
+\begin{equation}
+y(t) = H(t) \left( \int_0^t H(s)^{-1} \sigma(s) v^T v \sigma(s) H(s)^{-1} ds \right) H(t)
+\end{equation}
+
+where $H(t)$ is the diagonal $n \times n$ matrix $\text{diag}(h_1(t), \ldots, h_n(t))$. This model is a special form of
+the model described in section \ref{sec:general_gaussian_nfactor_model} with the parameter $g$ set to
+
+\begin{equation}
+g(t) = v \sigma(t) H(t)^{-1}
+\end{equation}
+
+\subsection{Covariance matrix estimation}\label{sec:covariance_matrix_estimation}
+
+To compute the covariance matrix, we will use the exponential-weighted approach from RiskMetrics with the normal
+covariance matrix as a special case.
+
+For an interest rate curve, we have a tenor structure $\tau_1, \ldots, \tau_{N_\tau}$. The continuously compounded
+forward yields can be computed by
+
+\begin{equation}\label{cont_comp_forward_p}
+f_j(t) = \frac{-\log \left( \frac{P_t(0, \tau_j)}{P_t(0, \tau_{j-1})} \right)}{ \tau_j - \tau_{j-1} }
+\end{equation}
+
+for $j = 1, 2, \ldots, N_\tau$, $t = 1, 2, \ldots, T$. $T$, here, is the days in the historical time series data. The
+absolute difference of the daily returns will be computed by
+
+\begin{equation}\label{abs_daily_return_p}
+r_{t, j} := f_j(t) - f_j(t-1)
+\end{equation}
+
+The covariance matrix $\Sigma_r$ can be computed as
+
+\begin{equation}\label{cov_mat}
+\Sigma_r = A C^T C
+\end{equation}
+
+$A$ here is the annualizing factor that normalize the daily covariance matrix to annual covariance. Normally,
+$A=252$. For matrix $C$ here, we use RiskMetrics (3.23).
+
+\begin{equation}\label{cov_mat_decomp}
+C =\left(\frac{1}{\Lambda}\right)^{\frac{1}{2}} \begin{pmatrix}
+     r_{1,1} \lambda^{\frac{T-1}{2}} & r_{1,2} \lambda^{\frac{T-1}{2}} & \ldots & r_{1,N_\tau} \lambda^{\frac{T-1}{2}} \\
+     r_{2,1} \lambda^{\frac{T-2}{2}} & r_{2,2} \lambda^{\frac{T-2}{2}} & \ldots & r_{2,N_\tau} \lambda^{\frac{T-2}{2}} \\
+     \vdots & \vdots & \ddots & \vdots \\
+     r_{T,1} & r_{T,2} & \ldots & r_{T,N_\tau}
+     \end{pmatrix}
+\end{equation}
+
+Here, $\lambda$ is the factor for exponential weight, and $\Lambda=\sum_{m=1}^{T} \lambda^{m-1}$. When $\lambda=1$, the
+covariance matrix will become equal-weighted.
+
+When using $C$ to compute the covariance matrix $\Sigma_r$, we provide an option to choose whether to subtract the actual mean or to use the zero-mean assumption. If user choosed to subtract the actual mean, the exponentially-weight will be apply to the dataset after the mean is subtracted.
+
+\section{Statistical Interest Rate - FX Model}
+
+\subsection{Model development}
+
+For multiple currencies $c_1,\ldots,c_C$ the calibration of the statistical interest rate / fx model proceeds as follows:
+
+\begin{enumerate}
+\item Check if the all data are available for all IR curves and FX spot currency pairs on dates that have data. If the data is missing, we will use the data from the previous available date. If there is no previous date (i.e. the missing date is the start date of the period), we will use the data from the next available date.
+\item Calibrate the parameters of the interest rate model in each currency with $m_i$ Brownians and $n_i$ factors, $i=1,\ldots,C$. See section \ref{stat_ir_model} for more details.
+\item Calibrate the parameters of the fx model for each currency pair $c_{i+1} - c_1$, $i=1,\ldots,C-1$. See section \ref{sec:fx_spot_variance} for more details.
+\item Calibrate the interest rate correlation matrices $\rho^{IR-IR}_{i,j}$ of size $m_i \times m_j$ for $i,j = 1,\ldots,C$, $i\neq j$:
+  \begin{enumerate}
+  \item transform the rate returns for currency $c_i$ and $c_j$ to PC-coordinates using \ref{coordinate_transform}
+  \item compute a historical correlation estimate between each PC of currency $c_i$ with each PC of currency $c_j$
+  \end{enumerate}
+\item Calibrate the interest rate - fx correlation matrices $\rho^{IR-FX}_{i,j}$ of size $m_i \times 1$ for $i = 1,\ldots,C$, $j=1,\ldots,C-1$
+  \begin{enumerate}
+  \item transform the rate returns for currency $c_i$ to PC-coordinates using \ref{coordinate_transform}
+  \item compute a historical correlation estimate between each PC of $c_i$ with the FX Spot log-returns for the currency pair $c_{j+1} - c_1$
+  \end{enumerate}
+\item Calibrate the fx - fx correlations $\rho^{FX-FX}_{i,j}$ of size $1 \times 1$ for $i = 1,\ldots,C-1$, $j=1,\ldots,C-1$
+  \begin{enumerate}
+  \item compute a historical correlation estimate between the FX Spot log-returns for currency pairs $c_{i+1} - c_1$, $c_{j+1} - c_1$
+  \end{enumerate}
+\end{enumerate}
+
+\subsection{FX spot sigma}\label{sec:fx_spot_variance}
+For each currency pairs $c_{i+1} - c_1$,  $i = 1,\ldots,C-1$, we have a set of time-series spot rates $s_{t, i+1}$, for $t=1, \ldots,T$. If the currency pair is in the format of $c_1 - c_{i+1}$, an inverse will be done on the spot rates (i.e. $1/s_{t,i+1}$). The daily log-return is then computed by 
+
+\begin{equation}
+r_{t,i+1}:=log(\frac{s_{t+1,i+1}}{s_{t,i+1}})
+\end{equation}
+
+Before computing the variance for the log-returns, user can choose whether to subtract the actual mean or to use the zero-mean assumption. If user choosed to sutract the actual mean, $r_{t,i+1} - \bar{r}_{i+1}$ will be used in the next step to compute the variance.
+
+The $\sigma_{i+1}$ for currency pair $c_{i+1} - c_1$ is computed by
+
+\begin{equation}
+\sigma_{i+1}^2=A\sum_{t=1}^T r_{t,i+1}^2 \lambda^{T-t} / \Lambda
+\end{equation}
+
+Here, $A$ is the annualizing factor that normalize the variance of daily log-return into annualized variance. Normally, $A=252$. $\lambda$ is the factor for exponential weight, and $\Lambda=\sum_{m=1}^{T} \lambda^{m-1}$. When $\lambda=1$, it will become equal-weighted.
+
+\section{Commodity Model}\label{sec:commodity_model}
+
+\subsection{Simple Model: Black-Scholes and Black76}
+
+The simplest approach is a Black-Scholes model
+
+\begin{equation}
+dS(t) = (r_d(t) - r_f(t)) S(t) dt + \sigma(t) S(t) dW(t)
+\end{equation}
+
+with $r_d$ denoting the risk free interest rate, $r_f$ denoting the convenience yield. We usually set $r_d$ to match the
+overnight curve in the commodity currency and use $r_f$ to match the quoted future curve of the commodity. See \cite{Clark_2014}, 2.2.1.
+
+A variation is the Black76 model under which the future with maturity $T$ evolves as
+
+\begin{equation}
+dF(t,T) = \sigma(t) F(t,T) dW(t)
+\end{equation}
+
+See \cite{Clark_2014}, 2.2.4.
+
+\subsection{Model variants: Shift and normal volatility}
+
+The shifted Black-Scholes model reads
+
+\begin{equation}
+dS(t) = (r_d(t) - r_f(t)) S(t) dt + \sigma(t) (S(t) + d) dW(t)
+\end{equation}
+
+with a shift $d \geq 0$. This allows to model negative commodity prices up to $-d$, as they might be occasionally
+observed for some commodities.
+
+The normal Black-Scholes model is
+
+\begin{equation}
+dS(t) = (r_d(t) - r_f(t)) S(t) dt + \sigma(t) dW(t)
+\end{equation}
+
+This allows for arbitrary negative prices.
+
+The Black76 model and often also more sophisticated models allow for both a shift-extension and a variant with normal
+volatility in a similar way.
+
+\subsection{Modeling of spreads}
+
+Spreads occur as spreads between different commodity names and / or different future expiries of one of two involved commodity names.
+
+\subsubsection{Sepearate component modeling}
+
+The standard procedure to model spreads is to model the two spread components separately and compute the spread from the two components.
+
+
+\subsubsection{Direct modeling of the spread}
+
+... \hl{TODO: for which concrete spreads is that necessary or convenient? Which market quotes are available in this case? To be further discussed...}
+
+
+\subsection{Advanced Model: 2 Factor model}
+
+We follow \cite{Andersen_2007}. We model future prices $F(t,T)$ at $t$ with maturity $T$ as
+
+\begin{equation}
+dF(t,T) = \sigma_1(t,T) dW_1(t) + \sigma_2(t,T) dW_2(t)
+\end{equation}
+
+with independent $W_i$, $i=1,2$. See \cite{Andersen_2007} section 7.1.
+
+
+\subsection{PCA-based model calibration}
+
+We follow \cite{Andersen_2007}. Section 6.2.2 presents a PCA for USD Gas Futures, in particular note Figure 6. The PCA
+is performed separately per calendar month to account for seasonality. The paper is focussed on a calibration for to
+liquid option prices pricing purposes. We aim to get a full model calibration from historical data on the other hand. We
+therefore use a more general form of the parametrization proposed at the beginning of \cite{Andersen_2007}, section 7.1:
+
+\begin{equation}\label{comm_parametrization}
+\sigma_i(t,T) = e^{b(T)}h_ie^{-\kappa(T-t)} + e^{a(T)}h_{i,\infty}
+\end{equation}
+
+for $i=1,2$. This idea of this form is to mimick the exponentially decreasing shape of the PCA with increasing future
+maturity and a certain long term level $h_{i,\infty}$. Here, $\kappa$ is a decay rate and $a(T)$ and $b(T)$ are functions
+oscicalling around zero to account for the seasonality. The parameters $h_i$ and $h_{\infty,i}$ are additionally scaled to
+match the variance of the pricincipal component, i.e. the $ith$ eigenvalue.
+
+\hl{TODO: Perform our own PCAs on the relevant commodity names to see how well the approach works. We possibly need to
+  make the parametrization more flexible or even dependent on the specific commodity name?}
+
+\hl{TODO: Do we want more than 2 factors? Which portion of the variance is explained by two principal components in our
+  data?}
+
+\subsection{Future Covariance estimation}
+
+\hl{TODO: details on covariance matrix estimate, e.g. rolling future maturities / interpolation ...}
+
+\section{Appendix}
+Here, we provide a proof that the results of subtracting mean and applying ewma on the pc-adjusted non ewma-adjusted absolute return is the same as multiply the ewma-adjusted return with the eigenvectors.
+
+We denote the absolute return matrix as
+
+\begin{equation}
+R=\begin{pmatrix}
+r_{11} & r_{12} & \ldots & r_{1\tau} \\
+r_{21} & r_{22} & \ldots & r_{2\tau} \\
+\vdots & \vdots & \ddots & \vdots \\
+r_{T1} & r_{T2} & \ldots & r_{T\tau}
+\end{pmatrix}
+\end{equation}
+
+The mean of each column as $\bar{r}_1, \bar{r}_2, \ldots, \bar{r}_\tau$.
+
+Eigenvector of the first n principal components as
+
+\begin{equation}
+V=\begin{pmatrix}
+e_{11} & e_{12} & \ldots & e_{1n} \\
+e_{21} & e_{22} & \ldots & e_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+e_{\tau1} & e_{\tau2} & \ldots & e_{\tau n}
+\end{pmatrix}
+\end{equation}
+
+Ewma-adjusted vector as
+
+\begin{equation}
+\omega =\begin{pmatrix}
+\omega_1\\
+\omega_2\\
+\vdots\\
+\omega_T\\
+\end{pmatrix}
+\end{equation}
+
+First, we compute the results for subtracting mean and applying ewma on pc-adjusted non ewma-adjusted absolute reture.
+For element at $i$th row and $j$th column in the $R\cdot V$ matrix, we have
+\begin{equation}
+RV_{i,j}=\sum_{k=1}^\tau r_{ik} e_{kj}
+\end{equation}
+
+The mean of column $j$ column of $R\cdot V$ can be written as
+\begin{equation}
+\begin{split}
+\bar{RV}_j &=\frac{1}{T} \sum_{i=1}^T \sum_{k=1}^\tau r_{ik} e_{kj} \\
+&=\frac{1}{T} \sum_{k=1}^\tau e_{kj} \sum_{i=1}^T r_{ik} \\
+&=\sum_{k=1}^\tau e_{kj} \bar{r}_k
+\end{split}
+\end{equation}
+
+After subtracting the mean and applying the ewma factor, we have
+\begin{equation}
+(RV_{i,j} - \bar{RV}_j) \omega_i =\sum_{k=1}^\tau e_{kj} (r_{ik} - \bar{r}_k) \omega_i
+\end{equation}
+ 
+Next, we compute the results for directly multiply ewma-adjusted return and the eigenvectors.
+
+The ewma-adjusted absolute return can be written as
+
+\begin{equation}
+R_{ewma}=\begin{pmatrix}
+(r_{11}-\bar{r}_1)\omega_1 & (r_{12}-\bar{r}_2)\omega_1 & \ldots & (r_{1\tau}-\bar{r}_\tau)\omega_1 \\
+(r_{21}-\bar{r}_1)\omega_2 & (r_{22}-\bar{r}_2)\omega_2 & \ldots & (r_{2\tau}-\bar{r}_\tau)\omega_2 \\
+\vdots & \vdots & \ddots & \vdots \\
+(r_{T1}-\bar{r}_1)\omega_T & (r_{T2}-\bar{r}_2)\omega_T & \ldots & (r_{T\tau}-\bar{r}_\tau)\omega_T
+\end{pmatrix}
+\end{equation}
+
+For element at $i$th row and $j$th column in the $R_{ewma}\cdot V$ matrix, we have
+
+\begin{equation}
+(R_{ewma} V)_{i,j} = \sum_{k=1}^\tau (r_{ik}-\bar{r}_k)\omega_i e_{kj}
+\end{equation}
+
+Thus, we proved that the results from the 2 approaches are the same.
+
+
+\begin{thebibliography}{4}
+  
+
+\bibitem{Andersen_2007}Andersen, Leif B.G., Markov Models for Commodity Futures: Theory and Practice (September 30, 2008). Available at SSRN: https://ssrn.com/abstract=1138782 or http://dx.doi.org/10.2139/ssrn.1138782
+
+\bibitem{Andersen_Piterbarg_2010} Andersen, L., and Piterbarg, V. (2010): Interest Rate Modeling, Volume I-III
+
+\bibitem{Clark_2014}Clark, Iain J.: Commodity option pricing, A Practioner's Guide, Wiley 2014
+  
+\end{thebibliography}
+
+
+\end{document}
