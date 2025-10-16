@@ -124,7 +124,6 @@ BOOST_AUTO_TEST_CASE(testPiecewiseVsConstantParametrization) {
         check_close(pc->sigma_x(t), pw->sigma_x(t), tol);
         check_close(pc->kappa(t), pw->kappa(t), tol);
         check_close(pc->y(t), pw->y(t), tol);
-        check_close(pc->kappa(t), pw->kappa(t), tol);
 
         for (auto const& T : checkTimes) {
             if (T < t)
