@@ -545,14 +545,6 @@ void FixingDateGetter::visit(IborCoupon& c) {
         requiredFixings_.addFixingDate(bma->adjustedFixingDate(c.fixingDate()),
                                        IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), true);
     } else {
-        if (auto interpolatedIbor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborIndex>(c.index())) {
-            requiredFixings_.addFixingDate(c.fixingDate(),
-                                           IndexNameTranslator::instance().oreName(interpolatedIbor->shortIndex()->name()),
-                                           c.date(), true);
-            requiredFixings_.addFixingDate(c.fixingDate(),
-                                           IndexNameTranslator::instance().oreName(interpolatedIbor->longIndex()->name()),
-                                           c.date(), true);
-        }
         auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(c.index());
         if (fallback != nullptr && c.fixingDate() >= fallback->switchDate()) {
             requiredFixings_.addFixingDates(fallback->onCoupon(c.fixingDate())->fixingDates(),
