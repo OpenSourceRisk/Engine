@@ -25,7 +25,7 @@ Array IrHwStateProcess::initialValues() const { return Array(size(), 0.0); }
 Array IrHwStateProcess::drift(Time t, const Array& s) const {
     Matrix y;
     if (cacheNotReady_drift_) {
-        Matrix y = parametrization_->y(t);
+        y = parametrization_->y(t);
         if (timeStepsToCache_drift_ > 0) {
             cache_drift_.push_back(y);
             if (cache_drift_.size() == timeStepsToCache_drift_)
@@ -68,7 +68,6 @@ Matrix IrHwStateProcess::diffusion(Time t, const Array& s) const {
         return res;
 
     } else {
-
         Matrix res = cache_diffusion_[timeStepCache_diffusion_++];
         if (timeStepCache_diffusion_ == timeStepsToCache_diffusion_)
             timeStepCache_diffusion_ = 0;
