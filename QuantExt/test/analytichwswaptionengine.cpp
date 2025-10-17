@@ -48,7 +48,7 @@ using namespace QuantExt;
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(AnalyticHwSwaptionEngineTest)
+BOOST_AUTO_TEST_SUITE(HWnFTests)
 
 BOOST_AUTO_TEST_CASE(test1FAgainstLgm) {
 
