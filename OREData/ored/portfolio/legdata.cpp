@@ -256,15 +256,15 @@ void FloatingLegData::fromXML(XMLNode* node) {
     if (frontStubNode) {
         frontStubShortIndex_ = XMLUtils::getChildValue(frontStubNode, "ShortIndex", true);
         frontStubLongIndex_ = XMLUtils::getChildValue(frontStubNode, "LongIndex", true);
-        frontStubRounding_ = XMLUtils::getChildValue(frontStubNode, "Rounding");
         frontStubRoundingType_ = XMLUtils::getChildValue(frontStubNode, "RoundingType");
+        frontStubRoundingPrecision_ = XMLUtils::getChildValue(frontStubNode, "RoundingPrecision");
     }
     XMLNode* backStubNode = XMLUtils::getChildNode(node, "BackStubInterpolation");
     if (backStubNode) {
         backStubShortIndex_ = XMLUtils::getChildValue(backStubNode, "ShortIndex", true);
         backStubLongIndex_ = XMLUtils::getChildValue(backStubNode, "LongIndex", true);
-        backStubRounding_ = XMLUtils::getChildValue(backStubNode, "Rounding");
         backStubRoundingType_ = XMLUtils::getChildValue(backStubNode, "RoundingType");
+        backStubRoundingPrecision_ = XMLUtils::getChildValue(backStubNode, "RoundingPrecision");
     }
     stubUseOriginalCurve_ = XMLUtils::getChildValueAsBool(node, "StubUseOriginalCurve", false, false);
 }
@@ -315,15 +315,15 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
         XMLNode* frontStubNode = XMLUtils::addChild(doc, node, "FrontStubInterpolation");
         XMLUtils::addChild(doc, frontStubNode, "ShortIndex", frontStubShortIndex_);
         XMLUtils::addChild(doc, frontStubNode, "LongIndex", frontStubLongIndex_);
-        XMLUtils::addChild(doc, frontStubNode, "Rounding", frontStubRounding_);
         XMLUtils::addChild(doc, frontStubNode, "RoundingType", frontStubRoundingType_);
+        XMLUtils::addChild(doc, frontStubNode, "RoundingPrecision", frontStubRoundingPrecision_);
     }
     if (!backStubShortIndex_.empty() && !backStubLongIndex_.empty()) {
         XMLNode* backStubNode = XMLUtils::addChild(doc, node, "BackStubInterpolation");
         XMLUtils::addChild(doc, backStubNode, "ShortIndex", backStubShortIndex_);
         XMLUtils::addChild(doc, backStubNode, "LongIndex", backStubLongIndex_);
-        XMLUtils::addChild(doc, backStubNode, "Rounding", backStubRounding_);
         XMLUtils::addChild(doc, backStubNode, "RoundingType", backStubRoundingType_);
+        XMLUtils::addChild(doc, backStubNode, "RoundingPrecision", backStubRoundingPrecision_);
     }
     if ((!frontStubShortIndex_.empty() && !frontStubLongIndex_.empty()) ||
         (!backStubShortIndex_.empty() && !backStubLongIndex_.empty())) {
@@ -1210,7 +1210,7 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
 }
 
 void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
-                            const std::string& roundingStr, const std::string& roundingTypeStr,
+                            const std::string& roundingTypeStr, const std::string& roundingPrecisionStr,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             const bool useOriginalIndexCurve, const Size accrualDays) {
     if (shortIndexStr.empty() && longIndexStr.empty()) {
@@ -1261,8 +1261,8 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         Size accl = accrualDays == Null<Size>() ? iborCpn->accrualEndDate() - iborCpn->accrualStartDate() : accrualDays;
         // we are rounding the percentage numbers, therefore we have to add 2 to the given precision
         QuantLib::Rounding rounding;
-        if (roundingStr != "" && roundingTypeStr != "")
-            rounding = QuantLib::Rounding(parseInteger(roundingStr) + 2, parseRoundingType(roundingTypeStr));
+        if (roundingTypeStr != "" && roundingPrecisionStr != "")
+            rounding = QuantLib::Rounding(parseInteger(roundingPrecisionStr) + 2, parseRoundingType(roundingTypeStr));
         auto interpolatedIndex = QuantLib::ext::make_shared<QuantExt::InterpolatedIborIndex>(
             idx1, idx2, accl, rounding,
             useOriginalIndexCurve ? iborCpn->iborIndex()->forwardingTermStructure() : Handle<YieldTermStructure>());
@@ -1437,7 +1437,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
             LOG("Floating annuity notional schedule done");
             // front / back stub interpolation
             applyStubInterpolation(leg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
-                                   floatData->frontStubRounding(), floatData->frontStubRoundingType(), engineFactory,
+                                   floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
                                    floatData->stubUseOriginalCurve());
             if (leg.size() == 1
                 && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
@@ -1446,8 +1446,8 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
                      "The definition in BackStubInterpolation will be ignored.");
             } else {
                 applyStubInterpolation(leg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
-                                    floatData->backStubRounding(), floatData->backStubRoundingType(), engineFactory,
-                                    floatData->stubUseOriginalCurve());
+                                       floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
+                                       floatData->stubUseOriginalCurve());
             }
             return leg;
         }
@@ -1560,7 +1560,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
 
     // front / back stub interpolation
     applyStubInterpolation(tmpLeg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
-                           floatData->frontStubRounding(), floatData->frontStubRoundingType(), engineFactory,
+                           floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
                            floatData->stubUseOriginalCurve());
     if (tmpLeg.size() == 1
         && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
@@ -1569,7 +1569,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
              "The definition in BackStubInterpolation will be ignored.");
     } else {
         applyStubInterpolation(tmpLeg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
-                               floatData->backStubRounding(), floatData->backStubRoundingType(), engineFactory,
+                               floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
                                floatData->stubUseOriginalCurve());
     }
 

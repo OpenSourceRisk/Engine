@@ -225,9 +225,9 @@ public:
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
                     const std::map<QuantLib::Date, double>& historicalFixings = {},
                     const string& frontStubShortIndex = std::string(), const string& frontStubLongIndex = std::string(),
-                    const string& frontStubRounding = std::string(), const string& frontStubRoundingType = std::string(),
+                    const string& frontStubRoundingType = std::string(), const string& frontStubRounding = std::string(),
                     const string& backStubShortIndex = std::string(), const string& backStubLongIndex = std::string(),
-                    const string& backStubRounding = std::string(), const string& backStubRoundingType = std::string(),
+                    const string& backStubRoundingType = std::string(), const string& backStubRounding = std::string(),
                     bool stubUseOriginalCurve = false)
         : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
           fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
@@ -237,9 +237,9 @@ public:
           lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar),
           telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings),
           frontStubShortIndex_(frontStubShortIndex), frontStubLongIndex_(frontStubLongIndex),
-          frontStubRounding_(frontStubRounding), frontStubRoundingType_(frontStubRoundingType),
+          frontStubRoundingType_(frontStubRoundingType), frontStubRoundingPrecision_(frontStubRounding),
           backStubShortIndex_(backStubShortIndex), backStubLongIndex_(backStubLongIndex),
-          backStubRounding_(backStubRounding), backStubRoundingType_(backStubRoundingType),
+          backStubRoundingType_(backStubRoundingType), backStubRoundingPrecision_(backStubRounding),
           stubUseOriginalCurve_(stubUseOriginalCurve) {
         indices_.insert(index_);
     }
@@ -272,12 +272,12 @@ public:
     const std::map<QuantLib::Date, double>& historicalFixings() const { return historicalFixings_; }
     const string& frontStubShortIndex() const { return frontStubShortIndex_; }
     const string& frontStubLongIndex() const { return frontStubLongIndex_; }
-    const string& frontStubRounding() const { return frontStubRounding_; }
     const string& frontStubRoundingType() const { return frontStubRoundingType_; }
+    const string& frontStubRoundingPrecision() const { return frontStubRoundingPrecision_; }
     const string& backStubShortIndex() const { return backStubShortIndex_; }
     const string& backStubLongIndex() const { return backStubLongIndex_; }
-    const string& backStubRounding() const { return backStubRounding_; }
     const string& backStubRoundingType() const { return backStubRoundingType_; }
+    const string& backStubRoundingPrecision() const { return backStubRoundingPrecision_; }
     bool stubUseOriginalCurve() const { return stubUseOriginalCurve_; }
     //@}
 
@@ -324,12 +324,12 @@ private:
     std::map<QuantLib::Date, double> historicalFixings_;
     string frontStubShortIndex_;
     string frontStubLongIndex_;
-    string frontStubRounding_;
     string frontStubRoundingType_;
+    string frontStubRoundingPrecision_;
     string backStubShortIndex_;
     string backStubLongIndex_;
-    string backStubRounding_;
     string backStubRoundingType_;
+    string backStubRoundingPrecision_;
     bool stubUseOriginalCurve_;
 };
 
@@ -1250,7 +1250,7 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
 
 // replace given Ibor coupon by interpolated Ibor coupon
 void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
-                            const std::string& roundingStr, const std::string& roundingTypeStr,
+                            const std::string& roundingTypeStr, const std::string& roundingPrecisionStr,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             const bool useOriginalIndexCurve, const Size accrualDays = Null<Size>());
 
