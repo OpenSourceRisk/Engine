@@ -29,6 +29,7 @@
 #include <qle/pricingengines/analytichwswaptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+#include <qle/processes/irhwstateprocess.hpp>
 
 #include <ql/currencies/america.hpp>
 #include <ql/exercise.hpp>
@@ -159,6 +160,9 @@ BOOST_AUTO_TEST_CASE(test2FAgainstMC) {
 
     modelDiscount->referenceDate(optionExpiry);
     modelForward->referenceDate(optionExpiry);
+
+    // not necessary, to improve performance
+    QuantLib::ext::static_pointer_cast<IrHwStateProcess>(process)->resetCache(grid.size() - 1);
 
     for (Size i = 0; i < paths; ++i) {
         p = pgen.next().value;
