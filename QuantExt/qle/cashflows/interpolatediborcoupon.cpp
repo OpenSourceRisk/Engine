@@ -31,10 +31,7 @@ InterpolatedIborCoupon::InterpolatedIborCoupon(const Date& paymentDate, const Re
                                                const Date& exCouponDate,
                                                const QuantLib::ext::shared_ptr<IborIndex>& iborIndex)
     : FloatingRateCoupon(paymentDate, nominal, accrualStart, accrualEnd, fixingDays,
-                        //  iborIndex ?
-                        //     QuantLib::ext::dynamic_pointer_cast<InterestRateIndex>(iborIndex) :
-                            QuantLib::ext::dynamic_pointer_cast<InterestRateIndex>(index),
-                         gearing, spread,
+                         index, gearing, spread,
                          refPeriodStart, refPeriodEnd, dayCounter, isInArrears, exCouponDate),
       interpolatedIborIndex_(index), iborIndex_(iborIndex) {
     fixingDate_ = FloatingRateCoupon::fixingDate();

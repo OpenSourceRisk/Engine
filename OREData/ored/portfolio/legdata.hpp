@@ -225,9 +225,9 @@ public:
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
                     const std::map<QuantLib::Date, double>& historicalFixings = {},
                     const string& frontStubShortIndex = std::string(), const string& frontStubLongIndex = std::string(),
-                    const string& frontStubRoundingType = std::string(), const string& frontStubRounding = std::string(),
+                    const string& frontStubRoundingType = std::string(), const string& frontStubRoundingPrecision = std::string(),
                     const string& backStubShortIndex = std::string(), const string& backStubLongIndex = std::string(),
-                    const string& backStubRoundingType = std::string(), const string& backStubRounding = std::string(),
+                    const string& backStubRoundingType = std::string(), const string& backStubRoundingPrecision = std::string(),
                     bool stubUseOriginalCurve = false)
         : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
           fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
@@ -237,9 +237,9 @@ public:
           lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar),
           telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings),
           frontStubShortIndex_(frontStubShortIndex), frontStubLongIndex_(frontStubLongIndex),
-          frontStubRoundingType_(frontStubRoundingType), frontStubRoundingPrecision_(frontStubRounding),
+          frontStubRoundingType_(frontStubRoundingType), frontStubRoundingPrecision_(frontStubRoundingPrecision),
           backStubShortIndex_(backStubShortIndex), backStubLongIndex_(backStubLongIndex),
-          backStubRoundingType_(backStubRoundingType), backStubRoundingPrecision_(backStubRounding),
+          backStubRoundingType_(backStubRoundingType), backStubRoundingPrecision_(backStubRoundingPrecision),
           stubUseOriginalCurve_(stubUseOriginalCurve) {
         indices_.insert(index_);
     }

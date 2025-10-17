@@ -1261,7 +1261,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         Size accl = accrualDays == Null<Size>() ? iborCpn->accrualEndDate() - iborCpn->accrualStartDate() : accrualDays;
         // we are rounding the percentage numbers, therefore we have to add 2 to the given precision
         QuantLib::Rounding rounding;
-        if (roundingTypeStr != "" && roundingPrecisionStr != "")
+        if (!roundingTypeStr.empty() && !roundingPrecisionStr.empty())
             rounding = QuantLib::Rounding(parseInteger(roundingPrecisionStr) + 2, parseRoundingType(roundingTypeStr));
         auto interpolatedIndex = QuantLib::ext::make_shared<QuantExt::InterpolatedIborIndex>(
             idx1, idx2, accl, rounding,
