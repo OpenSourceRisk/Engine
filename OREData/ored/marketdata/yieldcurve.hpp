@@ -144,6 +144,7 @@ private:
     std::vector<vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>> curveSegments_;
     std::vector<InterpolationVariable> interpolationVariable_;
     std::vector<InterpolationMethod> interpolationMethod_;
+    std::vector<bool> excludeT0FromInterpolation_;
 
     const Loader& loader_; // only used in ctor
     std::vector<RelinkableHandle<YieldTermStructure>> h_;
