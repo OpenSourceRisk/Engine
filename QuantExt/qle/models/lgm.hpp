@@ -173,8 +173,8 @@ inline void LinearGaussMarkovModel::update() {
 inline void LinearGaussMarkovModel::generateArguments() { update(); }
 
 inline QuantLib::ext::shared_ptr<StochasticProcess> LinearGaussMarkovModel::stateProcess() const {
-    QL_REQUIRE(measure_ == Measure::LGM, "LinearGaussMarkovModel::stateProcess() only supports measure = LGM");
-    return stateProcess_;
+    // implementation only supports LGM measure, therefore return nullptr for other measures
+    return measure_ == Measure::LGM ? stateProcess_ : nullptr;
 }
 
 inline QuantLib::Real
