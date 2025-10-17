@@ -914,6 +914,9 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         QL_REQUIRE(cfq, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CapFloorQuote");
         QL_REQUIRE(cfq->ccy() == currency,
                    "CapFloorQuote ccy '" << cfq->ccy() << "' <> config ccy '" << currency << "'");
+        if (config.quoteIncludesIndexName())
+            QL_REQUIRE(cfq->indexName() == config.index(),
+                       "CapFloorQuote index '" << cfq->indexName() << "' <> config index '" << config.index() << "'");
         if (cfq->underlying() == tenor) {
             // Surface quotes
             if (!cfq->atm()) {
