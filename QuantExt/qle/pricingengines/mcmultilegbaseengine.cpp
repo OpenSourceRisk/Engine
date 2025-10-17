@@ -29,7 +29,6 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/equityindex.hpp>
-#include <qle/indexes/interpolatediborindex.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
