@@ -283,7 +283,7 @@ public:
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
     void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
-    void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = std::move(s); }
+    void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = s; }
     void setXvaCgUsePythonIntegration(bool b) { xvaCgUsePythonIntegration_ = b; }
     void setXvaCgUsePythonIntegrationDynamicIm(bool b) { xvaCgUsePythonIntegrationDynamicIm_ = b; }
     void setXvaCgSensiScenarioData(const std::string& xml);

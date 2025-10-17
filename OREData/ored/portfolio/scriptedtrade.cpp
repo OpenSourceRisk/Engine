@@ -658,7 +658,7 @@ void ScriptedTradeScriptData::formatCode() {
 
 ScriptLibraryData::ScriptLibraryData(const ScriptLibraryData& d) { scripts_ = d.scripts_; }
 
-ScriptLibraryData::ScriptLibraryData(ScriptLibraryData&& d) { scripts_ = std::move(d.scripts_); }
+ScriptLibraryData::ScriptLibraryData(ScriptLibraryData&& d) { scripts_ = d.scripts_; }
 
 ScriptLibraryData& ScriptLibraryData::operator=(const ScriptLibraryData& d) {
     scripts_ = d.scripts_;
@@ -666,7 +666,7 @@ ScriptLibraryData& ScriptLibraryData::operator=(const ScriptLibraryData& d) {
 }
 
 ScriptLibraryData& ScriptLibraryData::operator=(ScriptLibraryData&& d) {
-    scripts_ = std::move(d.scripts_);
+    scripts_ = d.scripts_;
     return *this;
 }
 
@@ -749,7 +749,7 @@ void ScriptLibraryStorage::set(const ScriptLibraryData& data) {
 
 void ScriptLibraryStorage::set(ScriptLibraryData&& data) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    data_ = std::move(data);
+    data_ = data;
 }
 
 void ScriptLibraryStorage::clear() {
