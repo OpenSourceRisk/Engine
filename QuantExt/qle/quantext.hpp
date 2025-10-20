@@ -567,6 +567,7 @@
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/piecewisepricecurve.hpp>
+#include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
