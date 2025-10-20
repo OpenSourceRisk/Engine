@@ -4,10 +4,10 @@
 */
 
 #include <algorithm>
+#include <regex>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/assign.hpp>
 #include <boost/bimap.hpp>
-#include <boost/regex.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/saccrtradedata.hpp>
@@ -343,13 +343,13 @@ string SaccrTradeData::getUnderlyingName(const string& index, const OREAssetClas
     }
 
     if (assetClass == OREAssetClass::COM) {
-        static boost::mutex mutex_;
-        boost::lock_guard<boost::mutex> lock(mutex_);
+        static std::mutex mutex_;
+        std::lock_guard<std::mutex> lock(mutex_);
         // Remove expiry of form NAME-YYYY-MM-DD
         Date expiry;
         if (name.size() > 10) {
             string test = name.substr(name.size() - 10);
-            if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            if (std::regex_match(test, std::regex("\\d{4}-\\d{2}-\\d{2}"))) {
                 expiry = parseDate(test);
                 name = name.substr(0, name.size() - test.size() - 1);
             }
@@ -358,7 +358,7 @@ string SaccrTradeData::getUnderlyingName(const string& index, const OREAssetClas
         // Remove expiry of form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
         if (expiry == Date() && name.size() > 7) {
             string test = name.substr(name.size() - 7);
-            if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
+            if (std::regex_match(test, std::regex("\\d{4}-\\d{2}"))) {
                 expiry = parseDate(test + "-01");
                 name = name.substr(0, name.size() - test.size() - 1);
             }

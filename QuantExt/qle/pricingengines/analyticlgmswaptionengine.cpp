@@ -19,8 +19,8 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/math/solvers1d/brent.hpp>
 #include <ql/math/solvers1d/bisection.hpp>
+#include <ql/math/solvers1d/brent.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <boost/bind/bind.hpp>
@@ -71,56 +71,6 @@ void AnalyticLgmSwaptionEngine::clearCache() {
     zetaex_ = Null<Real>(); // indicates that alpha dependent variables are not yet computed
 }
 
-Real AnalyticLgmSwaptionEngine::flatAmount(const Size k) const {
-    Date reference = c_->referenceDate();
-    QuantLib::ext::shared_ptr<IborIndex> index = arguments_.swap->iborIndex();
-    QuantLib::ext::shared_ptr<OvernightIndex> ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index);
-    if (ois) {
-        auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(floatingLeg_[k]);
-        QL_REQUIRE(on, "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to "
-                       "QuantLib::OvernightIndexedCoupon.");
-        QL_REQUIRE(!on->valueDates().empty(),
-                   "AnalyticalLgmSwaptionEngine::calculate(): internal error, no value dates in ois coupon.");
-        Date v1 = std::max(reference, on->valueDates().front());
-        Date v2 = std::max(v1 + 1, on->valueDates().back());
-        Real rate;
-        if (on->averagingMethod() == QuantLib::RateAveraging::Compound)
-            rate = (c_->discount(v1) / c_->discount(v2) - 1.0) / index->dayCounter().yearFraction(v1, v2);
-        else
-            rate = std::log(c_->discount(v1) / c_->discount(v2)) / index->dayCounter().yearFraction(v1, v2);
-        return floatingLeg_[k]->accrualPeriod() * nominal_ * rate;
-    } else {
-        if (IborCoupon::Settings::instance().usingAtParCoupons()) {
-            // if par coupons are used, we mimick the fixing estimation in IborCoupon; we make
-            // sure that the estimation period does not start in the past and we do not use
-            // historical fixings
-            Date fixingValueDate =
-                index->fixingCalendar().advance(floatingLeg_[k]->fixingDate(), index->fixingDays(), Days);
-            fixingValueDate = std::max(fixingValueDate, reference);
-            auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(floatingLeg_[k]);
-            QL_REQUIRE(cpn, "AnalyticalLgmSwaptionEngine::calculate(): coupon expected on underlying swap "
-                            "floating leg, could not cast");
-            Date nextFixingDate = index->fixingCalendar().advance(cpn->accrualEndDate(),
-                                                                  -static_cast<Integer>(index->fixingDays()), Days);
-            Date fixingEndDate = index->fixingCalendar().advance(nextFixingDate, index->fixingDays(), Days);
-            fixingEndDate = std::max(fixingEndDate, fixingValueDate + 1);
-            Real spanningTime = index->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
-            DiscountFactor disc1 = c_->discount(fixingValueDate);
-            DiscountFactor disc2 = c_->discount(fixingEndDate);
-            Real fixing = (disc1 / disc2 - 1.0) / spanningTime;
-            return fixing * floatingLeg_[k]->accrualPeriod() * nominal_;
-        } else {
-            // if indexed coupons are used, we use a proper fixing, but make sure that the fixing
-            // date is not in the past and we do not use a historical fixing for "today"
-            auto flatIbor = QuantLib::ext::make_shared<IborIndex>(
-                index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(), index->currency(),
-                index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), c_);
-            Date fixingDate = flatIbor->fixingCalendar().adjust(std::max(floatingLeg_[k]->fixingDate(), reference));
-            return flatIbor->fixing(fixingDate) * floatingLeg_[k]->accrualPeriod() * nominal_;
-        }
-    }
-}
-
 void AnalyticLgmSwaptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.settlementType == Settlement::Physical, "cash-settled swaptions are not supported ...");
@@ -154,7 +104,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                    "AnalyticalLgmSwaptionEngine::calculate(): internal error, expected swap to be set.");
         const Schedule& fixedSchedule = arguments_.swap->fixedSchedule();
         const Schedule& floatSchedule = arguments_.swap->floatingSchedule();
-
 
         nominal_ = arguments_.swap->nominal();
 
@@ -208,8 +157,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
             }
             Real floatAmountMismatch = 0.0;
             for (Size k = k1_; k < floatingLeg_.size(); ++k) {
-                floatAmountMismatch +=
-                    (floatingLeg_[k]->amount() - flatAmount(k)) * c_->discount(floatingLeg_[k]->date());
+                floatAmountMismatch += (floatingLeg_[k]->amount() - flatAmount(floatingLeg_[k], c_)) *
+                                       c_->discount(floatingLeg_[k]->date());
             }
             for (Size j = j1_; j < fixedLeg_.size(); ++j) {
                 S_[j] = fixedLeg_[j]->accrualPeriod() * nominal_ * floatAmountMismatch / annuity;
@@ -242,7 +191,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                     lambda1 = lambda2 = 0.0;
                 }
                 if (amount != Null<Real>()) {
-                    Real correction = (amount - flatAmount(k)) * c_->discount(floatingLeg_[k]->date());
+                    Real correction =
+                        (amount - flatAmount(floatingLeg_[k], c_)) * c_->discount(floatingLeg_[k]->date());
                     sum1 += lambda1 * correction;
                     sum2 += lambda2 * correction;
                 } else {
@@ -304,24 +254,24 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     // If that fails again, try to find another starting point again, this time
     // in an even larger interval of starting values.
     try {
-        try { 
+        try {
             try { // Try Brent
                 yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
-                    0.0, 0.01 );
-            } catch (const std::exception& e) { // Try Brent with optimized starting point                
+                                0.0, 0.01);
+            } catch (const std::exception& e) { // Try Brent with optimized starting point
                 Bisection b2;
-                double startValue = b2.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2,
-                            -3.0, 3.0);
+                double startValue = b2.solve(
+                    std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2, -3.0, 3.0);
                 yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
-                            startValue, 0.01); 
+                                startValue, 0.01);
             }
         } catch (const std::exception& e) { // Try Brent with another optimized starting point
             Bisection b2;
-            double startValue2=b2.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2,
-                    -10.0, 10.0);
+            double startValue2 = b2.solve(
+                std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-2, -10.0, 10.0);
             yStar = b.solve(std::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, std::placeholders::_1), 1.0E-6,
-                    startValue2, 0.01); 
-        } 
+                            startValue2, 0.01);
+        }
     } catch (const std::exception& e) {
         std::ostringstream os;
         os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
@@ -405,6 +355,50 @@ std::ostream& operator<<(std::ostream& oss, const AnalyticLgmSwaptionEngine::Flo
     else
         QL_FAIL("FloatSpreadMapping type not covered");
     return oss;
+}
+
+Real flatAmount(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& f, const Handle<YieldTermStructure>& c) {
+    Date reference = c->referenceDate();
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(f)) {
+        QL_REQUIRE(!on->valueDates().empty(), "flatAmount(): internal error, no value dates in ois coupon.");
+        auto index = on->index();
+        Date v1 = std::max(reference, on->valueDates().front());
+        Date v2 = std::max(v1 + 1, on->valueDates().back());
+        Real rate;
+        if (on->averagingMethod() == QuantLib::RateAveraging::Compound)
+            rate = (c->discount(v1) / c->discount(v2) - 1.0) / index->dayCounter().yearFraction(v1, v2);
+        else
+            rate = std::log(c->discount(v1) / c->discount(v2)) / index->dayCounter().yearFraction(v1, v2);
+        return on->nominal() * on->accrualPeriod() * rate;
+    } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(f)) {
+        auto index = cpn->iborIndex();
+        if (IborCoupon::Settings::instance().usingAtParCoupons()) {
+            // if par coupons are used, we mimick the fixing estimation in IborCoupon; we make
+            // sure that the estimation period does not start in the past and we do not use
+            // historical fixings
+            Date fixingValueDate = index->fixingCalendar().advance(cpn->fixingDate(), index->fixingDays(), Days);
+            fixingValueDate = std::max(fixingValueDate, reference);
+            Date nextFixingDate = index->fixingCalendar().advance(cpn->accrualEndDate(),
+                                                                  -static_cast<Integer>(index->fixingDays()), Days);
+            Date fixingEndDate = index->fixingCalendar().advance(nextFixingDate, index->fixingDays(), Days);
+            fixingEndDate = std::max(fixingEndDate, fixingValueDate + 1);
+            Real spanningTime = index->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
+            DiscountFactor disc1 = c->discount(fixingValueDate);
+            DiscountFactor disc2 = c->discount(fixingEndDate);
+            Real fixing = (disc1 / disc2 - 1.0) / spanningTime;
+            return cpn->nominal() * cpn->accrualPeriod() * fixing;
+        } else {
+            // if indexed coupons are used, we use a proper fixing, but make sure that the fixing
+            // date is not in the past and we do not use a historical fixing for "today"
+            auto flatIbor = QuantLib::ext::make_shared<IborIndex>(
+                index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(), index->currency(),
+                index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), c);
+            Date fixingDate = flatIbor->fixingCalendar().adjust(std::max(cpn->fixingDate(), reference));
+            return cpn->nominal() * cpn->accrualPeriod() * flatIbor->fixing(fixingDate);
+        }
+    } else {
+        QL_FAIL("flatAmount(): coupon type not handled. Internal error.");
+    }
 }
 
 } // namespace QuantExt

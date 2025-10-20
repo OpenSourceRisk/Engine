@@ -50,8 +50,8 @@ public:
     LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization,
                            const Measure measure = Measure::LGM, const Discretization = Discretization::Euler,
                            const bool evaluateBankAccount = true,
-                           const QuantLib::ext::shared_ptr<Integrator>& integrator = QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8,
-                                                                                                                 100));
+                           const QuantLib::ext::shared_ptr<Integrator>& integrator =
+                               QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 16));
 
     //! IrModel interface
 

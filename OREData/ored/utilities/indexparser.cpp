@@ -403,8 +403,10 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
     if (indexStem == "USD-SIFMA") {
         QL_REQUIRE(tenor.empty(), "A tenor is not allowed with USD-SIFMA as it is implied");
         auto res = QuantLib::ext::make_shared<BMAIndexWrapper>(QuantLib::ext::make_shared<BMAIndex>(h));
-	IndexNameTranslator::instance().add(res->name(), s);
-	return res;
+        // set tenor to 1W, used in CAPFLOOR vol surface
+        tenor = "1W";
+        IndexNameTranslator::instance().add(res->name(), s);
+        return res;
     }
 
     // Ibor indices with a tenor, this includes OIS term rates like USD-SOFR-3M
