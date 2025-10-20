@@ -433,7 +433,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (fixedRate != Null<Real>()) {
                 fixing = RandomVariable(n, fixedRate);
             } else {
-                auto interpolatedIndex = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborIndex>(ibor->interpolatedIborIndex());
+                auto interpolatedIndex = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborIndex>(
+                    ibor->interpolatedIborIndex());
                 RandomVariable shortW = RandomVariable(n, interpolatedIndex->shortWeight(ibor->fixingDate()));
                 RandomVariable longW = RandomVariable(n, interpolatedIndex->longWeight(ibor->fixingDate()));
                 RandomVariable shortFixing =

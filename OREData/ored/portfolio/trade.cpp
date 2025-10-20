@@ -679,6 +679,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                         fixingValue = (c->rate() - c->spread()) / c->gearing();
                     }
 
+                    if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(ptrFloat)) {
+                        fixingValue = (c->rate() - c->spread()) / c->gearing();
+                    }
+
                     if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
                         fixingValue =
                             (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();

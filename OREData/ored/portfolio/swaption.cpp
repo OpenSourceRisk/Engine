@@ -69,7 +69,8 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 // This helper functionality checks for constant definitions of the given 
 // notional, the rates and the spreads. Those fields must have the same values everywhere on all legs.
 // Additional to this, the gearing must be equal to one on all floating legs.
-// Finally, the floating legs must be of type IborCoupon, OvernightIndexedCoupon or AverageONIndexedCoupon.
+// Finally, the floating legs must be of type IborCoupon, InterpolatedIborCoupon,
+// OvernightIndexedCoupon or AverageONIndexedCoupon.
 // If all those conditions are met, the trade is called standard.
 bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 {
