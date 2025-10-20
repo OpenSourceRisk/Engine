@@ -28,16 +28,16 @@
             <Kappa>-0.000000048673,-0.24532070948,-0.056427887126,0.510590372873</Kappa>
           </InitialValue>
         </Reversion>
-        <PCAV>
+        <PCALoadings>
           <Loadings>1.0,1.1</Loadings>
           <Loadings>0.9,0.8</Loadings>
-        </PCAV>
-        <PCASigma>
+        </PCALoadings>
+        <PCASigma0>
           <Calibrate>Y</Calibrate>
           <ParamType>Piecewise</ParamType>
           <TimeGrid/>
           <InitialValue>0.01</InitialValue>
-        </PCASigma>
+        </PCASigma0>
         <PCASigmaRatios>
           <Ratios>1.0, 1.1</Ratios>
         </PCASigmaRatios>
