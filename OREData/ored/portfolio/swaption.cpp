@@ -29,6 +29,7 @@
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 
 #include <ored/model/irmodeldata.hpp>
@@ -99,8 +100,9 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
                 
                 if (                    
                     !(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c))
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) 
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))                
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))
                 )
                     return false; // The trade must then be a non-standard type like e.g. CMS coupon
 
