@@ -325,6 +325,7 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/hwpiecewiseparametrization.hpp>
+#include <qle/models/hwpiecewisestatisticalparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infdkvectorised.hpp>
 #include <qle/models/infjyparameterization.hpp>
