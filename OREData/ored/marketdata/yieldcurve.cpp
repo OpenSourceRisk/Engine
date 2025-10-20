@@ -103,89 +103,90 @@ std::ostream& operator<<(std::ostream& os, YieldCurve::InterpolationVariable v) 
     QL_FAIL("Unknown InterpolationVariable");
 }
 
-template <template <class> class CurveType>
+// Unified template function that handles both standard curves (dates, rates, dayCounter, interpolator)
+// and pillar-only curves (referenceDate, dates, rates, dayCounter, interpolator)
+template <template <class> class CurveType, typename... ConstructorArgs>
 QuantLib::ext::shared_ptr<YieldTermStructure>
-buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates, const DayCounter& dayCounter,
-                YieldCurve::InterpolationMethod interpolationMethod, Size n) {
+buildYieldCurve(YieldCurve::InterpolationMethod interpolationMethod, Size n, ConstructorArgs&&... args) {
 
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
     switch (interpolationMethod) {
     case YieldCurve::InterpolationMethod::Linear:
-        yieldts.reset(new CurveType<QuantLib::Linear>(dates, rates, dayCounter, QuantLib::Linear()));
+        yieldts.reset(new CurveType<QuantLib::Linear>(std::forward<ConstructorArgs>(args)..., QuantLib::Linear()));
         break;
     case YieldCurve::InterpolationMethod::LogLinear:
-        yieldts.reset(new CurveType<QuantLib::LogLinear>(dates, rates, dayCounter, QuantLib::LogLinear()));
+        yieldts.reset(new CurveType<QuantLib::LogLinear>(std::forward<ConstructorArgs>(args)..., QuantLib::LogLinear()));
         break;
     case YieldCurve::InterpolationMethod::NaturalCubic:
-        yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter,
+        yieldts.reset(new CurveType<QuantLib::Cubic>(std::forward<ConstructorArgs>(args)...,
                                                      QuantLib::Cubic(CubicInterpolation::Kruger, true)));
         break;
     case YieldCurve::InterpolationMethod::FinancialCubic:
-        yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter,
+        yieldts.reset(new CurveType<QuantLib::Cubic>(std::forward<ConstructorArgs>(args)...,
                                                      QuantLib::Cubic(CubicInterpolation::Kruger, true,
                                                                      CubicInterpolation::SecondDerivative, 0.0,
                                                                      CubicInterpolation::FirstDerivative)));
         break;
     case YieldCurve::InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter, Calendar(), {}, {},
+        yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(std::forward<ConstructorArgs>(args)...,
                                                               QuantLib::ConvexMonotone()));
         break;
     case YieldCurve::InterpolationMethod::Quadratic:
-        yieldts.reset(new CurveType<QuantExt::Quadratic>(dates, rates, dayCounter, QuantExt::Quadratic(1, 0, 1, 0, 1)));
+        yieldts.reset(new CurveType<QuantExt::Quadratic>(std::forward<ConstructorArgs>(args)..., QuantExt::Quadratic(1, 0, 1, 0, 1)));
         break;
     case YieldCurve::InterpolationMethod::LogQuadratic:
         yieldts.reset(
-            new CurveType<QuantExt::LogQuadratic>(dates, rates, dayCounter, QuantExt::LogQuadratic(1, 0, -1, 0, 1)));
+            new CurveType<QuantExt::LogQuadratic>(std::forward<ConstructorArgs>(args)..., QuantExt::LogQuadratic(1, 0, -1, 0, 1)));
         break;
     case YieldCurve::InterpolationMethod::Hermite:
-        yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter, Cubic(CubicInterpolation::Parabolic)));
+        yieldts.reset(new CurveType<QuantLib::Cubic>(std::forward<ConstructorArgs>(args)..., Cubic(CubicInterpolation::Parabolic)));
         break;
     case YieldCurve::InterpolationMethod::CubicSpline:
-        yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter,
+        yieldts.reset(new CurveType<QuantLib::Cubic>(std::forward<ConstructorArgs>(args)...,
                                                      Cubic(CubicInterpolation::Spline, false,
                                                            CubicInterpolation::SecondDerivative, 0.0,
                                                            CubicInterpolation::SecondDerivative, 0.0)));
         break;
     case YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic:
         yieldts.reset(
-            new CurveType<DefaultLogMixedLinearCubic>(dates, rates, dayCounter, DefaultLogMixedLinearCubic(n)));
+            new CurveType<DefaultLogMixedLinearCubic>(std::forward<ConstructorArgs>(args)..., DefaultLogMixedLinearCubic(n)));
         break;
     case YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic:
         yieldts.reset(
-            new CurveType<MonotonicLogMixedLinearCubic>(dates, rates, dayCounter, MonotonicLogMixedLinearCubic(n)));
+            new CurveType<MonotonicLogMixedLinearCubic>(std::forward<ConstructorArgs>(args)..., MonotonicLogMixedLinearCubic(n)));
         break;
     case YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic:
-        yieldts.reset(new CurveType<KrugerLogMixedLinearCubic>(dates, rates, dayCounter, KrugerLogMixedLinearCubic(n)));
+        yieldts.reset(new CurveType<KrugerLogMixedLinearCubic>(std::forward<ConstructorArgs>(args)..., KrugerLogMixedLinearCubic(n)));
         break;
     case YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline:
         yieldts.reset(new CurveType<LogMixedLinearCubic>(
-            dates, rates, dayCounter,
+            std::forward<ConstructorArgs>(args)...,
             LogMixedLinearCubic(n, MixedInterpolation::ShareRanges, CubicInterpolation::Spline, false,
                                 CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0)));
         break;
     case YieldCurve::InterpolationMethod::LogNaturalCubic:
-        yieldts.reset(new CurveType<LogCubic>(dates, rates, dayCounter, LogCubic(CubicInterpolation::Kruger, true)));
+        yieldts.reset(new CurveType<LogCubic>(std::forward<ConstructorArgs>(args)..., LogCubic(CubicInterpolation::Kruger, true)));
         break;
     case YieldCurve::InterpolationMethod::LogFinancialCubic:
         yieldts.reset(
-            new CurveType<LogCubic>(dates, rates, dayCounter,
+            new CurveType<LogCubic>(std::forward<ConstructorArgs>(args)...,
                                     LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative,
                                              0.0, CubicInterpolation::FirstDerivative)));
         break;
     case YieldCurve::InterpolationMethod::LogCubicSpline:
         yieldts.reset(
-            new CurveType<LogCubic>(dates, rates, dayCounter,
+            new CurveType<LogCubic>(std::forward<ConstructorArgs>(args)...,
                                     LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative,
                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
         break;
     case YieldCurve::InterpolationMethod::MonotonicLogCubicSpline:
         yieldts.reset(
-            new CurveType<LogCubic>(dates, rates, dayCounter,
+            new CurveType<LogCubic>(std::forward<ConstructorArgs>(args)...,
                                     LogCubic(CubicInterpolation::Spline, true, CubicInterpolation::SecondDerivative,
                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
         break;
     case YieldCurve::InterpolationMethod::BackwardFlat:
-        yieldts.reset(new CurveType<QuantLib::BackwardFlat>(dates, rates, dayCounter, QuantLib::BackwardFlat()));
+        yieldts.reset(new CurveType<QuantLib::BackwardFlat>(std::forward<ConstructorArgs>(args)..., QuantLib::BackwardFlat()));
         break;
 
     default:
@@ -196,120 +197,38 @@ buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates, 
 
 QuantLib::ext::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
                                                         const DayCounter& dayCounter,
-                                                        YieldCurve::InterpolationMethod interpolationMethod, Size n) {
-    return buildYieldCurve<InterpolatedZeroCurve>(dates, yields, dayCounter, interpolationMethod, n);
+                                                        YieldCurve::InterpolationMethod interpolationMethod, Size n,
+                                                        bool excludeT0, const Date& referenceDate) {
+    if (excludeT0) {
+        return buildYieldCurve<QuantExt::InterpolatedPillarOnlyZeroCurve>(
+            interpolationMethod, n, referenceDate, dates, yields, dayCounter);
+    } else {
+        return buildYieldCurve<InterpolatedZeroCurve>(interpolationMethod, n, dates, yields, dayCounter);
+    }
 }
 
 QuantLib::ext::shared_ptr<YieldTermStructure>
 discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs, const DayCounter& dayCounter,
-              YieldCurve::InterpolationMethod interpolationMethod, Size n) {
-    return buildYieldCurve<InterpolatedDiscountCurve>(dates, dfs, dayCounter, interpolationMethod, n);
+              YieldCurve::InterpolationMethod interpolationMethod, Size n, bool excludeT0,
+              const Date& referenceDate) {
+    if (excludeT0) {
+        return buildYieldCurve<QuantExt::InterpolatedPillarOnlyDiscountCurve>(
+            interpolationMethod, n, referenceDate, dates, dfs, dayCounter);
+    } else {
+        return buildYieldCurve<InterpolatedDiscountCurve>(interpolationMethod, n, dates, dfs, dayCounter);
+    }
 }
 
 QuantLib::ext::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
                                                            const DayCounter& dayCounter,
                                                            YieldCurve::InterpolationMethod interpolationMethod,
-                                                           Size n) {
-    return buildYieldCurve<InterpolatedForwardCurve>(dates, forwards, dayCounter, interpolationMethod, n);
-}
-
-// Builder for pillar-only curves that require an explicit reference date
-template <template <class> class PillarCurveType>
-QuantLib::ext::shared_ptr<YieldTermStructure>
-buildPillarOnlyCurve(const Date& referenceDate, const vector<Date>& dates, const vector<QuantLib::Real>& rates,
-                     const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod, Size n) {
-
-    QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
-    switch (interpolationMethod) {
-    case YieldCurve::InterpolationMethod::Linear:
-        yieldts.reset(new PillarCurveType<QuantLib::Linear>(referenceDate, dates, rates, dayCounter, QuantLib::Linear()));
-        break;
-    case YieldCurve::InterpolationMethod::LogLinear:
-        yieldts.reset(new PillarCurveType<QuantLib::LogLinear>(referenceDate, dates, rates, dayCounter, QuantLib::LogLinear()));
-        break;
-    case YieldCurve::InterpolationMethod::NaturalCubic:
-        yieldts.reset(new PillarCurveType<QuantLib::Cubic>(referenceDate, dates, rates, dayCounter,
-                                                            QuantLib::Cubic(CubicInterpolation::Kruger, true)));
-        break;
-    case YieldCurve::InterpolationMethod::FinancialCubic:
-        yieldts.reset(new PillarCurveType<QuantLib::Cubic>(referenceDate, dates, rates, dayCounter,
-                                                            QuantLib::Cubic(CubicInterpolation::Kruger, true,
-                                                                            CubicInterpolation::SecondDerivative, 0.0,
-                                                                            CubicInterpolation::FirstDerivative)));
-        break;
-    case YieldCurve::InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new PillarCurveType<QuantLib::ConvexMonotone>(referenceDate, dates, rates, dayCounter,
-                                                                     QuantLib::ConvexMonotone()));
-        break;
-    case YieldCurve::InterpolationMethod::Quadratic:
-        yieldts.reset(new PillarCurveType<QuantExt::Quadratic>(referenceDate, dates, rates, dayCounter,
-                                                                QuantExt::Quadratic(1, 0, 1, 0, 1)));
-        break;
-    case YieldCurve::InterpolationMethod::LogQuadratic:
-        yieldts.reset(new PillarCurveType<QuantExt::LogQuadratic>(referenceDate, dates, rates, dayCounter,
-                                                                   QuantExt::LogQuadratic(1, 0, -1, 0, 1)));
-        break;
-    case YieldCurve::InterpolationMethod::Hermite:
-        yieldts.reset(new PillarCurveType<QuantLib::Cubic>(referenceDate, dates, rates, dayCounter,
-                                                            Cubic(CubicInterpolation::Parabolic)));
-        break;
-    case YieldCurve::InterpolationMethod::CubicSpline:
-        yieldts.reset(new PillarCurveType<QuantLib::Cubic>(referenceDate, dates, rates, dayCounter,
-                                                            Cubic(CubicInterpolation::Spline, false,
-                                                                  CubicInterpolation::SecondDerivative, 0.0,
-                                                                  CubicInterpolation::SecondDerivative, 0.0)));
-        break;
-    case YieldCurve::InterpolationMethod::DefaultLogMixedLinearCubic:
-        yieldts.reset(new PillarCurveType<DefaultLogMixedLinearCubic>(referenceDate, dates, rates, dayCounter,
-                                                                       DefaultLogMixedLinearCubic(n)));
-        break;
-    case YieldCurve::InterpolationMethod::MonotonicLogMixedLinearCubic:
-        yieldts.reset(new PillarCurveType<MonotonicLogMixedLinearCubic>(referenceDate, dates, rates, dayCounter,
-                                                                         MonotonicLogMixedLinearCubic(n)));
-        break;
-    case YieldCurve::InterpolationMethod::KrugerLogMixedLinearCubic:
-        yieldts.reset(new PillarCurveType<KrugerLogMixedLinearCubic>(referenceDate, dates, rates, dayCounter,
-                                                                      KrugerLogMixedLinearCubic(n)));
-        break;
-    case YieldCurve::InterpolationMethod::LogMixedLinearCubicNaturalSpline:
-        yieldts.reset(new PillarCurveType<LogMixedLinearCubic>(
-            referenceDate, dates, rates, dayCounter,
-            LogMixedLinearCubic(n, MixedInterpolation::ShareRanges, CubicInterpolation::Spline, false,
-                                CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0)));
-        break;
-    case YieldCurve::InterpolationMethod::LogNaturalCubic:
-        yieldts.reset(new PillarCurveType<LogCubic>(referenceDate, dates, rates, dayCounter,
-                                                     LogCubic(CubicInterpolation::Kruger, true)));
-        break;
-    case YieldCurve::InterpolationMethod::LogFinancialCubic:
-        yieldts.reset(new PillarCurveType<LogCubic>(referenceDate, dates, rates, dayCounter,
-                                                     LogCubic(CubicInterpolation::Kruger, true,
-                                                              CubicInterpolation::SecondDerivative, 0.0,
-                                                              CubicInterpolation::FirstDerivative)));
-        break;
-    case YieldCurve::InterpolationMethod::LogCubicSpline:
-        yieldts.reset(new PillarCurveType<LogCubic>(referenceDate, dates, rates, dayCounter,
-                                                     LogCubic(CubicInterpolation::Spline, false,
-                                                              CubicInterpolation::SecondDerivative, 0.0,
-                                                              CubicInterpolation::SecondDerivative, 0.0)));
-        break;
-    case YieldCurve::InterpolationMethod::MonotonicLogCubicSpline:
-        yieldts.reset(new PillarCurveType<LogCubic>(referenceDate, dates, rates, dayCounter,
-                                                     LogCubic(CubicInterpolation::Spline, true,
-                                                              CubicInterpolation::SecondDerivative, 0.0,
-                                                              CubicInterpolation::SecondDerivative, 0.0)));
-        break;
-    case YieldCurve::InterpolationMethod::BackwardFlat:
-        yieldts.reset(new PillarCurveType<QuantLib::BackwardFlat>(referenceDate, dates, rates, dayCounter,
-                                                                   QuantLib::BackwardFlat()));
-        break;
-
-    default:
-        QL_FAIL("Interpolation method '" << interpolationMethod << "' not recognised.");
+                                                           Size n, bool excludeT0, const Date& referenceDate) {
+    if (excludeT0) {
+        return buildYieldCurve<QuantExt::InterpolatedPillarOnlyForwardCurve>(
+            interpolationMethod, n, referenceDate, dates, forwards, dayCounter);
+    } else {
+        return buildYieldCurve<InterpolatedForwardCurve>(interpolationMethod, n, dates, forwards, dayCounter);
     }
-
-    yieldts->enableExtrapolation();
-    return yieldts;
 }
 
 /* Helper functions
@@ -937,82 +856,77 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
     // yield curve reacts to evaluation date changes because the bootstrap
     // helper recompute their start date (because they are relative date
     // helper for deposits, fras, swaps, etc.).
-    
+
     if (extrapolation_[index]) {
         yieldts->enableExtrapolation();
     }
 
     yieldts->discount(QL_EPSILON); // ensure initialization of instruments
 
-    // If excludeT0FromInterpolation is set, use pillar-only curve for the appropriate variable type
+    // Extract pillar dates and rates
+    vector<Date> dates;
+    vector<Real> rates;
+
     if (excludeT0FromInterpolation_[index]) {
-        // Extract actual pillar dates and values (no t0 point!)
-        vector<Date> dates;
-        vector<Real> rates;
-
-        for (Size i = 0; i < instruments.size(); i++) {
-            dates.push_back(instruments[i]->pillarDate());
-            
-            if (interpolationVariable_[index] == InterpolationVariable::Discount) {
-                rates.push_back(yieldts->discount(instruments[i]->pillarDate()));
-            } else if (interpolationVariable_[index] == InterpolationVariable::Zero) {
-                rates.push_back(yieldts->zeroRate(instruments[i]->pillarDate(), zeroDayCounter_[index], Continuous));
-            } else if (interpolationVariable_[index] == InterpolationVariable::Forward) {
-                rates.push_back(yieldts->forwardRate(instruments[i]->pillarDate(), instruments[i]->pillarDate(), 
-                                                       zeroDayCounter_[index], Continuous));
-            }
-        }
-
-        DLOG("Building pillar-only curve (variable: " << interpolationVariable_[index] << ") with " 
-             << dates.size() << " actual pillar points");
-        DLOG("Reference date: " << asofDate_ << ", First pillar: " << dates.front());
-
-        QuantLib::ext::shared_ptr<YieldTermStructure> pillarCurve;
-        
-        if (interpolationVariable_[index] == InterpolationVariable::Discount) {
-            pillarCurve = buildPillarOnlyCurve<QuantExt::InterpolatedPillarOnlyDiscountCurve>(
-                asofDate_, dates, rates, zeroDayCounter_[index], interpolationMethod_[index], mixedInterpolationSize);
-        } else if (interpolationVariable_[index] == InterpolationVariable::Zero) {
-            pillarCurve = buildPillarOnlyCurve<QuantExt::InterpolatedPillarOnlyZeroCurve>(
-                asofDate_, dates, rates, zeroDayCounter_[index], interpolationMethod_[index], mixedInterpolationSize);
-        } else if (interpolationVariable_[index] == InterpolationVariable::Forward) {
-            pillarCurve = buildPillarOnlyCurve<QuantExt::InterpolatedPillarOnlyForwardCurve>(
-                asofDate_, dates, rates, zeroDayCounter_[index], interpolationMethod_[index], mixedInterpolationSize);
-        } else {
-            QL_FAIL("Interpolation variable not recognised.");
-        }
-
-        if (extrapolation_[index]) {
-            pillarCurve->enableExtrapolation();
-        }
-
-        return pillarCurve;
+        // Pillar-only: use actual pillar dates without t0
+        dates.reserve(instruments.size());
+        rates.reserve(instruments.size());
+    } else {
+        // Standard: include t0 point in interpolation
+        dates.reserve(instruments.size() + 1);
+        rates.reserve(instruments.size() + 1);
+        dates.push_back(asofDate_);
+        // t0 rate will be set after we get the first pillar rate
     }
 
-    // Standard approach: include t0 point in interpolation
-    vector<Date> dates(instruments.size() + 1, asofDate_);
-    vector<Real> zeros(instruments.size() + 1, 0.0);
-    vector<Real> discounts(instruments.size() + 1, 1.0);
-    vector<Real> forwards(instruments.size() + 1, 0.0);
-
+    // Extract rates for all pillars
     for (Size i = 0; i < instruments.size(); i++) {
-        dates[i + 1] = instruments[i]->pillarDate();
-        zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_[index], Continuous);
-        discounts[i + 1] = yieldts->discount(dates[i + 1]);
-        forwards[i + 1] = yieldts->forwardRate(dates[i + 1], dates[i + 1], zeroDayCounter_[index], Continuous);
+        dates.push_back(instruments[i]->pillarDate());
+
+        if (interpolationVariable_[index] == InterpolationVariable::Discount) {
+            rates.push_back(yieldts->discount(instruments[i]->pillarDate()));
+        } else if (interpolationVariable_[index] == InterpolationVariable::Zero) {
+            rates.push_back(yieldts->zeroRate(instruments[i]->pillarDate(), zeroDayCounter_[index], Continuous));
+        } else if (interpolationVariable_[index] == InterpolationVariable::Forward) {
+            rates.push_back(yieldts->forwardRate(instruments[i]->pillarDate(), instruments[i]->pillarDate(),
+                                                   zeroDayCounter_[index], Continuous));
+        }
     }
-    zeros[0] = zeros[1];
-    forwards[0] = forwards[1];
-    if (interpolationVariable_[index] == InterpolationVariable::Zero)
-        return zerocurve(dates, zeros, zeroDayCounter_[index], interpolationMethod_[index], mixedInterpolationSize);
-    else if (interpolationVariable_[index] == InterpolationVariable::Discount)
-        return discountcurve(dates, discounts, zeroDayCounter_[index], interpolationMethod_[index],
-                             mixedInterpolationSize);
-    else if (interpolationVariable_[index] == InterpolationVariable::Forward)
-        return forwardcurve(dates, forwards, zeroDayCounter_[index], interpolationMethod_[index],
-                            mixedInterpolationSize);
-    else
+
+    // For standard approach, set t0 rate
+    if (!excludeT0FromInterpolation_[index]) {
+        if (interpolationVariable_[index] == InterpolationVariable::Discount) {
+            rates.insert(rates.begin(), 1.0);
+        } else {
+            // For Zero and Forward, use flat extrapolation from first pillar
+            rates.insert(rates.begin(), rates[0]);
+        }
+    }
+
+    DLOG("Building " << (excludeT0FromInterpolation_[index] ? "pillar-only" : "standard")
+                     << " curve (variable: " << interpolationVariable_[index] << ") with "
+                     << dates.size() << " points");
+
+    // Build the appropriate curve
+    QuantLib::ext::shared_ptr<YieldTermStructure> curve;
+    if (interpolationVariable_[index] == InterpolationVariable::Zero) {
+        curve = zerocurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index], mixedInterpolationSize,
+                         excludeT0FromInterpolation_[index], asofDate_);
+    } else if (interpolationVariable_[index] == InterpolationVariable::Discount) {
+        curve = discountcurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index], mixedInterpolationSize,
+                             excludeT0FromInterpolation_[index], asofDate_);
+    } else if (interpolationVariable_[index] == InterpolationVariable::Forward) {
+        curve = forwardcurve(dates, rates, zeroDayCounter_[index], interpolationMethod_[index], mixedInterpolationSize,
+                            excludeT0FromInterpolation_[index], asofDate_);
+    } else {
         QL_FAIL("Interpolation variable not recognised.");
+    }
+
+    if (extrapolation_[index]) {
+        curve->enableExtrapolation();
+    }
+
+    return curve;
 }
 
 void YieldCurve::buildZeroCurve(const std::size_t index) {
