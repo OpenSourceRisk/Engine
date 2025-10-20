@@ -91,6 +91,18 @@ string yieldCurveKey(const Currency& curveCcy, const string& curveID, const Date
 namespace ore {
 namespace data {
 
+std::ostream& operator<<(std::ostream& os, YieldCurve::InterpolationVariable v) {
+    switch (v) {
+    case YieldCurve::InterpolationVariable::Zero:
+        return os << "Zero";
+    case YieldCurve::InterpolationVariable::Discount:
+        return os << "Discount";
+    case YieldCurve::InterpolationVariable::Forward:
+        return os << "Forward";
+    }
+    QL_FAIL("Unknown InterpolationVariable");
+}
+
 template <template <class> class CurveType>
 QuantLib::ext::shared_ptr<YieldTermStructure>
 buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates, const DayCounter& dayCounter,
@@ -951,10 +963,7 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
             }
         }
 
-        const char* varTypeStr = (interpolationVariable_[index] == InterpolationVariable::Discount) ? "Discount" :
-                                  (interpolationVariable_[index] == InterpolationVariable::Zero) ? "Zero" : "Forward";
-        
-        DLOG("Building pillar-only curve (variable: " << varTypeStr << ") with " 
+        DLOG("Building pillar-only curve (variable: " << interpolationVariable_[index] << ") with " 
              << dates.size() << " actual pillar points");
         DLOG("Reference date: " << asofDate_ << ", First pillar: " << dates.front());
 

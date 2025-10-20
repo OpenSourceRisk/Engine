@@ -231,6 +231,9 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
 //! Helper function for parsing interpolation variable
 YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const string& s);
 
+//! Output operator for interpolation variable
+std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationVariable v);
+
 //! Output operator for interpolation method
 std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMethod m);
 
