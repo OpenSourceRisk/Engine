@@ -37,6 +37,7 @@ public:
                                const std::vector<QuantLib::Array>& kappa, const std::string& name = std::string());
 
     const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
+    const Array& parameterTimes(const Size) const override;
 
     QuantLib::Matrix sigma_x(const QuantLib::Time t) const override;
     QuantLib::Array kappa(const QuantLib::Time t) const override;
@@ -148,8 +149,7 @@ template <class TS>
 HwPiecewiseParametrization<TS>::HwPiecewiseParametrization(const QuantLib::Size n, const QuantLib::Size m,
                                                            const QuantLib::Currency& currency,
                                                            const QuantLib::Handle<TS>& termStructure,
-                                                           const QuantLib::Array& times,
-                                                           const std::string& name = std::string()) {
+                                                           const QuantLib::Array& times, const std::string& name) {
     for (Size i = 1; i < times_.size(); ++i) {
         QL_REQUIRE(times_[i] > times_[i - 1], "HwPiecewiseParametrization: times array must be strictly increasing");
     }
@@ -265,7 +265,7 @@ QuantLib::Array HwPiecewiseParametrization<TS>::g(const QuantLib::Time t, const 
 }
 
 template <class TS>
-const QuantLib::ext::shared_ptr<Parameter> HwConstantParametrization<TS>::parameter(const Size i) const {
+const QuantLib::ext::shared_ptr<Parameter> HwPiecewiseParametrization<TS>::parameter(const Size i) const {
     if (i == 0)
         return sigma_;
     else
