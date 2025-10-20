@@ -38,9 +38,7 @@
           <TimeGrid/>
           <InitialValue>0.01</InitialValue>
         </PCASigma0>
-        <PCASigmaRatios>
-          <Ratios>1.0, 1.1</Ratios>
-        </PCASigmaRatios>
+        <PCASigmaRatios>1.0, 1.1</PCASigmaRatios>
         <CalibrationSwaptions>
           <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
           <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
