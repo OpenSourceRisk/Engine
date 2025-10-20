@@ -354,7 +354,7 @@ void CrossAssetModelBuilder::buildModel() const {
             hwBuilder.push_back(builder);
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
-            auto parametrization = builder->parametrization();
+            auto parametrization = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(builder->parametrization());
             if (dontCalibrate_)
                 builder->freeze();
             swaptionBaskets_[i] = builder->swaptionBasket();

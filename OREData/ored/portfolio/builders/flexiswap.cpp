@@ -28,10 +28,9 @@
 namespace ore {
 namespace data {
 
-QuantLib::ext::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key,
-                                                                             const std::vector<Date>& expiries,
-                                                                             const Date& maturity,
-                                                                             const std::vector<Real>& strikes) {
+QuantLib::ext::shared_ptr<QuantExt::IrModel>
+FlexiSwapBGSLGMGridEngineBuilderBase::model(const string& id, const string& key, const std::vector<Date>& expiries,
+                                            const Date& maturity, const std::vector<Real>& strikes) {
 
     // TODO this is the same as in LGMBermudanSwaptionEngineBuilder::model(), factor the model building out
 
@@ -146,7 +145,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> FlexiSwapBGSLGMGridEngineBuilderBase::m
         allowChangingFallbacks, allowModelFallbacks);
 
     // In some cases, we do not want to calibrate the model
-    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
+    QuantLib::ext::shared_ptr<QuantExt::IrModel> model;
     if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
         DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
         model = calib->model();
@@ -168,7 +167,7 @@ QuantLib::ext::shared_ptr<PricingEngine> FlexiSwapLGMGridEngineBuilder::engineIm
                                                                            const std::vector<Real>& strikes) {
     DLOG("Building LGM Grid Flexi Swap engine for trade " << id);
 
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes);
+    auto lgm = QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(model(id, key, expiries, maturity, strikes));
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
