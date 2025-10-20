@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/marketdata/market.hpp>
 #include <ored/model/irmodelbuilder.hpp>
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/structuredmodelwarning.hpp>
@@ -26,6 +27,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
 
+#include <qle/models/irmodel.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
@@ -80,7 +82,8 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     if (vt == ShiftedLognormal) {
         atmStdDev *= sd.atmForward + shift;
     }
-    if (strike != Null<Real>() && std::abs(strike - sd.atmForward) > ore::data::IrModelBuilder::maxAtmStdDev * atmStdDev) {
+    if (strike != Null<Real>() &&
+        std::abs(strike - sd.atmForward) > ore::data::IrModelBuilder::maxAtmStdDev * atmStdDev) {
         DLOG("Helper with expiry " << expiry << " and term " << term << " has a strike (" << strike
                                    << ") that is too far out of the money (atm = " << sd.atmForward
                                    << ", atmStdDev = " << atmStdDev << "). Adjusting the strike using maxAtmStdDev "

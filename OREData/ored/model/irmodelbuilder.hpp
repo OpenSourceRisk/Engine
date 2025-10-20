@@ -161,5 +161,6 @@ protected:
     // Market Observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
+
 } // namespace data
 } // namespace ore
