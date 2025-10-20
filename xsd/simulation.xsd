@@ -346,7 +346,7 @@
   <xs:all>
     <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
     <xs:element type="calibrationTypeType" name="CalibrationType"/>
-    <xs:element name="Volatility">
+    <xs:element name="Volatility" minOccurs="0">
       <xs:complexType>
         <xs:all>
           <xs:element type="bool" name="Calibrate"/>
@@ -356,7 +356,7 @@
           <xs:element name="InitialValue">
             <xs:complexType>
               <xs:sequence>
-                <xs:element name="Sigma" maxOccurs="unbounded" minOccurs="1">
+                <xs:element name="Sigma" maxOccurs="unbounded">
                   <xs:complexType>
                     <xs:sequence>
                       <xs:element type="xs:string" name="Row" maxOccurs="unbounded" minOccurs="1"/>
@@ -383,6 +383,29 @@
               </xs:sequence>
             </xs:complexType>
           </xs:element>
+        </xs:all>
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="PCALoadings" minOccurs="0">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element type="xs:string" name="Loadings" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    <!-- FIXME: comma delimited list -->
+    <xs:element type="volatilityParameter" name="PCASigma0"/>
+    <xs:element type="xs:string" name="PCASigmaRatios" minOccurs="0"/>
+    <!-- FIXME: comma delimited list -->
+    <xs:element name="CalibrationSwaptions" maxOccurs="1" minOccurs="0">
+      <xs:complexType>
+        <xs:all>
+          <xs:element type="xs:string" name="Expiries"/>
+          <!-- FIXME: comma delimited list -->
+          <xs:element type="xs:string" name="Terms"/>
+          <!-- FIXME: comma delimited list -->
+          <xs:element type="xs:string" name="Strikes"/>
+          <!-- FIXME: comma delimited list -->
         </xs:all>
       </xs:complexType>
     </xs:element>
@@ -599,6 +622,7 @@
       <xs:enumeration value="Bootstrap"/>
       <xs:enumeration value="BestFit"/>
       <xs:enumeration value="None"/>
+      <xs:enumeration value="StatisticalWithRiskNeutralVolatility"/>
     </xs:restriction>
   </xs:simpleType>
 
