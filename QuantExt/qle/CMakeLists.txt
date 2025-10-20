@@ -1007,6 +1007,7 @@ termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
 termstructures/piecewisepricecurve.hpp
+termstructures/pillaronlyyieldcurve.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp

@@ -615,7 +615,7 @@ public:
     //! Default destructor
     virtual ~BondYieldShiftedYieldCurveSegment() {}
     //@}
-    
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
