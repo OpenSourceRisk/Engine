@@ -36,24 +36,29 @@ public:
                                const QuantLib::Array& times, const std::vector<Matrix>& sigma,
                                const std::vector<QuantLib::Array>& kappa, const std::string& name = std::string());
 
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
+
     QuantLib::Matrix sigma_x(const QuantLib::Time t) const override;
     QuantLib::Array kappa(const QuantLib::Time t) const override;
     QuantLib::Matrix y(const QuantLib::Time t) const override;
     QuantLib::Array g(const QuantLib::Time t, const QuantLib::Time T) const override;
-    const Array& parameterTimes(const Size) const override;
 
-private:
+protected:
+    HwPiecewiseParametrization(const QuantLib::Size n, const QuantLib::Size m, const QuantLib::Currency& currency,
+                               const QuantLib::Handle<TS>& termStructure, const QuantLib::Array& times,
+                               const std::string& name = std::string());
+
     static constexpr QuantLib::Real zeroKappaCutoff_ = 1.0E-6;
 
     QuantLib::Size timeIndex(const QuantLib::Time t) const;
     QuantLib::Size sigmaIndex(const QuantLib::Size i, const QuantLib::Size j, const QuantLib::Size timeIndex) const;
     QuantLib::Size kappaIndex(const QuantLib::Size i, const QuantLib::Size timeIndex) const;
 
+    virtual double sigmaComp(const QuantLib::Size i, const QuantLib::Size j, const QuantLib::Size timeIndex) const;
+    virtual double kappaComp(const QuantLib::Size i, const QuantLib::Size timeIndex) const;
+
     QuantLib::Matrix sigma_x_ind(const QuantLib::Size timeIndex) const;
     QuantLib::Array kappa_ind(const QuantLib::Size timeIndex) const;
-
-    double sigmaComp(const QuantLib::Size i, const QuantLib::Size j, const QuantLib::Size timeIndex) const;
-    double kappaComp(const QuantLib::Size i, const QuantLib::Size timeIndex) const;
 
     double y_part(double a, double b, double t, const QuantLib::Array& kappa, const QuantLib::Matrix& sigma,
                   QuantLib::Size i, QuantLib::Size j) const;
@@ -137,6 +142,17 @@ HwPiecewiseParametrization<TS>::HwPiecewiseParametrization(
     for (Size i = 0; i < kappa.front().size(); ++i)
         for (Size k = 0; k < times_.size() + 1; ++k)
             kappa_->setParam(kappaIndex(i, k), kappa[k][i]);
+}
+
+template <class TS>
+HwPiecewiseParametrization<TS>::HwPiecewiseParametrization(const QuantLib::Size n, const QuantLib::Size m,
+                                                           const QuantLib::Currency& currency,
+                                                           const QuantLib::Handle<TS>& termStructure,
+                                                           const QuantLib::Array& times,
+                                                           const std::string& name = std::string()) {
+    for (Size i = 1; i < times_.size(); ++i) {
+        QL_REQUIRE(times_[i] > times_[i - 1], "HwPiecewiseParametrization: times array must be strictly increasing");
+    }
 }
 
 template <class TS> QuantLib::Matrix HwPiecewiseParametrization<TS>::sigma_x_ind(const QuantLib::Size k) const {
@@ -246,6 +262,14 @@ QuantLib::Array HwPiecewiseParametrization<TS>::g(const QuantLib::Time t, const 
     }
 
     return g;
+}
+
+template <class TS>
+const QuantLib::ext::shared_ptr<Parameter> HwConstantParametrization<TS>::parameter(const Size i) const {
+    if (i == 0)
+        return sigma_;
+    else
+        return kappa_;
 }
 
 template <class TS> const Array& HwPiecewiseParametrization<TS>::parameterTimes(const Size) const { return times_; }
