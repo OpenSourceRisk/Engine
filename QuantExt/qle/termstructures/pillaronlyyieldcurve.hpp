@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2024 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -270,7 +270,7 @@ DiscountFactor InterpolatedPillarOnlyZeroCurve<Interpolator>::discountImpl(Time 
     else {
         zeroRate = this->data_.back();
     }
-    
+
     // Convert zero rate to discount factor: DF = exp(-r * t)
     return std::exp(-zeroRate * t);
 }
