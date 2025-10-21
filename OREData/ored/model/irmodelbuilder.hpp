@@ -28,6 +28,8 @@
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
 
+#include <ql/models/calibrationhelper.hpp>
+
 #include <map>
 #include <ostream>
 #include <vector>
