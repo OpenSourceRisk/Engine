@@ -25,6 +25,7 @@
 
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/irmodel.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
 
 #include <ql/math/comparison.hpp>
 
@@ -74,7 +75,7 @@ public:
         and following the procedure in HwPiecewiseStatisticalParametrization */
     void calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
         const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
-        const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights);
+        const EndCriteria& endCriteria, const Constraint& constraint = {}, const std::vector<Real>& weights = {});
 
     /*! calibration constraints, these can be used directly, or
         through the customized calibrate methods above */
@@ -86,6 +87,11 @@ public:
         return res;
     }
 
+    /*! set info on how the model was calibrated */
+    void setCalibrationInfo(const HwCalibrationInfo& calibrationInfo) { calibrationInfo_ = calibrationInfo; }
+    /*! get info on how the model was calibrated */
+    const HwCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
+
     /*! observer and linked calibrated model interface */
     void update() override;
     void generateArguments() override;
@@ -96,6 +102,7 @@ private:
     Discretization discretization_;
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess_;
     bool evaluateBankAccount_;
+    HwCalibrationInfo calibrationInfo_;
 };
 
 } // namespace QuantExt

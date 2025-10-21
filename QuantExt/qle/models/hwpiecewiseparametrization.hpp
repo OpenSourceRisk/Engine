@@ -53,7 +53,7 @@ protected:
 
     QuantLib::Size timeIndex(const QuantLib::Time t) const;
     QuantLib::Size sigmaIndex(const QuantLib::Size i, const QuantLib::Size j, const QuantLib::Size timeIndex) const;
-    QuantLib::Size kappaIndex(const QuantLib::Size i, const QuantLib::Size timeIndex) const;
+    virtual QuantLib::Size kappaIndex(const QuantLib::Size i, const QuantLib::Size timeIndex) const;
 
     virtual double sigmaComp(const QuantLib::Size i, const QuantLib::Size j, const QuantLib::Size timeIndex) const;
     virtual double kappaComp(const QuantLib::Size i, const QuantLib::Size timeIndex) const;
@@ -149,7 +149,8 @@ template <class TS>
 HwPiecewiseParametrization<TS>::HwPiecewiseParametrization(const QuantLib::Size n, const QuantLib::Size m,
                                                            const QuantLib::Currency& currency,
                                                            const QuantLib::Handle<TS>& termStructure,
-                                                           const QuantLib::Array& times, const std::string& name) {
+                                                           const QuantLib::Array& times, const std::string& name)
+    : HwParametrization<TS>(n, m, currency, termStructure, name.empty() ? currency.code() : name), times_(times) {
     for (Size i = 1; i < times_.size(); ++i) {
         QL_REQUIRE(times_[i] > times_[i - 1], "HwPiecewiseParametrization: times array must be strictly increasing");
     }

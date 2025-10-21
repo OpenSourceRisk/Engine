@@ -37,12 +37,16 @@ using namespace QuantExt;
 //! Builder for a Linear Gauss Markov model component
 class HwBuilder : public IrModelBuilder {
 public:
-    HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-              const QuantLib::ext::shared_ptr<HwModelData>& data, const IrModel::Measure measure = IrModel::Measure::BA,
-              const HwModel::Discretization discretization = HwModel::Discretization::Euler,
-              const bool evaluateBankAccount = true, const std::string& configuration = Market::defaultConfiguration,
-              Real bootstrapTolerance = 0.001, const bool continueOnError = false,
-              const std::string& referenceCalibrationGrid = "", const bool setCalibrationInfo = false);
+    HwBuilder(
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<HwModelData>& data,
+        const IrModel::Measure measure = IrModel::Measure::BA,
+        const HwModel::Discretization discretization = HwModel::Discretization::Euler,
+        const bool evaluateBankAccount = true, const std::string& configuration = Market::defaultConfiguration,
+        Real bootstrapTolerance = 0.001, const bool continueOnError = false,
+        const std::string& referenceCalibrationGrid = "", const bool setCalibrationInfo = false,
+        const std::string& id = "unknown",
+        BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
+        const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false);
 
 private:
     void initParametrization() const override;

@@ -504,20 +504,20 @@ void IrModelBuilder::buildSwaptionBasket(const bool enforceFullRebuild) const {
     swaptionBasketRefDate_ = calibrationDiscountCurve_->referenceDate();
 }
 
-std::string IrModelBuilder::getBasketDetails(LgmCalibrationInfo& info) const {
+std::string IrModelBuilder::getBasketDetails(std::vector<SwaptionData>& swaptionData) const {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(16) << "expiry" << std::setw(16) << "swapLength"
         << std::setw(16) << "strike" << std::setw(16) << "atmForward" << std::setw(16) << "annuity" << std::setw(16)
         << "vega" << std::setw(16) << "vol\n";
-    info.swaptionData.clear();
+    swaptionData.clear();
     for (Size j = 0; j < swaptionBasket_.size(); ++j) {
         auto swp = QuantLib::ext::static_pointer_cast<SwaptionHelper>(swaptionBasket_[j]);
-        auto sd = swaptionData(swp);
+        auto sd = ::swaptionData(swp);
         log << std::right << std::setw(3) << j << std::setw(16) << sd.timeToExpiry << std::setw(16) << sd.swapLength
             << std::setw(16) << sd.strike << std::setw(16) << sd.atmForward << std::setw(16) << sd.annuity
             << std::setw(16) << sd.vega << std::setw(16) << std::setw(16) << sd.stdDev / std::sqrt(sd.timeToExpiry)
             << "\n";
-        info.swaptionData.push_back(sd);
+        swaptionData.push_back(sd);
     }
     return log.str();
 }

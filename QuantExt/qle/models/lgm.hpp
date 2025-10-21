@@ -26,7 +26,7 @@
 
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/irmodel.hpp>
-#include <qle/models/lgmcalibrationinfo.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
 #include <ql/math/comparison.hpp>

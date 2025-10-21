@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file lgmcalibrationinfo.hpp
-    \brief info data on how a lgm model was calibrated
+/*! \file irmodelcalibrationinfo.hpp
+    \brief info data on how a lgm or hw model was calibrated
     \ingroup models
 */
 
@@ -34,6 +34,8 @@
 namespace QuantExt {
 using namespace QuantLib;
 
+// shared
+
 struct SwaptionData {
     Real timeToExpiry;
     Real swapLength;
@@ -43,6 +45,8 @@ struct SwaptionData {
     Real vega;
     Real stdDev;
 };
+
+// lgm
 
 struct LgmCalibrationData {
     Real modelTime;
@@ -62,6 +66,28 @@ struct LgmCalibrationInfo {
     std::vector<LgmCalibrationData> lgmCalibrationData;
 };
 
+// hw
+
+struct HwCalibrationData {
+    Real modelTime;
+    Real modelVol;
+    Real marketVol;
+    Real modelValue;
+    Real marketValue;
+    Matrix modelSigma;
+    Array modelKappa;
+};
+
+struct HwCalibrationInfo {
+    bool valid = false;
+    Real rmse = Null<Real>();
+    std::vector<SwaptionData> swaptionData;
+    std::vector<HwCalibrationData> hwCalibrationData;
+};
+
+// utility functions
+
 std::map<std::string, boost::any> getAdditionalResultsMap(const LgmCalibrationInfo& info);
+std::map<std::string, boost::any> getAdditionalResultsMap(const HwCalibrationInfo& info);
 
 } // namespace QuantExt

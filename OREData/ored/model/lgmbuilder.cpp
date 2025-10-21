@@ -240,7 +240,7 @@ void LgmBuilder::calibrate() const {
         if (Log::instance().filter(ORE_DEBUG) || setCalibrationInfo_) {
             DLOGGERSTREAM("Basket details:");
             try {
-                auto d = getBasketDetails(calibrationInfo);
+                auto d = getBasketDetails(calibrationInfo.swaptionData);
                 DLOGGERSTREAM(d);
             } catch (const std::exception& e) {
                 WLOG("An error occurred: " << e.what());
@@ -264,7 +264,7 @@ void LgmBuilder::calibrate() const {
         StructuredModelWarningMessage(errorTemplate, exceptionMessage, id_).log();
         WLOGGERSTREAM("Basket details:");
         try {
-            auto d = getBasketDetails(calibrationInfo);
+            auto d = getBasketDetails(calibrationInfo.swaptionData);
             WLOGGERSTREAM(d);
         } catch (const std::exception& e) {
             WLOG("An error occurred: " << e.what());

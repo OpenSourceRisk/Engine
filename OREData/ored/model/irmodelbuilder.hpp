@@ -98,7 +98,7 @@ protected:
     void performCalculations() const override;
     void buildSwaptionBasket(const bool enforceFullRebuild) const;
     void updateSwaptionBasketVols() const;
-    std::string getBasketDetails(QuantExt::LgmCalibrationInfo& info) const;
+    std::string getBasketDetails(std::vector<QuantExt::SwaptionData>& swaptionData) const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
     // populate expiry and term

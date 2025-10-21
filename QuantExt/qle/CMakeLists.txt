@@ -223,7 +223,7 @@ models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
 models/kienitzlawsonswaynesabrpdedensity.cpp
 models/lgm.cpp
-models/lgmcalibrationinfo.cpp
+models/irmodelcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
 models/lgmfdsolver.cpp
 models/lgmimplieddefaulttermstructure.cpp
@@ -782,7 +782,7 @@ models/jyimpliedzeroinflationtermstructure.hpp
 models/kienitzlawsonswaynesabrpdedensity.hpp
 models/lgm.hpp
 models/lgmbackwardsolver.hpp
-models/lgmcalibrationinfo.hpp
+models/irmodelcalibrationinfo.hpp
 models/lgmconvolutionsolver2.hpp
 models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
