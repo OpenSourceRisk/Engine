@@ -18,6 +18,9 @@
 
 #include <qle/models/irmodelcalibrationinfo.hpp>
 
+#include <ql/math/matrix.hpp>
+#include <ql/math/array.hpp>
+
 namespace QuantExt {
 
 std::map<std::string, boost::any> getAdditionalResultsMap(const LgmCalibrationInfo& info) {
