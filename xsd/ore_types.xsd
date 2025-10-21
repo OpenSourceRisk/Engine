@@ -979,4 +979,14 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="roundingType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Up"/>
+      <xs:enumeration value="Down"/>
+      <xs:enumeration value="Closest"/>
+      <xs:enumeration value="Floor"/>
+      <xs:enumeration value="Ceiling"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
