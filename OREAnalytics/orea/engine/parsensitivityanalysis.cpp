@@ -109,7 +109,7 @@ Real applyRegularisation(const ore::data::ParConversionMatrixRegularisation& reg
              << " to " << ParSensitivityAnalysis::regularisationThreshold << " (got " << originalValue << ")");
         StructuredAnalyticsWarningMessage(
             "ParSensitivityAnalysis",
-            "SmallDiagonal" + elementType + "Element",
+            "Small diagonal " + elementType + " element",
             message,
             {{"RiskFactor", to_string(riskFactor)},
              {"Key", to_string(key)},
@@ -442,7 +442,7 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             if (survivalAndRateCurveTypes.find(p.first.keytype) != survivalAndRateCurveTypes.end() &&
                 p.first == desc[i].key1()) {
-                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), p.first, desc[i].key1(), tmp);
+                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), p.first, desc[i].key1(), tmp, "SurvivalOrRateCurve");
             }
 
             // YoY diagnoal entries are 1.0
@@ -899,15 +899,9 @@ ParSensitivityConverter::ParSensitivityConverter(const ParSensitivityAnalysis::P
         }
         if (foundSmallDiagonal) {
             WLOG("Matrix inversion failed with " << smallDiagonalCount << " small diagonal entries. "
-                 << "Consider enabling regularisation by setting ParConversionMatrixRegularisation to 'Silent' or 'Warning' "
+                 << "If ParConversionMatrixRegularisation is set to 'Disable', "
+                 << "consider enabling regularisation by setting it to 'Silent' or 'Warning' "
                  << "to improve matrix conditioning and avoid inversion failures.");
-            StructuredAnalyticsWarningMessage("Par sensitivity conversion", 
-                                              "Transposed Jacobi matrix inversion failed",
-                                              "Matrix inversion failed with small diagonal entries detected. "
-                                              "Consider enabling regularisation to improve matrix conditioning.",
-                                              {{"SmallDiagonalCount", std::to_string(smallDiagonalCount)},
-                                               {"Threshold", std::to_string(ParSensitivityAnalysis::regularisationThreshold)}})
-                .log();
         }
         LOG("Extended matrix diagnostics done. Exiting application.");
         success = false;
