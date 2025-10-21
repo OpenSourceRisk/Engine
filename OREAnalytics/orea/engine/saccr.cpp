@@ -517,8 +517,8 @@ const map<string, string> commodityQualifierMapping = {{"Coal Americas", "Coal"}
                                                        {"EU Power UK", "Power"}};
 
 string SACCR::getCommodityName(const string& index, bool withPrefix) {
-    static boost::mutex mutex_;
-    boost::lock_guard<boost::mutex> lock(mutex_);
+    static std::mutex mutex_;
+    std::lock_guard<std::mutex> lock(mutex_);
 
     std::string commodity = index;
 

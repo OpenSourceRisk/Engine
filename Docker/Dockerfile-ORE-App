@@ -9,10 +9,6 @@ FROM ${DOCKER_REPO}ore-helper:${ORE_HELPER_VERSION}
 RUN mkdir -p /ore/App
 
 COPY --from=env_ore /usr/local/bin /ore/App
-
-#COPY --from=env_ore /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
-COPY --from=env_ore /usr/lib/x86_64-linux-gnu/libboost* /usr/lib/x86_64-linux-gnu
-COPY --from=env_ore /usr/lib/x86_64-linux-gnu/libOpenCL* /usr/lib/x86_64-linux-gnu
 RUN true
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 COPY --from=env_ore /usr/include/boost/ /usr/include/boost

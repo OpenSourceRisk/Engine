@@ -206,6 +206,7 @@ public:
     void setSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         sensiPricingEngine_ = engineData;
     }
+    void setSensiOutputPrecision(Size p) { sensiOutputPrecision_ = p; }
 
     // Setters for scenario
     void setScenarioSimMarketParams(const std::string& xml);
@@ -658,6 +659,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
     // const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
+    QuantLib::Size sensiOutputPrecision() const { return sensiOutputPrecision_; }
         
     /****************************
      * Getters for scenario build
@@ -1115,6 +1117,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
+    QuantLib::Size sensiOutputPrecision_ = 2;
 
     /**********************
      * SCENARIO analytic

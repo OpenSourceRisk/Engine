@@ -72,7 +72,8 @@ void SensitivityInputStream::reset() {
 
 SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& entries) const {
 
-    QL_REQUIRE(entries.size() == 10, "On line number " << lineNo_ << ": A sensitivity record needs 10 entries");
+    QL_REQUIRE(entries.size() == 10 || entries.size() == 14,
+               "On line number " << lineNo_ << ": A sensitivity record needs 10 or 14 entries");
 
     SensitivityRecord sr;
     sr.tradeId = entries[0];

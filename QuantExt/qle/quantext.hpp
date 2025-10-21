@@ -65,6 +65,8 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
+#include <qle/cashflows/interpolatediborcouponpricer.hpp>
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/mcgaussianformulabasedcouponpricer.hpp>
@@ -167,6 +169,7 @@
 #include <qle/indexes/iborindexfixingoverride.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/indexes/interpolatediborindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/region.hpp>
 #include <qle/indexes/secpi.hpp>
@@ -324,6 +327,7 @@
 #include <qle/models/hwconstantparametrization.hpp>
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
+#include <qle/models/hwpiecewiseparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infdkvectorised.hpp>
 #include <qle/models/infjyparameterization.hpp>
@@ -566,6 +570,7 @@
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/piecewisepricecurve.hpp>
+#include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>

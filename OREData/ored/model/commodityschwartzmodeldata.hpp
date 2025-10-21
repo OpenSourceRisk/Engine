@@ -61,6 +61,10 @@ public:
     CommoditySchwartzData(std::string name, std::string currency, CalibrationType calibrationType,
                           bool calibrateSigma, Real sigma,
                           bool calibrateKappa, Real kappa,
+                          bool calibrateSeasonality = false,
+                          ParamType seasonalityType = ParamType::Constant,
+                          std::vector<Time> seasonalityTimes = std::vector<Time>(),
+                          std::vector<Real> seasonalityValues = {0.0},
                           std::vector<std::string> optionExpiries = std::vector<std::string>(),
                           std::vector<std::string> optionStrikes = std::vector<std::string>(),
                           QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod = QuantLib::ext::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8),
@@ -71,6 +75,8 @@ public:
         : name_(name), ccy_(currency), calibrationType_(calibrationType),
           calibrateSigma_(calibrateSigma), sigmaType_(ParamType::Constant), sigmaValue_(sigma),
           calibrateKappa_(calibrateKappa),kappaType_(ParamType::Constant), kappaValue_(kappa),
+          calibrateSeasonality_(calibrateSeasonality), seasonalityType_(seasonalityType), 
+          seasonalityTimes_(seasonalityTimes), seasonalityValues_(seasonalityValues),
           optionExpiries_(optionExpiries), optionStrikes_(optionStrikes),
           driftFreeState_(driftFreeState), optimizationMethod_(optimizationMethod),
           endCriteria_(endCriteria), constraint_(constraint), calibrationErrorType_(calibrationErrorType) {}
@@ -84,8 +90,12 @@ public:
     ParamType& sigmaParamType() { return sigmaType_; }
     Real& sigmaValue() { return sigmaValue_; }
     bool& calibrateKappa() { return calibrateKappa_; }
-    ParamType& kappaParamType() { return sigmaType_; }
+    ParamType& kappaParamType() { return kappaType_; }
     Real& kappaValue() { return kappaValue_; }
+    bool& calibrateSeasonality() { return calibrateSeasonality_; }
+    ParamType& seasonalityParamType() { return seasonalityType_; }
+    std::vector<Time>& seasonalityTimes() { return seasonalityTimes_; }
+    std::vector<Real>& seasonalityValues() { return seasonalityValues_; }
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     bool& driftFreeState() { return driftFreeState_; }
@@ -117,6 +127,10 @@ private:
     bool calibrateKappa_ = false;
     ParamType kappaType_ = ParamType::Constant;
     Real kappaValue_ = 0.0;
+    bool calibrateSeasonality_ = false;
+    ParamType seasonalityType_ = ParamType::Constant;
+    std::vector<Time> seasonalityTimes_;
+    std::vector<Real> seasonalityValues_;
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
     bool driftFreeState_ = false;

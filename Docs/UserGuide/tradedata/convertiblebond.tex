@@ -851,9 +851,10 @@ applicable if the conversion is specified to be fixed cash amounts, and must the
     \end{itemize}
   \end{itemize}
 
-\item ConversionResets: This adds a reset schedule for the conversion rate. If a reset feature is defined, only an
-  initial ConversionRatio can be defined, the future conversion ratios are determined by the resets. The startDate
-  attribute can be used to define references, thresholds, gearings, floors, global floors. Optional.
+\item ConversionResets: This adds a reset schedule for the conversion rate. If a reset feature is defined, ConversionRatio values can
+      only be defined up to the valuation date, but changes later than valuation date are not allowed: From the valuation date onwards,
+      the future conversion ratios are determined by the resets. The startDate attribute can be used to define references, thresholds,
+      gearings, floors, global floors. Optional.
   \begin{itemize}
   \item ScheduleData: The conversion reset dates. \\
       Allowable values: see \ref{ss:schedule_data}.

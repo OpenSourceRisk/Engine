@@ -1014,6 +1014,9 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setSensiDecomposition(parseBool(tmp));
 
+        tmp = params_->get("sensitivity", "outputPrecision", false);
+        if (tmp != "")
+            setSensiOutputPrecision(parseInteger(tmp));
     }
 
     /************
@@ -3014,77 +3017,77 @@ void OREAppInputParameters::loadParameters() {
 
      tmp = params_->get("zeroToParSensiConversion", "active", false);
      if (!tmp.empty() && parseBool(tmp)) {
-         insertAnalytic("PARCONVERSION");
+        insertAnalytic("PARCONVERSION");
 
-         tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
-         if (tmp != "") {
-             setParConversionInputFile((inputPath_ / tmp).generic_string());
-         }
+        tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
+        if (tmp != "") {
+            setParConversionInputFile((inputPath_ / tmp).generic_string());
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
-         if (tmp != "") {
-             setParConversionInputIdColumn(tmp);
-         }
+        tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
+        if (tmp != "") {
+            setParConversionInputIdColumn(tmp);
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "riskFactorColumn", false);
-         if (tmp != "") {
-             setParConversionInputRiskFactorColumn(tmp);
-         }
+        tmp = params_->get("zeroToParSensiConversion", "riskFactorColumn", false);
+        if (tmp != "") {
+            setParConversionInputRiskFactorColumn(tmp);
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "deltaColumn", false);
-         if (tmp != "") {
-             setParConversionInputDeltaColumn(tmp);
-         }
+        tmp = params_->get("zeroToParSensiConversion", "deltaColumn", false);
+        if (tmp != "") {
+            setParConversionInputDeltaColumn(tmp);
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "currencyColumn", false);
-         if (tmp != "") {
-             setParConversionInputCurrencyColumn(tmp);
-         }
+        tmp = params_->get("zeroToParSensiConversion", "currencyColumn", false);
+        if (tmp != "") {
+            setParConversionInputCurrencyColumn(tmp);
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "baseNpvColumn", false);
-         if (tmp != "") {
-             setParConversionInputBaseNpvColumn(tmp);
-         }
+        tmp = params_->get("zeroToParSensiConversion", "baseNpvColumn", false);
+        if (tmp != "") {
+            setParConversionInputBaseNpvColumn(tmp);
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "shiftSizeColumn", false);
-         if (tmp != "") {
-             setParConversionInputShiftSizeColumn(tmp);
-         }
+        tmp = params_->get("zeroToParSensiConversion", "shiftSizeColumn", false);
+        if (tmp != "") {
+            setParConversionInputShiftSizeColumn(tmp);
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
-         if (tmp != "") {
-             string file = (inputPath_ / tmp).generic_string();
-             LOG("Loading par converions scenario sim market parameters from file" << file);
-             setParConversionSimMarketParamsFromFile(file);
-         } else {
-             WLOG("ScenarioSimMarket parameters for par conversion testing not loaded");
-         }
+        tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Loading par converions scenario sim market parameters from file" << file);
+            setParConversionSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for par conversion testing not loaded");
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
-         if (tmp != "") {
-             string file = (inputPath_ / tmp).generic_string();
-             LOG("Load par conversion scenario data from file" << file);
-             setParConversionScenarioDataFromFile(file);
-         } else {
-             WLOG("Par conversion scenario data not loaded");
-         }
+        tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Load par conversion scenario data from file" << file);
+            setParConversionScenarioDataFromFile(file);
+        } else {
+            WLOG("Par conversion scenario data not loaded");
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
-         if (tmp != "") {
-             string file = (inputPath_ / tmp).generic_string();
-             LOG("Load pricing engine data from file: " << file);
-             setParConversionPricingEngineFromFile(file);
-         } else {
-             WLOG("Pricing engine data not found for par conversion, using global");
-         }
+        tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Load pricing engine data from file: " << file);
+            setParConversionPricingEngineFromFile(file);
+        } else {
+            WLOG("Pricing engine data not found for par conversion, using global");
+        }
 
-         tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);
-         if (tmp != "")
-             setParConversionThreshold(parseReal(tmp));
+        tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);
+        if (tmp != "")
+            setParConversionThreshold(parseReal(tmp));
 
-         tmp = params_->get("zeroToParSensiConversion", "outputJacobi", false);
-         if (tmp != "")
-             setParConversionOutputJacobi(parseBool(tmp));
+        tmp = params_->get("zeroToParSensiConversion", "outputJacobi", false);
+        if (tmp != "")
+            setParConversionOutputJacobi(parseBool(tmp));
     } 
 
     tmp = params_->get("scenarioGeneration", "active", false);
