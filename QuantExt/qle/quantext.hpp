@@ -328,6 +328,7 @@
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/hwpiecewiseparametrization.hpp>
+#include <qle/models/hwpiecewisestatisticalparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infdkvectorised.hpp>
 #include <qle/models/infjyparameterization.hpp>
@@ -338,12 +339,12 @@
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 #include <qle/models/irmodel.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/kienitzlawsonswaynesabrpdedensity.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmbackwardsolver.hpp>
-#include <qle/models/lgmcalibrationinfo.hpp>
 #include <qle/models/lgmconvolutionsolver2.hpp>
 #include <qle/models/lgmfdsolver.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>

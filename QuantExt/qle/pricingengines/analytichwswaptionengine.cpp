@@ -141,10 +141,16 @@ void AnalyticHwSwaptionEngine::calculate() const {
         return DotProduct(tmp, tmp);
     };
 
-    SimpsonIntegral integrator(1E-10, 16);
-    Real optionExpiryTime = model_->parametrization()->termStructure()->timeFromReference(expiry);
+    std::set<double> pwTimes;
+    pwTimes.insert(model_->parametrization()->parameterTimes(0).begin(),
+                   model_->parametrization()->parameterTimes(0).end());
+    pwTimes.insert(model_->parametrization()->parameterTimes(1).begin(),
+                   model_->parametrization()->parameterTimes(1).end());
 
-    Real variance = integrator(integrand, 0.0, optionExpiryTime);
+    PiecewiseIntegral integrator(QuantLib::ext::make_shared<SimpsonIntegral>(1E-10, 16),
+                      std::vector<double>(pwTimes.begin(), pwTimes.end()));
+
+    Real variance = integrator(integrand, 0.0, model_->parametrization()->termStructure()->timeFromReference(expiry));
 
     // 7 calculate the swaption npv
 

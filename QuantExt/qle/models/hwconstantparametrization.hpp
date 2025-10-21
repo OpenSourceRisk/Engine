@@ -36,12 +36,11 @@ public:
                               const QuantLib::Matrix& sigma, const QuantLib::Array& kappa,
                               const std::string& name = std::string());
 
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
     QuantLib::Matrix sigma_x(const QuantLib::Time t) const override;
     QuantLib::Array kappa(const QuantLib::Time t) const override;
     QuantLib::Matrix y(const QuantLib::Time t) const override;
     QuantLib::Array g(const QuantLib::Time t, const QuantLib::Time T) const override;
-
-    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
 
 private:
     static constexpr QuantLib::Real zeroKappaCutoff_ = 1.0E-6;
