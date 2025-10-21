@@ -27,6 +27,7 @@
 
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
+#include <qle/models/irmodel.hpp>
 
 #include <ql/models/calibrationhelper.hpp>
 
