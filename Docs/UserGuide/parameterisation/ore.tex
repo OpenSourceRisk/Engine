@@ -185,7 +185,7 @@ The {\tt Analytics} section lists all permissible analytics using tags {\tt <Ana
 type can be (so far) in
 \begin{itemize}
 \item NPV, Cashflows, Curves
-\item Exposure Simulation, Model Calibration, Scenario Statistics
+\item Exposure Simulation, Model Calibration, Scenario Generation
 \item Value Adjustments (xVA)
 \item Sensitivity, Stress
 \item Value at Risk
@@ -471,16 +471,16 @@ memory for further processing e.g. via ORE's Python interface.
 
 See {\tt Example\_8} for a demonstration.
 
-\subsubsection{Scenario Statistics}
+\subsubsection{Scenario Generation}
 
-The {\tt scenarioStatistics} 'analytics' provide the statistics and distribution of the scenarios generated through simulation. Listing \ref{lst:ore_scenarioStatistics}
+The {\tt scenarioGeneration} 'analytics' generates scenarios and provides the statistics and distribution of the scenarios generated. Listing \ref{lst:ore_scenarioGneration}
 shows a typical configuration for sensitivity calculation.
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Analytics>
-  <Analytic type="scenarioStatistics">
+  <Analytic type="scenarioGeneration">
 	<Parameter name="active">Y</Parameter>
 	<Parameter name="simulationConfigFile">simulation.xml</Parameter>
 	<Parameter name="distributionBuckets">20</Parameter>
@@ -489,8 +489,8 @@ shows a typical configuration for sensitivity calculation.
   </Analytic>
 </Analytics>
 \end{minted}
-\caption{ORE analytic: scenarioStatistics}
-\label{lst:ore_scenarioStatistics}
+\caption{ORE analytic: scenarioGeneration}
+\label{lst:ore_scenarioGeneration}
 \end{listing}
 
 The parameters have the following interpretation:
