@@ -385,7 +385,8 @@ builders when setting up a leg. We note that they are not used in the AMC pricin
 configuration does not matter really:
 
 \begin{enumerate}
-\item \verb+CappedFlooredIborLeg+
+\item \verb+CapFlooredIborLeg+
+\item \verb+CapFlooredInterpolatedIborLeg+
 \item \verb+CMS+  
 \end{enumerate}
 
@@ -644,7 +645,8 @@ take three parameters
 \item the date grid used within the AMC valuation engine
 \end{enumerate}
 
-For technical reasons, the configuration also contains configurations for \\ \verb+CapFlooredIborLeg+ and \verb+CMS+
+For technical reasons, the configuration also contains configurations for \\ \verb+CapFlooredIborLeg+,
+\verb+CapFlooredInterpolatedIborLeg+ and \verb+CMS+
 because those are used within the trade builders (more precisely the leg builders called from these) to build the
 trade. The configuration can be the same as for T0 pricing for them, it is actually not used by the AMC pricing engines.
 

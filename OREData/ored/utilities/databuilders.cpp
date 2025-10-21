@@ -513,6 +513,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(DiscountingForwardBondEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityDoubleTouchOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredIborLegEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CapFlooredInterpolatedIborLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTsrDurationAdjustedCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaBucketingCdoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaMonteCarloCdoEngineBuilder, false)
