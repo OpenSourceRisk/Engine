@@ -20,6 +20,7 @@
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
