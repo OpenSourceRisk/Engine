@@ -120,6 +120,7 @@
         <Quote>CDS/PRICE/8B69AP/SNRFOR/USD/CR/*/100</Quote>
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+      <RunningSpread>0.01</RunningSpread>
     </DefaultCurve>
   </DefaultCurves>
 </CurveConfiguration>
