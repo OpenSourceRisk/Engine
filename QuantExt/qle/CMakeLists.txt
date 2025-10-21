@@ -226,7 +226,7 @@ models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
 models/kienitzlawsonswaynesabrpdedensity.cpp
 models/lgm.cpp
-models/lgmcalibrationinfo.cpp
+models/irmodelcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
 models/lgmfdsolver.cpp
 models/lgmimplieddefaulttermstructure.cpp
@@ -769,9 +769,10 @@ models/gaussianlhplossmodel.hpp
 models/homogeneouspooldef.hpp
 models/hullwhitebucketing.hpp
 models/hwconstantparametrization.hpp
-models/hwpiecewiseparametrization.hpp
 models/hwmodel.hpp
 models/hwparametrization.hpp
+models/hwpiecewiseparametrization.hpp
+models/hwpiecewisestatisticalparametrization.hpp
 models/infdkparametrization.hpp
 models/infdkvectorised.hpp
 models/infjyparameterization.hpp
@@ -787,7 +788,7 @@ models/jyimpliedzeroinflationtermstructure.hpp
 models/kienitzlawsonswaynesabrpdedensity.hpp
 models/lgm.hpp
 models/lgmbackwardsolver.hpp
-models/lgmcalibrationinfo.hpp
+models/irmodelcalibrationinfo.hpp
 models/lgmconvolutionsolver2.hpp
 models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
