@@ -394,7 +394,7 @@
       </xs:complexType>
     </xs:element>
     <!-- FIXME: comma delimited list -->
-    <xs:element type="volatilityParameter" name="PCASigma0"/>
+    <xs:element type="volatilityParameter" name="PCASigma0" minOccurs="0"/>
     <xs:element type="xs:string" name="PCASigmaRatios" minOccurs="0"/>
     <!-- FIXME: comma delimited list -->
     <xs:element name="CalibrationSwaptions" maxOccurs="1" minOccurs="0">
@@ -413,7 +413,6 @@
   <xs:attribute type="currencyCodeWithDefault" name="ccy"/>
   <!-- FIXME: currency not ccy -->
   <xs:attribute type="xs:string" name="index"/>
-  <!-- FIXME: currency not ccy -->
   </xs:complexType>
   
   <xs:complexType name="volatilityParameter">
