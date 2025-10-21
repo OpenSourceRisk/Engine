@@ -18,9 +18,6 @@
 
 #include <qle/models/irmodelcalibrationinfo.hpp>
 
-#include <ql/math/matrix.hpp>
-#include <ql/math/array.hpp>
-
 namespace QuantExt {
 
 using namespace QuantLib;

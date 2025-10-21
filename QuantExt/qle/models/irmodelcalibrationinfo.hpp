@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ql/math/array.hpp>
+#include <ql/math/matrix.hpp>
 #include <ql/types.hpp>
 #include <ql/utilities/null.hpp>
 
@@ -32,6 +34,7 @@
 #include <vector>
 
 namespace QuantExt {
+
 using namespace QuantLib;
 
 // shared
