@@ -40,12 +40,13 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                        const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
                        const std::string& id, BlackCalibrationHelper::CalibrationErrorType calibrationErrorType,
-                       const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks)
+                       const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks,
+                       const bool dontCalibrate)
     : IrModelBuilder(market, data, data->optionExpiries(), data->optionTerms(), data->optionStrikes(), configuration,
                      bootstrapTolerance, continueOnError, referenceCalibrationGrid, calibrationErrorType,
                      allowChangingFallbacksUnderScenarios, allowModelFallbacks,
                      (data->calibrateA() || data->calibrateH()) && data->calibrationType() != CalibrationType::None,
-                     "LGM", id),
+                     dontCalibrate, "LGM", id),
       setCalibrationInfo_(setCalibrationInfo) {}
 
 void LgmBuilder::initParametrization() const {

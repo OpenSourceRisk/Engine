@@ -110,25 +110,25 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
 namespace ore {
 namespace data {
 
-IrModelBuilder::IrModelBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-                               const QuantLib::ext::shared_ptr<IrModelData>& data,
-                               const std::vector<std::string>& optionExpiries,
-                               const std::vector<std::string>& optionTerms,
-                               const std::vector<std::string>& optionStrikes, const std::string& configuration,
-                               const Real bootstrapTolerance, const bool continueOnError,
-                               const std::string& referenceCalibrationGrid,
-                               BlackCalibrationHelper::CalibrationErrorType calibrationErrorType,
-                               const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks,
-                               const bool requiresCalibration, const std::string& modelLabel, const std::string& id)
+IrModelBuilder::IrModelBuilder(
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrModelData>& data,
+    const std::vector<std::string>& optionExpiries, const std::vector<std::string>& optionTerms,
+    const std::vector<std::string>& optionStrikes, const std::string& configuration, const Real bootstrapTolerance,
+    const bool continueOnError, const std::string& referenceCalibrationGrid,
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType, const bool allowChangingFallbacksUnderScenarios,
+    const bool allowModelFallbacks, const bool requiresCalibration, const bool dontCalibrate,
+    const std::string& modelLabel, const std::string& id)
     : market_(market), configuration_(configuration), data_(data), optionExpiries_(optionExpiries),
       optionTerms_(optionTerms), optionStrikes_(optionStrikes), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
       calibrationErrorType_(calibrationErrorType),
       allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios),
-      allowModelFallbacks_(allowModelFallbacks), requiresCalibration_(requiresCalibration), modelLabel_(modelLabel),
-      id_(id),
+      allowModelFallbacks_(allowModelFallbacks), requiresCalibration_(requiresCalibration),
+      dontCalibrate_(dontCalibrate), modelLabel_(modelLabel), id_(id),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
+
+    LOG("IrModelBuilder called.");
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
@@ -246,7 +246,7 @@ void IrModelBuilder::newCalcWithoutRecalibration() const {
 }
 
 bool IrModelBuilder::requiresRecalibration() const {
-    return requiresCalibration_ &&
+    return requiresCalibration_ && !dontCalibrate_ &&
            (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_) &&
            !suspendCalibration_;
 }
@@ -259,7 +259,7 @@ void IrModelBuilder::performCalculations() const {
     initParametrization();
 
     if (!requiresRecalibration()) {
-        DLOG("Skipping calibration as nothing has changed");
+        DLOG("Skipping calibration as nothing has changed or calibration is not required.");
         return;
     }
 

@@ -39,13 +39,14 @@ HwBuilder::HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                      const std::string& configuration, Real bootstrapTolerance, const bool continueOnError,
                      const std::string& referenceCalibrationGrid, const bool setCalibrationInfo, const std::string& id,
                      BlackCalibrationHelper::CalibrationErrorType calibrationErrorType,
-                     const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks)
+                     const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks,
+                     const bool dontCalibrate)
     : IrModelBuilder(market, data, data->optionExpiries(), data->optionTerms(), data->optionStrikes(), configuration,
                      bootstrapTolerance, continueOnError, referenceCalibrationGrid, calibrationErrorType,
                      allowChangingFallbacksUnderScenarios, allowModelFallbacks,
                      (data->calibrateSigma() || data->calibrateKappa()) &&
                          data->calibrationType() != CalibrationType::None,
-                     "HW", "HW"),
+                     dontCalibrate, "HW", "HW"),
       setCalibrationInfo_(setCalibrationInfo), measure_(measure), discretization_(discretization),
       evaluateBankAccount_(evaluateBankAccount) {}
 

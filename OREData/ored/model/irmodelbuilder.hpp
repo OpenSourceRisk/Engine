@@ -63,8 +63,8 @@ public:
         const std::string& referenceCalibrationGrid = "",
         BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
         const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false,
-        const bool requiresCalibration = true, const std::string& modelLabel = "unknown",
-        const std::string& id = "unknown");
+        const bool requiresCalibration = true, const bool dontCalibrate = false,
+        const std::string& modelLabel = "unknown", const std::string& id = "unknown");
 
     //! Return calibration error
     Real error() const;
@@ -122,7 +122,8 @@ protected:
     bool allowChangingFallbacksUnderScenarios_;
 
     bool allowModelFallbacks_ = false;
-    bool requiresCalibration_ = false;
+    bool requiresCalibration_ = true;
+    bool dontCalibrate_ = false;
     std::string modelLabel_;
     std::string id_;
 

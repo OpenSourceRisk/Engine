@@ -40,7 +40,8 @@ public:
         const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
         const bool setCalibrationInfo = false, const std::string& id = "unknown",
         BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
-        const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false);
+        const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false,
+        const bool dontCalibrate = false);
 
 private:
     void initParametrization() const override;
