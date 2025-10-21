@@ -9,6 +9,8 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 ls
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 
+pip install setuptools
+
 CURRENT_DIR=$(pwd)
 
 #echo "XYZ BEGIN unpack eigen"

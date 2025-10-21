@@ -39,7 +39,11 @@ if (TARGET Eigen3::Eigen)
 endif()
 
 if (ORE_PYTHON_INTEGRATION)
-    find_package(Python COMPONENTS Interpreter Development)
+    if(UNIX AND NOT APPLE)
+        find_package(Python COMPONENTS Interpreter Development.Module)
+    else()
+        find_package(Python COMPONENTS Interpreter Development)
+    endif()
     include_directories(${Python_INCLUDE_DIRS})
 endif()
 

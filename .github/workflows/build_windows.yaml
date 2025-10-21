@@ -44,27 +44,6 @@ jobs:
             boost-lib: 64
             python-wheel: "cp313"
             python-version: "3.13"
-          #pypy python versions
-          - arch: AMD64
-            platform: x64
-            boost-lib: 64
-            python-wheel: "pp38"
-            python-version: "pypy3.8"
-          - arch: AMD64
-            platform: x64
-            boost-lib: 64
-            python-wheel: "pp39"
-            python-version: "pypy3.9"
-          - arch: AMD64
-            platform: x64
-            boost-lib: 64
-            python-wheel: "pp310"
-            python-version: "pypy3.10"
-          - arch: AMD64
-            platform: x64
-            boost-lib: 64
-            python-wheel: "pp311"
-            python-version: "pypy3.11"
 
     steps:
     - uses: actions/checkout@v4
