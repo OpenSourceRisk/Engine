@@ -1629,5 +1629,30 @@ std::string removeAfterLastDelimiter(const std::string& source, const std::strin
     return source.substr(0, pos);
 }
 
+ParConversionMatrixRegularisation parseParConversionMatrixRegularisation(const std::string& s) {
+    if (s == "Silent") {
+        return ParConversionMatrixRegularisation::Silent;
+    } else if (s == "Warning") {
+        return ParConversionMatrixRegularisation::Warning;
+    } else if (s == "Fail") {
+        return ParConversionMatrixRegularisation::Fail;
+    } else {
+        QL_FAIL("Invalid ParConversionMatrixRegularisation: " << s << ". Valid values are: Silent, Warning, Fail");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation regularisation) {
+    if (regularisation == ParConversionMatrixRegularisation::Silent) {
+        os << "Silent";
+    } else if (regularisation == ParConversionMatrixRegularisation::Warning) {
+        os << "Warning";
+    } else if (regularisation == ParConversionMatrixRegularisation::Fail) {
+        os << "Fail";
+    } else {
+        QL_FAIL("Unknown ParConversionMatrixRegularisation");
+    }
+    return os;
+}
+
 } // namespace data
 } // namespace ore

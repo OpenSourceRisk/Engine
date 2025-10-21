@@ -647,6 +647,25 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type);
 //! parse integration policy
 QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s);
 
+//! Enum to control behavior when small diagonal elements are encountered in par conversion matrix
+enum class ParConversionMatrixRegularisation {
+    Silent,        //!< Set small diagonal elements to 0.01 without warnings (default behavior)
+    Warning,       //!< Set small diagonal elements to 0.01 but issue structured warnings, calculation continues
+    Fail           //!< Issue structured errors and fail the calculation when small diagonal elements are encountered
+};
+
+//! Convert text to ParConversionMatrixRegularisation
+/*!
+\ingroup utilities
+*/
+ParConversionMatrixRegularisation parseParConversionMatrixRegularisation(const std::string& s);
+
+//! Write ParConversionMatrixRegularisation
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation regularisation);
+
 std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
 
 std::string splitByLastDelimiter(const std::string& s, const std::string& delimeter);
