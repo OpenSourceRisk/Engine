@@ -32,6 +32,7 @@
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/irmodelcalibrationinfo.hpp>
+#include <qle/models/hwparametrization.hpp>
 
 #include <ql/models/calibrationhelper.hpp>
 
