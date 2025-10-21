@@ -26,7 +26,7 @@
 #include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/irmodelbuilder.hpp>
 
-#include <qle/models/lgm.hpp>
+#include <qle/models/hwmodel.hpp>
 
 namespace ore {
 namespace data {
