@@ -619,7 +619,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Silent"/>
       <xs:enumeration value="Warning"/>
-      <xs:enumeration value="Fail"/>
+      <xs:enumeration value="Disable"/>
     </xs:restriction>
   </xs:simpleType>
 

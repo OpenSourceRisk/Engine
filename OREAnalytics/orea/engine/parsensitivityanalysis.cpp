@@ -95,9 +95,7 @@ Real applyRegularisation(const ore::data::ParConversionMatrixRegularisation& reg
                          Real originalValue,
                          const std::string& elementType = "") {
     
-    static constexpr Real threshold = 0.01;
-    
-    if (std::abs(originalValue) >= threshold) {
+    if (std::abs(originalValue) >= ParSensitivityAnalysis::regularisationThreshold) {
         return originalValue; // No regularisation needed
     }
     
@@ -105,10 +103,10 @@ Real applyRegularisation(const ore::data::ParConversionMatrixRegularisation& reg
                          to_string(key) + " (got " + std::to_string(originalValue) + ")";
     
     if (regularisation == ore::data::ParConversionMatrixRegularisation::Silent) {
-        return threshold;
+        return ParSensitivityAnalysis::regularisationThreshold;
     } else if (regularisation == ore::data::ParConversionMatrixRegularisation::Warning) {
         WLOG("Setting diagonal " << elementType << " sensitivity " << riskFactor << " w.r.t. " << key 
-             << " to " << threshold << " (got " << originalValue << ")");
+             << " to " << ParSensitivityAnalysis::regularisationThreshold << " (got " << originalValue << ")");
         StructuredAnalyticsWarningMessage(
             "ParSensitivityAnalysis",
             "SmallDiagonal" + elementType + "Element",
@@ -116,21 +114,11 @@ Real applyRegularisation(const ore::data::ParConversionMatrixRegularisation& reg
             {{"RiskFactor", to_string(riskFactor)},
              {"Key", to_string(key)},
              {"OriginalValue", std::to_string(originalValue)},
-             {"CorrectedValue", std::to_string(threshold)}}
+             {"CorrectedValue", std::to_string(ParSensitivityAnalysis::regularisationThreshold)}}
         ).log();
-        return threshold;
-    } else if (regularisation == ore::data::ParConversionMatrixRegularisation::Fail) {
-        StructuredAnalyticsErrorMessage(
-            "ParSensitivityAnalysis",
-            "SmallDiagonal" + elementType + "ElementError",
-            message,
-            {{"RiskFactor", to_string(riskFactor)},
-             {"Key", to_string(key)},
-             {"Value", std::to_string(originalValue)},
-             {"Threshold", std::to_string(threshold)}}
-        ).log();
-        QL_FAIL("Small diagonal " << elementType << " element encountered in par conversion matrix: " << message 
-               << ". Threshold: " << threshold);
+        return ParSensitivityAnalysis::regularisationThreshold;
+    } else if (regularisation == ore::data::ParConversionMatrixRegularisation::Disable) {
+        return originalValue; // Use original value as-is, no regularisation
     } else {
         QL_FAIL("Unknown ParConversionMatrixRegularisation");
     }
@@ -892,6 +880,34 @@ ParSensitivityConverter::ParSensitivityConverter(const ParSensitivityAnalysis::P
                     }
                 }
             }
+        }
+        // Check for small diagonal entries that might benefit from regularisation
+        LOG("Checking for small diagonal entries...");
+        bool foundSmallDiagonal = false;
+        Size smallDiagonalCount = 0;
+        for (Size j = 0; j < jacobi_transp.size1(); ++j) {
+            Real diagonalValue = jacobi_transp(j, j);
+            if (std::abs(diagonalValue) < ParSensitivityAnalysis::regularisationThreshold) {
+                if (!foundSmallDiagonal) {
+                    foundSmallDiagonal = true;
+                    WLOG("Found small diagonal entries in Jacobi matrix (threshold = " 
+                         << ParSensitivityAnalysis::regularisationThreshold << "):");
+                }
+                WLOG("  diagonal[" << j << "] = " << diagonalValue);
+                smallDiagonalCount++;
+            }
+        }
+        if (foundSmallDiagonal) {
+            WLOG("Matrix inversion failed with " << smallDiagonalCount << " small diagonal entries. "
+                 << "Consider enabling regularisation by setting ParConversionMatrixRegularisation to 'Silent' or 'Warning' "
+                 << "to improve matrix conditioning and avoid inversion failures.");
+            StructuredAnalyticsWarningMessage("Par sensitivity conversion", 
+                                              "Transposed Jacobi matrix inversion failed",
+                                              "Matrix inversion failed with small diagonal entries detected. "
+                                              "Consider enabling regularisation to improve matrix conditioning.",
+                                              {{"SmallDiagonalCount", std::to_string(smallDiagonalCount)},
+                                               {"Threshold", std::to_string(ParSensitivityAnalysis::regularisationThreshold)}})
+                .log();
         }
         LOG("Extended matrix diagnostics done. Exiting application.");
         success = false;

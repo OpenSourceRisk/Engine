@@ -650,8 +650,8 @@ QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& 
 //! Enum to control behavior when small diagonal elements are encountered in par conversion matrix
 enum class ParConversionMatrixRegularisation {
     Silent,        //!< Set small diagonal elements to 0.01 without warnings (default behavior)
-    Warning,       //!< Set small diagonal elements to 0.01 but issue structured warnings, calculation continues
-    Fail           //!< Issue structured errors and fail the calculation when small diagonal elements are encountered
+    Warning,       //!< Set small diagonal elements to 0.01 but issue structured warnings
+    Disable        //!< Disable regularisation, use original diagonal elements as-is
 };
 
 //! Convert text to ParConversionMatrixRegularisation

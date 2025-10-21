@@ -1634,10 +1634,10 @@ ParConversionMatrixRegularisation parseParConversionMatrixRegularisation(const s
         return ParConversionMatrixRegularisation::Silent;
     } else if (s == "Warning") {
         return ParConversionMatrixRegularisation::Warning;
-    } else if (s == "Fail") {
-        return ParConversionMatrixRegularisation::Fail;
+    } else if (s == "Disable") {
+        return ParConversionMatrixRegularisation::Disable;
     } else {
-        QL_FAIL("Invalid ParConversionMatrixRegularisation: " << s << ". Valid values are: Silent, Warning, Fail");
+        QL_FAIL("Invalid ParConversionMatrixRegularisation: " << s << ". Valid values are: Silent, Warning, Disable");
     }
 }
 
@@ -1646,8 +1646,8 @@ std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation reg
         os << "Silent";
     } else if (regularisation == ParConversionMatrixRegularisation::Warning) {
         os << "Warning";
-    } else if (regularisation == ParConversionMatrixRegularisation::Fail) {
-        os << "Fail";
+    } else if (regularisation == ParConversionMatrixRegularisation::Disable) {
+        os << "Disable";
     } else {
         QL_FAIL("Unknown ParConversionMatrixRegularisation");
     }
