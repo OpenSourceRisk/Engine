@@ -23,6 +23,9 @@
 #pragma once
 
 #include <boost/lexical_cast.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/console.hpp>
 #include <boost/test/unit_test.hpp>
 #include <ored/utilities/log.hpp>
 
@@ -76,6 +79,11 @@ void setupTestLogging(int argc, char** argv) {
             ore::data::Log::instance().switchOn();
             ore::data::Log::instance().setMask(mask);
         }
+
+        // explicitly add a console log, we can disable StructuredLogging to console for tests that expected to fail
+        auto console_sink = boost::log::add_console_log(std::clog);
+        console_sink->set_filter(!boost::log::expressions::has_attr("NoConsole"));
+
     }
 }
 
