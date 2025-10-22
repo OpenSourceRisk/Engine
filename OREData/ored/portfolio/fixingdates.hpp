@@ -70,6 +70,7 @@ class CommodityIndexedAverageCashFlow;
 class CommodityIndexedCashFlow;
 class EquityMarginCoupon;
 class TRSCashFlow;
+class InterpolatedIborCoupon;
 } // namespace QuantExt
 
 namespace ore {
@@ -270,7 +271,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::EquityMarginCoupon>,
                          public QuantLib::Visitor<QuantExt::CommodityCashFlow>,
                          public QuantLib::Visitor<QuantExt::BondTRSCashFlow>,
-                         public QuantLib::Visitor<QuantExt::TRSCashFlow> {
+                         public QuantLib::Visitor<QuantExt::TRSCashFlow>,
+                         public QuantLib::Visitor<QuantExt::InterpolatedIborCoupon> {
 
 public:
     //! Constructor
@@ -312,6 +314,7 @@ public:
     void visit(QuantExt::CommodityCashFlow& c) override;
     void visit(QuantExt::BondTRSCashFlow& c) override;
     void visit(QuantExt::TRSCashFlow& c) override;
+    void visit(QuantExt::InterpolatedIborCoupon& c) override;
     //@}
         
     void setRequireFixingStartDates(const bool b) { requireFixingStartDates_ = b; }

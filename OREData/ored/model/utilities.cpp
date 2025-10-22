@@ -167,6 +167,46 @@ std::string getCalibrationDetails(LgmCalibrationInfo& info,
     return log.str();
 }
 
+std::string getCalibrationDetails(HwCalibrationInfo& info,
+                                  const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization) {
+    std::ostringstream log;
+    Real t = 0.0;
+    Matrix modelSigma;
+    Array modelKappa;
+    info.hwCalibrationData.clear();
+    for (Size j = 0; j < basket.size(); j++) {
+        Real modelValue = basket[j]->modelValue();
+        Real marketValue = basket[j]->marketValue();
+        Real valueDiff = modelValue - marketValue;
+        Volatility modelVol = 0, marketVol = 0, volDiff = 0;
+        QuantLib::ext::shared_ptr<SwaptionHelper> swaption =
+            QuantLib::ext::dynamic_pointer_cast<SwaptionHelper>(basket[j]);
+        if (swaption != nullptr && parametrization != nullptr) {
+            // report alpha, kappa at t_expiry^-
+            t = parametrization->termStructure()->timeFromReference(swaption->swaption()->exercise()->date(0));
+            modelSigma = parametrization->sigma_x(t - 1E-4);
+            modelKappa = parametrization->kappa(t - 1E-4);
+        }
+        marketVol = basket[j]->volatility()->value();
+        modelVol = impliedVolatility(basket[j]);
+        volDiff = modelVol - marketVol;
+        log << "#" << j << ", t=" << std::setprecision(6) << t << ", modelVol = " << modelVol
+            << ", marketVol = " << marketVol << ", volDiff = " << volDiff << "\n";
+        log << "      modelValue = " << modelValue << ", marketValue = " << marketValue << ", valueDiff = " << valueDiff << "\n";
+        log << "modelkappa = " << modelKappa << ", modelSigma =\n" << modelSigma << "\n";
+        info.hwCalibrationData.push_back(
+            HwCalibrationData{t, modelVol, marketVol, modelValue, marketValue, modelSigma, modelKappa});
+    }
+    if (parametrization != nullptr) {
+        // report alpha, kappa at t_expiry^+ for last expiry
+        modelSigma = parametrization->sigma_x(t + 1E-4);
+        modelKappa = parametrization->kappa(t + 1E-4);
+    }
+    log << "t >= " << t << ": kappa = " << modelKappa << ", sigma = \n" << modelSigma << "\n";
+    return log.str();
+}
+
 std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization,
                                   const QuantLib::ext::shared_ptr<Parametrization>& domesticIrModel) {

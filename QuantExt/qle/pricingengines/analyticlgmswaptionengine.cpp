@@ -33,8 +33,8 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->parametrization()),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping), x0_(x0),
-      caching_(false) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      x0_(x0) {
     registerWith(model);
     registerWith(c_);
 }
@@ -43,8 +43,8 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared
                                                      const Size ccy, const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->irlgm1f(ccy)),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping), x0_(x0),
-      caching_(false) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      x0_(x0) {
     registerWith(model);
     registerWith(c_);
 }
@@ -53,8 +53,8 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const QuantLib::ext::shared
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping, const Real x0)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping), x0_(x0),
-      caching_(false) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      x0_(x0) {
     registerWith(c_);
 }
 

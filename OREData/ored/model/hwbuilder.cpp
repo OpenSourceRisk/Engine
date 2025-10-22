@@ -18,20 +18,13 @@
 
 #include <ored/model/hwbuilder.hpp>
 #include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
-#include <ored/utilities/dategrid.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/strike.hpp>
 
 #include <qle/models/hwconstantparametrization.hpp>
-#include <qle/models/marketobserver.hpp>
-
-#include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <ql/quotes/simplequote.hpp>
+#include <qle/models/hwpiecewisestatisticalparametrization.hpp>
+#include <qle/pricingengines/analytichwswaptionengine.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -40,163 +33,178 @@ using namespace std;
 namespace ore {
 namespace data {
 
-HwBuilder::HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<HwModelData>& data,
-                     const IrModel::Measure measure, const HwModel::Discretization discretization,
-                     const bool evaluateBankAccount, const std::string& configuration, const Real bootstrapTolerance,
-                     const bool continueOnError, const std::string& referenceCalibrationGrid,
-                     const bool setCalibrationInfo)
-    : market_(market), configuration_(configuration), data_(data), measure_(measure), discretization_(discretization),
-      /*bootstrapTolerance_(bootstrapTolerance), continueOnError_(continueOnError),*/
-      referenceCalibrationGrid_(referenceCalibrationGrid), /*setCalibrationInfo_(setCalibrationInfo),*/
-      optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
-      endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8))
-      /*,calibrationErrorType_(BlackCalibrationHelper::RelativePriceError)*/ {
+HwBuilder::HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                     const QuantLib::ext::shared_ptr<HwModelData>& data, const IrModel::Measure measure,
+                     const HwModel::Discretization discretization, const bool evaluateBankAccount,
+                     const std::string& configuration, Real bootstrapTolerance, const bool continueOnError,
+                     const std::string& referenceCalibrationGrid, const bool setCalibrationInfo, const std::string& id,
+                     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType,
+                     const bool allowChangingFallbacksUnderScenarios, const bool allowModelFallbacks,
+                     const bool dontCalibrate)
+    : IrModelBuilder(market, data, data->optionExpiries(), data->optionTerms(), data->optionStrikes(), configuration,
+                     bootstrapTolerance, continueOnError, referenceCalibrationGrid, calibrationErrorType,
+                     allowChangingFallbacksUnderScenarios, allowModelFallbacks,
+                     (data->calibrateSigma() || data->calibrateKappa()) &&
+                         data->calibrationType() != CalibrationType::None,
+                     dontCalibrate, "HW", "HW"),
+      setCalibrationInfo_(setCalibrationInfo), measure_(measure), discretization_(discretization),
+      evaluateBankAccount_(evaluateBankAccount) {}
 
-    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
-    string qualifier = data_->qualifier();
-    currency_ = qualifier;
-    QuantLib::ext::shared_ptr<IborIndex> index;
-    if (tryParseIborIndex(qualifier, index)) {
-        currency_ = index->currency().code();
-    }
-    LOG("HwCalibration for qualifier " << qualifier << " (ccy=" << currency_ << "), configuration is "
-                                       << configuration_);
+void HwBuilder::initParametrization() const {
+
+    if (parametrizationInitialized_)
+        return;
+
+    auto hwData = QuantLib::ext::dynamic_pointer_cast<HwModelData>(data_);
+
     Currency ccy = parseCurrency(currency_);
 
-    requiresCalibration_ =
-        (data_->calibrateSigma() || data_->calibrateKappa()) && data_->calibrationType() != CalibrationType::None;
+    if (hwData->calibrationType() == CalibrationType::StatisticalWithRiskNeutralVolatility) {
 
-    QL_REQUIRE(!requiresCalibration_, "HwBuilder: HwModel does not support calibration at the moment.");
+        DLOG("HwBuilder: building a HwPiecewiseStatisticalParametrization.");
 
-    // the discount curve underlying the model might be relinked to a different curve outside this builder
-    // the calibration curve should always stay the same though, therefore we create a different handle for this
-    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(currency_, configuration_));
-    calibrationDiscountCurve_ = Handle<YieldTermStructure>(*modelDiscountCurve_);
+        std::vector<QuantLib::Array> loadings;
+        for (auto const& l : hwData->pcaLoadings())
+            loadings.push_back(Array(l.begin(), l.end()));
 
-    if (requiresCalibration_) {
-        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
-        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
-        shortSwapIndex_ =
-            market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
-        registerWith(svts_);
-        marketObserver_->addObservable(swapIndex_->forwardingTermStructure());
-        marketObserver_->addObservable(swapIndex_->discountingTermStructure());
-        marketObserver_->addObservable(shortSwapIndex_->forwardingTermStructure());
-        marketObserver_->addObservable(shortSwapIndex_->discountingTermStructure());
-    }
-    marketObserver_->addObservable(calibrationDiscountCurve_);
-    registerWith(marketObserver_);
-    // notify observers of all market data changes, not only when not calculated
-    alwaysForwardNotifications();
+        Array times, values;
 
-    swaptionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
+        if (hwData->calibratePcaSigma0()) {
 
-    if (requiresCalibration_) {
-        // buildSwaptionBasket();
-    }
+            // if we calibrate, we overwrite the times with swaption times and use the front initial value as a guess
 
-    Array sigmaTimes(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
-    Array kappaTimes(data_->kappaTimes().begin(), data_->kappaTimes().end());
-    std::vector<Matrix> sigma(data_->sigmaValues().begin(), data_->sigmaValues().end());
-    std::vector<Array> kappa(data_->kappaValues().begin(), data_->kappaValues().end());
+            times = Array(swaptionExpiries_.begin(), std::next(swaptionExpiries_.end(), -1));
+            values = Array(times.size() + 1, hwData->pcaSigma0Values().front());
 
-    QL_REQUIRE(data_->sigmaType() == ParamType::Constant,
-               "HwBuilder: only constant sigma is supported at the moment");
-    QL_REQUIRE(data_->kappaType() == ParamType::Constant,
-               "HwBuilder: only constant sigma is supported at the moment");
-
-    if (data_->sigmaType() == ParamType::Constant) {
-        QL_REQUIRE(data_->sigmaTimes().size() == 0,
-                   "HwBuilder: empty volatility time grid expected for constant parameter type");
-        QL_REQUIRE(data_->sigmaValues().size() == 1,
-                   "HwBuilder: initial volatility values should have size 1 for constant parameter type");
-    } else if (data_->sigmaType() == ParamType::Piecewise) {
-        if (data_->calibrateSigma() && data_->calibrationType() == CalibrationType::Bootstrap) {
-            if (data_->sigmaTimes().size() > 0) {
-                DLOG("overriding alpha time grid with swaption expiries, set all initial values to first given value");
-            }
-            QL_REQUIRE(swaptionExpiries_.size() > 0, "empty swaptionExpiries");
-            sigmaTimes = Array(swaptionExpiries_.begin(), swaptionExpiries_.end() - 1);
-            sigma = std::vector<Matrix>(sigmaTimes.size() + 1, data_->sigmaValues()[0]);
         } else {
-            QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1,
-                       "HwBBuilder: hw volatility time and initial value array sizes do not match");
+
+            // if we don't calibrate, we use the times and values from the parametrization
+
+            times = Array(hwData->pcaSigma0Times().begin(), hwData->pcaSigma0Times().end());
+            values = Array(hwData->pcaSigma0Values().begin(), hwData->pcaSigma0Values().end());
+        }
+
+        parametrization_ = QuantLib::ext::make_shared<IrHwPiecewiseStatisticalParametrization>(
+            ccy, modelDiscountCurve_, Array(times.begin(), times.end()),
+            Array(hwData->pcaSigma0Values().begin(), hwData->pcaSigma0Values().end()), hwData->kappaValues().front(),
+            Array(hwData->pcaSigmaRatios().begin(), hwData->pcaSigmaRatios().end()), loadings);
+
+    } else {
+
+        DLOG("HwBuilder: building a HwPiecewiseParametrization.");
+
+        QL_REQUIRE(hwData->sigmaTimes() == hwData->kappaTimes() || hwData->kappaTimes().empty(),
+                   "HwBuilder: sigma and kapp time grid must be identical or kappa must be constant");
+
+        Array times(hwData->sigmaTimes().begin(), hwData->sigmaTimes().end());
+
+        std::vector<Matrix> sigma(hwData->sigmaValues().begin(), hwData->sigmaValues().end());
+        std::vector<Array> kappa(hwData->kappaValues().begin(), hwData->kappaValues().end());
+
+        sigma.resize(times.size() + 1, sigma.back());
+        kappa.resize(times.size() + 1, kappa.back());
+
+        QL_REQUIRE(!hwData->calibrateSigma(), "HwBuilder: calibration of sigma is not supported.");
+        QL_REQUIRE(!hwData->calibrateKappa(), "HwBuilder: calibration of kappa is not supported.");
+
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::IrHwPiecewiseParametrization>(ccy, modelDiscountCurve_,
+                                                                                              times, sigma, kappa);
+    }
+
+    model_ = QuantLib::ext::make_shared<QuantExt::HwModel>(
+        QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(parametrization_), measure_, discretization_,
+        evaluateBankAccount_);
+    params_ = model_->params();
+    parametrizationInitialized_ = true;
+
+} // initiParametrization()
+
+void HwBuilder::calibrate() const {
+
+    auto hwData = QuantLib::ext::dynamic_pointer_cast<HwModelData>(data_);
+    auto hwModel = QuantLib::ext::dynamic_pointer_cast<HwModel>(model_);
+    auto hwParametrization = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(parametrization_);
+
+    // call into the actual calibration routines
+    HwCalibrationInfo calibrationInfo;
+    error_ = QL_MAX_REAL;
+    std::string errorTemplate =
+        std::string("Failed to calibrate HW Model. ") +
+        (continueOnError_ ? std::string("Calculation will proceed.") : std::string("Calculation will be aborted."));
+
+    try {
+
+        if (hwData->calibratePcaSigma0()) {
+
+            hwModel->calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+                swaptionBasket_, *optimizationMethod_, endCriteria_);
+
+            DLOG("HW " << hwData->qualifier() << " calibration errors:");
+            error_ = getCalibrationError(swaptionBasket_);
+        }
+
+    } catch (const std::exception& e) {
+        // just log a warning, we check below if we meet the bootstrap tolerance and handle the result there
+        StructuredModelErrorMessage(errorTemplate, e.what(), id_).log();
+    }
+
+    calibrationInfo.rmse = error_;
+    if (fabs(error_) < bootstrapTolerance_) {
+        // we check the log level here to avoid unnecessary computations
+        if (Log::instance().filter(ORE_DEBUG) || setCalibrationInfo_) {
+            DLOGGERSTREAM("Basket details:");
+            try {
+                auto d = getBasketDetails(calibrationInfo.swaptionData);
+                DLOGGERSTREAM(d);
+            } catch (const std::exception& e) {
+                WLOG("An error occurred: " << e.what());
+            }
+            DLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
+            try {
+                auto d = getCalibrationDetails(calibrationInfo, swaptionBasket_, hwParametrization);
+                DLOGGERSTREAM(d);
+            } catch (const std::exception& e) {
+                WLOG("An error occurred: " << e.what());
+            }
+            DLOGGERSTREAM("Parameter details (with parameter time grid)");
+            DLOGGERSTREAM(getCalibrationDetails(calibrationInfo, swaptionBasket_, hwParametrization))
+            DLOGGERSTREAM("rmse = " << error_);
+            calibrationInfo.valid = true;
         }
     } else {
-        QL_FAIL("HwBuilder: volatility parameter type not covered");
+        std::string exceptionMessage = "HullWhite (" + hwData->qualifier() + ") calibration target function value (" +
+                                       std::to_string(error_) + ") exceeds notification threshold (" +
+                                       std::to_string(bootstrapTolerance_) + ").";
+        StructuredModelWarningMessage(errorTemplate, exceptionMessage, id_).log();
+        WLOGGERSTREAM("Basket details:");
+        try {
+            auto d = getBasketDetails(calibrationInfo.swaptionData);
+            WLOGGERSTREAM(d);
+        } catch (const std::exception& e) {
+            WLOG("An error occurred: " << e.what());
+        }
+        WLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
+        try {
+            auto d = getCalibrationDetails(calibrationInfo, swaptionBasket_, hwParametrization);
+            WLOGGERSTREAM(d);
+        } catch (const std::exception& e) {
+            WLOG("An error occurred: " << e.what());
+        }
+        WLOGGERSTREAM("rmse = " << error_);
+        calibrationInfo.valid = true;
+        if (!continueOnError_) {
+            QL_FAIL(exceptionMessage);
+        }
     }
 
-    if (data_->kappaType() == ParamType::Constant) {
-        QL_REQUIRE(data_->kappaTimes().size() == 0,
-                   "HwBuilder: empty reversion time grid expected for constant parameter type");
-        QL_REQUIRE(data_->kappaValues().size() == 1,
-                   "HwBuidler: initial reversion values should have size 1 for constant parameter type");
-    } else if (data_->kappaType() == ParamType::Piecewise) {
-        if (data_->calibrateKappa() && data_->calibrationType() == CalibrationType::Bootstrap) {
-            if (data_->kappaTimes().size() > 0) {
-                DLOG("overriding h time grid with swaption underlying maturities, set all initial values to first "
-                     "given value");
-            }
-            kappaTimes = swaptionMaturities_;
-            kappa = std::vector<Array>(kappaTimes.size() + 1, data_->kappaValues()[0]);
-        } else { // use input time grid and input h array otherwise
-            QL_REQUIRE(kappa.size() == kappaTimes.size() + 1, "HwBuilder:: hw kappa grids do not match");
-        }
-    } else
-        QL_FAIL("HwBuilder: reversion parameter type case not covered");
+    hwModel->setCalibrationInfo(calibrationInfo);
 
-    DLOGGERSTREAM("before calibration: sigma times = " << sigmaTimes);
-    DLOGGERSTREAM("before calibration: kappa times = " << kappaTimes);
+} // calibrate()
 
-    parametrization_ =
-        QuantLib::ext::make_shared<QuantExt::IrHwConstantParametrization>(ccy, modelDiscountCurve_, sigma[0], kappa[0]);
-
-    DLOG("alpha times size: " << sigmaTimes.size());
-    DLOG("lambda times size: " << kappaTimes.size());
-
-    model_ = QuantLib::ext::make_shared<QuantExt::HwModel>(parametrization_, measure_, discretization_, evaluateBankAccount_);
-    params_ = model_->params();
-}
-
-Real HwBuilder::error() const {
-    calculate();
-    return error_;
-}
-
-QuantLib::ext::shared_ptr<QuantExt::HwModel> HwBuilder::model() const {
-    calculate();
-    return model_;
-}
-
-QuantLib::ext::shared_ptr<QuantExt::IrHwParametrization> HwBuilder::parametrization() const {
-    calculate();
-    return parametrization_;
-}
-
-std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> HwBuilder::swaptionBasket() const {
-    calculate();
-    return swaptionBasket_;
-}
-
-bool HwBuilder::requiresRecalibration() const {
-    // TODO
-    // return requiresCalibration_ &&
-    //        (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
-    return false;
-}
-
-void HwBuilder::performCalculations() const {
-
-    DLOG("Recalibrate HW model for qualifier " << data_->qualifier() << " currency " << currency_);
-
-    // TODO...
-
-} // performCalculations()
-
-void HwBuilder::forceRecalculate() {
-    forceCalibration_ = true;
-    ModelBuilder::forceRecalculate();
-    forceCalibration_ = false;
+QuantLib::ext::shared_ptr<PricingEngine> HwBuilder::getPricingEngine() const {
+    auto hwModel = QuantLib::ext::dynamic_pointer_cast<HwModel>(model_);
+    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticHwSwaptionEngine>(hwModel, calibrationDiscountCurve_);
+    return engine;
 }
 
 } // namespace data
