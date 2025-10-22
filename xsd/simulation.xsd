@@ -200,7 +200,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="InstantaneousCorrelations">
+      <xs:element name="InstantaneousCorrelations" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="Correlation" maxOccurs="unbounded" minOccurs="0">

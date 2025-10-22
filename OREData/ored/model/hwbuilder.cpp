@@ -44,7 +44,7 @@ HwBuilder::HwBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
     : IrModelBuilder(market, data, data->optionExpiries(), data->optionTerms(), data->optionStrikes(), configuration,
                      bootstrapTolerance, continueOnError, referenceCalibrationGrid, calibrationErrorType,
                      allowChangingFallbacksUnderScenarios, allowModelFallbacks,
-                     (data->calibrateSigma() || data->calibrateKappa()) &&
+                     (data->calibrateSigma() || data->calibrateKappa() || data->calibratePcaSigma0()) &&
                          data->calibrationType() != CalibrationType::None,
                      dontCalibrate, "HW", "HW"),
       setCalibrationInfo_(setCalibrationInfo), measure_(measure), discretization_(discretization),
@@ -64,14 +64,19 @@ void HwBuilder::initParametrization() const {
         DLOG("HwBuilder: building a HwPiecewiseStatisticalParametrization.");
 
         std::vector<QuantLib::Array> loadings;
-        for (auto const& l : hwData->pcaLoadings())
+        for (auto const& l : hwData->pcaLoadings()) {
             loadings.push_back(Array(l.begin(), l.end()));
+        }
 
         Array times, values;
 
         if (hwData->calibratePcaSigma0()) {
 
             // if we calibrate, we overwrite the times with swaption times and use the front initial value as a guess
+
+            QL_REQUIRE(!swaptionExpiries_.empty(), "HwBuilder:: no calibrating swaption provided.");
+            QL_REQUIRE(!hwData->pcaSigma0Values().empty(),
+                       "HwBuilder:: no initial value for PCASigma0 provided. At least one is required.");
 
             times = Array(swaptionExpiries_.begin(), std::next(swaptionExpiries_.end(), -1));
             values = Array(times.size() + 1, hwData->pcaSigma0Values().front());
@@ -85,8 +90,8 @@ void HwBuilder::initParametrization() const {
         }
 
         parametrization_ = QuantLib::ext::make_shared<IrHwPiecewiseStatisticalParametrization>(
-            ccy, modelDiscountCurve_, Array(times.begin(), times.end()),
-            Array(hwData->pcaSigma0Values().begin(), hwData->pcaSigma0Values().end()), hwData->kappaValues().front(),
+            ccy, modelDiscountCurve_, times, values,
+            Array(hwData->kappaValues().front().begin(), hwData->kappaValues().front().end()),
             Array(hwData->pcaSigmaRatios().begin(), hwData->pcaSigmaRatios().end()), loadings);
 
     } else {
@@ -136,10 +141,13 @@ void HwBuilder::calibrate() const {
 
         if (hwData->calibratePcaSigma0()) {
 
+            boost::timer::cpu_timer timer;
+
             hwModel->calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
                 swaptionBasket_, *optimizationMethod_, endCriteria_);
 
-            DLOG("HW " << hwData->qualifier() << " calibration errors:");
+            DLOG("HwBuilder: Calibration for qualifier " << hwData->qualifier() << " done in "
+                                                         << timer.elapsed().wall / 1E6 << " ms. Calibration errors:");
             error_ = getCalibrationError(swaptionBasket_);
         }
 
