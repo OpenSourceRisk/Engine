@@ -210,6 +210,10 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     parConversionExcludeFixings_ = XMLUtils::getChildValue(node, "ParSensiRemoveFixing", false, ".*");
 
+    DLOG("Get par conversion matrix regularisation mode");
+    string parConversionMatrixRegularisationString = XMLUtils::getChildValue(node, "ParConversionMatrixRegularisation", false, "Silent");
+    parConversionMatrixRegularisation_ = ore::data::parseParConversionMatrixRegularisation(parConversionMatrixRegularisationString);
+
     DLOG("Get discount curve sensitivity parameters");
     XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
     if (discountCurves) {
@@ -679,6 +683,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
     if (parConversionExcludeFixings_ != ".*") {
         XMLUtils::addChild(doc, root, "ParSensiRemoveFixing", parConversionExcludeFixings_);
     }
+
+    XMLUtils::addChild(doc, root, "ParConversionMatrixRegularisation", ore::data::to_string(parConversionMatrixRegularisation_));
 
     if (!discountCurveShiftData_.empty()) {
         DLOG("toXML for DiscountCurves");
