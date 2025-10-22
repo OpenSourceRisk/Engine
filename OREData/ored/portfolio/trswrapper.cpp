@@ -250,7 +250,7 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
             } else {
                 // The start valuation date is <= today, we determine the start value from the initial price or a
                 // historical fixing
-                Date fxDate = arguments_.fxConversion_ != TRS::FXConversion::Start
+                Date fxDate = arguments_.fxConversion_ != TRS::FXConversion::End
                                   ? v0
                                   : (endDate == Null<Date>() ? today : endDate);
                 Real s0 = 0.0, fx0 = 1.0;
