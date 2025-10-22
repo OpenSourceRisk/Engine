@@ -49,6 +49,8 @@ CalibrationType parseCalibrationType(const string& s) {
         return CalibrationType::Bootstrap;
     else if (boost::algorithm::to_upper_copy(s) == "BESTFIT")
         return CalibrationType::BestFit;
+    else if (boost::algorithm::to_upper_copy(s) == "STATISTICALWITHRISKNEUTRALVOLATILITY")
+        return CalibrationType::StatisticalWithRiskNeutralVolatility;
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationType::None;
     else
