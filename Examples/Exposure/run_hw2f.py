@@ -31,6 +31,25 @@ oreex.decorate_plot(title="Model implied principal components vs. input principa
                     y_format_as_int = False, display_grid = True, legend_loc = "best")
 oreex.save_plot_to_file()
 
+# same as before, but with calibration to coterminal swaptions
+
+oreex.print_headline("Run ORE to produce scenariodump.csv (risk neutral volatility)")
+oreex.run("Input/ore_hw2f_calibration_rn.xml")
+
+oreex.print_headline("Run python script to perform PCA on scenariodump data (risk neutral volatility)")
+pca.run_pca('hw2f_calibration_rn')
+
+oreex.print_headline("Plot results: Eigenvectors")
+
+oreex.setup_plot("hw2f_eigenvectors_rn")
+oreex.plot("hw2f_calibration_rn/eigenvectors.csv", 0, 1, 'b', "Model Eigenvector 1")
+oreex.plot("hw2f_calibration_rn/eigenvectors.csv", 0, 2, 'r', "Model Eigenvector 2")
+oreex.plot("../Input/inputeigenvectors_hw2f.csv", 0, 1, 'y', "Input Eigenvector 1")
+oreex.plot("../Input/inputeigenvectors_hw2f.csv", 0, 2, 'g', "Input Eigenvector 2")
+oreex.decorate_plot(title="Model implied principal components vs. input principal components", ylabel="shift",
+                    y_format_as_int = False, display_grid = True, legend_loc = "best")
+oreex.save_plot_to_file()
+
 # Legacy example 38
 
 oreex.print_headline("Run ORE to produce NPV cube and exposures for Cross Currency Swaps")
