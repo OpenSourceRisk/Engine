@@ -33,7 +33,8 @@ namespace QuantExt {
 
     sigma_0(t)
 
-    From this we deduce the volatility of m principial components via sigma ratios
+    It is this sigma_0(t) that is stored as the sigma_ parameter in this parametrization. From sigma_0
+    we deduce the volatility of m principial components via sigma ratios
 
     sigma_i(t) = sigma_0(t) * sigmaRatio_i
 
@@ -71,6 +72,8 @@ private:
     QuantLib::Array times_;
     QuantLib::Array sigmaRatios_;
     std::vector<QuantLib::Array> loadings_;
+
+    std::vector<Size> loadingIndex_;
 };
 
 // implementation
@@ -88,11 +91,7 @@ QuantLib::Size HwPiecewiseStatisticalParametrization<TS>::kappaTimeIndepIndex(co
 template <class TS>
 double HwPiecewiseStatisticalParametrization<TS>::sigmaComp(const QuantLib::Size i, const QuantLib::Size j,
                                                             const QuantLib::Size timeIndex) const {
-    Real tmp = 0.0;
-    for (Size k = 0; k < loadings_[k].size(); ++k) {
-        tmp += loadings_[i][k] * this->sigma_->params()[sigma0Index(timeIndex)] * sigmaRatios_[i];
-    }
-    return tmp;
+    return loadings_[i][loadingIndex_[j]] * this->sigma_->params()[sigma0Index(timeIndex)] * sigmaRatios_[i];
 }
 
 template <class TS>
@@ -123,6 +122,18 @@ HwPiecewiseStatisticalParametrization<TS>::HwPiecewiseStatisticalParametrization
     QL_REQUIRE(totalNumberLoadings == kappa.size(), "HwPiecewiseStatisticalParametrization: total number of loadings ("
                                                         << totalNumberLoadings << ") inconsistent to kappa ("
                                                         << kappa.size() << ")");
+
+    QL_REQUIRE(loadings_.size() == sigmaRatios_.size(), "HwPiecewiseStatisticalParametrization: loading rows ("
+                                                            << loadings_.size() << ") inconsistent to sigmaRatios ("
+                                                            << sigmaRatios_.size() << ")");
+
+    loadingIndex_.resize(totalNumberLoadings);
+
+    Size tmp = 0;
+    for (auto const& l : loadings_) {
+        std::iota(std::next(loadingIndex_.begin(), tmp), std::next(loadingIndex_.begin(), tmp + l.size()), 0);
+        tmp += l.size();
+    }
 
     for (Size k = 0; k < times_.size() + 1; ++k)
         this->sigma_->setParam(sigma0Index(k), sigma0[k]);
