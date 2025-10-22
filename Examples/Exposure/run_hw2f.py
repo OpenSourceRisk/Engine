@@ -12,8 +12,12 @@ print("+--------------------------------------------------+")
 print("| Exposure: Hull-White 2f                          |")
 print("+--------------------------------------------------+")
 
-# Legacy example 37
+# remove override
+if "OVERWRITE_SCENARIOGENERATOR_SAMPLES" in os.environ.keys() :
+    samples1=os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]
+    os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=""
 
+# Legacy example 37
 oreex.print_headline("Run ORE to produce scenariodump.csv")
 oreex.run("Input/ore_hw2f_calibration.xml")
 
@@ -32,7 +36,6 @@ oreex.decorate_plot(title="Model implied principal components vs. input principa
 oreex.save_plot_to_file()
 
 # same as before, but with calibration to coterminal swaptions
-
 oreex.print_headline("Run ORE to produce scenariodump.csv (risk neutral volatility)")
 oreex.run("Input/ore_hw2f_calibration_rn.xml")
 
@@ -50,8 +53,11 @@ oreex.decorate_plot(title="Model implied principal components vs. input principa
                     y_format_as_int = False, display_grid = True, legend_loc = "best")
 oreex.save_plot_to_file()
 
-# Legacy example 38
+# restore override
+if "OVERWRITE_SCENARIOGENERATOR_SAMPLES" in os.environ.keys() :
+    os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=samples1
 
+# Legacy example 38
 oreex.print_headline("Run ORE to produce NPV cube and exposures for Cross Currency Swaps")
 oreex.run("Input/ore_hw2f.xml")
 
