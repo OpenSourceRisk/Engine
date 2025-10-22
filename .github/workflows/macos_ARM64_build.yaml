@@ -8,12 +8,39 @@ on:
 
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-wheel: "cp38"
+            python-version: "3.8"
+          - python-wheel: "cp39"
+            python-version: "3.9"
+          - python-wheel: "cp310"
+            python-version: "3.10"
+          - python-wheel: "cp311"
+            python-version: "3.11"
+          - python-wheel: "cp312"
+            python-version: "3.12"
+          - python-wheel: "cp313"
+            python-version: "3.13"
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
     #    token: ${{ secrets.ORG_ACTIONS_ACCESS }}  
+    - name: Set up Python ${{ matrix.python-version }}
+      if: ${{ matrix.python-version }} != "3.13"
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+    - name: Install setuptools for Python 3.12
+      if: ${{ matrix.python-version }} == "3.12"
+      run: |
+        pip install setuptools
     #- name: get QuantLib
     #  run: |
     #    git submodule update --init --recursive
@@ -54,12 +81,13 @@ jobs:
     - name: Build Wheels
       uses: pypa/cibuildwheel@v2.22.0
       env:
-        CIBW_SKIP: cp36-*
+        #CIBW_SKIP: cp36-*
+        CIBW_BUILD: ${{ matrix.python-wheel }}-*
         #CIBW_BUILD: cp311-macosx_arm64
         CIBW_ARCHS_MACOS: arm64
-        MACOSX_DEPLOYMENT_TARGET: "13.7"
-        CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=13.7
-        CXXFLAGS: -std=c++17 -g0 -O3 -mmacosx-version-min=13.7
+        MACOSX_DEPLOYMENT_TARGET: "14.7"
+        CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=14.7
+        CXXFLAGS: -std=c++20 -g0 -O3 -mmacosx-version-min=14.7
         CIBW_BUILD_VERBOSITY: 2
         CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
           DYLD_LIBRARY_PATH=/usr/local/lib delocate-listdeps {wheel} &&
@@ -69,5 +97,5 @@ jobs:
     - name: Save wheels as artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-macos-arm64
+        name: wheels-macos-arm64-${{ matrix.python-wheel }}
         path: ./wheelhouse/*.whl
