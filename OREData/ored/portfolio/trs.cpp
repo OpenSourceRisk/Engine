@@ -62,7 +62,8 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
     paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
     initialPrice_ = Null<Real>();
-    fxConversionAtPeriodEnd_ = XMLUtils::getChildValue(node, "FXConversion", false, "Start") == "End";
+    fxConversion_ = (XMLUtils::getChildValue(node, "FXConversion", false, "Start") == "Start") ? FXConversion::Start
+                                                                                               : FXConversion::End;
     if (auto n = XMLUtils::getChildNode(node, "InitialPrice")) {
         initialPrice_ = parseReal(XMLUtils::getNodeValue(n));
     }
