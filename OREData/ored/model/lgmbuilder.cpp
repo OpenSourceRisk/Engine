@@ -71,7 +71,7 @@ void LgmBuilder::initParametrization() const {
             if (lgmData->aTimes().size() > 0) {
                 DLOG("overriding alpha time grid with swaption expiries, set all initial values to first given value");
             }
-            QL_REQUIRE(!swaptionExpiries_.empty(), "empty swaptionExpiries");
+            QL_REQUIRE(!swaptionExpiries_.empty(), "LgmBuilder: no calibrating swaption provided.");
             QL_REQUIRE(!lgmData->aValues().empty(),
                        "LgmBuilder: LGM volatility has empty initial values, requires one initial value");
             aTimes = Array(swaptionExpiries_.begin(), std::next(swaptionExpiries_.end(), -1));
