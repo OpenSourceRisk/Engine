@@ -362,7 +362,7 @@ Real flatAmount(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& f, const Ha
                    QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(f),
                "flatAmount(): coupon type not handled.");
     auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(f);
-    return cpn->nominal() * (c->discount(cpn->accrualStartDate()) / c->discount(cpn->accrualEndDate() - 1.0));
+    return cpn->nominal() * (c->discount(cpn->accrualStartDate()) / c->discount(cpn->accrualEndDate()) - 1.0);
 }
 
 } // namespace QuantExt
