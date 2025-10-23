@@ -56,13 +56,19 @@ public:
     HwModelData(std::string qualifier, CalibrationType calibrationType, bool calibrateKappa, ParamType kappaType,
                 std::vector<Time> kappaTimes, std::vector<QuantLib::Array> kappaValues, bool calibrateSigma,
                 ParamType sigmaType, std::vector<Time> sigmaTimes, std::vector<QuantLib::Matrix> sigmaValues,
+                std::vector<std::vector<double>> pcaLoadings = {}, bool calibratePcaSigma0 = false,
+                ParamType pcaSigma0Type = ParamType::Constant, std::vector<double> pcaSigma0Times = {},
+                std::vector<double> pcaSigma0Values = {}, std::vector<double> pcaSigmaRatios = {},
                 std::vector<std::string> optionExpiries = std::vector<std::string>(),
                 std::vector<std::string> optionTerms = std::vector<std::string>(),
                 std::vector<std::string> optionStrikes = std::vector<std::string>())
         : IrModelData("HwModel", qualifier, calibrationType), calibrateKappa_(calibrateKappa), kappaType_(kappaType),
-          kappaTimes_(kappaTimes), kappaValues_(kappaValues), calibrateSigma_(calibrateSigma), sigmaType_(sigmaType),
-          sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues), optionExpiries_(optionExpiries),
-          optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
+          kappaTimes_(std::move(kappaTimes)), kappaValues_(std::move(kappaValues)), calibrateSigma_(calibrateSigma),
+          sigmaType_(sigmaType), sigmaTimes_(std::move(sigmaTimes)), sigmaValues_(std::move(sigmaValues)),
+          calibratePcaSigma0_(calibratePcaSigma0), pcaSigma0Type_(pcaSigma0Type),
+          pcaSigma0Times_(std::move(pcaSigma0Times)), pcaSigma0Values_(std::move(pcaSigma0Values)),
+          pcaSigmaRatios_(std::move(pcaSigmaRatios)), optionExpiries_(optionExpiries), optionTerms_(optionTerms),
+          optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
     void clear() override;
@@ -78,14 +84,24 @@ public:
 
     //! \name Setters/Getters
     //@{
+
     bool& calibrateKappa() { return calibrateKappa_; }
     ParamType& kappaType() { return kappaType_; }
     std::vector<Time>& kappaTimes() { return kappaTimes_; }
     std::vector<Array>& kappaValues() { return kappaValues_; }
+
     bool& calibrateSigma() { return calibrateSigma_; }
     ParamType& sigmaType() { return sigmaType_; }
     std::vector<Time>& sigmaTimes() { return sigmaTimes_; }
     std::vector<QuantLib::Matrix>& sigmaValues() { return sigmaValues_; }
+
+    std::vector<std::vector<double>>& pcaLoadings() { return pcaLoadings_; }
+    bool& calibratePcaSigma0() { return calibratePcaSigma0_; }
+    ParamType& pcaSigma0Type() { return kappaType_; }
+    std::vector<Time>& pcaSigma0Times() { return kappaTimes_; }
+    std::vector<double>& pcaSigma0Values() { return pcaSigma0Values_; }
+    std::vector<double>& pcaSigmaRatios() { return pcaSigmaRatios_; }
+
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
     std::vector<std::string>& optionTerms() { return optionTerms_; }
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
@@ -107,6 +123,14 @@ private:
     ParamType sigmaType_;
     std::vector<Time> sigmaTimes_;
     std::vector<QuantLib::Matrix> sigmaValues_;
+
+    std::vector<std::vector<double>> pcaLoadings_;
+    bool calibratePcaSigma0_;
+    ParamType pcaSigma0Type_;
+    std::vector<Time> pcaSigma0Times_;
+    std::vector<double> pcaSigma0Values_;
+    std::vector<double> pcaSigmaRatios_;
+
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionTerms_;
     std::vector<std::string> optionStrikes_;

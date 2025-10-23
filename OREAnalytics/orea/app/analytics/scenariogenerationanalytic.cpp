@@ -61,7 +61,7 @@ std::ostream& operator<<(std::ostream& out, ScenarioGenerationAnalyticImpl::Type
 }
 
 void ScenarioGenerationAnalyticImpl::setUpConfigurations() {
-    LOG("ScenarioStatisticsAnalytic::setUpConfigurations() called");
+    LOG("ScenarioGenerationAnalyticImpl::setUpConfigurations() called");
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     
     string analyticStr = "scenarioGeneration";

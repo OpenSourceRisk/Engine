@@ -73,4 +73,14 @@ Size HwModel::m_aux() const {
     return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? m() : 0;
 }
 
+void HwModel::calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveVolatilityRaw(i));
+    }
+    update();
+}
+
 } // namespace QuantExt

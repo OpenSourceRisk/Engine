@@ -600,11 +600,12 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, QuantLib::ext::sh
             if (auto def = QuantLib::ext::dynamic_pointer_cast<HwModelData>(irDataMap["default"])) {
                 irConfigs_[i] = QuantLib::ext::make_shared<HwModelData>(
                     ccy, // overwrite this and keep the others
-                    def->calibrationType(), def->calibrateKappa(),
-                    def->kappaType(), def->kappaTimes(), def->kappaValues(), def->calibrateSigma(), def->sigmaType(),
-                    def->sigmaTimes(), def->sigmaValues(), def->optionExpiries(),
-                    def->optionTerms(), def->optionStrikes());
-                
+                    def->calibrationType(), def->calibrateKappa(), def->kappaType(), def->kappaTimes(),
+                    def->kappaValues(), def->calibrateSigma(), def->sigmaType(), def->sigmaTimes(), def->sigmaValues(),
+                    def->pcaLoadings(), def->calibratePcaSigma0(), def->pcaSigma0Type(), def->pcaSigma0Times(),
+                    def->pcaSigma0Values(), def->pcaSigmaRatios(), def->optionExpiries(), def->optionTerms(),
+                    def->optionStrikes());
+
             } else if (auto def = QuantLib::ext::dynamic_pointer_cast<IrLgmData>(irDataMap["default"])) {
                 irConfigs_[i] = QuantLib::ext::make_shared<IrLgmData>(
                     ccy, // overwrite this and keep the others
