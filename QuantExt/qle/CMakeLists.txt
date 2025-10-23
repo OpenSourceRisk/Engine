@@ -39,7 +39,6 @@ cashflows/cmbcoupon.cpp
 cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
-cashflows/nettedcommoditycashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/cpicoupon.cpp
 cashflows/cpicouponpricer.cpp
@@ -56,9 +55,12 @@ cashflows/formulabasedcoupon.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/iborfracoupon.cpp
 cashflows/indexedcoupon.cpp
+cashflows/interpolatediborcoupon.cpp
+cashflows/interpolatediborcouponpricer.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/mcgaussianformulabasedcouponpricer.cpp
+cashflows/nettedcommoditycashflow.cpp
 cashflows/nonstandardcapflooredyoyinflationcoupon.cpp
 cashflows/nonstandardinflationcouponpricer.cpp
 cashflows/nonstandardyoyinflationcoupon.cpp
@@ -97,6 +99,7 @@ indexes/ibor/primeindex.cpp
 indexes/ibor/sofr.cpp
 indexes/ibor/sonia.cpp
 indexes/inflationindexwrapper.cpp
+indexes/interpolatediborindex.cpp
 indexes/offpeakpowerindex.cpp
 indexes/region.cpp
 instruments/ascot.cpp
@@ -223,7 +226,7 @@ models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
 models/kienitzlawsonswaynesabrpdedensity.cpp
 models/lgm.cpp
-models/lgmcalibrationinfo.cpp
+models/irmodelcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
 models/lgmfdsolver.cpp
 models/lgmimplieddefaulttermstructure.cpp
@@ -486,7 +489,6 @@ cashflows/cmbcoupon.hpp
 cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
-cashflows/nettedcommoditycashflow.hpp
 cashflows/couponpricer.hpp
 cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
@@ -505,9 +507,12 @@ cashflows/formulabasedcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/iborfracoupon.hpp
 cashflows/indexedcoupon.hpp
+cashflows/interpolatediborcoupon.hpp
+cashflows/interpolatediborcouponpricer.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/mcgaussianformulabasedcouponpricer.hpp
+cashflows/nettedcommoditycashflow.hpp
 cashflows/nonstandardcapflooredyoyinflationcoupon.hpp
 cashflows/nonstandardinflationcouponpricer.hpp
 cashflows/nonstandardyoyinflationcoupon.hpp
@@ -606,6 +611,7 @@ indexes/ibor/twdtaibor.hpp
 indexes/iborindexfixingoverride.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
+indexes/interpolatediborindex.hpp
 indexes/offpeakpowerindex.hpp
 indexes/region.hpp
 indexes/secpi.hpp
@@ -765,6 +771,8 @@ models/hullwhitebucketing.hpp
 models/hwconstantparametrization.hpp
 models/hwmodel.hpp
 models/hwparametrization.hpp
+models/hwpiecewiseparametrization.hpp
+models/hwpiecewisestatisticalparametrization.hpp
 models/infdkparametrization.hpp
 models/infdkvectorised.hpp
 models/infjyparameterization.hpp
@@ -780,7 +788,7 @@ models/jyimpliedzeroinflationtermstructure.hpp
 models/kienitzlawsonswaynesabrpdedensity.hpp
 models/lgm.hpp
 models/lgmbackwardsolver.hpp
-models/lgmcalibrationinfo.hpp
+models/irmodelcalibrationinfo.hpp
 models/lgmconvolutionsolver2.hpp
 models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
@@ -1007,6 +1015,7 @@ termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
 termstructures/piecewisepricecurve.hpp
+termstructures/pillaronlyyieldcurve.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp

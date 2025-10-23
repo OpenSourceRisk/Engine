@@ -30,7 +30,7 @@ BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder::engineImpl(const string& id,
                                                                const std::vector<Real>& strikes) {
     DLOG("Building LGM Grid BGS Flexi Swap engine for trade " << id);
 
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, ccy, expiries, maturity, strikes);
+    auto lgm = QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(model(id, ccy, expiries, maturity, strikes));
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));

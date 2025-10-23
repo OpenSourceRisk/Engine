@@ -51,6 +51,8 @@ CalibrationType parseCalibrationType(const string& s) {
         return CalibrationType::BestFit;
     else if (boost::algorithm::to_upper_copy(s) == "FIRSTBESTFITTHENBOOTSTRAP")
         return CalibrationType::FirstBestFitThenBootstrap;
+    else if (boost::algorithm::to_upper_copy(s) == "STATISTICALWITHRISKNEUTRALVOLATILITY")
+        return CalibrationType::StatisticalWithRiskNeutralVolatility;
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationType::None;
     else

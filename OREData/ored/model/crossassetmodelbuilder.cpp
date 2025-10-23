@@ -319,14 +319,11 @@ void CrossAssetModelBuilder::buildModel() const {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
                     market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_, BlackCalibrationHelper::RelativePriceError,
-                    allowChangingFallbacksUnderScenarios_, allowModelFallbacks_);
+                    allowChangingFallbacksUnderScenarios_, allowModelFallbacks_, dontCalibrate_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             lgmBuilder.push_back(builder);
-            if (dontCalibrate_) {
-                builder->freeze();
-            }
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
             auto parametrization = builder->parametrization();
@@ -341,22 +338,19 @@ void CrossAssetModelBuilder::buildModel() const {
             irDiscountCurves.push_back(builder->discountCurve());
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
         } else if (auto ir = QuantLib::ext::dynamic_pointer_cast<HwModelData>(irConfig)) {
-            bool evaluateBankAccount = true; // updated in cross asset model for non-base ccys
-            bool setCalibrationInfo = false;
-            HwModel::Discretization discr = HwModel::Discretization::Euler;
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<HwBuilder>(
-                    market_.value(), ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
-                    config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
+                    market_.value(), ir, measure, HwModel::Discretization::Euler, true, configurationLgmCalibration_,
+                    config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, false, id_,
+                    BlackCalibrationHelper::RelativePriceError, allowChangingFallbacksUnderScenarios_,
+                    allowModelFallbacks_, dontCalibrate_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             hwBuilder.push_back(builder);
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
-            auto parametrization = builder->parametrization();
-            if (dontCalibrate_)
-                builder->freeze();
+            auto parametrization = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(builder->parametrization());
             swaptionBaskets_[i] = builder->swaptionBasket();
             QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
                            currencies.end(),

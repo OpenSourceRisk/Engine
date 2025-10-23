@@ -377,7 +377,7 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     MarketDatum::QuoteType qType = quoteType();
     string stem = "CAPFLOOR/" + to_string(qType) + "/" + ccy + "/";
     if(quoteIncludesIndexName())
-	stem += index() + "/";
+	    stem += index() + "/";
 
     // Cap floor matrix quotes. So, ATM flag is false i.e. 0 and RELATIVE flag is false also as strikes are absolute.
     for (const string& t : tenors_) {
@@ -387,7 +387,8 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     }
 
     // ATM quotes. So, ATM flag is true i.e. 1 and RELATIVE flag is true with strike set to 0.
-    if (type_ == Type::TermAtm || type_ == Type::TermSurfaceWithAtm) {
+    if (type_ == Type::TermAtm || type_ == Type::TermSurfaceWithAtm || type_ == Type::OptionletAtm ||
+        type_ == Type::OptionletSurfaceWithAtm) {
         for (const string& t : atmTenors_) {
             quotes_.push_back(stem + t + "/" + tenor + "/1/1/0");
         }

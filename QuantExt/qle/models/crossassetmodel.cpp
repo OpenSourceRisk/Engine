@@ -745,6 +745,15 @@ void CrossAssetModel::calibrateIrLgm1fGlobal(const Size ccy,
     update();
 }
 
+void CrossAssetModel::calibrateIrHwVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+    const Size ccy, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
+    hw(ccy)->calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(helpers, method, endCriteria,
+                                                                                constraint, weights);
+    update();
+}
+
 void CrossAssetModel::calibrateBsVolatilitiesIterative(
     const AssetType& assetType, const Size idx, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
     OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,

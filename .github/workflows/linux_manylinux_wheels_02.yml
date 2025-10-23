@@ -6,11 +6,38 @@ on:
 jobs:
   wheels-linux:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-wheel: "cp38"
+            python-version: "3.8"
+          - python-wheel: "cp39"
+            python-version: "3.9"
+          - python-wheel: "cp310"
+            python-version: "3.10"
+          - python-wheel: "cp311"
+            python-version: "3.11"
+          - python-wheel: "cp312"
+            python-version: "3.12"
+          - python-wheel: "cp313"
+            python-version: "3.13"
     steps:
     - name: Checkout ORE
       uses: actions/checkout@v4
       with:
         submodules: recursive
+    - name: Set up Python ${{ matrix.python-version }}
+      if: ${{ matrix.python-version }} != "3.13"
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+    - name: Install setuptools for Python 3.12
+      if: ${{ matrix.python-version }} == "3.12"
+      run: |
+        pip install setuptools
     #- name: get QuantLib
     #  run: |
     #    git submodule update --init --recursive
@@ -51,21 +78,17 @@ jobs:
          cd ORE-SWIG/Wheels
          chmod +x before_all_linux.sh
     - name: Build ORE wheels
-      uses: pypa/cibuildwheel@v2.22.0
+      uses: pypa/cibuildwheel@v3.2.1
       env:
-        CIBW_BUILD: "*-manylinux_x86_64"
-        CIBW_SKIP: cp36-* pp*
+        #CIBW_BUILD: "*-manylinux_x86_64"
+        #CIBW_SKIP: cp36-* pp*
         #CIBW_BUILD: cp39-manylinux_x86_64 cp310-manylinux_x86_64 cp311-manylinux_x86_64
-        #CIBW_BUILD: cp37-manylinux_x86_64
-        #CIBW_BUILD: cp38-manylinux_x86_64
-        #CIBW_BUILD: cp39-manylinux_x86_64
-        #CIBW_BUILD: cp310-manylinux_x86_64
-        #CIBW_BUILD: cp311-manylinux_x86_64
+        CIBW_BUILD: ${{matrix.python-wheel}}-manylinux_x86_64
         CIBW_ARCHS_LINUX: x86_64
         CIBW_BUILD_VERBOSITY: 2
-        CIBW_BEFORE_ALL_LINUX: ./ORE-SWIG/Wheels/before_all_linux.sh
+        CIBW_BEFORE_BUILD_LINUX: ./ORE-SWIG/Wheels/before_all_linux.sh
         #CIBW_ENVIRONMENT_LINUX: CXXFLAGS="-O3 -g0"
-        CIBW_ENVIRONMENT_LINUX: CXXFLAGS="-std=c++17 -DNDEBUG -O3 -g0" ORE=/project
+        CIBW_ENVIRONMENT_LINUX: CXXFLAGS="-std=c++20 -DNDEBUG -O3 -g0" ORE=/project
         CIBW_ENVIRONMENT_PASS_LINUX: CXXFLAGS
       with:
         package-dir: ${{ github.workspace }}/ORE-SWIG
@@ -73,5 +96,5 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-linux-manylinux-x86_64
+        name: wheels-linux-manylinux-x86_64-${{ matrix.python-version }}
         path: ./wheelhouse/*.whl
