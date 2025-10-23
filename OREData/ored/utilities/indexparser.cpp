@@ -310,7 +310,7 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
         {"EUR-EONIA", QuantLib::ext::make_shared<Eonia>()},
         {"EUR-ESTER", QuantLib::ext::make_shared<Estr>()},
         {"GBP-SONIA", QuantLib::ext::make_shared<Sonia>()},
-        {"JPY-TONAR", QuantLib::ext::make_shared<Tonar>()},
+        {"JPY-TONAR", QuantLib::ext::make_shared<QuantExt::Tonar>()},
         {"SGD-SORA", QuantLib::ext::make_shared<Sora>()},
         {"CHF-TOIS", QuantLib::ext::make_shared<CHFTois>()},
         {"CHF-SARON", QuantLib::ext::make_shared<CHFSaron>()},
