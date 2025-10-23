@@ -36,13 +36,17 @@
 
 // Boost
 using namespace boost;
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/file.hpp>
 #include <boost/timer/timer.hpp>
 using boost::timer::cpu_timer;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
-
-#include <oret/oret.hpp>
-using ore::test::setupTestLogging;
 
 #include "toplevelfixture.hpp"
 
@@ -62,9 +66,28 @@ public:
     QleGlobalFixture() {
         int argc = master_test_suite().argc;
         char** argv = master_test_suite().argv;
-
+        
+        std::string logFile;
+        for (int i = 1; i < argc; ++i) {
+            if (boost::starts_with(argv[i], "--ore_log_file")) {
+                std::vector<std::string> strs;
+                boost::split(strs, argv[i], boost::is_any_of("="));
+                if (strs.size() > 1) {
+                    logFile = strs[1];
+                }
+            }
+        }
         // Set up test logging
-        setupTestLogging(argc, argv);
+        if (!logFile.empty()) {
+            auto file_sink = boost::log::add_file_log(boost::log::keywords::file_name = logFile,
+                                                      boost::log::keywords::auto_flush = true);
+            file_sink->set_filter(!boost::log::expressions::has_attr("NoConsole"));
+
+        } else {
+            // explicitly add a console log, we can disable StructuredLogging to console for tests that expected to fail
+            auto console_sink = boost::log::add_console_log(std::clog);
+            console_sink->set_filter(!boost::log::expressions::has_attr("NoConsole"));
+        }
     }
 
     ~QleGlobalFixture() { stopTimer(); }
