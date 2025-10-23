@@ -191,9 +191,9 @@ models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
 models/commodityschwartzmodel.cpp
+models/commodityschwartzconstantparametrization.cpp
 models/commodityschwartzparametrization.cpp
-#models/commodityschwartzseasonalitymodel.cpp
-#models/commodityschwartzseasonalityparametrization.cpp
+models/commodityschwartzpiecewiseconstantparametrization.cpp
 models/cpicapfloorhelper.cpp
 models/crcirpp.cpp
 models/crossassetanalytics.cpp
@@ -727,9 +727,9 @@ models/cirppparametrization.hpp
 models/cmscaphelper.hpp
 models/commoditymodel.hpp
 models/commodityschwartzmodel.hpp
+models/commodityschwartzconstantparametrization.hpp
 models/commodityschwartzparametrization.hpp
-#models/commodityschwartzseasonalitymodel.hpp
-#models/commodityschwartzseasonalityparametrization.hpp
+models/commodityschwartzpiecewiseconstantparametrization.hpp
 models/constantlosslatentmodel.hpp
 models/cpicapfloorhelper.hpp
 models/crcirpp.hpp

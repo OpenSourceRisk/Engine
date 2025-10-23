@@ -790,46 +790,49 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!dontCalibrate_) {
             if (comData->calibrationType() == CalibrationType::BestFit) {
+                map<Size, bool> toCalibrate;
+                toCalibrate[0] = comData->calibrateSigma();
+                toCalibrate[1] = comData->calibrateKappa();
+                toCalibrate[2] = comData->calibrateSeasonality();
                 // reset to initial params to ensure identical calibration outcomes for identical baskets
-                // check which parameters are kept fixed
-                std::vector<bool> fix(comParametrizations[i]->numberOfParameters() 
-                                + comParametrizations[i]->parameter(2)->params().size()-1, true);
-                std::vector<Real> weights;
-                Size freeParams = 0;
-                if (comData->calibrateSigma()) {
-                    fix[0] = false;
-                    freeParams++;
-                    LOG("CommoditySchwartzModel: calibrate sigma for name " << comData->name());
+                resetModelParams(CrossAssetModel::AssetType::COM, 0, i, Null<Size>());
+                resetModelParams(CrossAssetModel::AssetType::COM, 1, i, Null<Size>());
+                resetModelParams(CrossAssetModel::AssetType::COM, 2, i, Null<Size>());
+                // calibrate the model.
+                model_->calibrateComSchwartz1fGlobal(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i], *optimizationMethod_, endCriteria_, toCalibrate);
+            } else if (comData->calibrationType() == CalibrationType::Bootstrap){
+                if (comData->calibrateKappa())
+                    WLOG("CommoditySchwartzModel: skip kappa calibration for name " << comData->name() << " in BOOTSTRAP mode");
+                if (comData->calibrateSigma())
+                    WLOG("CommoditySchwartzModel: skip sigma calibration for name " << comData->name() << " in BOOTSTRAP mode");    
+                QL_REQUIRE( comData->seasonalityParamType() == ParamType::Piecewise,
+                           "CommoditySchwartzModel: Bootstrap calibration implemented only for time dependent seasonaltiy");
+                // reset to initial params to ensure identical calibration outcomes for identical baskets
+                resetModelParams(CrossAssetModel::AssetType::COM, 2, i, Null<Size>());
+                // calibrate the model.
+                model_->calibrateComSchwartz1fSeasonalityIterative(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i],
+                                                                   *optimizationMethod_, endCriteria_);
+            }
+            else {
+                //1. Bestfit
+                WLOG("CommoditySchwartzModel: First, BESTFIT calibration for name " << comData->name());
+                map<Size, bool> toCalibrate;
+                toCalibrate[0] = comData->calibrateSigma();
+                toCalibrate[1] = comData->calibrateKappa();
+                if (toCalibrate[0] || toCalibrate[1]){
+                // reset to initial params to ensure identical calibration outcomes for identical baskets
+                    resetModelParams(CrossAssetModel::AssetType::COM, 0, i, Null<Size>());
+                    resetModelParams(CrossAssetModel::AssetType::COM, 1, i, Null<Size>());
+                    // calibrate the model.
+                    model_->calibrateComSchwartz1fGlobal(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i], *optimizationMethod_, endCriteria_, toCalibrate);
+                } else {
+                    WLOG("CommoditySchwartzModel: skip sigma and kappa calibration for name " << comData->name() << " in BESTFIT mode");
                 }
-                if (comData->calibrateKappa()) {
-                    fix[1] = false;
-                    freeParams++;
-                    LOG("CommoditySchwartzModel: calibrate kappa for name " << comData->name());
-                }
-                if (comData->calibrateSeasonality()) {
-                    for (Size i=3; i< fix.size(); i++)
-                        fix[i] = false;
-                    freeParams++;
-                    LOG("CommoditySchwartzModel: calibrate seasonality for name " << comData->name());
-                }
-                if (freeParams == 0) {
-                    WLOG("CommoditySchwartzModel: skip calibration for name " << comData->name() << ", no free parameters");
-                    continue;
-                }
-                comModel->setParams(comModel->params());
-                comModel->calibrate(comOptionBaskets_[i], *optimizationMethod_, comData->endCriteria(), comData->constraint(), weights, fix);
-                comModel->update();
-            } else{
-                std::vector<Real> weights;
-                for (Size j = 0; j < comOptionBaskets_[i].size() ; j++) {
-                    std::vector<bool> fix(comParametrizations[i]->numberOfParameters()
-                                         + comParametrizations[i]->parameter(2)->params().size()-1, true);
-                    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> h = {comOptionBaskets_[i][j]};               
-                    fix[j+3] = false;
-                    comModel->calibrate(h, *optimizationMethod_, comData->endCriteria(), comData->constraint(), weights, fix);
-                    comModel->update();
-                }
-            } 
+                //2. Bootstrap
+                resetModelParams(CrossAssetModel::AssetType::COM, 2, i, Null<Size>());
+                model_->calibrateComSchwartz1fSeasonalityIterative(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i],
+                                                                   *optimizationMethod_, endCriteria_);
+            }
              
             DLOG("COM " << comData->name() << " calibration errors:");
             comOptionCalibrationErrors_[i] = getCalibrationError(comOptionBaskets_[i]);

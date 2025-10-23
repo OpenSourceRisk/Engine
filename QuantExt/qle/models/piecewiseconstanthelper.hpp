@@ -167,6 +167,30 @@ private:
     mutable std::vector<Real> b_, c_;
 };
 
+class PiecewiseConstantHelper4 {
+public:
+    PiecewiseConstantHelper4(const Array& t,
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+    PiecewiseConstantHelper4(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts,
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+
+    const Array& t() const;
+    const QuantLib::ext::shared_ptr<Parameter> p() const;
+    /*! this returns the transformed value */
+    Real y(const Time t) const;
+
+    Real direct(const Real x) const;
+    Real inverse(const Real y) const;
+
+protected:
+    const Array t_;
+    /*! y are the raw values in the sense of parameter transformation */
+    const QuantLib::ext::shared_ptr<PseudoParameter> y_;
+
+private:
+    mutable std::vector<Real> b_;
+};
+
 // inline
 
 inline const Array& PiecewiseConstantHelper1::t() const { return t_; }
@@ -269,6 +293,14 @@ inline void PiecewiseConstantHelper3::update() const {
     }
 }
 
+inline const Array& PiecewiseConstantHelper4::t() const { return t_; }
+
+inline const QuantLib::ext::shared_ptr<Parameter> PiecewiseConstantHelper4::p() const { return y_; }
+
+inline Real PiecewiseConstantHelper4::direct(const Real x) const { return x * x; }
+
+inline Real PiecewiseConstantHelper4::inverse(const Real y) const { return std::sqrt(y); }
+
 inline Real PiecewiseConstantHelper1::y(const Time t) const {
     return direct(QL_PIECEWISE_FUNCTION(t_, y_->params(), t));
 }
@@ -283,6 +315,10 @@ inline Real PiecewiseConstantHelper3::y1(const Time t) const {
 
 inline Real PiecewiseConstantHelper3::y2(const Time t) const {
     return direct2(QL_PIECEWISE_FUNCTION(t2_, y2_->params(), t));
+}
+
+inline Real PiecewiseConstantHelper4::y(const Time t) const {
+    return direct(QL_PIECEWISE_FUNCTION2(t_, y_->params(), t));
 }
 
 inline Real PiecewiseConstantHelper1::int_y_sqr(const Time t) const {

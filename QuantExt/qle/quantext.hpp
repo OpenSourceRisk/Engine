@@ -287,8 +287,10 @@
 #include <qle/models/cirppparametrization.hpp>
 #include <qle/models/cmscaphelper.hpp>
 #include <qle/models/commoditymodel.hpp>
+#include <qle/models/commodityschwartzconstantparametrization.hpp>
 #include <qle/models/commodityschwartzmodel.hpp>
 #include <qle/models/commodityschwartzparametrization.hpp>
+#include <qle/models/commodityschwartzpiecewiseconstantparametrization.hpp>
 #include <qle/models/constantlosslatentmodel.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crcirpp.hpp>

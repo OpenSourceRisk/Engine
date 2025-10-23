@@ -60,6 +60,12 @@ enum class CalibrationType {
       is imperfect.
      */
     BestFit,
+    /*! Choose this option to first perform a best fit calibration followed by a
+      bootstrap calibration. Supported only for COM components. First, Kappa and Sigma calibrated 
+      to a basket of commodity options by using BestFit. Then, piecewise seasonality is bootstrapped 
+      by using the same set of options.      
+     */
+    FirstBestFitThenBootstrap,
     /*! No calibration
      */
     None

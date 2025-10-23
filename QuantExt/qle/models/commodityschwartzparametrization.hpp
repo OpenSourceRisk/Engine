@@ -31,165 +31,45 @@
 
 namespace QuantExt {
 //! COM Schwartz parametrization
-/*! COM parametrization for the Schwartz (1997) mean-reverting one-factor model
-    with log-normal forward price dynamics and forward volatility sigma * exp(-kappa*(T-t)):
-    dF(t,T) / F(t,T) = sigma * exp(-kappa * (T-t)) * dW    
-
-    The model can be propagated in terms of an artificial spot price process of the form 
-    S(t) = A(t) * exp(B(t) * X(t))
-    where    
-        dX(t) = -kappa * X(t) * dt + sigma * dW(t)
-        X(t) - X(s) = -X(s) * (1 - exp(-kappa*(t-s)) + int_s^t sigma * exp(-kappa*(t-u)) dW(u)
-        E[X(t)|s] = X(s) * exp(-kappa*(t-s))
-        Var[X(t)-X(s)|s] = sigma^2 * (1 - exp(-2*kappa*(t-s))) / (2*kappa)
-
-    The stochastic future price curve in terms of X(t) is
-        F(t,T) = F(0,T) * exp( X(t) * exp(-kappa*(T-t) - 1/2 * (V(0,T) - V(t,T))
-    with
-        V(t,T) = sigma^2 * (1 - exp(-2*kappa*(T-t))) / (2*kappa)
-    and
-        Var[ln F(T,T)] = VaR[X(T)] 
-
-    Instead of state variable X we can use 
-        Y(t) = exp(kappa * t) * X(t) 
-    with drift-free
-        dY(t) = sigma * exp(kappa * t) * dW
-        Y(t) = int_0^t sigma * exp(kappa * s) * dW(s)
-        Var[Y(t)] = sigma^2 * (exp(2*kappa*t) - 1) / (2*kappa)
-        Var[Y(t)-Y(s)|s] = int_s^t sigma * exp(kappa * u) * dW(u) = Var[Y(t)] - Var[Y(s)]
-    The stochastic future price curve in terms of Y(t) is 
-        F(t,T) = F(0,t) * exp( Y(t) * exp(-kappa*T) - 1/2 * (V(0,T) - V(t,T))
-
+/*! Base class for COM parametrization for the Schwartz (1997) mean-reverting one-factor model
     \ingroup models
 */
-class CommoditySchwartzParametrization : public Parametrization,
-                                         private PiecewiseConstantHelper1 {
+class CommoditySchwartzParametrization : public Parametrization{
 public:
     /*! The currency refers to the commodity currency, the
         fx spot is as of today (i.e. the discounted spot) */
     CommoditySchwartzParametrization(const Currency& currency, const std::string& name,
                                      const Handle<QuantExt::PriceTermStructure>& priceCurve,
-                                     const Handle<Quote>& fxSpotToday, const Real sigma, const Real kappa,
-                                     bool driftFreeState = false,
-                                     const Array& aTimes = Array(), const Array& a = Array(1, 0.0), 
-                                     const QuantLib::ext::shared_ptr<QuantLib::Constraint>& aConstraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>()
-                                     );
+                                     const Handle<Quote>& fxSpotToday,
+                                     bool driftFreeState = false);
 
     Size numberOfParameters() const override { return 3; }
     //! State variable variance on [0, t]
-    Real variance(const Time t) const;
+    virtual Real variance(const Time t) const { return 0.0; }
     //! State variable Y's diffusion at time t: sigma * exp(kappa * t)
-    Real sigma(const Time t) const;
+    virtual Real sigma(const Time t) const { return 0.0; }
     //! Inspector for the current value of model parameter sigma (direct)
-    Real sigmaParameter() const;
+    virtual Real sigmaParameter() const { return 0.0; }
     //! Inspector for the current value of model parameter kappa (direct)
-    Real kappaParameter() const;
-    //! Inspector for current value of the model parameter vector (inverse values)
-    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
-    //! Inspector for today's price curve
-    Handle<QuantExt::PriceTermStructure> priceCurve() { return priceCurve_; }
+    virtual Real kappaParameter() const { return 0.0; }
+    //! Inspector for the current value of model parameter a (direct)
+    virtual Real a(const QuantLib::Time t) const { return 0.0; }
+    //! Inspector for the current value of model parameter m:= exp(a) (direct)
+    virtual Real m(const QuantLib::Time t) const { return 0.0; }
     //! Variance V(t,T) used in the computation of F(t,T)
-    Real VtT(Real t, Real T);
-    //! Inspector for the current value of model parameter m(T) (direct)
-    Real m(const QuantLib::Time t) const;
-    //! Inspector for the current value of model parameter m(T) (direct)
-    Real a(const QuantLib::Time t) const;
+    virtual Real VtT(Real t, Real T) { return 0.0; }    
 
+    Handle<QuantExt::PriceTermStructure> priceCurve() const { return priceCurve_; }
+    const Handle<Quote> fxSpotToday() const { return fxSpotToday_; }
     bool driftFreeState() const { return driftFreeState_; }
     
-    void update() const override;
 protected:
-    Real direct(const Size i, const Real x) const override;
-    Real inverse(const Size i, const Real y) const override;
-    
     const Handle<QuantExt::PriceTermStructure> priceCurve_;
     const Handle<Quote> fxSpotToday_;
     std::string comName_;
-    const QuantLib::ext::shared_ptr<PseudoParameter> sigma_;
-    const QuantLib::ext::shared_ptr<PseudoParameter> kappa_;
     bool driftFreeState_;
 
-private:
-    void initialize(const Array& a);
 };
-
-// inline
-inline void CommoditySchwartzParametrization::initialize(const Array& a) {
-    QL_REQUIRE(PiecewiseConstantHelper1::t().size() + 1 == a.size(),
-               "a size (" << a.size() << ") inconsistent to times size ("
-                              << PiecewiseConstantHelper1::t().size() << ")");
-                              
-    // store raw parameter values
-    for (Size i = 0; i < PiecewiseConstantHelper1::y_->size(); ++i) {
-        PiecewiseConstantHelper1::y_->setParam(i, inverse(i + 2, a[i]));
-    }
-    update();
-}
-
-inline void CommoditySchwartzParametrization::update() const {
-    Parametrization::update();
-    PiecewiseConstantHelper1::update();
-}
-
-inline Real CommoditySchwartzParametrization::direct(const Size i, const Real x) const { 
-    if (i==0 || i==1)
-        return x * x; 
-    else
-        return PiecewiseConstantHelper1::direct(x);
-}
-
-inline Real CommoditySchwartzParametrization::inverse(const Size i, const Real y) const {   
-    if (i==0 || i==1)
-        return std::sqrt(y); 
-    else
-        return PiecewiseConstantHelper1::inverse(y);
-}
-
-inline Real CommoditySchwartzParametrization::m(const QuantLib::Time t) const{
-    return std::exp(PiecewiseConstantHelper1::y(t));
-}
-
-inline Real CommoditySchwartzParametrization::a(const QuantLib::Time t) const{
-    return PiecewiseConstantHelper1::y(t);
-}
-
-inline Real CommoditySchwartzParametrization::variance(const Time t) const {
-    Real sig = direct(0, sigma_->params()[0]);
-    Real kap = direct(0, kappa_->params()[0]);
-    if (kap < QL_EPSILON)
-        return sig * sig * t;
-    else if (driftFreeState_)
-        return sig * sig * (std::exp(2.0 * kap * t) - 1.0) / (2.0 * kap);
-    else
-        return sig * sig * (1.0 - std::exp(-2.0 * kap * t)) / (2.0 * kap);
-}
-
-inline Real CommoditySchwartzParametrization::sigma(const Time u) const {
-    Real sig = direct(0, sigma_->params()[0]);
-    Real kap = direct(0, kappa_->params()[0]);
-    if (driftFreeState_)
-        return sig * std::exp(kap * u);
-    else
-        return sig;
-}
-
-inline Real CommoditySchwartzParametrization::sigmaParameter() const {
-    return direct(0, sigma_->params()[0]);
-}
-
-inline Real CommoditySchwartzParametrization::kappaParameter() const {
-    return direct(0, kappa_->params()[0]);
-}
-
-inline const QuantLib::ext::shared_ptr<Parameter> CommoditySchwartzParametrization::parameter(const Size i) const {
-    QL_REQUIRE(i < 3, "parameter " << i << " does not exist, only have 0, 1 and 2");
-    if (i == 0)
-        return sigma_;
-    else if (i == 1)
-        return kappa_;
-    else
-        return PiecewiseConstantHelper1::y_;
-}
 
 } // namespace QuantExt
 
