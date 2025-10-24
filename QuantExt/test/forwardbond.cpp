@@ -323,9 +323,6 @@ BOOST_AUTO_TEST_CASE(testForwardBond4) { // now true forward bond, one coupon be
             yts, dpts, recovery, bondSpecificSpread, 2 * Months, boost::none, false, incomeTS, false, false, false));
     bond->setPricingEngine(pricingEngine);
 
-    for(auto const& cf:bond->cashflows())
-        std::cout << cf->date() << "," << cf->amount() << std::endl;
-
     Real price = bond->NPV();
     BOOST_TEST_MESSAGE("Bond price = " << std::setprecision(12) << price);
 
