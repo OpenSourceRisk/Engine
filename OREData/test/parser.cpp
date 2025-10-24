@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK(q->tenorBased());
         BOOST_CHECK(q->expiryDate() == Date());
         BOOST_CHECK(q->tenor() == 1 * Months);
-        BOOST_CHECK(q->startTenor() == QuantLib::ext::nullopt);
+        BOOST_CHECK(q->startTenor() == boost::none);
 
         // Date based quote
         input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-08-30";
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK(!q->tenorBased());
         BOOST_CHECK(q->expiryDate() == Date(30, Aug, 2019));
         BOOST_CHECK(q->tenor() == Period());
-        BOOST_CHECK(q->startTenor() == QuantLib::ext::nullopt);
+        BOOST_CHECK(q->startTenor() == boost::none);
 
         // Special tenor based quotes
 
@@ -805,7 +805,7 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK(q->tenorBased());
         BOOST_CHECK(q->expiryDate() == Date());
         BOOST_CHECK(q->tenor() == 1 * Days);
-        BOOST_CHECK(q->startTenor() == QuantLib::ext::nullopt);
+        BOOST_CHECK(q->startTenor() == boost::none);
     }
 
     // test possible exceptions

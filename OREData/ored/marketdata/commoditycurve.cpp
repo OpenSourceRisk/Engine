@@ -246,7 +246,7 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
             expiry = q->expiryDate();
             add(asof, expiry, value, data, outright, pointsFactor);
         } else {
-            if (q->startTenor() == QuantLib::ext::nullopt) {
+            if (!q->startTenor().has_value()) {
                 expiry = cal.advance(spotRelative ? spotDate : asof, q->tenor(), bdc);
                 add(asof, expiry, value, data, outright, pointsFactor);
             } else {

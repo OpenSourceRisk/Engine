@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/option.hpp>
 #include <ql/types.hpp>
-
-#include <ql/optional.hpp>
+// Have to use boost optional as long we support boost versions < 1.84, where std::optional serialization is not supported
+#include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/version.hpp>
@@ -158,7 +158,7 @@ public:
         - if \p atmType is \c AtmPutCall50, \p deltaType must be \c DeltaVolQuote::Fwd.
     */
     AtmStrike(QuantLib::DeltaVolQuote::AtmType atmType,
-              QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType = QuantLib::ext::nullopt);
+              boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType = boost::none);
 
     //! \name Inspectors
     //@{
@@ -166,7 +166,7 @@ public:
     QuantLib::DeltaVolQuote::AtmType atmType() const;
 
     //! Return the delta type
-    QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType() const;
+    boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType() const;
     //@}
 
     /*! Populate AtmStrike object from \p strStrike.
@@ -191,7 +191,9 @@ protected:
 
 private:
     QuantLib::DeltaVolQuote::AtmType atmType_;
-    QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType_;
+    // boost optional is required as long we support boost < 1.84, where std::optional serialization is not
+    // supported
+    boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType_;
 
     //! Perform validation
     void check() const;

@@ -26,7 +26,7 @@
 
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/schedule.hpp>
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>

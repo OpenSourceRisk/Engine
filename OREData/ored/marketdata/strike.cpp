@@ -97,14 +97,16 @@ bool DeltaStrike::equal_to(const BaseStrike& other) const {
 
 AtmStrike::AtmStrike() : atmType_(DeltaVolQuote::AtmSpot) {}
 
-AtmStrike::AtmStrike(DeltaVolQuote::AtmType atmType, QuantLib::ext::optional<DeltaVolQuote::DeltaType> deltaType)
+AtmStrike::AtmStrike(DeltaVolQuote::AtmType atmType, boost::optional<DeltaVolQuote::DeltaType> deltaType)
     : atmType_(atmType), deltaType_(deltaType) {
     check();
 }
 
 DeltaVolQuote::AtmType AtmStrike::atmType() const { return atmType_; }
 
-QuantLib::ext::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const { return deltaType_; }
+boost::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const {
+    return deltaType_;
+}
 
 void AtmStrike::fromString(const string& strStrike) {
 
@@ -118,7 +120,7 @@ void AtmStrike::fromString(const string& strStrike) {
 
     atmType_ = parseAtmType(tokens[1]);
 
-    deltaType_ = QuantLib::ext::nullopt;
+    deltaType_ = boost::none;
     if (tokens.size() == 4) {
         QL_REQUIRE(tokens[2] == "DEL", "AtmStrike::fromString expects 3rd token to equal 'DEL'.");
         deltaType_ = parseDeltaType(tokens[3]);

@@ -227,7 +227,7 @@ CommodityForwardQuote::CommodityForwardQuote(QuantLib::Real value, const QuantLi
 //! Tenor based commodity forward constructor
 CommodityForwardQuote::CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
                       QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-                      const QuantLib::Period& tenor, QuantLib::ext::optional<QuantLib::Period> startTenor)
+                      const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
       quoteCurrency_(quoteCurrency), tenor_(tenor), startTenor_(startTenor), tenorBased_(true) {
     QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
