@@ -27,7 +27,7 @@
 #include <ql/utilities/null.hpp>
 
 #include <ql/any.hpp>
-
+#include <string>
 #include <map>
 #include <vector>
 
