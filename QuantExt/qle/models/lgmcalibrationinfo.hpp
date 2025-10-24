@@ -23,12 +23,11 @@
 
 #pragma once
 
+#include <map>
+#include <ql/any.hpp>
 #include <ql/types.hpp>
 #include <ql/utilities/null.hpp>
-
-#include <ql/any.hpp>
 #include <string>
-#include <map>
 #include <vector>
 
 namespace QuantExt {
