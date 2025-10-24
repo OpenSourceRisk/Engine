@@ -130,7 +130,7 @@ private:
     bool calibrateSeasonality_ = false;
     ParamType seasonalityType_ = ParamType::Constant;
     std::vector<Time> seasonalityTimes_;
-    std::vector<Real> seasonalityValues_;
+    std::vector<Real> seasonalityValues_ = {0.0};
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
     bool driftFreeState_ = false;
