@@ -23,6 +23,7 @@
 #include <ql/pricingengines/bond/bondfunctions.hpp>
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
 #include <ql/quotes/derivedquote.hpp>
+#include <ql/termstructures/multicurve.hpp>
 #include <ql/termstructures/yield/bondhelpers.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/nonlinearfittingmethods.hpp>
@@ -1300,6 +1301,7 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
 
 void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
+    std::vector<QuantLib::RelinkableHandle<YieldTermStructure>> internalCurveHandles;
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> yieldTermStructures;
     std::vector<const QuantLib::MultiCurveBootstrapContributor*> multiCurveBootstrapContributors;
     std::vector<std::vector<QuantLib::ext::shared_ptr<RateHelper>>> instrumentSets;
@@ -1473,6 +1475,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         auto [yieldts, contr] = buildPiecewiseCurve(index, mixedInterpolationSize, instruments);
 
+        internalCurveHandles.push_back(requiredYieldCurveHandles_[curveSpec_[index]->name()]);
         yieldTermStructures.push_back(yieldts);
         multiCurveBootstrapContributors.push_back(contr);
         instrumentSets.push_back(instruments);
@@ -1480,19 +1483,18 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         maxAccuracy = std::max(maxAccuracy, curveConfig_[index]->bootstrapConfig().accuracy());
 
-        requiredYieldCurveHandles_[curveSpec_[index]->name()].linkTo(yieldts);
-
     } // loop set of indices for multi-curve bootstrapping
 
     // if we have more than one curve to build, set up the multicurve bootstrapper
 
+    auto multiCurve = ext::make_shared<MultiCurve>(ext::make_shared<MultiCurveBootstrap>(maxAccuracy));
     if (yieldTermStructures.size() > 1) {
-        auto multiCurveBootstrapper = QuantLib::ext::make_shared<MultiCurveBootstrap>(maxAccuracy);
-        for (auto const& c : multiCurveBootstrapContributors) {
+        for (Size i = 0; i < yieldTermStructures.size(); ++i) {
             QL_REQUIRE(
-                c,
+                multiCurveBootstrapContributors[i],
                 "All curves in a cycle must use global bootstrap, please adjust the BootstrapConfig of these curves.");
-            multiCurveBootstrapper->add(c);
+            // we can disregard the returned external handle
+            multiCurve->addCurve(internalCurveHandles[i], yieldTermStructures[i], multiCurveBootstrapContributors[i]);
         }
     }
 
