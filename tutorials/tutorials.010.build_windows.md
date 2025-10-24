@@ -21,12 +21,12 @@ You need to grab the source code for ORE, e.g:
 
 # Environment Variables
 
-For purposes of this tutorial, create environment variables pointing to the ORE
-and boost directories, e.g:
+For purposes of this tutorial, create environment variables pointing to the
+boost and ORE directories, e.g:
 
-    SET ORE_ROOT_DIR=C:\repos\ore
     SET BOOST_INCLUDEDIR=C:\repos\boost\boost_1_72_0
     SET BOOST_LIBRARYDIR=C:\repos\boost\boost_1_72_0\lib64-msvc-14.2
+    SET ORE_DIR=C:\repos\ore
 
 # Build ORE
 
@@ -34,15 +34,16 @@ and boost directories, e.g:
 
 Below are the commands to configure the ORE build using cmake:
 
-    mkdir %ORE_ROOT_DIR%\build
-    cd %ORE_ROOT_DIR%\build
-    cmake ..
+    cd %ORE_DIR%
+    mkdir %ORE_DIR%\build
+    cd %ORE_DIR%\build
+    cmake .. -DORE_BUILD_SWIG=0
 
 ## Build ORE
 
 Below are the commands to build ORE:
 
-    cd %ORE_ROOT_DIR%\build
+    cd %ORE_DIR%\build
     cmake --build . --config Release
 
 # Run tests
@@ -51,7 +52,7 @@ Below are the commands to build ORE:
 
 cd to the test directory:
 
-    cd %ORE_ROOT_DIR%\build\QuantLib\test-suite\Release
+    cd %ORE_DIR%\build\QuantLib\test-suite\Release
 
 Run all unit tests:
 
@@ -59,20 +60,20 @@ Run all unit tests:
 
 Or run a selected test, e.g:
 
-    quantlib-test-suite.exe --log_level=all --run_test="QuantLib test suite/Swap tests"
+    quantlib-test-suite.exe --log_level=all --run_test=QuantLibTests/SwapTests
 
 ## QuantExt
 
-    cd %ORE_ROOT_DIR%/build/QuantExt/test/Release
+    cd %ORE_DIR%/build/QuantExt/test/Release
     quantext-test-suite.exe
 
 ## OREData
 
-    cd %ORE_ROOT_DIR%/build/OREData/test/Release
+    cd %ORE_DIR%/build/OREData/test/Release
     ored-test-suite.exe
 
 ## OREAnalytics
 
-    cd %ORE_ROOT_DIR%/build/OREAnalytics/test/Release/
+    cd %ORE_DIR%/build/OREAnalytics/test/Release/
     orea-test-suite.exe
 
