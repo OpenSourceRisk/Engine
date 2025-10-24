@@ -27,7 +27,7 @@
 #include <ql/option.hpp>
 #include <ql/types.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/version.hpp>

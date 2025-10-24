@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional/optional.hpp>
+#include <ql/optional.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/portfolio/referencedata.hpp>

@@ -28,7 +28,7 @@
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/referencedata.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace ore {
 namespace data {

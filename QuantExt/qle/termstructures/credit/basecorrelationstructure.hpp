@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <boost/optional/optional.hpp>
+#include <ql/optional.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>

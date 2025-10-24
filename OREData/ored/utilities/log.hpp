@@ -63,7 +63,7 @@
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
 

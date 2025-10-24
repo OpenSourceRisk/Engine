@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ql/indexes/interestrateindex.hpp>

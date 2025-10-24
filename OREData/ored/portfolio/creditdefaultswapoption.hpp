@@ -25,7 +25,7 @@
 
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/optiondata.hpp>
-#include <boost/optional/optional.hpp>
+#include <ql/optional.hpp>
 
 /*! Serializable Credit Default Swap Option
     \ingroup tradedata

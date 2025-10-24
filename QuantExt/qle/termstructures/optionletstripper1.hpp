@@ -28,7 +28,7 @@
 #include <ql/quotes/simplequote.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;

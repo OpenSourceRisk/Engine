@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 

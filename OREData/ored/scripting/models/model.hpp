@@ -35,7 +35,7 @@
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 namespace ore {

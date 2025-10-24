@@ -24,7 +24,7 @@
 #ifndef quantext_apo_surface_hpp
 #define quantext_apo_surface_hpp
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>

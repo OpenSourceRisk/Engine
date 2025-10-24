@@ -26,7 +26,7 @@
 #include <ql/types.hpp>
 #include <ql/utilities/null.hpp>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 
 #include <map>
 #include <vector>

@@ -26,8 +26,7 @@
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-#include <boost/any.hpp>
-#include <boost/none.hpp>
+#include <ql/any.hpp>
 #include <ql/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 

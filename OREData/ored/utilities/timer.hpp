@@ -22,7 +22,7 @@
 */
 
 #pragma once
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <boost/timer/timer.hpp>
 #include <iostream>
 #include <limits>

@@ -25,7 +25,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
-#include <boost/optional/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace ore {
 namespace data {

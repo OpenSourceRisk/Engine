@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ored/model/lgmdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/types.hpp>

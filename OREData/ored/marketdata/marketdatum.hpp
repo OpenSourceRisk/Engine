@@ -39,7 +39,7 @@
 #include <string>
 
 #include <boost/make_shared.hpp>
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
