@@ -146,8 +146,8 @@ QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, QuantLib::ext::
     }
 
     // If we get to here, we have failed to get a risk weight
-    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier << ","
-                                                                                  << label_1 << ")");
+    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier.value_or("") << ","
+                                                                                  << label_1.value_or("") << ")");
 }
 
 QuantLib::Real SimmConfigurationBase::curvatureWeight(const RiskType& rt, const std::string& label_1) const {

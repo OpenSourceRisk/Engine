@@ -436,7 +436,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     std::vector<Real> multipliers;
                     while (true) {
                         auto v = getAdditionalResult(addResults, "multiplier", multipliers.size() + 1);
-                        if (v.empty())
+                        if (!v.has_value())
                             break;
                         multipliers.push_back(QuantLib::ext::any_cast<Real>(v));
                     }
@@ -469,7 +469,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     }
                     for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
                         auto v = getAdditionalResult(addResults, "amcCalculator", cmpIdx + 1);
-                        if (!v.empty()) {
+                        if (v.has_value()) {
                             amcCalcs.push_back(QuantLib::ext::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v));
                             if (amcIndividualTrainingOutput) {
                                 LOG("Serialising AMC calculator for trade " << cmpIdx + 1 << " of composite trade "

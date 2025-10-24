@@ -67,7 +67,7 @@ protected:
                                         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup){};
 
-    std::vector<ore::data::TimePeriod> timePeriods() override { return {period_.get()}; }
+    std::vector<ore::data::TimePeriod> timePeriods() override { return {period_.value()}; }
 
 private:
     std::vector<Real> p_;

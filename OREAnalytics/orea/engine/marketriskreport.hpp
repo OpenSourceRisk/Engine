@@ -348,7 +348,7 @@ protected:
     virtual std::string cubeFilePath(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup) const {
         return std::string();
     }
-    virtual std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
+    virtual std::vector<ore::data::TimePeriod> timePeriods() { return {period_.value()}; }
     virtual void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                               const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                               const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {}

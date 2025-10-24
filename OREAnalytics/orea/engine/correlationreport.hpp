@@ -61,7 +61,7 @@ protected:
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
     
     ore::data::TimePeriod covariancePeriod() const { return period_.value(); } 
-    std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
+    std::vector<ore::data::TimePeriod> timePeriods() { return {period_.value()}; }
     std::string mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF);
 };
 

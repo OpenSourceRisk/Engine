@@ -66,9 +66,9 @@ void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr
                                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
     if (!tradePnl_) {
-        pnls_ = histPnlGen_->pnl(period_.get(), tradeIdIdxPairs_);
+        pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
     } else {
-        tradePnls_ = histPnlGen_->tradeLevelPnl(period_.get(), tradeIdIdxPairs_);
+        tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
     }
 }
 

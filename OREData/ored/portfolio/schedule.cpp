@@ -276,7 +276,7 @@ Schedule makeSchedule(const ScheduleDates& data) {
     // Avoid compiler warning on gcc
     // https://www.boost.org/doc/libs/1_74_0/libs/optional/doc/html/boost_optional/tutorial/
     // gotchas/false_positive_with__wmaybe_uninitialized.html
-    auto tenor = boost::make_optional(false, Period());
+    QuantLib::ext::optional<Period> tenor = QuantLib::ext::nullopt;
     if (!data.tenor().empty())
         tenor = parsePeriod(data.tenor());
     bool endOfMonth = false;

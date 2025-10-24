@@ -63,7 +63,7 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
             (trade->tradeType() == "TotalReturnSwap" || trade->tradeType() == "ContractForDifference")) {
             std::map<std::string, double> decompositionIndexQuanities;
             for (const auto& [datum, value] : trade->additionalData()) {
-                if (!value.empty() && boost::starts_with(datum, "underlying_quantity_")) {
+                if (value.has_value() && boost::starts_with(datum, "underlying_quantity_")) {
                     decompositionIndexQuanities[datum.substr(20)] = QuantLib::ext::any_cast<double>(value);
                 }
             }
