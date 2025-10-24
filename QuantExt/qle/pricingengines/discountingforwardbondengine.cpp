@@ -111,7 +111,7 @@ void DiscountingForwardBondEngine::calculate() const {
                                                                                 : arguments_.compensationPaymentDate;
     if (effCmpPaymentDate > discountCurve_->referenceDate()) {
         results_.value +=
-            (arguments_.isLong ? 1.0 : -1.0) * effCmpPayment * discountCurve_->discount(effCmpPaymentDate);
+            (arguments_.isLong ? -1.0 : 1.0) * effCmpPayment * discountCurve_->discount(effCmpPaymentDate);
         results_.additionalResults["compensationPayment"] = effCmpPayment;
         results_.additionalResults["compensationPaymentDate"] = effCmpPaymentDate;
         results_.additionalResults["compensationPaymentDiscount"] = discountCurve_->discount(effCmpPaymentDate);
