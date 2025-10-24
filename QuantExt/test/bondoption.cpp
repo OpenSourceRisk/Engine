@@ -99,10 +99,6 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
     auto bondOptionEngine = QuantLib::ext::make_shared<BlackBondOptionEngine>(
         discountTS, Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS);
 
-    // underlying bond engine
-    auto bondEngine = QuantLib::ext::make_shared<DiscountingRiskyBondEngine>(discountTS, dpts, recRate,
-                                                                             issuerSpreadQuote, 3 * Months);
-
     // build bond option
     Real strikePrice = notional;
     Real faceAmount = notional;
