@@ -1064,7 +1064,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     for (const auto& pd : putDeltas) {
         strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Put, pd));
     }
-    strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(atmType, atmDeltaType));
+    strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(
+        atmType, atmDeltaType.has_value() ? boost::optional<DeltaVolQuote::DeltaType>(*atmDeltaType) : boost::none));
     for (const auto& cd : callDeltas) {
         strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Call, cd));
     }

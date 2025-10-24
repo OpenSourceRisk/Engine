@@ -25,7 +25,7 @@
 #ifndef quantext_black_variance_surface_delta_hpp
 #define quantext_black_variance_surface_delta_hpp
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
