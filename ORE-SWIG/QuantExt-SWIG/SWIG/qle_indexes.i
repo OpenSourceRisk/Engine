@@ -332,6 +332,5 @@ qle_export_overnight_instance(COPIbr);
 qle_export_overnight_instance(CORRA);
 qle_export_overnight_instance(DKKOis);
 qle_export_overnight_instance(SEKSior);
-qle_export_overnight_instance(Tonar);
 
 #endif
