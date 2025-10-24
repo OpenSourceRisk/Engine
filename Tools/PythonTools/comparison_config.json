@@ -1581,7 +1581,18 @@
               "FBAexOwnSP",
               "FCAexOwnSP",
               "FBAexAllSP",
-              "FCAexAllSP"
+              "FCAexAllSP",
+              "COLVA",
+              "MVA",
+              "OurKVACCR",
+              "TheirKVACCR",
+              "OurKVACVA",
+              "TheirKVACVA",
+              "CollateralFloor",
+              "AllocatedCVA",
+              "AllocatedDVA",
+              "BaselEPE",
+              "BaselEEPE"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
