@@ -31,6 +31,9 @@
 #include <ored/utilities/log.hpp>
 
 using ore::data::Logger;
+using ore::data::ProgressMessage;
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(messageType, "MessageType", std::string);
 
 namespace ore {
 namespace test {
@@ -94,11 +97,12 @@ void setupTestLogging(int argc, char** argv) {
     if (!logFile.empty()) {
         auto file_sink = boost::log::add_file_log(boost::log::keywords::file_name = logFile,
                                                   boost::log::keywords::auto_flush = true);
-        file_sink->set_filter(!boost::log::expressions::has_attr("NoConsole"));
+        file_sink->set_filter(!boost::log::expressions::has_attr("NoConsole") && messageType != ProgressMessage::name);
     } else { 
         // explicitly add a console log, we can disable StructuredLogging to console for tests that expected to fail
         auto console_sink = boost::log::add_console_log(std::clog);
-        console_sink->set_filter(!boost::log::expressions::has_attr("NoConsole"));
+        console_sink->set_filter(!boost::log::expressions::has_attr("NoConsole") &&
+                                 messageType != ProgressMessage::name);
     }
 }
 
