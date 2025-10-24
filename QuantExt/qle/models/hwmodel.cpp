@@ -28,6 +28,10 @@ HwModel::HwModel(const QuantLib::ext::shared_ptr<IrHwParametrization>& parametri
     QL_REQUIRE(parametrization_ != nullptr, "HwModel: parametrization is null");
     stateProcess_ =
         QuantLib::ext::make_shared<IrHwStateProcess>(parametrization_, measure_, discretization_, evaluateBankAccount_);
+    arguments_.resize(2);
+    arguments_[0] = parametrization_->parameter(0);
+    arguments_[1] = parametrization_->parameter(1);
+    registerWith(parametrization_->termStructure());
 }
 
 QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,

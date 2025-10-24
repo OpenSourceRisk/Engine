@@ -1,23 +1,24 @@
 <?xml version="1.0"?>
 <Simulation>
-    <Parameters>
-      <Grid>5000,1D</Grid>
-      <Calendar>EUR</Calendar>
-      <Sequence>MersenneTwister</Sequence>
-      <Scenario>Simple</Scenario>
-      <Seed>42</Seed>
-      <Samples>1</Samples>
-      <Ordering>Steps</Ordering>
-      <DirectionIntegers>JoeKuoD7</DirectionIntegers>
-    </Parameters>
+  <Parameters>
+    <Discretization>Exact</Discretization>
+    <Grid>81,3M</Grid>
+    <Calendar>EUR</Calendar>
+    <Sequence>SobolBrownianBridge</Sequence>
+    <Scenario>Simple</Scenario>
+    <Seed>42</Seed>
+    <Samples>1000</Samples>
+    <Ordering>Steps</Ordering>
+    <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+  </Parameters>
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
     <Currencies>
       <Currency>EUR</Currency>
     </Currencies>
-    <BootstrapTolerance>0.0001</BootstrapTolerance>
     <Discretization>Euler</Discretization>
     <Measure>BA</Measure>
+    <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
       <HWModel ccy="default">
         <CalibrationType>StatisticalWithRiskNeutralVolatility</CalibrationType>
@@ -47,20 +48,7 @@
         </CalibrationSwaptions>
       </HWModel>
     </InterestRateModels>
-    <ForeignExchangeModels>
-      <CrossCcyLGM foreignCcy="default">
-        <DomesticCcy>EUR</DomesticCcy>
-        <CalibrationType>None</CalibrationType>
-        <Sigma>
-          <Calibrate>N</Calibrate>
-          <ParamType>Constant</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.1</InitialValue>
-        </Sigma>
-        <CalibrationOptions/>
-      </CrossCcyLGM>
-    </ForeignExchangeModels>
-    <InstantaneousCorrelations/>
+    <ForeignExchangeModels/>
   </CrossAssetModel>
   <Market>
     <BaseCurrency>EUR</BaseCurrency>
@@ -69,11 +57,40 @@
     </Currencies>
     <YieldCurves>
       <Configuration>
-        <Tenors>1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Tenors>
+        <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
         <Interpolation>LogLinear</Interpolation>
         <Extrapolation>Y</Extrapolation>
       </Configuration>
     </YieldCurves>
-    <Indices/>
+    <Indices>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+    </Indices>
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-2Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-10Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+    <AggregationScenarioDataCurrencies>
+      <Currency>EUR</Currency>
+    </AggregationScenarioDataCurrencies>
+    <AggregationScenarioDataIndices>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+    </AggregationScenarioDataIndices>
   </Market>
 </Simulation>

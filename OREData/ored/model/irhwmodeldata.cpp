@@ -32,14 +32,18 @@ namespace ore {
 namespace data {
 
 bool HwModelData::operator==(const HwModelData& rhs) {
-
     if (qualifier_ != rhs.qualifier_ || calibrationType_ != rhs.calibrationType_ ||
         calibrateKappa_ != rhs.calibrateKappa_ || kappaType_ != rhs.kappaType_ || kappaTimes_ != rhs.kappaTimes_ ||
         kappaValues_ != rhs.kappaValues_ || calibrateSigma_ != rhs.calibrateSigma_ || sigmaType_ != rhs.sigmaType_ ||
-        sigmaTimes_ != rhs.sigmaTimes_ || sigmaValues_ != rhs.sigmaValues_) {
+        sigmaTimes_ != rhs.sigmaTimes_ || sigmaValues_ != rhs.sigmaValues_ || pcaLoadings_ != rhs.pcaLoadings_ ||
+        calibratePcaSigma0_ != rhs.calibratePcaSigma0_ || pcaSigma0Type_ != rhs.pcaSigma0Type_ ||
+        pcaSigma0Times_ != rhs.pcaSigma0Times_ || pcaSigma0Values_ != rhs.pcaSigma0Values_ ||
+        pcaSigmaRatios_ != rhs.pcaSigmaRatios_ || optionExpiries_ != rhs.optionExpiries_ ||
+        optionTerms_ != rhs.optionTerms_ || optionStrikes_ != rhs.optionStrikes_) {
         return false;
+    } else {
+        return true;
     }
-    return true;
 }
 
 bool HwModelData::operator!=(const HwModelData& rhs) { return !(*this == rhs); }

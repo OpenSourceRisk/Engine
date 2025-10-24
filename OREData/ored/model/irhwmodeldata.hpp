@@ -65,7 +65,7 @@ public:
         : IrModelData("HwModel", qualifier, calibrationType), calibrateKappa_(calibrateKappa), kappaType_(kappaType),
           kappaTimes_(std::move(kappaTimes)), kappaValues_(std::move(kappaValues)), calibrateSigma_(calibrateSigma),
           sigmaType_(sigmaType), sigmaTimes_(std::move(sigmaTimes)), sigmaValues_(std::move(sigmaValues)),
-          calibratePcaSigma0_(calibratePcaSigma0), pcaSigma0Type_(pcaSigma0Type),
+          pcaLoadings_(pcaLoadings), calibratePcaSigma0_(calibratePcaSigma0), pcaSigma0Type_(pcaSigma0Type),
           pcaSigma0Times_(std::move(pcaSigma0Times)), pcaSigma0Values_(std::move(pcaSigma0Values)),
           pcaSigmaRatios_(std::move(pcaSigmaRatios)), optionExpiries_(optionExpiries), optionTerms_(optionTerms),
           optionStrikes_(optionStrikes) {}
