@@ -73,6 +73,7 @@ public:
         boost::optional<FXConversion> fxConversionAtPeriodEnd() const { return fxConversion_; }
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
+        FXConversion parseFXConversion(string fxConv_);
 
     private:
         bool payer_;

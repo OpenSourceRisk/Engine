@@ -32,6 +32,7 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 
+#include <boost/optional/optional_io.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/bimap.hpp>
 #include <boost/optional.hpp>
@@ -62,8 +63,7 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
     paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
     initialPrice_ = Null<Real>();
-    fxConversion_ = (XMLUtils::getChildValue(node, "FXConversion", false, "Start") == "Start") ? FXConversion::Start
-                                                                                               : FXConversion::End;
+    fxConversion_ = parseFXConversion(XMLUtils::getChildValue(node, "FXConversion", false, "Start"));
     if (auto n = XMLUtils::getChildNode(node, "InitialPrice")) {
         initialPrice_ = parseReal(XMLUtils::getNodeValue(n));
     }
@@ -74,6 +74,8 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
     }
     fxTerms_ = XMLUtils::getChildrenValues(node, "FXTerms", "FXIndex", false);
 }
+
+
 
 XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("ReturnData");
@@ -102,8 +104,18 @@ XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, n, "PayUnderlyingCashFlowsImmediately", *payUnderlyingCashFlowsImmediately_);
     if (!fxTerms_.empty())
         XMLUtils::addChildren(doc, n, "FXTerms", "FXIndex", fxTerms_);
+    if (fxConversion_) {
+        XMLUtils::addChild(doc, n, "FXConversion", ore::data::to_string(fxConversion_));
+    }
     return n;
 }
+
+TRS::FXConversion TRS::ReturnData::parseFXConversion(string fxConv_) {
+    return (fxConv_ == "Start" ? FXConversion::Start : FXConversion::End);
+}
+
+
+
 
 void TRS::FundingData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FundingData");
@@ -314,6 +326,10 @@ TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::strin
     missingFxIndexPairs.insert(domestic + foreign);
     return fx;
 }
+
+/*TRS::FXConversion TRS::ReturnData::parseFXConversion(string fxConv_) { return  (fxConv_ == "Start" ? FXConversion::Start
+                                                                                               : FXConversion::End);
+}*/
 
 void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -860,6 +876,17 @@ std::ostream& operator<<(std::ostream& os, const TRS::FundingData::NotionalType 
     QL_REQUIRE(it != types.right.end(), "operator<<(" << static_cast<int>(t) << ") failed, this is an internal error.");
     os << it->second;
     return os;
+}
+
+std::ostream& operator<<(std::ostream& out, const TRS::FXConversion type) {
+    switch (type) {
+    case TRS::FXConversion::Start:
+        return out << "Start";
+    case TRS::FXConversion::End:
+        return out << "End";
+    default:
+        QL_FAIL("Unrecognized FXConversion type");
+    }
 }
 
 void TRS::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) const{
