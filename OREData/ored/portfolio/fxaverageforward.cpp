@@ -85,7 +85,7 @@ void FxAverageForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     LOG("FxAverageForward::build() done");
 }
 
-const std::map<std::string, boost::any>& FxAverageForward::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& FxAverageForward::additionalData() const {
     additionalData_.clear();
     additionalData_["settlementNotional"] = settlementNotional_;
     additionalData_["settlementCurrency"] = settlementCurrency_;

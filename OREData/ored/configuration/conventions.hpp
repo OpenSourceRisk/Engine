@@ -918,16 +918,16 @@ public:
     Size flatPaymentLag() const { return flatPaymentLag_; }
 
     // only OIS
-    boost::optional<bool> includeSpread() const { return includeSpread_; }
-    boost::optional<QuantLib::Period> lookback() const { return lookback_; }
-    boost::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
-    boost::optional<Size> rateCutoff() const { return rateCutoff_; }
-    boost::optional<bool> isAveraged() const { return isAveraged_; }
-    boost::optional<bool> flatIncludeSpread() const { return flatIncludeSpread_; }
-    boost::optional<QuantLib::Period> flatLookback() const { return flatLookback_; }
-    boost::optional<QuantLib::Size> flatFixingDays() const { return flatFixingDays_; }
-    boost::optional<Size> flatRateCutoff() const { return flatRateCutoff_; }
-    boost::optional<bool> flatIsAveraged() const { return flatIsAveraged_; }
+    QuantLib::ext::optional<bool> includeSpread() const { return includeSpread_; }
+    QuantLib::ext::optional<QuantLib::Period> lookback() const { return lookback_; }
+    QuantLib::ext::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
+    QuantLib::ext::optional<Size> rateCutoff() const { return rateCutoff_; }
+    QuantLib::ext::optional<bool> isAveraged() const { return isAveraged_; }
+    QuantLib::ext::optional<bool> flatIncludeSpread() const { return flatIncludeSpread_; }
+    QuantLib::ext::optional<QuantLib::Period> flatLookback() const { return flatLookback_; }
+    QuantLib::ext::optional<QuantLib::Size> flatFixingDays() const { return flatFixingDays_; }
+    QuantLib::ext::optional<Size> flatRateCutoff() const { return flatRateCutoff_; }
+    QuantLib::ext::optional<bool> flatIsAveraged() const { return flatIsAveraged_; }
     //@}
 
     //! \name Serialisation
@@ -948,16 +948,16 @@ private:
     QuantLib::Size paymentLag_;
     QuantLib::Size flatPaymentLag_;
     // OIS only
-    boost::optional<bool> includeSpread_;
-    boost::optional<QuantLib::Period> lookback_;
-    boost::optional<QuantLib::Size> fixingDays_;
-    boost::optional<Size> rateCutoff_;
-    boost::optional<bool> isAveraged_;
-    boost::optional<bool> flatIncludeSpread_;
-    boost::optional<QuantLib::Period> flatLookback_;
-    boost::optional<QuantLib::Size> flatFixingDays_;
-    boost::optional<Size> flatRateCutoff_;
-    boost::optional<bool> flatIsAveraged_;
+    QuantLib::ext::optional<bool> includeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> lookback_;
+    QuantLib::ext::optional<QuantLib::Size> fixingDays_;
+    QuantLib::ext::optional<Size> rateCutoff_;
+    QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> flatIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> flatLookback_;
+    QuantLib::ext::optional<QuantLib::Size> flatFixingDays_;
+    QuantLib::ext::optional<Size> flatRateCutoff_;
+    QuantLib::ext::optional<bool> flatIsAveraged_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -1022,11 +1022,11 @@ public:
     bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
 
     // only OIS
-    boost::optional<bool> includeSpread() const { return includeSpread_; }
-    boost::optional<QuantLib::Period> lookback() const { return lookback_; }
-    boost::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
-    boost::optional<Size> rateCutoff() const { return rateCutoff_; }
-    boost::optional<bool> isAveraged() const { return isAveraged_; }
+    QuantLib::ext::optional<bool> includeSpread() const { return includeSpread_; }
+    QuantLib::ext::optional<QuantLib::Period> lookback() const { return lookback_; }
+    QuantLib::ext::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
+    QuantLib::ext::optional<Size> rateCutoff() const { return rateCutoff_; }
+    QuantLib::ext::optional<bool> isAveraged() const { return isAveraged_; }
     //@}
 
     //! \name Serialisation interface
@@ -1073,11 +1073,11 @@ private:
     std::string strIsAveraged_;
 
     // OIS Only
-    boost::optional<bool> includeSpread_;
-    boost::optional<QuantLib::Period> lookback_;
-    boost::optional<QuantLib::Size> fixingDays_;
-    boost::optional<Size> rateCutoff_;
-    boost::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> includeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> lookback_;
+    QuantLib::ext::optional<QuantLib::Size> fixingDays_;
+    QuantLib::ext::optional<Size> rateCutoff_;
+    QuantLib::ext::optional<bool> isAveraged_;
 };
 
 //! Container for storing Credit Default Swap quote conventions
@@ -1594,7 +1594,7 @@ public:
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
 
     //! N-th weekday based constructor
@@ -1611,7 +1611,7 @@ public:
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
 
     //! Calendar days before based constructor
@@ -1628,7 +1628,7 @@ public:
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
     
     //! Business days before based constructor
@@ -1645,7 +1645,7 @@ public:
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
 
     //! \name Inspectors
@@ -1680,7 +1680,7 @@ public:
     }
     const AveragingData& averagingData() const { return averagingData_; }
     QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
-    const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData() const { return offPeakPowerIndexData_; }
+    const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData() const { return offPeakPowerIndexData_; }
     const std::string& indexName() const { return indexName_; }
     QuantLib::Frequency optionContractFrequency() const { return optionContractFrequency_; }
     OptionAnchorType optionAnchorType() const { return optionAnchorType_; }
@@ -1741,7 +1741,7 @@ private:
     std::map<QuantLib::Natural, QuantLib::Natural> optionContinuationMappings_;
     AveragingData averagingData_;
     QuantLib::Natural hoursPerDay_;
-    boost::optional<OffPeakPowerIndexData> offPeakPowerIndexData_;
+    QuantLib::ext::optional<OffPeakPowerIndexData> offPeakPowerIndexData_;
     std::string indexName_;
     
     std::string strOptionContractFrequency_;

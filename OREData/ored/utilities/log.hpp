@@ -647,14 +647,14 @@ public:
     void log() const;
     //! create JSON-like output from the data
     const std::string json() const { return jsonify(data_); }
-    void set(const std::string& key, const boost::any& value) { data_[key] = value; }
+    void set(const std::string& key, const QuantLib::ext::any& value) { data_[key] = value; }
     virtual void emitLog() const = 0;
 
 protected:
     //! generate Boost log record - this method is called by log()
-    static std::string jsonify(const boost::any&);
+    static std::string jsonify(const QuantLib::ext::any&);
 
-    std::map<std::string, boost::any> data_;
+    std::map<std::string, QuantLib::ext::any> data_;
     mutable bool logged_ = false;
 };
 
@@ -720,7 +720,7 @@ public:
 
 class EventMessage : public JSONMessage {
 public:
-    EventMessage(const std::string& msg, const std::string& msgKey, const std::map<std::string, boost::any> data = {}) {
+    EventMessage(const std::string& msg, const std::string& msgKey, const std::map<std::string, QuantLib::ext::any> data = {}) {
         data_ = data;
         data_[msgKey] = msg;
     }

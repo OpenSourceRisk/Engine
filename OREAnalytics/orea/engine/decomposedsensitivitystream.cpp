@@ -64,7 +64,7 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
             std::map<std::string, double> decompositionIndexQuanities;
             for (const auto& [datum, value] : trade->additionalData()) {
                 if (!value.empty() && boost::starts_with(datum, "underlying_quantity_")) {
-                    decompositionIndexQuanities[datum.substr(20)] = boost::any_cast<double>(value);
+                    decompositionIndexQuanities[datum.substr(20)] = QuantLib::ext::any_cast<double>(value);
                 }
             }
             if (!decompositionIndexQuanities.empty()) {

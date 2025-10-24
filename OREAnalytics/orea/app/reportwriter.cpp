@@ -923,17 +923,17 @@ void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
 
 namespace {
 template <class T>
-void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
-    T map = boost::any_cast<T>(resultMap);
+void addMapResults(QuantLib::ext::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
+    T map = QuantLib::ext::any_cast<T>(resultMap);
     for (auto it : map) {
         std::string name = resultName + "_" + it.first.code();
-        boost::any tmp = it.second;
+        QuantLib::ext::any tmp = it.second;
         auto p = parseBoostAny(tmp);
         report.next().add(tradeId).add(name).add(p.first).add(p.second);
     }
 }
 
-void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
+void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const QuantLib::ext::any& result,
                  const std::size_t precision) {
     auto p = parseBoostAny(result, precision);
     if (boost::starts_with(p.first, "vector")) {
@@ -1012,7 +1012,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                 if (i > 0 && instruments[i - 1] == nullptr)
                     continue;
 
-                std::map<std::string, boost::any> thisAddResults =
+                std::map<std::string, QuantLib::ext::any> thisAddResults =
                     i == 0 ? additionalResults : instruments[i - 1]->additionalResults();
 
                 // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in

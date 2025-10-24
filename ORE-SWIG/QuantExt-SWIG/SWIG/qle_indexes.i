@@ -223,7 +223,7 @@ class CommodityIndex : public Index {
         //virtual Real pastFixing(const QuantLib::Date& fixingDate) const;
         ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expireDate = QuantLib::Date(),
                                               const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
-                                              const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::mpme) const = 0;
+                                              const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::mpme) const = 0;
 };
 
 // QuantExt Commodity Spot Index
@@ -234,7 +234,7 @@ class CommoditySpotIndex : public CommodityIndex {
                    const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
     ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
                                           const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
-                                          const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const;
+                                          const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const;
 };
 
 // QuantExt Commodity Futures Index
@@ -251,7 +251,7 @@ public:
 
     ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
-        const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const;
+        const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const;
 };
 
 // QuantLib BMA Index (not yet wrapped in QL v1.14)

@@ -32,7 +32,7 @@
 
 namespace QuantExt {
 using namespace QuantLib;
-using boost::optional;
+using QuantLib::ext::optional;
 
 typedef std::vector<std::vector<QuantLib::ext::shared_ptr<QuantLib::CapFloor> > > CapFloorMatrix;
 
@@ -49,8 +49,8 @@ public:
                        Real accuracy = 1.0e-6, Natural maxIter = 100,
                        const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
-                       const optional<VolatilityType> targetVolatilityType = boost::none,
-                       const optional<Real> targetDisplacement = boost::none);
+                       const optional<VolatilityType> targetVolatilityType = QuantLib::ext::nullopt,
+                       const optional<Real> targetDisplacement = QuantLib::ext::nullopt);
 
     const Matrix& capFloorPrices() const;
     const Matrix& capletVols() const;

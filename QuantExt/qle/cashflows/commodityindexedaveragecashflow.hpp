@@ -59,7 +59,7 @@ public:
         CommodityQuantityFrequency quantityFrequency = CommodityQuantityFrequency::PerCalculationPeriod,
         QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
-        const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none,
+        const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = QuantLib::ext::nullopt,
         const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
@@ -75,7 +75,7 @@ public:
         CommodityQuantityFrequency quantityFrequency = CommodityQuantityFrequency::PerCalculationPeriod,
         QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
-        const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = boost::none,
+        const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = QuantLib::ext::nullopt,
         const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
@@ -91,7 +91,7 @@ public:
     QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
     QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
     bool unrealisedQuantity() const { return unrealisedQuantity_; }
-    const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData() const {
+    const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData() const {
         return offPeakPowerData_;
     }
 
@@ -159,7 +159,7 @@ private:
     QuantLib::Natural dailyExpiryOffset_;
     bool unrealisedQuantity_;
     QuantLib::Real periodQuantity_;
-    boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
+    QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
     mutable QuantLib::Real averagePrice_;
     QuantLib::Natural avgPricePrecision_;
     // Populated only when offPeakPowerData_ is provided.
@@ -203,7 +203,7 @@ public:
     CommodityIndexedAverageLeg& withDailyExpiryOffset(QuantLib::Natural dailyExpiryOffset);
     CommodityIndexedAverageLeg& unrealisedQuantity(bool flag = false);
     CommodityIndexedAverageLeg&
-    withOffPeakPowerData(const boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData);
+    withOffPeakPowerData(const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData);
     CommodityIndexedAverageLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
     CommodityIndexedAverageLeg& withAvgPricePrecision(QuantLib::Natural precision =  QuantLib::Null<QuantLib::Natural>());
     operator Leg() const;
@@ -232,7 +232,7 @@ private:
     QuantLib::Natural hoursPerDay_;
     QuantLib::Natural dailyExpiryOffset_;
     bool unrealisedQuantity_;
-    boost::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
+    QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
     ext::shared_ptr<FxIndex> fxIndex_;
     QuantLib::Natural avgPricePrecision_;
 };

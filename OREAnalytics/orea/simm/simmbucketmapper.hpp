@@ -52,7 +52,7 @@ public:
     virtual bool hasBuckets(const CrifRecord::RiskType& riskType) const = 0;
 
     //! Check if the given \p riskType and \p qualifier has a mapping (which is valid, and matches the fallback flag if given)
-    virtual bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier, boost::optional<bool> fallback = boost::none) const = 0;
+    virtual bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier, QuantLib::ext::optional<bool> fallback = QuantLib::ext::nullopt) const = 0;
 
     //! Add a single \p bucket mapping for \p qualifier with risk type \p riskType
     /*! \todo Not very convenient. If deemed useful, add more methods for adding

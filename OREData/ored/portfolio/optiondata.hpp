@@ -55,9 +55,9 @@ public:
                const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = std::string(),
                string exerciseFeeSettlementCalendar = std::string(), string exerciseFeeSettlementConvention = std::string(),
                string payoffType = std::string(), string payoffType2 = std::string(),
-               const boost::optional<bool>& automaticExercise = boost::none,
-               const boost::optional<OptionExerciseData>& exerciseData = boost::none,
-               const boost::optional<OptionPaymentData>& paymentData = boost::none,
+               const QuantLib::ext::optional<bool>& automaticExercise = QuantLib::ext::nullopt,
+               const QuantLib::ext::optional<OptionExerciseData>& exerciseData = QuantLib::ext::nullopt,
+               const QuantLib::ext::optional<OptionPaymentData>& paymentData = QuantLib::ext::nullopt,
                const bool midCouponExercise = false, const std::string& cashSettlementCurrency = std::string(),
                const std::string& cashSettlementFxIndex = std::string(),
                const std::string& cashSettlementFixingDate = std::string())
@@ -96,9 +96,9 @@ public:
     const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
     const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
     const vector<double>& exercisePrices() const { return exercisePrices_; }
-    boost::optional<bool> automaticExercise() const { return automaticExercise_; }
-    const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
-    const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    QuantLib::ext::optional<bool> automaticExercise() const { return automaticExercise_; }
+    const QuantLib::ext::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
+    const QuantLib::ext::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
     const bool midCouponExercise() const { return midCouponExercise_; }
     const string& cashSettlementCurrency() const { return cashSettlementCurrency_; }
     const string& cashSettlementFxIndex() const { return cashSettlementFxIndex_; }
@@ -159,9 +159,9 @@ private:
     string exerciseFeeSettlementCalendar_;
     string exerciseFeeSettlementConvention_;
     vector<double> exercisePrices_;
-    boost::optional<bool> automaticExercise_;
-    boost::optional<OptionExerciseData> exerciseData_;
-    boost::optional<OptionPaymentData> paymentData_;
+    QuantLib::ext::optional<bool> automaticExercise_;
+    QuantLib::ext::optional<OptionExerciseData> exerciseData_;
+    QuantLib::ext::optional<OptionPaymentData> paymentData_;
     bool midCouponExercise_;
     string cashSettlementCurrency_;
     string cashSettlementFxIndex_; 

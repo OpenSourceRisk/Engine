@@ -496,11 +496,11 @@ void JSONMessage::log() const {
     logged_ = true;
 }
 
-string JSONMessage::jsonify(const boost::any& obj) {
-    if (obj.type() == typeid(map<string, boost::any>)) {
+string JSONMessage::jsonify(const QuantLib::ext::any& obj) {
+    if (obj.type() == typeid(map<string, QuantLib::ext::any>)) {
         string jsonStr = "{ ";
         Size i = 0;
-        for (const auto& kv : boost::any_cast<map<string, boost::any>>(obj)) {
+        for (const auto& kv : QuantLib::ext::any_cast<map<string, QuantLib::ext::any>>(obj)) {
             if (i > 0)
                 jsonStr += ", ";
             jsonStr += '\"' + kv.first + "\": " + jsonify(kv.second);
@@ -508,10 +508,10 @@ string JSONMessage::jsonify(const boost::any& obj) {
         }
         jsonStr += " }";
         return jsonStr;
-    } else if (obj.type() == typeid(vector<boost::any>)) {
+    } else if (obj.type() == typeid(vector<QuantLib::ext::any>)) {
         string arrayStr = "[ ";
         Size i = 0;
-        for (const auto& v : boost::any_cast<vector<boost::any>>(obj)) {
+        for (const auto& v : QuantLib::ext::any_cast<vector<QuantLib::ext::any>>(obj)) {
             if (i > 0)
                 arrayStr += ", ";
             arrayStr += jsonify(v);
@@ -520,30 +520,30 @@ string JSONMessage::jsonify(const boost::any& obj) {
         arrayStr += " ]";
         return arrayStr;
     } else if (obj.type() == typeid(string)) {
-        string str = boost::any_cast<string>(obj);
+        string str = QuantLib::ext::any_cast<string>(obj);
         boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
         boost::replace_all(str, "\"", "\\\"");
         boost::replace_all(str, "\r", "\\r");
         boost::replace_all(str, "\n", "\\n");
         return '\"' + str + '\"';
     } else if (obj.type() == typeid(StructuredMessage::Category)) {
-        return to_string(boost::any_cast<StructuredMessage::Category>(obj));
+        return to_string(QuantLib::ext::any_cast<StructuredMessage::Category>(obj));
     } else if (obj.type() == typeid(StructuredMessage::Group)) {
-        return to_string(boost::any_cast<StructuredMessage::Group>(obj));
+        return to_string(QuantLib::ext::any_cast<StructuredMessage::Group>(obj));
     } else if (obj.type() == typeid(int)) {
-        return to_string(boost::any_cast<int>(obj));
+        return to_string(QuantLib::ext::any_cast<int>(obj));
     } else if (obj.type() == typeid(bool)) {
-        return to_string(boost::any_cast<bool>(obj));
+        return to_string(QuantLib::ext::any_cast<bool>(obj));
     } else if (obj.type() == typeid(QuantLib::Size)) {
-        return to_string(boost::any_cast<QuantLib::Size>(obj));
+        return to_string(QuantLib::ext::any_cast<QuantLib::Size>(obj));
     } else if (obj.type() == typeid(QuantLib::Real)) {
-        return to_string(boost::any_cast<QuantLib::Real>(obj));
+        return to_string(QuantLib::ext::any_cast<QuantLib::Real>(obj));
     } else if (obj.type() == typeid(unsigned int)) {
-        return to_string(boost::any_cast<unsigned int>(obj));
+        return to_string(QuantLib::ext::any_cast<unsigned int>(obj));
     } else if (obj.type() == typeid(unsigned short)) {
-        return to_string(boost::any_cast<unsigned short>(obj));
+        return to_string(QuantLib::ext::any_cast<unsigned short>(obj));
     } else if (obj.type() == typeid(float)) {
-        return to_string(boost::any_cast<float>(obj));
+        return to_string(QuantLib::ext::any_cast<float>(obj));
     } else {
         try {
             // It is possible that this line is the one causing the unknown value error.
@@ -562,11 +562,11 @@ StructuredMessage::StructuredMessage(const Category& category, const Group& grou
     data_["message"] = message;
 
     if (!subFields.empty()) {
-        vector<boost::any> subFieldsVector;
+        vector<QuantLib::ext::any> subFieldsVector;
         bool addedSubField = false;
         for (const auto& sf : subFields) {
             if (!sf.second.empty()) {
-                map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
+                map<string, QuantLib::ext::any> subField({{"name", sf.first}, {"value", sf.second}});
                 subFieldsVector.push_back(subField);
                 addedSubField = true;
             }
@@ -584,7 +584,7 @@ void StructuredMessage::emitLog() const {
     QL_REQUIRE(it != data_.end(), "StructuredMessage must have a 'category' key specified.");
     QL_REQUIRE(it->second.type() == typeid(string), "StructuredMessage category must be a string.");
 
-    string category = boost::any_cast<string>(it->second);
+    string category = QuantLib::ext::any_cast<string>(it->second);
     if (category == to_string(StructuredMessage::Category::Unknown) || category == to_string(StructuredMessage::Category::Warning)) {
         BOOST_LOG_SEV(lg, oreSeverity::warning) << json();
     } else if (category == to_string(StructuredMessage::Category::Error)) {
@@ -609,13 +609,13 @@ void StructuredMessage::addSubFields(const map<string, string>& subFields) {
             return;
 
         if (data_.find("sub_fields") == data_.end()) {
-            data_["sub_fields"] = vector<boost::any>();
+            data_["sub_fields"] = vector<QuantLib::ext::any>();
         }
 
         for (const auto& sf : subFields) {
             if (!sf.second.empty()) {
-                map<string, boost::any> subField({{"name", sf.first}, {"value", sf.second}});
-                boost::any_cast<vector<boost::any>&>(data_.at("sub_fields")).push_back(subField);
+                map<string, QuantLib::ext::any> subField({{"name", sf.first}, {"value", sf.second}});
+                QuantLib::ext::any_cast<vector<QuantLib::ext::any>&>(data_.at("sub_fields")).push_back(subField);
             }
         }
 

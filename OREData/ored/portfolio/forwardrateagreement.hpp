@@ -47,7 +47,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     const string& index() const { return index_; }
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 private:
     string longShort_;

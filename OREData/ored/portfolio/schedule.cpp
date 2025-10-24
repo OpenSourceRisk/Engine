@@ -282,7 +282,7 @@ Schedule makeSchedule(const ScheduleDates& data) {
     bool endOfMonth = false;
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
-    ext::optional<BusinessDayConvention> endOfMonthConvention = boost::none;
+    ext::optional<BusinessDayConvention> endOfMonthConvention = QuantLib::ext::nullopt;
     if (!data.endOfMonthConvention().empty())
         endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
@@ -299,7 +299,7 @@ Schedule makeSchedule(const ScheduleDates& data) {
         dates.erase(last, dates.end());
     }
     
-    return QuantLib::Schedule(dates, calendar, convention, boost::none, tenor, boost::none, endOfMonth, vector<bool>(0),
+    return QuantLib::Schedule(dates, calendar, convention, QuantLib::ext::nullopt, tenor, QuantLib::ext::nullopt, endOfMonth, vector<bool>(0),
                               false, false, endOfMonthConvention);
 }
 
@@ -335,12 +335,12 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
         derivedDate = calendar.advance(d, shift, convention);
         derivedDates.push_back(derivedDate);
     }
-    ext::optional<BusinessDayConvention> endOfMonthConvention = boost::none;
+    ext::optional<BusinessDayConvention> endOfMonthConvention = QuantLib::ext::nullopt;
     if (baseSchedule.hasEndOfMonthBusinessDayConvention())
         endOfMonthConvention = baseSchedule.endOfMonthBusinessDayConvention();
 
-    return QuantLib::Schedule(vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, boost::none,
-                              baseSchedule.tenor(), boost::none, baseSchedule.endOfMonth(), std::vector<bool>(0),
+    return QuantLib::Schedule(vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, QuantLib::ext::nullopt,
+                              baseSchedule.tenor(), QuantLib::ext::nullopt, baseSchedule.endOfMonth(), std::vector<bool>(0),
                               data.removeFirstDate(), data.removeLastDate(),
                               endOfMonthConvention);
 }
@@ -375,7 +375,7 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
     BusinessDayConvention bdcEnd = ModifiedFollowing;
     DateGeneration::Rule rule = DateGeneration::Forward;
     bool endOfMonth = false;
-    ext::optional<BusinessDayConvention> endOfMonthConvention = boost::none;
+    ext::optional<BusinessDayConvention> endOfMonthConvention = QuantLib::ext::nullopt;
 
     // now check the strings, if they are empty we take defaults
     if (!data.convention().empty())
@@ -556,14 +556,14 @@ Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplaceme
         return QuantLib::Schedule(
             dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
             hasConvention && hasConsistentConvention ? convention : Unadjusted,
-            hasTermConvention ? ext::optional<BusinessDayConvention>(termConvention) : boost::none,
-            hasTenor && hasConsistentTenor ? ext::optional<Period>(tenor) : boost::none,
-            hasRule && hasConsistentRule ? ext::optional<DateGeneration::Rule>(rule) : boost::none,
-            hasEndOfMonth && hasConsistentEndOfMonth ? ext::optional<bool>(endOfMonth) : boost::none, isRegular,
+            hasTermConvention ? ext::optional<BusinessDayConvention>(termConvention) : QuantLib::ext::nullopt,
+            hasTenor && hasConsistentTenor ? ext::optional<Period>(tenor) : QuantLib::ext::nullopt,
+            hasRule && hasConsistentRule ? ext::optional<DateGeneration::Rule>(rule) : QuantLib::ext::nullopt,
+            hasEndOfMonth && hasConsistentEndOfMonth ? ext::optional<bool>(endOfMonth) : QuantLib::ext::nullopt, isRegular,
             false, false,
             hasEndOfMonthConvention && hasConsistentEndOfMonthConvention
                 ? ext::optional<BusinessDayConvention>(endOfMonthConvention)
-                : boost::none);
+                : QuantLib::ext::nullopt);
     }
 }
 } // namespace data

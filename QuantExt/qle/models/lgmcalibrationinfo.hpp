@@ -62,6 +62,6 @@ struct LgmCalibrationInfo {
     std::vector<LgmCalibrationData> lgmCalibrationData;
 };
 
-std::map<std::string, boost::any> getAdditionalResultsMap(const LgmCalibrationInfo& info);
+std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const LgmCalibrationInfo& info);
 
 } // namespace QuantExt

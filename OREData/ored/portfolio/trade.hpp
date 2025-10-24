@@ -148,7 +148,7 @@ public:
     //! Set the envelope with counterparty and portfolio info
     void setEnvelope(const Envelope& envelope);
 
-    void setAdditionalData(const std::map<std::string, boost::any>& additionalData);
+    void setAdditionalData(const std::map<std::string, QuantLib::ext::any>& additionalData);
 
     //! Set the trade actions
     TradeActions& tradeActions() { return tradeActions_; }
@@ -204,7 +204,7 @@ public:
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
-    const virtual std::map<std::string,boost::any>& additionalData() const;
+    const virtual std::map<std::string,QuantLib::ext::any>& additionalData() const;
 
     /*! returns the sensi template, e.g. "IR_Analytical" for this trade,
         this is only available after build() has been called */
@@ -279,7 +279,7 @@ protected:
                      const string& configuration);
 
     RequiredFixings requiredFixings_;
-    mutable std::map<std::string,boost::any> additionalData_;
+    mutable std::map<std::string,QuantLib::ext::any> additionalData_;
 
     /* sets additional data based on given internal legNo (0, 1, ...), the result leg id is derived from this
        as "legNo + 1", i.e. starting with 1 (1, 2, ...). The result leg id can be overwriten using the second
@@ -297,11 +297,11 @@ private:
 
 template <class T>
 inline T Trade::additionalDatum(const std::string& tag) const {
-    std::map<std::string,boost::any>::const_iterator value =
+    std::map<std::string,QuantLib::ext::any>::const_iterator value =
         additionalData_.find(tag);
     QL_REQUIRE(value != additionalData_.end(),
                tag << " not provided");
-    return boost::any_cast<T>(value->second);
+    return QuantLib::ext::any_cast<T>(value->second);
 }
 
 } // namespace data

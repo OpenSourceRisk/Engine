@@ -225,7 +225,7 @@ public:
     virtual void resetNPVMem() {}
 
     // additional results provided by the model
-    const std::map<std::string, boost::any>& additionalResults() const { return additionalResults_; }
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
 
     // CG / AD part of the interface
     virtual std::size_t cgVersion() const = 0;
@@ -257,7 +257,7 @@ public:
 
 protected:
     // map with additional results provided by this model instance
-    mutable std::map<std::string, boost::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
 
     // the underlying computation graph
     QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> g_;

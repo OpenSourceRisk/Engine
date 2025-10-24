@@ -864,11 +864,11 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
             Date settlementDate = date + 10;
             QuantLib::ext::shared_ptr<PricingEngine> swapEngine_eur =
                 QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(simMarket->discountCurve("EUR"),
-                                                                              boost::none, settlementDate, date);
+                                                                              QuantLib::ext::nullopt, settlementDate, date);
             swap_eur->setPricingEngine(swapEngine_eur);
             QuantLib::ext::shared_ptr<PricingEngine> swapEngine_usd =
                 QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(simMarket->discountCurve("USD"),
-                                                                              boost::none, settlementDate, date);
+                                                                              QuantLib::ext::nullopt, settlementDate, date);
             swap_usd->setPricingEngine(swapEngine_usd);
             // we do not use the valuation engine, so in case updates are disabled we need to
             // take care of the instrument update ourselves

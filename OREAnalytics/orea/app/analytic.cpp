@@ -261,7 +261,7 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
         ALOG("Skip building the market due to missing today's market parameters in configurations"); 
     }
     const bool returnTimer = true;
-    boost::optional<cpu_timer> mTimer = stopTimer("buildMarket()", returnTimer);
+    QuantLib::ext::optional<cpu_timer> mTimer = stopTimer("buildMarket()", returnTimer);
     if (mTimer)
         LOG("Market Build time " << setprecision(2) << mTimer->format(default_places, "%w") << " sec");
 }

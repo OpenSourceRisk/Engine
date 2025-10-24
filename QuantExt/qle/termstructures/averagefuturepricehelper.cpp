@@ -40,7 +40,7 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(const Handle<Quote>& price,
     Integer futureMonthOffset,
     bool useBusinessDays,
     Natural dailyExpiryOffset,
-    const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData)
+    const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData)
     : PriceHelper(price) {
     init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays, dailyExpiryOffset,
          offPeakPowerData);
@@ -56,7 +56,7 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(Real price,
     Integer futureMonthOffset,
     bool useBusinessDays,
     Natural dailyExpiryOffset,
-    const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData)
+    const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData)
     : PriceHelper(price) {
     init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays, dailyExpiryOffset,
          offPeakPowerData);
@@ -66,7 +66,7 @@ void AverageFuturePriceHelper::init(const QuantLib::ext::shared_ptr<CommodityInd
                                     const Date& end, const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc,
                                     const Calendar& calendar, Natural deliveryDateRoll, Integer futureMonthOffset,
                                     bool useBusinessDays, Natural dailyExpiryOffset,
-                                    const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData) {
+                                    const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData) {
 
     // Make a copy of the commodity index linked to this price helper's price term structure handle, 
     // termStructureHandle_.

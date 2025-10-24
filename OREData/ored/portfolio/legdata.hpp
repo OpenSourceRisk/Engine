@@ -221,7 +221,7 @@ public:
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
-                    bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
+                    bool localCapFloor = false, const QuantLib::ext::optional<Period>& lastRecentPeriod = QuantLib::ext::nullopt,
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
                     const std::map<QuantLib::Date, double>& historicalFixings = {})
         : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
@@ -240,7 +240,7 @@ public:
     QuantLib::Size fixingDays() const { return fixingDays_; }
     QuantLib::Period lookback() const { return lookback_; }
     QuantLib::Size rateCutoff() const { return rateCutoff_; }
-    boost::optional<bool> isInArrears() const { return isInArrears_; }
+    QuantLib::ext::optional<bool> isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     bool hasSubPeriods() const { return hasSubPeriods_; }
     bool includeSpread() const { return includeSpread_; }
@@ -254,7 +254,7 @@ public:
     const vector<string>& gearingDates() const { return gearingDates_; }
     bool nakedOption() const { return nakedOption_; }
     bool localCapFloor() const { return localCapFloor_; }
-    const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
+    const QuantLib::ext::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
     const std::string& lastRecentPeriodCalendar() const { return lastRecentPeriodCalendar_; }
     bool telescopicValueDates() const { return telescopicValueDates_; }
     ScheduleData fixingSchedule() const { return fixingSchedule_; }
@@ -283,7 +283,7 @@ private:
     QuantLib::Size fixingDays_ = Null<Size>();
     QuantLib::Period lookback_ = 0 * Days;
     QuantLib::Size rateCutoff_ = Null<Size>();
-    boost::optional<bool> isInArrears_;
+    QuantLib::ext::optional<bool> isInArrears_;
     bool isAveraged_ = false;
     bool hasSubPeriods_ = false;
     bool includeSpread_ = false;
@@ -297,7 +297,7 @@ private:
     vector<string> gearingDates_;
     bool nakedOption_ = false;
     bool localCapFloor_ = false;
-    boost::optional<Period> lastRecentPeriod_;
+    QuantLib::ext::optional<Period> lastRecentPeriod_;
     std::string lastRecentPeriodCalendar_;
     bool telescopicValueDates_ = false;
     ScheduleData fixingSchedule_;

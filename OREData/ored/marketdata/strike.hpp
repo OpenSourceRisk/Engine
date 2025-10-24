@@ -158,7 +158,7 @@ public:
         - if \p atmType is \c AtmPutCall50, \p deltaType must be \c DeltaVolQuote::Fwd.
     */
     AtmStrike(QuantLib::DeltaVolQuote::AtmType atmType,
-              boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType = boost::none);
+              QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType = QuantLib::ext::nullopt);
 
     //! \name Inspectors
     //@{
@@ -166,7 +166,7 @@ public:
     QuantLib::DeltaVolQuote::AtmType atmType() const;
 
     //! Return the delta type
-    boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType() const;
+    QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType() const;
     //@}
 
     /*! Populate AtmStrike object from \p strStrike.
@@ -191,7 +191,7 @@ protected:
 
 private:
     QuantLib::DeltaVolQuote::AtmType atmType_;
-    boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType_;
+    QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType_;
 
     //! Perform validation
     void check() const;

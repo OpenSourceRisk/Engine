@@ -54,7 +54,7 @@ public:
 
     /*! Get the stored sensitivities for a netting set for T0 (dateIndex = sampleIndex = null) or the given date and
       sample. The return value varies for each concrete implementation.  */
-    virtual boost::any getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
+    virtual QuantLib::ext::any getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
                                         const std::string& nettingSetId,
                                         const QuantLib::Size dateIndex = QuantLib::Null<QuantLib::Size>(),
                                         const QuantLib::Size sampleIndex = QuantLib::Null<QuantLib::Size>()) const = 0;
@@ -107,7 +107,7 @@ public:
          All entries are in base ccy (= first ccy in camCurrencies), the fx deltas against base ccy.
     */
 
-    boost::any getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube, const std::string& nettingSetId,
+    QuantLib::ext::any getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube, const std::string& nettingSetId,
                                 const QuantLib::Size dateIndex = QuantLib::Null<QuantLib::Size>(),
                                 const QuantLib::Size sampleIndex = QuantLib::Null<QuantLib::Size>()) const override;
 

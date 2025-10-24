@@ -226,7 +226,7 @@ public:
     };
 
     MarketRiskReport(const std::string& calculationCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                     const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
+                     const std::string& portfolioFilter, QuantLib::ext::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
         std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
@@ -264,7 +264,7 @@ protected:
     std::string calculationCurrency_;
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     std::string portfolioFilter_;
-    boost::optional<ore::data::TimePeriod> period_;
+    QuantLib::ext::optional<ore::data::TimePeriod> period_;
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     std::unique_ptr<SensiRunArgs> sensiArgs_;
     std::unique_ptr<FullRevalArgs> fullRevalArgs_;

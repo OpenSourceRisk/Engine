@@ -34,8 +34,8 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
     const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg, bool telescopicValueDates,
     const QuantLib::Pillar::Choice pillarChoice,
-    boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
-    boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged)
+    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
+    QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),

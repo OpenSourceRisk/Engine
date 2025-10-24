@@ -51,7 +51,7 @@ using namespace QuantExt;
 
 void populateReportDataFromAdditionalResults(
     std::vector<TradeCashflowReportData>& result, std::map<Size, Size>& cashflowNumber,
-    const std::map<std::string, boost::any>& addResults, const Real multiplier, const std::string& baseCurrency,
+    const std::map<std::string, QuantLib::ext::any>& addResults, const Real multiplier, const std::string& baseCurrency,
     const std::string& npvCurrency, QuantLib::ext::shared_ptr<ore::data::Market> market, 
     const Handle<YieldTermStructure>& specificDiscountCurve, const std::string& configuration, const bool includePastCashflows) {
 
@@ -66,7 +66,7 @@ void populateReportDataFromAdditionalResults(
         QL_REQUIRE(cashFlowResults->second.type() == typeid(std::vector<CashFlowResults>),
                    "internal error: cashflowResults type does not match CashFlowResults: '"
                        << cashFlowResults->second.type().name() << "'");
-        std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
+        std::vector<CashFlowResults> cfResults = QuantLib::ext::any_cast<std::vector<CashFlowResults>>(cashFlowResults->second);
 
         for (auto const& cf : cfResults) {
 
@@ -289,7 +289,7 @@ void Trade::setEnvelope(const Envelope& envelope) {
     envelope_ = envelope;
 }
 
-void Trade::setAdditionalData(const std::map<std::string, boost::any>& additionalData) {
+void Trade::setAdditionalData(const std::map<std::string, QuantLib::ext::any>& additionalData) {
     additionalData_ = additionalData;
 }
 
@@ -318,7 +318,7 @@ void Trade::reset() {
     additionalData_.clear();
 }
     
-const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
+const std::map<std::string, QuantLib::ext::any>& Trade::additionalData() const { return additionalData_; }
 
 void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     if (legs_.size() < i + 1)

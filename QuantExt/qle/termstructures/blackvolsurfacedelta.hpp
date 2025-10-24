@@ -90,11 +90,11 @@ public:
                                 const Handle<YieldTermStructure>& foreignTS,
                                 DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
                                 DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral,
-                                boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType = boost::none,
+                                QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType = QuantLib::ext::nullopt,
                                 const Period& switchTenor = 0 * Days,
                                 DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
                                 DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
-                                boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType = boost::none,
+                                QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType = QuantLib::ext::nullopt,
                                 InterpolatedSmileSection::InterpolationMethod interpolationMethod =
                                     InterpolatedSmileSection::InterpolationMethod::Linear,
                                 bool flatStrikeExtrapolation = true,
@@ -148,11 +148,11 @@ private:
 
     DeltaVolQuote::DeltaType dt_;
     DeltaVolQuote::AtmType at_;
-    boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType_;
+    QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType_;
     Period switchTenor_;
     DeltaVolQuote::DeltaType ltdt_;
     DeltaVolQuote::AtmType ltat_;
-    boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType_;
+    QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType_;
 
     InterpolatedSmileSection::InterpolationMethod interpolationMethod_;
     bool flatStrikeExtrapolation_;

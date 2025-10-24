@@ -36,7 +36,7 @@ FlexiSwap::FlexiSwap(const VanillaSwap::Type type, const std::vector<Real>& fixe
                      const std::vector<Real>& cappedRate, const std::vector<Real>& flooredRate,
                      const DayCounter& floatingDayCount, const std::vector<Real>& lowerNotionalBound,
                      const QuantLib::Position::Type optionPosition, const std::vector<bool>& notionalCanBeDecreased,
-                     boost::optional<BusinessDayConvention> paymentConvention)
+                     QuantLib::ext::optional<BusinessDayConvention> paymentConvention)
     : Swap(2), type_(type), fixedNominal_(fixedNominal), floatingNominal_(floatingNominal),
       fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
       floatingSchedule_(floatingSchedule), iborIndex_(iborIndex), gearing_(gearing), spread_(spread),

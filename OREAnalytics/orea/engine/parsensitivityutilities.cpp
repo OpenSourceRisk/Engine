@@ -104,9 +104,9 @@ Real ImpliedCapFloorVolHelper::derivative(Volatility x) const {
         vol_->setValue(x);
         engine_->calculate();
     }
-    std::map<std::string, boost::any>::const_iterator vega_ = results_->additionalResults.find("vega");
+    std::map<std::string, QuantLib::ext::any>::const_iterator vega_ = results_->additionalResults.find("vega");
     QL_REQUIRE(vega_ != results_->additionalResults.end(), "vega not provided");
-    return boost::any_cast<Real>(vega_->second);
+    return QuantLib::ext::any_cast<Real>(vega_->second);
 }
 
 class CapFloorImpliedVolCalculator {

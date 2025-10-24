@@ -62,7 +62,7 @@ public:
         QuantLib::BusinessDayConvention businessDayConvention, QuantLib::DayCounter dayCounter, bool extrapolate,
         const std::string& quoteName = "", const QuantLib::Date& startDate = QuantLib::Date(),
         const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
-        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none, bool adjustForLosses = true,
+        QuantLib::ext::optional<QuantLib::DateGeneration::Rule> rule = QuantLib::ext::nullopt, bool adjustForLosses = true,
         const std::vector<MarketDatum::QuoteType>& quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
         const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "",
         bool calibrateConstituentsToIndexSpread = false, const bool useAssumedRecovery = false,
@@ -89,7 +89,7 @@ public:
     const std::string& quoteName() const { return quoteName_; }
     const QuantLib::Date& startDate() const { return startDate_; }
     const QuantLib::Period& indexTerm() const { return indexTerm_; }
-    const boost::optional<QuantLib::DateGeneration::Rule>& rule() const { return rule_; }
+    const QuantLib::ext::optional<QuantLib::DateGeneration::Rule>& rule() const { return rule_; }
     const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
     const std::vector<MarketDatum::QuoteType>& quoteTypes() const { return quoteTypes_; }
@@ -134,7 +134,7 @@ private:
     std::string quoteName_;
     QuantLib::Date startDate_;
     QuantLib::Period indexTerm_;
-    boost::optional<QuantLib::DateGeneration::Rule> rule_;
+    QuantLib::ext::optional<QuantLib::DateGeneration::Rule> rule_;
     bool adjustForLosses_;
     std::vector<MarketDatum::QuoteType> quoteTypes_;
     double indexSpread_;

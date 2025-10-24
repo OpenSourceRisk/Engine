@@ -900,13 +900,13 @@ class CommodityForwardQuote : public MarketDatum {
     CommodityForwardQuote(Real value, const Date& asofDate, const std::string& name, 
                           MarketDatum::QuoteType quoteType, const std::string& commodityName,
                           const std::string& quoteCurrency, const Period& tenor, 
-                          boost::optional<QuantLib::Period> startTenor = boost::none);
+                          QuantLib::ext::optional<QuantLib::Period> startTenor = QuantLib::ext::nullopt);
 
     const std::string& commodityName() const;
     const std::string& quoteCurrency() const;
     const Date& expiryDate() const;
     const Period& tenor() const;
-    const boost::optional<QuantLib::Period>& startTenor() const;
+    const QuantLib::ext::optional<QuantLib::Period>& startTenor() const;
     bool tenorBased() const;
     %extend {
       static const ext::shared_ptr<CommodityForwardQuote> getFullView(ext::shared_ptr<MarketDatum> baseInput) {

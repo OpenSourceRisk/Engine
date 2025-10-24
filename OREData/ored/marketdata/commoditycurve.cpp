@@ -246,7 +246,7 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
             expiry = q->expiryDate();
             add(asof, expiry, value, data, outright, pointsFactor);
         } else {
-            if (q->startTenor() == boost::none) {
+            if (q->startTenor() == QuantLib::ext::nullopt) {
                 expiry = cal.advance(spotRelative ? spotDate : asof, q->tenor(), bdc);
                 add(asof, expiry, value, data, outright, pointsFactor);
             } else {
@@ -535,7 +535,7 @@ CommodityCurve::getQuotes(const Date& asof, const string& /*configId*/, const ve
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
     auto wildcard = getUniqueWildcard(quotes);
-    regexQuotes_ = wildcard != boost::none;
+    regexQuotes_ = wildcard != QuantLib::ext::nullopt;
 
     std::set<QuantLib::ext::shared_ptr<MarketDatum>> data;
     if (wildcard) {
@@ -720,7 +720,7 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
                     end, uFec, peakIndex, peakCalendar, peakHoursPerDay);
             } else {
                 TLOG("Building average future price helper from quote, " << quote->name() << ".");
-                boost::optional<std::pair<Calendar, Real>> offPeakPowerData;
+                QuantLib::ext::optional<std::pair<Calendar, Real>> offPeakPowerData;
                 if (const auto& oppid = underlyingConvention->offPeakPowerIndexData()) {
                     offPeakPowerData = make_pair(oppid->peakCalendar(), oppid->offPeakHours());
                 }

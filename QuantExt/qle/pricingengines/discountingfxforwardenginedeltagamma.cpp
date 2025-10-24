@@ -31,7 +31,7 @@ DiscountingFxForwardEngineDeltaGamma::DiscountingFxForwardEngineDeltaGamma(
     const Currency& domCcy, const Handle<YieldTermStructure>& domCurve, const Currency& forCcy,
     const Handle<YieldTermStructure>& forCurve, const Handle<Quote>& spotFx, const std::vector<Time>& bucketTimes,
     const bool computeDelta, const bool computeGamma, const bool linearInZero,
-    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate,
+    QuantLib::ext::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate,
     const bool applySimmExemptions)
     : domCcy_(domCcy), forCcy_(forCcy), domCurve_(domCurve), forCurve_(forCurve), spotFx_(spotFx),
       bucketTimes_(bucketTimes), computeDelta_(computeDelta), computeGamma_(computeGamma), linearInZero_(linearInZero),

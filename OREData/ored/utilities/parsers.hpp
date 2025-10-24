@@ -487,10 +487,10 @@ QuantLib::YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const std::st
 */
 QuantExt::CrossAssetModel::AssetType parseCamAssetType(const std::string& s);
 
-/*! Convert boost::any to pair<string,string>, including the valueType and the value
+/*! Convert QuantLib::ext::any to pair<string,string>, including the valueType and the value
     \ingroup utilities
 */
-std::pair<string, string> parseBoostAny(const boost::any& anyType, Size precision = 8);
+std::pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size precision = 8);
 
 //! Convert text to QuantLib::RateAveraging::Type
 QuantLib::RateAveraging::Type parseOvernightIndexFutureNettingType(const std::string& s);

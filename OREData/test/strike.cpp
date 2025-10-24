@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeNoDeltaEquality) {
      // Checks for failure in operator== if delta type is not given
 
      DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmFwd;
-     boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
+     QuantLib::ext::optional<DeltaVolQuote::DeltaType> atmDeltaType;
 
      vector<QuantLib::ext::shared_ptr<BaseStrike>> strikes;
      strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(atmType, atmDeltaType));

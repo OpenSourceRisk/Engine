@@ -20,8 +20,8 @@
 
 namespace QuantExt {
 
-std::map<std::string, boost::any> getAdditionalResultsMap(const LgmCalibrationInfo& info) {
-    std::map<std::string, boost::any> result;
+std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const LgmCalibrationInfo& info) {
+    std::map<std::string, QuantLib::ext::any> result;
     if (info.valid) {
         result["lgmCalibrationError"] = info.rmse;
         std::vector<Real> timeToExpiry, swapLength, strike, atmForward, annuity, vega, vols;

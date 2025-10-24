@@ -35,7 +35,7 @@ namespace analytics {
 
 HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-    const string& portfolioFilter, const vector<Real>& p, boost::optional<TimePeriod> period,
+    const string& portfolioFilter, const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
     const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs)),

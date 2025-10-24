@@ -1751,7 +1751,7 @@ public:
     //! Tenor based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
                           QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-                          const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none);
+                          const QuantLib::Period& tenor, QuantLib::ext::optional<QuantLib::Period> startTenor = QuantLib::ext::nullopt);
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
@@ -1774,11 +1774,11 @@ public:
     const QuantLib::Period& tenor() const { return tenor_; }
 
     /*! The period between the as of date and the date from which the forward tenor is applied. This is generally the
-        spot tenor which is indicated by \c boost::none but there are special cases:
+        spot tenor which is indicated by \c QuantLib::ext::nullopt but there are special cases:
         - overnight forward: \c startTenor will be <code>0 * Days</code> and \c tenor will be <code>1 * Days</code>
         - tom-next forward: \c startTenor will be <code>1 * Days</code> and \c tenor will be <code>1 * Days</code>
     */
-    const boost::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
+    const QuantLib::ext::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
 
     //! Returns \c true if the forward is tenor based and \c false if forward is date based
     bool tenorBased() const { return tenorBased_; }
@@ -1789,7 +1789,7 @@ private:
     std::string quoteCurrency_;
     QuantLib::Date expiryDate_;
     QuantLib::Period tenor_;
-    boost::optional<QuantLib::Period> startTenor_;
+    QuantLib::ext::optional<QuantLib::Period> startTenor_;
     bool tenorBased_;
     //! Serialization
     friend class boost::serialization::access;

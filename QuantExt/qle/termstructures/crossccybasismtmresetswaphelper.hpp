@@ -62,14 +62,14 @@ public:
         const bool domesticIndexGiven, const bool foreignDiscountCurveGiven, const bool domesticDiscountCurveGiven,
         const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
         const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
-        bool spreadOnForeignCcy = true, boost::optional<QuantLib::Period> foreignTenor = boost::none,
-        boost::optional<QuantLib::Period> domesticTenor = boost::none, Size foreignPaymentLag = 0,
-        Size domesticPaymentLag = 0, boost::optional<bool> foreignIncludeSpread = boost::none,
-        boost::optional<Period> foreignLookback = boost::none, boost::optional<Size> foreignFixingDays = boost::none,
-        boost::optional<Size> foreignRateCutoff = boost::none, boost::optional<bool> foreignIsAveraged = boost::none,
-        boost::optional<bool> domesticIncludeSpread = boost::none,
-        boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
-        boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none,
+        bool spreadOnForeignCcy = true, QuantLib::ext::optional<QuantLib::Period> foreignTenor = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<QuantLib::Period> domesticTenor = QuantLib::ext::nullopt, Size foreignPaymentLag = 0,
+        Size domesticPaymentLag = 0, QuantLib::ext::optional<bool> foreignIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> foreignLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> foreignFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> foreignRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> foreignIsAveraged = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> domesticIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> domesticLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> domesticFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> domesticRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> domesticIsAveraged = QuantLib::ext::nullopt,
         const bool telescopicValueDates = false,
         const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
     //! \name RateHelper interface
@@ -111,16 +111,16 @@ protected:
     Size foreignPaymentLag_;
     Size domesticPaymentLag_;
     // OIS only
-    boost::optional<bool> foreignIncludeSpread_;
-    boost::optional<QuantLib::Period> foreignLookback_;
-    boost::optional<QuantLib::Size> foreignFixingDays_;
-    boost::optional<Size> foreignRateCutoff_;
-    boost::optional<bool> foreignIsAveraged_;
-    boost::optional<bool> domesticIncludeSpread_;
-    boost::optional<QuantLib::Period> domesticLookback_;
-    boost::optional<QuantLib::Size> domesticFixingDays_;
-    boost::optional<Size> domesticRateCutoff_;
-    boost::optional<bool> domesticIsAveraged_;
+    QuantLib::ext::optional<bool> foreignIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> foreignLookback_;
+    QuantLib::ext::optional<QuantLib::Size> foreignFixingDays_;
+    QuantLib::ext::optional<Size> foreignRateCutoff_;
+    QuantLib::ext::optional<bool> foreignIsAveraged_;
+    QuantLib::ext::optional<bool> domesticIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> domesticLookback_;
+    QuantLib::ext::optional<QuantLib::Size> domesticFixingDays_;
+    QuantLib::ext::optional<Size> domesticRateCutoff_;
+    QuantLib::ext::optional<bool> domesticIsAveraged_;
 
     Currency foreignCurrency_;
     Currency domesticCurrency_;

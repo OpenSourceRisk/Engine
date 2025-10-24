@@ -78,8 +78,8 @@ public:
 private:
     Protection::Side side_;
     Real nominal_;
-    boost::optional<Period> tenor_;
-    boost::optional<Date> termDate_;
+    QuantLib::ext::optional<Period> tenor_;
+    QuantLib::ext::optional<Date> termDate_;
     Period couponTenor_;
     Real couponRate_;
     Real upfrontRate_;

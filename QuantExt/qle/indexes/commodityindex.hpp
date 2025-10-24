@@ -94,7 +94,7 @@ public:
     */
     virtual QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const Date& optionExpiryDate = QuantLib::Date(),
-        const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const = 0;
+        const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const = 0;
 
 protected:
     std::string underlyingName_;
@@ -123,7 +123,7 @@ public:
     //! Implement the base clone. The \c expiryDate is ignored for a CommoditySpotIndex.
     QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
         const Date& optionExpiryDate = QuantLib::Date(),
-        const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
+        const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const override;
 };
 
 class CommodityFuturesIndex : public CommodityIndex {
@@ -147,7 +147,7 @@ public:
     //! Implement the base clone.
     QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(), 
         const Date& optionExpiryDate = QuantLib::Date(),
-        const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
+        const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const override;
 };
 
 } // namespace QuantExt

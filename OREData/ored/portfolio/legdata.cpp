@@ -193,8 +193,8 @@ void FloatingLegData::fromXML(XMLNode* node) {
     // These are all optional
     spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
                                                                &parseReal);
-    isInArrears_ = boost::none;
-    lastRecentPeriod_ = boost::none;
+    isInArrears_ = QuantLib::ext::nullopt;
+    lastRecentPeriod_ = QuantLib::ext::nullopt;
     isAveraged_ = hasSubPeriods_ = includeSpread_ = false;
     if (XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears"))
         isInArrears_ = parseBool(XMLUtils::getNodeValue(arrNode));

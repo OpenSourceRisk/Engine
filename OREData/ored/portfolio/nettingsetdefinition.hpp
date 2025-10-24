@@ -265,7 +265,7 @@ private:
     QuantLib::ext::shared_ptr<CSA> csa_;
 
     // string csaTypeStr_;                // staging value for csaType_
-    // boost::optional<CSAType> csaType_; // initialised during build()
+    // QuantLib::ext::optional<CSAType> csaType_; // initialised during build()
     // string csaCurrency_;
     // string index_;
     // Real thresholdPay_;

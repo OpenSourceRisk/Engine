@@ -280,7 +280,7 @@ public:
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
                          const std::vector<PriceSegment>& priceSegments, const std::string& dayCountId = "A365",
                          const std::string& interpolationMethod = "Linear", bool extrapolation = true,
-                         const boost::optional<BootstrapConfig>& bootstrapConfig = boost::none);
+                         const QuantLib::ext::optional<BootstrapConfig>& bootstrapConfig = QuantLib::ext::nullopt);
     
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -302,7 +302,7 @@ public:
     bool averageBase() const;
     bool priceAsHistFixing() const;
     const std::map<unsigned short, PriceSegment>& priceSegments() const;
-    const boost::optional<BootstrapConfig>& bootstrapConfig() const;
+    const QuantLib::ext::optional<BootstrapConfig>& bootstrapConfig() const;
 
     Type& type();
     std::string& currency();
@@ -410,7 +410,7 @@ public:
         const std::vector<std::string>& smileOptionTenors = std::vector<std::string>(),
         const std::vector<std::string>& smileUnderlyingTenors = std::vector<std::string>(),
         const std::vector<std::string>& smileSpreads = std::vector<std::string>(),
-        const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = boost::none);
+        const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = QuantLib::ext::nullopt);
     GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
                                       const std::string& qualifierLabel, const std::string& curveID,
                                       const std::string& curveDescription, const std::string& qualifier,
@@ -450,7 +450,7 @@ public:
     const std::string& proxyTargetShortSwapIndexBase() const;
     const std::string& proxyTargetSwapIndexBase() const;
     
-    const boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const;
+    const QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const;
     const ReportConfig& reportConfig() const;
 
 };
@@ -540,7 +540,7 @@ public:
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
         const string& inputType = "TermVolatilities",
-        const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = boost::none);
+        const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = QuantLib::ext::nullopt);
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
                                   const std::string& proxySourceCurveId, const std::string& proxySourceIndex,
                                   const std::string& proxyTargetIndex,
@@ -586,7 +586,7 @@ public:
     const QuantLib::Period& proxySourceRateComputationPeriod() const;
     const QuantLib::Period& proxyTargetRateComputationPeriod() const;
 
-    const boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const;
+    const QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const;
 
     const ReportConfig& reportConfig() const;
     std::string toString(VolatilityType type) const;
@@ -602,13 +602,13 @@ public:
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     const string& equityId() const;
@@ -620,7 +620,7 @@ public:
     void populateQuotes();
     bool isProxySurface();
     OneDimSolverConfig solverConfig() const;
-    const boost::optional<bool>& preferOutOfTheMoney() const;
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const;
     const ReportConfig& reportConfig() const;
     string& ccy();
     string& dayCounter();

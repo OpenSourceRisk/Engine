@@ -150,7 +150,7 @@ Real getOptionStrike(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade, c
         
         // Get strike data from additional results
         if (ar.find("strike") != ar.end()) {
-            return boost::any_cast<Real>(ar.at("strike"));
+            return QuantLib::ext::any_cast<Real>(ar.at("strike"));
         
         // Otherwise fallback to rate provided in the fixed leg
         } else {
@@ -177,7 +177,7 @@ Real getOptionStrike(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade, c
     } else if (auto vanillaOpt = QuantLib::ext::dynamic_pointer_cast<ore::data::VanillaOptionTrade>(trade)) {
         const auto& ar = vanillaOpt->instrument()->additionalResults();
         if (ar.find("strike") != ar.end())
-            return boost::any_cast<Real>(ar.at("strike"));
+            return QuantLib::ext::any_cast<Real>(ar.at("strike"));
 
         return vanillaOpt->strike().value();
 
@@ -202,7 +202,7 @@ Real getOptionPrice(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade) {
     }
     
     if (addResults.find("forward") != addResults.end())
-        return boost::any_cast<Real>(addResults.at("forward"));
+        return QuantLib::ext::any_cast<Real>(addResults.at("forward"));
     else
         return Null<Real>();
 }
@@ -696,7 +696,7 @@ Real SACCR::getDelta(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& t
             const auto& ar = trade->instrument()->additionalResults();
             QL_REQUIRE(ar.find("atmForward") != ar.end(),
                        "getDelta: Could not find price for IR swaption " << trade->id());
-            tradeData.price = boost::any_cast<Real>(ar.at("atmForward"));
+            tradeData.price = QuantLib::ext::any_cast<Real>(ar.at("atmForward"));
 
             Real sigma = 0.5; // supervisory option volatility for IR trades
 

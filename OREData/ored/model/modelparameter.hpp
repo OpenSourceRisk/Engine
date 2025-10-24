@@ -109,7 +109,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::optional<LgmData::VolatilityType>& volatilityType() const;
+    const QuantLib::ext::optional<LgmData::VolatilityType>& volatilityType() const;
     //@}
 
     //! \name Serialisation
@@ -119,7 +119,7 @@ public:
     //@}
 
 private:
-    boost::optional<LgmData::VolatilityType> volatilityType_;
+    QuantLib::ext::optional<LgmData::VolatilityType> volatilityType_;
 };
 
 /*! Reversion model parameter with specified reversion type.
