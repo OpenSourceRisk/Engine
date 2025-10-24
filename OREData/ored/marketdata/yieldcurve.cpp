@@ -1483,8 +1483,6 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         maxAccuracy = std::max(maxAccuracy, curveConfig_[index]->bootstrapConfig().accuracy());
 
-        requiredYieldCurveHandles_[curveSpec_[index]->name()].linkTo(yieldts);
-
     } // loop set of indices for multi-curve bootstrapping
 
     // if we have more than one curve to build, set up the multicurve bootstrapper
