@@ -37,7 +37,7 @@
 
 \begin{document}
 
-\title{SABR model}
+\title{SABR model in ORE}
 
 \date{27 Oct 2025}
 
@@ -57,18 +57,25 @@ The SABR model is given by (see e.g. \cite{Hagan_2002})
 \begin{eqnarray}
 dF &=& \sigma (F + d)^\beta dW_1 \\
 d\sigma &=& \nu\sigma dW_2 \\
-dW_1 dW_2 &=& \rho dt
+dW_1 dW_2 &=& \rho dt \\
+F(0) &=& F_0 \\
+\sigma(0) &=& \alpha
 \end{eqnarray}
 
 with
 
 \begin{itemize}
-\item $F$ a forward rate or price, e.g. a forward swap rate, a forward libor or overnight term rate
-\item $d$ a (non-negative) displacement, in the classic set up we have $d=0$, for $d>0$ we allow for negative $F$ down to $-d$
+\item $F$ a forward rate or price, e.g. a forward swap rate, a forward libor or overnight term rate, with initial value $F_0$
+\item $d$ a (non-negative) displacement; in the classic set up we have $d=0$, for $d>0$ we allow for negative $F$ down to $-d$
 \item $\sigma$ the stochastic forward rate volatility
 \item $W_1, W_2$ Wiener processes
-\item $\rho$ the correlation between the Wiener processes driving forward and volatility
+\item $\alpha$ the initial value of $\sigma$
+\item $\beta \in [0,1]$ the exponent for the forward
+\item $\nu > 0$ the volatilitiy of $\sigma$
+\item $\rho$ the correlation between forward and volatility, given as a constant, instantaneous corelation between the driving Wiener processes
 \end{itemize}
+
+The latter $4$ parameters are referred to as the "SABR parameters" of the model.
 
 \subsection{Resolution}
 
@@ -95,8 +102,7 @@ The resolution methods support strike domains and have preferred output types as
 \ref{tab:strike_domains}. The output type can be converted from the preferred type to any other type in a numerical
 post-processing step, but each method has a natural, primary output type.
 
-\begin{table}[hbt]
-\scriptsize
+\begin{table}[h]
 \begin{center}
 \begin{tabular}{l|l|l}
 Method & Strike Domain & Preferred Output Type \\
@@ -109,8 +115,8 @@ KienitzLawsonSwaynePde & $[-d, \infty)$ & Premium \\
 FlochKennedy & $[-d, \infty)$ & Shifted Lognormal Volaility \\
 \end{tabular}
 \caption{Strike domains and preferred output types.}
-\label{tab:strike_domains}
 \end{center}
+\label{tab:strike_domains}
 \end{table}
 
 \subsection{Imply $\alpha$}\label{sec:imply_alpha}
@@ -168,7 +174,7 @@ transformation from transformed parameters $x$ to actual SABR parameters is defi
 \rho   &=& 1_{|x_3|<2.5\pi} \epsilon_2 \sin(x_3) + \epsilon_2 ( 1_{x_3>2.5\pi} - 1_{x_3<-2.5\pi} )
 \end{eqnarray}
 
-The inverse transformation is given as.
+The inverse transformation is given as:
 
 \begin{eqnarray}
 x_1  &=& \sqrt{-\ln(\min(1-\epsilon_1,\max(\epsilon_1,\beta)))} \\
