@@ -343,7 +343,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     refData.lastPeriodDayCounter = cdsConv->lastPeriodDayCounter();
     refData.cashSettlementDays = cdsConv->upfrontSettlementDays();
 
-
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
         if (recoveryRate_ != Null<Real>() && quotes.empty()) {
@@ -378,9 +377,9 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                                                  : QuantExt::CreditDefaultSwap::atPeriodEnd;
 
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
+        refData.type = "SpreadCDS";
         for (auto quote : quotes) {
             try {
-                refData.type = "SpreadCDS";
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
                     cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
@@ -410,10 +409,10 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
             }
         }
     }else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
+        refData.type = "ConvSpreadCDS";
         // Currently same than SpreadCDS
         for (auto quote : quotes) {
             try {
-                refData.type = "ConvSpreadCDS";
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
                     cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
