@@ -20,8 +20,10 @@
 #define ored_curveconfigurations_i
 
 %include std_set.i
+%include ored_curveconfig.i
 %include ored_curvespec.i
 %include ored_xmlutils.i
+%include ored_yieldcurveconfig.i
 
 %{
 using ore::data::CurveConfigurations;
@@ -209,23 +211,6 @@ public:
 
 };
 
-%shared_ptr(CurveConfig)
-class CurveConfig : public XMLSerializable {
-public:
-    CurveConfig(const std::string& curveID, const std::string& curveDescription, const std::vector<std::string>& quotes = std::vector<std::string>());
-    CurveConfig();
-
-    const std::string& curveID() const;
-    const std::string& curveDescription() const;
-    std::string& curveID();
-    std::string& curveDescription();    
-    virtual std::set<std::string> requiredCurveIds(const CurveSpec::CurveType& curveType);
-    virtual std::map<CurveSpec::CurveType, std::set<std::string>> requiredCurveIds();
-    void setRequiredCurveIds(const CurveSpec::CurveType& curveType, const std::set<std::string>& ids);
-    void setRequiredCurveIds(const std::map<CurveSpec::CurveType, std::set<std::string>>& ids);
-    virtual const std::vector<std::string>& quotes();
-};
-
 %shared_ptr(EquityCurveConfig)
 class EquityCurveConfig : public CurveConfig {
 public:
@@ -339,42 +324,6 @@ public:
     const std::string& currency() const;
     const std::map<int, Config>& configs() const;
 };
-
-%shared_ptr(YieldCurveConfig)
-class YieldCurveConfig : public CurveConfig {
-public:
-    YieldCurveConfig();
-    YieldCurveConfig(const std::string& curveID, const std::string& curveDescription, const std::string& currency,
-                     const std::string& discountCurveID, const std::vector<ext::shared_ptr<YieldCurveSegment>>& curveSegments,
-                     const std::string& interpolationVariable = "Discount", const std::string& interpolationMethod = "LogLinear",
-                     const std::string& zeroDayCounter = "A365", bool extrapolation = true,
-                     const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-                     const QuantLib::Size mixedInterpolationCutoff = 1);
-    virtual ~YieldCurveConfig();
-
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
-
-    const std::string& currency() const;
-    const std::string& discountCurveID() const;
-    const std::vector<ext::shared_ptr<YieldCurveSegment>>& curveSegments() const;
-    const std::string& interpolationVariable() const;
-    const std::string& interpolationMethod() const;
-    QuantLib::Size mixedInterpolationCutoff() const;
-    const std::string& zeroDayCounter() const;
-    bool extrapolation() const;
-    const BootstrapConfig& bootstrapConfig() const;
-
-    std::string& interpolationVariable();
-    std::string& interpolationMethod();
-    QuantLib::Size& mixedInterpolationCutoff();
-    std::string& zeroDayCounter();
-    bool& extrapolation();
-    void setBootstrapConfig(const BootstrapConfig& bootstrapConfig);
-
-    const std::vector<std::string>& quotes();
-};
-
 
 %shared_ptr(GenericYieldVolatilityCurveConfig)
 class GenericYieldVolatilityCurveConfig : public CurveConfig {

@@ -141,8 +141,10 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*")
-        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion), parConversionExcludeFixings_(parConversionExcludeFixings){};
+    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*", 
+                            ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation = ore::data::ParConversionMatrixRegularisation::Silent)
+        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion), 
+          parConversionExcludeFixings_(parConversionExcludeFixings), parConversionMatrixRegularisation_(parConversionMatrixRegularisation){};
 
     //! \name Inspectors
     //@{
@@ -200,6 +202,7 @@ public:
 
     const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() const { return parConversionExcludes_; }
     const std::string& parConversionExcludeFixings() const { return parConversionExcludeFixings_; }
+    ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation() const { return parConversionMatrixRegularisation_; }
     //@}
 
     //! \name Setters
@@ -244,6 +247,7 @@ public:
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
 
     void setParConversion(const bool b) { parConversion_ = b; }
+    void setParConversionMatrixRegularisation(const ore::data::ParConversionMatrixRegularisation& r) { parConversionMatrixRegularisation_ = r; }
 
     void addDiscountCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
         discountCurveShiftData_[s] = d;
@@ -364,6 +368,7 @@ protected:
     bool parConversion_;
     set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;
     std::string parConversionExcludeFixings_;
+    ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation_;
 
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);

@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/lgmcalibrationinfo.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
 
 namespace QuantExt {
-
-std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const LgmCalibrationInfo& info) {
+    using namespace QuantLib;
+    
+    std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const LgmCalibrationInfo& info) {
     std::map<std::string, QuantLib::ext::any> result;
     if (info.valid) {
         result["lgmCalibrationError"] = info.rmse;
@@ -63,6 +64,55 @@ std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const LgmCalib
         result["lgmCalibrationModelAlphas"] = modelAlpha;
         result["lgmCalibrationModelKappas"] = modelKappa;
         result["lgmCalibrationModelHwSigmas"] = modelHwSigma;
+        result["lgmCalibrationModelMarketVolDiffs"] = volDiff;
+        result["lgmCalibrationModelMarketValueDiffs"] = valueDiff;
+    }
+    return result;
+}
+
+std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const HwCalibrationInfo& info) {
+    std::map<std::string, QuantLib::ext::any> result;
+    if (info.valid) {
+        result["hwCalibrationError"] = info.rmse;
+        std::vector<Real> timeToExpiry, swapLength, strike, atmForward, annuity, vega, vols;
+        std::vector<Real> modelTime, modelVol, marketVol, modelValue, marketValue;
+        std::vector<Matrix> modelSigma;
+        std::vector<Array> modelKappa;
+        std::vector<Real> volDiff, valueDiff;
+        for (auto const& d : info.swaptionData) {
+            timeToExpiry.push_back(d.timeToExpiry);
+            swapLength.push_back(d.swapLength);
+            strike.push_back(d.strike);
+            atmForward.push_back(d.atmForward);
+            annuity.push_back(d.annuity);
+            vega.push_back(d.vega);
+            vols.push_back(d.stdDev / std::sqrt(d.timeToExpiry));
+        }
+        for (auto const& d : info.hwCalibrationData) {
+            modelTime.push_back(d.modelTime);
+            modelVol.push_back(d.modelVol);
+            marketVol.push_back(d.marketVol);
+            modelValue.push_back(d.modelValue);
+            marketValue.push_back(d.marketValue);
+            modelSigma.push_back(d.modelSigma);
+            modelKappa.push_back(d.modelKappa);
+            volDiff.push_back(d.modelVol - d.marketVol);
+            valueDiff.push_back(d.modelValue - d.marketValue);
+        }
+        result["lgmCalibrationBasketExpiryTimes"] = timeToExpiry;
+        result["lgmCalibrationBasketSwapLengths"] = swapLength;
+        result["lgmCalibrationBasketStrikes"] = strike;
+        result["lgmCalibrationBasketAtmForwards"] = atmForward;
+        result["lgmCalibrationBasketAnnuities"] = annuity;
+        result["lgmCalibrationBasketVegas"] = vega;
+        result["lgmCalibrationBasketVols"] = vols;
+        result["lgmCalibrationTimes"] = modelTime;
+        result["lgmCalibrationModelVols"] = modelVol;
+        result["lgmCalibrationMarketVols"] = marketVol;
+        result["lgmCalibrationModelValues"] = modelValue;
+        result["lgmCalibrationMarketValues"] = marketValue;
+        result["lgmCalibrationModelSigmas"] = modelSigma;
+        result["lgmCalibrationModelKappas"] = modelKappa;
         result["lgmCalibrationModelMarketVolDiffs"] = volDiff;
         result["lgmCalibrationModelMarketValueDiffs"] = valueDiff;
     }

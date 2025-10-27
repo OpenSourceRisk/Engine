@@ -29,6 +29,7 @@
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 
 #include <ored/model/irmodeldata.hpp>
@@ -68,7 +69,8 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 // This helper functionality checks for constant definitions of the given 
 // notional, the rates and the spreads. Those fields must have the same values everywhere on all legs.
 // Additional to this, the gearing must be equal to one on all floating legs.
-// Finally, the floating legs must be of type IborCoupon, OvernightIndexedCoupon or AverageONIndexedCoupon.
+// Finally, the floating legs must be of type IborCoupon, InterpolatedIborCoupon,
+// OvernightIndexedCoupon or AverageONIndexedCoupon.
 // If all those conditions are met, the trade is called standard.
 bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 {
@@ -99,8 +101,9 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
                 
                 if (                    
                     !(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c))
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) 
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))                
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))
                 )
                     return false; // The trade must then be a non-standard type like e.g. CMS coupon
 
