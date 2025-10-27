@@ -169,6 +169,9 @@ protected:
                                              const std::vector<Handle<YieldTermStructure>>& bases,
                                              const std::vector<double>& multiplier);
 
+    void applyCurveAlgebraPriceCurve(const Handle<PriceTermStructure>& target,
+                                     const std::vector<Handle<PriceTermStructure>>& bases,
+                                     const std::vector<double>& multiplier);
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
     this ScenarioSimMarket instance.

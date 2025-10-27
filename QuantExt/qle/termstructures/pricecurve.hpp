@@ -98,6 +98,8 @@ public:
     const std::vector<QuantLib::Real>& prices() const { return this->data_; }
     //@}
 
+    void makeThisCurveSpreaded(const std::vector<Handle<PriceTermStructure>>& bases,
+                               const std::vector<double>& multiplier);
 protected:
     //! Used by PiecewisePriceCurve
     InterpolatedPriceCurve(const QuantLib::Date& referenceDate,
@@ -120,7 +122,10 @@ private:
     const QuantLib::Currency currency_;
     std::vector<QuantLib::Handle<QuantLib::Quote> > quotes_;
     std::vector<QuantLib::Period> tenors_;
-
+    std::vector<Handle<PriceTermStructure>> bases_;
+    std::vector<double> multiplier_;
+    std::vector<std::vector<Real>> basesOffset_;
+    
     void initialise();
     void populateDatesFromTenors() const;
     void convertDatesToTimes();
@@ -297,6 +302,32 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::getPric
         QL_REQUIRE(!this->quotes_[i].empty(), "price quote at index " << i << " is empty");
         this->data_[i] = quotes_[i]->value();
     }
+}
+
+template <class Interpolator>
+void InterpolatedPriceCurve<Interpolator>::makeThisCurveSpreaded(const std::vector<Handle<PriceTermStructure>>& bases,
+                                                                 const std::vector<double>& multiplier) {
+    for (auto const& b : bases_)
+        unregisterWith(b);
+
+    bases_ = bases;
+    multiplier_ = multiplier;
+    QL_REQUIRE(bases_.size() == multiplier_.size(), "SpreadedDiscountCurve::makeThisCurveSpreaded(): bases size ("
+                                                        << bases_.size() << ") does not match multiplier size ("
+                                                        << multiplier_.size() << ")");
+
+    for (auto const& b : bases_)
+        registerWith(b);
+
+    basesOffset_.resize(bases.size());
+    for (Size i = 0; i < bases_.size(); ++i) {
+        basesOffset_[i].resize(times_.size());
+        for (Size j = 0; j < times_.size(); ++j) {
+            basesOffset_[i][j] = bases_[i].empty() ? 0.0 : bases_[i]->price(times_[j]);
+        }
+    }
+
+    update();
 }
 
 } // namespace QuantExt

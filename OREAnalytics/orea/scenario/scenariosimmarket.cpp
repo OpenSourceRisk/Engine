@@ -3395,6 +3395,19 @@ void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTe
     }
 }
 
+void ScenarioSimMarket::applyCurveAlgebraPriceCurve(const Handle<PriceTermStructure>& target,
+                                                    const std::vector<Handle<PriceTermStructure>>& bases,
+                                                    const std::vector<double>& multiplier) {
+    if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<LinearFlat>>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(*target)) {
+        c->makeThisCurveSpreaded(bases, multiplier);
+    } else {
+        QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
+                "supported curve types. Internal error, contact dev.");
+    }
+}
+
 } // namespace analytics
 } // namespace ore
 
