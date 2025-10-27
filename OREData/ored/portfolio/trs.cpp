@@ -41,8 +41,8 @@
 namespace ore {
 namespace data {
 
-void addTRSRequiredFixings(RequiredFixings& fixings, const std::vector<Leg>& returnLegs, 
-    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& ind = nullptr) {
+void addTRSRequiredFixings(RequiredFixings& fixings, const std::vector<Leg>& returnLegs,
+                           const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& ind = nullptr) {
     QL_REQUIRE(returnLegs.size() > 0, "TrsUnderlyingBuilder: No returnLeg built");
     auto fdg = QuantLib::ext::make_shared<FixingDateGetter>(fixings);
     fdg->setAdditionalFxIndex(ind);
@@ -63,7 +63,9 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
     paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
     initialPrice_ = Null<Real>();
-    fxConversion_ = parseFXConversion(XMLUtils::getChildValue(node, "FXConversion", false, "Start"));
+    if (XMLNode* fxcNode = XMLUtils::getChildNode(node, "FXConversion")) {
+        fxConversion_ = parseFXConversion(XMLUtils::getNodeValue(fxcNode));
+    }
     if (auto n = XMLUtils::getChildNode(node, "InitialPrice")) {
         initialPrice_ = parseReal(XMLUtils::getNodeValue(n));
     }
@@ -74,8 +76,6 @@ void TRS::ReturnData::fromXML(XMLNode* node) {
     }
     fxTerms_ = XMLUtils::getChildrenValues(node, "FXTerms", "FXIndex", false);
 }
-
-
 
 XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("ReturnData");
@@ -111,7 +111,7 @@ XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
 }
 
 TRS::FXConversion TRS::ReturnData::parseFXConversion(string fxConv_) {
-    return (fxConv_ == "Start" ? FXConversion::Start : FXConversion::End);
+    return fxConv_ == "Start" ? FXConversion::Start : FXConversion::End;
 }
 
 
