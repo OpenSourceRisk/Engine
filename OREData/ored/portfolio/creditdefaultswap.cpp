@@ -49,7 +49,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         if (creditRefDatum->creditData().entityType == "") {
             ALOG("EntityType is blank in credit reference data for entity " << entity);
         }
-        type_ = creditRefDatum->creditData().primaryPriceType;
+        additionalData_["primaryPriceType"] = creditRefDatum->creditData().primaryPriceType;
     } else {
         ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
     }
@@ -58,10 +58,6 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
-
-    try{
-        type_ = market->defaultCurve(entity)->refData().type;
-    }catch(...){}
 
     auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();
@@ -189,11 +185,6 @@ const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() con
     additionalData_["notionalCurrency[1]"] = notionalCurrency_;
     additionalData_["notionalCurrency[2]"] = notionalCurrency_;
     return additionalData_;
-}
-
-void CreditDefaultSwap::updateProductModelEngineAdditionalData(){
-    Trade::updateProductModelEngineAdditionalData();
-    additionalData_["PricingConfigEngine"] = type_=="SpreadCDS" ? std::string("MidPointCdsEngine") : std::string("IsdaCdsEngine");
 }
 
 QuantLib::Real CreditDefaultSwap::notional() const {

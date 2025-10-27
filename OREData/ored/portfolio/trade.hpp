@@ -287,7 +287,7 @@ protected:
     void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
 
     // update additional data based on stored product, model, engine
-    virtual void updateProductModelEngineAdditionalData();
+    void updateProductModelEngineAdditionalData();
 
 private:
     string id_;
