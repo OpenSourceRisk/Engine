@@ -46,6 +46,9 @@ public:
     QuantLib::Time minTime() const override;
     const QuantLib::Currency& currency() const override;
     std::vector<QuantLib::Date> pillarDates() const override;
+    
+    void makeThisCurveSpreaded(const std::vector<Handle<PriceTermStructure>>& bases,
+                               const std::vector<double>& multiplier);
 
 private:
     void performCalculations() const override;
@@ -57,6 +60,12 @@ private:
 
     mutable std::vector<QuantLib::Real> data_;
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> interpolation_;
+    
+    std::vector<Handle<PriceTermStructure>> bases_;
+    std::vector<double> multiplier_;
+    std::vector<std::vector<Real>> basesOffset_;
+
+
 };
 
 } // namespace QuantExt
