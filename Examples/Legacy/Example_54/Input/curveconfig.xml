@@ -236,7 +236,7 @@
       <Currency>USD</Currency>
       <!-- SpreadCDS, HazardRate -->
       <Type>SpreadCDS</Type>
-      <!-- discount curve (only needed for CDS boostrapping) -->
+      <!-- discount curve (only needed for CDS bootstrapping) -->
       <DiscountCurve>Yield/USD/USD3M</DiscountCurve>
       <DayCounter>A365</DayCounter>
       <!-- although only needed for CDS curve, we require
