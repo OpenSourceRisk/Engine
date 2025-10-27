@@ -202,7 +202,8 @@ void PricingAnalyticImpl::runAnalytic(
             }
 
             ReportWriter(inputs_->reportNaString())
-                .writeSensitivityReport(*report, ss, inputs_->sensiThreshold(), analytic()->market(), marketConfig);
+                .writeSensitivityReport(*report, ss, inputs_->sensiThreshold(), analytic()->market(), marketConfig,
+                                        inputs_->sensiOutputPrecision());
 
             analytic()->addReport(type, "sensitivity", report);
 
@@ -260,7 +261,7 @@ void PricingAnalyticImpl::runAnalytic(
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold(), analytic()->market(),
-                                            marketConfig);
+                                            marketConfig, inputs_->sensiOutputPrecision());
                 analytic()->addReport(type, "par_sensitivity", parSensiReport);
 
                 if (inputs_->outputJacobi()) {

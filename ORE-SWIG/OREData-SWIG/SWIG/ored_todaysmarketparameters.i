@@ -54,7 +54,7 @@ class TodaysMarketParameters : public XMLSerializable {
     const std::vector<std::pair<std::string, MarketConfiguration>>& configurations() const;
     bool hasConfiguration(const std::string& configuration) const;
     bool hasMarketObject(const MarketObject& o) const;
-    bool hasMarketObject(const MarketObject o, const string& configuration) const;
+    bool hasMarketObject(const MarketObject o, const std::string& configuration) const;
 
     const std::map<std::string, std::string>& mapping(const MarketObject o, const std::string& configuration) const;
     std::map<std::string, std::string>& mappingReference(const MarketObject o, const std::string& configuration);

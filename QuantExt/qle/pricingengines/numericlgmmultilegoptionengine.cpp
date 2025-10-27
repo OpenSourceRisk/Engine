@@ -20,6 +20,7 @@
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
@@ -109,8 +110,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                 return (RandomVariable(x.size(), ibor->gearing()) *
                             lgm.fixing(ibor->index(), ibor->fixingDate(), t, x) +
                         RandomVariable(x.size(), ibor->spread())) *
-                       RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal() * payrec) *
-                       lgm.reducedDiscountBond(t, T, x, discountCurve);
+                        RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal() * payrec) *
+                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
         } else if (auto fix = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
@@ -119,6 +120,23 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                                                 const Handle<YieldTermStructure>& discountCurve) {
                 return RandomVariable(x.size(), fix->amount() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
+            };
+            done = true;
+        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(cpn)) {
+            info.maxEstimationTime_ = timeFromReference(ibor->fixingDate());
+            info.calculator_ = [ibor, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                 const Handle<YieldTermStructure>& discountCurve) {
+                auto shortW = RandomVariable(x.size(), ibor->interpolatedIborIndex()->shortWeight(ibor->fixingDate()));
+                auto longW = RandomVariable(x.size(), ibor->interpolatedIborIndex()->longWeight(ibor->fixingDate()));
+                RandomVariable shortFixing =
+                    lgm.fixing(ibor->interpolatedIborIndex()->shortIndex(), ibor->fixingDate(), t, x);
+                RandomVariable longFixing =
+                    lgm.fixing(ibor->interpolatedIborIndex()->longIndex(), ibor->fixingDate(), t, x);
+                return (RandomVariable(x.size(), ibor->gearing()) *
+                            shortW * shortFixing + longW * longFixing +
+                        RandomVariable(x.size(), ibor->spread())) *
+                        RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal() * payrec) *
+                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
         } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn)) {
@@ -343,8 +361,8 @@ bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
         for (Size j = 0; j < legs[i].size(); ++j) {
             if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
                 if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) || QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
-                      QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c) ||
@@ -356,7 +374,7 @@ bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
                            QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c)->underlying())))) {
                     messages.push_back(
                         "NumericLgmMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
-                        "(capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. leg = " +
+                        "(capfloored) (interpolated) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. leg = " +
                         std::to_string(i) + " cf = " + std::to_string(j));
                     isHandled = false;
                 }

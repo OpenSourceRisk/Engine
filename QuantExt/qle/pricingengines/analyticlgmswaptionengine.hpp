@@ -73,8 +73,14 @@ namespace QuantExt {
 class AnalyticLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results> {
 
 public:
-    /*! nextCoupon is Mapping A, proRata is Mapping B
-        in Lichters, Stamm, Gallagher (2015), 11.2.2 */
+
+    /*! For nextCoupon, proRata cf. Lichters, Stamm, Gallagher (2015), 11.2.2, where these methods
+        are called Mapping A and Mapping B respectively.
+
+        The method "simple" determines the difference between the flat amount (see documentation of
+        flatAmount() method below) and the actual floating coupon amount npv on the float leg and
+        from that a fixed leg rate correction by dividing the difference by the fixed leg annuity. */
+
     enum class FloatSpreadMapping { nextCoupon, proRata, simple };
 
     /*! Lgm model based constructor */
@@ -99,7 +105,7 @@ public:
 
     void calculate() const override;
 
-    /* If enabled, the underlying instrument should not changed between two pricings or the cache has to be
+    /* If enabled, the underlying instrument should not change between two pricings or the cache has to be
        cleared. Furthermore it is assumed that all the market data stays constant between two pricings.
        Regarding the LGM parameters it is assumed that either H(t) or alpha(t) (or both) is constant, depending
        on the passed parameters here. enableCache() should only be called once on an instance of this class. */
@@ -118,7 +124,7 @@ private:
     Handle<YieldTermStructure> c_;
     mutable FloatSpreadMapping floatSpreadMapping_;
     mutable Real x0_;
-    bool caching_, lgm_H_constant_ = false, lgm_alpha_constant_ = false;
+    bool caching_ = false, lgm_H_constant_ = false, lgm_alpha_constant_ = false;
     mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
@@ -131,6 +137,22 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m);
+
+/* The "flat amount" is defined such that the floating leg value of a standard OIS or Ibor swap
+   is obtained as
+
+   P(t,T0) - P(t,T1)
+
+   where P is the discount factor on the curve c and where we assume a single curve
+   setup with discount curve = forward curve = c. T0 is the first acrrual start date on the
+   floating leg and T1 is the last accrual end date.
+
+   The flat amount is used to reduce the pricing of a swaption in a multi-curve setting to
+   the usual simplified single-curve setting by determining a correction spread for the fixed
+   rate compensating for the difference between flat amount and actual amounts.
+
+   Note: There are several methods to determine the correction spread. See e.g.
+   AnalyticLgmSwaptionEngine where the method is chosen via the enum FloatSpreadMapping. */
 
 Real flatAmount(const QuantLib::ext::shared_ptr<QuantLib::CashFlow>& f, const Handle<YieldTermStructure>& c);
 

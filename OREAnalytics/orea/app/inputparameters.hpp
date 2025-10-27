@@ -107,7 +107,21 @@ public:
      /*********
      * Setters
      *********/
-    
+    void setResultsPath(boost::filesystem::path resultsPath) { resultsPath_ = resultsPath; }
+    void setRefDataManager(const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager) {
+        refDataManager_ = refDataManager;
+    }
+    void setBaselTrafficLight(const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight) {
+        baselTrafficLightConfig_ = baselTrafficLight;
+    }
+    void setTodaysMarketParams(const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams) {
+        todaysMarketParams_ = todaysMarketParams;
+    }
+    void setSensitivityScenarioData(
+        const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData) {
+        sensiScenarioData_ = sensiScenarioData;
+    }
+
     void setAsOfDate(const std::string& s); // parse to Date
     void setResultsPath(const std::string& s) { resultsPath_ = s; }
     void setInputPath(const std::string& s) { inputPath_ = s; }
@@ -133,15 +147,18 @@ public:
     void setScriptLibrary(const std::string& xml);
     void setScriptLibraryFromFile(const std::string& fileName);
     void setConventions(const std::string& xml);
+    void setConventions(const QuantLib::ext::shared_ptr<Conventions>& convs);
     void setConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setBaselTrafficLightConfig(const std::string& xml);
     void setBaselTrafficLightFromFile(const std::string& fileName);
-    void setCurveConfigs(const std::string& xml);
-    void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
+    void setCurveConfigs(const std::string& xml, std::string id = std::string());
+    void setCurveConfigs(const QuantLib::ext::shared_ptr<CurveConfigurations>& cc, std::string id = std::string());
+    void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setPricingEngine(const std::string& xml);
     void setPricingEngineFromFile(const std::string& fileName);
+    void setPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& ed);
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
@@ -206,6 +223,7 @@ public:
     void setSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         sensiPricingEngine_ = engineData;
     }
+    void setSensiOutputPrecision(Size p) { sensiOutputPrecision_ = p; }
 
     // Setters for scenario
     void setScenarioSimMarketParams(const std::string& xml);
@@ -218,7 +236,8 @@ public:
     void setStressSimMarketParams(const std::string& xml); 
     void setStressSimMarketParamsFromFile(const std::string& fileName); 
     void setStressScenarioData(const std::string& xml); 
-    void setStressScenarioDataFromFile(const std::string& fileName); 
+    void setStressScenarioDataFromFile(const std::string& fileName);
+    void setStressScenarioData(const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData);
     void setStressPricingEngine(const std::string& xml); 
     void setStressPricingEngineFromFile(const std::string& fileName); 
     void setStressPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
@@ -580,7 +599,9 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
     const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
     const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const { return baselTrafficLightConfig_; }
+    
     CurveConfigurationsManager& curveConfigs() { return curveConfigs_; }
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& pricingEngine() const { return pricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams() const { return todaysMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; }
@@ -658,6 +679,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
     // const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& sensiTodaysMarketParams() { return sensiTodaysMarketParams_; }
+    QuantLib::Size sensiOutputPrecision() const { return sensiOutputPrecision_; }
         
     /****************************
      * Getters for scenario build
@@ -1115,6 +1137,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
+    QuantLib::Size sensiOutputPrecision_ = 2;
 
     /**********************
      * SCENARIO analytic

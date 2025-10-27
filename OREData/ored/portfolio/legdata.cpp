@@ -51,6 +51,8 @@
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
+#include <qle/cashflows/interpolatediborcouponpricer.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
@@ -250,6 +252,21 @@ void FloatingLegData::fromXML(XMLNode* node) {
         auto dt = parseDate(histFixingDates[i]);
         historicalFixings_[dt] = histFixingValues[i];
     }
+    XMLNode* frontStubNode = XMLUtils::getChildNode(node, "FrontStubInterpolation");
+    if (frontStubNode) {
+        frontStubShortIndex_ = XMLUtils::getChildValue(frontStubNode, "ShortIndex", true);
+        frontStubLongIndex_ = XMLUtils::getChildValue(frontStubNode, "LongIndex", true);
+        frontStubRoundingType_ = XMLUtils::getChildValue(frontStubNode, "RoundingType");
+        frontStubRoundingPrecision_ = XMLUtils::getChildValue(frontStubNode, "RoundingPrecision");
+    }
+    XMLNode* backStubNode = XMLUtils::getChildNode(node, "BackStubInterpolation");
+    if (backStubNode) {
+        backStubShortIndex_ = XMLUtils::getChildValue(backStubNode, "ShortIndex", true);
+        backStubLongIndex_ = XMLUtils::getChildValue(backStubNode, "LongIndex", true);
+        backStubRoundingType_ = XMLUtils::getChildValue(backStubNode, "RoundingType");
+        backStubRoundingPrecision_ = XMLUtils::getChildValue(backStubNode, "RoundingPrecision");
+    }
+    stubUseOriginalCurve_ = XMLUtils::getChildValueAsBool(node, "StubUseOriginalCurve", false, false);
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
@@ -293,6 +310,24 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
         for (const auto& [fixingDate, fixingValue] : historicalFixings_) {
             XMLUtils::addChild(doc, histFixings, "Fixing", to_string(fixingValue), "fixingDate", to_string(fixingDate));
         }
+    }
+    if (!frontStubShortIndex_.empty() && !frontStubLongIndex_.empty()) {
+        XMLNode* frontStubNode = XMLUtils::addChild(doc, node, "FrontStubInterpolation");
+        XMLUtils::addChild(doc, frontStubNode, "ShortIndex", frontStubShortIndex_);
+        XMLUtils::addChild(doc, frontStubNode, "LongIndex", frontStubLongIndex_);
+        XMLUtils::addChild(doc, frontStubNode, "RoundingType", frontStubRoundingType_);
+        XMLUtils::addChild(doc, frontStubNode, "RoundingPrecision", frontStubRoundingPrecision_);
+    }
+    if (!backStubShortIndex_.empty() && !backStubLongIndex_.empty()) {
+        XMLNode* backStubNode = XMLUtils::addChild(doc, node, "BackStubInterpolation");
+        XMLUtils::addChild(doc, backStubNode, "ShortIndex", backStubShortIndex_);
+        XMLUtils::addChild(doc, backStubNode, "LongIndex", backStubLongIndex_);
+        XMLUtils::addChild(doc, backStubNode, "RoundingType", backStubRoundingType_);
+        XMLUtils::addChild(doc, backStubNode, "RoundingPrecision", backStubRoundingPrecision_);
+    }
+    if ((!frontStubShortIndex_.empty() && !frontStubLongIndex_.empty()) ||
+        (!backStubShortIndex_.empty() && !backStubLongIndex_.empty())) {
+        XMLUtils::addChild(doc, node, "StubUseOriginalCurve", stubUseOriginalCurve_);
     }
     return node;
 }
@@ -1174,6 +1209,103 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     return leg;
 }
 
+void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
+                            const std::string& roundingTypeStr, const std::string& roundingPrecisionStr,
+                            const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                            const bool useOriginalIndexCurve, const Size accrualDays) {
+    if (shortIndexStr.empty() && longIndexStr.empty()) {
+        return;
+    }
+    // we have to unpack the coupon...
+    QuantLib::ext::shared_ptr<CappedFlooredCoupon> cfCpn;
+    auto strippedCpn = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(*c);
+    if (strippedCpn) {
+        cfCpn = strippedCpn->underlying();
+    } else {
+        cfCpn = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(*c);
+    }
+    Real cap = Null<Real>(), floor = Null<Real>();
+    QuantLib::ext::shared_ptr<IborCoupon> iborCpn;
+    if (cfCpn) {
+        cap = cfCpn->cap();
+        floor = cfCpn->floor();
+        iborCpn = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(cfCpn->underlying());
+    } else {
+        iborCpn = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(*c);
+    }
+    QL_REQUIRE(iborCpn, "applyStubInterpolation(): unable to unpack coupon to ibor coupon");
+    // ... replace it with an interpolated Ibor Coupon ...
+    QuantLib::ext::shared_ptr<IborIndex> idx1, idx2;
+    if (!shortIndexStr.empty())
+        idx1 = *engineFactory->market()->iborIndex(shortIndexStr, engineFactory->configuration(MarketContext::pricing));
+    if (!longIndexStr.empty())
+        idx2 = *engineFactory->market()->iborIndex(longIndexStr, engineFactory->configuration(MarketContext::pricing));
+    if (shortIndexStr.empty())
+        idx1 = idx2;
+    if (longIndexStr.empty())
+        idx2 = idx1;
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> tmp;
+    bool pricerSet = false;
+    if (idx1->name() == idx2->name()) {
+        // actually no interpolation, only one index is given effectively, so we can use an Ibor Coupon
+        tmp = QuantLib::ext::make_shared<IborCoupon>(
+            iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
+            iborCpn->fixingDays(),
+            useOriginalIndexCurve ? idx1->clone(iborCpn->iborIndex()->forwardingTermStructure()) : idx1,
+            iborCpn->gearing(), iborCpn->spread(), iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(),
+            iborCpn->dayCounter(), iborCpn->isInArrears(), iborCpn->exCouponDate());
+        tmp->setPricer(iborCpn->pricer()); // use the original pricer
+        pricerSet = true;
+    } else {
+        // interpolation
+        Size accl = accrualDays == Null<Size>() ? iborCpn->accrualEndDate() - iborCpn->accrualStartDate() : accrualDays;
+        // we are rounding the percentage numbers, therefore we have to add 2 to the given precision
+        QuantLib::Rounding rounding;
+        if (!roundingTypeStr.empty() && !roundingPrecisionStr.empty())
+            rounding = QuantLib::Rounding(parseInteger(roundingPrecisionStr) + 2, parseRoundingType(roundingTypeStr));
+        auto interpolatedIndex = QuantLib::ext::make_shared<QuantExt::InterpolatedIborIndex>(
+            idx1, idx2, accl, rounding,
+            useOriginalIndexCurve ? iborCpn->iborIndex()->forwardingTermStructure() : Handle<YieldTermStructure>());
+        tmp = QuantLib::ext::make_shared<InterpolatedIborCoupon>(
+            iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
+            iborCpn->fixingDays(), interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
+            iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(), iborCpn->dayCounter(),
+            iborCpn->isInArrears(), iborCpn->exCouponDate(), iborCpn->iborIndex());
+        DLOG("created InterpolatedIborIndex for accrual period "
+             << QuantLib::io::iso_date(iborCpn->accrualStartDate()) << ","
+             << QuantLib::io::iso_date(iborCpn->accrualEndDate()) << " with " << accl
+             << " accrual days, prescribed accrual days = "
+             << (accrualDays == Null<Size>() ? "na" : std::to_string(accrualDays)));
+    }
+    // ... and wrap it again ...
+    if (cfCpn) {
+        tmp = QuantLib::ext::make_shared<CappedFlooredCoupon>(tmp, cap, floor);
+    }
+    if (strippedCpn) {
+        // we know that tmp is a cf coupon in this case
+        tmp = QuantLib::ext::make_shared<StrippedCappedFlooredCoupon>(QuantLib::ext::static_pointer_cast<CappedFlooredCoupon>(tmp));
+    }
+    // ... get and set the pricer ..
+    if (!pricerSet) {
+        if (cfCpn || strippedCpn) {
+            QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredInterpolatedIborLeg");
+            QL_REQUIRE(builder, "No builder found for CapFlooredInterpolatedIborLeg");
+            QuantLib::ext::shared_ptr<CapFlooredInterpolatedIborLegEngineBuilder> cappedFlooredInterpolatedIborBuilder =
+                QuantLib::ext::dynamic_pointer_cast<CapFlooredInterpolatedIborLegEngineBuilder>(builder);
+            QL_REQUIRE(cappedFlooredInterpolatedIborBuilder, "wrong builder type to CapFlooredInterpolatedIborLeg");
+            QuantLib::ext::shared_ptr<FloatingRateCouponPricer> couponPricer =
+                cappedFlooredInterpolatedIborBuilder->engine(IndexNameTranslator::instance().oreName(iborCpn->iborIndex()->name()));
+            QL_REQUIRE(couponPricer, "got null couponPricer from CapFlooredInterpolatedIborLeg");
+            tmp->setPricer(couponPricer);
+        } else {
+            ext::shared_ptr<InterpolatedIborCouponPricer> couponPricer = ext::make_shared<BlackInterpolatedIborCouponPricer>();
+            tmp->setPricer(couponPricer);
+        }
+    }
+    // ... and set the result coupon.
+    *c = tmp;
+} // applyStubInterpolation
+
 Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>& index,
                 const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer,
                 const QuantLib::Date& openEndDateReplacement,
@@ -1303,6 +1435,20 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
             for (Size i = 0; i < coupons.size(); i++)
                 leg.push_back(coupons[i]);
             LOG("Floating annuity notional schedule done");
+            // front / back stub interpolation
+            applyStubInterpolation(leg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
+                                   floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
+                                   floatData->stubUseOriginalCurve());
+            if (leg.size() == 1
+                && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
+                && !floatData->backStubShortIndex().empty() && !floatData->backStubLongIndex().empty()) {
+                WLOG("Leg size is 1, and both FrontStubInterpolation and BackStubInterpolation are defined. "
+                     "The definition in BackStubInterpolation will be ignored.");
+            } else {
+                applyStubInterpolation(leg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
+                                       floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
+                                       floatData->stubUseOriginalCurve());
+            }
             return leg;
         }
     }
@@ -1323,6 +1469,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
                                                         : QuantExt::SubPeriodsCoupon1::Compounding)
                       .includeSpread(floatData->includeSpread());
         QuantExt::setCouponPricer(leg, QuantLib::ext::make_shared<QuantExt::SubPeriodsCouponPricer1>());
+        /* TODO: add stub interpolation */
         return leg;
     }
 
@@ -1409,6 +1556,21 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
 
     if (floatData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+    }
+
+    // front / back stub interpolation
+    applyStubInterpolation(tmpLeg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
+                           floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
+                           floatData->stubUseOriginalCurve());
+    if (tmpLeg.size() == 1
+        && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
+        && !floatData->backStubShortIndex().empty() && !floatData->backStubLongIndex().empty()) {
+        WLOG("Leg size is 1, and both FrontStubInterpolation and BackStubInterpolation are defined. "
+             "The definition in BackStubInterpolation will be ignored.");
+    } else {
+        applyStubInterpolation(tmpLeg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
+                               floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
+                               floatData->stubUseOriginalCurve());
     }
 
     // return the leg
