@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/structuredanalyticserror.hpp>
+#include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -85,6 +86,44 @@ using boost::numeric::ublas::element_prod;
 
 namespace ore {
 namespace analytics {
+
+namespace {
+//! Apply par conversion matrix regularisation to a small diagonal element
+Real applyRegularisation(const ore::data::ParConversionMatrixRegularisation& regularisation,
+                         const RiskFactorKey& riskFactor,
+                         const RiskFactorKey& key,
+                         Real originalValue,
+                         const std::string& elementType = "") {
+    
+    if (std::abs(originalValue) >= ParSensitivityAnalysis::regularisationThreshold) {
+        return originalValue; // No regularisation needed
+    }
+    
+    std::string message = "Small diagonal " + elementType + " sensitivity " + to_string(riskFactor) + " w.r.t. " + 
+                         to_string(key) + " (got " + std::to_string(originalValue) + ")";
+    
+    if (regularisation == ore::data::ParConversionMatrixRegularisation::Silent) {
+        return ParSensitivityAnalysis::regularisationThreshold;
+    } else if (regularisation == ore::data::ParConversionMatrixRegularisation::Warning) {
+        WLOG("Setting diagonal " << elementType << " sensitivity " << riskFactor << " w.r.t. " << key 
+             << " to " << ParSensitivityAnalysis::regularisationThreshold << " (got " << originalValue << ")");
+        StructuredAnalyticsWarningMessage(
+            "ParSensitivityAnalysis",
+            "Small diagonal " + elementType + " element",
+            message,
+            {{"RiskFactor", to_string(riskFactor)},
+             {"Key", to_string(key)},
+             {"OriginalValue", std::to_string(originalValue)},
+             {"CorrectedValue", std::to_string(ParSensitivityAnalysis::regularisationThreshold)}}
+        ).log();
+        return ParSensitivityAnalysis::regularisationThreshold;
+    } else if (regularisation == ore::data::ParConversionMatrixRegularisation::Disable) {
+        return originalValue; // Use original value as-is, no regularisation
+    } else {
+        QL_FAIL("Unknown ParConversionMatrixRegularisation");
+    }
+}
+} // anonymous namespace
 
 //! Constructor
 ParSensitivityAnalysis::ParSensitivityAnalysis(const Date& asof,
@@ -402,10 +441,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
             // getting ill-conditioned or even singular
 
             if (survivalAndRateCurveTypes.find(p.first.keytype) != survivalAndRateCurveTypes.end() &&
-                p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
-                WLOG("Setting Diagonal Sensi " << p.first << " w.r.t. " << desc[i].key1() << " to 0.01 (got " << tmp
-                                               << ")");
-                tmp = 0.01;
+                p.first == desc[i].key1()) {
+                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), p.first, desc[i].key1(), tmp, "SurvivalOrRateCurve");
             }
 
             // YoY diagnoal entries are 1.0
@@ -437,10 +474,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
             // a) the shift size used to compute dpar / dzero might be close to zero and / or
             // b) the implied vol calculation has numerical inaccuracies
 
-            if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
-                WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
-                                                           << " to 0.01 (got " << tmp << ")");
-                tmp = 0.01;
+            if (p.first == desc[i].key1()) {
+                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), p.first, desc[i].key1(), tmp, "CapFloorVol");
             }
 
             // write sensitivity
@@ -463,10 +498,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
 
             // see par caps
 
-            if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
-                WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
-                                                           << " to 0.01 (got " << tmp << ")");
-                tmp = 0.01;
+            if (p.first == desc[i].key1()) {
+                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), p.first, desc[i].key1(), tmp, "OISCapFloorVol");
             }
 
             // write sensitivity
@@ -492,10 +525,8 @@ void ParSensitivityAnalysis::computeParInstrumentSensitivities(const QuantLib::e
             // a) the shift size used to compute dpar / dzero might be close to zero and / or
             // b) the implied vol calculation has numerical inaccuracies
 
-            if (p.first == desc[i].key1() && std::abs(tmp) < 0.01) {
-                WLOG("Setting Diagonal CapFloorVol Sensi " << p.first << " w.r.t. " << desc[i].key1()
-                                                           << " to 0.01 (got " << tmp << ")");
-                tmp = 0.01;
+            if (p.first == desc[i].key1()) {
+                tmp = applyRegularisation(sensitivityData_.parConversionMatrixRegularisation(), p.first, desc[i].key1(), tmp, "YoYCapFloorVol");
             }
 
             // write sensitivity
@@ -849,6 +880,28 @@ ParSensitivityConverter::ParSensitivityConverter(const ParSensitivityAnalysis::P
                     }
                 }
             }
+        }
+        // Check for small diagonal entries that might benefit from regularisation
+        LOG("Checking for small diagonal entries...");
+        bool foundSmallDiagonal = false;
+        Size smallDiagonalCount = 0;
+        for (Size j = 0; j < jacobi_transp.size1(); ++j) {
+            Real diagonalValue = jacobi_transp(j, j);
+            if (std::abs(diagonalValue) < ParSensitivityAnalysis::regularisationThreshold) {
+                if (!foundSmallDiagonal) {
+                    foundSmallDiagonal = true;
+                    WLOG("Found small diagonal entries in Jacobi matrix (threshold = " 
+                         << ParSensitivityAnalysis::regularisationThreshold << "):");
+                }
+                WLOG("  diagonal[" << j << "] = " << diagonalValue);
+                smallDiagonalCount++;
+            }
+        }
+        if (foundSmallDiagonal) {
+            WLOG("Matrix inversion failed with " << smallDiagonalCount << " small diagonal entries. "
+                 << "If ParConversionMatrixRegularisation is set to 'Disable', "
+                 << "consider enabling regularisation by setting it to 'Silent' or 'Warning' "
+                 << "to improve matrix conditioning and avoid inversion failures.");
         }
         LOG("Extended matrix diagnostics done. Exiting application.");
         success = false;

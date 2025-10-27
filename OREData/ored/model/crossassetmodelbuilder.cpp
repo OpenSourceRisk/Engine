@@ -52,6 +52,7 @@
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
+#include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
@@ -318,14 +319,11 @@ void CrossAssetModelBuilder::buildModel() const {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
                     market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_, BlackCalibrationHelper::RelativePriceError,
-                    allowChangingFallbacksUnderScenarios_, allowModelFallbacks_);
+                    allowChangingFallbacksUnderScenarios_, allowModelFallbacks_, dontCalibrate_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             lgmBuilder.push_back(builder);
-            if (dontCalibrate_) {
-                builder->freeze();
-            }
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
             auto parametrization = builder->parametrization();
@@ -340,22 +338,19 @@ void CrossAssetModelBuilder::buildModel() const {
             irDiscountCurves.push_back(builder->discountCurve());
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
         } else if (auto ir = QuantLib::ext::dynamic_pointer_cast<HwModelData>(irConfig)) {
-            bool evaluateBankAccount = true; // updated in cross asset model for non-base ccys
-            bool setCalibrationInfo = false;
-            HwModel::Discretization discr = HwModel::Discretization::Euler;
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<HwBuilder>(
-                    market_.value(), ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
-                    config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
+                    market_.value(), ir, measure, HwModel::Discretization::Euler, true, configurationLgmCalibration_,
+                    config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, false, id_,
+                    BlackCalibrationHelper::RelativePriceError, allowChangingFallbacksUnderScenarios_,
+                    allowModelFallbacks_, dontCalibrate_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             hwBuilder.push_back(builder);
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
-            auto parametrization = builder->parametrization();
-            if (dontCalibrate_)
-                builder->freeze();
+            auto parametrization = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(builder->parametrization());
             swaptionBaskets_[i] = builder->swaptionBasket();
             QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
                            currencies.end(),
@@ -731,7 +726,6 @@ void CrossAssetModelBuilder::buildModel() const {
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
         if (!dontCalibrate_) {
-
             // reset to initial params to ensure identical calibration outcomes for identical baskets
             resetModelParams(CrossAssetModel::AssetType::EQ, 0, i, Null<Size>());
 
@@ -771,9 +765,89 @@ void CrossAssetModelBuilder::buildModel() const {
      * Calibrate COM components
      */
 
-    for (Size i = 0; i < csBuilder.size(); i++) {
+    for (Size i = 0; i < comParametrizations.size(); i++) {
+        QuantLib::ext::shared_ptr<CommoditySchwartzData> comData = config_->comConfigs()[i];
+        QuantLib::ext::shared_ptr<CommoditySchwartzModel> comModel = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
+
+        if (comData->calibrationType() == CalibrationType::None ||
+            (comData->calibrateSigma() == false && comData->calibrateKappa() == false && comData->calibrateSeasonality() == false)) {
+            LOG("COM calibration is deactivated in the CommoditySchwartzModelData for name " << comData->name());
+            continue;
+        }
+
         DLOG("COM Calibration " << i);
-        comOptionCalibrationErrors_[i] = csBuilder[i]->error();
+        // attach pricing engines to helpers
+        QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzFutureOptionEngine> engine =
+            QuantLib::ext::make_shared<QuantExt::CommoditySchwartzFutureOptionEngine>(comModel);
+        for (Size j = 0; j < comOptionBaskets_[i].size(); j++)
+            comOptionBaskets_[i][j]->setPricingEngine(engine);
+
+        if (!dontCalibrate_) {
+            if (comData->calibrationType() == CalibrationType::BestFit) {
+                // reset to initial params to ensure identical calibration outcomes for identical baskets
+                // check which parameters are kept fixed
+                std::vector<bool> fix(comParametrizations[i]->numberOfParameters() 
+                                + comParametrizations[i]->parameter(2)->params().size()-1, true);
+                std::vector<Real> weights;
+                Size freeParams = 0;
+                if (comData->calibrateSigma()) {
+                    fix[0] = false;
+                    freeParams++;
+                    LOG("CommoditySchwartzModel: calibrate sigma for name " << comData->name());
+                }
+                if (comData->calibrateKappa()) {
+                    fix[1] = false;
+                    freeParams++;
+                    LOG("CommoditySchwartzModel: calibrate kappa for name " << comData->name());
+                }
+                if (comData->calibrateSeasonality()) {
+                    for (Size i=3; i< fix.size(); i++)
+                        fix[i] = false;
+                    freeParams++;
+                    LOG("CommoditySchwartzModel: calibrate seasonality for name " << comData->name());
+                }
+                if (freeParams == 0) {
+                    WLOG("CommoditySchwartzModel: skip calibration for name " << comData->name() << ", no free parameters");
+                    continue;
+                }
+                comModel->setParams(comModel->params());
+                comModel->calibrate(comOptionBaskets_[i], *optimizationMethod_, comData->endCriteria(), comData->constraint(), weights, fix);
+                comModel->update();
+            } else{
+                std::vector<Real> weights;
+                for (Size j = 0; j < comOptionBaskets_[i].size() ; j++) {
+                    std::vector<bool> fix(comParametrizations[i]->numberOfParameters()
+                                         + comParametrizations[i]->parameter(2)->params().size()-1, true);
+                    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> h = {comOptionBaskets_[i][j]};               
+                    fix[j+3] = false;
+                    comModel->calibrate(h, *optimizationMethod_, comData->endCriteria(), comData->constraint(), weights, fix);
+                    comModel->update();
+                }
+            } 
+             
+            DLOG("COM " << comData->name() << " calibration errors:");
+            comOptionCalibrationErrors_[i] = getCalibrationError(comOptionBaskets_[i]);
+            if (fabs(comOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                TLOGGERSTREAM("Calibration details:");
+                TLOGGERSTREAM(
+                    getCalibrationDetails(comOptionBaskets_[i], comParametrizations[i]));
+                TLOGGERSTREAM("rmse = " << comOptionCalibrationErrors_[i]);
+            } else {
+                std::string exceptionMessage = "COM " + comData->name() + " index " + std::to_string(i) + " calibration error " +
+                                                std::to_string(comOptionCalibrationErrors_[i]) +
+                                                " exceeds tolerance " +
+                                                std::to_string(config_->bootstrapTolerance());
+                StructuredModelWarningMessage("Failed to calibrate COM Model", exceptionMessage, id_).log();
+                WLOGGERSTREAM("Calibration details:");
+                WLOGGERSTREAM(
+                    getCalibrationDetails(comOptionBaskets_[i], comParametrizations[i]));
+                WLOGGERSTREAM("rmse = " << comOptionCalibrationErrors_[i]);
+                if (!continueOnError_)
+                    QL_FAIL(exceptionMessage);
+            }
+
+        }
+        csBuilder[i]->setCalibrationDone();
     }
 
     /*************************

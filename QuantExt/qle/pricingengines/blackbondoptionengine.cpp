@@ -77,7 +77,8 @@ void BlackBondOptionEngine::calculate() const {
 
     // hard code yield compounding convention to annual
     Rate fwdYtm = QuantExt::yield(arguments_.underlying, fwdNpv / arguments_.underlying->notional(exerciseDate) * 100.0,
-                                  volatility_->dayCounter(), Compounded, Annual, exerciseDate, exerciseDate);
+                                  volatility_->dayCounter(), Compounded, Annual, exerciseDate, exerciseDate, 1E-8, 100,
+                                  0.05, QuantLib::Bond::Price::Dirty);
     Time fwdDur = QuantExt::duration(arguments_.underlying, fwdYtm, volatility_->dayCounter(), Compounded, Annual,
                                      Duration::Modified, exerciseDate, exerciseDate);
 

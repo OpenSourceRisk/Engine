@@ -33,6 +33,7 @@ class PnlAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PNL";
     static constexpr const char* mporLookupKey = "MPOR";
+    static constexpr const char* sensiLookupKey = "SENSI";
 
     PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs), useSpreadedTermStructures_(true) {

@@ -34,11 +34,8 @@ namespace analytics {
 void StressTestAnalyticImpl::setUpConfigurations() {
     const auto stressData =  inputs_->stressScenarioData();
     analytic()->configurations().simulationConfigRequired = true;
-    if (stressData != nullptr) {
+    if (stressData)
         analytic()->configurations().sensitivityConfigRequired = stressData->hasScenarioWithParShifts();
-    } else {
-        analytic()->configurations().sensitivityConfigRequired = false;
-    }
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->stressSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->stressSensitivityScenarioData();
@@ -70,7 +67,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Stress Test Analysis called");
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
-    if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
+    if (scenarioData && scenarioData->hasScenarioWithParShifts()) {
         try{
             QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
                 QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -110,6 +107,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                       inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
                       scenarioReport);
     } else {
+        QL_REQUIRE(scenarioData, "StressTestAnalytic::runAnalytic: No stress scenario data provided.");
         runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                       analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
                       inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),

@@ -85,6 +85,12 @@ std::string InputParameters::loadParameterXMLString(const std::string& analytic,
     return loadParameterString(analytic, param, mandatory);
 }
 
+
+const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>&
+InputParameters::curveConfig(const std::string& s) const {
+    return curveConfigs_.get(s);
+}
+
 void InputParameters::setAsOfDate(const std::string& s) {
     asof_ = parseDate(s);
     Settings::instance().evaluationDate() = asof_;
@@ -132,6 +138,11 @@ void InputParameters::setConventions(const std::string& xml) {
     conventions_->fromXMLString(xml);
     InstrumentConventions::instance().setConventions(conventions_);
 }
+
+void InputParameters::setConventions(const QuantLib::ext::shared_ptr<Conventions>& convs) {
+    conventions_ = convs;
+    InstrumentConventions::instance().setConventions(conventions_);
+}
     
 void InputParameters::setConventionsFromFile(const std::string& fileName) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
@@ -139,10 +150,14 @@ void InputParameters::setConventionsFromFile(const std::string& fileName) {
     InstrumentConventions::instance().setConventions(conventions_);
 }
 
-void InputParameters::setCurveConfigs(const std::string& xml) {
+void InputParameters::setCurveConfigs(const std::string& xml, std::string id) {
     auto curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfig->fromXMLString(xml);
-    curveConfigs_.add(curveConfig);
+    curveConfigs_.add(curveConfig, id);
+}
+
+void InputParameters::setCurveConfigs(const QuantLib::ext::shared_ptr<CurveConfigurations>& cc, std::string id) {
+    curveConfigs_.add(cc, id);
 }
 
 void InputParameters::setCurveConfigsFromFile(const std::string& fileName, std::string id) {
@@ -194,6 +209,10 @@ void InputParameters::setIborFallbackConfigFromFile(const std::string& fileName)
 void InputParameters::setPricingEngine(const std::string& xml) {
     pricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     pricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& ed) {
+    pricingEngine_ = ed;
 }
 
 void InputParameters::setPricingEngineFromFile(const std::string& fileName) {
@@ -324,6 +343,11 @@ void InputParameters::setStressScenarioData(const std::string& xml) {
 void InputParameters::setStressScenarioDataFromFile(const std::string& fileName) {
     stressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
     stressScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setStressScenarioData(
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData) {
+    stressScenarioData_ = stressScenarioData;
 }
 
 void InputParameters::setStressSensitivityScenarioData(const std::string& xml) {

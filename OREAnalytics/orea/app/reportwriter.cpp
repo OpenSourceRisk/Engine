@@ -755,7 +755,9 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
 }
 
 void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
-                                          Real outputThreshold, Size outputPrecision) {
+                                          Real outputThreshold,
+                                          const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                          const std::string& configuration, Size outputPrecision) {
 
     LOG("Writing Sensitivity report");
 
@@ -772,12 +774,26 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     report.addColumn("Base NPV", double(), amountPrecision);
     report.addColumn("Delta", double(), amountPrecision);
     report.addColumn("Gamma", double(), amountPrecision);
+    report.addColumn("Currency(Trade)", string());
+    report.addColumn("Base NPV(Trade)", double(), amountPrecision);
+    report.addColumn("Delta(Trade)", double(), amountPrecision);
+    report.addColumn("Gamma(Trade)", double(), amountPrecision);
 
     // Make sure that we are starting from the start
     ss->reset();
     while (SensitivityRecord sr = ss->next()) {
-        if ((outputThreshold == Null<Real>()) || (fabs(sr.delta) > outputThreshold ||
-            (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+
+            Real fx = 1.0;
+            std::string tradeCcy;
+            if (market && !sr.tradeCurrency.empty()) {
+                tradeCcy = sr.tradeCurrency;
+                if (sr.tradeCurrency != sr.currency)
+                    fx = market->fxRate(sr.currency + sr.tradeCurrency, configuration)->value();
+            } else
+                tradeCcy = sr.currency;
+
             report.next();
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
@@ -789,6 +805,14 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             report.add(sr.baseNpv);
             report.add(sr.delta);
             report.add(sr.gamma);
+            report.add(tradeCcy);
+            report.add(sr.baseNpv * fx);
+            report.add(sr.delta * fx);
+            if (sr.gamma == Null<Real>()) {
+                report.add(sr.gamma);
+            } else {
+                report.add(sr.gamma * fx);
+            }
         } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
             // TODO: Again, is this needed?
             ALOG("sensitivity record has infinite values: " << sr);
@@ -2136,14 +2160,15 @@ Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& 
 
 void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t0NpvReport,
-            const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
-            const ext::shared_ptr<InMemoryReport>& t1NpvLaggedReport,
-            const ext::shared_ptr<InMemoryReport>& t1Npvt0PortReport,
-            const ext::shared_ptr<InMemoryReport>& t1NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t0m0p0NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t1m0p0NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t1m1p0NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t1m0p1NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t1m1p1NpvReport,
             const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,
             const Date& startDate, const Date& endDate,
             const std::string& baseCurrency,
-                        const ext::shared_ptr<ore::data::Market>& market,
+            const ext::shared_ptr<ore::data::Market>& market,
             const std::string& configuration,
             const ext::shared_ptr<Portfolio>& portfolio) {
   
@@ -2155,11 +2180,14 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
         .addColumn("MaturityTime", double(), 6)
         .addColumn("StartDate", Date())
         .addColumn("EndDate", Date())
-        .addColumn("NPV(t0)", double(), 6)
-        .addColumn("NPV(asof=t0;mkt=t1)", double(), 6)
-        .addColumn("NPV(asof=t1;mkt=t0)", double(), 6)
-        .addColumn("NPV(t1;portfolio=t0)", double(), 6)
-        .addColumn("NPV(t1)", double(), 6)
+        .addColumn("NPV(t0;m0;p0)", double(), 6) // renamed from NPV(t0)
+        .addColumn("NPV(t0;m1;p0)", double(), 6) // renamed from NPV(asof=t0;mkt=t1)
+        .addColumn("NPV(t1;m0;p0)", double(), 6) // renamed from NPV(asof=t1;mkt=t0)
+        .addColumn("NPV(t1;m1;p0)", double(), 6) // renamed from NPV(t1;portfolio=t0)
+        .addColumn("NPV(t1;m0;p1)", double(), 6) // new column
+        .addColumn("NPV(t1;m1;p1)", double(), 6) // renamed from NPV(t1)
+        .addColumn("Day1PnL", double(), 6)
+        .addColumn("TradeChangePnL", double(), 6)
         .addColumn("PeriodCashFlow", double(), 6)
         .addColumn("New", double(), 6)
         .addColumn("Matured", double(), 6)
@@ -2178,8 +2206,9 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     Size npvBaseColumn = 6;
     Size baseCcyColumn = 7;
     
-    QL_REQUIRE(t0NpvReport->rows() == t0NpvLaggedReport->rows(), "different number of rows in npv reports");
-    QL_REQUIRE(t0NpvReport->rows() == t1NpvLaggedReport->rows(), "different number of rows in npv reports");
+    // t0 NPV = NPV(t0;m0;p0)
+    QL_REQUIRE(t0NpvReport->rows() == t0m0p0NpvReport->rows(), "different number of rows in npv reports");
+    QL_REQUIRE(t0NpvReport->rows() == t1m0p0NpvReport->rows(), "different number of rows in npv reports");
 
     QL_REQUIRE(t0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
     QL_REQUIRE(t0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
@@ -2188,30 +2217,41 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     QL_REQUIRE(t0NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
     QL_REQUIRE(t0NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
 
-    QL_REQUIRE(t0NpvLaggedReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
-    QL_REQUIRE(t0NpvLaggedReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
-    QL_REQUIRE(t0NpvLaggedReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
-    QL_REQUIRE(t0NpvLaggedReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
-    QL_REQUIRE(t0NpvLaggedReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
-    QL_REQUIRE(t0NpvLaggedReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
+    // t0 portfolio as of t0 using the t1 market = NPV(t0;m1;p0)
+    QL_REQUIRE(t0m0p0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(t0m0p0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
+    QL_REQUIRE(t0m0p0NpvReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
+    QL_REQUIRE(t0m0p0NpvReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
+    QL_REQUIRE(t0m0p0NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
+    QL_REQUIRE(t0m0p0NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
 
-    QL_REQUIRE(t1NpvLaggedReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
-    QL_REQUIRE(t1NpvLaggedReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
-    QL_REQUIRE(t1NpvLaggedReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
-    QL_REQUIRE(t1NpvLaggedReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
-    QL_REQUIRE(t1NpvLaggedReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
-    QL_REQUIRE(t1NpvLaggedReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
+    // t0 portfolio as of t1 using the t0 market = NPV(t1;m0;p0)
+    QL_REQUIRE(t1m0p0NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(t1m0p0NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
+    QL_REQUIRE(t1m0p0NpvReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
+    QL_REQUIRE(t1m0p0NpvReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
+    QL_REQUIRE(t1m0p0NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
+    QL_REQUIRE(t1m0p0NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
 
-    QL_REQUIRE(t1NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
-    QL_REQUIRE(t1NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
-    QL_REQUIRE(t1NpvReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
-    QL_REQUIRE(t1NpvReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
-    QL_REQUIRE(t1NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
-    QL_REQUIRE(t1NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
+    // t1 portfolio as of t1 using the t0 market = NPV(t1;m0;p1)
+    QL_REQUIRE(t1m0p1NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(t1m0p1NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
+    QL_REQUIRE(t1m0p1NpvReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
+    QL_REQUIRE(t1m0p1NpvReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
+    QL_REQUIRE(t1m0p1NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
+    QL_REQUIRE(t1m0p1NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
+
+    // t1 portfolio as of t1 using the t1 market = NPV(t1;m1;p1)
+    QL_REQUIRE(t1m1p1NpvReport->header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(t1m1p1NpvReport->header(tradeTypeColumn) == "TradeType", "incorrect trade type column " << tradeTypeColumn);
+    QL_REQUIRE(t1m1p1NpvReport->header(maturityDateColumn) == "Maturity", "incorrect maturity date column " << maturityDateColumn);
+    QL_REQUIRE(t1m1p1NpvReport->header(maturityTimeColumn) == "MaturityTime", "incorrect maturity time column " << maturityTimeColumn);
+    QL_REQUIRE(t1m1p1NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
+    QL_REQUIRE(t1m1p1NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
 
     map<string, Size> t1IdMap;
-    for (Size j = 0; j < t1NpvReport->rows(); ++j) {
-    string tradeId = boost::get<string>(t1NpvReport->data(tradeIdColumn, j));
+    for (Size j = 0; j < t1m1p1NpvReport->rows(); ++j) {
+    string tradeId = boost::get<string>(t1m1p1NpvReport->data(tradeIdColumn, j));
         t1IdMap[tradeId] = j;
     }
 
@@ -2220,8 +2260,8 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
         try {
             string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn, i));
             t0Ids.insert(tradeId);
-            string tradeId2 = boost::get<string>(t0NpvLaggedReport->data(tradeIdColumn, i));
-            string tradeId3 = boost::get<string>(t1NpvLaggedReport->data(tradeIdColumn, i));
+            string tradeId2 = boost::get<string>(t0m0p0NpvReport->data(tradeIdColumn, i));
+            string tradeId3 = boost::get<string>(t1m0p0NpvReport->data(tradeIdColumn, i));
             QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3, "inconsistent ordering of NPV reports");
             string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn, i));
             Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn, i));
@@ -2229,21 +2269,23 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn, i));
             QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
             Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn, i));
-            Real t0NpvLagged = boost::get<Real>(t0NpvLaggedReport->data(npvBaseColumn, i));
-            Real t1NpvLagged = boost::get<Real>(t1NpvLaggedReport->data(npvBaseColumn, i));
-            Real t1Npvt0Port = boost::get<Real>(t1Npvt0PortReport->data(npvBaseColumn, i));
+            Real t0m0p0Npv = boost::get<Real>(t0m0p0NpvReport->data(npvBaseColumn, i));
+            Real t1m0p0Npv = boost::get<Real>(t1m0p0NpvReport->data(npvBaseColumn, i));
+            Real t1m1p0Npv = boost::get<Real>(t1m1p0NpvReport->data(npvBaseColumn, i));
 
             auto it = t1IdMap.find(tradeId);
-            Real t1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1NpvReport->data(npvBaseColumn, it->second));
+            Real t1m0p1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1m0p1NpvReport->data(npvBaseColumn, it->second));
+            Real t1m1p1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1m1p1NpvReport->data(npvBaseColumn, it->second));
             
-            Real hypotheticalCleanPnl = t0NpvLagged - t0Npv;
+            Real tradeChangePnl = t1m1p1Npv - t1m1p0Npv;
+            Real hypotheticalCleanPnl = t0m0p0Npv - t0Npv;
             Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
             Real matured =
-                (maturityDate <= endDate && close_enough(t1Npvt0Port, 0.0) && close_enough(t1Npv, 0.0)) ? t0Npv : 0.0;
-            Real terminated = (close_enough(t1Npv, 0.0) && !close_enough(t1Npvt0Port, 0.0)) ? t0Npv : 0.0;
-            Real amendments = (close_enough(matured, 0.0) && close_enough(terminated, 0.0)) ? t1Npv - t1Npvt0Port : 0.0;            
-            Real theta = t1NpvLagged - t0Npv + periodFlow;
-            Real dirtyPnl = t1Npv - t0Npv;
+                (maturityDate <= endDate && close_enough(t1m1p0Npv, 0.0) && close_enough(t1m1p1Npv, 0.0)) ? t0Npv : 0.0;
+            Real terminated = (close_enough(t1m1p1Npv, 0.0) && !close_enough(t1m1p0Npv, 0.0)) ? t0Npv : 0.0;
+            Real amendments = (close_enough(matured, 0.0) && close_enough(terminated, 0.0)) ? t1m1p1Npv - t1m1p0Npv : 0.0;
+            Real theta = t1m0p0Npv - t0Npv + periodFlow;
+            Real dirtyPnl = t1m1p1Npv - t0Npv;
             Real cleanPnl = dirtyPnl + periodFlow;
             LOG("PnL report, writing line " << i << " tradeId " << tradeId);
         
@@ -2255,10 +2297,13 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
                 .add(startDate)
                 .add(endDate)
                 .add(t0Npv)
-                .add(t0NpvLagged)
-                .add(t1NpvLagged)
-                .add(t1Npvt0Port)
-                .add(t1Npv)
+                .add(t0m0p0Npv)
+                .add(t1m0p0Npv)
+                .add(t1m1p0Npv)
+                .add(t1m0p1Npv)
+                .add(t1m1p1Npv)
+                .add(0.0)
+                .add(tradeChangePnl)
                 .add(periodFlow)
                 .add(0.0)
                 .add(matured)
@@ -2281,13 +2326,15 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
 
           string tradeId = tId.first;
           Size loc = tId.second;
-          string tradeType = boost::get<string>(t1NpvReport->data(tradeTypeColumn, loc));
-          Date maturityDate = boost::get<Date>(t1NpvReport->data(maturityDateColumn, loc));
-          Real maturityTime = boost::get<Real>(t1NpvReport->data(maturityTimeColumn, loc));
-          string ccy = boost::get<string>(t1NpvReport->data(baseCcyColumn, loc));
+          string tradeType = boost::get<string>(t1m1p1NpvReport->data(tradeTypeColumn, loc));
+          Date maturityDate = boost::get<Date>(t1m1p1NpvReport->data(maturityDateColumn, loc));
+          Real maturityTime = boost::get<Real>(t1m1p1NpvReport->data(maturityTimeColumn, loc));
+          string ccy = boost::get<string>(t1m1p1NpvReport->data(baseCcyColumn, loc));
           QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
 
-          Real t1Npv = boost::get<Real>(t1NpvReport->data(npvBaseColumn, loc));
+          Real t1m0p1Npv = boost::get<Real>(t1m0p1NpvReport->data(npvBaseColumn, loc));
+          Real t1m1p1Npv = boost::get<Real>(t1m1p1NpvReport->data(npvBaseColumn, loc));
+          Real day1Pnl = t1m1p1Npv - t1m0p1Npv;
           LOG("PnL report, writing line " << loc << " tradeId " << tradeId);
 
           report.next()
@@ -2301,16 +2348,19 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
               .add(0.0)
               .add(0.0)
               .add(0.0)
-              .add(t1Npv)
-              .add(0.0)
-              .add(t1Npv)
-              .add(0.0)
-              .add(0.0)
+              .add(t1m0p1Npv)
+              .add(t1m1p1Npv)
+              .add(day1Pnl)
               .add(0.0)
               .add(0.0)
+              .add(t1m1p1Npv)
               .add(0.0)
-              .add(t1Npv)
-              .add(t1Npv)
+              .add(0.0)
+              .add(0.0)
+              .add(0.0)
+              .add(0.0)
+              .add(t1m1p1Npv)
+              .add(t1m1p1Npv)
               .add(ccy);
         }
     }

@@ -18,6 +18,7 @@
 
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/processes/irhwstateprocess.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
@@ -87,6 +88,10 @@ void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
     cache_d_.clear();
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
         tmp->resetCache(timeSteps);
+    for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::IR); ++i) {
+        if (auto p = QuantLib::ext::dynamic_pointer_cast<IrHwStateProcess>(model_->irModel(i)->stateProcess()))
+            p->resetCache(timeSteps);
+    }
     updateSqrtCorrelation();
 }
 

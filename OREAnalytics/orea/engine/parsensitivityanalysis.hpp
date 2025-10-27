@@ -58,6 +58,9 @@ class ParSensitivityAnalysis {
 public:
     typedef std::map<std::pair<ore::analytics::RiskFactorKey, ore::analytics::RiskFactorKey>, Real> ParContainer;
 
+    //! Threshold for small diagonal elements in par conversion matrix regularisation
+    static constexpr QuantLib::Real regularisationThreshold = 0.01;
+
     //! Constructor
     ParSensitivityAnalysis(const QuantLib::Date& asof,
                            const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,

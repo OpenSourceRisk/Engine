@@ -95,6 +95,7 @@ model/inflation/infjydata.cpp
 model/inflation/inflationmodeldata.cpp
 model/irhwmodeldata.cpp
 model/irlgmdata.cpp
+model/irmodelbuilder.cpp
 model/irmodeldata.cpp
 model/lgmbuilder.cpp
 model/lgmdata.cpp
@@ -499,6 +500,7 @@ model/inflation/infjydata.hpp
 model/inflation/inflationmodeldata.hpp
 model/irhwmodeldata.hpp
 model/irlgmdata.hpp
+model/irmodelbuilder.hpp
 model/irmodeldata.hpp
 model/lgmbuilder.hpp
 model/lgmdata.hpp

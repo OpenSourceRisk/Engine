@@ -100,10 +100,11 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
     MEM_LOG;
 
     QuantLib::ext::shared_ptr<SensitivityStream> ss = QuantLib::ext::make_shared<SensitivityCubeStream>(
-        sensiAnalysis->sensiCubes(), analytic->configurations().simMarketParams->baseCcy());
+        sensiAnalysis->sensiCubes(), analytic->configurations().simMarketParams->baseCcy(), portfolio);
     if (writeReports) {
         auto simmSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeSensitivityReport(*simmSensitivityReport, ss, inputs->sensiThreshold());
+        reportWriter.writeSensitivityReport(*simmSensitivityReport, ss, inputs->sensiThreshold(), analytic->market(),
+                                            Market::defaultConfiguration, inputs->sensiOutputPrecision());
         sensiReports["crif_sensitivity"] = simmSensitivityReport;
     } else {
         LOG("Skipping SIMM sensitivity report, this is an optional report and writeOptionalReports is set to "
@@ -133,13 +134,15 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
     auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis->sensiCubes(), parConverter, typesDisabled, true);
-    ss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, analytic->configurations().simMarketParams->baseCcy());
+    ss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(
+        parCube, analytic->configurations().simMarketParams->baseCcy(), portfolio);
     // The stream will be reused for the crif generation, so we wrap it into a buffered stream to gain some
     // performance. The cost for this is the memory footpring of the buffer.
     ss = QuantLib::ext::make_shared<ore::analytics::BufferedSensitivityStream>(ss);
     if (writeReports) {
         auto simmParSensitivityReport = QuantLib::ext::make_shared<InMemoryReport>();
-        reportWriter.writeSensitivityReport(*simmParSensitivityReport, ss, inputs->sensiThreshold());
+        reportWriter.writeSensitivityReport(*simmParSensitivityReport, ss, inputs->sensiThreshold(), analytic->market(),
+                                            Market::defaultConfiguration, inputs->sensiOutputPrecision());
         sensiReports["crif_par_sensitivity"] = simmParSensitivityReport;
     }
     MEM_LOG;
