@@ -17,6 +17,7 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
   <YieldCurveDayCounter> </YieldCurveDayCounter>
   <Tolerance> </Tolerance>
   <Extrapolation> </Extrapolation>
+  <ExcludeT0FromInterpolation> </ExcludeT0FromInterpolation>
   <BootstrapConfig>
     ...
   </BootstrapConfig>
@@ -54,6 +55,31 @@ explicitly supplied, it takes precedence for backwards compatibility purposes.
 
 \item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
 the element is omitted or left blank, then it defaults to \emph{True}.
+
+\item ExcludeT0FromInterpolation [Optional]: Set to \emph{True} to exclude the synthetic time-zero (t0) point from
+yield curve interpolation. When enabled, the curve interpolates only on actual market pillar dates, while still
+ensuring proper behavior at the reference date (e.g., $DF(t_0) = 1.0$ for discount curves). This is useful when the
+first market pillar date does not coincide with the as-of date and you want to avoid including a synthetic point in
+the interpolation.
+
+This feature is supported for all three interpolation variables:
+\begin{itemize}
+  \item \lstinline!InterpolationVariable=Discount!: Interpolates discount factors on pillar dates. At $t=0$, returns
+  $DF(t_0) = 1.0$ by definition. For $0 < t < t_1$ (between reference date and first pillar), uses flat forward
+  extrapolation from the first pillar to ensure continuity at $t=0$.
+
+  \item \lstinline!InterpolationVariable=Zero!: Interpolates continuously compounded zero rates on pillar dates.
+  For $t < t_1$, uses flat extrapolation with the first pillar's zero rate.
+
+  \item \lstinline!InterpolationVariable=Forward!: Interpolates instantaneous forward rates on pillar dates.
+  For $t < t_1$, uses flat forward rate from the first pillar.
+\end{itemize}
+
+All standard interpolation methods are supported (e.g., Linear, LogLinear, NaturalCubic, etc.,).
+
+If the element is omitted or left blank, then it defaults to \emph{False}, which preserves the traditional behavior
+of including a t0 point (with $DF = 1.0$ for discount curves, or extrapolated rate for zero/forward curves) in the
+interpolation input.
 
 \item \lstinline!BootstrapConfig! [Optional]: this node holds configuration details for the iterative bootstrap
 that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described

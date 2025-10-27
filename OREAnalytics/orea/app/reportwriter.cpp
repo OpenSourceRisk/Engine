@@ -2168,7 +2168,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,
             const Date& startDate, const Date& endDate,
             const std::string& baseCurrency,
-                        const ext::shared_ptr<ore::data::Market>& market,
+            const ext::shared_ptr<ore::data::Market>& market,
             const std::string& configuration,
             const ext::shared_ptr<Portfolio>& portfolio) {
   

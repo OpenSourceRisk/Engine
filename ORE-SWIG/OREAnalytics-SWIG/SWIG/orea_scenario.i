@@ -30,6 +30,9 @@ using QuantLib::Real;
 using ore::data::XMLSerializable;
 %}
 
+
+%template(VectorReal) std::vector<Real>;
+%template(VectorPeriod) std::vector<Period>;
 %template(PeriodVectorRealMap) std::map<Period, std::vector<Real>>;
 %template(PeriodPairsRealMap) std::map<pair<Period, Period>, Real>;
 
@@ -78,22 +81,54 @@ using ore::data::XMLSerializable;
 class StressTestScenarioData : public XMLSerializable {
   public:
     struct CurveShiftData {
-        ~CurveShiftData() {}
+        ShiftType shiftType;
+        vector<Real> shifts;
+        vector<Period> shiftTenors;
     };
+
     struct SpotShiftData {
-        ~SpotShiftData() {}
+        ShiftType shiftType;
+        Real shiftSize;
     };
+
     struct VolShiftData {
-        ~VolShiftData() {}
+        ShiftType shiftType;
+        vector<Period> shiftExpiries;
+        vector<Real> shifts; 
     };
+
     struct FXVolShiftData {
-        ~FXVolShiftData() {}
+        enum class AtmShiftMode {
+            Explicit,   
+            Unadjusted,
+            Weighted
+        };
+        ShiftType shiftType;
+        vector<Period> shiftExpiries;
+        vector<Real> shifts;
+        vector<Period> weightTenors;
+        vector<Real> weights;
+        AtmShiftMode mode = AtmShiftMode::Explicit;
     };
+    
     struct CapFloorVolShiftData {
-        ~CapFloorVolShiftData() {}
+        ShiftType shiftType;
+        vector<Period> shiftExpiries;
+        vector<double> shiftStrikes;
+        std::map<Period, vector<Real>> shifts;
     };
     struct SwaptionVolShiftData {
-        ~SwaptionVolShiftData() {}
+        ShiftType shiftType;
+        Real parallelShiftSize;
+        vector<Period> shiftExpiries;
+        vector<Period> shiftTerms;
+        map<pair<Period, Period>, Real> shifts;
+    };
+    struct CommodityVolShiftData {
+        ShiftType shiftType;
+        vector<Period> shiftExpiries;
+        vector<Real> shiftMoneyness;
+        vector<Real> shifts; 
     };
     struct StressTestData {
         ~StressTestData() {}

@@ -33,9 +33,9 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<QuantExt::LGM> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
-                                                                     const QuantLib::Date& maturityDate,
-                                                                     const bool generateAdditionalResults) {
+boost::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
+                                                                         const QuantLib::Date& maturityDate,
+                                                                         const bool generateAdditionalResults) {
 
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
@@ -153,22 +153,12 @@ boost::shared_ptr<QuantExt::LGM> CallableBondLgmEngineBuilder::model(const std::
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
-        allowChangingFallbacks, allowModelFallbacks);
+        allowChangingFallbacks, allowModelFallbacks,
+        globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
 
-    // In some cases, we do not want to calibrate the model
-    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
-    if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
-        DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
-        model = calib->model();
-    } else {
-        DLOG("Skip calibration of model based on global parameters");
-        calib->freeze();
-        model = calib->model();
-        calib->unfreeze();
-    }
     engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
 
-    return model;
+    return calib->model();
 }
 
 template <class... Args>
@@ -225,9 +215,9 @@ CallableBondLgmEngineBuilder::makeEngine(const std::string& id, const std::strin
     Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
 
     return QuantLib::ext::make_shared<QuantExt::NumericLgmCallableBondEngine>(
-        Handle<QuantExt::LGM>(lgm), args..., americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve,
-        incomeCurve, recovery, parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")),
-        generateAdditionalResults);
+        Handle<QuantExt::LGM>(QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(lgm)), args...,
+        americanExerciseTimeStepsPerYear, referenceCurve, spread, defaultCurve, incomeCurve, recovery,
+        parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true")), generateAdditionalResults);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> CallableBondLgmFdEngineBuilder::engineImpl(
