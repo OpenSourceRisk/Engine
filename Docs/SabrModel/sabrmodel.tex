@@ -48,7 +48,7 @@ Description of SABR model implementation in ORE.
 
 \tableofcontents
 
-\section{SABR Model}
+\section{SABR Model}\label{sec:model}
 
 \subsection{Specification}
 
@@ -195,13 +195,13 @@ $$
 
 the result of the optimization will be accepted. Otherwise more optimization runs will be performed using random initial
 guesses generated from a Halton sequence. Let $(h_0,h_1,h_2,h_3)$ be a point of the halton sequence. Then the start
-value for the optimization will be set to
+value for the optimization will be set to (in actual parameter space)
 
 \begin{eqnarray}
-x_0 &=& (\epsilon_1 + 0.01 h_0) / \max(f+d,\epsilon_1)^\beta \\
-x_1 &=& \epsilon_1 + h_1 \epsilon_2 \\
-x_2 &=& \epsilon_1 + m_\nu h_2 \\
-x_3 &=& \epsilon_2 ( 2h_3 - 1 )
+\alpha &=& (\epsilon_1 + 0.01 h_0) / \max(f+d,\epsilon_1)^\beta \\
+\beta &=& \epsilon_1 + h_1 \epsilon_2 \\
+\nu &=& \epsilon_1 + m_\nu h_2 \\
+\rho &=& \epsilon_2 ( 2h_3 - 1 )
 \end{eqnarray}
 
 If for any of the subsequent optimization runs, the error lies below $t_A$ the corresponding minimum will be
@@ -228,14 +228,106 @@ interpolated values are updated if not admissiable for the SABR model, i.e.
 
 \subsection{Interpolation}
 
-Sabr parameters for option expiry times / underlying swap lengths that do not lie on the market quotation grid will be
+SABR parameters for option expiry times / underlying swap lengths that do not lie on the market quotation grid will be
 interpolated linearly (1D case for Cap/Floors) or bilinearly (2D case for swaptions) with flat extrapolation.
 
 \section{Parametrization in ORE}
 
-\subsection{Swaption}
+For details on the parametrization see also the ORE User Guide. This documentation focusses on the link between the
+parametrization and methodology explained in \ref{sec:model}.
 
-\subsection{Cap/Floor}
+The SABR interpolation is specified as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <StrikeInterpolation>Hagan2002NormalZeroBeta</StrikeInterpolation>
+\end{minted}
+
+for cap/floor volatility surfaces and
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
+\end{minted}
+
+for swaption volatility surfaces. In both cases the {\em Input} volatility type is given by
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <VolatilityType>Normal</VolatilityType>
+\end{minted}
+
+The displacement $d$ applied in the SABR {\em model} formulation is either read from the input market quotes, or can be
+overriden with
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <ModelShift>0.0</ModelShift>
+\end{minted}
+
+for cap/floors (single displacement $d$ for the whole surface) resp.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <ModelShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</ModelShift>
+\end{minted}
+
+for swaptions (each underlying swap length has its own associated displacement $d$). In the following
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <ParametricSmileConfiguration>
+\end{minted}
+
+the initial values for the optimization for each parameter are specified, either as a single value that is used for all
+options or individually for the array of option expiries (caps), matrix of swaption expiries / underlying swap lengths, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Parameters>
+        <Parameter>
+          <Name>alpha</Name>
+          <InitialValue>0.0050</InitialValue>
+          <Calibration>Implied</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>beta</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Fixed</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>nu</Name>
+          <InitialValue>0.30</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <Calibration>Calibrated</Calibration>
+        </Parameter>
+      </Parameters>
+\end{minted}
+
+The "Calibration" field is used to distinguish
+
+\begin{itemize}
+\item "Fixed": fixed values that are not calibrated, but prescribed by the user resp. set to a value corresponding to
+  the model flavour (e.g. $\beta=0$ for Hagan2002NormalZeroBeta and Antonov2015FreeBoundaryNormal).
+\item "Implied": if $\alpha$ is implied from atm market volatility
+\item "Calibrated": takes part in optimization
+\end{itemize}
+
+It follows a Calibration section with the maximum number of calibration attempts $N$, the early exit error threshold
+$t_A$ and the maximum acceptable error threshold $t_B$:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <Calibration>
+        <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+        <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+        <MaxAcceptableError>0.05</MaxAcceptableError>
+      </Calibration>
+\end{minted}
+
+Finally, the {\em output} volatility type and displacement $d$ can be overriden. By default, input volatility type and
+displacement is used. In the case of swaptions an override would look like this
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <OutputVolatilityType>Normal</OutputVolatilityType>
+      <OutputShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</OutputShift>
+\end{minted}
 
 
 \begin{thebibliography}{4}
