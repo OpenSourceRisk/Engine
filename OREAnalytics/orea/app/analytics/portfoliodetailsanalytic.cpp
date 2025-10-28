@@ -30,7 +30,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
         portfolioAnalyser_ = QuantLib::ext::make_shared<PortfolioAnalyser>(
             effectivePortfolio,
             inputs_->pricingEngine(), inputs_->baseCurrency(), analytic()->configurations().curveConfig,
-            inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            inputs_->refDataManager(), inputs_->iborFallbackConfig());
     }
 
     // risk factor report

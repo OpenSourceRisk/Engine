@@ -236,7 +236,7 @@
 			<Currency>USD</Currency>
 			<!-- SpreadCDS, HazardRate -->
 			<Type>SpreadCDS</Type>
-			<!-- discount curve (only needed for CDS boostrapping) -->
+			<!-- discount curve (only needed for CDS bootstrapping) -->
 			<DiscountCurve>Yield/USD/USD3M</DiscountCurve>
 			<DayCounter>A365</DayCounter>
 			<!-- although only needed for CDS curve, we require
@@ -288,6 +288,19 @@
 			<RecoveryRate>RECOVERY_RATE/RATE/CPTY_C/SR/EUR</RecoveryRate>
 			<Quotes>
 				<Quote>HAZARD_RATE/RATE/CPTY_C/SR/EUR/1Y</Quote>
+			</Quotes>
+			<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+		</DefaultCurve>
+		<DefaultCurve>
+			<CurveId>CPTY_D_SR_EUR</CurveId>
+			<CurveDescription>CPTY_D SR HR EUR</CurveDescription>
+			<Currency>EUR</Currency>
+			<Type>HazardRate</Type>
+			<DiscountCurve/>
+			<DayCounter>A360</DayCounter>
+			<RecoveryRate>RECOVERY_RATE/RATE/CPTY_D/SR/EUR</RecoveryRate>
+			<Quotes>
+				<Quote>HAZARD_RATE/RATE/CPTY_D/SR/EUR/1Y</Quote>
 			</Quotes>
 			<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
 		</DefaultCurve>
@@ -3025,6 +3038,25 @@
 			<CurveDescription>SP 500 equity price projection curve</CurveDescription>
 			<Currency>USD</Currency>
 			<ForecastingCurve>USD1D</ForecastingCurve>
+			<Type>DividendYield</Type><!-- {DividendYield, ForwardPrice} -->
+			<SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote><!--  the spot quote from the market data file -->
+			<Quotes>
+				<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
+				<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
+				<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
+				<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
+			</Quotes>
+			<DayCounter>A365</DayCounter>
+			<DividendInterpolation>
+				<InterpolationVariable>Zero</InterpolationVariable>
+				<InterpolationMethod>Linear</InterpolationMethod>
+			</DividendInterpolation>
+		</EquityCurve>
+		<EquityCurve>
+			<CurveId>SP5E</CurveId>
+			<CurveDescription>SP 500 equity price projection curve</CurveDescription>
+			<Currency>EUR</Currency>
+			<ForecastingCurve>EUR1D</ForecastingCurve>
 			<Type>DividendYield</Type><!-- {DividendYield, ForwardPrice} -->
 			<SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote><!--  the spot quote from the market data file -->
 			<Quotes>

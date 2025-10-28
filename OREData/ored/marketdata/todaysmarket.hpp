@@ -99,7 +99,8 @@ public:
         //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
         const bool preserveQuoteLinkage = false,
         //! the ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
         //! build calibration info?
         const bool buildCalibrationInfo = true,
         //! support pseudo currencies
@@ -123,7 +124,7 @@ private:
     const bool lazyBuild_;
     const bool preserveQuoteLinkage_;
     const QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
-    const IborFallbackConfig iborFallbackConfig_;
+    const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     const bool buildCalibrationInfo_;
 
     // initialise market

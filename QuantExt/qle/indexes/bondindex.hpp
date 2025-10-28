@@ -153,44 +153,59 @@ protected:
     double priceQuoteBaseValue_;
     bool isInflationLinked_;
     double bidAskAdjustment_;
-    QuantLib::ext::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
     bool bondIssueDateFallback_ = false;
     std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = QuantLib::Bond::Price::Type::Clean;
 };
 
 //! Bond Futures Index
-/*! \ingroup indexes */
-class BondFuturesIndex : public BondIndex {
+/*! The ctd refers to the ctd for the current global evaluation date
+    \ingroup indexes
+*/
+class BondFuturesIndex : public Index {
 public:
-    BondFuturesIndex(
-        const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false,
-        const bool relative = true, const Calendar& fixingCalendar = NullCalendar(),
-        const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
-        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-        const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
-        const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
-        const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-        const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
-        const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
-        const double priceQuoteBaseValue = 1.0);
+    BondFuturesIndex(const std::string& futureContract, const Date& futureExpiryDate = Date(),
+                     const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd = nullptr,
+                     const Real conversionFactor = Null<Real>(), const bool dirty = false);
 
     //! \name Index interface
     //@{
     std::string name() const override;
+    Calendar fixingCalendar() const override;
+    bool isValidFixingDate(const Date& fixingDate) const override;
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
+    //@}
+
+    //! \name Observer interface
+    //@{
+    void update() override;
     //@}
 
     //! \name Fixing calculations
     //@{
-    Rate forecastFixing(const Date& fixingDate) const override;
+    virtual Rate forecastFixing(const Date& fixingDate) const;
+    Rate pastFixing(const Date& fixingDate) const override;
     //@}
 
     //! \name Inspectors
     //@{
-    const QuantLib::Date& expiryDate() const { return expiryDate_; }
+    const std::string& futureContract() const { return futureContract_; }
+    const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
+    const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd() const { return ctd_; }
+    Real conversionFactor() const { return conversionFactor_; }
+    const bool dirty() const { return dirty_; }
+    //@}
+
+    //! \name Inspectors
+    //@{
+    void setName(const std::string& name) const { name_ = name; }
     //@}
 
 private:
-    Date expiryDate_;
+    std::string futureContract_;
+    Date futureExpiryDate_;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> ctd_;
+    Real conversionFactor_;
+    bool dirty_;
     mutable std::string name_;
 };
 

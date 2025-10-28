@@ -20,6 +20,7 @@
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/marketdataloader.hpp>
+#include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -179,7 +180,7 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
-    buildConfigurations();
+    setUp();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
@@ -206,7 +207,33 @@ QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
     return QuantLib::ext::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations,
                                              inputs_->refDataManager(),
-                                             *inputs_->iborFallbackConfig());
+                                             inputs_->iborFallbackConfig());
+}
+
+void Analytic::setUp() {
+
+    if (!portfolio_) {
+        portfolio_ = QuantLib::ext::make_shared<Portfolio>();
+        if (inputs()->portfolio()) {
+            for (const auto& [tradeId, trade] : inputs()->portfolio()->trades())
+                portfolio_->add(trade);
+        }
+    }
+
+    buildConfigurations();
+
+    /* if we do not load all fixings, and the portfolio is not built at this point,
+       we built it against a dummy market using the portfolio analyser, so that
+       we can ask the portfolio for its required fixings in the market data loader
+       and also enrich the index fixings here (if desired). */
+    if (!portfolio_->empty() && !inputs()->allFixings()) {
+        if (!portfolio_->isBuilt()) {
+            PortfolioAnalyser(portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(),
+                              configurations().curveConfig, inputs_->refDataManager(), inputs_->iborFallbackConfig());
+        }
+        if (inputs()->enrichIndexFixings())
+            enrichIndexFixings(portfolio_);
+    }
 }
 
 void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -234,7 +261,7 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
             market_ = QuantLib::ext::make_shared<TodaysMarket>(
                 configurations().asofDate, configurations().todaysMarketParams, loader_, configurations().curveConfig,
                 inputs()->continueOnError(), false, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
-                *inputs()->iborFallbackConfig());
+                inputs()->iborFallbackConfig());
         } catch (const std::exception& e) {
             if (marketRequired) {
                 stopTimer("buildMarket()");
@@ -259,16 +286,9 @@ void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrati
 
 void Analytic::buildPortfolio(const bool emitStructuredError) {
     startTimer("buildPortfolio()");
-    QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
-        
-    // create a new empty portfolio
-    portfolio_ = QuantLib::ext::make_shared<Portfolio>(inputs()->buildFailedTrades());
-
-    tmp->reset();
-    // populate with trades
-    for (const auto& [tradeId, trade] : tmp->trades())
-        // If portfolio was already provided to the analytic, make sure to only process those given trades.
-        portfolio()->add(trade);
+    
+    portfolio_->setBuildFailedTrades(inputs()->buildFailedTrades());
+    portfolio_->reset();
     
     if (market_) {
         replaceTrades();
@@ -317,16 +337,16 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
                                            const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                            const std::string& excludeRegex) {
 
-    auto securities = BondSpreadImply::requiredSecurities(asof, todaysMarketParams, curveConfigs, *loader,
-                                                          true, excludeRegex);
+    auto securities =
+        BondSpreadImply::requiredSecurities(asof, todaysMarketParams, curveConfigs, *loader, true, excludeRegex);
 
     if (!securities.empty()) {
         // always continue on error and always use lazy market building
         QuantLib::ext::shared_ptr<Market> market =
             QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, false, true,
-                                             params->refDataManager(), false, *params->iborFallbackConfig());
+                                             params->refDataManager(), false, params->iborFallbackConfig());
         return BondSpreadImply::implyBondSpreads(securities, params->refDataManager(), market, params->pricingEngine(),
-                                                 Market::defaultConfiguration, *params->iborFallbackConfig());
+                                                 Market::defaultConfiguration, params->iborFallbackConfig());
     } else {
         // no bonds that require a spread imply => return null ptr
         return QuantLib::ext::shared_ptr<Loader>();
@@ -334,9 +354,6 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
 }
 
 void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
-
-    if (!inputs()->enrichIndexFixings())
-        return;
 
     startTimer("enrichIndexFixings()");
     QL_REQUIRE(portfolio, "portfolio cannot be empty");
@@ -368,7 +385,7 @@ void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Por
             vector<Real> fixingsToAdd;
 
             for(const auto& [date, mandatory] : dates) {
-                if (mandatory && date != inputs()->asof()) {
+                if (mandatory.first && date != inputs()->asof()) {
                     auto tmp = std::pair<Date,Real>(date, Null<Real>());
 
                     if (timeSeries[date] != Null<Real>())

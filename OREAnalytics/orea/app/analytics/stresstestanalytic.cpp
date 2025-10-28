@@ -34,11 +34,8 @@ namespace analytics {
 void StressTestAnalyticImpl::setUpConfigurations() {
     const auto stressData =  inputs_->stressScenarioData();
     analytic()->configurations().simulationConfigRequired = true;
-    if (stressData != nullptr) {
+    if (stressData)
         analytic()->configurations().sensitivityConfigRequired = stressData->hasScenarioWithParShifts();
-    } else {
-        analytic()->configurations().sensitivityConfigRequired = false;
-    }
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->stressSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->stressSensitivityScenarioData();
@@ -62,8 +59,6 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
-    analytic()->enrichIndexFixings(analytic()->portfolio());
-
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
     analytic()->modifyPortfolio();
@@ -72,14 +67,19 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Stress Test Analysis called");
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->stressScenarioData();
-    if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
+    if (scenarioData && scenarioData->hasScenarioWithParShifts()) {
         try{
+            QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
+                QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ParStressTestConverter converter(
             inputs_->asof(), analytic()->configurations().todaysMarketParams,
             analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
             analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
-            scenarioData = converter.convertStressScenarioData(scenarioData);
+            scenarioData = converter.convertStressScenarioData(scenarioData, parScenarioReport);
             analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
+            if (parScenarioReport->rows() > 0) {
+                analytic()->addReport(label(), "stress_scenario_par_rates", parScenarioReport);
+            }
         } catch(const std::exception& e){
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
@@ -104,14 +104,15 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                       analytic()->configurations().simMarketParams, inputs_->scenarioReader(), report, cfReport,
                       inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-                      inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
                       scenarioReport);
     } else {
+        QL_REQUIRE(scenarioData, "StressTestAnalytic::runAnalytic: No stress scenario data provided.");
         runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                       analytic()->configurations().simMarketParams, scenarioData, report, cfReport,
                       inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-                      nullptr, inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->continueOnError(),
+                      nullptr, inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),
                       scenarioReport);
     }
 

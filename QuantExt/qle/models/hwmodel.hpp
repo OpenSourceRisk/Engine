@@ -25,6 +25,7 @@
 
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/irmodel.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
 
 #include <ql/math/comparison.hpp>
 
@@ -69,6 +70,28 @@ public:
 
     const QuantLib::ext::shared_ptr<IrHwParametrization> parametrization() const { return parametrization_; }
 
+    /*! calibrate volatilities to a sequence of ir options with
+        expiry times equal to step times in the parametrization
+        and following the procedure in HwPiecewiseStatisticalParametrization */
+    void calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+        const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+        const EndCriteria& endCriteria, const Constraint& constraint = {}, const std::vector<Real>& weights = {});
+
+    /*! calibration constraints, these can be used directly, or
+        through the customized calibrate methods above */
+    std::vector<bool> MoveVolatilityRaw(const Size i) {
+        QL_REQUIRE(i < parametrization_->parameter(0)->size(),
+                   "volatility index (" << i << ") out of range 0..." << parametrization_->parameter(0)->size() - 1);
+        std::vector<bool> res(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
+        res[i] = false;
+        return res;
+    }
+
+    /*! set info on how the model was calibrated */
+    void setCalibrationInfo(const HwCalibrationInfo& calibrationInfo) { calibrationInfo_ = calibrationInfo; }
+    /*! get info on how the model was calibrated */
+    const HwCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
+
     /*! observer and linked calibrated model interface */
     void update() override;
     void generateArguments() override;
@@ -79,6 +102,7 @@ private:
     Discretization discretization_;
     QuantLib::ext::shared_ptr<StochasticProcess> stateProcess_;
     bool evaluateBankAccount_;
+    HwCalibrationInfo calibrationInfo_;
 };
 
 } // namespace QuantExt

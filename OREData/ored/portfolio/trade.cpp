@@ -31,6 +31,7 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/typedcashflow.hpp>
 #include <qle/instruments/cashflowresults.hpp>
@@ -327,8 +328,10 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     string legID = std::to_string(resultLegId == Null<Size>() ? i + 1 : resultLegId);
     for (Size j = 0; j < legs_[i].size(); ++j) {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
-        // pick flow with earliest future payment date on this leg
-        if (flow->date() > asof) {
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+        auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+        if (date > asof) {
+        // pick flow with the earliest future accrual period end date on this leg
             Real flowAmount = 0.0;
             try {
                 flowAmount = flow->amount();
@@ -337,7 +340,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
             additionalData_["amount[" + legID + "]"] = flowAmount;
             additionalData_["paymentDate[" + legID + "]"] = ore::data::to_string(flow->date());
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+            //QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -392,7 +395,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                             baseCPI =
                                 QuantLib::CPI::laggedFixing(cpic->cpiIndex(), cpic->baseDate() + cpic->observationLag(),
                                                             cpic->observationLag(), cpic->observationInterpolation());
-                        } catch (std::exception& e) {
+                        } catch (std::exception&) {
                             ALOG("CPICoupon baseCPI could not be interpolated for additional results for trade " << id()
                                                                                                              << ".")
                         }
@@ -407,7 +410,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                             baseCPI = QuantLib::CPI::laggedFixing(cpicf->cpiIndex(),
                                                                   cpicf->baseDate() + cpicf->observationLag(),
                                                                   cpicf->observationLag(), cpicf->interpolation());
-                        } catch (std::exception& e) {
+                        } catch (std::exception&) {
                             ALOG("CPICashFlow baseCPI could not be interpolated for additional results for trade " << id()
                                                                                                                << ".")
                         }
@@ -558,9 +561,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
     // add cashflows from trade legs, if no cashflows were added so far or if a leg is marked as mandatory for cashflows
 
     bool haveEngineCashflows = !result.empty();
-
     for (size_t i = 0; i < legs().size(); i++) {
-
         Trade::LegCashflowInclusion cashflowInclusion = Trade::LegCashflowInclusion::IfNoEngineCashflows;
         if (auto incl = legCashflowInclusion().find(i); incl != legCashflowInclusion().end()) {
             cashflowInclusion = incl->second;
@@ -645,9 +646,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     flowType = "Notional";
                 }
 
-                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow)) {
-                    ptrFlow = unpackIndexedCoupon(cpn);
-                }
+                ptrFlow = unpackIndexedCouponOrCashFlow(ptrFlow);
 
                 QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
@@ -655,6 +654,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                QuantLib::ext::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommIndCf =
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(ptrFlow);
+                QuantLib::ext::shared_ptr<QuantExt::CommodityIndexedAverageCashFlow> ptrCommIndAvgCf =
+                    QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndexedAverageCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
                     QuantLib::ext::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                 QuantLib::ext::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
@@ -673,6 +676,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     }
 
                     if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(ptrFloat)) {
+                        fixingValue = (c->rate() - c->spread()) / c->gearing();
+                    }
+
+                    if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(ptrFloat)) {
                         fixingValue = (c->rate() - c->spread()) / c->gearing();
                     }
 
@@ -725,6 +732,14 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     fixingDate = ptrIndCf->fixingDate();
                     fixingValue = ptrIndCf->indexFixing();
                     flowType = "Index";
+                } else if (ptrCommIndCf) {
+                    fixingDate = ptrCommIndCf->lastPricingDate();
+                    fixingValue = ptrCommIndCf->fixing();
+                    flowType = "Notional (units)";
+                } else if (ptrCommIndAvgCf) {
+                    fixingDate = ptrCommIndAvgCf->lastPricingDate();
+                    fixingValue = ptrCommIndAvgCf->fixing();
+                    flowType = "Notional (units)";
                 } else if (ptrFxlCf) {
                     fixingDate = ptrFxlCf->fxFixingDate();
                     fixingValue = ptrFxlCf->fxRate();
@@ -743,7 +758,9 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                 Real discountFactor = Null<Real>();
                 Real presentValue = Null<Real>();
                 Real presentValueBase = Null<Real>();
+                Real fxRateLocalCcy = Null<Real>();
                 Real fxRateLocalBase = Null<Real>();
+                Real fxRateCcyBase = Null<Real>();
                 Real floorStrike = Null<Real>();
                 Real capStrike = Null<Real>();
                 Real floorVolatility = Null<Real>();
@@ -760,7 +777,9 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     if (effectiveAmount != Null<Real>())
                         presentValue = discountFactor * effectiveAmount;
                     try {
-                        fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
+                        fxRateCcyBase = market->fxRate(npvCurrency_ + baseCurrency, configuration)->value();
+                        fxRateLocalCcy = market->fxRate(ccy + npvCurrency_, configuration)->value();
+                        fxRateLocalBase = fxRateCcyBase  * fxRateLocalCcy;
                         presentValueBase = presentValue * fxRateLocalBase;
                     } catch (...) {
                     }
@@ -793,6 +812,9 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                             usesSwaptionVol = true;
                         } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
                             qlIndexName = ibor->index()->name();
+                            usesCapVol = true;
+                        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(tmp->underlying())) {
+                            qlIndexName = ibor->iborIndex()->name();
                             usesCapVol = true;
                         }
                     } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
@@ -892,7 +914,6 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
             }
         }
     }
-
     return result;
 
 }

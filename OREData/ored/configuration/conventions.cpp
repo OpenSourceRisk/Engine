@@ -32,6 +32,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace QuantLib;
@@ -226,11 +227,11 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) const {
 }
 
 FutureConvention::FutureConvention(const string& id, const string& index)
-    : FutureConvention(id, index, QuantLib::RateAveraging::Type::Compound, DateGenerationRule::IMM) {}
+    : FutureConvention(id, index, QuantLib::RateAveraging::Type::Compound, DateGenerationRule::IMM, std::string()) {}
 
 FutureConvention::FutureConvention(const string& id, const string& index,
                                    const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
-                                   const DateGenerationRule dateGenerationRule)
+                                   const DateGenerationRule dateGenerationRule, const string& calendar)
     : Convention(id, Type::Future), strIndex_(index),
       overnightIndexFutureNettingType_(overnightIndexFutureNettingType) {
     parseIborIndex(strIndex_);
@@ -241,13 +242,15 @@ void FutureConvention::fromXML(XMLNode* node) {
     type_ = Type::Future;
     id_ = XMLUtils::getChildValue(node, "Id", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
-    parseIborIndex(strIndex_);
+    auto tmpIndex = parseIborIndex(strIndex_);
     string nettingTypeStr = XMLUtils::getChildValue(node, "OvernightIndexFutureNettingType", false);
     overnightIndexFutureNettingType_ =
         nettingTypeStr.empty() ? RateAveraging::Type::Compound : parseOvernightIndexFutureNettingType(nettingTypeStr);
     string dateGenerationStr = XMLUtils::getChildValue(node, "DateGenerationRule", false);
     dateGenerationRule_ =
         dateGenerationStr.empty() ? DateGenerationRule::IMM : parseFutureDateGenerationRule(dateGenerationStr);
+    strCalendar_ = XMLUtils::getChildValue(node, "Calendar", false);
+    calendar_ = strCalendar_.empty() ? tmpIndex->fixingCalendar() : parseCalendar(strCalendar_);
 }
 
 XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
@@ -257,6 +260,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "OvernightIndexFutureNettingType", ore::data::to_string(overnightIndexFutureNettingType_));
     XMLUtils::addChild(doc, node, "DateGenerationRule", ore::data::to_string(dateGenerationRule_));
+    if (!strCalendar_.empty())
+        XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
     return node;
 }
 
@@ -1150,12 +1155,16 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
     const string& id, const string& settlementDays, const string& settlementCalendar,
     const string& settlementConvention, const string& fixedCurrency, const string& fixedFrequency,
     const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom,
-    const std::string& strIsResettable, const std::string& strFloatIndexIsResettable)
+    const std::string& strIsResettable, const std::string& strFloatIndexIsResettable, const string& strIncludeSpread,
+    const string& strLookback, const string& strFixingDays, const string& strRateCutoff,
+    const string& strIsAveraged)
     : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
-      strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom),
-      strIsResettable_(strIsResettable), strFloatIndexIsResettable_(strFloatIndexIsResettable){
+      strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom), strIsResettable_(strIsResettable),
+      strFloatIndexIsResettable_(strFloatIndexIsResettable), strIncludeSpread_(strIncludeSpread),
+      strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
+      strIsAveraged_(strIsAveraged) {
 
     build();
 }
@@ -1172,6 +1181,16 @@ void CrossCcyFixFloatSwapConvention::build() {
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
     floatIndexIsResettable_ = strFloatIndexIsResettable_.empty() ? true : parseBool(strFloatIndexIsResettable_);
+    if (!strIncludeSpread_.empty())
+        includeSpread_ = parseBool(strIncludeSpread_);
+    if (!strLookback_.empty())
+        lookback_ = parsePeriod(strLookback_);
+    if (!strFixingDays_.empty())
+        fixingDays_ = parseInteger(strFixingDays_);
+    if (!strRateCutoff_.empty())
+        rateCutoff_ = parseInteger(strRateCutoff_);
+    if (!strIsAveraged_.empty())
+        isAveraged_ = parseBool(strIsAveraged_);
 }
 
 void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
@@ -1193,6 +1212,15 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
     strFloatIndexIsResettable_ = XMLUtils::getChildValue(node, "FloatIndexIsResettable", false);
+
+    
+    // OIS specific conventions
+
+    strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
+    strLookback_ = XMLUtils::getChildValue(node, "Lookback", false);
+    strFixingDays_ = XMLUtils::getChildValue(node, "FixingDays", false);
+    strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
+    strIsAveraged_ = XMLUtils::getChildValue(node, "IsAveraged", false);
 
     build();
 }
@@ -1216,7 +1244,16 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
     if (!strFloatIndexIsResettable_.empty())
         XMLUtils::addChild(doc, node, "FloatIndexIsResettable", strFloatIndexIsResettable_);
-
+    if (!strIncludeSpread_.empty())
+        XMLUtils::addChild(doc, node, "SpreadIncludeSpread", strIncludeSpread_);
+    if (!strLookback_.empty())
+        XMLUtils::addChild(doc, node, "SpreadLookback", strLookback_);
+    if (!strFixingDays_.empty())
+        XMLUtils::addChild(doc, node, "SpreadFixingDays", strFixingDays_);
+    if (!strRateCutoff_.empty())
+        XMLUtils::addChild(doc, node, "SpreadRateCutoff", strRateCutoff_);
+    if (!strIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strIsAveraged_);
     return node;
 }
 
@@ -2485,7 +2522,7 @@ void FxOptionTimeWeightingConvention::fromXML(XMLNode* node) {
 
     weekdayWeights_.resize(7);
     auto w = XMLUtils::getChildNode(node, "WeekdayWeights");
-    QL_REQUIRE(w, "FxOptionTimeWeightingConventions::fromXML(): 'WeekDayWeights' node not found.");
+    QL_REQUIRE(w, "FxOptionTimeWeightingConventions::fromXML(): 'WeekdayWeights' node not found.");
     weekdayWeights_[QuantLib::Weekday::Monday - 1] = parseReal(XMLUtils::getChildValue(w, "Monday"));
     weekdayWeights_[QuantLib::Weekday::Tuesday - 1] = parseReal(XMLUtils::getChildValue(w, "Tuesday"));
     weekdayWeights_[QuantLib::Weekday::Wednesday - 1] = parseReal(XMLUtils::getChildValue(w, "Wednesday"));
@@ -2523,7 +2560,7 @@ XMLNode* FxOptionTimeWeightingConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("FxOptionTimeWeighting");
     XMLUtils::addChild(doc, node, "Id", id_);
 
-    auto w = XMLUtils::addChild(doc, node, "WeekDayWeights");
+    auto w = XMLUtils::addChild(doc, node, "WeekdayWeights");
     XMLUtils::addChild(doc, w, "Monday", weekdayWeights_[QuantLib::Weekday::Monday - 1]);
     XMLUtils::addChild(doc, w, "Tuesday", weekdayWeights_[QuantLib::Weekday::Tuesday - 1]);
     XMLUtils::addChild(doc, w, "Wednesday", weekdayWeights_[QuantLib::Weekday::Wednesday - 1]);
@@ -2850,10 +2887,10 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         add(convention);
         used_.insert(id);
     } catch (exception& e) {
-        WLOG("Convention '" << id << "' could not be built: " << e.what());
-        QL_FAIL("Convention '" << id << "' could not be built: " << e.what());
+        auto err = "Convention '" + id + "' could not be built.";
+        StructuredConventionErrorMessage(id, err, e.what()).log();
+        QL_FAIL(err << e.what());
     }
-
     return convention;
 }
 

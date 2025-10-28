@@ -3,6 +3,7 @@
 set(QuantExt-Test_SRC ad.cpp
 analyticcashsettledeuropeanengine.cpp
 analyticeuropeanenginedeltagamma.cpp
+analytichwswaptionengine.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
@@ -60,6 +61,7 @@ forwardbond.cpp
 fxvolsmile.cpp
 fxvoltimeweighting.cpp
 hullwhitebucketing.cpp
+hwpiecewiseparametrization.cpp
 index.cpp
 inflationcurve.cpp
 inflationvol.cpp
@@ -73,6 +75,7 @@ mclgmswaptionengine.cpp
 multilegoption.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp
+overnightindexedcoupon.cpp
 payment.cpp
 piecewiseatmoptionletcurve.cpp
 piecewiseoptionletcurve.cpp

@@ -25,6 +25,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/equityindex.hpp>
@@ -320,8 +321,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     }
 
     if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow)) {
-        Real fixedRate =
-            ibor->fixingDate() <= today_ ? (ibor->rate() - ibor->spread()) / ibor->gearing() : Null<Real>();
+        Real fixedRate = ibor->fixingDate() <= today_ ? ibor->iborIndex()->fixing(ibor->fixingDate()) : Null<Real>();
         Size indexCcyIdx = model_->ccyIndex(ibor->index()->currency());
         Real simTime = time(ibor->fixingDate());
         if (ibor->fixingDate() > today_) {
@@ -352,6 +352,99 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                                         ? RandomVariable(n, fixedRate)
                                         : lgmVectorised_[indexCcyIdx].fixing(ibor->index(), ibor->fixingDate(), simTime,
                                                                              *states.at(0).at(0));
+            RandomVariable fxFixing(n, 1.0);
+            if (isFxLinked || isFxIndexed) {
+                if (fxLinkedFixedFxRate != Null<Real>()) {
+                    fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
+                } else {
+                    RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                    Size fxIdx = 0;
+                    if (fxLinkedSourceCcyIdx > 0)
+                        fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
+                    if (fxLinkedTargetCcyIdx > 0)
+                        fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
+                    fxFixing = fxSource / fxTarget;
+                }
+            }
+            RandomVariable eqFixing(n, 1.0);
+            if (isEqIndexed) {
+                if (eqLinkedFixedPrice != Null<Real>()) {
+                    eqFixing = RandomVariable(n, eqLinkedFixedPrice);
+                } else {
+                    eqFixing = exp(*states.at(statesEqIdx).at(0));
+                }
+                eqFixing *= RandomVariable(n, eqLinkedQuantity);
+            }
+
+            RandomVariable effectiveRate;
+            if (isCapFloored) {
+                RandomVariable swapletRate(n, 0.0);
+                RandomVariable floorletRate(n, 0.0);
+                RandomVariable capletRate(n, 0.0);
+                if (!isNakedOption)
+                    swapletRate = RandomVariable(n, ibor->gearing()) * fixing + RandomVariable(n, ibor->spread());
+                if (effFloor != Null<Real>())
+                    floorletRate = RandomVariable(n, ibor->gearing()) *
+                                   max(RandomVariable(n, effFloor) - fixing, RandomVariable(n, 0.0));
+                if (effCap != Null<Real>())
+                    capletRate = RandomVariable(n, ibor->gearing()) *
+                                 max(fixing - RandomVariable(n, effCap), RandomVariable(n, 0.0)) *
+                                 RandomVariable(n, isNakedOption && effFloor == Null<Real>() ? -1.0 : 1.0);
+                effectiveRate = swapletRate + floorletRate - capletRate;
+            } else {
+                effectiveRate = RandomVariable(n, ibor->gearing()) * fixing + RandomVariable(n, ibor->spread());
+            }
+            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) * ibor->accrualPeriod()) *
+                   effectiveRate * fxFixing * eqFixing;
+        };
+
+        return info;
+    }
+
+    if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(flow)) {
+        Real fixedRate = ibor->fixingDate() <= today_ ? ibor->iborIndex()->fixing(ibor->fixingDate()) : Null<Real>();
+        Size indexCcyIdx = model_->ccyIndex(ibor->index()->currency());
+        Real simTime = time(ibor->fixingDate());
+        if (ibor->fixingDate() > today_) {
+            info.simulationTimes.push_back(simTime);
+            info.modelIndices.push_back({model_->pIdx(CrossAssetModel::AssetType::IR, indexCcyIdx)});
+        }
+
+        Size simTimeCounter = 1;
+        Size statesFxIdx = Null<Size>();
+        if (fxLinkedSimTime != Null<Real>()) {
+            info.simulationTimes.push_back(fxLinkedSimTime);
+            info.modelIndices.push_back(fxLinkedModelIndices);
+            statesFxIdx = simTimeCounter++;
+        }
+        Size statesEqIdx = Null<Size>();
+        if (eqLinkedSimTime != Null<Real>()) {
+            info.simulationTimes.push_back(eqLinkedSimTime);
+            info.modelIndices.push_back(eqLinkedModelIndices);
+            statesEqIdx = simTimeCounter++;
+        }
+
+        info.amountCalculator = [this, indexCcyIdx, ibor, simTime, fixedRate, isFxLinked, fxLinkedForeignNominal,
+                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isCapFloored,
+                                 isNakedOption, effFloor, effCap, isFxIndexed, isEqIndexed, eqLinkedFixedPrice,
+                                 eqLinkedQuantity, statesFxIdx, statesEqIdx](
+                                    const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+            RandomVariable fixing;
+            if (fixedRate != Null<Real>()) {
+                fixing = RandomVariable(n, fixedRate);
+            } else {
+                auto interpolatedIndex = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborIndex>(
+                    ibor->interpolatedIborIndex());
+                RandomVariable shortW = RandomVariable(n, interpolatedIndex->shortWeight(ibor->fixingDate()));
+                RandomVariable longW = RandomVariable(n, interpolatedIndex->longWeight(ibor->fixingDate()));
+                RandomVariable shortFixing =
+                    lgmVectorised_[indexCcyIdx].fixing(interpolatedIndex->shortIndex(), ibor->fixingDate(),
+                                                        simTime, *states.at(0).at(0));
+                RandomVariable longFixing =
+                    lgmVectorised_[indexCcyIdx].fixing(interpolatedIndex->longIndex(), ibor->fixingDate(),
+                                                        simTime, *states.at(0).at(0));
+                fixing = shortW * shortFixing + longW * longFixing;
+            }
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -491,7 +584,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
         for (Size i = 0; i < on->fixingDates().size(); ++i) {
-            auto t = time(on->valueDates()[i]);
+            auto t = time(on->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -512,7 +605,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(on->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(on->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);
@@ -582,8 +675,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
-        for (Size i = 0; i < cfon->underlying()->valueDates().size(); ++i) {
-            auto t = time(cfon->underlying()->valueDates()[i]);
+        for (Size i = 0; i < cfon->underlying()->fixingDates().size(); ++i) {
+            auto t = time(cfon->underlying()->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -604,7 +697,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(cfon->underlying()->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(cfon->underlying()->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);
@@ -675,8 +768,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
-        for (Size i = 0; i < av->valueDates().size(); ++i) {
-            auto t = time(av->valueDates()[i]);
+        for (Size i = 0; i < av->fixingDates().size(); ++i) {
+            auto t = time(av->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -697,7 +790,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(av->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(av->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);
@@ -767,8 +860,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
         std::vector<Size> relevantIdx;
         Time cutOffTime = time(today_ + cfOnCpnAddSimTimesCutoff_);
-        for (Size i = 0; i < cfav->underlying()->valueDates().size(); ++i) {
-            auto t = time(cfav->underlying()->valueDates()[i]);
+        for (Size i = 0; i < cfav->underlying()->fixingDates().size(); ++i) {
+            auto t = time(cfav->underlying()->fixingDates()[i]);
             if (t < 0.0 && i == 0 && cfOnCpnMaxSimTimes_ == 1) {
                 relevantIdx.push_back(0);
                 break;
@@ -789,7 +882,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             if (idx >= relevantIdx.size()) {
                 break;
             }
-            Time t = std::max(time(cfav->underlying()->valueDates()[relevantIdx[idx]]), 0.0);
+            Time t = std::max(time(cfav->underlying()->fixingDates()[relevantIdx[idx]]), 0.0);
             simTime.push_back(t);
             simIdx.push_back(relevantIdx[idx]);
             info.simulationTimes.push_back(t);

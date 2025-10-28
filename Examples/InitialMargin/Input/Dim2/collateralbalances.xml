@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <CollateralBalances>
 
   <CollateralBalance>
@@ -9,7 +8,7 @@
     <!-- FX Option -->
     <!--<InitialMargin>71197</InitialMargin>-->
     <!-- Swaption -->
-    <InitialMargin>216688</InitialMargin>
+    <InitialMargin>288127.313631287</InitialMargin>
     <VariationMargin>0</VariationMargin>
   </CollateralBalance>
     

@@ -32,6 +32,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 
@@ -162,6 +163,61 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow)) {
         std::string indexName = IndexNameTranslator::instance().oreName(ibor->index()->name());
         std::size_t fixing = modelCg_->eval(indexName, ibor->fixingDate(), Null<Date>());
+
+        info.addCcys.insert(ibor->index()->currency().code());
+
+        std::size_t effectiveRate;
+        if (isCapFloored) {
+            std::size_t swapletRate = ComputationGraph::nan;
+            std::size_t floorletRate = ComputationGraph::nan;
+            std::size_t capletRate = ComputationGraph::nan;
+            if (!isNakedOption)
+                swapletRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
+            if (effFloor != Null<Real>())
+                floorletRate = cg_mult(g, cg_const(g, ibor->gearing()),
+                                       cg_max(g, cg_subtract(g, cg_const(g, effFloor), fixing), cg_const(g, 0.0)));
+            if (effCap != Null<Real>())
+                capletRate = cg_mult(g, cg_const(g, ibor->gearing()),
+                                     cg_max(g, cg_subtract(g, fixing, cg_const(g, effCap)), cg_const(g, 0.0)));
+            if (isNakedOption && effFloor == Null<Real>()) {
+                capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
+            }
+            effectiveRate = swapletRate;
+            if (floorletRate != ComputationGraph::nan)
+                effectiveRate = cg_add(g, effectiveRate, floorletRate);
+            if (capletRate != ComputationGraph::nan) {
+                if (isNakedOption && effFloor == Null<Real>()) {
+                    effectiveRate = cg_subtract(g, effectiveRate, capletRate);
+                } else {
+                    effectiveRate = cg_add(g, effectiveRate, capletRate);
+                }
+            }
+        } else {
+            effectiveRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
+        }
+
+        info.flowNode =
+            modelCg_->pay(cg_mult(g,
+                                  cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) *
+                                                  ibor->accrualPeriod()),
+                                  effectiveRate),
+                          flow->date(), flow->date(), payCcy);
+        if (isFxLinked || isFxIndexed) {
+            info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
+        }
+        return info;
+    }
+
+    if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(flow)) {
+        std::string indexNameShort = IndexNameTranslator::instance().oreName(
+            ibor->interpolatedIborIndex()->shortIndex()->name());
+        std::string indexNameLong = IndexNameTranslator::instance().oreName(
+            ibor->interpolatedIborIndex()->longIndex()->name());
+        std::size_t fixingShort = modelCg_->eval(indexNameShort, ibor->fixingDate(), Null<Date>());
+        std::size_t fixingLong = modelCg_->eval(indexNameLong, ibor->fixingDate(), Null<Date>());
+        std::size_t shortWeight = cg_const(g, ibor->interpolatedIborIndex()->shortWeight(ibor->fixingDate()));
+        std::size_t longWeight = cg_const(g, ibor->interpolatedIborIndex()->longWeight(ibor->fixingDate()));
+        std::size_t fixing = cg_add(g, cg_mult(g, shortWeight, fixingShort), cg_mult(g, longWeight, fixingLong));
 
         info.addCcys.insert(ibor->index()->currency().code());
 
@@ -825,6 +881,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 (*tradeExposure)[simCounter + 1].targetConditionalExpectationDerivative =
                     cg_add(g, cg_mult(g, wasExercised, exercisedValueCond),
                            cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValueCond));
+
+                (*tradeExposure)[simCounter + 1].targetConditionalExpDerivativeNpvNodes = {exercisedValueCond,
+                                                                                           futureOptionValueCond};
 
                 // here we can take max(0, futureOptionValueCond)
                 (*tradeExposure)[simCounter + 1].targetConditionalExpectation =

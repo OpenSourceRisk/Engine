@@ -46,6 +46,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
@@ -146,6 +147,59 @@ void addZeroInflationDates(RequiredFixings::FixingDates& dates, const Date& fixi
     dates.addDates(fixingDates);
 }
 } // namespace
+
+void RequiredFixings::FixingDates::addDate(const QuantLib::Date& date, const bool mandatory,
+                                           const std::set<std::string>& tradeIds) {
+    bool mand = mandatory;
+    if (!mand && tradeIds.size() > 0)
+        mand = true;
+    auto exits = data_.find(date);
+    if (exits == data_.end()) {
+        data_[date] = std::make_pair(mandatory, tradeIds);
+    } else {
+        data_[date].first = data_[date].first || mandatory;          // merge mandatory flags
+        data_[date].second.insert(tradeIds.begin(), tradeIds.end()); // merge trade ids
+    }
+}
+
+
+void RequiredFixings::FixingDates::addDate(const QuantLib::Date& date,
+                                           const std::pair<bool, std::set<std::string>>& ids) {
+    data_[date] = ids;
+}
+
+void RequiredFixings::FixingDates::addDates(const FixingDates& dates, const std::string& tradeId) {
+    for (const auto& [d, man] : dates) {
+        auto tIds = man.second;
+        if (!tradeId.empty())
+            tIds.insert(tradeId);
+        addDate(d, man.first, tIds);
+    }
+}
+
+void RequiredFixings::FixingDates::addDates(const FixingDates& dates, bool mandatory,
+                                            const std::set<std::string>& tradeIds) {
+    for (const auto& [d, _] : dates) {
+        addDate(d, mandatory, tradeIds);
+    }
+}
+
+void RequiredFixings::FixingDates::addDates(const std::set<QuantLib::Date>& dates, bool mandatory,
+                                            const std::set<std::string>& tradeIds) {
+    for (const QuantLib::Date& d : dates) {
+        addDate(d, mandatory, tradeIds);
+    }
+}
+
+RequiredFixings::FixingDates RequiredFixings::FixingDates::filterByDate(const QuantLib::Date& before) const {
+    fixingMap results;
+    for (const auto& [d, mandatory] : data_) {
+        if (d < before) {
+            results.insert({d, mandatory});
+        }
+    }
+    return FixingDates(results);
+}
 
 bool operator<(const RequiredFixings::FixingEntry& lhs, const RequiredFixings::FixingEntry& rhs) {
     return std::tie(lhs.indexName, lhs.fixingDate, lhs.payDate, lhs.alwaysAddIfPaysOnSettlement, lhs.mandatory) <
@@ -722,9 +776,9 @@ void FixingDateGetter::visit(BondTRSCashFlow& bc) {
     }
     requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date());
     if (bc.fxIndex()) {
-        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
+        requiredFixings_.addFixingDate(bc.fxFixingStartDate(),
                                        IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
-        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+        requiredFixings_.addFixingDate(bc.fxFixingEndDate(),    
                                        IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
     }
 }
@@ -789,6 +843,15 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
     }
 }
 
+void FixingDateGetter::visit(InterpolatedIborCoupon& c) {
+    requiredFixings_.addFixingDate(c.fixingDate(),
+                                   IndexNameTranslator::instance().oreName(c.interpolatedIborIndex()->shortIndex()->name()),
+                                   c.date(), true);
+    requiredFixings_.addFixingDate(c.fixingDate(),
+                                   IndexNameTranslator::instance().oreName(c.interpolatedIborIndex()->longIndex()->name()),
+                                   c.date(), true);
+}
+
 void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {
     for (auto const& c : leg) {
         QL_REQUIRE(c, "addToRequiredFixings(), got null cashflow, this is unexpected");
@@ -841,7 +904,7 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
             set<Date> iborDates;
             set<Date> oisDates;
             set<Date> bmaDates;
-            WeekendsOnly calendar;
+            NullCalendar calendar;
 
             std::set<std::string> indices;
             for (auto const& [i, _] : mktParams.mapping(MarketObject::IndexCurve, configuration)) {

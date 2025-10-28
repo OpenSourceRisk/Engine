@@ -59,9 +59,10 @@ Leg FixedLegBuilder::buildLeg(
                 QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(leg[j]);
             Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
+            Real domesticNotional = !data.notionals().empty()?data.notionals()[0]:Null<Real>();
             QuantLib::ext::shared_ptr<FixedRateFXLinkedNotionalCoupon> fxLinkedCoupon =
                 QuantLib::ext::make_shared<FixedRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(), fxIndex,
-                                                                            coupon);
+                                                                            coupon, parseDate(data.resetStartDate()), domesticNotional);
             leg[j] = fxLinkedCoupon;
 
             // Add the FX fixing to the required fixings
@@ -142,9 +143,13 @@ Leg FloatingLegBuilder::buildLeg(
                 QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(result[j]);
             Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
+
+            auto domesticNotional = !data.notionals().empty()?data.notionals()[0]:Null<Real>();
             QuantLib::ext::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
                 QuantLib::ext::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(),
-                                                                               fxIndex, coupon);
+                                                                               fxIndex, coupon, parseDate(data.resetStartDate()),
+                                                                               domesticNotional);
+            
             // set the same pricer
             fxLinkedCoupon->setPricer(coupon->pricer());
             result[j] = fxLinkedCoupon;

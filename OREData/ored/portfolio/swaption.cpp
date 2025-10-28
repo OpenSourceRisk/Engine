@@ -29,6 +29,7 @@
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 
 #include <ored/model/irmodeldata.hpp>
@@ -68,7 +69,8 @@ QuantLib::Settlement::Method defaultSettlementMethod(const QuantLib::Settlement:
 // This helper functionality checks for constant definitions of the given 
 // notional, the rates and the spreads. Those fields must have the same values everywhere on all legs.
 // Additional to this, the gearing must be equal to one on all floating legs.
-// Finally, the floating legs must be of type IborCoupon, OvernightIndexedCoupon or AverageONIndexedCoupon.
+// Finally, the floating legs must be of type IborCoupon, InterpolatedIborCoupon,
+// OvernightIndexedCoupon or AverageONIndexedCoupon.
 // If all those conditions are met, the trade is called standard.
 bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
 {
@@ -99,8 +101,9 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>> &legs)
                 
                 if (                    
                     !(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c))
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c)) 
-                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))                
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c))
+                    && !(QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c))
                 )
                     return false; // The trade must then be a non-standard type like e.g. CMS coupon
 
@@ -655,11 +658,12 @@ const std::map<std::string, boost::any>& Swaption::additionalData() const {
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
         for (Size j = 0; j < legs_[i].size(); ++j) {
             QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest future payment date on this leg
-            if (flow->date() > asof) {
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+            // pick flow with the earliest future accrual period end date on this leg
+            auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+            if (date > asof) {
                 additionalData_["amount[" + legID + "]"] = flow->amount();
                 additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
-                QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
                 if (coupon) {
                     additionalData_["currentNotional[" + legID + "]"] = coupon->nominal();
                     additionalData_["rate[" + legID + "]"] = coupon->rate();
@@ -710,6 +714,8 @@ XMLNode* Swaption::toXML(XMLDocument& doc) const {
 map<AssetClass, set<string>>
 Swaption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     map<AssetClass, set<string>> result;
+    if (underlying_)
+        result = underlying_->underlyingIndices();
     if (auto s = envelope().additionalField("security_spread", false); !s.empty())
         result[AssetClass::BOND] = {s};
     return result;

@@ -257,7 +257,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate, continueOnCalibrationError, "", id, allowChangingFallbacks, allowModelFallbacks);
 
-    modelBuilders_.insert(std::make_pair(id, builder));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 
     // build the pricing engine
 
@@ -328,7 +328,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
-        parseInteger(engineParameter("CashFlowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
         parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
         parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
         parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),

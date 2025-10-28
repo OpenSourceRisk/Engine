@@ -23,137 +23,35 @@
 
 #pragma once
 
-#include <map>
-#include <ostream>
-#include <vector>
+#include <ored/model/irlgmdata.hpp>
+#include <ored/model/irmodelbuilder.hpp>
 
 #include <qle/models/lgm.hpp>
 
-#include <ored/model/irlgmdata.hpp>
-#include <qle/models/marketobserver.hpp>
-#include <qle/models/modelbuilder.hpp>
-
 namespace ore {
 namespace data {
-using namespace QuantLib;
 
 //! Builder for a Linear Gauss Markov model component
-/*!
-  This class is a utility that turns a Linear Gauss Markov
-  model description into an interest rate model parametrisation which
-  can be used to instantiate a CrossAssetModel.
-
-  \ingroup models
- */
-class LgmBuilder : public QuantExt::ModelBuilder {
+class LgmBuilder : public IrModelBuilder {
 public:
-    // We apply certain fallback rules to ensure a robust calibration:
-
-    enum class FallbackType { NoFallback, FallbackRule1 };
-
-    /* Rule 1 If the helper's strike is too far away from the ATM level in terms of the relevant std dev, we move the
-              calibration strike closer to the ATM level */
-    static constexpr Real maxAtmStdDev = 3.0;
-
-    /*! The configuration refers to the configuration to read swaption vol and swap index from the market.
-        The discounting curve to price calibrating swaptions is derived from the swap index directly though,
-        i.e. it is not read as a discount curve from the market (except as a fallback in case we do not find
-        the swap index). */
     LgmBuilder(
         const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
         const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
         const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
         const bool setCalibrationInfo = false, const std::string& id = "unknown",
         BlackCalibrationHelper::CalibrationErrorType calibrationErrorType = BlackCalibrationHelper::RelativePriceError,
-        const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false);
-    //! Return calibration error
-    Real error() const;
-
-    //! \name Inspectors
-    //@{
-    std::string qualifier() { return data_->qualifier(); }
-    std::string ccy() { return currency_; }
-    QuantLib::ext::shared_ptr<QuantExt::LGM> model() const;
-    /* The curve used to build the lgm parametrization. This is initially the swap index discount curve (see ctor). It
-       can be relinked later outside this builder to calibrate fx processes, for which one wants to use a xccy curve
-       instead of the in-ccy curve that is used to calibrate the LGM model within this builder. */
-    RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
-    QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
-    //@}
-
-    //! \name ModelBuilder interface
-    //@{
-    void forceRecalculate() override;
-    bool requiresRecalibration() const override;
-    void recalibrate() const override;
-    void newCalcWithoutRecalibration() const override;
-    //@}
+        const bool allowChangingFallbacksUnderScenarios = false, const bool allowModelFallbacks = false,
+        const bool dontCalibrate = false);
 
 private:
-    void processException(const std::string& s, const std::exception& e);
-    void performCalculations() const override;
-    void buildSwaptionBasket(const bool enforceFullRebuild) const;
-    void updateSwaptionBasketVols() const;
-    std::string getBasketDetails(QuantExt::LgmCalibrationInfo& info) const;
-    // checks whether swaption vols have changed compared to cache and updates the cache if requested
-    bool volSurfaceChanged(const bool updateCache) const;
-    // populate expiry and term
-    void getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb, Real& termT,
-                          bool& expiryDateBased, bool& termDateBased) const;
-    // get strike for jth option (or Null<Real>() if ATM)
-    Real getStrike(const Size j) const;
+    void initParametrization() const override;
+    void calibrate() const override;
+    QuantLib::ext::shared_ptr<PricingEngine> getPricingEngine() const override;
 
-    QuantLib::ext::shared_ptr<ore::data::Market> market_;
-    std::string configuration_;
-    QuantLib::ext::shared_ptr<IrLgmData> data_;
-    Real bootstrapTolerance_;
-    bool continueOnError_;
-    std::string referenceCalibrationGrid_;
-    bool setCalibrationInfo_;
-    std::string id_;
-    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
-    bool allowChangingFallbacksUnderScenarios_;
+    bool setCalibrationInfo_ = false;
 
-    bool allowModelFallbacks_ = false;
-    bool requiresCalibration_ = false;
-    std::string currency_; // derived from data->qualifier()
-
-    mutable Real error_;
-    mutable QuantLib::ext::shared_ptr<QuantExt::LGM> model_;
-    mutable Array params_;
-    mutable QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
-
-    // index of swaption in swaptionBasket for expiries in data->optionExpries(), or null if inactive
-    mutable std::vector<Size> swaptionIndexInBasket_;
-
-    mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
-    mutable std::vector<Real> swaptionStrike_;
-    mutable std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> swaptionBasketVols_;
-    mutable std::vector<FallbackType> swaptionFallbackType_;
-
-    mutable std::set<double> swaptionExpiries_;
-    mutable std::set<double> swaptionMaturities_;
-
-    mutable Date swaptionBasketRefDate_;
-
-    Handle<QuantLib::SwaptionVolatilityStructure> svts_;
-    Handle<SwapIndex> swapIndex_, shortSwapIndex_;
-    RelinkableHandle<YieldTermStructure> modelDiscountCurve_;
-    Handle<YieldTermStructure> calibrationDiscountCurve_;
-
-    // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
-    QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
-    EndCriteria endCriteria_;
-
-    // Cache the swaption volatilities
-    mutable std::vector<QuantLib::Real> swaptionVolCache_;
-
-    bool forceCalibration_ = false;
-    mutable bool suspendCalibration_ = false;
-
-    // LGM Observer
-    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    mutable bool parametrizationInitialized_ = false;
 };
+
 } // namespace data
 } // namespace ore

@@ -44,9 +44,10 @@ TRSWrapper::TRSWrapper(
     const Currency& fundingCurrency, const Size fundingResetGracePeriod, const bool paysAsset, const bool paysFunding,
     const Leg& additionalCashflowLeg, const bool additionalCashflowLegPayer, const Currency& additionalCashflowCurrency,
     const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxIndexAsset, const QuantLib::ext::shared_ptr<FxIndex>& fxIndexReturn,
-    const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
+                       const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
                        const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices,
-                       const bool fxConversionAtPeriodEnd)
+                       const boost::optional<TRS::FXConversion>& fxConversion)
+
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),
       portfolioInitialPrice_(portfolioInitialPrice), portfolioId_(portfolioId),
@@ -57,7 +58,7 @@ TRSWrapper::TRSWrapper(
       additionalCashflowLeg_(additionalCashflowLeg), additionalCashflowLegPayer_(additionalCashflowLegPayer),
       additionalCashflowCurrency_(additionalCashflowCurrency), fxIndexAsset_(fxIndexAsset),
       fxIndexReturn_(fxIndexReturn), fxIndexAdditionalCashflows_(fxIndexAdditionalCashflows),
-      addFxIndices_(addFxIndices), fxConversionAtPeriodEnd_(fxConversionAtPeriodEnd) {
+      addFxIndices_(addFxIndices), fxConversion_(fxConversion) {
 
     QL_REQUIRE(!paymentSchedule_.empty(), "TRSWrapper::TRSWrapper(): payment schedule must not be empty()");
 
@@ -167,7 +168,7 @@ void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     a->fxIndexReturn_ = fxIndexReturn_;
     a->fxIndexAdditionalCashflows_ = fxIndexAdditionalCashflows_;
     a->addFxIndices_ = addFxIndices_;
-    a->fxConversionAtPeriodEnd_ = fxConversionAtPeriodEnd_;
+    a->fxConversion_ = fxConversion_;
 }
 
 void TRSWrapper::arguments::validate() const {
@@ -249,7 +250,9 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
             } else {
                 // The start valuation date is <= today, we determine the start value from the initial price or a
                 // historical fixing
-                Date fxDate = !arguments_.fxConversionAtPeriodEnd_ ? v0 : (endDate == Null<Date>() ? today : endDate);
+                Date fxDate = arguments_.fxConversion_ != TRS::FXConversion::End
+                                  ? v0
+                                  : (endDate == Null<Date>() ? today : endDate);
                 Real s0 = 0.0, fx0 = 1.0;
                 if (nth == 0 && arguments_.initialPrice_ != Null<Real>() &&
                     v0 == arguments_.valuationSchedule_.front()) {
@@ -395,11 +398,10 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
 }
 
 Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
-    if (auto b = QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]);
-        b != nullptr &&
-        QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) == nullptr) {
+    if (QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]) != nullptr ||
+        QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) != nullptr) {
         Date today = Settings::instance().evaluationDate();
-        return b->fixing(today, true) * arguments_.underlyingMultiplier_[i];
+        return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
         return arguments_.underlying_[i]->instrument()->NPV();
     }

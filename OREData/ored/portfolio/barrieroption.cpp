@@ -136,6 +136,7 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         barrier = QuantLib::ext::make_shared<QuantLib::DoubleBarrierOption>(boost::get<DoubleBarrier::Type>(barrierType),
             barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, payoff, exercise);
     }
+    int strictBarrier = barrier_.strictComparison() ? boost::lexical_cast<int>(barrier_.strictComparison().value()) : 0;
 
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> barrierEngine = barrierPricingEngine(engineFactory, expiryDate, payDate);
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine> vanillaEngine = vanillaPricingEngine(engineFactory, expiryDate, payDate);
@@ -152,14 +153,14 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<Barrier::Type>(barrierType), spot,
             barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_, tradeMultiplier(),
             tradeMultiplier(), additionalInstruments, additionalMultipliers, barrier_.overrideTriggered(),
-            getLowIndex(), getHighIndex());
+            getLowIndex(), getHighIndex(), strictBarrier);
     } else {
         instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
             barrier, positionType == Position::Long ? true : false, expiryDate, payDate,
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<DoubleBarrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_,
             index, calendar_, tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers,
-            barrier_.overrideTriggered(), getLowIndex(), getHighIndex());
+            barrier_.overrideTriggered(), getLowIndex(), getHighIndex(), strictBarrier);
     }
     instrument_ = instWrapper;
 
@@ -316,6 +317,11 @@ void EquityOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::E
     eqIndex_ = ef->market()->equityCurve(equityName()).currentLink();
 
     BarrierOption::build(ef);
+}
+
+map<AssetClass, set<string>> EquityOptionWithBarrier::underlyingIndices(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::EQ, set<string>({equityName()})}};
 }
 
 void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {

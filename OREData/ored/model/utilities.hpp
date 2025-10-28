@@ -25,13 +25,14 @@
 
 #include <ored/marketdata/strike.hpp>
 
+#include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
-#include <qle/models/commodityschwartzparametrization.hpp>
-#include <qle/models/lgmcalibrationinfo.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
+#include <qle/models/hwparametrization.hpp>
 
 #include <ql/models/calibrationhelper.hpp>
 
@@ -56,6 +57,11 @@ template <typename Helper> Real getCalibrationError(const std::vector<QuantLib::
 std::string getCalibrationDetails(
     LgmCalibrationInfo& info, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
     const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization = QuantLib::ext::shared_ptr<IrLgm1fParametrization>());
+
+std::string getCalibrationDetails(HwCalibrationInfo& info,
+                                  const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization =
+                                      QuantLib::ext::shared_ptr<IrHwParametrization>());
 
 std::string getCalibrationDetails(
     const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,

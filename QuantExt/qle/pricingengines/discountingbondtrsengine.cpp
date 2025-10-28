@@ -17,8 +17,9 @@
 */
 
 #include <qle/cashflows/bondtrscashflow.hpp>
-#include <qle/pricingengines/discountingbondtrsengine.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/pricingengines/discountingbondtrsengine.hpp>
+#include <qle/pricingengines/forwardenabledbondengine.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -56,7 +57,6 @@ void DiscountingBondTRSEngine::calculate() const {
     Date today = Settings::instance().evaluationDate();
 
     Handle<Quote> bondSpread = arguments_.bondIndex->securitySpread();
-    Handle<Quote> bondRecoveryRate = arguments_.bondIndex->recoveryRate();
     Handle<YieldTermStructure> bondReferenceYieldCurve =
         bondSpread.empty() ? arguments_.bondIndex->discountCurve()
                            : Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
@@ -80,8 +80,8 @@ void DiscountingBondTRSEngine::calculate() const {
 
     QL_REQUIRE(!discountCurve_.empty(), "discounting term structure handle is empty");
     QL_REQUIRE(!arguments_.bondIndex->conditionalOnSurvival(),
-               "DiscountingBondTRSEngine::calculate(): bondIndex should not be computed with conditionalOnSurvival = "
-               "true in this engine");
+               "DiscountingBondTRSEngine::calculate(): bondIndex should be computed with conditionalOnSurvival = "
+               "false in this engine");
 
     Real mult = arguments_.payTotalReturnLeg ? -1.0 : 1.0;
 
@@ -138,16 +138,18 @@ void DiscountingBondTRSEngine::calculate() const {
         if (c->hasOccurred(today))
             continue;
 
-        // the return leg payments terminate when the underlying bond defaults
+        /* the return leg is based on a bond index unconditional on default and therefore
+           contains recovery in the forward estimation of the bond price */
+
+        /* TODO review the weighting of the return payment with the survival prob */
 
         Real S = 1.0;
 
         if (survivalWeightedFundingReturnCashflows_) {
-            // the bond index itself is not conditional on survival, so here we just take the security spread
-            // into account
-            S = treatSecuritySpreadAsCreditSpread_
-                    ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
-                    : 1.0;
+            S = (treatSecuritySpreadAsCreditSpread_
+                     ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
+                     : 1.0) *
+                bondDefaultCurve->survivalProbability(c->date());
         }
 
         returnLeg += c->amount() * discountCurve_->discount(c->date()) * S;
@@ -182,17 +184,26 @@ void DiscountingBondTRSEngine::calculate() const {
     Date start = bd->settlementDate(arguments_.valuationDates.front());
     Date end = bd->settlementDate(arguments_.valuationDates.back());
 
-    Real bondPayments = 0.0, bondRecovery = 0.0;
-    bool hasLiveCashFlow = false;
-    Size numCoupons = 0;
+    Real bondPayments = 0.0;
 
-    
+    // get the expected cashflows
 
-    for (Size i = 0; i < bd->cashflows().size(); i++) {
+    QuantLib::Leg futureCashflows;
+    QuantExt::forwardPrice(bd, today, today, false, nullptr, &futureCashflows);
+
+    QuantLib::Leg pastCashflows;
+    std::copy_if(bd->cashflows().begin(), bd->cashflows().end(), std::back_inserter(pastCashflows),
+                 [&today](const auto& cf) { return cf->date() <= today; });
+
+    QuantLib::Leg expectedCashflows;
+    std::copy(pastCashflows.begin(), pastCashflows.end(), std::back_inserter(expectedCashflows));
+    std::copy(futureCashflows.begin(), futureCashflows.end(), std::back_inserter(expectedCashflows));
+
+    for (Size i = 0; i < expectedCashflows.size(); i++) {
 
         // 5a skip bond cashflows that are outside the total return valuation schedule
 
-        if (bd->cashflows()[i]->date() <= start || bd->cashflows()[i]->date() > end)
+        if (expectedCashflows[i]->date() <= start || expectedCashflows[i]->date() > end)
             continue;
 
         // 5b determine bond cf pay date
@@ -200,16 +211,16 @@ void DiscountingBondTRSEngine::calculate() const {
         Date bondFlowPayDate;
         Date bondFlowValuationDate;
         bool paymentAfterMaturityButWithinBondSettlement =
-            bd->cashflows()[i]->date() > arguments_.valuationDates.back() && bd->cashflows()[i]->date() <= end;
+            expectedCashflows[i]->date() > arguments_.valuationDates.back() && expectedCashflows[i]->date() <= end;
         if (arguments_.payBondCashFlowsImmediately || paymentAfterMaturityButWithinBondSettlement) {
-            bondFlowPayDate = bd->cashflows()[i]->date();
-            bondFlowValuationDate = bd->cashflows()[i]->date();
+            bondFlowPayDate = bd->calendar().advance(expectedCashflows[i]->date(), arguments_.paymentLag);
+            bondFlowValuationDate = expectedCashflows[i]->date();
         } else {
             const auto& payDates = arguments_.paymentDates;
-            auto nextPayDate = std::lower_bound(payDates.begin(), payDates.end(), bd->cashflows()[i]->date());
+            auto nextPayDate = std::lower_bound(payDates.begin(), payDates.end(), expectedCashflows[i]->date());
             QL_REQUIRE(nextPayDate != payDates.end(), "DiscountingBondTRSEngine::calculate(): unexpected, could "
                                                       "not determine next pay date for bond cashflow date "
-                                                          << bd->cashflows()[i]);
+                                                          << expectedCashflows[i]);
             bondFlowPayDate = *nextPayDate;
 
             const auto& valDates = arguments_.valuationDates;
@@ -232,8 +243,6 @@ void DiscountingBondTRSEngine::calculate() const {
         if (bondFlowPayDate <= today)
             continue;
 
-        hasLiveCashFlow = true;
-
         // 5d determine survivial prob S and fx conversion rate for bond cashflow
 
         // FIXME which fixing date should we use for the fx conversion
@@ -250,13 +259,13 @@ void DiscountingBondTRSEngine::calculate() const {
         // 5e set bond cashflow and additional results
 
         cfResults.emplace_back();
-        cfResults.back().amount = mult * bd->cashflows()[i]->amount() * fx * arguments_.bondNotional;
+        cfResults.back().amount = mult * expectedCashflows[i]->amount() * fx * arguments_.bondNotional;
         cfResults.back().discountFactor = discountCurve_->discount(bondFlowPayDate) * S;
         cfResults.back().payDate = bondFlowPayDate;
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 1;
         cfResults.back().type = "BondCashFlowReturn";
-        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i])) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(expectedCashflows[i])) {
             cfResults.back().rate = cpn->rate();
             cfResults.back().accrualPeriod = cpn->accrualPeriod();
             cfResults.back().accrualStartDate = cpn->accrualStartDate();
@@ -264,13 +273,13 @@ void DiscountingBondTRSEngine::calculate() const {
             cfResults.back().accruedAmount = cpn->accruedAmount(today);
             cfResults.back().notional = cpn->nominal();
         }
-        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(bd->cashflows()[i])) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(expectedCashflows[i])) {
             cfResults.back().fixingDate = cpn->fixingDate();
             cfResults.back().fixingValue = cpn->index()->fixing(cpn->fixingDate());
         }
 
-        bondCashflows.push_back(mult * bd->cashflows()[i]->amount() * arguments_.bondNotional);
-        bondCashflowOriginalPayDates.push_back(bd->cashflows()[i]->date());
+        bondCashflows.push_back(mult * expectedCashflows[i]->amount() * arguments_.bondNotional);
+        bondCashflowOriginalPayDates.push_back(expectedCashflows[i]->date());
         bondCashflowReturnPayDates.push_back(bondFlowPayDate);
         bondCashflowFxRate.push_back(fx);
         bondCashflowFxFixingDate.push_back(fxFixingDate);
@@ -278,82 +287,21 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // 5f bond cashflow npv contribution
 
-        bondPayments += bd->cashflows()[i]->amount() * S * discountCurve_->discount(bondFlowPayDate) * fx;
-
-        // 5g bond cashflow recovery contribution
-
-        if (auto coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(bd->cashflows()[i])) {
-            Date startDate = coupon->accrualStartDate();
-            Date endDate = coupon->accrualEndDate();
-            Date effectiveStartDate = (startDate <= start && start <= endDate) ? start : startDate;
-            if (effectiveStartDate < today)
-                effectiveStartDate = today;
-            if (endDate > effectiveStartDate) {
-                Probability P = 1.0 - (treatSecuritySpreadAsCreditSpread_
-                                           ? exp(-bondSpread->value() / (1.0 - recoveryVal) *
-                                                 (discountCurve_->timeFromReference(endDate) -
-                                                  discountCurve_->timeFromReference(effectiveStartDate)))
-                                           : 1.0) *
-                                          (1.0 - bondDefaultCurve->defaultProbability(effectiveStartDate, endDate));
-                Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
-                // FIXME which fixing date should we use for the fx conversion?
-                Real fx = arguments_.fxIndex ? arguments_.fxIndex->fixing(arguments_.fxIndex->fixingCalendar().adjust(
-                                                   coupon->date(), Preceding))
-                                             : 1.0;
-                bondRecovery += coupon->nominal() * recoveryVal * P * discountCurve_->discount(defaultDate) * fx;
-            }
-            ++numCoupons;
-        }
+        bondPayments += expectedCashflows[i]->amount() * S * discountCurve_->discount(bondFlowPayDate) * fx;
 
     } // loop over bond cashflows
 
-    // 5h multiply bond payments and recovery contributions by bond notional
+    // 5g multiply bond payments by bond notional
+
     bondPayments *= arguments_.bondNotional;
-    bondRecovery *= arguments_.bondNotional;
-
-    // 5i bond recovery value (special treatment for zero bonds)
-
-    if (hasLiveCashFlow) {
-        if (bd->cashflows().size() > 1 && numCoupons == 0) {
-            QL_FAIL("DiscountingBondTRSEngine: no support of bonds with multiple cashflows but no coupons");
-        }
-        /* If there are no coupon, as in a Zero Bond, we must integrate over the entire period from npv date to
-           maturity. The timestepPeriod specified is used as provide the steps for the integration. This only
-           applies to bonds with 1 cashflow, identified as a final redemption payment. */
-        if (bd->cashflows().size() == 1) {
-            QuantLib::ext::shared_ptr<Redemption> redemption = QuantLib::ext::dynamic_pointer_cast<Redemption>(bd->cashflows()[0]);
-            if (redemption) {
-                Date startDate = (start < today ? today : start);
-                while (startDate < redemption->date()) {
-                    Date stepDate = startDate + 1 * Months; // hardcoded period
-                    Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
-                    Date defaultDate = startDate + (endDate - startDate) / 2;
-                    Probability P =
-                        1.0 - (treatSecuritySpreadAsCreditSpread_ ? exp(-bondSpread->value() / (1.0 - recoveryVal) *
-                                                                        (discountCurve_->timeFromReference(endDate) -
-                                                                         discountCurve_->timeFromReference(startDate)))
-                                                                  : 1.0) *
-                                  (1.0 - bondDefaultCurve->defaultProbability(startDate, endDate));
-                    // FIXME which fixing date should we use for the fx conversion?
-                    Real fx = arguments_.fxIndex
-                                  ? arguments_.fxIndex->fixing(
-                                        arguments_.fxIndex->fixingCalendar().adjust(redemption->date(), Preceding))
-                                  : 1.0;
-                    bondRecovery += redemption->amount() * recoveryVal * P * discountCurve_->discount(defaultDate) * fx;
-                    startDate = stepDate;
-                }
-            }
-        }
-    }
 
     // 6 set results
 
-    results_.value = mult * (returnLeg + bondPayments + bondRecovery - fundingLeg);
+    results_.value = mult * (returnLeg + bondPayments - fundingLeg);
 
-    results_.additionalResults["returnLegNpv"] = mult * (returnLeg + bondPayments + bondRecovery);
+    results_.additionalResults["returnLegNpv"] = mult * (returnLeg + bondPayments);
     results_.additionalResults["returnLegNpvReturnPaymentsContribtion"] = mult * returnLeg;
     results_.additionalResults["returnLegNpvBondPaymentsContribtion"] = mult * bondPayments;
-    results_.additionalResults["returnLegNpvBondRecoveryContribution"] = mult * bondRecovery;
     results_.additionalResults["fundingLegNpv"] = -mult * fundingLeg;
 
     results_.additionalResults["cashFlowResults"] = cfResults;

@@ -150,9 +150,14 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
     'IMM' applies to SOFR-3M futures for example. 'FirstDayOfMonth' on the other hand means that the end date of the
     future is set to the first day in the month following the future's expiry month and the start date is set to the
     first day of the month lying $n$ months before the end date's month where $n$ is the number of months of the
-    future's underlying tenor. The setting 'FirstDayOfMonth' applies to SOFR-1M futures for example. This tenor is
+    future's underlying tenor. The setting 'FirstDayOfMonth' applies to SOFR-1M futures for example. For 'FirstDayOfMonth'
+    the start and end date are adjusted to the next business day w.r.t. roll convention 'following' and the overnight
+    index calendar - or if given the calendar given in the field 'Calendar'. This tenor is
     derived from the market quote, see \ref{ss:market_data_oi_index_future_prices}.
   \end{itemize}
+\item Calendar: Only applicable to overnight index futures with date generation rule 'FirstDayOfMonth'. Overwrites the
+    calendar used to adjust the start and end date of the future. Optional, if not given, the overnight index publishing
+    calendar will be used to adjust the future start and end date.
 \item OvernightIndexFutureNettingType [Optional]: Only relevant for OI futures. Can be 'Compounding' (which is also the
   default value if no value is given) or 'Averaging'. For example, SOFR 3M futures are compounding while SOFR 1M futures
   are averaging the daily overnight fixings over the calculation period of the future.
@@ -208,6 +213,7 @@ Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_so
     <Id>USD-SOFR-1M-FUTURES</Id>
     <Index>USD-SOFR</Index>
     <DateGenerationRule>FirstDayOfMonth</DateGenerationRule>
+    <Calendar>CME</Calendar>
     <OvernightIndexFutureNettingType>Averaging</OvernightIndexFutureNettingType>
   </Future>
 \end{minted}
@@ -927,7 +933,7 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
              2 Event
              3 Trading Center (product of weights if several apply)
              4 Weekday (Monday to Friday) -->
-  <WeekDayWeights>
+  <WeekdayWeights>
     <Monday>1.0</Monday>
     <Tuesday>1.0</Tuesday>
     <Wednesday>1.0</Wednesday>
@@ -935,7 +941,7 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
     <Friday>1.0</Friday>
     <Saturday>0.3</Saturday>
     <Sunday>0.3</Sunday>
-  </WeekDayWeights>
+  </WeekdayWeights>
   <TradingCenters>
     <TradingCenter>
       <Name>JP,US</Name>
@@ -959,7 +965,7 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
-\item WeekDayWeights: Specifies weights to be applied to weekdays
+\item WeekdayWeights: Specifies weights to be applied to weekdays
 \item TradingCenters: Zero, one or more trading centers specified by a calendar and a weight per trading center
 \item Events: Zero, one or more dates, on which special weights apply
 \end{itemize}
@@ -967,7 +973,7 @@ The meanings of the various elements in this node are as follows:
 To determine a weight for a given day exactly one of the following rules is applied, with priority from top to bottom:
 
 \begin{itemize}
-\item If a day falls on a weekend, the weight for Saturday, Sunday from WeekDayWeights is applied to the day.
+\item If a day falls on a weekend, the weight for Saturday, Sunday from WeekdayWeights is applied to the day.
 \item If a day is in the event list, the weight for that date is applied.
 \item If a day is a holiday in one or more trading centers, the product of the weights of these trading centers is applied.
 \item Otherwise, the weight for the weekday (Monday to Friday) is applied.
