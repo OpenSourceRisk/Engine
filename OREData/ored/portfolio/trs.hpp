@@ -40,8 +40,7 @@ public:
     class ReturnData : public XMLSerializable {
     public:
         ReturnData()
-            : payer_(false), initialPrice_(Null<Real>()), payUnderlyingCashFlowsImmediately_(false),
-              fxConversion_(FXConversion::Start) {}
+            : payer_(false), initialPrice_(Null<Real>()), payUnderlyingCashFlowsImmediately_(false) {}
         ReturnData(const bool payer, const std::string& currency, const ScheduleData& scheduleData,
                    const std::string& observationLag, const std::string& observationConvention,
                    const std::string& observationCalendar, const std::string& paymentLag,

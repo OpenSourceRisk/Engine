@@ -111,7 +111,7 @@ XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
 }
 
 TRS::FXConversion TRS::ReturnData::parseFXConversion(string fxConv_) {
-    return fxConv_ == "Start" ? FXConversion::Start : FXConversion::End;
+    return fxConv_ == "End" ? FXConversion::End : FXConversion::Start;
 }
 
 
