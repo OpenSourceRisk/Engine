@@ -20,6 +20,7 @@
 // clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 // clang-format on
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/loader.hpp>
@@ -324,6 +325,8 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles
     TodaysMarketArguments tma(Date(25, Sep, 2019), "ars_in_usd", "failing/" + curveConfigFile);
 
     QuantLib::ext::shared_ptr<TodaysMarket> todaysMarket;
+    // Disable console logging for this test as we expect errors
+    BOOST_LOG_SCOPED_THREAD_ATTR("NoConsole", boost::log::attributes::constant<bool>(true));
     BOOST_CHECK_EXCEPTION(todaysMarket = QuantLib::ext::make_shared<TodaysMarket>(
                               tma.asof, tma.todaysMarketParameters, tma.loader, tma.curveConfigs, false, false),
                           Error, ExpErrorPred("yield curve building failed for curve(s) Yield/ARS/ARS-IN-USD"));

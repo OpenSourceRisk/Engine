@@ -491,7 +491,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             ich->enableExtrapolation();
 
                         QuantLib::ext::shared_ptr<IborIndex> i = index->clone(ich);
-                        if (iborFallbackConfig_->isIndexReplaced(name, asof_)) {
+                        if (iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(name, asof_)) {
                             // handle ibor fallback indices
                             auto fallbackData = iborFallbackConfig_->fallbackData(name);
                             auto f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
