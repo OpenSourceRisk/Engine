@@ -98,7 +98,7 @@ public:
     const std::vector<QuantLib::Real>& prices() const { return this->data_; }
     //@}
 
-    void makeThisCurveSpreaded(const std::vector<Handle<PriceTermStructure>>& bases,
+    void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
                                const std::vector<double>& multiplier);
 protected:
     //! Used by PiecewisePriceCurve
@@ -122,9 +122,9 @@ private:
     const QuantLib::Currency currency_;
     std::vector<QuantLib::Handle<QuantLib::Quote> > quotes_;
     std::vector<QuantLib::Period> tenors_;
-    std::vector<Handle<PriceTermStructure>> bases_;
+    std::vector<QuantLib::Handle<PriceTermStructure>> bases_;
     std::vector<double> multiplier_;
-    std::vector<std::vector<Real>> basesOffset_;
+    std::vector<std::vector<QuantLib::Real>> basesOffset_;
     
     void initialise();
     void populateDatesFromTenors() const;
@@ -301,18 +301,21 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::getPric
     for (QuantLib::Size i = 0; i < quotes_.size(); ++i) {
         QL_REQUIRE(!this->quotes_[i].empty(), "price quote at index " << i << " is empty");
         this->data_[i] = quotes_[i]->value();
+        for (QuantLib::Size j = 0; j < bases_.size(); ++j) {
+            this->data_[i] += (bases_[j]->price(this->times_[i]) - this->basesOffset_[j][i]) * multiplier_[j];
+        }
     }
 }
 
 template <class Interpolator>
-void InterpolatedPriceCurve<Interpolator>::makeThisCurveSpreaded(const std::vector<Handle<PriceTermStructure>>& bases,
+void InterpolatedPriceCurve<Interpolator>::makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
                                                                  const std::vector<double>& multiplier) {
     for (auto const& b : bases_)
         unregisterWith(b);
 
     bases_ = bases;
     multiplier_ = multiplier;
-    QL_REQUIRE(bases_.size() == multiplier_.size(), "SpreadedDiscountCurve::makeThisCurveSpreaded(): bases size ("
+    QL_REQUIRE(bases_.size() == multiplier_.size(), "InterpolatedPriceCurve::makeThisCurveSpreaded(): bases size ("
                                                         << bases_.size() << ") does not match multiplier size ("
                                                         << multiplier_.size() << ")");
 
@@ -320,10 +323,10 @@ void InterpolatedPriceCurve<Interpolator>::makeThisCurveSpreaded(const std::vect
         registerWith(b);
 
     basesOffset_.resize(bases.size());
-    for (Size i = 0; i < bases_.size(); ++i) {
-        basesOffset_[i].resize(times_.size());
-        for (Size j = 0; j < times_.size(); ++j) {
-            basesOffset_[i][j] = bases_[i].empty() ? 0.0 : bases_[i]->price(times_[j]);
+    for (QuantLib::Size i = 0; i < bases_.size(); ++i) {
+        basesOffset_[i].resize(this->times_.size());
+        for (QuantLib::Size j = 0; j < this->times_.size(); ++j) {
+            basesOffset_[i][j] = bases_[i].empty() ? 0.0 : bases_[i]->price(this->times_[j]);
         }
     }
 

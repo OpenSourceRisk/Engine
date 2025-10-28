@@ -76,7 +76,7 @@ QuantLib::Real SpreadedPriceTermStructure::priceImpl(QuantLib::Time t) const {
     return referenceCurve_->price(t) + (*interpolation_)(t);
 }
 
-void SpreadedPriceTermStructure::makeThisCurveSpreaded(const std::vector<Handle<PriceTermStructure>>& bases,
+void SpreadedPriceTermStructure::makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
                                                        const std::vector<double>& multiplier) {
 
     for (auto const& b : bases_)

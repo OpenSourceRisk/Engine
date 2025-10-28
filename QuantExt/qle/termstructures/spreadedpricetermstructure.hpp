@@ -47,7 +47,7 @@ public:
     const QuantLib::Currency& currency() const override;
     std::vector<QuantLib::Date> pillarDates() const override;
     
-    void makeThisCurveSpreaded(const std::vector<Handle<PriceTermStructure>>& bases,
+    void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
                                const std::vector<double>& multiplier);
 
 private:
@@ -61,9 +61,9 @@ private:
     mutable std::vector<QuantLib::Real> data_;
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> interpolation_;
     
-    std::vector<Handle<PriceTermStructure>> bases_;
+    std::vector<QuantLib::Handle<PriceTermStructure>> bases_;
     std::vector<double> multiplier_;
-    std::vector<std::vector<Real>> basesOffset_;
+    std::vector<std::vector<QuantLib::Real>> basesOffset_;
 
 
 };
