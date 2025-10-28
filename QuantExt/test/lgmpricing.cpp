@@ -164,7 +164,7 @@ double bachelierPutPrice(double spot, double strike, double volatility, double t
 }
 
 BOOST_AUTO_TEST_CASE(testBachelier) {
-    // The LGM model converges to the well-known Bachelier approach in case of a zero mean-reversion rate.
+    // The LGM model is approximately close to the well-known Bachelier approach in case of a zero mean-reversion rate.
     // The dynamics defined via the underlying SDE lead to that relationship between the two models.
     // We check that equality for different swaption types (payer and receiver) and different strikes
     // that will cover the practically relevant area.
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, 
-            schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+            schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());        
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
-             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
+             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
-             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());        
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
-             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
+             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);

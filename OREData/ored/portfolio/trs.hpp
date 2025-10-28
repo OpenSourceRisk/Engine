@@ -36,11 +36,11 @@ namespace data {
 /*! TRS trade class */
 class TRS : public Trade {
 public:
+    enum class FXConversion { Start, End };
     class ReturnData : public XMLSerializable {
     public:
         ReturnData()
-            : payer_(false), initialPrice_(Null<Real>()), payUnderlyingCashFlowsImmediately_(false),
-              fxConversionAtPeriodEnd_(false) {}
+            : payer_(false), initialPrice_(Null<Real>()), payUnderlyingCashFlowsImmediately_(false) {}
         ReturnData(const bool payer, const std::string& currency, const ScheduleData& scheduleData,
                    const std::string& observationLag, const std::string& observationConvention,
                    const std::string& observationCalendar, const std::string& paymentLag,
@@ -48,13 +48,12 @@ public:
                    const std::vector<std::string>& paymentDates, const Real initialPrice,
                    const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
                    const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
-                   const QuantLib::ext::optional<bool> fxConversionAtPeriodEnd)
+                   const QuantLib::ext::optional<FXConversion> fxConversion)
             : payer_(payer), currency_(currency), scheduleData_(scheduleData), observationLag_(observationLag),
               observationCalendar_(observationCalendar), paymentLag_(paymentLag), paymentConvention_(paymentConvention),
               paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), initialPrice_(initialPrice),
               initialPriceCurrency_(initialPriceCurrency), fxTerms_(fxTerms),
-              payUnderlyingCashFlowsImmediately_(payUnderlyingCashFlowsImmediately),
-              fxConversionAtPeriodEnd_(fxConversionAtPeriodEnd) {}
+              payUnderlyingCashFlowsImmediately_(payUnderlyingCashFlowsImmediately), fxConversion_(fxConversion) {}
 
         bool payer() const { return payer_; }
         const std::string& currency() const { return currency_; }
@@ -70,9 +69,10 @@ public:
         const std::string& initialPriceCurrency() const { return initialPriceCurrency_; }
         const std::vector<std::string>& fxTerms() const { return fxTerms_; }
         QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
-        bool fxConversionAtPeriodEnd() const { return fxConversionAtPeriodEnd_; }
+        QuantLib::ext::optional<FXConversion> fxConversionAtPeriodEnd() const { return fxConversion_; }
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
+        FXConversion parseFXConversion(string fxConv_);
 
     private:
         bool payer_;
@@ -85,7 +85,7 @@ public:
         std::string initialPriceCurrency_;
         std::vector<std::string> fxTerms_; // FX index strings
         QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately_;
-        bool fxConversionAtPeriodEnd_;
+        QuantLib::ext::optional<FXConversion> fxConversion_;
     };
 
     class FundingData : public XMLSerializable {
