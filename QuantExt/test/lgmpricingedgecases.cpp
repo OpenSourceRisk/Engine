@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
     for (int strike = 5; strike <= 10; strike ++)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
-             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());        
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
     for (int strike = 10; strike <= 15; strike ++)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, 
-            schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
+            schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     for (int strike = -7; strike <= -1; strike ++)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
-            schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+            schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());        
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     for (int strike = -11; strike <=-5; strike ++)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
-             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
+             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     for (int strike = 3; strike <= 7; strike ++)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
-             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());        
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     for (int strike = -3; strike <= 1; strike ++)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
-             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
+             schedule, (double)strike/100.0, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
