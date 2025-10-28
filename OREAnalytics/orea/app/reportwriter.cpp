@@ -2618,7 +2618,7 @@ void ReportWriter::writeSaccrTradeDetailReport(
             Real notionalFxRate =
                 c.currency.empty() ? Null<Real>() : tradeData->getFxRate(c.currency + tradeData->baseCurrency());
 
-            report.add(c.hedgingData.hedgingSubset.get_value_or(""))
+            report.add(c.hedgingData.hedgingSubset.value_or(""))
                 .add(c.bucket)
                 .add(c.underlyingData.qualifier)
                 .add(tradeData->baseCurrency())
@@ -2626,34 +2626,34 @@ void ReportWriter::writeSaccrTradeDetailReport(
                 .add(adjNotional * notionalFxRate)
                 .add(c.maturityFactor)
                 .add(c.maturity)
-                .add(c.startDate.get_value_or(Null<Real>()))
-                .add(c.endDate.get_value_or(Null<Real>()))
-                .add(c.lastExerciseDate.get_value_or(Null<Real>()))
+                .add(c.startDate.value_or(Null<Real>()))
+                .add(c.endDate.value_or(Null<Real>()))
+                .add(c.lastExerciseDate.value_or(Null<Real>()))
                 .add(timpl->getSupervisoryDuration(c.underlyingData.saccrAssetClass, c.startDate, c.endDate)
-                         .get_value_or(Null<Real>()));
-            Real currentPrice = c.currentPrice.get_value_or(Null<Real>());
+                         .value_or(Null<Real>()));
+            Real currentPrice = c.currentPrice.value_or(Null<Real>());
             if (currentPrice != Null<Real>())
                 currentPrice *= notionalFxRate;
             report.add(currentPrice)
-                .add(timpl->getNominalFlowCount().get_value_or(Null<Size>()))
-                .add(c.optionDeltaPrice.get_value_or(Null<Real>()))
-                .add(c.strike.get_value_or(Null<Real>()))
+                .add(timpl->getNominalFlowCount().value_or(Null<Size>()))
+                .add(c.optionDeltaPrice.value_or(Null<Real>()))
+                .add(c.strike.value_or(Null<Real>()))
                 .add(timpl->getSupervisoryOptionVolatility(c.underlyingData));
             // auto tradeDates = timpl->getDates();
             // report.add(tradeDates.M)
-            //     .add(tradeDates.S.get_value_or(Null<Real>()))
-            //     .add(tradeDates.E.get_value_or(Null<Real>()))
-            //     .add(c.lastExerciseDate.get_value_or(Null<Real>()))
+            //     .add(tradeDates.S.value_or(Null<Real>()))
+            //     .add(tradeDates.E.value_or(Null<Real>()))
+            //     .add(c.lastExerciseDate.value_or(Null<Real>()))
             //     .add(timpl->getSupervisoryDuration(c.underlyingData.saccrAssetClass, c.startDate, c.endDate)
-            //              .get_value_or(Null<Real>()));
+            //              .value_or(Null<Real>()));
 
-            // Real currentPrice = c.currentPrice.get_value_or(Null<Real>());
+            // Real currentPrice = c.currentPrice.value_or(Null<Real>());
             // if (currentPrice != Null<Real>())
             //     currentPrice *= notionalFxRate;
             // report.add(currentPrice)
-            //     .add(timpl->getNominalFlowCount().get_value_or(Null<Size>()))
-            //     .add(c.optionDeltaPrice.get_value_or(Null<Real>()))
-            //    .add(c.strike.get_value_or(Null<Real>()))
+            //     .add(timpl->getNominalFlowCount().value_or(Null<Size>()))
+            //     .add(c.optionDeltaPrice.value_or(Null<Real>()))
+            //    .add(c.strike.value_or(Null<Real>()))
             //    .add(timpl->getSupervisoryOptionVolatility(c));
         }
         // report.next().add(tid).add(timpl->trade()->tradeType());
@@ -2673,32 +2673,32 @@ void ReportWriter::writeSaccrTradeDetailReport(
         // Real npvBase = timpl->NPV() * npvFxRate;
         //
         // SaccrTradeData::Delta delta = timpl->getDelta();
-        // report.add(timpl->getHedgingSubset().get_value_or(""))
+        // report.add(timpl->getHedgingSubset().value_or(""))
         //     .add(npvBase)
         //     .add(tradeData->baseCurrency())
-        //     .add(timpl->getSupervisoryDuration().get_value_or(Null<Real>()))
+        //     .add(timpl->getSupervisoryDuration().value_or(Null<Real>()))
         //     .add(delta.delta)
         //     .add(adjNotional.notional * notionalFxRate)
         //     .add(timpl->getMaturityFactor());
         //
         // auto tradeDates = timpl->getDates();
         // report.add(tradeDates.M)
-        //     .add(tradeDates.S.get_value_or(Null<Real>()))
-        //     .add(tradeDates.E.get_value_or(Null<Real>()))
-        //     .add(delta.exerciseDate.get_value_or(Null<Real>()));
+        //     .add(tradeDates.S.value_or(Null<Real>()))
+        //     .add(tradeDates.E.value_or(Null<Real>()))
+        //     .add(delta.exerciseDate.value_or(Null<Real>()));
 
-        // Real currentPrice1 = adjNotional.currentPrice1.get_value_or(Null<Real>());
+        // Real currentPrice1 = adjNotional.currentPrice1.value_or(Null<Real>());
         // if (currentPrice1 != Null<Real>())
         //     currentPrice1 *= notionalFxRate;
-        // Real currentPrice2 = adjNotional.currentPrice2.get_value_or(Null<Real>());
+        // Real currentPrice2 = adjNotional.currentPrice2.value_or(Null<Real>());
         // if (currentPrice2 != Null<Real>())
         //     currentPrice2 *= notionalFxRate;
         // report.add(currentPrice1)
         //     .add(currentPrice2)
-        //     .add(timpl->getNominalFlowCount().get_value_or(Null<Size>()))
-        //     .add(delta.price.get_value_or(Null<Real>()))
-        //     .add(delta.strike.get_value_or(Null<Real>()))
-        //     .add(delta.volatility.get_value_or(Null<Real>()));
+        //     .add(timpl->getNominalFlowCount().value_or(Null<Size>()))
+        //     .add(delta.price.value_or(Null<Real>()))
+        //     .add(delta.strike.value_or(Null<Real>()))
+        //     .add(delta.volatility.value_or(Null<Real>()));
     }
     report.end();
     LOG("Finished writing SA-CCR trade detail report");

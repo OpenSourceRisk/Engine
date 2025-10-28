@@ -137,8 +137,8 @@ class OreExample(object):
             elif os.path.isfile("/ore/App/ore"):
                 self.ore_exe = "/ore/App/ore"
             else:
-                print_on_console("ORE executable not found.")
-                quit()
+                self.ore_exe = "ore3"
+                self.ore_plus_exe = "ore_plus3"
         print_on_console("Using ORE executable " + (os.path.abspath(self.ore_exe)))
 
     def print_headline(self, headline):
