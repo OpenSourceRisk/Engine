@@ -15,7 +15,7 @@
         <PaymentConvention>MF</PaymentConvention>
         <DayCounter>A360</DayCounter>
         <Notionals>
-          <Notional>10000</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
         <FloatingLegData>
           <Index>USD-SOFR</Index>
@@ -41,7 +41,7 @@
         <PaymentConvention>MF</PaymentConvention>
         <DayCounter>A360</DayCounter>
         <Notionals>
-          <Notional>10000</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
         <FixedLegData>
           <Rates>
@@ -81,7 +81,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>10000</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
