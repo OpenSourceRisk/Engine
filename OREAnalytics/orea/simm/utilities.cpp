@@ -17,6 +17,7 @@
 */
 
 #include <orea/simm/utilities.hpp>
+#include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmconfigurationisdav1_0.hpp>
 #include <orea/simm/simmconfigurationisdav1_3.hpp>
 #include <orea/simm/simmconfigurationisdav1_3_38.hpp>
@@ -32,6 +33,19 @@
 #include <orea/simm/simmconfigurationisdav2_7_2412.hpp>
 #include <orea/simm/simmconfigurationcalibration.hpp>
 
+#include <ored/portfolio/bondposition.hpp>
+#include <ored/portfolio/bondoption.hpp>
+#include <ored/portfolio/bondrepo.hpp>
+#include <ored/portfolio/bondtotalreturnswap.hpp>
+#include <ored/portfolio/compositetrade.hpp>
+#include <ored/portfolio/convertiblebond.hpp>
+#include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/fxderivative.hpp>
+#include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxswap.hpp>
+#include <ored/portfolio/scriptedtrade.hpp>
+#include <ored/portfolio/trs.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
@@ -65,13 +79,16 @@
 using std::map;
 using std::set;
 using std::string;
-using namespace ore::data;
+using ore::data::parseReal;
+using ore::data::parseInteger;
+using ore::data::isPseudoCurrency;
 
 namespace ore {
 namespace analytics {
 
 using QuantLib::Null;
 using QuantLib::Size;
+using QuantLib::Matrix;
 
 std::vector<std::string> loadFactorList(const std::string& inputFileName, const char delim) {
     LOG("Load factor list from file " << inputFileName);
@@ -310,8 +327,7 @@ productClassBond(QuantLib::ext::shared_ptr<const BondDerivative> bondDerivative,
 template <typename FxDerivative>
 CrifRecord::ProductClass productClassFX(QuantLib::ext::shared_ptr<const FxDerivative> fxDerivative) {
     // If either Bought or Sold currency is precious or crypto we return Commodity
-    if (ore::data::isPseudoCurrency(fxDerivative->boughtCurrency()) ||
-        ore::data::isPseudoCurrency(fxDerivative->soldCurrency())) {
+    if (isPseudoCurrency(fxDerivative->boughtCurrency()) || isPseudoCurrency(fxDerivative->soldCurrency())) {
         return CrifRecord::ProductClass::Commodity;
     } else {
         return CrifRecord::ProductClass::FX;
@@ -456,7 +472,7 @@ std::string simmStandardCurrency(const std::string& ccy) {
     }
 }
 
-void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<Market> market) {
+void convertToSimmStandardCurrency(double& npv, std::string& ccy, const QuantLib::ext::shared_ptr<ore::data::Market> market) {
     if (!isSimmNonStandardCurrency(ccy))
         return;
     std::string target = simmStandardCurrency(ccy);
@@ -473,8 +489,9 @@ bool convertToSimmStandardCurrencyPair(std::string& ccy) {
     ccy = ccy1 + ccy2;
     return ccy1 != ccy2;
 }
-  
+
 CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade) {
+
     // Firstly check for a Product class override in the trade's additional fields
     auto additionalFields = trade->envelope().additionalFields();
     auto it = additionalFields.find("ProductClassOverride");
@@ -507,32 +524,34 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
     } else if (trade->tradeType() == "CallableBond") {
         return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::CallableBond>(trade));
     } else if (trade->tradeType() == "BondOption") {
-        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondOption>(trade));
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::BondOption>(trade));
     } else if (trade->tradeType() == "BondTRS") {
-        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondTRS>(trade));
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::BondTRS>(trade));
     } else if (trade->tradeType() == "ForwardBond") {
-        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ForwardBond>(trade));
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::ForwardBond>(trade));
     } else if (trade->tradeType() == "BondFuture") {
-        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondFuture>(trade));
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::BondFuture>(trade));
     } else if (trade->tradeType() == "BondRepo") {
-        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const BondRepo>(trade));
+        return productClassBond(QuantLib::ext::dynamic_pointer_cast<const ore::data::BondRepo>(trade));
     } else if (trade->tradeType() == "FxForward") {
         // ORE FX derivatives need to be handled in turn
-        return productClassFX(QuantLib::ext::dynamic_pointer_cast<const FxForward>(trade));
+        return productClassFX(QuantLib::ext::dynamic_pointer_cast<const ore::data::FxForward>(trade));
     } else if (trade->tradeType() == "FxOption") {
-        return productClassFX(QuantLib::ext::dynamic_pointer_cast<const FxOption>(trade));
+        return productClassFX(QuantLib::ext::dynamic_pointer_cast<const ore::data::FxOption>(trade));
     } else if (trade->tradeType() == "FxSwap") {
-        QuantLib::ext::shared_ptr<FxSwap> fxSwap(QuantLib::ext::dynamic_pointer_cast<FxSwap>(trade));
+        QuantLib::ext::shared_ptr<ore::data::FxSwap> fxSwap(
+            QuantLib::ext::dynamic_pointer_cast<ore::data::FxSwap>(trade));
         if (isPseudoCurrency(fxSwap->nearBoughtCurrency()) || isPseudoCurrency(fxSwap->nearSoldCurrency())) {
             return CrifRecord::ProductClass::Commodity;
         } else {
             return CrifRecord::ProductClass::FX;
         }
-    } else if (QuantLib::ext::dynamic_pointer_cast<const FxSingleAssetDerivative>(trade)) {
+    } else if (QuantLib::ext::dynamic_pointer_cast<const ore::data::FxSingleAssetDerivative>(trade)) {
         // All ORE+ FX Single Asset Derivatives should hit this
-        return productClassFX(QuantLib::ext::dynamic_pointer_cast<const FxSingleAssetDerivative>(trade));
+        return productClassFX(QuantLib::ext::dynamic_pointer_cast<const ore::data::FxSingleAssetDerivative>(trade));
     } else if (trade->tradeType() == "CompositeTrade") {
-        QuantLib::ext::shared_ptr<CompositeTrade> compositeTrade(QuantLib::ext::dynamic_pointer_cast<CompositeTrade>(trade));
+        QuantLib::ext::shared_ptr<ore::data::CompositeTrade> compositeTrade(
+            QuantLib::ext::dynamic_pointer_cast<ore::data::CompositeTrade>(trade));
         CrifRecord::ProductClass pc = CrifRecord::ProductClass::Empty;
         for (const auto& subtrade : compositeTrade->trades()) {
             pc = SimmConfiguration::maxProductClass(pc, scheduleProductClassFromOreTrade(subtrade));
@@ -555,6 +574,5 @@ CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::s
     }
 }
 
-  
 } // namespace analytics
 } // namespace ore
