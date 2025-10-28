@@ -116,7 +116,7 @@ not then `cube.dat` is generated as a flat (plain text) file.
 
 ### Use the wheel
 
-    cd %ORE_DIR%\ORE-SWIG\ORE-Python\Examples
+    cd %ORE_DIR%\Examples\ORE-Python\ExampleScripts
     python -m venv env1
     .\env1\Scripts\activate.bat
     pip install %ORE_DIR%\ORE-SWIG\dist\open_source_risk_engine-1.8.13.1-cp312-cp312-win_amd64.whl
