@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -208,6 +209,8 @@ BOOST_AUTO_TEST_CASE(testEqCurveConfigBadLoad) {
     BOOST_CHECK_NO_THROW(ore::data::XMLUtils::checkNode(badNode, "CurveConfiguration"));
     ore::data::CurveConfigurations cc;    
     BOOST_CHECK_NO_THROW(cc.fromXML(badNode)); // the spot price is missing, but the correct behaviour is to log error and move on
+    // Disable console logging for this test as we expect errors
+    BOOST_LOG_SCOPED_THREAD_ATTR("NoConsole", boost::log::attributes::constant<bool>(true));
     BOOST_CHECK_THROW(cc.equityCurveConfig("SP5Mini"), QuantLib::Error); // this checks that the XML throws when we try to load
 }
 
