@@ -361,14 +361,22 @@
           "TradeType",
           "NettingSet",
           "AssetClass",
-          "HedgingSet"
+          "HedgingSet",
+          "HedgingSubset"
+        ],
+        "optional_keys": [
+          "AgreementType",
+          "CallType",
+          "InitialMarginType",
+          "LegalEntityId"
         ],
         "column_settings": [
           {
             "names": [
               "NPV",
-              "NpvCcy",
-              "SD",
+              "Bucket",
+              "Qualifier",
+              "Currency",
               "delta",
               "d",
               "MF",
@@ -376,13 +384,51 @@
               "S",
               "E",
               "T",
-              "CurrentPrice1",
-              "CurrentPrice2",
+              "SD",
+              "CurrentPrice",
               "NumNominalFlows",
               "Price",
-              "Strike"
+              "Strike",
+              "Volatility"
             ],
             "abs_tol": 0.05,
+            "rel_tol": null
+          }
+        ]
+      },
+      "capital_crif.csv": {
+        "keys": [
+          "TradeID",
+          "PortfolioID",
+          "CounterpartyName",
+          "CounterpartyID",
+          "NettingSetNumber",
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2",
+          "AmountCurrency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": null
+          },
+          {
+            "names": [
+              "ValuationDate",
+              "EndDate",
+              "Label3",
+              "Regulation",
+              "Model",
+              "TradeType"
+            ],
+            "abs_tol": null,
             "rel_tol": null
           }
         ]

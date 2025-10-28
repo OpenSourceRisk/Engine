@@ -498,6 +498,8 @@ void IrModelBuilder::buildSwaptionBasket(const bool enforceFullRebuild) const {
                 swaptionMaturities_.insert(calibrationDiscountCurve_->timeFromReference(matDate));
                 if (refCalDate != referenceCalibrationDates.end())
                     lastRefCalDate = *refCalDate;
+            } else {
+                swaptionIndexInBasket_[j] = Null<Size>();
             }
         }
     }

@@ -17,8 +17,10 @@
 */
 
 #include "toplevelfixture.hpp"
-#include <boost/test/unit_test.hpp>
+
 #include <qle/pricingengines/blackbondoptionengine.hpp>
+#include <qle/pricingengines/discountingriskybondengine.hpp>
+
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/instruments/bonds/fixedratebond.hpp>
@@ -28,11 +30,9 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/schedule.hpp>
-#include <qle/pricingengines/discountingriskybondengine.hpp>
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
-#include <iomanip>
-#include <iostream>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
     // bond market data
     Handle<Quote> rateQuote(QuantLib::ext::make_shared<SimpleQuote>(0.1));
     Handle<Quote> issuerSpreadQuote(QuantLib::ext::make_shared<SimpleQuote>(0.0));
+    Handle<Quote> recRate(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     DayCounter dc = Actual365Fixed();
     Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
     Handle<DefaultProbabilityTermStructure> dpts(QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
@@ -95,8 +96,8 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         yts, dpts, recovery, bondSpecificSpread, 1 * Months));
 
     // pricing engine with lognormal yield vola
-    QuantLib::ext::shared_ptr<PricingEngine> bondOptionEngine(new QuantExt::BlackBondOptionEngine(
-        discountTS, Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS));
+    auto bondOptionEngine = QuantLib::ext::make_shared<BlackBondOptionEngine>(
+        discountTS, Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS);
 
     // build bond option
     Real strikePrice = notional;
@@ -113,6 +114,7 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         new QuantLib::FixedRateBond(settlementDays, faceAmount, schedule, rates, dc, bdc, redemption, issueDate));
     bond->setPricingEngine(bondEngine);
     QuantLib::ext::shared_ptr<QuantExt::BondOption> bondOption(new QuantExt::BondOption(bond, callabilitySchedule));
+    bond->setPricingEngine(bondEngine);
     bondOption->setPricingEngine(bondOptionEngine);
 
     // build tief OTM bond option
@@ -140,19 +142,20 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         std::vector<Rate>(1, 0.0), dc, bdc, redemption, issueDate));
     zerobond->setPricingEngine(bondEngine);
     QuantLib::ext::shared_ptr<QuantExt::BondOption> zeroBondOption(new QuantExt::BondOption(zerobond, callabilitySchedule));
+    zerobond->setPricingEngine(bondEngine);
     zeroBondOption->setPricingEngine(bondOptionEngine);
 
     BOOST_TEST_MESSAGE("normal bond option price = " << bondOption->NPV());
-    BOOST_CHECK_CLOSE(bondOption->NPV(), 36.807084974664072, 0.000001);
+    BOOST_CHECK_CLOSE(bondOption->NPV(), 36.807084974664029, 0.000001);
 
     BOOST_TEST_MESSAGE("tief otm bond option price = " << otmBondOption->NPV());
-    BOOST_CHECK_CLOSE(otmBondOption->NPV(), 3.2657603282632749e-45, 0.000001);
+    BOOST_CHECK_CLOSE(otmBondOption->NPV(), 3.265760328263273e-45, 0.000001);
 
     BOOST_TEST_MESSAGE("tief itm bond option price = " << itmBondOption->NPV());
     BOOST_CHECK_CLOSE(itmBondOption->NPV(), 491.52718033161705, 0.000001);
 
     BOOST_TEST_MESSAGE("zero bond option price = " << zeroBondOption->NPV());
-    BOOST_CHECK_CLOSE(zeroBondOption->NPV(), 0.1581328332651856, 0.000001);
+    BOOST_CHECK_CLOSE(zeroBondOption->NPV(), 0.15813283326518543, 0.000001);
 
     // test put-call parity
     Real putCallStrikePrice = 1000;
