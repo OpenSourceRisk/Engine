@@ -187,7 +187,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 }
             }
 
-            LOG("GenericYieldVolCurve: read " << quotesRead << " vols and " << shiftQuotesRead << " shift quotes");
+            DLOG("GenericYieldVolCurve: read " << quotesRead << " vols and " << shiftQuotesRead << " shift quotes");
 
             // check we have found all requires values
             bool haveAllAtmValues = true;
@@ -284,10 +284,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
             if (config->dimension() == GenericYieldVolatilityCurveConfig::Dimension::ATM) {
                 // Nothing more to do
-                LOG("Returning ATM surface for config " << config->curveID());
+                DLOG("Returning ATM surface for config " << config->curveID());
                 vol_ = atm;
             } else {
-                LOG("Building Cube for config " << config->curveID());
+                DLOG("Building Cube for config " << config->curveID());
                 vector<Period> smileOptionTenors =
                     parseVectorOfValues<Period>(config->smileOptionTenors(), &parsePeriod);
                 vector<Period> smileUnderlyingTenors =
@@ -315,9 +315,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     for (auto& j : i)
                         j = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 
-                LOG("vol cube smile option tenors " << smileOptionTenors.size());
-                LOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
-                LOG("vol cube strike spreads " << spreads.size());
+                DLOG("vol cube smile option tenors " << smileOptionTenors.size());
+                DLOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
+                DLOG("vol cube strike spreads " << spreads.size());
 
                 Size spreadQuotesRead = 0;
                 for (auto& p : config->quotes()) {
@@ -393,7 +393,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                 vol - atm->volatility(smileOptionTenors[i], smileUnderlyingTenors[j], 0.0)));
                     }
                 }
-                LOG("Read " << spreadQuotesRead << " quotes for VolCube.");
+                DLOG("Read " << spreadQuotesRead << " quotes for VolCube.");
 
                 // post processing: extrapolate leftmost non-zero value flat to the left and overwrite
                 // zero values
