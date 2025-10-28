@@ -3364,27 +3364,38 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const std::string& k
 void ScenarioSimMarket::applyCurveAlgebra() {
     LOG("Applying " << parameters_->curveAlgebraData().data().size() << " curve algebra rules...");
     for (auto const& a : parameters_->curveAlgebraData().data()) {
-        DLOG("Applying operation type " << a.operationType());
-        if (a.operationType() == "Spreaded") {
-            std::vector<Handle<YieldTermStructure>> bases;
-            std::vector<double> multiplier;
-            for (auto const& arg : a.arguments()) {
-                auto v = parseListOfValues(arg);
-                bases.push_back(getYieldCurve(v[0]));
-                multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
-                DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier "
-                              << multiplier.back());
-            }
-            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), bases, multiplier);
-        } else {
-            QL_FAIL("curve algebra rule type '" << a.operationType() << "' not recognized. Expected: 'Spreaded'.");
+        DLOG("Processing curve algebra rule for key " << a.key());
+        QL_REQUIRE(a.operationType() == "Spreaded",
+                   "ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(): operation type must be 'Spreaded'.");
+        auto rfKeyTarget = parseRiskFactorKey(a.key()); // just to validate the key
+        switch (rfKeyTarget.keytype) {
+        case RiskFactorKey::KeyType::DiscountCurve:
+        case RiskFactorKey::KeyType::YieldCurve:
+        case RiskFactorKey::KeyType::IndexCurve:
+            applyCurveAlgebraSpreadedYieldCurve(a);
+            break;
+        case RiskFactorKey::KeyType::CommodityCurve:
+            applyCurveAlgebraCommodityPriceCurve(a);
+            break;
+        default:
+            QL_FAIL("ScenarioSimMarket::applyCurveAlgebra(): target key type "
+                    << rfKeyTarget.keytype
+                    << " not supported for curve algebra. Expected: DiscountCurve, YieldCurve or PriceCurve.");
         }
     }
 }
 
-void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
-                                                            const std::vector<Handle<YieldTermStructure>>& bases,
-                                                            const std::vector<double>& multiplier) {
+void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(
+    const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a) {
+    std::vector<Handle<YieldTermStructure>> bases;
+    std::vector<double> multiplier;
+    for (auto const& arg : a.arguments()) {
+        auto v = parseListOfValues(arg);
+        bases.push_back(getYieldCurve(v[0]));
+        multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
+        DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier " << multiplier.back());
+    }
+    auto target = getYieldCurve(a.key());
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
@@ -3395,9 +3406,17 @@ void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTe
     }
 }
 
-void ScenarioSimMarket::applyCurveAlgebraPriceCurve(const Handle<PriceTermStructure>& target,
-                                                    const std::vector<Handle<PriceTermStructure>>& bases,
-                                                    const std::vector<double>& multiplier) {
+void ScenarioSimMarket::applyCurveAlgebraCommodityPriceCurve(
+    const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a) {
+    std::vector<Handle<PriceTermStructure>> bases;
+    std::vector<double> multiplier;
+    for (auto const& arg : a.arguments()) {
+        auto v = parseListOfValues(arg);
+        bases.push_back(commodityIndex(v[0])->priceCurve());
+        multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
+        DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier " << multiplier.back());
+    }
+    auto target = commodityIndex(a.key())->priceCurve();
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<LinearFlat>>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(*target)) {

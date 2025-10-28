@@ -165,13 +165,9 @@ protected:
     QuantLib::Handle<QuantLib::YieldTermStructure> getYieldCurve(const std::string& key) const;
 
     void applyCurveAlgebra();
-    void applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
-                                             const std::vector<Handle<YieldTermStructure>>& bases,
-                                             const std::vector<double>& multiplier);
+    void applyCurveAlgebraSpreadedYieldCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
 
-    void applyCurveAlgebraPriceCurve(const Handle<PriceTermStructure>& target,
-                                     const std::vector<Handle<PriceTermStructure>>& bases,
-                                     const std::vector<double>& multiplier);
+    void applyCurveAlgebraCommodityPriceCurve(const ScenarioSimMarketParameters::CurveAlgebraData::Curve& a);
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
     this ScenarioSimMarket instance.
