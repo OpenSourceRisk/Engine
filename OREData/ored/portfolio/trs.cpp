@@ -31,11 +31,10 @@
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/optional.hpp>
 
-#include <boost/optional/optional_io.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/bimap.hpp>
-#include <boost/optional.hpp>
 #include <boost/range/adaptor/map.hpp>
 
 namespace ore {
@@ -104,8 +103,8 @@ XMLNode* TRS::ReturnData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, n, "PayUnderlyingCashFlowsImmediately", *payUnderlyingCashFlowsImmediately_);
     if (!fxTerms_.empty())
         XMLUtils::addChildren(doc, n, "FXTerms", "FXIndex", fxTerms_);
-    if (fxConversion_) {
-        XMLUtils::addChild(doc, n, "FXConversion", ore::data::to_string(fxConversion_));
+    if (fxConversion_.has_value()) {
+        XMLUtils::addChild(doc, n, "FXConversion", ore::data::to_string(fxConversion_.value()));
     }
     return n;
 }
