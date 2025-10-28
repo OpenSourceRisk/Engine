@@ -98,7 +98,7 @@ public:
     //@{
     const string& counterparty() const { return counterparty_; }
     const string& nettingSetId() const { return nettingSetDetails_.nettingSetId(); }
-    const NettingSetDetails nettingSetDetails() const { return nettingSetDetails_; }
+    const NettingSetDetails& nettingSetDetails() const { return nettingSetDetails_; }
     const set<string>& portfolioIds() const { return portfolioIds_; }
     const map<string, string> additionalFields() const;
     const map<string, QuantLib::ext::any>& fullAdditionalFields() const { return additionalFields_; }

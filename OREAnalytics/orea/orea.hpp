@@ -116,7 +116,9 @@
 #include <orea/engine/pathdata.hpp>
 #include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/riskfilter.hpp>
-#include <orea/engine/saccr.hpp>
+#include <orea/engine/saccrcalculator.hpp>
+#include <orea/engine/saccrcrifgenerator.hpp>
+#include <orea/engine/saccrtradedata.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
 #include <orea/engine/sacvasensitivityrecord.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>

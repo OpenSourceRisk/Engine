@@ -279,6 +279,17 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // maturity_ is set in buildBarrierOptionWrapperInstr()
 }
 
+Real FxTouchOption::strike() const {
+    Real strike = Null<Real>();
+
+    try {
+        strike = barrier().levels().at(0).value();
+    } catch (...) {
+    }
+
+    return strike;
+}
+
 void FxTouchOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fxNode = XMLUtils::getChildNode(node, "FxTouchOptionData");
