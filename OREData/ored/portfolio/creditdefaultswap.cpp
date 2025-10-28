@@ -40,6 +40,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     // set isdaSubProduct to entityType in credit reference data
     additionalData_["isdaSubProduct"] = string("");
     string entity = swap_.referenceInformation() ? swap_.referenceInformation()->id() : swap_.creditCurveId();
+
     QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("Credit", entity)) {
         auto refDatum = refData->getData("Credit", entity);
@@ -53,11 +54,21 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     } else {
         ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
     }
+
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
+
+    auto addFields = env_.additionalFields();
+    auto it = addFields.find("use_cp_trade");
+    if (it != addFields.end() && parseBool(it->second)) {
+        LOG("CDS has use_cp_trade=true, no default curve needed");
+    }else{
+        string cdsDefaultCurveType = market->defaultCurve(entity)->refData().type;
+        additionalData_["cdsDefaultCurveEngine"] = cdsDefaultCurveType == "SpreadCDS" ? std::string("MidPointCdsEngine") : std::string("IsdaCdsEngine");
+    }
 
     auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();

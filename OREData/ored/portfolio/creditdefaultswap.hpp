@@ -40,7 +40,7 @@ public:
 
     //xg! Constructor
     CreditDefaultSwap(const Envelope& env, const CreditDefaultSwapData& swap)
-        : Trade("CreditDefaultSwap", env), swap_(swap) {}
+        : Trade("CreditDefaultSwap", env), env_(env), swap_(swap) {}
 
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
@@ -53,8 +53,8 @@ public:
     const std::map<std::string,boost::any>& additionalData() const override;
 
 private:
+    Envelope env_;
     CreditDefaultSwapData swap_;
-    std::string type_;
 };
 
 } // namespace data
