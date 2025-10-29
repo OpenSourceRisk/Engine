@@ -270,6 +270,26 @@ selected indexes by adding an optional block to the sensitivity configuration as
 \label{lst:par_sensi_excludes_fixings}
 \end{longlisting}
 
+By default, par sensitivity analysis sets small diagonal elements in the par conversion matrix to 0.01 silently to avoid matrix inversion issues. However, it is possible to control this behaviour by adding an optional block to the sensitivity configuration as shown in listing \ref{lst:par_conversion_matrix_regularisation}. The available options are:
+
+\begin{itemize}
+\item {\tt Silent}: Set small diagonal elements to 0.01 without warnings (default behaviour)
+\item {\tt Warning}: Set small diagonal elements to 0.01 but issue structured warnings
+\item {\tt Disable}: Disable regularisation, use original diagonal elements as-is
+\end{itemize}
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+<SensitivityAnalysis>
+
+  <ParConversionMatrixRegularisation>Warning</ParConversionMatrixRegularisation>
+  
+</SensitivityAnalysis>
+\end{minted}
+\caption{Par conversion matrix regularisation}
+\label{lst:par_conversion_matrix_regularisation}
+\end{longlisting}
+
 Using DiscountCurves as an example, the full sensitivity specification including par conversion data is as follows:
 
 \begin{longlisting}

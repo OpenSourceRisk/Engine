@@ -51,17 +51,13 @@ public:
     //@{
     const ore::data::OptionData& option() { return option_; }
     const std::vector<ore::data::LegData>& legData() const { return legData_; }
+    const std::string& name() const { return name_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
-    //@}
-
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return false; }
     //@}
 
 private:

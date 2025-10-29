@@ -74,9 +74,10 @@ public:
                                  "BermudanSwaption_NonStandard", "AmericanSwaption", "AmericanSwaption_NonStandard"}) {}
 
 protected:
-    QuantLib::ext::shared_ptr<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& dates,
-                                           const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                           const bool isAmerican);
+    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const string& id, const string& key,
+                                                       const std::vector<Date>& dates,
+                                                       const std::vector<Date>& maturities,
+                                                       const std::vector<Real>& strikes, const bool isAmerican);
 };
 
 //! Implementation of BermudanAmericanSwaptionEngineBuilder using LGM Grid pricer

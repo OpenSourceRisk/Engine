@@ -39,7 +39,8 @@ public:
                       const QuantLib::ext::shared_ptr<ore::data::EngineData>& ed, const std::string& baseCcy,
                       const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
                       const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-                      const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+                      const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
                       bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
 
     //! Check if the portfolio has risk factors of a given type
@@ -66,7 +67,7 @@ public:
 
     //! Return all of the market objects needed by the portfolio
     std::map<ore::data::MarketObject, std::set<std::string>>
-    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    marketObjects(const QuantLib::ext::optional<std::string> config = QuantLib::ext::nullopt) const;
     std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> allMarketObjects() const {
         return marketObjects_;
     }
@@ -106,7 +107,7 @@ private:
     std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices_;
     std::string baseCcy_;
     QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
-    ore::data::IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     std::string baseCcyDiscountCurve_;
 };
 

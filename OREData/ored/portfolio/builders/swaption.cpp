@@ -63,7 +63,13 @@ QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 }
 } // namespace
 
@@ -86,10 +92,11 @@ EuropeanSwaptionEngineBuilder::engineImpl(const string& id, const string& key, c
     return QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(yts, svts);
 }
 
-QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
-                                                                 const std::vector<Date>& expiries,
-                                                                 const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                                                 const bool isAmerican) {
+QuantLib::ext::shared_ptr<QuantExt::IrModel> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
+                                                                             const std::vector<Date>& expiries,
+                                                                             const std::vector<Date>& maturities,
+                                                                             const std::vector<Real>& strikes,
+                                                                             const bool isAmerican) {
     QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
 
@@ -109,6 +116,8 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
 
     auto floatSpreadMapping = parseFloatSpreadMapping(modelParameter("FloatSpreadMapping", {}, false, "proRata"));
 
@@ -239,22 +248,12 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks,
+        globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
 
-    // In some cases, we do not want to calibrate the model
-    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
-    if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
-        DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
-        model = calib->model();
-    } else {
-        DLOG("Skip calibration of model based on global parameters");
-        calib->freeze();
-        model = calib->model();
-        calib->unfreeze();
-    }
-    modelBuilders_.insert(std::make_pair(id, calib));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
 
-    return model;
+    return calib->model();
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -263,7 +262,7 @@ LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const string& key, co
                                          const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building LGM Grid Bermudan/American Swaption engine for trade " << id);
 
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturities, strikes, isAmerican);
+    auto lgm = QuantLib::ext::dynamic_pointer_cast<LGM>(model(id, key, expiries, maturities, strikes, isAmerican));
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -291,7 +290,7 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
                                        const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building LGM FD Bermudan/American Swaption engine for trade " << id);
 
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturities, strikes, isAmerican);
+    auto lgm = QuantLib::ext::dynamic_pointer_cast<LGM>(model(id, key, expiries, maturities, strikes, isAmerican));
 
     DLOG("Get engine data");
     QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
@@ -321,7 +320,7 @@ LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
                                        const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building MC Bermudan/American Swaption engine for trade " << id);
 
-    auto lgm = model(id, key, expiries, maturities, strikes, isAmerican);
+    auto lgm = QuantLib::ext::dynamic_pointer_cast<LGM>(model(id, key, expiries, maturities, strikes, isAmerican));
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
@@ -372,8 +371,9 @@ AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
     QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
-    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(std::vector<std::string>{ccy}, modelCg_,
-                                                                 simulationDates_);
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
+        std::vector<std::string>{ccy}, modelCg_, simulationDates_,
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data

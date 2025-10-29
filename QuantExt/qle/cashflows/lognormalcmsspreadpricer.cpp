@@ -61,7 +61,7 @@ LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const QuantLib::ext::shared_p
                                                    const Handle<QuantExt::CorrelationTermStructure>& correlation,
                                                    const Handle<YieldTermStructure>& couponDiscountCurve,
                                                    const Size integrationPoints,
-                                                   const boost::optional<VolatilityType> volatilityType,
+                                                   const QuantLib::ext::optional<VolatilityType> volatilityType,
                                                    const Real shift1, const Real shift2)
     : CmsSpreadCouponPricer2(correlation), cmsPricer_(cmsPricer), couponDiscountCurve_(couponDiscountCurve) {
 
@@ -74,7 +74,7 @@ LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(const QuantLib::ext::shared_p
 
     cnd_ = QuantLib::ext::make_shared<CumulativeNormalDistribution>(0.0, 1.0);
 
-    if (volatilityType == boost::none) {
+    if (volatilityType == QuantLib::ext::nullopt) {
         QL_REQUIRE(shift1 == Null<Real>() && shift2 == Null<Real>(),
                    "if volatility type is inherited, no shifts should be "
                    "specified");

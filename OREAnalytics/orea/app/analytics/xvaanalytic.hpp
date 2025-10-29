@@ -25,6 +25,7 @@
 #include <orea/app/analytic.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/sensitivitystoragemanager.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 
 namespace ore {
 namespace analytics {
@@ -32,6 +33,7 @@ namespace analytics {
 class XvaAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA";
+    static constexpr const char* corrLookupKey = "CORRELATION";
 
     explicit XvaAnalyticImpl(
         const QuantLib::ext::shared_ptr<InputParameters>& inputs,
@@ -56,12 +58,13 @@ public:
         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) {
         offsetSimMarketParams_ = offsetSimMarketParams;
     }
+    void buildDependencies() override;
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildScenarioSimMarket();
-    void buildCrossAssetModel(bool continueOnError);
-    void buildScenarioGenerator(bool continueOnError);
+    void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
+    void buildScenarioGenerator(bool continueOnError, bool allowModelFallbacks);
 
     void initCubeDepth();
     void initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);
@@ -75,11 +78,13 @@ protected:
     amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& simDates,
                      const std::vector<Date>& stickyCloseOutDates);
     void buildAmcPortfolio();
-    void amcRun(bool doClassicRun);
+    void amcRun(bool doClassicRun, bool continueOnCalibrationError, bool allowModelFallbacks);
 
     void runPostProcessor();
 
     Matrix creditStateCorrelationMatrix() const;
+    std::string mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF);
+    void feedCorrelationToCAM(const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& corrData = {});
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarketCalibration_;

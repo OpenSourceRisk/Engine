@@ -564,7 +564,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
-        basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint, indexCdsMaturity,
+        basket->setLossModel(cdoEngineBuilder->lossModel(creditCurveIdWithTerm(), recoveryRates, adjDetachPoint, indexCdsMaturity,
                                                          homogeneous, creditCurves, indexSubFamily,
                                                          enforceExpectedRecoveryEqualsMarketRecovery));
 
@@ -573,7 +573,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         auto cdoDetach = QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(
             basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
-            protectionStartDate, parseDate(upfrontDate_), boost::none, Null<Real>(), lastPeriodDayCounter);
+            protectionStartDate, parseDate(upfrontDate_), QuantLib::ext::nullopt, Null<Real>(), lastPeriodDayCounter);
 
         cdoDetach->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
@@ -626,13 +626,13 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint,
             QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
-        basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint, indexCdsMaturity,
+        basket->setLossModel(cdoEngineBuilder->lossModel(creditCurveIdWithTerm(), recoveryRates, adjAttachPoint, indexCdsMaturity,
                                                          homogeneous, creditCurves, indexSubFamily,
                                                          enforceExpectedRecoveryEqualsMarketRecovery));
 
         auto cdoA = QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(
             basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
-            protectionStartDate, parseDate(upfrontDate_), boost::none, fixedRecovery, lastPeriodDayCounter);
+            protectionStartDate, parseDate(upfrontDate_), QuantLib::ext::nullopt, fixedRecovery, lastPeriodDayCounter);
 
         cdoA->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
@@ -659,8 +659,9 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         vector<Real> mults;
         Real upfrontAmount = upfrontFee_ * origTrancheNtl;
         string configuration = cdoEngineBuilder->configuration(MarketContext::pricing);
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         Date lastPremiumDate = addPremiums(insts, mults, 1.0, PremiumData(upfrontAmount, ccy.code(), upfrontDate),
-                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, engineFactory, configuration);
+                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, discountCurve, engineFactory, configuration);
         maturity_ = std::max(maturity_, lastPremiumDate);
         if (maturity_ == lastPremiumDate)
             maturityType_ = "Last Premium Date";

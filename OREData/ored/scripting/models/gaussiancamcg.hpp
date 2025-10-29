@@ -47,7 +47,8 @@ public:
                   const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                   const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
                   const std::set<Date>& simulationDates,
-                  const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                  const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                      QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                   const std::vector<Size>& projectedStateProcessIndices = {},
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
                   const std::vector<Date>& stickyCloseOutDates = {}, const Size timeStepsPerYear = 1);

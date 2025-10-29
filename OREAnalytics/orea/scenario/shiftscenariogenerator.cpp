@@ -309,5 +309,22 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
         }
     }
 }
+
+ShiftScenarioLoaderGenerator::ShiftScenarioLoaderGenerator(
+    const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+    const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const QuantLib::ext::weak_ptr<ScenarioSimMarket>& simMarket)
+    : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), scenarioReader_(scenarioReader) {
+    while (scenarioReader->next()) {
+        auto scenario = scenarioReader->scenario();
+        if (scenario->label() == "BASE") {
+            baseScenario_ = scenario;
+            continue; // skip base scenario, already added
+        }
+        scenarios_.push_back(scenario);
+    }
+}
+
 } // namespace analytics
 } // namespace ore

@@ -85,9 +85,10 @@ void EquityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate =
         addPremiums(additionalInstruments, additionalMultipliers, mult * quantity_, option_.premiumData(), -bsInd, ccy,
-                    engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
+                    discountCurve, engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult*quantity_, additionalInstruments, additionalMultipliers));
@@ -130,6 +131,11 @@ XMLNode* EquityDigitalOption::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
 
     return node;
+}
+
+std::map<AssetClass, std::set<std::string>>
+EquityDigitalOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::EQ, std::set<std::string>({equityName()})}};
 }
 } // namespace data
 } // namespace oreplus

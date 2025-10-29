@@ -38,7 +38,7 @@ public:
     MidPointCdsEngineMultiState(const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves,
                                 const std::vector<Handle<Quote>> recoveryRates,
                                 const Handle<YieldTermStructure>& discountCurve, const Size mainResultState,
-                                const boost::optional<bool> includeSettlementDateFlows = boost::none);
+                                const QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt);
 
     void calculate() const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };

@@ -84,7 +84,9 @@ public:
         //! id of the builder
         const std::string& id = "unknown",
         //! allow changing fallbacks under scenarios in lgm sub builders
-        const bool allowChangingFallbacksUnderScenarios = false);
+        const bool allowChangingFallbacksUnderScenarios = false,
+        //! allow fallback during model build if market objects are missing (e.g. vol surfaces)
+        const bool allowModelFallbacks = false);
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
@@ -155,6 +157,7 @@ private:
     std::string referenceCalibrationGrid_;
     std::string id_;
     bool allowChangingFallbacksUnderScenarios_;
+    bool allowModelFallbacks_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;

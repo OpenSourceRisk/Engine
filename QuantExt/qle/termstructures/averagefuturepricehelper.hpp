@@ -65,9 +65,10 @@ public:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
         QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0,
+        QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
-        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
+        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
+        const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData = QuantLib::ext::nullopt);
 
     /*! \param price             The average price.
         \param index             The commodity index. Used to convey the commodity's name and calendar. The underlying 
@@ -87,6 +88,8 @@ public:
         \param dailyExpiryOffset If set to \c Null<Natural>(), this is ignored. If set to a positive integer, it is
                                  the number of business days on the \c index calendar to offset each daily expiry date
                                  on each pricing date.
+        \param offPeakPowerData  Optional data for off-peak power averaging futures. Contains the Holiday calendar number of offpeak hours on a workday.
+                                 Used for compute the average hourly price from the daily price fixings.
     */
     AverageFuturePriceHelper(QuantLib::Real price,
         const QuantLib::ext::shared_ptr<CommodityIndex>& index,
@@ -95,9 +98,10 @@ public:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
         QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0,
+        QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
-        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
+        QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
+        const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData = QuantLib::ext::nullopt);
     //@}
 
     //! \name PriceHelper interface
@@ -126,9 +130,10 @@ private:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar,
         QuantLib::Natural deliveryDateRoll,
-        QuantLib::Natural futureMonthOffset,
+        QuantLib::Integer futureMonthOffset,
         bool useBusinessDays,
-        QuantLib::Natural dailyExpiryOffset);
+        QuantLib::Natural dailyExpiryOffset,
+        const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData);
 
     QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
     QuantLib::RelinkableHandle<PriceTermStructure> termStructureHandle_;

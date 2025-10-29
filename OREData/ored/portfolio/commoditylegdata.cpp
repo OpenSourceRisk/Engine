@@ -124,13 +124,17 @@ CommodityFixedLegData::CommodityFixedLegData()
 CommodityFixedLegData::CommodityFixedLegData(const vector<Real>& quantities, const vector<string>& quantityDates,
                                              const vector<Real>& prices, const vector<string>& priceDates,
                                              CommodityPayRelativeTo commodityPayRelativeTo, const string& tag)
-    : LegAdditionalData(LegType::CommodityFixed, false), quantities_(quantities), quantityDates_(quantityDates), prices_(prices),
-      priceDates_(priceDates), commodityPayRelativeTo_(commodityPayRelativeTo), tag_(tag) {}
+    : LegAdditionalData(LegType::CommodityFixed, false), quantities_(quantities), quantityDates_(quantityDates),
+      prices_(prices), priceDates_(priceDates), commodityPayRelativeTo_(commodityPayRelativeTo), tag_(tag) {}
 
 void CommodityFixedLegData::setQuantities(const vector<Real>& quantities) {
     // Ensure that the quantityDates_ are cleared also.
     quantities_ = quantities;
     quantityDates_.clear();
+}
+
+void CommodityFixedLegData::setForeignCurrency(const std::string foreignCurrency) {
+    foreignCurrency_ = foreignCurrency;
 }
 
 void CommodityFixedLegData::fromXML(XMLNode* node) {
@@ -177,7 +181,8 @@ CommodityFloatingLegData::CommodityFloatingLegData()
       pricingLag_(0), isAveraged_(false), isInArrears_(true), futureMonthOffset_(0),
       deliveryRollDays_(0), includePeriodEnd_(true), excludePeriodStart_(true),
       hoursPerDay_(Null<Natural>()), useBusinessDays_(true), dailyExpiryOffset_(0),
-      unrealisedQuantity_(false), lastNDays_(Null<Natural>()), fxIndex_(""), avgPricePrecision_(QuantLib::Null<QuantLib::Natural>()) {}
+      unrealisedQuantity_(false), lastNDays_(Null<Natural>()), fxIndex_(std::string()),
+      avgPricePrecision_(QuantLib::Null<QuantLib::Natural>()){}
 
 CommodityFloatingLegData::CommodityFloatingLegData(
     const string& name, CommodityPriceType priceType, const vector<Real>& quantities,
@@ -185,10 +190,9 @@ CommodityFloatingLegData::CommodityFloatingLegData(
     CommodityPayRelativeTo commodityPayRelativeTo, const vector<Real>& spreads, const vector<string>& spreadDates,
     const vector<Real>& gearings, const vector<string>& gearingDates, CommodityPricingDateRule pricingDateRule,
     const string& pricingCalendar, Natural pricingLag, const vector<string>& pricingDates, bool isAveraged,
-    bool isInArrears, Natural futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
-    bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag,
-    Natural dailyExpiryOffset, bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex, 
-    QuantLib::Natural avgPricePrecision)
+    bool isInArrears, Integer futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
+    bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag, Natural dailyExpiryOffset,
+    bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex, QuantLib::Natural avgPricePrecision)
     : LegAdditionalData(LegType::CommodityFloating, false), name_(name), priceType_(priceType), quantities_(quantities),
       quantityDates_(quantityDates), commodityQuantityFrequency_(commodityQuantityFrequency),
       commodityPayRelativeTo_(commodityPayRelativeTo), spreads_(spreads), spreadDates_(spreadDates),
@@ -201,6 +205,8 @@ CommodityFloatingLegData::CommodityFloatingLegData(
       avgPricePrecision_(avgPricePrecision) {
     indices_.insert("COMM-" + name_);
 }
+
+void CommodityFloatingLegData::setForeignCurrency(std::string foreignCurrency) { foreignCurrency_ = foreignCurrency; }
 
 void CommodityFloatingLegData::fromXML(XMLNode* node) {
 
@@ -294,7 +300,8 @@ void CommodityFloatingLegData::fromXML(XMLNode* node) {
         int precision = parseInteger(XMLUtils::getNodeValue(n));
         QL_REQUIRE(precision >= 0, "CommodityFloatingLegData: avgPricePrecision must be non-negative, got " << precision);
         avgPricePrecision_ = static_cast<QuantLib::Natural>(precision);
-    } 
+    }
+
 }
 
 XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {

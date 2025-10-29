@@ -36,6 +36,15 @@
 
 // Boost
 using namespace boost;
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/timer/timer.hpp>
+using boost::timer::cpu_timer;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
@@ -52,3 +61,63 @@ using boost::unit_test::framework::master_test_suite;
 #include <boost/config/auto_link.hpp>
 #endif
 
+class QleGlobalFixture {
+public:
+    QleGlobalFixture() {
+        int argc = master_test_suite().argc;
+        char** argv = master_test_suite().argv;
+        
+        std::string logFile;
+        for (int i = 1; i < argc; ++i) {
+            if (boost::starts_with(argv[i], "--ore_log_file")) {
+                std::vector<std::string> strs;
+                boost::split(strs, argv[i], boost::is_any_of("="));
+                if (strs.size() > 1) {
+                    logFile = strs[1];
+                }
+            }
+        }
+        // Set up test logging
+        if (!logFile.empty()) {
+            auto file_sink = boost::log::add_file_log(boost::log::keywords::file_name = logFile,
+                                                      boost::log::keywords::auto_flush = true);
+            file_sink->set_filter(!boost::log::expressions::has_attr("NoConsole"));
+
+        } else {
+            // explicitly add a console log, we can disable StructuredLogging to console for tests that expected to fail
+            auto console_sink = boost::log::add_console_log(std::clog);
+            console_sink->set_filter(!boost::log::expressions::has_attr("NoConsole"));
+        }
+    }
+
+    ~QleGlobalFixture() { stopTimer(); }
+
+    // Method called in destructor to log time taken
+    void stopTimer() {
+        t.stop();
+        double seconds = t.elapsed().wall * 1e-9;
+        int hours = int(seconds / 3600);
+        seconds -= hours * 3600;
+        int minutes = int(seconds / 60);
+        seconds -= minutes * 60;
+        std::cout << std::endl << "QuantExt tests completed in ";
+        if (hours > 0)
+            std::cout << hours << " h ";
+        if (hours > 0 || minutes > 0)
+            std::cout << minutes << " m ";
+        std::cout << std::fixed << std::setprecision(0) << seconds << " s" << std::endl;
+    }
+
+private:
+    // Timing the test run
+    cpu_timer t;
+};
+
+// Breaking change in 1.65.0
+// https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
+// Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE
+#if BOOST_VERSION < 106500
+BOOST_GLOBAL_FIXTURE(OreaGlobalFixture);
+#else
+BOOST_TEST_GLOBAL_FIXTURE(QleGlobalFixture);
+#endif

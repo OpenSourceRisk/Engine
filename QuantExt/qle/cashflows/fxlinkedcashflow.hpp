@@ -31,6 +31,7 @@
 #include <ql/quote.hpp>
 #include <ql/time/date.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/cashflows/typedcashflow.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -38,10 +39,20 @@ using namespace QuantLib;
 //! Base class for FX Linked cashflows
 class FXLinked {
 public:
-    FXLinked(const Date& fixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex);
+    FXLinked(const Date& fixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex,
+            const Date& fxResetStart = Null<Date>(), Real domesticAmount = Null<Real>());
     virtual ~FXLinked() {}
     Date fxFixingDate() const { return fxFixingDate_; }
-    Real foreignAmount() const { return foreignAmount_; }
+    Real foreignAmount() const {
+        if(fxResetStart_!=Null<Date>()){
+            //We get the fixing in the leg Currency, not the fxReset currency, so we flip the fixing
+            QL_REQUIRE(domesticAmount_!=Null<Real>(), "domesticAmount/Notional Required when fxResetStart Date exist.");
+            auto fxResetFixing = fxIndex_->fixing(fxResetStart_,true);
+            return domesticAmount_*(1/fxResetFixing);
+        }else{
+            return foreignAmount_;     
+        } 
+    }
     const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     Real fxRate() const;
 
@@ -51,6 +62,8 @@ protected:
     Date fxFixingDate_;
     Real foreignAmount_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
+    Date fxResetStart_;
+    Real domesticAmount_;
 };
 
 class AverageFXLinked {
@@ -101,7 +114,7 @@ protected:
 class FXLinkedCashFlow : public CashFlow, public FXLinked {
 public:
     FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
-                     QuantLib::ext::shared_ptr<FxIndex> fxIndex);
+                     QuantLib::ext::shared_ptr<FxIndex> fxIndex, const Date& fxResetStart = Null<Date>(), Real domesticAmount = Null<Real>());
 
     //! \name CashFlow interface
     //@{
@@ -200,6 +213,22 @@ inline void AverageFXLinkedCashFlow::accept(AcyclicVisitor& v) {
     else
         CashFlow::accept(v);
 }
-} // namespace QuantExt
 
+class FXLinkedTypedCashFlow : public QuantExt::FXLinkedCashFlow {
+public:
+    FXLinkedTypedCashFlow(const QuantLib::Date& cashFlowDate, const QuantLib::Date& fixingDate,
+                          QuantLib::Real foreignAmount, QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex,
+                          const QuantExt::TypedCashFlow::Type type = QuantExt::TypedCashFlow::Type::Unspecified)
+        : QuantExt::FXLinkedCashFlow(cashFlowDate, fixingDate, foreignAmount, fxIndex), type_(type) {}
+
+    //! \name Inspectors
+    //@{
+    //! Return the cashflow type
+    QuantExt::TypedCashFlow::Type type() const { return type_; }
+
+private:
+    QuantExt::TypedCashFlow::Type type_;
+};
+
+} // namespace QuantExt
 #endif

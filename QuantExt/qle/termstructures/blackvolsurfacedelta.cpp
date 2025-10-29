@@ -18,7 +18,7 @@
 */
 
 #include <ql/errors.hpp>
-#include <ql/experimental/fx/blackdeltacalculator.hpp>
+#include <ql/pricingengines/blackdeltacalculator.hpp>
 #include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
@@ -66,8 +66,8 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
     const std::vector<Real>& callDeltas, bool hasAtm, const Matrix& blackVolMatrix, const DayCounter& dayCounter,
     const Calendar& cal, const Handle<Quote>& spot, const Handle<YieldTermStructure>& domesticTS,
     const Handle<YieldTermStructure>& foreignTS, DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at,
-    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType, const Period& switchTenor, DeltaVolQuote::DeltaType ltdt,
-    DeltaVolQuote::AtmType ltat, boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType,
+    QuantLib::ext::optional<DeltaVolQuote::DeltaType> atmDeltaType, const Period& switchTenor, DeltaVolQuote::DeltaType ltdt,
+    DeltaVolQuote::AtmType ltat, QuantLib::ext::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType,
     InterpolatedSmileSection::InterpolationMethod im, bool flatStrikeExtrapolation,
     QuantLib::BlackVolTimeExtrapolation timeExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, cal, Following, dayCounter), dates_(dates), times_(dates.size(), 0),

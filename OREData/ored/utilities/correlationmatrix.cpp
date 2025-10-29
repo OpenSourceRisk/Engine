@@ -21,6 +21,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <qle/math/kendallrankcorrelation.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -300,6 +301,40 @@ const map<CorrelationKey, Handle<Quote>>& CorrelationMatrixBuilder::correlations
     return corrs_;
 }
 
+QuantLib::Matrix CorrelationMatrixBuilder::pearsonCorrelation(const QuantLib::Matrix& mCovariance) {
+    //Regular Pearson Correlation
+    QL_REQUIRE(mCovariance.columns()==mCovariance.rows(),"Covariance Matrix must be a squared Matrix");
+    Size n = mCovariance.rows();
+    Matrix mCorrelation(n, n);
+    Array stdDevs(n);
+    for (Size i = 0; i < n; i++) {
+        stdDevs[i] = sqrt(mCovariance[i][i]);
+    }
+    for (Size i = 0; i < n; i++) {
+        for (Size j = 0; j < n; j++) {
+            mCorrelation[i][j] = mCovariance[i][j] / (stdDevs[i] * stdDevs[j]);
+        }
+    }
+    return mCorrelation;
+}
+
+QuantLib::Matrix CorrelationMatrixBuilder::kendallCorrelation(const QuantLib::Matrix& mData) {
+    Size row = mData.rows();
+    Size col = mData.columns();
+    Matrix mCorrelation(row, col);
+    for (int i = 0; i < col; i++) {
+        mCorrelation[i][i] = 1.0;
+        for (int j = 1; j < col; j++) {
+            vector<double> colI, colJ;
+            for (int k = 0; k < row; k++) {
+                colI.push_back(mData[k][i]);
+                colJ.push_back(mData[k][j]);
+            }
+            mCorrelation[i][j] = mCorrelation[j][i] = QuantExt::kendallRankCorrelation(colI.begin(), colI.end(), colJ.begin());
+        }
+    }
+    return mCorrelation;
+}
 
 } // namespace data
 } // namespace ore

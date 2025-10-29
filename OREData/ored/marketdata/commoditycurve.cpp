@@ -56,7 +56,7 @@ using std::map;
 using std::string;
 
 // Explicit template instantiation to avoid "error C2079: ... uses undefined class ..."
-// Explained in the answer to the SO question here: 
+// Explained in the answer to the SO question here:
 // https://stackoverflow.com/a/57666066/1771882
 // Needs to be in global namespace also i.e. not under ore::data
 // https://stackoverflow.com/a/25594741/1771882
@@ -67,6 +67,7 @@ template class QuantExt::PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::Ite
 template class QuantExt::PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
 template class QuantExt::PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
 template class QuantExt::PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::ForwardFlat, QuantExt::IterativeBootstrap>;
 
 namespace {
 
@@ -166,7 +167,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         // Ask for price now so that errors are thrown during the build, not later.
         commodityPriceCurve_->price(asof + 1 * Days);
 
-        
+
         Handle<PriceTermStructure> pts(commodityPriceCurve_);
         commodityIndex_ = parseCommodityIndex(spec_.curveConfigID(), false, pts);
         commodityPriceCurve_->pillarDates();
@@ -204,7 +205,7 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
     bool outright = true;
 
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    
+
     // Overwrite the default conventions if the commodity curve config provides explicit conventions
     if (!config->conventionsId().empty()) {
         QL_REQUIRE(conventions->has(config->conventionsId()),
@@ -245,7 +246,7 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
             expiry = q->expiryDate();
             add(asof, expiry, value, data, outright, pointsFactor);
         } else {
-            if (q->startTenor() == boost::none) {
+            if (!q->startTenor().has_value()) {
                 expiry = cal.advance(spotRelative ? spotDate : asof, q->tenor(), bdc);
                 add(asof, expiry, value, data, outright, pointsFactor);
             } else {
@@ -393,7 +394,7 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
 
     // Construct the commodity index.
     auto baseIndex = parseCommodityIndex(baseConvention->id(), false, basePts);
-    
+
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
@@ -451,7 +452,7 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
 
     LOG("CommodityCurve: start building commodity piecewise curve.");
 
-    // We store the instruments in a map. The key is the instrument's pillar date. The segments are ordered in 
+    // We store the instruments in a map. The key is the instrument's pillar date. The segments are ordered in
     // priority so if we encounter the same pillar date later, we ignore it with a debug log.
     map<Date, QuantLib::ext::shared_ptr<Helper>> mpInstruments;
     const auto& priceSegments = config.priceSegments();
@@ -514,6 +515,10 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
         BS<Crv<BackwardFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
         commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<BackwardFlat>>(asof, instruments,
             dayCounter_, ccy, BackwardFlat(), bs);
+    } else if (interpolationMethod_ == "ForwardFlat") {
+        BS<Crv<ForwardFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<ForwardFlat>>(asof, instruments,
+            dayCounter_, ccy, ForwardFlat(), bs);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }
@@ -530,7 +535,7 @@ CommodityCurve::getQuotes(const Date& asof, const string& /*configId*/, const ve
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
     auto wildcard = getUniqueWildcard(quotes);
-    regexQuotes_ = wildcard != boost::none;
+    regexQuotes_ = wildcard != QuantLib::ext::nullopt;
 
     std::set<QuantLib::ext::shared_ptr<MarketDatum>> data;
     if (wildcard) {
@@ -596,6 +601,7 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
     QuantLib::ext::shared_ptr<CommodityFutureConvention> convention;
     AD ad;
     QuantLib::ext::shared_ptr<CommodityIndex> index;
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> underlyingConvention;
     QuantLib::ext::shared_ptr<FutureExpiryCalculator> uFec;
     if (type == PST::AveragingFuture || type == PST::AveragingSpot || type == PST::AveragingOffPeakPower) {
 
@@ -620,7 +626,7 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
             QL_REQUIRE(uConvention, "Convention " << priceSegment.conventionsId() <<
                 " not of expected type CommodityFutureConvention.");
             uFec = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*uConvention);
-
+            underlyingConvention = uConvention;
             if (ad.dailyExpiryOffset() != Null<Natural>() && ad.dailyExpiryOffset() > 0) {
                 QL_REQUIRE(uConvention->contractFrequency() == Daily, "CommodityCurve: the averaging data has" <<
                     " a positive DailyExpiryOffset (" << ad.dailyExpiryOffset() << ") but the underlying future" <<
@@ -714,9 +720,13 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
                     end, uFec, peakIndex, peakCalendar, peakHoursPerDay);
             } else {
                 TLOG("Building average future price helper from quote, " << quote->name() << ".");
+                QuantLib::ext::optional<std::pair<Calendar, Real>> offPeakPowerData;
+                if (const auto& oppid = underlyingConvention->offPeakPowerIndexData()) {
+                    offPeakPowerData = make_pair(oppid->peakCalendar(), oppid->offPeakHours());
+                }
                 helper = QuantLib::ext::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
                     ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays(),
-                    ad.dailyExpiryOffset());
+                    ad.dailyExpiryOffset(), offPeakPowerData);
             }
 
             // Only add to instruments if an instrument with the same pillar date is not there already.
@@ -766,9 +776,9 @@ void CommodityCurve::addOffPeakPowerInstruments(const Date& asof, const Loader& 
     QL_REQUIRE(opd, "The OffPeakPowerDaily price segment for curve configuration " << configId <<
         " should have an OffPeakDaily section.");
 
-    // Get all the peak and off-peak quotes that we have and store them in a map. The map key is the expiry date and 
-    // the map value is a pair of values the first being the off-peak value for that expiry and the second being the 
-    // peak value for that expiry. We only need the peak portion to form the quote on peakCalendar holidays. We need 
+    // Get all the peak and off-peak quotes that we have and store them in a map. The map key is the expiry date and
+    // the map value is a pair of values the first being the off-peak value for that expiry and the second being the
+    // peak value for that expiry. We only need the peak portion to form the quote on peakCalendar holidays. We need
     // the off-peak portion always.
     map<Date, pair<Real, Real>> quotes;
 

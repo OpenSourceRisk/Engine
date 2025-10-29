@@ -49,7 +49,7 @@ public:
                               const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
                               const std::string& quoteSuffix = "",
                               const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                              const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                              const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
 
     //! \name Inspectors
     //@{
@@ -63,7 +63,7 @@ public:
     const std::string& yieldCurveId() const;
     const std::string& quoteSuffix() const;
     OneDimSolverConfig solverConfig() const;
-    const boost::optional<bool>& preferOutOfTheMoney() const;
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const;
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -86,7 +86,7 @@ private:
     std::string yieldCurveId_;
     std::string quoteSuffix_;
     OneDimSolverConfig solverConfig_;
-    boost::optional<bool> preferOutOfTheMoney_;
+    QuantLib::ext::optional<bool> preferOutOfTheMoney_;
     ReportConfig reportConfig_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.

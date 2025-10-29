@@ -100,6 +100,7 @@ void CommodityOptionStrip::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     auto conLegData = legData_.concreteLegData();
     commLegData_ = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(conLegData);
     QL_REQUIRE(commLegData_, "CommodityOptionStrip leg data should be of type CommodityFloating");
+    QL_REQUIRE(commLegData_->futureMonthOffset() >= 0, "FutureMonthOffset must be positive.");
     if(!commLegData_->fxIndex().empty())
         fxIndex_= commLegData_->fxIndex();
     // Build the commodity floating leg data
@@ -128,7 +129,9 @@ void CommodityOptionStrip::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     legs_.push_back(leg);
     legPayers_.push_back(false);
     legCurrencies_.push_back(npvCurrency_);
+    legCashflowInclusion_[legs_.size() - 1] = Trade::LegCashflowInclusion::Never;
 }
+
 
 std::map<ore::data::AssetClass, std::set<std::string>>
 CommodityOptionStrip::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
@@ -342,8 +345,9 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const QuantLib::ext::shared
 
     // Possibly add a premium to the additional instruments and multipliers
     // We expect here that the fee already has the correct sign
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_, 1.0,
-                                       parseCurrency(legData_.currency()), engineFactory,
+                                       parseCurrency(legData_.currency()), discountCurve, engineFactory,
                                        engineFactory->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
@@ -380,7 +384,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
         vector<string> strExerciseDate = {to_string(exerciseDate)};
 
         // If cash settlement and European, create the OptionPaymentData for the OptionData block below.
-        boost::optional<OptionPaymentData> paymentData = boost::none;
+        QuantLib::ext::optional<OptionPaymentData> paymentData = QuantLib::ext::nullopt;
         if (settlement == "Cash" && style == "European") {
 
             Date paymentDate = cf->date();
@@ -427,7 +431,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
 
             OptionData optionData(to_string(tempDatum.position), tempDatum.type, style, false, strExerciseDate,
                                   settlement, "", PremiumData(), {}, {}, "", "", "", {}, {}, "", "", "", "", "",
-                                  automaticExercise, boost::none, paymentData);
+                                  automaticExercise, QuantLib::ext::nullopt, paymentData);
 
 
             QuantLib::ext::shared_ptr<Trade> commOption;
@@ -466,8 +470,9 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
 
     // Possibly add a premium to the additional instruments and multipliers
     // We expect here that the fee already has the correct sign
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, qlInstMult, premiumData_, 1.0,
-                                       parseCurrency(legData_.currency()), engineFactory,
+                                       parseCurrency(legData_.currency()), discountCurve, engineFactory,
                                        engineFactory->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)

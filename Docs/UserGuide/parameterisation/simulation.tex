@@ -675,6 +675,31 @@ StickyStrike.
 \label{lst:smile_dynamics_configuration}
 \end{listing}
 
+We can specify a CurveAlgebra node as a subnode of Market to link curves in the scenario sim market to other curves
+using predefined operations. Listing \ref{lst:curve_algebra_configuration} shows an example for a spread declaration,
+where the instantaneous forward rate of the EUR discount curve is linked to both EURIBOR-1M and 3M index curves with
+multipliers $1$ and $-2$, respectively.
+
+\begin{listing}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <CurveAlgebra>
+      <Curve>
+        <Key>DiscountCurve/EUR</Key>
+        <Operation>
+          <Type>Spreaded</Type>
+          <Arguments>
+            <Argument>IndexCurve/EUR-EURIBOR-1M,1</Argument>
+            <Argument>IndexCurve/EUR-EURIBOR-3M,-2</Argument>
+          </Arguments>
+        </Operation>
+      </Curve>
+    </CurveAlgebra>
+  \end{minted}
+\caption{CurveAlgebra Node}
+\label{lst:curve_algebra_configuration}
+\end{listing}
+
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}

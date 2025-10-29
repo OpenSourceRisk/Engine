@@ -81,15 +81,18 @@ CapFloorVolCurve::CapFloorVolCurve(
         // The configuration
         const QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig>& config =
             curveConfigs.capFloorVolCurveConfig(spec_.curveConfigID());
-
         if (!config->proxySourceCurveId().empty()) {
             // handle proxy vol surfaces
             buildProxyCurve(*config, sourceIndex, targetIndex, requiredCapFloorVolCurves);
         } else {
-            QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(iborIndex) == nullptr,
-                       "CapFloorVolCurve: BMA/SIFMA index in '"
-                           << spec_.curveConfigID()
-                           << " not allowed  - vol surfaces for SIFMA can only be proxied from Ibor / OIS");
+            if (QuantLib::ext::dynamic_pointer_cast<BMAIndexWrapper>(iborIndex)) {
+                QL_REQUIRE(config->type() == CfgType::OptionletSurface ||
+                               config->type() == CfgType::OptionletSurfaceWithAtm ||
+                               config->type() == CfgType::OptionletAtm,
+                           "CapFloorVolCurve: BMA/SIFMA index in '"
+                               << spec_.curveConfigID()
+                               << "' only allowed with optionlet vol surfaces or poxied from Ibor / OIS");
+            }
 
             // Read the shift early if the configured volatility type is shifted lognormal
             Real shift = 0.0;
@@ -145,7 +148,7 @@ void CapFloorVolCurve::buildProxyCurve(
 
     capletVol_ = QuantLib::ext::make_shared<ProxyOptionletVolatility>(
         Handle<OptionletVolatilityStructure>(sourceVol->second.first->capletVolStructure()), sourceIndex, targetIndex,
-        config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod());
+        config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod(), config.proxyScalingFactor());
 }
 
 void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
@@ -183,7 +186,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                     volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Linear(),
                     QuantExt::IterativeBootstrap<
                         PiecewiseAtmOptionletCurve<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                 tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -195,7 +199,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                     volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, LinearFlat(),
                     QuantExt::IterativeBootstrap<
                         PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                 tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -207,7 +212,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                     volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, BackwardFlat(),
                     QuantExt::IterativeBootstrap<
                         PiecewiseAtmOptionletCurve<BackwardFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Linear>>(
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                 tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -219,7 +225,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                     volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Cubic(),
                     QuantExt::IterativeBootstrap<
                         PiecewiseAtmOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                 tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -231,7 +238,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                     volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, CubicFlat(),
                     QuantExt::IterativeBootstrap<
                         PiecewiseAtmOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                 tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -251,7 +259,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                         volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, CubicFlat(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseAtmOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                        config.rateComputationPeriod(), config.onCapSettlementDays());
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
                     asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                     tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -263,7 +272,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                         volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Cubic(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseAtmOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                        config.rateComputationPeriod(), config.onCapSettlementDays());
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
                     asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                     tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -278,7 +288,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                         LinearFlat(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                        config.rateComputationPeriod(), config.onCapSettlementDays());
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
                     asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                     tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -290,7 +301,8 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                         volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Linear(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseAtmOptionletCurve<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
+                        config.rateComputationPeriod(), config.onCapSettlementDays());
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
                     asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                                     tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
@@ -902,6 +914,9 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         QL_REQUIRE(cfq, "Internal error: could not downcast MarketDatum '" << md->name() << "' to CapFloorQuote");
         QL_REQUIRE(cfq->ccy() == currency,
                    "CapFloorQuote ccy '" << cfq->ccy() << "' <> config ccy '" << currency << "'");
+        if (config.quoteIncludesIndexName())
+            QL_REQUIRE(cfq->indexName() == config.index(),
+                       "CapFloorQuote index '" << cfq->indexName() << "' <> config index '" << config.index() << "'");
         if (cfq->underlying() == tenor) {
             // Surface quotes
             if (!cfq->atm()) {
@@ -981,7 +996,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                     // Store the vols into a map to sort the wildcard tenors
                     atmCapFloorVols[cfq->term()] = cfq->quote()->value();
                 }
-            }   
+            }
         }
     }
     vector<Rate> strikes = parseVectorOfValues<Real>(config.strikes(), &parseReal);
@@ -1003,7 +1018,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                                                                     << config.curveID());
         }
     }
-    std::map<Date, Date> tenorMap; 
+    std::map<Date, Date> tenorMap;
     if (includeAtm) {
         // Check if all tenor for atm quotes exists
         if (!atmWildcardTenor) {
@@ -1293,7 +1308,7 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
         return QuantLib::ext::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(config.settleDays(), config.calendar(),
             config.businessDayConvention(), tenors, strikes, vols,
             config.dayCounter(), config.interpolationMethod());
-    }        
+    }
 }
 
 QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolCurve>

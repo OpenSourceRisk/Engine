@@ -19,11 +19,14 @@
 #ifndef orea_app_i
 #define orea_app_i
 
+%include orea_scenario.i
 %include ored_market.i
 %include ored_reports.i
 %include ored_curveconfigurations.i
 %include ored_referencedatamanager.i
+%include ored_iborfallbackconfig.i
 %include ored_log.i
+%include ored_portfolio.i
 %include std_map.i
 %include std_set.i
 %include tuple.i
@@ -42,6 +45,9 @@ using ore::analytics::MarketDataInMemoryLoader;
 using ore::analytics::MarketCalibrationReport;
 using ore::analytics::DummyMarketDataLoader;
 using ore::analytics::PortfolioAnalyser;
+using ore::analytics::ScenarioSimMarketParameters;
+using ore::analytics::SensitivityScenarioData;
+using ore::analytics::StressTestScenarioData;
 using ore::data::Portfolio;
 using ore::data::MarketImpl;
 using ore::data::PlainInMemoryReport;
@@ -84,9 +90,12 @@ class Parameters {
     //void add(const std::string& groupName, const std::string& paramName, const std::string& paramValue);
 };
 
+%shared_ptr(IborFallbackConfig)
 %shared_ptr(InputParameters)
 class InputParameters {
 public:
+    
+    void setParameter(std::string analytic, std::string parameter, std::string val);
 
     // Getters, to be continued
     const QuantLib::Date& asof();
@@ -95,10 +104,19 @@ public:
     CurveConfigurationsManager& curveConfigs();
     const ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams() const;
     const std::string& marketDataLoaderOutput();
-    const bool scenarioOutputStatistics();
-    const bool scenarioOutputDistributions();
     const ext::shared_ptr<BasicReferenceDataManager>& refDataManager() const;
     const ext::shared_ptr<EngineData>& pricingEngine() const;
+    const ext::shared_ptr<Conventions>& conventions() const;
+    const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig() const;
+    const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const;
+    const ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs();
+    const ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs();
+    const ext::shared_ptr<CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
+        
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& stressSimMarketParams() const;
+    const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressScenarioData() const;
+    const QuantLib::ext::shared_ptr<EngineData>& stressPricingEngine() const;
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& stressSensitivityScenarioData() const;
 
     // and Setters
     void setAsOfDate(const std::string& s); 
@@ -109,21 +127,30 @@ public:
     void setBuildFailedTrades(bool b);
     void setObservationModel(const std::string& s);
     void setImplyTodaysFixings(bool b);
-    void setMarketConfig(const std::string& config, const std::string& context);
+    void setMarketConfig(const std::string& config, const std::string& context); 
+    void setResultsPath(boost::filesystem::path resultsPath);
+    void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);
+    void setBaselTrafficLight(const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight);
+    void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);
+    void setSensitivityScenarioData(
+        const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData);
     void setRefDataManager(const std::string& xml);
     void setRefDataManagerFromFile(const std::string& fileName);
     void setConventions(const std::string& xml);
     void setConventionsFromFile(const std::string& fileName);
+    void setConventions(const ext::shared_ptr<Conventions>& convs);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
-    void setCurveConfigs(const std::string& xml);
-    void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
+    void setCurveConfigs(const std::string& xml, std::string id = std::string());
+    void setCurveConfigs(const ext::shared_ptr<CurveConfigurations>& cc, std::string id = std::string());
+    void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCalendarAdjustment(const std::string& xml);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
     void setCurrencyConfig(const std::string& xml);
     void setCurrencyConfigFromFile(const std::string& fileName);
     void setPricingEngine(const std::string& xml);
     void setPricingEngineFromFile(const std::string& fileName);
+    void setPricingEngine(const ext::shared_ptr<EngineData>& ed);
     void setScriptLibrary(const std::string& xml);
     void setScriptLibraryFromFile(const std::string& fileName);
     void setTodaysMarketParams(const std::string& xml);
@@ -308,8 +335,6 @@ public:
     void setCollateralBalancesFromFile(const std::string& fileName);
     void setCube(const ext::shared_ptr<NPVCube>& file);
     void setMarketCube(const ext::shared_ptr<AggregationScenarioData>& file);
-    void setScenarioOutputStatistics(const bool b);
-    void setScenarioOutputDistributions(const bool b);
 
     const std::map<std::string, std::string>&  marketConfigs() const; 
 };
@@ -422,7 +447,8 @@ public:
                       const ext::shared_ptr<EngineData>& ed, const std::string& baseCcy,
                       const ext::shared_ptr<CurveConfigurations>& curveConfigs = nullptr,
                       const ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                      const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                          ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                       bool recordSecuritySpecificCreditCurves = false, const std::string& baseCcyDiscountCurve = std::string());
 
     bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const;
@@ -431,7 +457,7 @@ public:
     std::set<std::string> riskFactorNames(const RiskFactorKey::KeyType& riskFactorType) const;
     std::set<RiskFactorKey::KeyType> riskFactorTypes() const;
     std::map<MarketObject, std::set<std::string>>
-    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    marketObjects(const QuantLib::ext::optional<std::string> config = QuantLib::ext::nullopt) const;
     std::map<std::string, std::map<MarketObject, std::set<std::string>>> allMarketObjects() const;
     std::set<std::string> swapindices() const;
     void riskFactorReport(Report& reportOut) const;

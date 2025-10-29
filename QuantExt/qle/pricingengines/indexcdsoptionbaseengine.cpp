@@ -105,37 +105,42 @@ void IndexCdsOptionBaseEngine::calculate() const {
     if (generateAdditionalResults_)
         results_.additionalResults = cds.additionalResults();
 
+    // calculate FEP
+
+    const Date& exerciseDate = arguments_.exercise->dates().front();
+    Real dfe = discountTradeCollateral_->discount(exerciseDate);
+
+    realizedFep_ = dfe * arguments_.realisedFep;
+
+    Real ufep = 0.0;
+    for (Size i = 0; i < probabilities_.size(); ++i) {
+        ufep += (1 - recoveries_[i]) * probabilities_[i]->defaultProbability(exerciseDate) * notionals_[i];
+    }
+
+    unrealizedFep_ = ufep * dfe;
+    totalFep_ = realizedFep_ + unrealizedFep_;
+
+    if (generateAdditionalResults_) {
+        results_.additionalResults["unrealisedFEP"] = unrealizedFep_ / dfe;
+        results_.additionalResults["realisedFEP"] = realizedFep_ / dfe;
+        results_.additionalResults["discountedFEP"] = totalFep_;
+        results_.additionalResults["FEP"] = totalFep_ / dfe;
+    }
+
     // call engine-specific calculation
     doCalc();
 }
 
+Real IndexCdsOptionBaseEngine::unrealizedFep() const {
+    return unrealizedFep_;
+}
+
+Real IndexCdsOptionBaseEngine::realizedFep() const {
+    return realizedFep_;
+}
+
 Real IndexCdsOptionBaseEngine::fep() const {
-
-    // Exercise date
-    const Date& exerciseDate = arguments_.exercise->dates().front();
-
-    // Realised FEP
-    results_.additionalResults["realisedFEP"] = arguments_.realisedFep;
-
-    // Unrealised FEP
-    Real fep = 0.0;
-    for (Size i = 0; i < probabilities_.size(); ++i) {
-        fep += (1 - recoveries_[i]) * probabilities_[i]->defaultProbability(exerciseDate) * notionals_[i];
-    }
-    if (generateAdditionalResults_)
-        results_.additionalResults["unrealisedFEP"] = fep;
-
-    // Total FEP
-    fep += arguments_.realisedFep;
-    if(generateAdditionalResults_)
-        results_.additionalResults["FEP"] = fep;
-
-    // Discounted FEP
-    fep *= discountTradeCollateral_->discount(exerciseDate);
-    if (generateAdditionalResults_)
-        results_.additionalResults["discountedFEP"] = fep;
-
-    return fep;
+    return totalFep_;
 }
 
 void IndexCdsOptionBaseEngine::registerWithMarket() {

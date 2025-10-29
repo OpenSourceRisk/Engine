@@ -21,8 +21,10 @@
 
 namespace QuantExt {
 
-FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex)
-    : fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
+FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, QuantLib::ext::shared_ptr<FxIndex> fxIndex,
+                   const Date& fxResetStart, Real domesticAmount)
+    : fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex), fxResetStart_(fxResetStart),
+    domesticAmount_(domesticAmount) {}
 
 AverageFXLinked::AverageFXLinked(const std::vector<Date>& fxFixingDates, Real foreignAmount,
                                  QuantLib::ext::shared_ptr<FxIndex> fxIndex, const bool inverted)
@@ -41,8 +43,9 @@ Real AverageFXLinked::fxRate() const {
 }
 
 FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
-                                   QuantLib::ext::shared_ptr<FxIndex> fxIndex)
-    : FXLinked(fxFixingDate, foreignAmount, fxIndex), cashFlowDate_(cashFlowDate) {
+                                   QuantLib::ext::shared_ptr<FxIndex> fxIndex, const Date& fxResetStart, 
+                                   Real domesticAmount)
+    : FXLinked(fxFixingDate, foreignAmount, fxIndex, fxResetStart, domesticAmount), cashFlowDate_(cashFlowDate) {
     registerWith(FXLinked::fxIndex());
 }
 

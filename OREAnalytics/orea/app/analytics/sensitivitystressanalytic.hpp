@@ -32,7 +32,7 @@ namespace analytics {
 class SensitivityStressAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SENSITIVITY_STRESS";
-    explicit SensitivityStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
+    explicit SensitivityStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
@@ -51,7 +51,7 @@ class SensitivityStressAnalytic : public Analytic {
 public:
     explicit SensitivityStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                                const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
-        const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {})
+        const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {})
         : Analytic(std::make_unique<SensitivityStressAnalyticImpl>(inputs, scenarios), {"SENSITIVITY_STRESS"}, inputs, analyticsManager,
                    true, false, false, false) {}
 };

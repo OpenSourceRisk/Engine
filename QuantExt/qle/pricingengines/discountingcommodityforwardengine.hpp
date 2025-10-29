@@ -49,8 +49,9 @@ public:
         \param npvDate                    Discount to this date. If not given, is set to the evaluation date
     */
     DiscountingCommodityForwardEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                      boost::optional<bool> includeSettlementDateFlows = boost::none,
-                                      const QuantLib::Date& npvDate = QuantLib::Date());
+                                      QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
+                                      const QuantLib::Date& npvDate = QuantLib::Date(),
+                                      const Handle<Quote>& npvFxConversion = {});
     //@}
 
     //! \name PricingEngine interface
@@ -65,8 +66,9 @@ public:
 
 private:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     QuantLib::Date npvDate_;
+    Handle<Quote> npvFxConversion_;
 };
 } // namespace QuantExt
 

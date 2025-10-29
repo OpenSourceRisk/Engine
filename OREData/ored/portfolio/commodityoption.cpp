@@ -42,7 +42,7 @@ CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { trade
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
                                  const string& currency, Real quantity, TradeStrike strike,
-                                 const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
+                                 const QuantLib::ext::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
     : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, quantity, strike),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityOption";
@@ -61,12 +61,7 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = currency_;    
 
-    // Checks
-    QL_REQUIRE((strike_.value() > 0) || close_enough(strike_.value(),0.0), "Commodity option requires a non-negative strike");
-    if (close_enough(strike_.value(), 0.0)) {
-        strike_.setValue(0.0);
-    }
-
+    
     // This is called in VanillaOptionTrade::build(), but we want to call it first here,
     // in case the build fails before it reaches VanillaOptionTrade::build()
     VanillaOptionTrade::setNotionalAndCurrencies();
@@ -146,7 +141,7 @@ void CommodityOption::fromXML(XMLNode* node) {
     strike_.fromXML(commodityNode);
     quantity_ = XMLUtils::getChildValueAsDouble(commodityNode, "Quantity", true);
 
-    isFuturePrice_ = boost::none;
+    isFuturePrice_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityNode, "IsFuturePrice"))
         isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
 

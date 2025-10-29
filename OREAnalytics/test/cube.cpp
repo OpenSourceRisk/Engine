@@ -122,7 +122,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
+    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
 
     // Create a new Cube and load it
     BOOST_TEST_MESSAGE("Loading from file " << filename);
@@ -229,7 +229,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     // get a random filename
     string filename = boost::filesystem::unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
-    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
+    saveCube(filename, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
 
     // Create a new Cube and load it
     auto cube2 = QuantLib::ext::make_shared<T>();

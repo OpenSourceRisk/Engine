@@ -83,6 +83,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }
+    outputType_ = type_;
 }
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
@@ -92,14 +93,14 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
     XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
-    XMLUtils::addChild(doc, node, "Type", to_string(type_));
-    if (type_ == EquityCurveConfig::Type::OptionPremium)
+    XMLUtils::addChild(doc, node, "Type", to_string(outputType_));
+    if (outputType_ == EquityCurveConfig::Type::OptionPremium)
         XMLUtils::addChild(doc, node, "ExerciseStyle", to_string(exerciseStyle_));
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
 
-    if (type_ != Type::NoDividends) {
+    if (outputType_ != Type::NoDividends) {
         XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
         XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
         XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);

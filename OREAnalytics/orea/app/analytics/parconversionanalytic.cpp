@@ -83,7 +83,7 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
             analytic()->market(), configs.simMarketParams, inputs_->marketConfig("pricing"),
             configs.curveConfig ? *configs.curveConfig : ore::data::CurveConfigurations(),
             configs.todaysMarketParams ? *configs.todaysMarketParams : ore::data::TodaysMarketParameters(), true,
-            configs.sensiScenarioData->useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
+            configs.sensiScenarioData->useSpreadedTermStructures(), false, false, inputs_->iborFallbackConfig());
 
         auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
             configs.sensiScenarioData, simMarket->baseScenario(), configs.simMarketParams, simMarket,
@@ -93,6 +93,10 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         simMarket->scenarioGenerator() = scenarioGenerator;
 
         parAnalysis->computeParInstrumentSensitivities(simMarket);
+
+        QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+        analytic()->addReport("PARCONVERSION", "parConversionScenarioParRates", parScenarioRatesReport);
 
         QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
             QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
@@ -179,7 +183,8 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         }
 
         auto ss = QuantLib::ext::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
-        QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        QuantLib::ext::shared_ptr<InMemoryReport> report =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
         analytic()->addReport("PARCONVERSION", "parConversionSensitivity", report);
 

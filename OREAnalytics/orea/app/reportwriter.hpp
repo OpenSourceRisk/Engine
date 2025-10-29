@@ -107,8 +107,12 @@ public:
                                      const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& sensitivityCubes,
                                      QuantLib::Real outputThreshold = 0.0);
 
-    virtual void writeSensitivityReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
-                                        QuantLib::Real outputThreshold = 0.0, QuantLib::Size outputPrecision = 2);
+    virtual void writeSensitivityReport(ore::data::Report& report,
+                                        const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
+                                        QuantLib::Real outputThreshold = 0.0,
+                                        const QuantLib::ext::shared_ptr<ore::data::Market>& market = nullptr,
+                                        const std::string& configuration = Market::defaultConfiguration,
+                                        QuantLib::Size outputPrecision = 2);
 
     virtual void writeXvaSensitivityReport(
         Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ssTrades,
@@ -218,10 +222,11 @@ public:
                                             
     virtual void writePnlReport(ore::data::Report& report,
 	    const ext::shared_ptr<InMemoryReport>& t0NpvReport,
-	    const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
-        const ext::shared_ptr<InMemoryReport>& t1NpvLaggedReport,
-        const ext::shared_ptr<InMemoryReport>& t1Npvt0PortReport,
-	    const ext::shared_ptr<InMemoryReport>& t1NpvReport,
+	    const ext::shared_ptr<InMemoryReport>& t0m0p0NpvReport,
+        const ext::shared_ptr<InMemoryReport>& t1m0p0NpvReport,
+        const ext::shared_ptr<InMemoryReport>& t1m1p0NpvReport,
+        const ext::shared_ptr<InMemoryReport>& t1m0p1NpvReport,
+        const ext::shared_ptr<InMemoryReport>& t1m1p1NpvReport,
 	    const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,			
 	    const Date& startDate, const Date& endDate,
 	    const std::string& baseCurrency,
@@ -240,6 +245,12 @@ public:
     virtual void writeCvaSensiReport(const std::vector<CvaSensitivityRecord>& records, ore::data::Report& reportOut);
 
     virtual void writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis, ore::data::Report& reportOut);
+
+    void writeSaccrTradeDetailReport(ore::data::Report& report,
+                                     const QuantLib::ext::shared_ptr<ore::analytics::SaccrTradeData>& tradeData) const;
+
+    void writeCapitalCrifReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
+                                const std::string& baseCurrency, const char& csvQuoteChar = '\0') const;
 
 protected:
     std::string nullString_;

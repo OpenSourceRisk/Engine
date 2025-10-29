@@ -216,7 +216,8 @@ class TodaysMarket : public MarketImpl {
                  const bool lazyBuild = false,
                  const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                  const bool preserveQuoteLinkage = false,
-                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+                 const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                     QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 };
 
 #endif

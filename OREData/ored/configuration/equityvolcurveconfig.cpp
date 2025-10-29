@@ -31,7 +31,7 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
     const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& equityId, 
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig, 
-    const boost::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       equityId_(equityId), dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
       preferOutOfTheMoney_(preferOutOfTheMoney) {
@@ -42,7 +42,7 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
     const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig, const string& equityId,
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig,
-    const boost::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
     : EquityVolatilityCurveConfig(curveID, curveDescription, currency,
         std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>{volatilityConfig}, equityId, dayCounter, 
         calendar, solverConfig, preferOutOfTheMoney) {}
@@ -113,7 +113,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         solverConfig_.fromXML(n);
     }
 
-    preferOutOfTheMoney_ = boost::none;
+    preferOutOfTheMoney_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
     }

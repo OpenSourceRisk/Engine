@@ -58,18 +58,19 @@ public:
         const Handle<YieldTermStructure>& flatDiscountCurve, const Handle<YieldTermStructure>& spreadDiscountCurve,
         const bool flatIndexGiven, const bool spreadIndexGiven, const bool flatDiscountCurveGiven,
         const bool spreadDiscountCurveGiven, bool eom = false, bool flatIsDomestic = true,
-        boost::optional<QuantLib::Period> flatTenor = boost::none,
-        boost::optional<QuantLib::Period> spreadTenor = boost::none, Real spreadOnFlatLeg = 0.0, Real flatGearing = 1.0,
+        QuantLib::ext::optional<QuantLib::Period> flatTenor = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<QuantLib::Period> spreadTenor = QuantLib::ext::nullopt, Real spreadOnFlatLeg = 0.0, Real flatGearing = 1.0,
         Real spreadGearing = 1.0, const Calendar& flatCalendar = Calendar(),
         const Calendar& spreadCalendar = Calendar(),
         const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
         const std::vector<Calendar>& spotFXSettleCalendar = std::vector<Calendar>(), Size paymentLag = 0,
-        Size flatPaymentLag = 0, boost::optional<bool> includeSpread = boost::none,
-        boost::optional<Period> lookback = boost::none, boost::optional<Size> fixingDays = boost::none,
-        boost::optional<Size> rateCutoff = boost::none, boost::optional<bool> isAveraged = boost::none,
-        boost::optional<bool> flatIncludeSpread = boost::none, boost::optional<Period> flatLookback = boost::none,
-        boost::optional<Size> flatFixingDays = boost::none, boost::optional<Size> flatRateCutoff = boost::none,
-        boost::optional<bool> flatIsAveraged = boost::none, const bool telescopicValueDates = false);
+        Size flatPaymentLag = 0, QuantLib::ext::optional<bool> includeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> lookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> fixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> rateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> flatIncludeSpread = QuantLib::ext::nullopt, QuantLib::ext::optional<Period> flatLookback = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> flatFixingDays = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> flatRateCutoff = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> flatIsAveraged = QuantLib::ext::nullopt, const bool telescopicValueDates = false,
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -115,16 +116,16 @@ protected:
     Size paymentLag_;
     Size flatPaymentLag_;
     // OIS only
-    boost::optional<bool> includeSpread_;
-    boost::optional<QuantLib::Period> lookback_;
-    boost::optional<QuantLib::Size> fixingDays_;
-    boost::optional<Size> rateCutoff_;
-    boost::optional<bool> isAveraged_;
-    boost::optional<bool> flatIncludeSpread_;
-    boost::optional<QuantLib::Period> flatLookback_;
-    boost::optional<QuantLib::Size> flatFixingDays_;
-    boost::optional<Size> flatRateCutoff_;
-    boost::optional<bool> flatIsAveraged_;
+    QuantLib::ext::optional<bool> includeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> lookback_;
+    QuantLib::ext::optional<QuantLib::Size> fixingDays_;
+    QuantLib::ext::optional<Size> rateCutoff_;
+    QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> flatIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> flatLookback_;
+    QuantLib::ext::optional<QuantLib::Size> flatFixingDays_;
+    QuantLib::ext::optional<Size> flatRateCutoff_;
+    QuantLib::ext::optional<bool> flatIsAveraged_;
 
     Currency flatLegCurrency_;
     Currency spreadLegCurrency_;
@@ -135,6 +136,7 @@ protected:
     RelinkableHandle<YieldTermStructure> spreadDiscountRLH_;
 
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 };
 } // namespace QuantExt
 

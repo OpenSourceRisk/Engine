@@ -36,12 +36,9 @@ class AmcCgCurrencySwapEngine : public QuantExt::CurrencySwap::engine, public Am
 public:
     AmcCgCurrencySwapEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                             const std::vector<Date>& simulationDates)
-        : AmcCgBaseEngine(modelCg, simulationDates), ccys_(ccys) {
+        : AmcCgBaseEngine(modelCg, simulationDates, false), ccys_(ccys) {
         registerWith(modelCg);
     }
-
-    void buildComputationGraph(const bool stickyCloseOutDateRun,
-                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
     void calculate() const override;
 
 private:

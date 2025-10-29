@@ -113,7 +113,7 @@ RiskParticipationAgreementXCcyBlackEngineBuilder::engineImpl(const std::string& 
         parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
 }
 
-QuantLib::ext::shared_ptr<QuantExt::LGM>
+QuantLib::ext::shared_ptr<QuantExt::IrModel>
 RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const string& key,
                                                       const std::vector<Date>& expiries, const Date& maturity,
                                                       const std::vector<Real>& strikes) {
@@ -135,6 +135,8 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
     auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
+    bool allowModelFallbacks =
+        globalParameters_.count("AllowModelFallbacks") > 0 && parseBool(globalParameters_.at("AllowModelFallbacks"));
 
     auto data = QuantLib::ext::make_shared<IrLgmData>();
 
@@ -224,26 +226,15 @@ RiskParticipationAgreementLGMGridEngineBuilder::model(const string& id, const st
     bool allowChangingFallbacks =
         rt != globalParameters_.end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
 
-
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
-        allowChangingFallbacks);
+        allowChangingFallbacks, allowModelFallbacks,
+        globalParameters_.count("Calibrate") != 0 && !parseBool(globalParameters_.at("Calibrate")));
 
-    // In some cases, we do not want to calibrate the model
-    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
-    if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
-        DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
-        model = calib->model();
-    } else {
-        DLOG("Skip calibration of model based on global parameters");
-        calib->freeze();
-        model = calib->model();
-        calib->unfreeze();
-    }
-    modelBuilders_.insert(std::make_pair(id, calib));
+    engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
 
-    return model;
+    return calib->model();
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
@@ -323,7 +314,7 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
 
     // build model + engine
     DLOG("Building LGM Grid RPA engine for trade " << id);
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm =
+    QuantLib::ext::shared_ptr<QuantExt::IrModel> lgm =
         model(id, index == nullptr ? rpa->npvCurrency() : IndexNameTranslator::instance().oreName(index->name()),
               expiries, calibrationMaturity, strikes);
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
@@ -331,8 +322,9 @@ RiskParticipationAgreementSwapLGMGridEngineBuilder::engineImpl(const std::string
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
     Handle<Quote> recoveryRate = market_->recoveryRate(rpa->creditCurveId(), configuration(MarketContext::pricing));
     return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngine>(
-        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, creditCurve, recoveryRate,
-        maxGapDays, maxDiscretisationPoints,
+        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa),
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(lgm), sy, ny, sx, nx, creditCurve, recoveryRate, maxGapDays,
+        maxDiscretisationPoints,
         parseRpaOptionExpiryPosition(engineParameter("OptionExpiryPosition", {}, false, "Mid")));
 }
 
@@ -386,7 +378,8 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     // build model + engine
 
     DLOG("Building LGM Grid RPA engine (tlock) for trade " << id);
-    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, rpa->npvCurrency(), expiries, calibrationMaturity, strikes);
+    QuantLib::ext::shared_ptr<QuantExt::IrModel> lgm =
+        model(id, rpa->npvCurrency(), expiries, calibrationMaturity, strikes);
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     Handle<DefaultProbabilityTermStructure> creditCurve =
         market_->defaultCurve(rpa->creditCurveId(), configuration(MarketContext::pricing))->curve();
@@ -403,7 +396,8 @@ RiskParticipationAgreementTLockLGMGridEngineBuilder::engineImpl(const std::strin
     }
 
     return QuantLib::ext::make_shared<NumericLgmRiskParticipationAgreementEngineTLock>(
-        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa), lgm, sy, ny, sx, nx, treasuryCurve, creditCurve,
+        rpa->npvCurrency(), getDiscountCurves(rpa), getFxSpots(rpa),
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::LGM>(lgm), sy, ny, sx, nx, treasuryCurve, creditCurve,
         recoveryRate, timeStepsPerYear);
 }
 

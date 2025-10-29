@@ -77,6 +77,8 @@ void AnalyticEuropeanEngineDeltaGamma::calculate() const {
         vegaRaw[exerciseDate] = singleVega;
         std::vector<Real> resVega = detail::rebucketDeltas(bucketTimesVega_, vegaRaw, referenceDate, dc, true);
         results_.additionalResults["vega"] = resVega;
+        results_.additionalResults["singleVega"] = singleVega;
+        results_.additionalResults["exerciseDate"] = exerciseDate;
         std::map<Date, Real> deltaRateRaw, deltaDividendRaw;
         Real tmp = dividendDiscount * w * cnd(w * d1);
         npvr = t * (-npv + spot * tmp);

@@ -42,7 +42,8 @@ public:
     DependencyMarket(
         const std::string& baseCcy, bool useFxDominance = true,
         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<ore::data::IborFallbackConfig>(ore::data::IborFallbackConfig::defaultConfig()),
         const bool recordSecuritySpecificCreditCurves = false)
         : ore::data::Market(true), baseCcy_(baseCcy), useFxDominance_(useFxDominance), curveConfigs_(curveConfigs),
           iborFallbackConfig_(iborFallbackConfig),
@@ -74,7 +75,6 @@ public:
                                                                         const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CreditCurve> defaultCurve(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::Quote> recoveryRate(const std::string&, const std::string&) const override;
-    virtual QuantLib::Handle<QuantLib::Quote> conversionFactor(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CreditVolCurve> cdsVol(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::BaseCorrelationTermStructure> baseCorrelation(const std::string&,
                                                                                      const std::string&) const override;
@@ -99,6 +99,9 @@ public:
                                                                                const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::EquityIndex2> equityCurve(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::Quote> securitySpread(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::Quote> conversionFactor(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::Quote> securityPrice(const std::string&, const std::string&) const override;
+
     virtual QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const std::string&,
                                                                                const std::string&) const override;
     QuantLib::Handle<QuantExt::CommodityIndex> commodityIndex(const std::string&, const std::string&) const override;
@@ -138,7 +141,7 @@ private:
     // needed in Index to determine fixings
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     // The ibor fallback config
-    ore::data::IborFallbackConfig iborFallbackConfig_;
+    const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     // Whether to record security specific credit curve names or normalize them to the original credit curve id
     bool recordSecuritySpecificCreditCurves_;
     //! \name helper functions

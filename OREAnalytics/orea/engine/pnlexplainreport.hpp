@@ -25,6 +25,7 @@ class PnlExplainReport : public MarketRiskReport {
 public:
 
     struct PnlExplainResults {
+        std::string riskFactor = "";
         QuantLib::Real pnl = 0.0;
         QuantLib::Real delta = 0.0;
         QuantLib::Real gamma = 0.0;
@@ -50,15 +51,16 @@ public:
     };
 
     PnlExplainReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                     const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
+                     const std::string& portfolioFilter, QuantLib::ext::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<Report>& pnlReport = nullptr,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                      std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
                      std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
                      std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr,
-                     const bool requireTradePnl = false)
+                     const bool requireTradePnl = false,
+                     const bool requireRiskFactorPnl = false)
         : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs), std::move(fullRevalArgs), 
-            std::move(multiThreadArgs), true, requireTradePnl), pnlReport_(pnlReport) {
+            std::move(multiThreadArgs), true, requireTradePnl, requireRiskFactorPnl), pnlReport_(pnlReport) {
         sensiBased_ = true;
     }
 

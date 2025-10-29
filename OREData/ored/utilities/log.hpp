@@ -63,7 +63,7 @@
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
 
@@ -647,14 +647,14 @@ public:
     void log() const;
     //! create JSON-like output from the data
     const std::string json() const { return jsonify(data_); }
-    void set(const std::string& key, const boost::any& value) { data_[key] = value; }
+    void set(const std::string& key, const QuantLib::ext::any& value) { data_[key] = value; }
     virtual void emitLog() const = 0;
 
 protected:
     //! generate Boost log record - this method is called by log()
-    static std::string jsonify(const boost::any&);
+    static std::string jsonify(const QuantLib::ext::any&);
 
-    std::map<std::string, boost::any> data_;
+    std::map<std::string, QuantLib::ext::any> data_;
     mutable bool logged_ = false;
 };
 
@@ -685,7 +685,7 @@ class StructuredMessage : public JSONMessage {
 public:
     enum class Category { Error, Warning, Unknown };
 
-    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Input, Unknown };
+    enum class Group { Analytics, Configuration, Model, Curve, Convention, Trade, Fixing, Logging, ReferenceData, Input, Unknown };
 
     StructuredMessage(const Category& category, const Group& group, const std::string& message,
                       const std::map<std::string, std::string>& subFields = std::map<std::string, std::string>());
@@ -720,7 +720,7 @@ public:
 
 class EventMessage : public JSONMessage {
 public:
-    EventMessage(const std::string& msg, const std::string& msgKey, const std::map<std::string, boost::any> data = {}) {
+    EventMessage(const std::string& msg, const std::string& msgKey, const std::map<std::string, QuantLib::ext::any> data = {}) {
         data_ = data;
         data_[msgKey] = msg;
     }

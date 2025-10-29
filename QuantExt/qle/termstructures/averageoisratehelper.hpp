@@ -49,7 +49,8 @@ public:
                          const Period& onTenor, const Handle<Quote>& onSpread, Natural rateCutoff,
                          // Exogenous discount curve
                          const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                         const bool discountCurveGiven = false, const bool telescopicValueDates = false);
+                         const bool discountCurveGiven = false, const bool telescopicValueDates = false,
+                         const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
 
     //! \name RateHelper interface
     //@{
@@ -89,6 +90,7 @@ protected:
     bool discountCurveGiven_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
     bool telescopicValueDates_;
+    QuantLib::Pillar::Choice pillarChoice_;
 };
 
 } // namespace QuantExt

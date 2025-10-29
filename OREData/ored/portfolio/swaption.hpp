@@ -57,8 +57,7 @@ public:
     //@}
 
     QuantLib::Real notional() const override;
-    const std::map<std::string, boost::any>& additionalData() const override;
-    bool hasCashflows() const override { return false; }
+    const std::map<std::string, QuantLib::ext::any>& additionalData() const override;
 
     bool isExercised() const;
 

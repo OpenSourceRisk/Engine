@@ -34,7 +34,7 @@ OffPeakPowerIndex::OffPeakPowerIndex(const string& underlyingName,
     Real offPeakHours,
     const Calendar& peakCalendar,
     const Handle<PriceTermStructure>& priceCurve)
-    : CommodityFuturesIndex(underlyingName, expiryDate, NullCalendar(), true, priceCurve),
+    : CommodityFuturesIndex(underlyingName, expiryDate, NullCalendar(), true, priceCurve, QuantLib::Date()),
       offPeakIndex_(offPeakIndex), peakIndex_(peakIndex), offPeakHours_(offPeakHours),
       peakCalendar_(peakCalendar) {
     string msgPrefix = "Constructing " + underlyingName + ": ";
@@ -66,7 +66,8 @@ const Calendar& OffPeakPowerIndex::peakCalendar() const {
 }
 
 QuantLib::ext::shared_ptr<CommodityIndex> OffPeakPowerIndex::clone(const Date& expiry,
-    const boost::optional<Handle<PriceTermStructure>>& ts) const {
+    const Date& optionExpiry,
+    const QuantLib::ext::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     auto offPeakIndex = QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(offPeakIndex_->clone(ed));

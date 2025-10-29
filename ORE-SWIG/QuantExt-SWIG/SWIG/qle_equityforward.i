@@ -55,7 +55,7 @@ class DiscountingEquityForwardEngine : public PricingEngine {
   public:
     DiscountingEquityForwardEngine(const QuantLib::Handle<QuantExt::EquityIndex2>& equityIndex,
                                    const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                   boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                   QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                    const QuantLib::Date& settlementDate = QuantLib::Date(),
                                    const QuantLib::Date& npvDate = QuantLib::Date());
     void calculate();

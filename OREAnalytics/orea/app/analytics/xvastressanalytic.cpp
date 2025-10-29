@@ -75,8 +75,8 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
 }
 
 XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                             const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs), stressScenarios_(scenarios.get_value_or(inputs->xvaStressScenarioData())) {
+                                             const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
+    : Analytic::Impl(inputs), stressScenarios_(scenarios.value_or(inputs->xvaStressScenarioData())) {
     setLabel(LABEL);
 }
 
@@ -118,12 +118,17 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_;
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
+            QuantLib::ext::shared_ptr<InMemoryReport> parScenarioReport =
+                QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ParStressTestConverter converter(
                 inputs_->asof(), analytic()->configurations().todaysMarketParams,
                 analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                 analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
-            scenarioData = converter.convertStressScenarioData(scenarioData);
+            scenarioData = converter.convertStressScenarioData(scenarioData, parScenarioReport);
             analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
+            if (parScenarioReport->rows() > 0) {
+                analytic()->addReport(label(), "stress_scenario_par_rates", parScenarioReport);
+            }
         } catch (const std::exception& e) {
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
@@ -134,7 +139,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
         inputs_->continueOnError(), scenarioData->useSpreadedTermStructures(), false, false,
-        *inputs_->iborFallbackConfig(), true);
+        inputs_->iborFallbackConfig(), true);
 
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);

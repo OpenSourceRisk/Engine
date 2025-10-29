@@ -61,7 +61,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const QuantLib::Period& rateComputationPeriod, const Size onCapSettlementDays, const string& discountCurve,
     const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
     const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig,
-    const string& inputType, const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
+    const string& inputType, const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
@@ -87,11 +87,12 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const std::string& curveID, const std::string& curveDescription, const std::string& proxySourceCurveId,
     const std::string& proxySourceIndex, const std::string& proxyTargetIndex,
-    const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod)
+    const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod,
+    double proxyScalingFactor)
     : CurveConfig(curveID, curveDescription), proxySourceCurveId_(proxySourceCurveId),
       proxySourceIndex_(proxySourceIndex), proxyTargetIndex_(proxyTargetIndex),
       proxySourceRateComputationPeriod_(proxySourceRateComputationPeriod),
-      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod) {}
+      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod), proxyScalingFactor_(proxyScalingFactor) {}
 
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
@@ -117,6 +118,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         proxyTargetRateComputationPeriod_ = rateComputationPeriod_ =
             parsePeriod(XMLUtils::getChildValue(target, "RateComputationPeriod", false, "0D"));
         onCapSettlementDays_ = parseInteger(XMLUtils::getChildValue(target, "ONCapSettlementDays", false, "0"));
+
+        proxyScalingFactor_ = XMLUtils::getChildValueAsDouble(p, "ScalingFactor", false, 1.0);
 
     } else {
         // read in quote-based config
@@ -276,6 +279,8 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
             XMLUtils::addChild(doc, source, "RateComputationPeriod", proxySourceRateComputationPeriod_);
         if (proxyTargetRateComputationPeriod_ != 0 * Days)
             XMLUtils::addChild(doc, target, "RateComputationPeriod", proxyTargetRateComputationPeriod_);
+        if (proxyScalingFactor_ != 1.0)
+            XMLUtils::addChild(doc, proxy, "ScalingFactor", proxyScalingFactor_);
     } else {
         // write out quote based config
         XMLUtils::addChild(doc, node, "VolatilityType", toString(volatilityType_));
@@ -372,7 +377,7 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     MarketDatum::QuoteType qType = quoteType();
     string stem = "CAPFLOOR/" + to_string(qType) + "/" + ccy + "/";
     if(quoteIncludesIndexName())
-	stem += index() + "/";
+	    stem += index() + "/";
 
     // Cap floor matrix quotes. So, ATM flag is false i.e. 0 and RELATIVE flag is false also as strikes are absolute.
     for (const string& t : tenors_) {
@@ -382,7 +387,8 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     }
 
     // ATM quotes. So, ATM flag is true i.e. 1 and RELATIVE flag is true with strike set to 0.
-    if (type_ == Type::TermAtm || type_ == Type::TermSurfaceWithAtm) {
+    if (type_ == Type::TermAtm || type_ == Type::TermSurfaceWithAtm || type_ == Type::OptionletAtm ||
+        type_ == Type::OptionletSurfaceWithAtm) {
         for (const string& t : atmTenors_) {
             quotes_.push_back(stem + t + "/" + tenor + "/1/1/0");
         }

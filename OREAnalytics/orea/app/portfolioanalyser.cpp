@@ -32,14 +32,14 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
                                      const QuantLib::ext::shared_ptr<EngineData>& ed, const string& baseCcy,
                                      const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                                     const IborFallbackConfig& iborFallbackConfig,
+                                     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                      bool recordSecuritySpecificCreditCurves, const std::string& baseCcyDiscountCurve)
     : portfolio_(p), baseCcy_(baseCcy), curveConfigs_(curveConfigs), iborFallbackConfig_(iborFallbackConfig),
       baseCcyDiscountCurve_(baseCcyDiscountCurve) {
 
     QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
 
-    underlyingIndices_ = portfolio_->underlyingIndices();
+    underlyingIndices_ = portfolio_->underlyingIndices(referenceData);
 
     // Build Dependency Market
     market_ = QuantLib::ext::make_shared<DependencyMarket>(baseCcy, true, curveConfigs, iborFallbackConfig,
@@ -115,7 +115,7 @@ void PortfolioAnalyser::addDependencies() {
 }
 
 std::map<ore::data::MarketObject, std::set<std::string>>
-PortfolioAnalyser::marketObjects(const boost::optional<std::string> config) const {
+PortfolioAnalyser::marketObjects(const QuantLib::ext::optional<std::string> config) const {
     if (config)
         return marketObjects_[*config];
     std::map<ore::data::MarketObject, std::set<std::string>> result;

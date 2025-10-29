@@ -84,6 +84,7 @@ public:
         MonotonicLogMixedLinearCubic,
         KrugerLogMixedLinearCubic,
         LogMixedLinearCubicNaturalSpline,
+        BackwardFlat,       // backward-flat interpolation
         ExponentialSplines, // fitted bond curves only
         NelsonSiegel,       // fitted bond curves only
         Svensson            // fitted bond curves only
@@ -110,7 +111,8 @@ public:
         //! optional pointer to reference data, needed to build fitted bond curves
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! ibor fallback config
-        const IborFallbackConfig& iborfallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
         const bool preserveQuoteLinkage = false,
         //! build calibration info
@@ -142,6 +144,7 @@ private:
     std::vector<vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>> curveSegments_;
     std::vector<InterpolationVariable> interpolationVariable_;
     std::vector<InterpolationMethod> interpolationMethod_;
+    std::vector<bool> excludeT0FromInterpolation_;
 
     const Loader& loader_; // only used in ctor
     std::vector<RelinkableHandle<YieldTermStructure>> h_;
@@ -154,7 +157,7 @@ private:
     void buildZeroCurve(const std::size_t index);
     void buildZeroSpreadedCurve(const std::size_t index);
     //! Build a yield curve that uses QuantExt::DiscountRatioModifiedCurve
-    void buildDiscountRatioCurve(const std::size_t index);
+    void buildDiscountRatioCurve(const std::size_t index, const CurveConfigurations& curveConfigs);
     //! Build a yield curve that uses QuantLib::FittedBondCurve
     void buildFittedBondCurve(const std::size_t index);
     //! Build a yield curve that uses QuantExt::WeightedYieldTermStructure
@@ -174,7 +177,7 @@ private:
     map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
     const QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
     const bool preserveQuoteLinkage_;
     bool buildCalibrationInfo_;
     const Market* market_;
@@ -228,6 +231,9 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
 //! Helper function for parsing interpolation variable
 YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const string& s);
 
+//! Output operator for interpolation variable
+std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationVariable v);
+
 //! Output operator for interpolation method
 std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMethod m);
 
@@ -241,18 +247,21 @@ buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates, 
 QuantLib::ext::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
                                                         const DayCounter& dayCounter,
                                                         YieldCurve::InterpolationMethod interpolationMethod,
-                                                        Size n = 0);
+                                                        Size n = 0, bool excludeT0 = false,
+                                                        const Date& referenceDate = Date());
 
 //! Create a Interpolated Discount Curve and apply interpolators
 QuantLib::ext::shared_ptr<YieldTermStructure>
 discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs, const DayCounter& dayCounter,
-              YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
+              YieldCurve::InterpolationMethod interpolationMethod, Size n = 0, bool excludeT0 = false,
+              const Date& referenceDate = Date());
 
 //! Create a Interpolated Forward Curve and apply interpolators
 QuantLib::ext::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
                                                            const DayCounter& dayCounter,
                                                            YieldCurve::InterpolationMethod interpolationMethod,
-                                                           Size n = 0);
+                                                           Size n = 0, bool excludeT0 = false,
+                                                           const Date& referenceDate = Date());
 
 } // namespace data
 } // namespace ore

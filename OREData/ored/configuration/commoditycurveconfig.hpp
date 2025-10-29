@@ -25,7 +25,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
-#include <boost/optional/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -68,8 +68,8 @@ public:
     PriceSegment(const std::string& type,
         const std::string& conventionsId,
         const std::vector<std::string>& quotes,
-        const boost::optional<unsigned short>& priority = boost::none,
-        const boost::optional<OffPeakDaily>& offPeakDaily = boost::none,
+        const QuantLib::ext::optional<unsigned short>& priority = QuantLib::ext::nullopt,
+        const QuantLib::ext::optional<OffPeakDaily>& offPeakDaily = QuantLib::ext::nullopt,
         const std::string& peakPriceCurveId = "",
         const std::string& peakPriceCalendar = "");
     //@}
@@ -79,8 +79,8 @@ public:
     Type type() const;
     const std::string& conventionsId() const;
     const std::vector<std::string>& quotes() const;
-    const boost::optional<unsigned short>& priority() const;
-    const boost::optional<OffPeakDaily>& offPeakDaily() const;
+    const QuantLib::ext::optional<unsigned short>& priority() const;
+    const QuantLib::ext::optional<OffPeakDaily>& offPeakDaily() const;
     const std::string& peakPriceCurveId() const;
     const std::string& peakPriceCalendar() const;
     bool empty() const;
@@ -99,8 +99,8 @@ private:
     std::string strType_;
     std::string conventionsId_;
     std::vector<std::string> quotes_;
-    boost::optional<unsigned short> priority_;
-    boost::optional<OffPeakDaily> offPeakDaily_;
+    QuantLib::ext::optional<unsigned short> priority_;
+    QuantLib::ext::optional<OffPeakDaily> offPeakDaily_;
     std::string peakPriceCurveId_;
     std::string peakPriceCalendar_;
 
@@ -151,7 +151,7 @@ public:
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
                          const std::vector<PriceSegment>& priceSegments, const std::string& dayCountId = "A365",
                          const std::string& interpolationMethod = "Linear", bool extrapolation = true,
-                         const boost::optional<BootstrapConfig>& bootstrapConfig = boost::none);
+                         const QuantLib::ext::optional<BootstrapConfig>& bootstrapConfig = QuantLib::ext::nullopt);
     //@}
 
     //! \name Serialisation
@@ -179,7 +179,7 @@ public:
     bool averageBase() const { return averageBase_; }
     bool priceAsHistFixing() const { return priceAsHistFixing_; }
     const std::map<unsigned short, PriceSegment>& priceSegments() const { return priceSegments_; }
-    const boost::optional<BootstrapConfig>& bootstrapConfig() const { return bootstrapConfig_; }
+    const QuantLib::ext::optional<BootstrapConfig>& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
 
     //! \name Setters
@@ -233,7 +233,7 @@ private:
         configuration.
     */
     std::map<unsigned short, PriceSegment> priceSegments_;
-    boost::optional<BootstrapConfig> bootstrapConfig_;
+    QuantLib::ext::optional<BootstrapConfig> bootstrapConfig_;
 };
 
 } // namespace data
