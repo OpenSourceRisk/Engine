@@ -68,7 +68,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         additionalData_["cdsDefaultCurveEngine"] = "";
     }else{
         string cdsDefaultCurveType = market->defaultCurve(entity)->refData().type;
-        additionalData_["cdsDefaultCurveEngine"] = cdsDefaultCurveType == "SpreadCDS" ? std::string("MidPointCdsEngine") : std::string("IsdaCdsEngine");
+        additionalData_["cdsDefaultCurveEngine"] = cdsDefaultCurveType == "ConvSpreadCDS" ? std::string("IsdaCdsEngine") : std::string("MidPointCdsEngine");
     }
 
     auto legData = swap_.leg(); // copy
