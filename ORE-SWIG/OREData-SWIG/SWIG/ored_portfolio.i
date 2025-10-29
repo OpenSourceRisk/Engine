@@ -64,14 +64,14 @@ public:
     const std::map<std::string, std::string>& engineParameters(const std:: string& productName) const;
     const std::map<std::string, std::string>& globalParameters() const;
     std::vector<std::string> products() const;
-    std::string& model(const std::string& productName);
-    std::map<std::string, std::string>& modelParameters(const std::string& productName);
-    std::string& engine(const std::string& productName);
-    std::map<std::string, std::string>& engineParameters(const std::string& productName);
-    std::map<std::string, std::string>& globalParameters();
+    void setModel(const std::string& productName, const std::string& model) { model_[productName] = model; }
+    void setModelParameters(const std::string& productName, const std::map<std::string, std::string>& params) { modelParams_[productName] = params; }
+    void setEngine(const std::string& productName, const std::string& engine) { engine_[productName] = engine; }
+    void setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params) { engineParams_[productName] = params; }
+    void setGlobalParameter(const std::string& name, const std::string& param) { globalParams_[name] = param; }
     void clear();
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 %shared_ptr(LegBuilder)

@@ -198,7 +198,7 @@ public:
     void setSensiScenarioDataFromFile(const std::string& fileName);
     void setSensiPricingEngine(const std::string& xml);    
     void setSensiPricingEngineFromFile(const std::string& fileName);
-    void setSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData);
+    void setSensiPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for scenario
     void setScenarioSimMarketParams(const std::string& xml);
     void setScenarioSimMarketParamsFromFile(const std::string& fileName);
@@ -208,6 +208,7 @@ public:
     void setStressSimMarketParams(const std::string& xml); 
     void setStressScenarioData(const std::string& xml); 
     void setStressPricingEngine(const std::string& xml); 
+    void setStressPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for VaR
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b);

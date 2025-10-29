@@ -21,6 +21,7 @@
 
 %include indexes.i
 %include inflation.i
+%include ored_xmlutils.i
 
 %{
 // put c++ declarations here
@@ -52,6 +53,7 @@ using ore::data::FxOptionConvention;
 using ore::data::FxOptionTimeWeightingConvention;
 using ore::data::ZeroInflationIndexConvention;
 using ore::data::BondYieldConvention;
+using ore::data::XMLSerializable;
 
 using QuantLib::DayCounter;
 using QuantLib::Calendar;
@@ -68,20 +70,23 @@ using QuantExt::FutureExpiryCalculator;
 %}
 
 %shared_ptr(Conventions)
-class Conventions {
+class Conventions  : public XMLSerializable {
   public:
     Conventions();
     ext::shared_ptr<Convention> get(const std::string& id) const;
+    std::pair<bool, ext::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
+    std::set<ext::shared_ptr<Convention>> get(const Convention::Type& type) const;
+    ext::shared_ptr<Convention> getFxConvention(const std::string& ccy1, const std::string& ccy2) const;
+    bool has(const std::string& id) const;
+    bool has(const std::string& id, const Convention::Type& type) const;
     void clear();
     void add(const ext::shared_ptr<Convention>& convention);
-    void fromXMLString(const std::string& xmlString);
-    void fromFile(const std::string& xmlFileName);
-    std::string toXMLString() const;
-    void toFile(const std::string& filename) const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 %shared_ptr(Convention)
-class Convention {
+class Convention : public XMLSerializable {
   public:
     enum class Type {
         Zero,
@@ -104,8 +109,6 @@ class Convention {
     };
     const std::string& id() const;
     Convention::Type type() const;
-    void fromXMLString(const std::string& xmlString);
-    std::string toXMLString();
 
     %extend {
       static const Convention::Type Zero = Convention::Type::Zero;
@@ -149,6 +152,9 @@ class ZeroRateConvention : public Convention {
     BusinessDayConvention rollConvention() const;
     bool eom();
     bool tenorBased();
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<ZeroRateConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::ZeroRateConvention>(baseInput);
@@ -171,6 +177,9 @@ class DepositConvention : public Convention {
     const DayCounter& dayCounter() const;
     const Size settlementDays() const;
     bool indexBased();
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<DepositConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::DepositConvention>(baseInput);
@@ -184,6 +193,9 @@ class FutureConvention : public Convention {
     FutureConvention();
     FutureConvention(const std::string& id, const std::string& index);
     const ext::shared_ptr<IborIndex> index() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<FutureConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FutureConvention>(baseInput);
@@ -197,6 +209,9 @@ class FraConvention : public Convention {
     FraConvention();
     FraConvention(const std::string& id,const std::string& index);
     const ext::shared_ptr<IborIndex> index() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<FraConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FraConvention>(baseInput);
@@ -223,6 +238,9 @@ class OisConvention : public Convention {
     BusinessDayConvention fixedConvention() const;
     BusinessDayConvention fixedPaymentConvention() const;
     DateGeneration::Rule rule() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<OisConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::OisConvention>(baseInput);
@@ -242,7 +260,9 @@ class IborIndexConvention : public Convention {
     const QuantLib::Size settlementDays() const;
     const std::string& businessDayConvention() const;
     const bool endOfMonth() const;
-
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<IborIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::IborIndexConvention>(baseInput);
@@ -260,7 +280,9 @@ class OvernightIndexConvention : public Convention {
     const std::string& fixingCalendar() const;
     const std::string& dayCounter() const;
     const QuantLib::Size settlementDays() const;
-
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<OvernightIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::OvernightIndexConvention>(baseInput);
@@ -274,6 +296,9 @@ class SwapIndexConvention : public Convention {
     SwapIndexConvention();
     SwapIndexConvention(const std::string& id,const std::string& conventions);
     const std::string& conventions() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<SwapIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::SwapIndexConvention>(baseInput);
@@ -298,6 +323,9 @@ class IRSwapConvention : public Convention {
     bool hasSubPeriod() const;
     Frequency floatFrequency() const;
     QuantExt::SubPeriodsCoupon1::Type subPeriodsCouponType() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<IRSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::IRSwapConvention>(baseInput);
@@ -324,6 +352,9 @@ class AverageOisConvention : public Convention {
     const ext::shared_ptr<OvernightIndex> index() const;
     const Period& onTenor() const;
     Natural rateCutoff() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<AverageOisConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::AverageOisConvention>(baseInput);
@@ -347,6 +378,9 @@ class TenorBasisSwapConvention : public Convention {
     bool spreadOnRec() const;
     bool includeSpread() const;
     QuantExt::SubPeriodsCoupon1::Type subPeriodsCouponType() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<TenorBasisSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::TenorBasisSwapConvention>(baseInput);
@@ -374,6 +408,9 @@ class TenorBasisTwoSwapConvention : public Convention {
     const DayCounter& shortFixedDayCounter() const;
     const ext::shared_ptr<IborIndex> shortIndex() const;
     bool longMinusShort() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<TenorBasisTwoSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::TenorBasisTwoSwapConvention>(baseInput);
@@ -391,6 +428,9 @@ class BMABasisSwapConvention : public Convention {
     const ext::shared_ptr<BMAIndexWrapper> bmaIndex() const;
     const std::string& indexName() const;
     const std::string& bmaIndexName() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<BMABasisSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::BMABasisSwapConvention>(baseInput);
@@ -412,6 +452,9 @@ class FXConvention : public Convention {
     Real pointsFactor() const;
     const Calendar& advanceCalendar() const;
     bool spotRelative() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<FXConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::FXConvention>(baseInput);
@@ -435,6 +478,9 @@ class CrossCcyBasisSwapConvention : public Convention {
     const std::string& flatIndexName() const;
     const std::string& spreadIndexName() const;
     bool eom() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<CrossCcyBasisSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CrossCcyBasisSwapConvention>(baseInput);
@@ -460,6 +506,9 @@ class CrossCcyFixFloatSwapConvention : public Convention {
     const DayCounter& fixedDayCounter() const;
     const ext::shared_ptr<IborIndex> index() const;
     bool eom() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<CrossCcyFixFloatSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CrossCcyFixFloatSwapConvention>(baseInput);
@@ -484,6 +533,9 @@ class CdsConvention : public Convention {
     const DayCounter& dayCounter() const;
     bool settlesAccrual() const;
     bool paysAtDefaultTime() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<CdsConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CdsConvention>(baseInput);
@@ -510,6 +562,9 @@ class InflationSwapConvention : public Convention {
     bool adjustInfObsDates() const;
     const Calendar& infCalendar() const;
     BusinessDayConvention infConvention() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<InflationSwapConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::InflationSwapConvention>(baseInput);
@@ -534,6 +589,9 @@ class SecuritySpreadConvention : public Convention {
     const Calendar& spotCalendar() const;
     BusinessDayConvention rollConvention() const;
     bool eom();
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<SecuritySpreadConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::SecuritySpreadConvention>(baseInput);
@@ -556,6 +614,9 @@ class CmsSpreadOptionConvention : public Convention {
     const QuantLib::Calendar& calendar() const;
     const QuantLib::DayCounter& dayCounter() const;
     QuantLib::BusinessDayConvention rollConvention() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<CmsSpreadOptionConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CmsSpreadOptionConvention>(baseInput);
@@ -578,6 +639,9 @@ class CommodityForwardConvention : public Convention {
     bool spotRelative() const;
     QuantLib::BusinessDayConvention bdc() const;
     bool outright() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
     %extend {
       static const ext::shared_ptr<CommodityForwardConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
           return ext::dynamic_pointer_cast<ore::data::CommodityForwardConvention>(baseInput);
@@ -868,6 +932,9 @@ class FxOptionConvention : public Convention {
     const QuantLib::DeltaVolQuote::DeltaType& longTermDeltaType() const;
     const QuantLib::Option::Type& riskReversalInFavorOf() const;
     const bool butterflyIsBrokerStyle() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
 
     %extend {
       static const ext::shared_ptr<FxOptionConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
@@ -898,6 +965,9 @@ class FxOptionTimeWeightingConvention : public Convention {
     const std::vector<double>& weekdayWeights() const;
     const std::vector<TradingCenter>& tradingCenters() const;
     const std::vector<Event>& events() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
 
     %extend {
       static const ext::shared_ptr<FxOptionTimeWeightingConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
@@ -923,6 +993,9 @@ class ZeroInflationIndexConvention : public Convention {
     QuantLib::Frequency frequency() const;
     const QuantLib::Period& availabilityLag() const;
     const QuantLib::Currency& currency() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
 
     %extend {
       static const ext::shared_ptr<ZeroInflationIndexConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
@@ -952,6 +1025,9 @@ class BondYieldConvention : public Convention {
     QuantLib::Real accuracy() const;
     QuantLib::Size maxEvaluations() const;
     QuantLib::Real guess() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void build() override;
 
     %extend {
       static const ext::shared_ptr<BondYieldConvention> getFullView(ext::shared_ptr<Convention> baseInput) {
