@@ -285,7 +285,7 @@ CPILeg& CPILeg::withPaymentCalendar(const Calendar& cal) {
     return *this;
 }
 
-CPILeg& CPILeg::withPaymentLag(Natural lag) {
+CPILeg& CPILeg::withPaymentLag(Integer lag) {
     paymentLag_ = lag;
     return *this;
 }

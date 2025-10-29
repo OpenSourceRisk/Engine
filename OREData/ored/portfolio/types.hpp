@@ -29,18 +29,18 @@
 namespace ore {
 namespace data {
 
-typedef boost::variant<QuantLib::Period, QuantLib::Natural> PaymentLag;
+typedef boost::variant<QuantLib::Period, QuantLib::Integer> PaymentLag;
 
 struct PaymentLagPeriod : public boost::static_visitor<QuantLib::Period> {
 public:
-    QuantLib::Period operator()(const QuantLib::Natural& n) const { return Period(n, Days); }
+    QuantLib::Period operator()(const QuantLib::Integer& n) const { return Period(n, Days); }
     QuantLib::Period operator()(const QuantLib::Period& p) const { return p; }
 };
 
-struct PaymentLagInteger : public boost::static_visitor<QuantLib::Natural> {
+struct PaymentLagInteger : public boost::static_visitor<QuantLib::Integer> {
 public:
-    QuantLib::Natural operator()(const QuantLib::Natural& n) const { return n; }
-    QuantLib::Natural operator()(const QuantLib::Period& p) const { return static_cast<QuantLib::Natural>(days(p)); }
+    QuantLib::Integer operator()(const QuantLib::Integer& n) const { return n; }
+    QuantLib::Integer operator()(const QuantLib::Period& p) const { return static_cast<QuantLib::Integer>(days(p)); }
 };
 
 } // namespace data
