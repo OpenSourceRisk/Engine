@@ -64,7 +64,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     auto addFields = env_.additionalFields();
     auto it = addFields.find("use_cp_trade");
     if (it != addFields.end() && parseBool(it->second)) {
-        LOG("CDS has use_cp_trade=true, no default curve needed");
+        additionalData_["cdsDefaultCurveEngine"] = "";
     }else{
         string cdsDefaultCurveType = market->defaultCurve(entity)->refData().type;
         additionalData_["cdsDefaultCurveEngine"] = cdsDefaultCurveType == "SpreadCDS" ? std::string("MidPointCdsEngine") : std::string("IsdaCdsEngine");
