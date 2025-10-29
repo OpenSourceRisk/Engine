@@ -55,7 +55,7 @@ namespace analytics {
 
 namespace {
 
-boost::any getAdditionalResult(const std::map<std::string, boost::any>& addResults, const std::string& name,
+QuantLib::ext::any getAdditionalResult(const std::map<std::string, QuantLib::ext::any>& addResults, const std::string& name,
                                const Size index) {
     /* CompositeInstrument convention to store component results  */
     if (auto g = addResults.find(std::to_string(index) + "_" + name); g != addResults.end())
@@ -64,7 +64,7 @@ boost::any getAdditionalResult(const std::map<std::string, boost::any>& addResul
     std::string altName = name == "multiplier" ? "__multiplier" : name;
     if (auto g = addResults.find(altName + "_" + std::to_string(index - 1)); g != addResults.end())
         return g->second;
-    return boost::any();
+    return QuantLib::ext::any();
 }
 
 Real fx(const std::vector<std::vector<std::vector<Real>>>& fxBuffer, const Size ccyIndex, const Size timeIndex,
@@ -436,9 +436,9 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     std::vector<Real> multipliers;
                     while (true) {
                         auto v = getAdditionalResult(addResults, "multiplier", multipliers.size() + 1);
-                        if (v.empty())
+                        if (!v.has_value())
                             break;
-                        multipliers.push_back(boost::any_cast<Real>(v));
+                        multipliers.push_back(QuantLib::ext::any_cast<Real>(v));
                     }
                     std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalcs;
                     if (amcIndividualTrainingInput) {
@@ -469,15 +469,15 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     }
                     for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
                         auto v = getAdditionalResult(addResults, "amcCalculator", cmpIdx + 1);
-                        if (!v.empty()) {
-                            amcCalcs.push_back(boost::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v));
+                        if (v.has_value()) {
+                            amcCalcs.push_back(QuantLib::ext::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v));
                             if (amcIndividualTrainingOutput) {
                                 LOG("Serialising AMC calculator for trade " << cmpIdx + 1 << " of composite trade "
                                                                             << trade.first);
                                 string component_filename = filename + "_" + to_string(cmpIdx);
                                 std::ofstream os(component_filename, std::ios::binary);
                                 boost::archive::binary_oarchive oa(os, boost::archive::no_header);
-                                auto tmp = boost::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v);
+                                auto tmp = QuantLib::ext::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v);
                                 auto amcCalc = QuantLib::ext::dynamic_pointer_cast<
                                     McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(tmp);
                                 oa << amcCalc;

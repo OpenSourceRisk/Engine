@@ -124,13 +124,13 @@ Real CommodityIndex::forecastFixing(const Date& fixingDate) const {
 }
 
 QuantLib::ext::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate, const Date& optionExpiry,
-                                                            const boost::optional<Handle<PriceTermStructure>>& ts) const {
+                                                            const QuantLib::ext::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     return QuantLib::ext::make_shared<CommoditySpotIndex>(underlyingName(), fixingCalendar(), pts);
 }
 
 QuantLib::ext::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expiry, const Date& optionExpiry,
-                                                               const boost::optional<Handle<PriceTermStructure>>& ts) const {
+                                                               const QuantLib::ext::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     const auto& oed = optionExpiry == Date() ? optionExpiryDate() : optionExpiry;

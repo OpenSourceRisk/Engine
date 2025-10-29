@@ -34,7 +34,7 @@ BalanceGuaranteedSwap::BalanceGuaranteedSwap(
     const std::vector<Real>& fixedRate, const DayCounter& fixedDayCount, const Schedule& floatingSchedule,
     const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, const std::vector<Real>& gearing, const std::vector<Real>& spread,
     const std::vector<Real>& cappedRate, const std::vector<Real>& flooredRate, const DayCounter& floatingDayCount,
-    boost::optional<BusinessDayConvention> paymentConvention)
+    QuantLib::ext::optional<BusinessDayConvention> paymentConvention)
     : Swap(2), type_(type), trancheNominals_(trancheNominals), nominalSchedule_(nominalSchedule),
       referencedTranche_(referencedTranche), fixedSchedule_(fixedSchedule), fixedRate_(fixedRate),
       fixedDayCount_(fixedDayCount), floatingSchedule_(floatingSchedule), iborIndex_(iborIndex), gearing_(gearing),

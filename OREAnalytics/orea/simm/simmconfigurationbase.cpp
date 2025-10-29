@@ -105,8 +105,8 @@ vector<string> SimmConfigurationBase::labels2(const RiskType& rt) const {
     return lookup(rt, mapLabels_2_);
 }
 
-QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional<string> qualifier,
-                                             boost::optional<std::string> label_1, const std::string&) const {
+QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, QuantLib::ext::optional<string> qualifier,
+                                             QuantLib::ext::optional<std::string> label_1, const std::string&) const {
 
     QL_REQUIRE(isValidRiskType(rt),
                "The risk type " << rt << " is not valid for SIMM configuration with name" << name_);
@@ -146,8 +146,8 @@ QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional
     }
 
     // If we get to here, we have failed to get a risk weight
-    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier << ","
-                                                                                  << label_1 << ")");
+    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier.value_or("") << ","
+                                                                                  << label_1.value_or("") << ")");
 }
 
 QuantLib::Real SimmConfigurationBase::curvatureWeight(const RiskType& rt, const std::string& label_1) const {
@@ -174,8 +174,8 @@ Real SimmConfigurationBase::historicalVolatilityRatio(const RiskType& rt) const 
     }
 }
 
-Real SimmConfigurationBase::sigma(const RiskType& rt, boost::optional<std::string> qualifier,
-                                  boost::optional<std::string> label_1, const std::string& calculationCurrency) const {
+Real SimmConfigurationBase::sigma(const RiskType& rt, QuantLib::ext::optional<std::string> qualifier,
+                                  QuantLib::ext::optional<std::string> label_1, const std::string& calculationCurrency) const {
 
     Real sigmaMultiplier = SimmConfigurationBase::sigmaMultiplier();
 

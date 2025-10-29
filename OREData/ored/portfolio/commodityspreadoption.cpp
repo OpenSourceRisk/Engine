@@ -113,9 +113,9 @@ QuantLib::ext::shared_ptr<OptionPaymentDateAdjuster>
 makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData, const std::vector<Date>& expiryDates) {
 
     if (optionData.optionStrip().has_value()) {
-        return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().get());
+        return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().value());
     } else if (optionData.optionData().paymentData().has_value()) {
-        return QuantLib::ext::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().get());
+        return QuantLib::ext::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().value());
     } else {
         return QuantLib::ext::make_shared<OptionPaymentDateAdjuster>();
     }
@@ -261,7 +261,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     }
 
     if (optionData_.paymentData().has_value()) {
-        paymentDates = optionData_.paymentData().get().dates();
+        paymentDates = optionData_.paymentData().value().dates();
         QL_REQUIRE(
             paymentDates.size() == legs_[0].size(),
             "Commodityspread option: if explicit payment dates are given, a exercise for each option is required. Got "

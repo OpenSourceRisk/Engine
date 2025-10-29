@@ -219,7 +219,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             if (it != results_.additionalResults.end()) {
                 string resPricing = res + "_pricing";
                 results_.additionalResults[resPricing] = it->second;
-                it->second = 1. / boost::any_cast<Real>(it->second);
+                it->second = 1. / QuantLib::ext::any_cast<Real>(it->second);
             }
         }
 
@@ -229,9 +229,9 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         Real divDiscount = Null<Real>();
 
         if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
-            rfDiscount = boost::any_cast<Real>(tmp->second);
+            rfDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
         if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
-            divDiscount = boost::any_cast<Real>(tmp->second);
+            divDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
 
         results_.additionalResults["riskFreeDiscount"] = divDiscount;
         results_.additionalResults["dividendDiscount"] = rfDiscount;

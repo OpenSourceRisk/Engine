@@ -28,7 +28,7 @@
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/referencedata.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -47,8 +47,8 @@ public:
                    const std::string& paymentConvention, const std::string& paymentCalendar,
                    const std::vector<std::string>& paymentDates, const Real initialPrice,
                    const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
-                   const boost::optional<bool> payUnderlyingCashFlowsImmediately,
-                   const boost::optional<FXConversion> fxConversion)
+                   const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
+                   const QuantLib::ext::optional<FXConversion> fxConversion)
             : payer_(payer), currency_(currency), scheduleData_(scheduleData), observationLag_(observationLag),
               observationCalendar_(observationCalendar), paymentLag_(paymentLag), paymentConvention_(paymentConvention),
               paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), initialPrice_(initialPrice),
@@ -68,8 +68,8 @@ public:
         Real initialPrice() const { return initialPrice_; }
         const std::string& initialPriceCurrency() const { return initialPriceCurrency_; }
         const std::vector<std::string>& fxTerms() const { return fxTerms_; }
-        boost::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
-        boost::optional<FXConversion> fxConversionAtPeriodEnd() const { return fxConversion_; }
+        QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
+        QuantLib::ext::optional<FXConversion> fxConversionAtPeriodEnd() const { return fxConversion_; }
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
         FXConversion parseFXConversion(string fxConv_);
@@ -84,8 +84,8 @@ public:
         Real initialPrice_;
         std::string initialPriceCurrency_;
         std::vector<std::string> fxTerms_; // FX index strings
-        boost::optional<bool> payUnderlyingCashFlowsImmediately_;
-        boost::optional<FXConversion> fxConversion_;
+        QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately_;
+        QuantLib::ext::optional<FXConversion> fxConversion_;
     };
 
     class FundingData : public XMLSerializable {

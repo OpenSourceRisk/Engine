@@ -26,8 +26,7 @@
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-#include <boost/any.hpp>
-#include <boost/none.hpp>
+#include <ql/any.hpp>
 #include <ql/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 
@@ -102,12 +101,12 @@ public:
     const NettingSetDetails& nettingSetDetails() const { return nettingSetDetails_; }
     const set<string>& portfolioIds() const { return portfolioIds_; }
     const map<string, string> additionalFields() const;
-    const map<string, boost::any>& fullAdditionalFields() const { return additionalFields_; }
+    const map<string, QuantLib::ext::any>& fullAdditionalFields() const { return additionalFields_; }
     string additionalField(const std::string& name, const bool mandatory = true,
                            const std::string& defaultValue = std::string()) const;
-    boost::any additionalAnyField(const std::string& name, const bool mandatory = true,
-                                  const boost::any& defaultValue = boost::none) const;
-    void setAdditionalField(const std::string& key, const boost::any& value);
+    QuantLib::ext::any additionalAnyField(const std::string& name, const bool mandatory = true,
+                                  const QuantLib::ext::any& defaultValue = QuantLib::ext::nullopt) const;
+    void setAdditionalField(const std::string& key, const QuantLib::ext::any& value);
     //@}
 
     //! \name Utility
@@ -122,7 +121,7 @@ private:
     string counterparty_;
     NettingSetDetails nettingSetDetails_;
     set<string> portfolioIds_;
-    map<string, boost::any> additionalFields_;
+    map<string, QuantLib::ext::any> additionalFields_;
     bool initialized_ = false;
 };
 

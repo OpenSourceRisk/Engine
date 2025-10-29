@@ -57,7 +57,7 @@
 #include <qle/indexes/ibor/skkbribor.hpp>
 #include <qle/indexes/ibor/sora.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
-#include <qle/indexes/ibor/tonar.hpp>
+#include <ql/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 
 using namespace QuantLib;

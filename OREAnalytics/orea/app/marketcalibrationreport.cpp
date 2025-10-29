@@ -168,7 +168,7 @@ QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCalibrationRepo
 
 void MarketCalibrationReport::addRowReport(const std::string& moType, const std::string& moId,
                         const std::string& resId, const std::string& key1, const std::string& key2,
-                        const std::string& key3, const boost::any& value) {
+                        const std::string& key3, const QuantLib::ext::any& value) {
     auto p = parseBoostAny(value, precision_);
     report_->next().add(moType).add(moId).add(resId).add(key1).add(key2).add(key3).add(p.first).add(p.second);
 }

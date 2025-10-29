@@ -55,7 +55,7 @@ public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
-                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
+                               Period timestepPeriod, QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                const bool includePastCashflows = false,
                                const Handle<YieldTermStructure>& incomeCurve = {},
                                const bool conditionalOnSurvival = true, const bool spreadOnIncome = true,
@@ -63,7 +63,7 @@ public:
 
     //! alternative constructor (does not require default curve or recovery rate)
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
-                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
+                               Period timestepPeriod, QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                const Handle<YieldTermStructure>& incomeCurve = {},
                                const bool conditionalOnSurvival = true, const bool spreadOnIncome = true,
                                const bool treatSecuritySpreadAsCreditSpread = false);
@@ -109,7 +109,7 @@ protected:
         - If an incomeCurve is given, this is used to compound the npv from today to the npvDate, otherwise the curve
           built in the engine as discount curve + security Spread is used. */
     BondNPVCalculationResults calculateNpv(const Date& npvDate, const Date& settlementDate,
-                                           boost::optional<bool> includeSettlementDateFlows,
+                                           QuantLib::ext::optional<bool> includeSettlementDateFlows,
                                            const bool conditionalOnSurvival, const bool additionalResults) const;
 
     DiscountingRiskyBondEngine::RecoveryContribution
@@ -123,7 +123,7 @@ protected:
     mutable Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
     Period timestepPeriod_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     bool includePastCashflows_;
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;

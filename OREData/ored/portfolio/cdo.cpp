@@ -573,7 +573,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         auto cdoDetach = QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(
             basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
-            protectionStartDate, parseDate(upfrontDate_), boost::none, Null<Real>(), lastPeriodDayCounter);
+            protectionStartDate, parseDate(upfrontDate_), QuantLib::ext::nullopt, Null<Real>(), lastPeriodDayCounter);
 
         cdoDetach->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
@@ -632,7 +632,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         auto cdoA = QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(
             basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
-            protectionStartDate, parseDate(upfrontDate_), boost::none, fixedRecovery, lastPeriodDayCounter);
+            protectionStartDate, parseDate(upfrontDate_), QuantLib::ext::nullopt, fixedRecovery, lastPeriodDayCounter);
 
         cdoA->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));

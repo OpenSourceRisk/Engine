@@ -48,7 +48,7 @@ StressScenarioGenerator::StressScenarioGenerator(const QuantLib::ext::shared_ptr
                                                  const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
                                                  const QuantLib::ext::shared_ptr<ScenarioFactory>& stressScenarioFactory,
                                                  const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute,
-                                                 boost::optional<bool> useSpreadedTermStructuresOverride)
+                                                 QuantLib::ext::optional<bool> useSpreadedTermStructuresOverride)
     : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), stressData_(stressData),
       stressScenarioFactory_(stressScenarioFactory),
       baseScenarioAbsolute_(baseScenarioAbsolute == nullptr ? baseScenario : baseScenarioAbsolute) {

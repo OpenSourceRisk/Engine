@@ -51,7 +51,7 @@ public:
     };
 
     PnlExplainReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                     const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
+                     const std::string& portfolioFilter, QuantLib::ext::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<Report>& pnlReport = nullptr,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                      std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,

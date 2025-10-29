@@ -42,7 +42,7 @@ CommodityDigitalOption::CommodityDigitalOption() { tradeType_ = "CommodityDigita
 
 CommodityDigitalOption::CommodityDigitalOption(const Envelope& env, const OptionData& optionData, const string& name,
 					       const string& currency, Real strike, Real payoff,
-					       const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
+					       const QuantLib::ext::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
     : optionData_(optionData), name_(name), currency_(currency), strike_(strike), payoff_(payoff),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityDigitalOption";
@@ -185,7 +185,7 @@ void CommodityDigitalOption::fromXML(XMLNode* node) {
     strike_ = XMLUtils::getChildValueAsDouble(commodityNode, "Strike", true);
     payoff_ = XMLUtils::getChildValueAsDouble(commodityNode, "Payoff", true);
 
-    isFuturePrice_ = boost::none;
+    isFuturePrice_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityNode, "IsFuturePrice"))
         isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
 

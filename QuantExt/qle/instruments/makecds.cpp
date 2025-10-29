@@ -43,14 +43,14 @@
 namespace QuantExt {
 
 MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Period& tenor, const Real couponRate)
-    : side_(Protection::Buyer), nominal_(1.0), tenor_(tenor), termDate_(boost::none), couponTenor_(3 * Months),
+    : side_(Protection::Buyer), nominal_(1.0), tenor_(tenor), termDate_(QuantLib::ext::nullopt), couponTenor_(3 * Months),
       couponRate_(couponRate), upfrontRate_(0.0),
       dayCounter_(Actual360()), lastPeriodDayCounter_(Actual360(true)),
       rule_(DateGeneration::CDS2015), cashSettlementDays_(3), settlesAccrual_(true),
       paysAtDefaultTime_(true), rebatesAccrual_(true) {}
 
 MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Date& termDate, const Real couponRate)
-    : side_(Protection::Buyer), nominal_(1.0), tenor_(boost::none), termDate_(termDate), couponTenor_(3 * Months),
+    : side_(Protection::Buyer), nominal_(1.0), tenor_(QuantLib::ext::nullopt), termDate_(termDate), couponTenor_(3 * Months),
       couponRate_(couponRate), upfrontRate_(0.0),
       dayCounter_(Actual360()), lastPeriodDayCounter_(Actual360(true)),
       rule_(DateGeneration::CDS2015), cashSettlementDays_(3), settlesAccrual_(true),

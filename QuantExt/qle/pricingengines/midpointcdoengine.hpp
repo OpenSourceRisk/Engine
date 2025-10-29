@@ -44,7 +44,7 @@ basket inception is not the same as CDO's ?????
 class MidPointCDOEngine : public QuantExt::SyntheticCDO::engine {
 public:
     MidPointCDOEngine(const Handle<YieldTermStructure>& discountCurve,
-                      boost::optional<bool> includeSettlementDateFlows = boost::none)
+                      QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt)
         : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows) {
         registerWith(discountCurve);
     }
@@ -52,7 +52,7 @@ public:
 
 protected:
     Handle<YieldTermStructure> discountCurve_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
 };
 
 } // namespace QuantExt

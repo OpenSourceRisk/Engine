@@ -99,9 +99,9 @@ public:
     enum class CommodityHedgingSet : char { Energy, Agriculture, Metal, Other };
 
     struct AdjustedNotional {
-        AdjustedNotional() : notional(QuantLib::Null<QuantLib::Real>()), currency(""), currentPrice(boost::none) {}
+        AdjustedNotional() : notional(QuantLib::Null<QuantLib::Real>()), currency(""), currentPrice(QuantLib::ext::nullopt) {}
         AdjustedNotional(QuantLib::Real notional, const std::string& currency,
-                         const QuantLib::ext::optional<QuantLib::Real>& currentPrice = boost::none)
+                         const QuantLib::ext::optional<QuantLib::Real>& currentPrice = QuantLib::ext::nullopt)
             : notional(notional), currency(currency), currentPrice(currentPrice) {}
 
         QuantLib::Real notional;
@@ -123,9 +123,9 @@ public:
     };
 
     struct Dates {
-        Dates() : M(QuantLib::Null<QuantLib::Real>()), S(boost::none), E(boost::none) {}
-        Dates(QuantLib::Real M, const QuantLib::ext::optional<QuantLib::Real>& S = boost::none,
-              const QuantLib::ext::optional<QuantLib::Real>& E = boost::none)
+        Dates() : M(QuantLib::Null<QuantLib::Real>()), S(QuantLib::ext::nullopt), E(QuantLib::ext::nullopt) {}
+        Dates(QuantLib::Real M, const QuantLib::ext::optional<QuantLib::Real>& S = QuantLib::ext::nullopt,
+              const QuantLib::ext::optional<QuantLib::Real>& E = QuantLib::ext::nullopt)
             : M(M), S(S), E(E) {}
 
         QuantLib::Real M;
@@ -137,11 +137,11 @@ public:
 
         // "basis transaction" - Same asset class, same underlying currencies, different underlyings
         bool isBasis() const { return hedgingSet.find("_BASIS") != string::npos; }
-        bool empty() const { return hedgingSet.empty() && (!hedgingSubset.has_value() || hedgingSubset.get().empty()); }
+        bool empty() const { return hedgingSet.empty() && (!hedgingSubset.has_value() || hedgingSubset.value().empty()); }
 
         std::string hedgingSet = "";
         bool isVol = false;
-        QuantLib::ext::optional<std::string> hedgingSubset = boost::none;
+        QuantLib::ext::optional<std::string> hedgingSubset = QuantLib::ext::nullopt;
     };
 
     struct UnderlyingData {
@@ -180,14 +180,14 @@ public:
         Contribution(const UnderlyingData& underlyingData, const std::string& currency = "",
                      QuantLib::Real adjustedNotional = QuantLib::Null<QuantLib::Real>(),
                      QuantLib::Real delta = QuantLib::Null<QuantLib::Real>(), bool isOption = false, bool isVol = false,
-                     const QuantLib::ext::optional<QuantLib::Real>& supervisoryDuration = boost::none,
-                     const QuantLib::ext::optional<QuantLib::Real>& startDate = boost::none,
-                     const QuantLib::ext::optional<QuantLib::Real>& endDate = boost::none,
-                     const QuantLib::ext::optional<QuantLib::Real>& lastExerciseDate = boost::none,
-                     const QuantLib::ext::optional<QuantLib::Real>& currentPrice = boost::none,
-                     const QuantLib::ext::optional<QuantLib::Real>& optionDeltaPrice = boost::none,
-                     const QuantLib::ext::optional<QuantLib::Real>& strike = boost::none,
-                     const QuantLib::ext::optional<QuantLib::Size>& numNominalFlows = boost::none)
+                     const QuantLib::ext::optional<QuantLib::Real>& supervisoryDuration = QuantLib::ext::nullopt,
+                     const QuantLib::ext::optional<QuantLib::Real>& startDate = QuantLib::ext::nullopt,
+                     const QuantLib::ext::optional<QuantLib::Real>& endDate = QuantLib::ext::nullopt,
+                     const QuantLib::ext::optional<QuantLib::Real>& lastExerciseDate = QuantLib::ext::nullopt,
+                     const QuantLib::ext::optional<QuantLib::Real>& currentPrice = QuantLib::ext::nullopt,
+                     const QuantLib::ext::optional<QuantLib::Real>& optionDeltaPrice = QuantLib::ext::nullopt,
+                     const QuantLib::ext::optional<QuantLib::Real>& strike = QuantLib::ext::nullopt,
+                     const QuantLib::ext::optional<QuantLib::Size>& numNominalFlows = QuantLib::ext::nullopt)
             : underlyingData(underlyingData), hedgingData(HedgingData()), currency(currency),
               adjustedNotional(adjustedNotional), delta(delta), isOption(isOption), isVol(isVol),
               supervisoryDuration(supervisoryDuration), startDate(startDate), endDate(endDate),
@@ -197,9 +197,9 @@ public:
             : underlyingData(UnderlyingData()), hedgingData(HedgingData()), currency(""),
               delta(QuantLib::Null<QuantLib::Real>()), maturity(QuantLib::Null<QuantLib::Real>()),
               maturityFactor(QuantLib::Null<QuantLib::Real>()), isOption(false), isVol(false),
-              supervisoryDuration(boost::none), startDate(boost::none), endDate(boost::none),
-              lastExerciseDate(boost::none), currentPrice(boost::none), optionDeltaPrice(boost::none),
-              strike(boost::none), numNominalFlows(boost::none) {}
+              supervisoryDuration(QuantLib::ext::nullopt), startDate(QuantLib::ext::nullopt), endDate(QuantLib::ext::nullopt),
+              lastExerciseDate(QuantLib::ext::nullopt), currentPrice(QuantLib::ext::nullopt), optionDeltaPrice(QuantLib::ext::nullopt),
+              strike(QuantLib::ext::nullopt), numNominalFlows(QuantLib::ext::nullopt) {}
 
         // Trade ID/Type, nettingSetDetails, npv,  can be taken from trade_
         UnderlyingData underlyingData; // SA-CCR/ORE assetClass, qualifier/underlyingName, isIndex
@@ -310,7 +310,7 @@ public:
     // Underlyings SaccrTradeData::Impl::getUnderlyings() const;
     SaccrTradeData::UnderlyingData
     getUnderlyingData(const std::string& originalName,
-                      const QuantLib::ext::optional<ore::data::AssetClass>& oreAssetClass = boost::none) const;
+                      const QuantLib::ext::optional<ore::data::AssetClass>& oreAssetClass = QuantLib::ext::nullopt) const;
     SaccrTradeData::UnderlyingData getUnderlyingData(const std::string& boughtCurrency,
                                                      const std::string& soldCurrency) const;
     virtual void calculate();
@@ -330,7 +330,7 @@ public:
     calculateSingleOptionContribution(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade = nullptr) const;
     QuantLib::Real getLastExerciseDate(const ore::data::OptionData& optionData) const;
     virtual bool isVol() const { QL_FAIL("Not yet implemented"); }
-    virtual QuantLib::ext::optional<QuantLib::Size> getNominalFlowCount() const { return boost::none; }
+    virtual QuantLib::ext::optional<QuantLib::Size> getNominalFlowCount() const { return QuantLib::ext::nullopt; }
 
     std::string getBucket(const SaccrTradeData::Contribution& contribution) const;
     std::tuple<QuantLib::Real, std::string, QuantLib::ext::optional<QuantLib::Real>>

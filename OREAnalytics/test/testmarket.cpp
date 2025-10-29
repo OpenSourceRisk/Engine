@@ -630,11 +630,14 @@ Handle<ZeroInflationTermStructure> TestMarket::flatZeroInflationCurve(Real infla
     Date today = Settings::instance().evaluationDate();
     Period lag = 2 * Months;
     std::vector<Date> dates;
+    dates.push_back(inflationPeriod(today - lag, Monthly).first);
     dates.push_back(today - lag);
     dates.push_back(today + 1 * Years);
+    std::sort(dates.begin(), dates.end());
+    dates.erase(std::unique(dates.begin(), dates.end()), dates.end());
     std::vector<Real> rates(dates.size(), inflationRate);
     auto curve = QuantLib::ext::make_shared<QuantLib::InterpolatedZeroInflationCurve<Linear>>(
-        today, NullCalendar(), QuantLib::ActualActual(ActualActual::ISDA), 2 * Months, Monthly, dates, rates);
+        today, dates, rates, 2 * Months, Monthly, QuantLib::ActualActual(ActualActual::ISDA));
     curve->enableExtrapolation();
     return Handle<ZeroInflationTermStructure>(curve);
 }
@@ -643,11 +646,14 @@ Handle<YoYInflationTermStructure> TestMarket::flatYoYInflationCurve(Real inflati
     Date today = Settings::instance().evaluationDate();
     Period lag = 2 * Months;
     std::vector<Date> dates;
+    dates.push_back(inflationPeriod(today - lag, Monthly).first);
     dates.push_back(today - lag);
     dates.push_back(today + 1 * Years);
+    std::sort(dates.begin(), dates.end());
+    dates.erase(std::unique(dates.begin(), dates.end()), dates.end());
     std::vector<Real> rates(dates.size(), inflationRate);
     auto curve = QuantLib::ext::make_shared<QuantLib::InterpolatedYoYInflationCurve<Linear>>(
-        today, NullCalendar(), QuantLib::ActualActual(ActualActual::ISDA), 2 * Months, Monthly, false, dates, rates);
+        today, dates, rates, 2 * Months, Monthly, false, QuantLib::ActualActual(ActualActual::ISDA));
     curve->enableExtrapolation();
     return Handle<YoYInflationTermStructure>(curve);
 }
