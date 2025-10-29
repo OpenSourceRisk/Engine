@@ -60,8 +60,9 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
-
-    auto addFields = env_.additionalFields();
+    
+    Envelope env = envelope();
+    auto addFields = env.additionalFields();
     auto it = addFields.find("use_cp_trade");
     if (it != addFields.end() && parseBool(it->second)) {
         additionalData_["cdsDefaultCurveEngine"] = "";
