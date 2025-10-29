@@ -149,7 +149,7 @@ public:
     Real getCurrentFxConversion(const Size i) const;       // populated for all i
     Date getAssociatedDate(const Size i) const;            // null if no date is associated
 
-    const std::map<std::string, boost::any>& additionalResults() const { return additionalResults_; }
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
 
 private:
     Date nextExerciseDate(const Date& d, const std::vector<ConvertibleBond2::CallabilityData>& data) const;
@@ -207,7 +207,7 @@ private:
     std::vector<Date> associatedDate_;
 
     // additional results provided by the event processor
-    std::map<std::string, boost::any> additionalResults_;
+    std::map<std::string, QuantLib::ext::any> additionalResults_;
 
     // containers to store interpolation data for mw cr increases
     QuantLib::Array mw_cr_inc_x_, mw_cr_inc_y_;

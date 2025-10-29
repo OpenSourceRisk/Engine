@@ -126,12 +126,12 @@ public:
     const NettingSetDetails nettingSetDetails() const;
     const std::set<std::string>& portfolioIds() const;
     const std::map<std::string, std::string> additionalFields() const;
-    const std::map<std::string, boost::any>& fullAdditionalFields() const;
+    const std::map<std::string, QuantLib::ext::any>& fullAdditionalFields() const;
     string additionalField(const std::string& name, const bool mandatory = true,
                            const std::string& defaultValue = std::string()) const;
-    boost::any additionalAnyField(const std::string& name, const bool mandatory = true,
-                                  const boost::any& defaultValue = boost::none) const;
-    void setAdditionalField(const std::string& key, const boost::any& value);
+    QuantLib::ext::any additionalAnyField(const std::string& name, const bool mandatory = true,
+                                  const QuantLib::ext::any& defaultValue = boost::none) const;
+    void setAdditionalField(const std::string& key, const QuantLib::ext::any& value);
     bool initialized() const;
     bool hasNettingSetDetails() const;
 };
@@ -209,7 +209,7 @@ public:
     void fromXMLString(const std::string& xmlString);
     std::string toXMLString();
     const std::vector<LegData>& legData() const { return legData_; }
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 };
 
 %shared_ptr(OREForwardRateAgreement)
@@ -226,7 +226,7 @@ public:
     std::string toXMLString();
     const std::string& index() const { return index_; }
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 };
 
 #endif

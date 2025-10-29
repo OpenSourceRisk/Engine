@@ -93,7 +93,7 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
     std::vector<Array> fxVega;
     Real theta;
     
-    std::tie(delta, swaptionVegaRisk, fxVega, theta) = boost::any_cast<std::tuple<Array, vector<Array>, vector<Array>, Real>>(r);
+    std::tie(delta, swaptionVegaRisk, fxVega, theta) = QuantLib::ext::any_cast<std::tuple<Array, vector<Array>, vector<Array>, Real>>(r);
 
     DLOG("SimmHelper delta size: " << delta.size());
     DLOG("SimmHelper swaptionVegaRisk size: " << swaptionVegaRisk.size());

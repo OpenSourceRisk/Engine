@@ -126,7 +126,7 @@ public:
                  const QuantLib::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
                      QuantLib::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
                  Date protectionStart = Date(), Date upfrontDate = Date(),
-                 boost::optional<Real> notional = boost::none,
+                 QuantLib::ext::optional<Real> notional = QuantLib::ext::nullopt,
                  Real recoveryRate = Null<Real>(),
                  const DayCounter& lastPeriodDayCounter = DayCounter());
 

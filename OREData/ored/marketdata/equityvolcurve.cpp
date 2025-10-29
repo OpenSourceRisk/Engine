@@ -818,7 +818,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     // Configured delta and Atm types.
     DeltaVolQuote::DeltaType deltaType = parseDeltaType(vdsc.deltaType());
     DeltaVolQuote::AtmType atmType = parseAtmType(vdsc.atmType());
-    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
+    QuantLib::ext::optional<DeltaVolQuote::DeltaType> atmDeltaType;
     if (!vdsc.atmDeltaType().empty()) {
         atmDeltaType = parseDeltaType(vdsc.atmDeltaType());
     }
@@ -828,7 +828,8 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     for (const auto& pd : putDeltas) {
         strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Put, pd));
     }
-    strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(atmType, atmDeltaType));
+    strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(
+        atmType, atmDeltaType.has_value() ? boost::optional<DeltaVolQuote::DeltaType>(*atmDeltaType) : boost::none));
     for (const auto& cd : callDeltas) {
         strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Call, cd));
     }

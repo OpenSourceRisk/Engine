@@ -23,7 +23,7 @@ namespace QuantExt {
 
 PaymentDiscountingEngine::PaymentDiscountingEngine(const Handle<YieldTermStructure>& discountCurve,
                                                    const Handle<Quote>& spotFX,
-                                                   boost::optional<bool> includeSettlementDateFlows,
+                                                   QuantLib::ext::optional<bool> includeSettlementDateFlows,
                                                    const Date& settlementDate, const Date& npvDate)
     : discountCurve_(discountCurve), spotFX_(spotFX), includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate), npvDate_(npvDate) {

@@ -413,7 +413,7 @@ AverageONLeg& AverageONLeg::withInArrears(const bool inArrears) {
     return *this;
 }
 
-AverageONLeg& AverageONLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+AverageONLeg& AverageONLeg::withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod) {
     lastRecentPeriod_ = lastRecentPeriod;
     return *this;
 }

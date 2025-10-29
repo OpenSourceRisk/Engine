@@ -27,7 +27,7 @@ BaseCorrelationTermStructure::BaseCorrelationTermStructure(const Date& refDate, 
                                                            BusinessDayConvention bdc, const std::vector<Period>& tenors,
                                                            const std::vector<Real>& detachmentPoints,
                                                            const DayCounter& dc, const Date& startDate,
-                                                           boost::optional<DateGeneration::Rule> rule)
+                                                           QuantLib::ext::optional<DateGeneration::Rule> rule)
     : CorrelationTermStructure(refDate, cal, dc), bdc_(bdc), startDate_(startDate), rule_(rule), tenors_(tenors), detachmentPoints_(detachmentPoints) {
     // Ensure tenors are sorted and positive
     validate();
@@ -38,7 +38,7 @@ BaseCorrelationTermStructure::BaseCorrelationTermStructure(Natural settlementDay
                                                            BusinessDayConvention bdc, const std::vector<Period>& tenors,
                                                            const std::vector<double>& detachmentPoints,
                                                            const DayCounter& dc, const Date& startDate,
-                                                           boost::optional<DateGeneration::Rule> rule)
+                                                           QuantLib::ext::optional<DateGeneration::Rule> rule)
     : CorrelationTermStructure(settlementDays, cal, dc), bdc_(bdc), startDate_(startDate), rule_(rule), tenors_(tenors),
       detachmentPoints_(detachmentPoints) {
     validate();

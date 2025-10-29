@@ -136,7 +136,7 @@ void PnlExplainReport::handleSensiResults(const QuantLib::ext::shared_ptr<Market
 }
 
 void PnlExplainReport::addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
-    pnlCalculators_.push_back(QuantLib::ext::make_shared<PNLCalculator>(period_.get()));
+    pnlCalculators_.push_back(QuantLib::ext::make_shared<PNLCalculator>(period_.value()));
 }
 
 void PnlExplainReport::writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,

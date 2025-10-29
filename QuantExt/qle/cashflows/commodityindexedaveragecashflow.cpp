@@ -44,7 +44,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     QuantLib::Real gearing, bool useFuturePrice, Natural deliveryDateRoll, Integer futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay, Natural dailyExpiryOffset,
-    bool unrealisedQuantity, const boost::optional<pair<Calendar, Real>>& offPeakPowerData,
+    bool unrealisedQuantity, const QuantLib::ext::optional<pair<Calendar, Real>>& offPeakPowerData,
     const ext::shared_ptr<FxIndex>& fxIndex, QuantLib::Natural avgPricePrecision)
     : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), startDate_(startDate),
       endDate_(endDate),
@@ -64,7 +64,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     const QuantLib::Date& paymentDateOverride, bool useBusinessDays, CommodityQuantityFrequency quantityFrequency,
     Natural hoursPerDay, Natural dailyExpiryOffset, bool unrealisedQuantity,
-    const boost::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex,
+    const QuantLib::ext::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex,
     QuantLib::Natural avgPricePrecision)
     : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), startDate_(startDate), endDate_(endDate),
       paymentDate_(paymentDateOverride), pricingCalendar_(pricingCalendar),
@@ -448,7 +448,7 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withFxIndex(const ext::s
     return *this;
 }
 
-CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withOffPeakPowerData(const boost::optional<pair<Calendar, Real> >& offPeakPowerData) {
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withOffPeakPowerData(const QuantLib::ext::optional<pair<Calendar, Real> >& offPeakPowerData) {
     offPeakPowerData_ = offPeakPowerData;
     return *this;
 }

@@ -187,7 +187,7 @@ protected:
 
         return QuantLib::ext::make_shared<DiscountingFxForwardEngineDeltaGamma>(
             domCcy, domCcyCurve, forCcy, forCcyCurve, fx, bucketTimes, computeDelta, computeGamma, linearInZero,
-            boost::none, Date(), Date(), applySimmExemptions);
+            QuantLib::ext::nullopt, Date(), Date(), applySimmExemptions);
     }
 };
 

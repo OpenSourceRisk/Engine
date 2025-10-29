@@ -115,7 +115,7 @@ void PortfolioAnalyser::addDependencies() {
 }
 
 std::map<ore::data::MarketObject, std::set<std::string>>
-PortfolioAnalyser::marketObjects(const boost::optional<std::string> config) const {
+PortfolioAnalyser::marketObjects(const QuantLib::ext::optional<std::string> config) const {
     if (config)
         return marketObjects_[*config];
     std::map<ore::data::MarketObject, std::set<std::string>> result;

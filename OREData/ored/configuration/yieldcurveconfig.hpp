@@ -34,8 +34,6 @@
 #include <ql/types.hpp>
 #include <ql/termstructures/bootstraphelper.hpp>
 
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
 #include <ql/shared_ptr.hpp>
 #include <ql/optional.hpp>
 

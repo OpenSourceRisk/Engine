@@ -42,7 +42,7 @@ CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { trade
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
                                  const string& currency, Real quantity, TradeStrike strike,
-                                 const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
+                                 const QuantLib::ext::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
     : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, quantity, strike),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityOption";
@@ -141,7 +141,7 @@ void CommodityOption::fromXML(XMLNode* node) {
     strike_.fromXML(commodityNode);
     quantity_ = XMLUtils::getChildValueAsDouble(commodityNode, "Quantity", true);
 
-    isFuturePrice_ = boost::none;
+    isFuturePrice_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityNode, "IsFuturePrice"))
         isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
 

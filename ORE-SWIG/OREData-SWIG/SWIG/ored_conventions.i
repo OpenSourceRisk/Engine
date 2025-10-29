@@ -744,7 +744,7 @@ class CommodityFutureConvention : public Convention {
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
 
     //! N-th weekday based constructor
@@ -761,7 +761,7 @@ class CommodityFutureConvention : public Convention {
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
 
     //! Calendar days before based constructor
@@ -778,7 +778,7 @@ class CommodityFutureConvention : public Convention {
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
     
     //! Business days before based constructor
@@ -795,7 +795,7 @@ class CommodityFutureConvention : public Convention {
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
 
 
@@ -823,7 +823,7 @@ class CommodityFutureConvention : public Convention {
     const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings() const;
     const AveragingData& averagingData() const;
     QuantLib::Natural hoursPerDay() const;
-    const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData() const;
+    const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData() const;
     const std::string& indexName() const;
     QuantLib::Frequency optionContractFrequency() const;
     OptionAnchorType optionAnchorType() const;

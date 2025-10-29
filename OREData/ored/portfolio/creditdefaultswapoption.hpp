@@ -25,7 +25,7 @@
 
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/optiondata.hpp>
-#include <boost/optional/optional.hpp>
+#include <ql/optional.hpp>
 
 /*! Serializable Credit Default Swap Option
     \ingroup tradedata
@@ -80,7 +80,7 @@ public:
         const std::string& strikeType = "Spread",
         bool knockOut = true,
         const std::string& term = "",
-        const boost::optional<AuctionSettlementInformation>& asi = boost::none);
+        const QuantLib::ext::optional<AuctionSettlementInformation>& asi = QuantLib::ext::nullopt);
 
     //! \name Trade interface
     //@{
@@ -95,7 +95,7 @@ public:
     const std::string& strikeType() const;
     bool knockOut() const;
     const std::string& term() const;
-    const boost::optional<AuctionSettlementInformation>& auctionSettlementInformation() const;
+    const QuantLib::ext::optional<AuctionSettlementInformation>& auctionSettlementInformation() const;
     //@}
 
     //! \name Serialisation
@@ -111,7 +111,7 @@ private:
     std::string strikeType_;
     bool knockOut_;
     std::string term_;
-    boost::optional<AuctionSettlementInformation> asi_;
+    QuantLib::ext::optional<AuctionSettlementInformation> asi_;
 
     //! Build CDS option given that no default
     void buildNoDefault(const QuantLib::ext::shared_ptr<EngineFactory>& ef);

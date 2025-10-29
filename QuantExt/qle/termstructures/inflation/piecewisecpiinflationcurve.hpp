@@ -77,7 +77,6 @@ private:
     QuantLib::Real accuracy_;
 
     friend class Bootstrap<this_curve>;
-    friend class QuantLib::BootstrapError<this_curve>;
     Bootstrap<this_curve> bootstrap_;
 };
 

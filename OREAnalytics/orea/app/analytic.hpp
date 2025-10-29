@@ -39,7 +39,7 @@
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <iostream>
 
 namespace ore {
@@ -174,7 +174,7 @@ public:
     
     const Timer& getTimer();
     void startTimer(const std::string& key) { timer_.start(key); }
-    boost::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
+    QuantLib::ext::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
         return timer_.stop(key, returnTimer);
     }
     void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }

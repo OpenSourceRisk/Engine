@@ -606,7 +606,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
                 auto cdo = ext::make_shared<QuantExt::SyntheticCDO>(
                     basket, Protection::Side::Buyer, schedule, 0.0, config.indexSpread(), Actual360(), Following, true,
-                    QuantLib::CreditDefaultSwap::ProtectionPaymentTime::atDefault, asof, Date(), boost::none,
+                    QuantLib::CreditDefaultSwap::ProtectionPaymentTime::atDefault, asof, Date(), QuantLib::ext::nullopt,
                     Null<Real>(), Actual360(true));
 
                 auto pricingEngine = QuantLib::ext::make_shared<QuantExt::IndexCdsTrancheEngine>(discountCurve);

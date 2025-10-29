@@ -457,7 +457,7 @@ public:
     std::set<std::string> riskFactorNames(const RiskFactorKey::KeyType& riskFactorType) const;
     std::set<RiskFactorKey::KeyType> riskFactorTypes() const;
     std::map<MarketObject, std::set<std::string>>
-    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    marketObjects(const QuantLib::ext::optional<std::string> config = QuantLib::ext::nullopt) const;
     std::map<std::string, std::map<MarketObject, std::set<std::string>>> allMarketObjects() const;
     std::set<std::string> swapindices() const;
     void riskFactorReport(Report& reportOut) const;
