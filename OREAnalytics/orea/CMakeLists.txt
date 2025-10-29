@@ -102,7 +102,9 @@ engine/parstressconverter.cpp
 engine/parstressscenarioconverter.cpp
 engine/pnlexplainreport.cpp
 engine/riskfilter.cpp
-engine/saccr.cpp
+engine/saccrcalculator.cpp
+engine/saccrcrifgenerator.cpp
+engine/saccrtradedata.cpp
 engine/sacvasensitivityloader.cpp
 engine/sacvasensitivityrecord.cpp
 engine/sensitivityaggregator.cpp
@@ -184,6 +186,7 @@ simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
 simm/simmconcentrationisdav2_6_5.cpp
 simm/simmconcentrationisdav2_7_2412.cpp
+simm/simmconcentrationisdav2_8_2506.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -200,6 +203,7 @@ simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
 simm/simmconfigurationisdav2_6_5.cpp
 simm/simmconfigurationisdav2_7_2412.cpp
+simm/simmconfigurationisdav2_8_2506.cpp
 simm/simmresults.cpp
 simm/simmtradedata.cpp
 simm/utilities.cpp
@@ -320,7 +324,9 @@ engine/parstressscenarioconverter.hpp
 engine/pathdata.hpp
 engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
-engine/saccr.hpp
+engine/saccrcalculator.hpp
+engine/saccrcrifgenerator.hpp
+engine/saccrtradedata.hpp
 engine/sacvasensitivityloader.hpp
 engine/sacvasensitivityrecord.hpp
 engine/sensitivityaggregator.hpp
@@ -409,6 +415,7 @@ simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
 simm/simmconcentrationisdav2_6_5.hpp
 simm/simmconcentrationisdav2_7_2412.hpp
+simm/simmconcentrationisdav2_8_2506.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -425,6 +432,7 @@ simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
 simm/simmconfigurationisdav2_6_5.hpp
 simm/simmconfigurationisdav2_7_2412.hpp
+simm/simmconfigurationisdav2_8_2506.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/simmtradedata.hpp

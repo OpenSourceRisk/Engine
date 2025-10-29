@@ -90,7 +90,7 @@ std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair
                 break;
             }
             case 2: {
-                result[2] = eps1 + randomSeq[j] * 5.0;
+                result[2] = eps1 + randomSeq[j] * max_nu;
                 break;
             }
             case 3: {
@@ -664,7 +664,7 @@ void SabrParametricVolatility::calculate() {
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j < n; ++j) {
             alpha_(i, j) = std::max(alpha_(i, j), 0.0);
-            beta_(i, j) = std::max(beta_(i, j), 0.0);
+            beta_(i, j) = std::max(std::min(beta_(i, j), 1.0), 0.0);
             nu_(i, j) = std::max(nu_(i, j), 0.0);
             rho_(i, j) = std::max(std::min(rho_(i, j), 1.0), -1.0);
         }

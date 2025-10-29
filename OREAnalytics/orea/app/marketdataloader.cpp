@@ -208,7 +208,7 @@ void MarketDataLoader::populateFixings(
         amendInflationFixingDates(fixings_);
     }
 
-    if (fixings_.size() > 0 && impl_)
+    if ((inputs_->allFixings() || fixings_.size() > 0) && impl_)
         impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
 
     applyFixings(loader_->loadFixings());
