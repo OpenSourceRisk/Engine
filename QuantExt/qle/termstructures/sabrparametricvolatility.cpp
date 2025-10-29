@@ -759,4 +759,34 @@ Real SabrParametricVolatility::evaluate(const Real timeToExpiry, const Real unde
                    outputOptionType);
 }
 
+QuantLib::ext::shared_ptr<SabrParametricVolatility> SabrParametricVolatility::clone(
+    const std::vector<ParametricVolatility::MarketSmile>& marketSmiles,
+    const std::vector<ParameterCalibration>& calibrationTypes) const {
+
+    auto modelParameters = modelParameters_;
+
+    if (calibrationTypes.size() > 0) {
+        // If calibration types are provided, we need to adjust the model parameters accordingly
+        for (Size i = 0; i < timeToExpiries_.size(); ++i) {
+            const auto& tte = timeToExpiries_[i];
+            for (Size j = 0; j < underlyingLengths_.size(); ++j) {
+                const auto& ul = underlyingLengths_[j];
+                auto key = std::make_pair(tte, ul);
+                QL_REQUIRE(calibrationTypes.size() == modelParameters[key].size(),
+                           "SabrParametricVolatility::clone(): number of calibration types ("
+                               << calibrationTypes.size() << ") does not match number of model parameters ("
+                               << modelParameters[key].size() << ") for ("
+                               << tte << ", " << ul << ").");
+                for (Size k = 0; k < modelParameters[key].size(); ++k) {
+                    modelParameters[key][k].second = calibrationTypes[k];
+                }
+            }
+        }
+    }
+
+    return QuantLib::ext::make_shared<SabrParametricVolatility>(
+        modelVariant_, marketSmiles, marketModelType_, inputMarketQuoteType_, discountCurve_, modelParameters,
+        modelShifts_, maxCalibrationAttempts_, exitEarlyErrorThreshold_, maxAcceptableError_);
+}
+
 } // namespace QuantExt

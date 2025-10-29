@@ -55,7 +55,7 @@ public:
         const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
             initialModelParameters = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05);
+        const QuantLib::Real maxAcceptableError = 0.05, bool stickySabr = false);
 
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
      */
@@ -105,6 +105,13 @@ public:
         calculate();
         return parametricVolatility_;
     }
+    QuantExt::SabrParametricVolatility::ModelVariant modelVariant() const { return modelVariant_; }
+    QuantLib::Real modelDisplacement() const { return modelDisplacement_; }
+    const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
+        initialModelParameters() const { return initialModelParameters_; }
+    QuantLib::Size maxCalibrationAttempts() const { return maxCalibrationAttempts_; }
+    QuantLib::Real exitEarlyErrorThreshold() const { return exitEarlyErrorThreshold_; }
+    QuantLib::Real maxAcceptableError() const { return maxAcceptableError_; }
     //@}
 
 protected:
@@ -130,6 +137,7 @@ private:
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
+    bool stickySabr_;
 
     //! State
     mutable std::map<Real, QuantLib::ext::shared_ptr<ParametricVolatilitySmileSection>> cache_;
@@ -145,13 +153,13 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Real modelDisplacement,
     const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>& initialModelParameters,
     const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
-    const QuantLib::Real maxAcceptableError)
+    const QuantLib::Real maxAcceptableError, bool stickySabr)
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
                                    sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
       outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
-      maxAcceptableError_(maxAcceptableError) {
+      maxAcceptableError_(maxAcceptableError), stickySabr_(stickySabr) {
     registerWith(optionletBase_);
 }
 
@@ -238,6 +246,14 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
         }
     }
 
+    // For sticky SABR, we only need to re-imply the alpha parameter after initial calibration
+    if (stickySabr_) {
+        if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrParametricVolatility>(parametricVolatility_)) {
+            parametricVolatility_ = sabr->clone(marketSmiles, {});
+            return;
+        }
+    }
+
     std::map<Real, Real> modelShift;
     if (modelDisplacement_ != Null<Real>()) {
         modelShift[Null<Real>()] = modelDisplacement_;
@@ -250,6 +266,18 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
             : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
         Handle<YieldTermStructure>(), modelParameters, modelShift, maxCalibrationAttempts_, exitEarlyErrorThreshold_,
         maxAcceptableError_);
+
+    // for sticky SABR, after initial calibration, we re-create parametric volatility with only alpha to be implied
+    // this ensures that basis between the two parametric volatilities is eliminated
+    if (stickySabr_) {
+        if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrParametricVolatility>(parametricVolatility_)) {
+            parametricVolatility_ = sabr->clone(marketSmiles,
+                                                { ParametricVolatility::ParameterCalibration::Implied, 
+                                                  ParametricVolatility::ParameterCalibration::Fixed,
+                                                  ParametricVolatility::ParameterCalibration::Fixed, 
+                                                  ParametricVolatility::ParameterCalibration::Fixed });
+        }
+    }
 }
 
 template <class TimeInterpolator> inline void SabrStrippedOptionletAdapter<TimeInterpolator>::deepUpdate() {

@@ -44,6 +44,13 @@ public:
     Real displacement() const override { return baseVol_->displacement(); }
     Calendar calendar() const override { return baseVol_->calendar(); }
 
+    const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseVol() const { return baseVol_; }
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex() const { return baseIndex_; }
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex() const { return targetIndex_; }
+    const QuantLib::Period& baseRateComputationPeriod() const { return baseRateComputationPeriod_; }
+    const QuantLib::Period& targetRateComputationPeriod() const { return targetRateComputationPeriod_; }
+    double scalingFactor() const { return scalingFactor_; }
+
 private:
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;

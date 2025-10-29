@@ -61,6 +61,7 @@
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
+#include <qle/termstructures/sabrstrippedoptionletadapter.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
@@ -75,6 +76,7 @@
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/swaptionsabrcube.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
@@ -139,6 +141,48 @@ void processException(const std::exception& e, const std::string& curveId = "",
         StructuredCurveErrorMessage(curve, message, exceptionMessage).log();
     }
 }
+
+template <typename TimeInterpolator>
+bool createSabrAdapter(RelinkableHandle<OptionletVolatilityStructure> hCapletVol, 
+                       QuantLib::ext::shared_ptr<StrippedOptionlet> optionlet,
+                       QuantLib::ext::shared_ptr<OptionletVolatilityStructure> t0Optionlet) {
+    QL_REQUIRE(t0Optionlet, "t0Optionlet is null in createSabrAdapter");
+    if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrStrippedOptionletAdapter<TimeInterpolator>>(t0Optionlet)) {
+        auto baseVol = sabr->optionletBase();
+        QL_REQUIRE(baseVol, "baseVol is null in createSabrAdapter");
+        auto baseOptionletFixingTimes = baseVol->optionletFixingTimes();
+        auto targetOptionletFixingTimes = optionlet->optionletFixingTimes();
+        std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>
+            modelParameters;
+        auto initialModelParameters = sabr->initialModelParameters();
+
+        // If fixing times in sim market are not in the initialModelParameters,
+        // we need to map them to the last available data in initialModelParameters
+        if (initialModelParameters.size() > 1) {
+            for (auto fixingTime : targetOptionletFixingTimes) {
+                auto it = std::upper_bound(baseOptionletFixingTimes.begin(),
+                                        baseOptionletFixingTimes.end(), fixingTime);
+                if (it != baseOptionletFixingTimes.begin())
+                    --it;
+                Size i0 = std::distance(baseOptionletFixingTimes.begin(), it);
+                QL_REQUIRE(i0 < initialModelParameters.size(),
+                           "index " << i0 << " out of bounds in createSabrAdapter");
+                modelParameters.push_back(initialModelParameters[i0]);
+            }
+        } else if (initialModelParameters.size() == 1) {
+            modelParameters.push_back(initialModelParameters[0]);
+        } // else initialModelParameters is empty, so we leave modelParameters empty too
+
+        hCapletVol.linkTo(
+            QuantLib::ext::make_shared<SabrStrippedOptionletAdapter<TimeInterpolator>>(
+                optionlet, sabr->modelVariant(), TimeInterpolator(), sabr->volatilityType(),
+                sabr->displacement(), sabr->modelDisplacement(), modelParameters,
+                sabr->maxCalibrationAttempts(), sabr->exitEarlyErrorThreshold(), sabr->maxAcceptableError(), true));
+        return true;
+    }
+    return false;
+}
+
 } // namespace
 
 namespace ore {
@@ -723,13 +767,21 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         // set parameters for swaption resp. yield vols
                         RelinkableHandle<SwaptionVolatilityStructure> wrapper;
+                        QuantLib::ext::shared_ptr<ProxySwaptionVolatility> proxy;
                         vector<Period> optionTenors, underlyingTenors;
                         vector<Real> strikeSpreads;
                         string shortSwapIndexBase = "", swapIndexBase = "";
                         bool isCube, isAtm, simulateAtmOnly;
                         if (param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             DLOG("building " << name << " swaption volatility curve...");
-                            wrapper.linkTo(*initMarket->swaptionVol(name, configuration));
+                            proxy = QuantLib::ext::dynamic_pointer_cast<ProxySwaptionVolatility>(
+                                *initMarket->swaptionVol(name, configuration));
+                            if (proxy && !useSpreadedTermStructures_) {
+                                DLOG("Detected ProxySwaptionVolatility for " << name);
+                                wrapper.linkTo(*proxy->baseVol());
+                            } else {
+                                wrapper.linkTo(*initMarket->swaptionVol(name, configuration));
+                            }
                             shortSwapIndexBase = initMarket->shortSwapIndexBase(name, configuration);
                             swapIndexBase = initMarket->swapIndexBase(name, configuration);
                             isCube = parameters->swapVolIsCube(name);
@@ -928,17 +980,111 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                 } else {
                                     if (isCube) {
-                                        QuantLib::ext::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
-                                            atm, optionTenors, underlyingTenors, strikeSpreads, quotes,
-                                            *initMarket->swapIndex(swapIndexBase, configuration),
-                                            *initMarket->swapIndex(shortSwapIndexBase, configuration), false,
-                                            flatExtrapolation, false));
+                                        QuantLib::ext::shared_ptr<SwaptionVolatilityCube> tmp;
+
+                                        auto smileDynamics = 
+                                                param.first == RiskFactorKey::KeyType::SwaptionVolatility ?
+                                                parameters_->swapVolSmileDynamics(name) :
+                                                parameters_->yieldVolSmileDynamics(name);
+                                        bool stickySabr = smileDynamics == "StickySABR";
+
+                                        if (stickySabr) {
+
+                                            vector<vector<Handle<Quote>>> volSpreads;
+                                            volSpreads.resize(optionTenors.size() * underlyingTenors.size(),
+                                                              vector<Handle<Quote>>(strikeSpreads.size(), Handle<Quote>()));
+
+                                            // calculate volSpreads to be spreads to atm, as required by SwaptionSabrCube
+                                            for (Size i = 0; i < optionTenors.size(); ++i) {
+                                                for (Size j = 0; j < underlyingTenors.size(); ++j) {
+                                                    auto atmVol = atmQuotes[i][j];
+                                                    for (Size k = 0; k < strikeSpreads.size(); ++k) {
+                                                        if (k == atmSlice) {
+                                                            volSpreads[i * underlyingTenors.size() + j][k] = Handle<Quote>(
+                                                                QuantLib::ext::make_shared<SimpleQuote>(0.0));
+                                                            continue;
+                                                        }
+                                                        auto q = QuantLib::ext::make_shared<CompositeQuote<std::minus<double>>>(
+                                                                quotes[i * underlyingTenors.size() + j][k], atmVol,
+                                                                std::minus<double>());
+                                                        volSpreads[i * underlyingTenors.size() + j][k] = Handle<Quote>(q);
+                                                    }
+                                                }
+                                            }
+
+                                            auto sabrCube = QuantLib::ext::dynamic_pointer_cast<SwaptionSabrCube>(cube);
+                                            QL_REQUIRE(sabrCube, "SSM: expected SwaptionSabrCube for stickySabr swaption vol for key "
+                                                                 << name
+                                                                 << ". T0 vol surface should be of a SABR variant");
+
+                                            std::map<std::pair<Period, Period>, 
+                                                     std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>
+                                                modelParameters;
+                                            auto initialModelParameters = sabrCube->initialModelParameters();
+
+                                            // If optionTenors/underlyingTenors in sim market are not in the initialModelParameters,
+                                            // we need to map them to the last available tenor in initialModelParameters
+                                            if (!initialModelParameters.empty()) {
+                                                std::set<Period> modelOptionTenorsSet;
+                                                std::set<Period> modelSwapTenorsSet;
+                                                for (const auto& [key, value] : initialModelParameters) {
+                                                    modelOptionTenorsSet.insert(key.first);
+                                                    modelSwapTenorsSet.insert(key.second);
+                                                }
+                                                for (auto optionTenor : optionTenors) {
+                                                    auto i0 = modelOptionTenorsSet.upper_bound(optionTenor);
+                                                    if (i0 != modelOptionTenorsSet.begin())
+                                                        --i0;
+                                                    for (auto underlyingTenor : underlyingTenors) {
+                                                        if (auto m = initialModelParameters.find(std::make_pair(optionTenor, underlyingTenor));
+                                                            m != initialModelParameters.end()) {
+                                                            modelParameters[std::make_pair(optionTenor, underlyingTenor)] = m->second;
+                                                        } else {
+                                                            auto j0 = modelSwapTenorsSet.upper_bound(underlyingTenor);
+                                                            if (j0 != modelSwapTenorsSet.begin())
+                                                                --j0;
+                                                            modelParameters[std::make_pair(optionTenor, underlyingTenor)] =
+                                                                initialModelParameters.at(std::make_pair(*i0, *j0));
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            tmp = QuantLib::ext::make_shared<SwaptionSabrCube>(
+                                                atm, optionTenors, underlyingTenors,
+                                                optionTenors, underlyingTenors, strikeSpreads, volSpreads,
+                                                *initMarket->swapIndex(swapIndexBase, configuration),
+                                                *initMarket->swapIndex(shortSwapIndexBase, configuration),
+                                                sabrCube->modelVariant(), sabrCube->volatilityType(),
+                                                modelParameters,
+                                                sabrCube->modelShift(), sabrCube->outputShift(),
+                                                sabrCube->maxCalibrationAttempts(),
+                                                sabrCube->exitEarlyErrorThreshold(),
+                                                sabrCube->maxAcceptableError(), true);
+                                        } else {
+                                            tmp = QuantLib::ext::make_shared<SwaptionVolCube2>(
+                                                atm, optionTenors, underlyingTenors, strikeSpreads, quotes,
+                                                *initMarket->swapIndex(swapIndexBase, configuration),
+                                                *initMarket->swapIndex(shortSwapIndexBase, configuration), false,
+                                                flatExtrapolation, false);
+                                        }
                                         tmp->setAdjustReferenceDate(false);
                                         svp = Handle<SwaptionVolatilityStructure>(
-                                            QuantLib::ext::make_shared<SwaptionVolCubeWithATM>(tmp));
+                                            QuantLib::ext::make_shared<SwaptionVolCubeWithATM>(tmp, !stickySabr));
                                     } else {
                                         svp = atm;
                                     }
+                                }
+                                if (proxy) {
+                                    DLOG("Wrapping simulated vol structure with ProxySwaptionVolatility for " << name);
+                                    svp->setAdjustReferenceDate(false);
+                                    svp->enableExtrapolation(); // FIXME
+                                    svp = Handle<SwaptionVolatilityStructure>(
+                                        QuantLib::ext::make_shared<ProxySwaptionVolatility>(svp,
+                                                                                            proxy->baseSwapIndexBase(),
+                                                                                            proxy->baseShortSwapIndexBase(),
+                                                                                            *initMarket->swapIndex(swapIndexBase, configuration),
+                                                                                            *initMarket->swapIndex(shortSwapIndexBase, configuration)));
                                 }
                             }
                         } else {
@@ -992,7 +1138,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         LOG("building " << name << " cap/floor volatility curve...");
-                        Handle<OptionletVolatilityStructure> wrapper = initMarket->capFloorVol(name, configuration);
+                        RelinkableHandle<OptionletVolatilityStructure> wrapper;
+                        QuantLib::ext::shared_ptr<ProxyOptionletVolatility> proxy;
+                        proxy = QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(
+                            *initMarket->capFloorVol(name, configuration));
+                        if (proxy && !useSpreadedTermStructures_) {
+                            DLOG("Detected ProxyOptionletVolatility for " << name);
+                            wrapper.linkTo(*proxy->baseVol());
+                        } else {
+                            wrapper.linkTo(*initMarket->capFloorVol(name, configuration));
+                        }
                         auto [iborIndexName, rateComputationPeriod] =
                             initMarket->capFloorVolIndexBase(name, configuration);
                         QuantLib::ext::shared_ptr<IborIndex> iborIndex =
@@ -1000,7 +1155,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
 
-                        Handle<OptionletVolatilityStructure> hCapletVol;
+                        RelinkableHandle<OptionletVolatilityStructure> hCapletVol;
 
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
@@ -1188,20 +1343,53 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = wrapper->dayCounter();
 
                             if (useSpreadedTermStructures_) {
-                                hCapletVol = Handle<OptionletVolatilityStructure>(
+                                hCapletVol.linkTo(
                                     QuantLib::ext::make_shared<QuantExt::SpreadedOptionletVolatility2>(wrapper, optionDates,
                                                                                                strikes, quotes));
                             } else {
                                 // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
                                 // TODO: Build floating reference date StrippedOptionlet class for MC path generators
+                                auto smileDynamics = parameters_->capFloorVolSmileDynamics(name);
+                                bool stickySabr = smileDynamics == "StickySABR";
+
+                                // If StickySABR, we need initial market's discount curve in ibor index to calculate ATM rate
+                                // in SabrStrippedOptionletAdapter via optionletBase()->atmOptionletRates()
+                                if (stickySabr) {
+                                    iborIndex = *initMarket->iborIndex(
+                                        IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
+                                }
+
                                 QuantLib::ext::shared_ptr<StrippedOptionlet> optionlet = QuantLib::ext::make_shared<StrippedOptionlet>(
                                     settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
                                     optionDates, strikes, quotes, dc, wrapper->volatilityType(),
                                     wrapper->displacement());
 
-                                hCapletVol = Handle<OptionletVolatilityStructure>(
-                                    QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
-                                        optionlet));
+                                if (stickySabr) {
+                                    if (!createSabrAdapter<Linear>(hCapletVol, optionlet, *wrapper) &&
+                                        !createSabrAdapter<LinearFlat>(hCapletVol, optionlet, *wrapper) &&
+                                        !createSabrAdapter<Cubic>(hCapletVol, optionlet, *wrapper) &&
+                                        !createSabrAdapter<CubicFlat>(hCapletVol, optionlet, *wrapper) &&
+                                        !createSabrAdapter<BackwardFlat>(hCapletVol, optionlet, *wrapper)) {
+                                        QL_FAIL("SSM: expected SabrStrippedOptionletAdapter for stickySabr optionlet vol for key "
+                                                 << name
+                                                 << ". T0 cap/floor vol surface should be of a SABR variant"
+                                                 << ". Supported time interpolators are: Linear, LinearFlat, Cubic, CubicFlat, BackwardFlat.");
+                                    }
+                                } else {
+                                    hCapletVol.linkTo(
+                                        QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
+                                            optionlet));
+                                }
+                                if (proxy) {
+                                    DLOG("Wrapping simulated vol structure with ProxyOptionletVolatility for " << name);
+                                    hCapletVol = RelinkableHandle<OptionletVolatilityStructure>(
+                                        QuantLib::ext::make_shared<ProxyOptionletVolatility>(hCapletVol,
+                                                                                             proxy->baseIndex(),
+                                                                                             proxy->targetIndex(),
+                                                                                             proxy->baseRateComputationPeriod(),
+                                                                                             proxy->targetRateComputationPeriod(),
+                                                                                             proxy->scalingFactor()));
+                                }
                             }
                         } else {
                             string decayModeString = parameters->capFloorVolDecayMode();
@@ -1212,8 +1400,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol =
                                 QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(),
-                                                                                        decayMode);
-                            hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
+                                                                                                decayMode);
+                            hCapletVol.linkTo(capletVol);
                         }
                         hCapletVol->setAdjustReferenceDate(false);
                         hCapletVol->enableExtrapolation();
