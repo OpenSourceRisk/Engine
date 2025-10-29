@@ -64,7 +64,7 @@ namespace QuantExt {
     \ingroup models
 */
 class CommoditySchwartzPiecewiseConstantParametrization : public CommoditySchwartzParametrization,
-                                                          private PiecewiseConstantHelper4 {
+                                                          private PiecewiseConstantHelper1 {
 public:
     /*! The currency refers to the commodity currency, the
         fx spot is as of today (i.e. the discounted spot) */
@@ -108,13 +108,13 @@ private:
 
 // inline
 inline void CommoditySchwartzPiecewiseConstantParametrization::initialize(const Array& a) {
-    QL_REQUIRE(PiecewiseConstantHelper4::t().size() == a.size(),
+    QL_REQUIRE(PiecewiseConstantHelper1::t().size() == a.size(),
                "a size (" << a.size() << ") inconsistent to times size ("
-                              << PiecewiseConstantHelper4::t().size() << ")");
+                              << PiecewiseConstantHelper1::t().size() << ")");
                               
     // store raw parameter values
     for (Size i = 0; i < a.size(); ++i) {
-        PiecewiseConstantHelper4::y_->setParam(i, inverse(i + 2, a[i]));
+        PiecewiseConstantHelper1::y_->setParam(i, inverse(i + 2, a[i]));
     }
 }
 
@@ -126,22 +126,22 @@ inline Real CommoditySchwartzPiecewiseConstantParametrization::direct(const Size
     if (i==0 || i==1)
         return x * x; 
     else
-        return PiecewiseConstantHelper4::direct(x);
+        return PiecewiseConstantHelper1::direct(x);
 }
 
 inline Real CommoditySchwartzPiecewiseConstantParametrization::inverse(const Size i, const Real y) const {   
     if (i==0 || i==1)
         return std::sqrt(y); 
     else
-        return PiecewiseConstantHelper4::inverse(y);
+        return PiecewiseConstantHelper1::inverse(y);
 }
 
 inline Real CommoditySchwartzPiecewiseConstantParametrization::m(const QuantLib::Time t) const{
-    return std::exp(PiecewiseConstantHelper4::y(t));
+    return std::exp(PiecewiseConstantHelper1::y(t));
 }
 
 inline Real CommoditySchwartzPiecewiseConstantParametrization::a(const QuantLib::Time t) const{
-    return PiecewiseConstantHelper4::y(t);
+    return PiecewiseConstantHelper1::y(t);
 }
 
 inline Real CommoditySchwartzPiecewiseConstantParametrization::variance(const Time t) const {
@@ -179,12 +179,12 @@ inline const QuantLib::ext::shared_ptr<Parameter> CommoditySchwartzPiecewiseCons
     else if (i == 1)
         return kappa_;
     else
-        return PiecewiseConstantHelper4::y_;
+        return PiecewiseConstantHelper1::y_;
 }
 
 inline const Array& CommoditySchwartzPiecewiseConstantParametrization::parameterTimes(const Size i) const {
     QL_REQUIRE(i < 3, "parameter " << i << " does not exist, only have 2");
-    return PiecewiseConstantHelper4::t_;
+    return PiecewiseConstantHelper1::t_;
 }
 
 } // namespace QuantExt

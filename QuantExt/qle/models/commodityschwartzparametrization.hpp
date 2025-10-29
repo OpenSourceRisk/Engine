@@ -45,19 +45,19 @@ public:
 
     Size numberOfParameters() const override { return 3; }
     //! State variable variance on [0, t]
-    virtual Real variance(const Time t) const { return 0.0; }
+    virtual Real variance(const Time t) const = 0;
     //! State variable Y's diffusion at time t: sigma * exp(kappa * t)
-    virtual Real sigma(const Time t) const { return 0.0; }
+    virtual Real sigma(const Time t) const = 0;
     //! Inspector for the current value of model parameter sigma (direct)
-    virtual Real sigmaParameter() const { return 0.0; }
+    virtual Real sigmaParameter() const = 0;
     //! Inspector for the current value of model parameter kappa (direct)
-    virtual Real kappaParameter() const { return 0.0; }
+    virtual Real kappaParameter() const = 0;
     //! Inspector for the current value of model parameter a (direct)
-    virtual Real a(const QuantLib::Time t) const { return 0.0; }
+    virtual Real a(const QuantLib::Time t) const = 0;
     //! Inspector for the current value of model parameter m:= exp(a) (direct)
-    virtual Real m(const QuantLib::Time t) const { return 0.0; }
+    virtual Real m(const QuantLib::Time t) const = 0;
     //! Variance V(t,T) used in the computation of F(t,T)
-    virtual Real VtT(Real t, Real T) { return 0.0; }    
+    virtual Real VtT(Real t, Real T) = 0;   
 
     Handle<QuantExt::PriceTermStructure> priceCurve() const { return priceCurve_; }
     const Handle<Quote> fxSpotToday() const { return fxSpotToday_; }

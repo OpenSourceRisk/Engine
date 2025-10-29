@@ -40,9 +40,11 @@ using namespace QuantLib;
 class PiecewiseConstantHelper1 {
 public:
     PiecewiseConstantHelper1(const Array& t,
-        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>(), 
+        const bool rcll = true);
     PiecewiseConstantHelper1(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts,
-        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+        const QuantLib::ext::shared_ptr<QuantLib::Constraint>& constraint = QuantLib::ext::make_shared<QuantLib::NoConstraint>(), 
+        const bool rcll = true);
 
     const Array& t() const;
     const QuantLib::ext::shared_ptr<Parameter> p() const;
@@ -58,10 +60,11 @@ public:
 protected:
     const Array t_;
     /*! y are the raw values in the sense of parameter transformation */
-    const QuantLib::ext::shared_ptr<PseudoParameter> y_;
+    QuantLib::ext::shared_ptr<PseudoParameter> y_;
 
 private:
     mutable std::vector<Real> b_;
+    bool rcll_ = true;
 };
 
 //! Piecewise Constant Helper 11
@@ -302,7 +305,7 @@ inline Real PiecewiseConstantHelper4::direct(const Real x) const { return x * x;
 inline Real PiecewiseConstantHelper4::inverse(const Real y) const { return std::sqrt(y); }
 
 inline Real PiecewiseConstantHelper1::y(const Time t) const {
-    return direct(QL_PIECEWISE_FUNCTION(t_, y_->params(), t));
+    return rcll_ ? direct(QL_PIECEWISE_FUNCTION(t_, y_->params(), t)) : direct(QL_PIECEWISE_FUNCTION2(t_, y_->params(), t));
 }
 
 inline Real PiecewiseConstantHelper2::y(const Time t) const {

@@ -793,10 +793,7 @@ void CrossAssetModel::calibrateComSchwartz1fGlobal(
     const AssetType& assetType, const Size aIdx, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
     OptimizationMethod& method, const EndCriteria& endCriteria, const std::map<Size, bool>& toCalibrate,
     const Constraint& constraint, const std::vector<Real>& weights) {
-    //QL_REQUIRE(assetType == CrossAssetModel::AssetType::COM, "Unsupported AssetType for BS calibration");
-    //calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(assetType, 1, aIdx, Null<Size>()));
-    //update();
-
+    
     QL_REQUIRE(assetType == CrossAssetModel::AssetType::COM, "Unsupported AssetType for BS calibration");
     // Initialise the parameters to move first to get the size.
     vector<bool> fixedParams = MoveParameter(CrossAssetModel::AssetType::COM, 0, aIdx, Null<Size>());
