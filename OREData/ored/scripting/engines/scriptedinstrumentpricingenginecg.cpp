@@ -41,18 +41,18 @@ namespace data {
 
 namespace {
 
-// helper that converts a context value to a ql additional result (i.e. boost::any)
+// helper that converts a context value to a ql additional result (i.e. QuantLib::ext::any)
 
-struct anyGetterCg : public boost::static_visitor<boost::any> {
-    boost::any operator()(const RandomVariable& x) const { QL_FAIL("unexpected call to anyGetter (RandomVariable)"); }
-    boost::any operator()(const EventVec& x) const { return x.value; }
-    boost::any operator()(const IndexVec& x) const { return x.value; }
-    boost::any operator()(const CurrencyVec& x) const { return x.value; }
-    boost::any operator()(const DaycounterVec& x) const { return x.value; }
-    boost::any operator()(const Filter& x) const { QL_FAIL("unexpected call to anyGetter (Filter)"); }
+struct anyGetterCg : public boost::static_visitor<QuantLib::ext::any> {
+    QuantLib::ext::any operator()(const RandomVariable& x) const { QL_FAIL("unexpected call to anyGetter (RandomVariable)"); }
+    QuantLib::ext::any operator()(const EventVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const IndexVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const CurrencyVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const DaycounterVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const Filter& x) const { QL_FAIL("unexpected call to anyGetter (Filter)"); }
 };
 
-boost::any valueToAnyCg(const ValueType& v) { return boost::apply_visitor(anyGetterCg(), v); }
+QuantLib::ext::any valueToAnyCg(const ValueType& v) { return boost::apply_visitor(anyGetterCg(), v); }
 
 double externalAverage(const std::vector<double>& v) {
     boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::mean>> acc;
@@ -471,7 +471,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                         instrumentAdditionalResults_[r.first] =
                             model_->extractT0Result(values[cg_var(*g, r.second + "_0")]);
                     } else {
-                        boost::any t = valueToAnyCg(s->second);
+                        QuantLib::ext::any t = valueToAnyCg(s->second);
                         instrumentAdditionalResults_[r.first] = t;
                     }
                     DLOG("got additional result '" << r.first << "' referencing script variable '" << r.second << "'");
@@ -491,11 +491,11 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                             tmpdouble.push_back(
                                 model_->extractT0Result(values[cg_var(*g, r.second + "_" + std::to_string(i))]));
                         } else {
-                            boost::any t = valueToAnyCg(v->second[i]);
+                            QuantLib::ext::any t = valueToAnyCg(v->second[i]);
                             if (t.type() == typeid(std::string))
-                                tmpstring.push_back(boost::any_cast<std::string>(t));
+                                tmpstring.push_back(QuantLib::ext::any_cast<std::string>(t));
                             else if (t.type() == typeid(QuantLib::Date))
-                                tmpdate.push_back(boost::any_cast<QuantLib::Date>(t));
+                                tmpdate.push_back(QuantLib::ext::any_cast<QuantLib::Date>(t));
                             else {
                                 QL_FAIL("unexpected result type '" << t.type().name() << "' for result variable '"
                                                                    << r.first << "' referencing script variable '"

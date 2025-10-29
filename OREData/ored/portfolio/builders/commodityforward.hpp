@@ -53,7 +53,7 @@ protected:
             discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing)),  
-            boost::none, Date(),
+            QuantLib::ext::nullopt, Date(),
             market_->fxRate(ccy.code() + npvCcy.code(), configuration(MarketContext::pricing)));
     }
 };

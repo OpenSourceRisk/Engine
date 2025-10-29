@@ -35,7 +35,7 @@
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 namespace ore {
@@ -119,7 +119,7 @@ public:
 
     // refdate <= obsdate required
     virtual RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                               const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                               const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                const RandomVariable& addRegressor2) const = 0;
 
     /* eval index at (past or future) obsdate:
@@ -162,14 +162,14 @@ public:
     virtual void resetNPVMem() {}
 
     // additional results provided by the model
-    const std::map<std::string, boost::any>& additionalResults() const { return additionalResults_; }
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
 
 protected:
     // default implementation lazy object interface
     void performCalculations() const override {}
 
     // map with additional results provided by this model instance
-    mutable std::map<std::string, boost::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
 
 private:
     // size of random variables within model

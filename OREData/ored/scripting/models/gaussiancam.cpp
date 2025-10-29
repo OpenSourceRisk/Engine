@@ -574,7 +574,7 @@ RandomVariable GaussianCam::getNumeraire(const Date& s) const {
 Real GaussianCam::getFxSpot(const Size idx) const { return fxSpots_.at(idx)->value(); }
 
 RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                                const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                                const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                 const RandomVariable& addRegressor2) const {
 
     calculate();

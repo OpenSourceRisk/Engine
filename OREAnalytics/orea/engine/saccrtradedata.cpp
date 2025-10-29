@@ -107,7 +107,7 @@ Real phi(QuantLib::ext::optional<Real> P, QuantLib::ext::optional<Real> K, Quant
         return x > 0 ? 1 : -1;
     } else {
         const Real x =
-            callPut * (std::log(*P / *K) + 0.5 * sigma.get() * sigma.get() * T.get()) / (*sigma * std::sqrt(*T));
+            callPut * (std::log(*P / *K) + 0.5 * sigma.value() * sigma.value() * T.value()) / (*sigma * std::sqrt(*T));
         const QuantLib::CumulativeNormalDistribution N;
         return N(x);
     }
@@ -948,7 +948,7 @@ UnderlyingData SaccrTradeData::Impl::getUnderlyingData(const string& originalNam
 
     OREAssetClass assetClass = OREAssetClass::EQ;
     if (oreAssetClass.has_value()) {
-        assetClass = oreAssetClass.get();
+        assetClass = oreAssetClass.value();
     } else {
         try {
             auto index = parseIndex(originalName);
@@ -1046,7 +1046,7 @@ vector<Contribution> SaccrTradeData::Impl::calculateContributions() const {
         }
 
         c.adjustedNotional *=
-            getSupervisoryDuration(c.underlyingData.saccrAssetClass, c.startDate, c.endDate).get_value_or(1.0);
+            getSupervisoryDuration(c.underlyingData.saccrAssetClass, c.startDate, c.endDate).value_or(1.0);
         if (c.maturity == Null<Real>())
             c.maturity = getMaturity();
         if (c.maturityFactor == Null<Real>())
@@ -1276,12 +1276,12 @@ SaccrTradeData::Impl::getSupervisoryDuration(const AssetClass& assetClass,
                                              const QuantLib::ext::optional<Real>& startDate,
                                              const QuantLib::ext::optional<Real>& endDate) const {
 
-    QuantLib::ext::optional<Real> supervisoryDuration = boost::none;
+    QuantLib::ext::optional<Real> supervisoryDuration = QuantLib::ext::nullopt;
 
     if (assetClass == AssetClass::IR || assetClass == AssetClass::Credit) {
         QL_REQUIRE(startDate.has_value() && endDate.has_value(),
                    "SaccrTradeData::Impl::getSupervisoryDuration() : start and end date cannot be null");
-        return (std::exp(-0.05 * startDate.get()) - std::exp(-0.05 * endDate.get())) / 0.05;
+        return (std::exp(-0.05 * startDate.value()) - std::exp(-0.05 * endDate.value())) / 0.05;
     }
 
     return supervisoryDuration;
@@ -1670,7 +1670,7 @@ string SaccrTradeData::Impl::getBucket(const Contribution& contribution) const {
         // TODO: SubAsset Class for Commodity - same as hedgingSet in many cases, but not always, e.g. HS=Energy,
         // B=OIL/GAS We should probably also change the bucket mapping to make it configurable like the SIMM bucket
         // mapper
-        bucket = contribution.hedgingData.hedgingSubset.get_value_or("");
+        bucket = contribution.hedgingData.hedgingSubset.value_or("");
     }
 
     return bucket;

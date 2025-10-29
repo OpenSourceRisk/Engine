@@ -37,7 +37,7 @@ class CorrelationReport{
 public:
     CorrelationReport(const QuantLib::ext::shared_ptr<ScenarioReader>& scenario,
                       const std::string& correlationMethod,
-                      boost::optional<ore::data::TimePeriod> period,
+                      QuantLib::ext::optional<ore::data::TimePeriod> period,
                       const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                       const QuantLib::ext::shared_ptr<ScenarioShiftCalculator>& shiftCalc = nullptr)
         : scenario_(scenario), correlationMethod_(correlationMethod), period_(period), hisScenGen_(hisScenGen),
@@ -51,7 +51,7 @@ public:
 protected:
     QuantLib::ext::shared_ptr<ScenarioReader> scenario_;
     std::string correlationMethod_;
-    boost::optional<ore::data::TimePeriod> period_;
+    QuantLib::ext::optional<ore::data::TimePeriod> period_;
     QuantLib::ext::shared_ptr<HistoricalSensiPnlCalculator> sensiPnlCalculator_;
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalc_;
@@ -61,7 +61,7 @@ protected:
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
     
     ore::data::TimePeriod covariancePeriod() const { return period_.value(); } 
-    std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
+    std::vector<ore::data::TimePeriod> timePeriods() { return {period_.value()}; }
     std::string mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF);
 };
 

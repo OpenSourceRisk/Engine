@@ -26,7 +26,7 @@ namespace QuantExt {
 
 CrossCcySwapEngine::CrossCcySwapEngine(const Currency& ccy1, const Handle<YieldTermStructure>& currency1Discountcurve,
                                        const Currency& ccy2, const Handle<YieldTermStructure>& currency2Discountcurve,
-                                       const Handle<Quote>& spotFX, boost::optional<bool> includeSettlementDateFlows,
+                                       const Handle<Quote>& spotFX, QuantLib::ext::optional<bool> includeSettlementDateFlows,
                                        const Date& settlementDate, const Date& npvDate, const Date& spotFXSettleDate)
     : ccy1_(ccy1), currency1Discountcurve_(currency1Discountcurve), ccy2_(ccy2),
       currency2Discountcurve_(currency2Discountcurve), spotFX_(spotFX),

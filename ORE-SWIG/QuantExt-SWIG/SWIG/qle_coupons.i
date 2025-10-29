@@ -102,7 +102,7 @@ class AverageONLeg {
     AverageONLeg& withNakedOption(const bool nakedOption);
     AverageONLeg& withLocalCapFloor(const bool localCapFloor);
     AverageONLeg& withInArrears(const bool inArrears);
-    AverageONLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
+    AverageONLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
     AverageONLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
     AverageONLeg& withAverageONIndexedCouponPricer(const ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(

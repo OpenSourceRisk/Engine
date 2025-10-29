@@ -33,12 +33,12 @@ CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrenc
                                      const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing,
                                      Real recNominal, const Currency& recCurrency, const Schedule& recSchedule,
                                      const QuantLib::ext::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing,
-                                     Size payPaymentLag, Size recPaymentLag, boost::optional<bool> payIncludeSpread,
-                                     boost::optional<Period> payLookback, boost::optional<Size> payFixingDays,
-                                     boost::optional<Size> payRateCutoff, boost::optional<bool> payIsAveraged,
-                                     boost::optional<bool> recIncludeSpread, boost::optional<Period> recLookback,
-                                     boost::optional<Size> recFixingDays, boost::optional<Size> recRateCutoff,
-                                     boost::optional<bool> recIsAveraged, const bool telescopicValueDates)
+                                     Size payPaymentLag, Size recPaymentLag, QuantLib::ext::optional<bool> payIncludeSpread,
+                                     QuantLib::ext::optional<Period> payLookback, QuantLib::ext::optional<Size> payFixingDays,
+                                     QuantLib::ext::optional<Size> payRateCutoff, QuantLib::ext::optional<bool> payIsAveraged,
+                                     QuantLib::ext::optional<bool> recIncludeSpread, QuantLib::ext::optional<Period> recLookback,
+                                     QuantLib::ext::optional<Size> recFixingDays, QuantLib::ext::optional<Size> recRateCutoff,
+                                     QuantLib::ext::optional<bool> recIsAveraged, const bool telescopicValueDates)
     : CrossCcySwap(2), payNominal_(payNominal), payCurrency_(payCurrency), paySchedule_(paySchedule),
       payIndex_(payIndex), paySpread_(paySpread), payGearing_(payGearing), recNominal_(recNominal),
       recCurrency_(recCurrency), recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread),

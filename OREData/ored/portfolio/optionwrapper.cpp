@@ -134,8 +134,8 @@ Real OptionWrapper::NPV() const {
     }
 }
 
-const std::map<std::string, boost::any>& OptionWrapper::additionalResults() const {
-    static std::map<std::string, boost::any> emptyMap;
+const std::map<std::string, QuantLib::ext::any>& OptionWrapper::additionalResults() const {
+    static std::map<std::string, QuantLib::ext::any> emptyMap;
     NPV();
     if (exercised_) {
         if (activeUnderlyingInstrument_ != nullptr)

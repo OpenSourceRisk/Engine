@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/option.hpp>
 #include <ql/types.hpp>
-
+// Have to use boost optional as long we support boost versions < 1.84, where std::optional serialization is not supported
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -191,6 +191,8 @@ protected:
 
 private:
     QuantLib::DeltaVolQuote::AtmType atmType_;
+    // boost optional is required as long we support boost < 1.84, where std::optional serialization is not
+    // supported
     boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType_;
 
     //! Perform validation

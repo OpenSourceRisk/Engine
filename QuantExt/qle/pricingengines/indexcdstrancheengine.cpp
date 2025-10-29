@@ -31,7 +31,7 @@ using std::vector;
 namespace QuantExt {
 
 IndexCdsTrancheEngine::IndexCdsTrancheEngine(const Handle<YieldTermStructure>& discountCurve,
-                                             boost::optional<bool> includeSettlementDateFlows)
+                                             QuantLib::ext::optional<bool> includeSettlementDateFlows)
     : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows) {
     registerWith(discountCurve);
 }

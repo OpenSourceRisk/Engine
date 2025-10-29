@@ -100,7 +100,7 @@ public:
                         const std::string& portfolioFilter, const std::vector<QuantLib::Real>& p,
                         const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
                         const SalvagingAlgorithm::Type varSalvagingAlgorithm,
-                        boost::optional<ore::data::TimePeriod> period,
+                        QuantLib::ext::optional<ore::data::TimePeriod> period,
                         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
 
     ParametricVarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
@@ -109,7 +109,7 @@ public:
                         const std::vector<QuantLib::Real>& p,
                         const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
                         const SalvagingAlgorithm::Type varSalvagingAlgorithm,
-                        boost::optional<ore::data::TimePeriod> period,
+                        QuantLib::ext::optional<ore::data::TimePeriod> period,
                         std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
 
     void createVarCalculator() override;

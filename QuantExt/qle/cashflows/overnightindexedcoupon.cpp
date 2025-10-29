@@ -597,7 +597,7 @@ OvernightLeg& OvernightLeg::withInArrears(const bool inArrears) {
     return *this;
 }
 
-OvernightLeg& OvernightLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+OvernightLeg& OvernightLeg::withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod) {
     lastRecentPeriod_ = lastRecentPeriod;
     return *this;
 }

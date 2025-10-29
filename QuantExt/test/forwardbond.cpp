@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond(QuantLib::ext::make_shared<QuantLib::Bond>(0, WeekendsOnly(), today, leg));
     Handle<Quote> recovery(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     auto pricingEngine = QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
-        yts, dpts, recovery, bondSpecificSpread, 2 * Months, boost::none, false, incomeTS, false, false, false);
+        yts, dpts, recovery, bondSpecificSpread, 2 * Months, QuantLib::ext::nullopt, false, incomeTS, false, false, false);
     bond->setPricingEngine(pricingEngine);
 
     Real price = bond->NPV();
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond4) { // now true forward bond, one coupon be
     Handle<Quote> recovery(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     QuantLib::ext::shared_ptr<PricingEngine> pricingEngine(
         QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
-            yts, dpts, recovery, bondSpecificSpread, 2 * Months, boost::none, false, incomeTS, false, false, false));
+            yts, dpts, recovery, bondSpecificSpread, 2 * Months, QuantLib::ext::nullopt, false, incomeTS, false, false, false));
     bond->setPricingEngine(pricingEngine);
 
     Real price = bond->NPV();
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond5) { // now true forward bond, one coupon be
     Handle<Quote> recovery(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     QuantLib::ext::shared_ptr<PricingEngine> pricingEngine(
         QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
-            yts, dpts, recovery, bondSpecificSpread, 2 * Months, boost::none, false, incomeTS, false, false, false));
+            yts, dpts, recovery, bondSpecificSpread, 2 * Months, QuantLib::ext::nullopt, false, incomeTS, false, false, false));
     bond->setPricingEngine(pricingEngine);
 
     Real price = bond->NPV();
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
     Handle<Quote> recovery(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     QuantLib::ext::shared_ptr<PricingEngine> pricingEngine(
         QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
-            yts, dpts, recovery, bondSpecificSpread, 2 * Months, boost::none, false, incomeTS, false, false, false));
+            yts, dpts, recovery, bondSpecificSpread, 2 * Months, QuantLib::ext::nullopt, false, incomeTS, false, false, false));
     bond->setPricingEngine(pricingEngine);
 
     Real price = bond->NPV();

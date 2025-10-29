@@ -171,8 +171,8 @@ public:
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
                                premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
-                               vector<string>(), "", "", "", "Asian", "Arithmetic", boost::none, boost::none,
-                               boost::none);
+                               vector<string>(), "", "", "", "Asian", "Arithmetic", QuantLib::ext::nullopt, QuantLib::ext::nullopt,
+                               QuantLib::ext::nullopt);
 
          QuantLib::ext::shared_ptr<CommodityAsianOption> asianOption = QuantLib::ext::make_shared<CommodityAsianOption>(
              env, "CommodityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,

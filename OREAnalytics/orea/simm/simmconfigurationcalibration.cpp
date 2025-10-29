@@ -40,8 +40,8 @@ string SimmConfigurationCalibration::group(const string& qualifier,
     return result;
 }
 
-QuantLib::Real SimmConfigurationCalibration::weight(const RiskType& rt, boost::optional<string> qualifier,
-                                                   boost::optional<string> label_1,
+QuantLib::Real SimmConfigurationCalibration::weight(const RiskType& rt, QuantLib::ext::optional<string> qualifier,
+                                                   QuantLib::ext::optional<string> label_1,
                                                    const string& calculationCurrency) const {
 
     if (rt == RiskType::FX) {

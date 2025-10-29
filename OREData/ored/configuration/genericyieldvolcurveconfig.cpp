@@ -54,7 +54,7 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
     const string& swapIndexBase, const vector<string>& smileOptionTenors, const vector<string>& smileUnderlyingTenors,
     const vector<string>& smileSpreads,
-    const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
+    const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel), allowSmile_(true),
       requireSwapIndexBases_(false), qualifier_(qualifier), dimension_(dimension), volatilityType_(volatilityType),
