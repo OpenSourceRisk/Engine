@@ -20,6 +20,7 @@
 #define ored_utilitles_i
 
 %include types.i
+%include ored_iborfallbackconfig.i
 
 %{
 using std::string;
@@ -33,13 +34,15 @@ using ore::data::buildCollateralCurveConfig;
 using ore::data::getCollateralisedDiscountCcy;
 using ore::data::isCollateralCurve;
 using ore::data::CurveConfigurations;
+using ore::data::IborFallbackConfig;
 using ore::data::MarketObject;
 
 %}
 void addMarketObjectDependencies(std::map<std::string, std::map<MarketObject, std::set<std::string>>>* objects,
                                  const ext::shared_ptr<CurveConfigurations>& curveConfigs, const std::string& baseCcy,
                                  const std::string& baseCcyDiscountCurve,
-                                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+                                 ext::shared_ptr<IborFallbackConfig> iborFallbackConfig =
+                                    ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()));
 
 std::string marketObjectToCurveSpec(const MarketObject& mo, const std::string& name, const std::string& baseCcy,
                                     const ext::shared_ptr<CurveConfigurations>& curveConfigs);

@@ -20,6 +20,7 @@
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
@@ -30,6 +31,7 @@
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/payoff.hpp>
 
 #include <boost/algorithm/string/join.hpp>
@@ -108,8 +110,8 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                 return (RandomVariable(x.size(), ibor->gearing()) *
                             lgm.fixing(ibor->index(), ibor->fixingDate(), t, x) +
                         RandomVariable(x.size(), ibor->spread())) *
-                       RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal() * payrec) *
-                       lgm.reducedDiscountBond(t, T, x, discountCurve);
+                        RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal() * payrec) *
+                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
         } else if (auto fix = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
@@ -120,6 +122,23 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
             done = true;
+        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(cpn)) {
+            info.maxEstimationTime_ = timeFromReference(ibor->fixingDate());
+            info.calculator_ = [ibor, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                                 const Handle<YieldTermStructure>& discountCurve) {
+                auto shortW = RandomVariable(x.size(), ibor->interpolatedIborIndex()->shortWeight(ibor->fixingDate()));
+                auto longW = RandomVariable(x.size(), ibor->interpolatedIborIndex()->longWeight(ibor->fixingDate()));
+                RandomVariable shortFixing =
+                    lgm.fixing(ibor->interpolatedIborIndex()->shortIndex(), ibor->fixingDate(), t, x);
+                RandomVariable longFixing =
+                    lgm.fixing(ibor->interpolatedIborIndex()->longIndex(), ibor->fixingDate(), t, x);
+                return (RandomVariable(x.size(), ibor->gearing()) *
+                            shortW * shortFixing + longW * longFixing +
+                        RandomVariable(x.size(), ibor->spread())) *
+                        RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal() * payrec) *
+                        lgm.reducedDiscountBond(t, T, x, discountCurve);
+            };
+            done = true;
         } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn)) {
             info.maxEstimationTime_ = timeFromReference(on->fixingDates().front());
             info.calculator_ = [on, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
@@ -128,6 +147,18 @@ NumericLgmMultiLegOptionEngineBase::CashflowInfo NumericLgmMultiLegOptionEngineB
                                             on->valueDates(), on->dt(), on->rateCutoff(), on->includeSpread(),
                                             on->spread(), on->gearing(), on->lookback(), Null<Real>(), Null<Real>(),
                                             false, false, t, x) *
+                       RandomVariable(x.size(), on->accrualPeriod() * on->nominal() * payrec) *
+                       lgm.reducedDiscountBond(t, T, x, discountCurve);
+            };
+            done = true;
+        } else if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(cpn)) {
+            info.maxEstimationTime_ = timeFromReference(on->fixingDates().front());
+            info.calculator_ = [on, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
+                                               const Handle<YieldTermStructure>& discountCurve) {
+                return lgm.compoundedOnRate(QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(on->index()),
+                                            on->fixingDates(), on->valueDates(), on->dt(), on->lockoutDays(), false,
+                                            on->spread(), on->gearing(), 0 * Days, Null<Real>(), Null<Real>(), false,
+                                            false, t, x) *
                        RandomVariable(x.size(), on->accrualPeriod() * on->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
@@ -330,6 +361,7 @@ bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
         for (Size j = 0; j < legs[i].size(); ++j) {
             if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
                 if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) || QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
@@ -342,7 +374,7 @@ bool NumericLgmMultiLegOptionEngineBase::instrumentIsHandled(
                            QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredCoupon>(c)->underlying())))) {
                     messages.push_back(
                         "NumericLgmMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
-                        "(capfloored) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. leg = " +
+                        "(capfloored) (interpolated) Ibor, (capfloored) ON comp, (capfloored) ON avg, BMA/SIFMA, subperiod. leg = " +
                         std::to_string(i) + " cf = " + std::to_string(j));
                     isHandled = false;
                 }
@@ -450,6 +482,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     RandomVariable underlyingNpv(solver_->gridSize(), 0.0);
     RandomVariable optionNpv(solver_->gridSize(), 0.0);
     RandomVariable provisionalNpv(solver_->gridSize(), 0.0);
+    RandomVariable provisionalNpvNonCached(solver_->gridSize(), 0.0);
 
     std::vector<RandomVariable> cache(cashflows.size());
 
@@ -463,6 +496,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // update cashflows on current time
 
         provisionalNpv = RandomVariable(solver_->gridSize(), 0.0);
+        provisionalNpvNonCached = RandomVariable(solver_->gridSize(), 0.0);
 
         for (Size i = 0; i < cashflows.size(); ++i) {
             if (cashflowStatus[i] == CashflowStatus::Done)
@@ -488,7 +522,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
                         cashflowStatus[i] = CashflowStatus::Done;
                     }
                 } else {
-                    provisionalNpv += cashflows[i].pv(lgm, t_from, state, discountCurve_) * cpnRatio;
+                    provisionalNpvNonCached += cashflows[i].pv(lgm, t_from, state, discountCurve_) * cpnRatio;
                 }
             } else if (cashflows[i].mustBeEstimated(t_from) && cashflowStatus[i] == CashflowStatus::Open) {
                 cache[i] = cashflows[i].pv(lgm, t_from, state, discountCurve_);
@@ -502,7 +536,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
             auto rebateNpv =
                 getRebatePv(lgm, t_from, state, discountCurve_, rebatedExercise,
                             exercise_->type() == Exercise::American ? Null<Date>() : optionDates.at(t_from));
-            optionNpv = max(optionNpv, underlyingNpv + provisionalNpv + rebateNpv);
+            optionNpv = max(optionNpv, underlyingNpv + provisionalNpv + provisionalNpvNonCached + rebateNpv);
         }
 
         // roll back
@@ -515,9 +549,10 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
                     continue;
                 c = solver_->rollback(c, t_from, t_to);
             }
-            // need to roll back provisionalNpv only for the last step t_1 -> t_0 = 0
+            /* need to roll back provisionalNpvNonCached for the last step t_1 -> t_0 = 0 since
+               it is added to the underlying value below */
             if (it == std::next(timeGrid.rend(), -1))
-                provisionalNpv = solver_->rollback(provisionalNpv, t_from, t_to);
+                provisionalNpvNonCached = solver_->rollback(provisionalNpvNonCached, t_from, t_to);
         }
     }
 
@@ -529,7 +564,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         if (c.initialised())
             underlyingNpv_ += c.at(0);
     }
-    underlyingNpv_ += provisionalNpv.at(0);
+    underlyingNpv_ += provisionalNpvNonCached.at(0);
 
     additionalResults_ = getAdditionalResultsMap(solver_->model()->getCalibrationInfo());
 

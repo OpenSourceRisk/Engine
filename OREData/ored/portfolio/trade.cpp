@@ -31,6 +31,7 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/typedcashflow.hpp>
 #include <qle/instruments/cashflowresults.hpp>
@@ -679,6 +680,10 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                         fixingValue = (c->rate() - c->spread()) / c->gearing();
                     }
 
+                    if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantExt::InterpolatedIborCoupon>(ptrFloat)) {
+                        fixingValue = (c->rate() - c->spread()) / c->gearing();
+                    }
+
                     if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::CappedFlooredIborCoupon>(ptrFloat)) {
                         fixingValue =
                             (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
@@ -808,6 +813,9 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                             usesSwaptionVol = true;
                         } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
                             qlIndexName = ibor->index()->name();
+                            usesCapVol = true;
+                        } else if (auto ibor = QuantLib::ext::dynamic_pointer_cast<InterpolatedIborCoupon>(tmp->underlying())) {
+                            qlIndexName = ibor->iborIndex()->name();
                             usesCapVol = true;
                         }
                     } else if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {

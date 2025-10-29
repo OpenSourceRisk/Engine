@@ -141,14 +141,25 @@ void DiscountingBondTRSEngine::calculate() const {
         /* the return leg is based on a bond index unconditional on default and therefore
            contains recovery in the forward estimation of the bond price */
 
-        returnLeg += c->amount() * discountCurve_->discount(c->date());
+        /* TODO review the weighting of the return payment with the survival prob */
+
+        Real S = 1.0;
+
+        if (survivalWeightedFundingReturnCashflows_) {
+            S = (treatSecuritySpreadAsCreditSpread_
+                     ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
+                     : 1.0) *
+                bondDefaultCurve->survivalProbability(c->date());
+        }
+
+        returnLeg += c->amount() * discountCurve_->discount(c->date()) * S;
 
         cfResults.emplace_back();
         cfResults.back().amount = mult * c->amount();
         cfResults.back().payDate = c->date();
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 0;
-        cfResults.back().discountFactor = discountCurve_->discount(c->date());
+        cfResults.back().discountFactor = discountCurve_->discount(c->date()) * S;
         cfResults.back().type = "Return";
         if (auto bc = QuantLib::ext::dynamic_pointer_cast<BondTRSCashFlow>(c)) {
             cfResults.back().fixingDate = bc->fixingEndDate();
@@ -177,26 +188,32 @@ void DiscountingBondTRSEngine::calculate() const {
 
     // get the expected cashflows
 
+    QuantLib::Leg futureCashflows;
+    QuantExt::forwardPrice(bd, today, today, false, nullptr, &futureCashflows);
+
+    QuantLib::Leg pastCashflows;
+    std::copy_if(bd->cashflows().begin(), bd->cashflows().end(), std::back_inserter(pastCashflows),
+                 [&today](const auto& cf) { return cf->date() <= today; });
+
     QuantLib::Leg expectedCashflows;
-    QuantExt::forwardPrice(bd, today, today, false, nullptr, &expectedCashflows);
+    std::copy(pastCashflows.begin(), pastCashflows.end(), std::back_inserter(expectedCashflows));
+    std::copy(futureCashflows.begin(), futureCashflows.end(), std::back_inserter(expectedCashflows));
 
     for (Size i = 0; i < expectedCashflows.size(); i++) {
 
-        Date payDate = arguments_.paymentCalendar.advance(
-            expectedCashflows[i]->date(), arguments_.payLagPeriod == Period() ? 0 * Days : arguments_.payLagPeriod);
-
         // 5a skip bond cashflows that are outside the total return valuation schedule
 
-        if (payDate <= start || payDate > end)
+        if (expectedCashflows[i]->date() <= start || expectedCashflows[i]->date() > end)
             continue;
 
         // 5b determine bond cf pay date
 
         Date bondFlowPayDate;
         Date bondFlowValuationDate;
-        bool paymentAfterMaturityButWithinBondSettlement = payDate > arguments_.valuationDates.back() && payDate <= end;
+        bool paymentAfterMaturityButWithinBondSettlement =
+            expectedCashflows[i]->date() > arguments_.valuationDates.back() && expectedCashflows[i]->date() <= end;
         if (arguments_.payBondCashFlowsImmediately || paymentAfterMaturityButWithinBondSettlement) {
-            bondFlowPayDate = payDate;
+            bondFlowPayDate = bd->calendar().advance(expectedCashflows[i]->date(), arguments_.paymentLag);
             bondFlowValuationDate = expectedCashflows[i]->date();
         } else {
             const auto& payDates = arguments_.paymentDates;

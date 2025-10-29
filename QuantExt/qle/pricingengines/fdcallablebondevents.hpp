@@ -72,11 +72,10 @@ public:
     bool hasAmericanExercise() const; // at least on "from this date on" call data
 
     Date latestRelevantDate() const;  // the latest event date after finalise
+    Real time(const Date& d) const;   // time associated to a date
 
 private:
     Date nextExerciseDate(const Date& d, const std::vector<CallableBond::CallabilityData>& data) const;
-
-    Real time(const Date& d) const;
 
     void processBondCashflows();
     void processExerciseData(const std::vector<CallableBond::CallabilityData>& sourceData,

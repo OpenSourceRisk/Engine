@@ -144,6 +144,7 @@ public:
     //@{
     //! Set the trade id
     string& id() { return id_; }
+    void setId(const std::string& id) { id_ = id; };
 
     bool& isSubTrade() { return isSubTrade_; }
     //! Set the envelope with counterparty and portfolio info

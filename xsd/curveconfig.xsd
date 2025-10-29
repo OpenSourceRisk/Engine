@@ -620,8 +620,11 @@
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="xs:string" name="NominalTermStructure" minOccurs="1" maxOccurs="1"/>
       <xs:element type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="quoteType" name="Quotes"/>
-      <xs:element type="xs:string" name="Conventions"/>
+      <!-- Legacy block: Quotes/Conventions OR new Segments block -->
+      <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+      <!-- New Segments block use instead of Quotes/Conventions-->
+      <xs:element type="inflSegmentsType" name="Segments" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
@@ -633,6 +636,19 @@
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="inflSegmentsType">
+    <xs:sequence>
+      <xs:element type="inlfSegmentType" name="Segment" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inlfSegmentType">
+    <xs:all>
+      <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -698,6 +714,7 @@
       <xs:element type="dayCounter" name="YieldCurveDayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="ExcludeT0FromInterpolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="yieldCurveReport" name="Report" minOccurs="0"/>
     </xs:all>
@@ -1270,8 +1287,8 @@
 
   <xs:complexType name="bootstrapConfigType">
     <xs:all>
-      <xs:element type="positiveDecimal" name="Accuracy" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="positiveDecimal" name="GlobalAccuracy" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="Accuracy" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="GlobalAccuracy" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:boolean" name="DontThrow" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:positiveInteger" name="MaxAttempts" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="MaxFactor" minOccurs="0" maxOccurs="1"/>
@@ -1292,10 +1309,10 @@
     <xs:sequence>
       <xs:element type="xs:positiveInteger" name="MaxEvaluations"/>
       <xs:element type="xs:decimal" name="InitialGuess"/>
-      <xs:element type="positiveDecimal" name="Accuracy"/>
+      <xs:element type="xs:double" name="Accuracy"/>
       <xs:choice>
         <xs:element type="minMaxType" name="MinMax"/>
-        <xs:element type="positiveDecimal" name="Step"/>
+        <xs:element type="xs:double" name="Step"/>
       </xs:choice>
       <xs:element type="xs:decimal" name="LowerBound" minOccurs="0"/>
       <xs:element type="xs:decimal" name="UpperBound" minOccurs="0"/>

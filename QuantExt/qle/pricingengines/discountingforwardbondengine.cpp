@@ -106,21 +106,15 @@ void DiscountingForwardBondEngine::calculate() const {
 
     results_.value = (arguments_.isLong ? 1.0 : -1.0) * (forwardPrice - strikeAmount) * effDiscount;
 
-    if (arguments_.compensationPayment != Null<Real>()) {
-
-        QL_REQUIRE(arguments_.compensationPaymentDate != Null<Date>(),
-                   "DiscountingForwardBondEngine::calculate(): no compensation payment date given for compensation "
-                   "payment amount "
-                       << arguments_.compensationPayment);
-
-        if (arguments_.compensationPaymentDate > discountCurve_->referenceDate()) {
-            results_.value += (arguments_.isLong ? 1.0 : -1.0) * arguments_.compensationPayment *
-                              discountCurve_->discount(arguments_.compensationPaymentDate);
-            results_.additionalResults["compensationPayment"] = arguments_.compensationPayment;
-            results_.additionalResults["compensationPaymentDate"] = arguments_.compensationPaymentDate;
-            results_.additionalResults["compensationPaymentDiscount"] =
-                discountCurve_->discount(arguments_.compensationPaymentDate);
-        }
+    Real effCmpPayment = arguments_.compensationPayment == Null<Real>() ? 0.0 : arguments_.compensationPayment;
+    Date effCmpPaymentDate = arguments_.compensationPaymentDate == Null<Date>() ? arguments_.fwdMaturityDate
+                                                                                : arguments_.compensationPaymentDate;
+    if (effCmpPaymentDate > discountCurve_->referenceDate()) {
+        results_.value +=
+            (arguments_.isLong ? -1.0 : 1.0) * effCmpPayment * discountCurve_->discount(effCmpPaymentDate);
+        results_.additionalResults["compensationPayment"] = effCmpPayment;
+        results_.additionalResults["compensationPaymentDate"] = effCmpPaymentDate;
+        results_.additionalResults["compensationPaymentDiscount"] = discountCurve_->discount(effCmpPaymentDate);
     }
 
     // relabel cashflow results from underlying bond, scale with bond notional

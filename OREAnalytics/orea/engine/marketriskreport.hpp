@@ -175,7 +175,7 @@ public:
         QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
         QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
         QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-        ore::data::IborFallbackConfig iborFallbackConfig_;
+        QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
         bool dryRun_ = false;
         //! True to enable cube writing
         bool writeCube_ = false;
@@ -189,7 +189,8 @@ public:
         FullRevalArgs(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& sm,
                       const QuantLib::ext::shared_ptr<ore::data::EngineData>& ed,
                       const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& rd = nullptr,
-                      const ore::data::IborFallbackConfig ifc = ore::data::IborFallbackConfig::defaultConfig(),
+                      const QuantLib::ext::shared_ptr<IborFallbackConfig>& ifc =
+                          QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                       const bool dr = false)
             : simMarket_(sm), engineData_(ed), referenceData_(rd), iborFallbackConfig_(ifc), dryRun_(dr) {}
     };

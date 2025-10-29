@@ -55,7 +55,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const TodaysMarketParameters& todaysMarketParams,
                    const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory,
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                   const IborFallbackConfig& iborFallbackConfig, bool continueOnError,
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, bool continueOnError,
                    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport) {
 
     // run stress simulation
@@ -89,7 +89,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     const ore::data::CurveConfigurations& curveConfigs,
     const ore::data::TodaysMarketParameters& todaysMarketParams,
     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-    const IborFallbackConfig& iborFallbackConfig, bool continueOnError,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, bool continueOnError,
     const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport) {
 
     // run stress simulation
@@ -118,7 +118,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const Size precision, const bool includePastCashflows, const CurveConfigurations& curveConfigs,
                    const TodaysMarketParameters& todaysMarketParams,
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                   const IborFallbackConfig& iborFallbackConfig, bool continueOnError,
+                   const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, bool continueOnError,
                    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& scenarioReport) {
     
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator = scenGenerator;

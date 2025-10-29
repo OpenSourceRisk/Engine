@@ -545,6 +545,9 @@
         <xs:element type="scheduleData" name="FixingSchedule" minOccurs="0"/>
         <xs:element type="scheduleData" name="ResetSchedule" minOccurs="0"/>
         <xs:element type="tradeLevelFixings" name="HistoricalFixings" minOccurs="0"/>
+        <xs:element type="stubInterpolation" name="FrontStubInterpolation" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="stubInterpolation" name="BackStubInterpolation" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="StubUseOriginalCurve" minOccurs="0" maxOccurs="1"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
@@ -5090,6 +5093,15 @@
       <xs:element type="stFreeStyleIndex" name="GasIndex"/>
       <xs:element type="stFreeStyleIndex" name="EnergyIndex"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="stubInterpolation">
+    <xs:all>
+      <xs:element type="indexNameType" name="ShortIndex" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="indexNameType" name="LongIndex" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="roundingType" name="RoundingType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="RoundingPrecision" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

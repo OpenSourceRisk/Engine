@@ -86,7 +86,7 @@ void SensitivityStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
         inputs_->continueOnError(), scenarioData->useSpreadedTermStructures(), false, false,
-        *inputs_->iborFallbackConfig(), true);
+        inputs_->iborFallbackConfig(), true);
 
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);

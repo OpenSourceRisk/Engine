@@ -51,6 +51,8 @@ public:
     //! \name Inspectors
     //@{
     const std::string& name() const { return underlying_->name(); }
+    const OptionData& option() const { return optionData_; }
+    const TradeStrike& strike() const { return strike_; }
     //@}
 
 private:

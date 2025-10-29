@@ -327,6 +327,14 @@ public:
                                 const Constraint& constraint = Constraint(),
                                 const std::vector<Real>& weights = std::vector<Real>());
 
+    /*! calibrate irhw volatilities to a sequence of ir options with
+        expiry times equal to step times in the parametrization
+        and following the procedure in HwPiecewiseStatisticalParametrization */
+    void calibrateIrHwVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+        const Size ccy, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+        OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint = Constraint(),
+        const std::vector<Real>& weights = std::vector<Real>());
+
     /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
     void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,

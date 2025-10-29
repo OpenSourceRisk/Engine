@@ -76,11 +76,11 @@ void BlackBondOptionEngine::calculate() const {
     }
 
     // hard code yield compounding convention to annual
-    Rate fwdYtm = CashFlows::yield(arguments_.underlying->cashflows(), fwdNpv, volatility_->dayCounter(), Compounded,
-                                   Annual, false, exerciseDate, exerciseDate);
-    InterestRate fwdRate(fwdYtm, volatility_->dayCounter(), Compounded, Annual);
-    Time fwdDur = CashFlows::duration(arguments_.underlying->cashflows(), fwdRate, Duration::Modified, false,
-                                      exerciseDate, exerciseDate);
+    Rate fwdYtm = QuantExt::yield(arguments_.underlying, fwdNpv / arguments_.underlying->notional(exerciseDate) * 100.0,
+                                  volatility_->dayCounter(), Compounded, Annual, exerciseDate, exerciseDate, 1E-8, 100,
+                                  0.05, QuantLib::Bond::Price::Dirty);
+    Time fwdDur = QuantExt::duration(arguments_.underlying, fwdYtm, volatility_->dayCounter(), Compounded, Annual,
+                                     Duration::Modified, exerciseDate, exerciseDate);
 
     QL_REQUIRE(arguments_.putCallSchedule.size() == 1, "BlackBondOptionEngine: only European bond options allowed");
 

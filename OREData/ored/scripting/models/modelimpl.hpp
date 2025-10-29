@@ -66,7 +66,7 @@ public:
               const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
               const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
               const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-              const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
+              const std::set<Date>& simulationDates, const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
 
     // Model interface implementation (partial)
     const std::string& baseCcy() const override { return currencies_.front(); }
@@ -111,7 +111,7 @@ protected:
     std::vector<std::string> currencies_;
     std::vector<std::string> indexCurrencies_;
     std::set<Date> simulationDates_;
-    IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
 
     std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices_;
     std::vector<std::pair<IndexInfo, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> infIndices_;

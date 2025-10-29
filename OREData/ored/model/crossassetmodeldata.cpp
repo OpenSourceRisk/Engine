@@ -72,9 +72,8 @@ namespace data {
 void InstantaneousCorrelations::fromXML(XMLNode* node) {
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
-    XMLNode* correlationNode = XMLUtils::locateNode(node, "InstantaneousCorrelations");
     CorrelationMatrixBuilder cmb;
-    if (correlationNode) {
+    if (auto correlationNode = XMLUtils::getChildNode(node, "InstantaneousCorrelations")) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
         for (Size i = 0; i < nodes.size(); ++i) {
             CorrelationFactor factor_1 = fromNode(nodes[i], true);
@@ -82,10 +81,7 @@ void InstantaneousCorrelations::fromXML(XMLNode* node) {
             Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
             cmb.addCorrelation(factor_1, factor_2, corr);
         }
-    } else {
-        QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
     }
-
     correlations_ = cmb.correlations();
 }
 
@@ -600,11 +596,12 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, QuantLib::ext::sh
             if (auto def = QuantLib::ext::dynamic_pointer_cast<HwModelData>(irDataMap["default"])) {
                 irConfigs_[i] = QuantLib::ext::make_shared<HwModelData>(
                     ccy, // overwrite this and keep the others
-                    def->calibrationType(), def->calibrateKappa(),
-                    def->kappaType(), def->kappaTimes(), def->kappaValues(), def->calibrateSigma(), def->sigmaType(),
-                    def->sigmaTimes(), def->sigmaValues(), def->optionExpiries(),
-                    def->optionTerms(), def->optionStrikes());
-                
+                    def->calibrationType(), def->calibrateKappa(), def->kappaType(), def->kappaTimes(),
+                    def->kappaValues(), def->calibrateSigma(), def->sigmaType(), def->sigmaTimes(), def->sigmaValues(),
+                    def->pcaLoadings(), def->calibratePcaSigma0(), def->pcaSigma0Type(), def->pcaSigma0Times(),
+                    def->pcaSigma0Values(), def->pcaSigmaRatios(), def->optionExpiries(), def->optionTerms(),
+                    def->optionStrikes());
+
             } else if (auto def = QuantLib::ext::dynamic_pointer_cast<IrLgmData>(irDataMap["default"])) {
                 irConfigs_[i] = QuantLib::ext::make_shared<IrLgmData>(
                     ccy, // overwrite this and keep the others
@@ -767,8 +764,9 @@ void CrossAssetModelData::buildComConfigs(std::map<std::string, QuantLib::ext::s
             QuantLib::ext::shared_ptr<CommoditySchwartzData> def = comDataMap["default"];
             QuantLib::ext::shared_ptr<CommoditySchwartzData> comData = QuantLib::ext::make_shared<CommoditySchwartzData>(
                 name, def->currency(), def->calibrationType(), def->calibrateSigma(), def->sigmaValue(),
-                def->calibrateKappa(), def->kappaValue(), def->optionExpiries(), def->optionStrikes());
-
+                def->calibrateKappa(), def->kappaValue(), def->calibrateSeasonality(), def->seasonalityParamType(), def->seasonalityTimes(),
+                def->seasonalityValues(),
+                def->optionExpiries(), def->optionStrikes());
             comConfigs_.push_back(comData);
         }
         LOG("CrossAssetModelData: COM config added for name " << name);

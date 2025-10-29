@@ -148,7 +148,7 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
-                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                    inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -159,7 +159,7 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->configurations().sensiScenarioData, inputs_->sensiRecalibrateModels(),
                     inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                    inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
 
@@ -192,7 +192,7 @@ void PricingAnalyticImpl::runAnalytic(
             auto baseCurrency = sensiAnalysis_->simMarketData()->baseCcy();
 
             QuantLib::ext::shared_ptr<SensitivityStream> ss =
-                QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency);
+                QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency, analytic()->portfolio());
 
             if (inputs_->sensiDecomposition()) {
                 ss = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
@@ -201,7 +201,9 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->market());
             }
 
-            ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+            ReportWriter(inputs_->reportNaString())
+                .writeSensitivityReport(*report, ss, inputs_->sensiThreshold(), analytic()->market(), marketConfig,
+                                        inputs_->sensiOutputPrecision());
 
             analytic()->addReport(type, "sensitivity", report);
 
@@ -246,8 +248,8 @@ void PricingAnalyticImpl::runAnalytic(
                 auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis_->sensiCubes(), parConverter,
                                                                          typesDisabled, true);
                 LOG("Sensi analysis - write par sensitivity report in memory");
-                QuantLib::ext::shared_ptr<SensitivityStream> pss =
-                    QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
+                QuantLib::ext::shared_ptr<SensitivityStream> pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(
+                    parCube, baseCurrency, analytic()->portfolio());
                 if (inputs_->sensiDecomposition()) {
                     pss = QuantLib::ext::make_shared<DecomposedSensitivityStream>(
                         pss, baseCurrency, analytic()->portfolio(), inputs_->refDataManager(),
@@ -258,7 +260,8 @@ void PricingAnalyticImpl::runAnalytic(
                 // performance. The cost for this is the memory footpring of the buffer.
                 QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
-                    .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
+                    .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold(), analytic()->market(),
+                                            marketConfig, inputs_->sensiOutputPrecision());
                 analytic()->addReport(type, "par_sensitivity", parSensiReport);
 
                 if (inputs_->outputJacobi()) {

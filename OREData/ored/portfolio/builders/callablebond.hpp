@@ -51,9 +51,9 @@ public:
     explicit CallableBondLgmEngineBuilder(const std::string& engine) : CallableBondEngineBuilder("LGM", engine) {}
 
 protected:
-    QuantLib::ext::shared_ptr<QuantExt::LGM> model(const std::string& id, const std::string& ccy,
-                                                   const QuantLib::Date& maturityDate,
-                                                   const bool generateAdditionalResults);
+    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const std::string& id, const std::string& ccy,
+                                                       const QuantLib::Date& maturityDate,
+                                                       const bool generateAdditionalResults);
 
     // Args cover a list of FD resp. Grid engine parameters
     template <class... Args>

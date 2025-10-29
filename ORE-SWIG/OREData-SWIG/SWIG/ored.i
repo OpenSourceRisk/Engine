@@ -40,13 +40,14 @@
 
 %}
 
-
 %include ored_calendarAdjustmentConfig.i
 %include ored_curvespec.i
+%include ored_curveconfig.i
 %include ored_curveconfigurations.i
 %include ored_crossassetmodeldata.i
 %include ored_conventions.i
 %include ored_conventionsbasedfutureexpiry.i
+%include ored_iborfallbackconfig.i
 %include ored_loader.i
 %include ored_log.i
 %include ored_market.i
@@ -61,5 +62,6 @@
 %include ored_utilities.i
 %include ored_volcurves.i
 %include ored_xmlutils.i
+%include ored_yieldcurveconfig.i
 
 #endif

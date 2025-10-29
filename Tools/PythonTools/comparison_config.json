@@ -153,11 +153,25 @@
           "ShiftSize_2",
           "Currency"
         ],
+		"use_cols": [
+          "Base NPV",
+          "Delta",
+          "Gamma"
+        ],
+		"optional_cols": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
-              "Delta"
+              "Delta",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -208,11 +222,20 @@
           "Delta",
           "Gamma"
         ],
+		"optional_cols": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
-              "Delta"
+              "Delta",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -338,14 +361,22 @@
           "TradeType",
           "NettingSet",
           "AssetClass",
-          "HedgingSet"
+          "HedgingSet",
+          "HedgingSubset"
+        ],
+        "optional_keys": [
+          "AgreementType",
+          "CallType",
+          "InitialMarginType",
+          "LegalEntityId"
         ],
         "column_settings": [
           {
             "names": [
               "NPV",
-              "NpvCcy",
-              "SD",
+              "Bucket",
+              "Qualifier",
+              "Currency",
               "delta",
               "d",
               "MF",
@@ -353,13 +384,51 @@
               "S",
               "E",
               "T",
-              "CurrentPrice1",
-              "CurrentPrice2",
+              "SD",
+              "CurrentPrice",
               "NumNominalFlows",
               "Price",
-              "Strike"
+              "Strike",
+              "Volatility"
             ],
             "abs_tol": 0.05,
+            "rel_tol": null
+          }
+        ]
+      },
+      "capital_crif.csv": {
+        "keys": [
+          "TradeID",
+          "PortfolioID",
+          "CounterpartyName",
+          "CounterpartyID",
+          "NettingSetNumber",
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2",
+          "AmountCurrency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": null
+          },
+          {
+            "names": [
+              "ValuationDate",
+              "EndDate",
+              "Label3",
+              "Regulation",
+              "Model",
+              "TradeType"
+            ],
+            "abs_tol": null,
             "rel_tol": null
           }
         ]
@@ -1048,6 +1117,24 @@
           }
         ]
       },
+      "stress_scenarios.csv": {
+        "keys": [
+          "Date",
+          "Scenario"
+        ],
+        "use_cols": [
+          "Numeraire"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Numeraire"
+            ],
+            "abs_tol": 0.000001,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
       ".*scenariostatistics.*\\.csv": {
         "keys": [
           "Date",
@@ -1211,12 +1298,27 @@
           "ShiftSize_2",
           "Currency"
         ],
+		"use_cols": [
+          "Base NPV",
+          "Delta",
+          "Gamma"
+        ],
+		"optional_cols": [
+            "Currency(Trade)",
+            "Base NPV(Trade)",
+            "Delta(Trade)",
+            "Gamma(Trade)"
+        ],
+		"require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-              "Gamma"
+			  "Gamma",
+			  "Base NPV(Trade)",
+			  "Delta(Trade)",
+			  "Gamma(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -1525,7 +1627,18 @@
               "FBAexOwnSP",
               "FCAexOwnSP",
               "FBAexAllSP",
-              "FCAexAllSP"
+              "FCAexAllSP",
+              "COLVA",
+              "MVA",
+              "OurKVACCR",
+              "TheirKVACCR",
+              "OurKVACVA",
+              "TheirKVACVA",
+              "CollateralFloor",
+              "AllocatedCVA",
+              "AllocatedDVA",
+              "BaselEPE",
+              "BaselEEPE"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -1778,17 +1891,21 @@
         "column_settings": [
           {
             "names": [
-              "NPV(t0)",
-              "NPV(asof=t0;mkt=t1)",
-              "NPV(asof=t1;mkt=t0)",
-              "NPV(t1)",
+              "NPV(t0;m0;p0)",
+              "NPV(t0;m1;p0)",
+              "NPV(t1;m0;p0)",
+              "NPV(t1;m1;p0)",
+              "NPV(t1;m0;p1)",
+              "NPV(t1;m1;p1)",
+              "Day1PnL",
+              "TradeChangePnL",
               "PeriodCashFlow",
               "Theta",
               "HypotheticalCleanPnL",
               "CleanPnL",
               "DirtyPnL"
             ],
-            "abs_tol": 1e-06,
+            "abs_tol": 1e-03,
             "rel_tol": 1e-12
           }
         ]
@@ -1800,10 +1917,14 @@
         "column_settings": [
           {
             "names": [
-              "NPV(t0)",
-              "NPV(asof=t0;mkt=t1)",
-              "NPV(asof=t1;mkt=t0)",
-              "NPV(t1)",
+              "NPV(t0;m0;p0)",
+              "NPV(t0;m1;p0)",
+              "NPV(t1;m0;p0)",
+              "NPV(t1;m1;p0)",
+              "NPV(t1;m0;p1)",
+              "NPV(t1;m1;p1)",
+              "Day1PnL",
+              "TradeChangePnL",
               "PeriodCashFlow",
               "Theta",
               "HypotheticalCleanPnL",
@@ -1832,7 +1953,7 @@
               "CommGamma",
               "CommVega"
             ],
-            "abs_tol": 0.0001,
+            "abs_tol": 0.001,
             "rel_tol": 1e-06
           }
         ]
