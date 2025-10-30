@@ -39,7 +39,7 @@ public:
                                          const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves,
                                          const std::vector<Handle<Quote>>& recoveryRates, const Size mainResultState,
                                          const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                         const boost::optional<bool> includeSettlementDateFlows = boost::none);
+                                         const QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt);
 
     void calculate() const;
     Real calculateNpv(const Size state) const;

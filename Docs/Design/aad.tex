@@ -529,7 +529,7 @@ public:
 
     // refdate <= obsdate required
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                            const boost::optional<long>& memSlot, const std::size_t addRegressor1,
+                            const QuantLib::ext::optional<long>& memSlot, const std::size_t addRegressor1,
                             const std::size_t addRegressor2) const = 0;
     ...
 

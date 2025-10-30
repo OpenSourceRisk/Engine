@@ -35,12 +35,12 @@ public:
     // use index curve
     MidPointIndexCdsEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
                            const Handle<YieldTermStructure>& discountCurve,
-                           boost::optional<bool> includeSettlementDateFlows = boost::none);
+                           QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt);
     // use underlying curves
     MidPointIndexCdsEngine(const std::vector<Handle<DefaultProbabilityTermStructure>>&,
                            const std::vector<Real>& underlyingRecoveryRate,
                            const Handle<YieldTermStructure>& discountCurve,
-                           boost::optional<bool> includeSettlementDateFlows = boost::none);
+                           QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt);
     void calculate() const override;
 
 private:

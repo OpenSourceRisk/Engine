@@ -262,7 +262,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp,
+        deltaType_, atmType_, QuantLib::ext::nullopt, switchTenor_, longTermDeltaType_, longTermAtmType_, QuantLib::ext::nullopt, interp,
         flatExtrapolation);
 
     vol_->enableExtrapolation();

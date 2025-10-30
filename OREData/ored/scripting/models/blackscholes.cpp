@@ -769,7 +769,7 @@ RandomVariable BlackScholes::getNumeraire(const Date& s) const {
 Real BlackScholes::getFxSpot(const Size idx) const { return fxSpots_.at(idx)->value(); }
 
 RandomVariable BlackScholes::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                                 const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                                 const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                  const RandomVariable& addRegressor2) const {
 
     calculate();
@@ -1125,7 +1125,7 @@ Real BlackScholes::extractT0Result(const RandomVariable& value) const {
 
     // roll back to today (if necessary)
 
-    RandomVariable r = npv(value, referenceDate(), Filter(), boost::none, RandomVariable(), RandomVariable());
+    RandomVariable r = npv(value, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
 
     // if result is deterministic, return the value
 

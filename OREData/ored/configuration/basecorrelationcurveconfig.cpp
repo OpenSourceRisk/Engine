@@ -42,7 +42,7 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(
     const string& curveID, const string& curveDescription, const vector<string>& detachmentPoints,
     const vector<string>& terms, Size settlementDays, const Calendar& calendar,
     BusinessDayConvention businessDayConvention, DayCounter dayCounter, bool extrapolate, const string& quoteName,
-    const Date& startDate, const Period& indexTerm, boost::optional<DateGeneration::Rule> rule, bool adjustForLosses,
+    const Date& startDate, const Period& indexTerm, QuantLib::ext::optional<DateGeneration::Rule> rule, bool adjustForLosses,
     const std::vector<MarketDatum::QuoteType>& quoteTypes, double indexSpread, const std::string& currency,
     const bool calibrateConstituentsToIndexSpread, bool useAssumedRecovery,
     const std::map<std::string, std::vector<double>>& rrGrids,

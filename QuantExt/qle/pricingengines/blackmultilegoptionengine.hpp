@@ -64,7 +64,7 @@ protected:
 
     // outputs
     mutable Real npv_, underlyingNpv_;
-    mutable std::map<std::string, boost::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
 };
 
 class BlackMultiLegOptionEngine : public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,

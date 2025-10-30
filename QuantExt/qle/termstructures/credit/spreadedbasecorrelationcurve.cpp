@@ -28,7 +28,7 @@ SpreadedBaseCorrelationCurve::SpreadedBaseCorrelationCurve(const Handle<BaseCorr
                                                            const std::vector<double>& detachmentPoints,
                                                            const std::vector<std::vector<Handle<Quote>>>& corrSpreads,
                                                            const Date& startDate,
-                                                           boost::optional<DateGeneration::Rule> rule)
+                                                           QuantLib::ext::optional<DateGeneration::Rule> rule)
     : BaseCorrelationTermStructure(baseCurve->settlementDays(), baseCurve->calendar(),
                                    baseCurve->businessDayConvention(), tenors, detachmentPoints,
                                    baseCurve->dayCounter(), startDate, rule),

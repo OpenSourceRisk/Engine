@@ -182,7 +182,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     additionalData_["tradeRecoveryRate"] = swap_.recoveryRate();
 }
 
-const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& CreditDefaultSwap::additionalData() const {
     setLegBasedAdditionalData(0, 2);
     additionalData_["legNPV[1]"] = instrument_->qlInstrument()->result<Real>("protectionLegNPV");
     additionalData_["legNPV[2]"] = instrument_->qlInstrument()->result<Real>("premiumLegNPVDirty") +

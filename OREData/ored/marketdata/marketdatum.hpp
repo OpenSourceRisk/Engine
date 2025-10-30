@@ -40,6 +40,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
@@ -1816,7 +1817,9 @@ public:
         - overnight forward: \c startTenor will be <code>0 * Days</code> and \c tenor will be <code>1 * Days</code>
         - tom-next forward: \c startTenor will be <code>1 * Days</code> and \c tenor will be <code>1 * Days</code>
     */
-    const boost::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
+    const boost::optional<QuantLib::Period>& startTenor() const {
+        return startTenor_;
+    }
 
     //! Returns \c true if the forward is tenor based and \c false if forward is date based
     bool tenorBased() const { return tenorBased_; }
@@ -1827,6 +1830,8 @@ private:
     std::string quoteCurrency_;
     QuantLib::Date expiryDate_;
     QuantLib::Period tenor_;
+    // boost optional is required as long we support boost < 1.84, where std::optional serialization is not
+    // supported
     boost::optional<QuantLib::Period> startTenor_;
     bool tenorBased_;
     //! Serialization

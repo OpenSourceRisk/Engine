@@ -33,8 +33,8 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
     const Calendar& fixedPaymentCalendar, Real floatNominal, const Currency& floatCurrency,
     const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
     BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
-    const bool telescopicValueDates, boost::optional<bool> floatIncludeSpread, boost::optional<Period> floatLookback,
-    boost::optional<Size> floatFixingDays, boost::optional<Size> floatRateCutoff, boost::optional<bool> floatIsAveraged)
+    const bool telescopicValueDates, QuantLib::ext::optional<bool> floatIncludeSpread, QuantLib::ext::optional<Period> floatLookback,
+    QuantLib::ext::optional<Size> floatFixingDays, QuantLib::ext::optional<Size> floatRateCutoff, QuantLib::ext::optional<bool> floatIsAveraged)
     : CrossCcySwap(2), type_(type), fixedNominal_(fixedNominal), fixedCurrency_(fixedCurrency),
       fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
       fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),

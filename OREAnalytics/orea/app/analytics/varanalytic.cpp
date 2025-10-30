@@ -100,7 +100,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
 
         varReport_ = ext::make_shared<ParametricVarReport>(
             inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-            varParams, inputs_->getVarSalvagingAlgorithm(), boost::none, std::move(sensiArgs), inputs_->varBreakDown());
+            varParams, inputs_->getVarSalvagingAlgorithm(), QuantLib::ext::nullopt, std::move(sensiArgs), inputs_->varBreakDown());
     } else {
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());

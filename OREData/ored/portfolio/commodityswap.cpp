@@ -190,7 +190,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap);
 }
 
-const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
+const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();

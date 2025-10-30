@@ -118,7 +118,7 @@ DefaultCurveConfig::Config::Config(const Type& type, const string& discountCurve
                                    const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
                                    const Date& startDate, const BootstrapConfig& bootstrapConfig,
                                    QuantLib::Real runningSpread, const QuantLib::Period& indexTerm,
-                                   const boost::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates,
+                                   const QuantLib::ext::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates,
                                    const int priority)
     : cdsQuotes_(cdsQuotes), type_(type), discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote),
       dayCounter_(dayCounter), conventionID_(conventionID), extrapolation_(extrapolation),
@@ -219,7 +219,7 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         }
         string t = XMLUtils::getChildValue(node, "IndexTerm", false);
         indexTerm_ = t.empty() ? 0 * Days : parsePeriod(t);
-        implyDefaultFromMarket_ = boost::none;
+        implyDefaultFromMarket_ = QuantLib::ext::nullopt;
         if (XMLNode* n = XMLUtils::getChildNode(node, "ImplyDefaultFromMarket"))
             implyDefaultFromMarket_ = parseBool(XMLUtils::getNodeValue(n));
         // Optional bootstrap configuration

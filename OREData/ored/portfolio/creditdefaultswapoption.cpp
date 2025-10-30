@@ -70,7 +70,7 @@ CreditDefaultSwapOption::CreditDefaultSwapOption(const Envelope& env,
     const string& strikeType,
     bool knockOut,
     const string& term,
-    const boost::optional<AuctionSettlementInformation>& asi)
+    const QuantLib::ext::optional<AuctionSettlementInformation>& asi)
     : Trade("CreditDefaultSwapOption", env), option_(option), swap_(swap), strike_(strike),
       strikeType_(strikeType), knockOut_(knockOut), term_(term), asi_(asi) {}
 
@@ -140,7 +140,7 @@ const string& CreditDefaultSwapOption::term() const {
 }
 
 using ASI = CreditDefaultSwapOption::AuctionSettlementInformation;
-const boost::optional<ASI>& CreditDefaultSwapOption::auctionSettlementInformation() const {
+const QuantLib::ext::optional<ASI>& CreditDefaultSwapOption::auctionSettlementInformation() const {
     return asi_;
 }
 

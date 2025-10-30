@@ -39,8 +39,8 @@ struct NPVCubeWithMetaData {
     QuantLib::ext::shared_ptr<NPVCube> cube;
     // all of the following members are optional
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
-    boost::optional<bool> storeFlows;
-    boost::optional<Size> storeCreditStateNPVs;
+    QuantLib::ext::optional<bool> storeFlows;
+    QuantLib::ext::optional<Size> storeCreditStateNPVs;
 };
 
 NPVCubeWithMetaData loadCube(const std::string& filename);

@@ -23,14 +23,13 @@
 
 #pragma once
 
+#include <map>
+#include <ql/any.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/types.hpp>
 #include <ql/utilities/null.hpp>
-
-#include <boost/any.hpp>
-
-#include <map>
+#include <string>
 #include <vector>
 
 namespace QuantExt {
@@ -69,6 +68,7 @@ struct LgmCalibrationInfo {
     std::vector<LgmCalibrationData> lgmCalibrationData;
 };
 
+std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const LgmCalibrationInfo& info);
 // hw
 
 struct HwCalibrationData {
@@ -90,7 +90,7 @@ struct HwCalibrationInfo {
 
 // utility functions
 
-std::map<std::string, boost::any> getAdditionalResultsMap(const LgmCalibrationInfo& info);
-std::map<std::string, boost::any> getAdditionalResultsMap(const HwCalibrationInfo& info);
+std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const LgmCalibrationInfo& info);
+std::map<std::string, QuantLib::ext::any> getAdditionalResultsMap(const HwCalibrationInfo& info);
 
 } // namespace QuantExt

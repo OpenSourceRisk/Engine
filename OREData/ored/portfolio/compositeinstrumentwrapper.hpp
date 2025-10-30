@@ -57,7 +57,7 @@ public:
     void initialise(const std::vector<QuantLib::Date>& dates) override;
     void reset() override;
     QuantLib::Real NPV() const override;
-    const std::map<std::string, boost::any>& additionalResults() const override;
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const override;
     void updateQlInstruments() override;
     bool isOption() override;
 
@@ -66,7 +66,7 @@ protected:
     std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>> wrappers_;
     std::vector<QuantLib::Handle<Quote>> fxRates_;
     Date valuationDate_;
-    mutable std::map<std::string, boost::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
 };
 
 } // namespace data
