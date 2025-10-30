@@ -27,7 +27,7 @@
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/commodityschwartzmodel.hpp>
-#include <qle/models/commodityschwartzparametrization.hpp>
+#include <qle/models/commodityschwartzconstantparametrization.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/crossassetanalytics.hpp>
@@ -2082,8 +2082,8 @@ struct IrFxInfCrComModelTestData {
 
         // Add commodity parameterisations
         bool df = driftFreeState;
-        comParametrizationA = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(EURCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, df);
-        comParametrizationB = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05, df);
+        comParametrizationA = QuantLib::ext::make_shared<CommoditySchwartzConstantParametrization>(EURCurrency(), "WTI", comTS, fxEurUsd, 0.1, 0.05, 0.0, df);
+        comParametrizationB = QuantLib::ext::make_shared<CommoditySchwartzConstantParametrization>(USDCurrency(), "NG", comTS, fxEurUsd, 0.15, 0.05, 0.0, df);
         comModelA = QuantLib::ext::make_shared<CommoditySchwartzModel>(comParametrizationA);
         comModelB = QuantLib::ext::make_shared<CommoditySchwartzModel>(comParametrizationB);
         singleModels.push_back(comParametrizationA);
