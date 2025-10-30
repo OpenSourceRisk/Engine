@@ -17,7 +17,7 @@
 */
 
 #include <ql/experimental/fx/bachelierdeltacalculator.hpp>
-#include <ql/experimental/fx/blackdeltacalculator.hpp>
+#include <ql/pricingengines/blackdeltacalculator.hpp>
 #include <qle/termstructures/blackdeltautilities.hpp>
 
 namespace QuantExt {

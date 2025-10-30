@@ -84,8 +84,6 @@ private:
 
 template <class I, template <class> class B, class T>
 inline QuantLib::Date PiecewiseCPIInflationCurve<I, B, T>::baseDate() const {
-    if (!this->hasExplicitBaseDate())
-        this->calculate();
     return base_curve::baseDate();
 }
 
