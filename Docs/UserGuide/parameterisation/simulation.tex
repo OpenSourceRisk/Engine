@@ -572,11 +572,15 @@ Within each CommoditySchwartz section, the interpretation of elements is as foll
 
 \begin{itemize}
 \item {\tt Currency: } Currency of denomination
-\item {\tt CalibrationType:} Choose between {\em BestFit} and {\em None}.  The choice {\em None} will deactivate calibration as usual. {\em BestFit} will attempt to set the model parameter(s) such that the error in matching calibration instrument prices is minimised.  The option  {\em Bootstrap} is not available here because the model parameters are not time-dependent and the model's degrees of freedom in general do not suffice to perfectly match the calibration instrument prices.
+\item {\tt CalibrationType:} Choose between {\em BestFit},  {\em Bootstrap},  {\em FirstBestFitThanBootstrap}  and {\em None}.  The choice {\em None} will deactivate calibration as usual. {\em BestFit} will attempt to set the model parameter(s) such that the error in matching calibration instrument prices is minimised.  The option {\em Bootstrap} will iteratively attempt to calibrate the time dependent seasonality factor to the calibration instrument prices. The option {\em FirstBestFitThanBootstrap} will first attempt to fit the model parameters (kappa and sigma) as in {\em BestFit} option. Then, time dependent seasonality parameter is bootstrapped as in {\em Bootstrap} option.
 \item {\tt Sigma/Calibrate:} Flag to enable/disable calibration of this particular parameter
 \item {\tt Sigma/InitialValue:} Initial value of the constant parameter
 \item {\tt Kappa/Calibrate:} Flag to enable/disable calibration of this particular parameter
 \item {\tt Kappa/InitialValue:} Initial value of the constant parameter
+\item {\tt Seasonality/Calibrate:} Flag to enable/disable calibration of this particular parameter
+\item {\tt Seasonality/ParamType:} Initial time grid for this parameter, can be left empty if ParamType is Constant
+\item {\tt Seasonality/TimeGrid:} Initial time grid for this parameter. If ParamType is Constant, there should be a single entry
+\item {\tt Seasonality/InitialValue:} Vector of initial values. Size of the vector should be identical to the size of TimeGrid vector.  For {\em Bootstrap} this is ignored.  If ParamType is Constant, there should be a single entry	
 \item {\tt CalibrationOptions:} Choice of calibration instruments by expiry and strike, strikes can be empty 	(implying the default, ATMF options), or explicitly specified (in terms of commodity prices as absolute strike values). 
 \item {\tt DriftFreeState[Optional]:} Boolean to switch between the two implementations of the state variable, see appendix. By default this is set to {\tt false}.        
 \end{itemize}

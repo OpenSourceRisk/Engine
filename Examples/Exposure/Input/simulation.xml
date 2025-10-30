@@ -226,7 +226,7 @@
           <Calibrate>true</Calibrate>
           <ParamType>Piecewise</ParamType>
           <TimeGrid>1, 2, 3, 4, 5, 10 </TimeGrid>
-          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01 </InitialValue>
         </Seasonality>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
