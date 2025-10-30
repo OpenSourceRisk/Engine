@@ -9,8 +9,10 @@
 | CPython 3.11   | ✅ | ✅  |✅  |  ✅ | 
 | CPython 3.12   | ✅ | ✅  | ✅   | ✅ |  
 | CPython 3.13   | ✅ | ✅  | ✅   | ✅ |  
-| PyPy 3.7 v7.3  | N/A | N/A | ✅  |  N/A | 
-| PyPy 3.8 v7.3  | N/A | N/A | ✅  | N/A | 
-| PyPy 3.9 v7.3  | N/A | N/A | ✅  | N/A | 
-| PyPy 3.10 v7.3 | N/A | N/A | ✅  | N/A | 
-| PyPy 3.11 v7.3 | N/A | N/A | ✅  | N/A | 
+| PyPy 3.7 v7.3  | N/A | N/A | ✅ ¹  |  N/A | 
+| PyPy 3.8 v7.3  | N/A | N/A | ✅ ¹  | N/A | 
+| PyPy 3.9 v7.3  | N/A | N/A | ✅ ¹ | N/A | 
+| PyPy 3.10 v7.3 | N/A | N/A | ✅ ¹ | N/A | 
+| PyPy 3.11 v7.3 | N/A | N/A | ✅ ¹ | N/A | 
+
+<sup>¹ PyPy wheel are built without ORE Python Integration.</sup><br>
