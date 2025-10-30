@@ -179,7 +179,7 @@ private:
 
      void addRowReport(const std::string& moType, const std::string& moId, const std::string& resId,
                        const std::string& key1, const std::string& key2, const std::string& key3,
-                       const boost::any& value);
+                       const QuantLib::ext::any& value);
 };
 
 } // namespace analytics

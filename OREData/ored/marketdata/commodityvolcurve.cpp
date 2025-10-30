@@ -1054,7 +1054,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Configured delta and Atm types.
     DeltaVolQuote::DeltaType deltaType = parseDeltaType(vdsc.deltaType());
     DeltaVolQuote::AtmType atmType = parseAtmType(vdsc.atmType());
-    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
+    QuantLib::ext::optional<DeltaVolQuote::DeltaType> atmDeltaType;
     if (!vdsc.atmDeltaType().empty()) {
         atmDeltaType = parseDeltaType(vdsc.atmDeltaType());
     }
@@ -1064,7 +1064,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     for (const auto& pd : putDeltas) {
         strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Put, pd));
     }
-    strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(atmType, atmDeltaType));
+    strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(
+        atmType, atmDeltaType.has_value() ? boost::optional<DeltaVolQuote::DeltaType>(*atmDeltaType) : boost::none));
     for (const auto& cd : callDeltas) {
         strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Call, cd));
     }
@@ -1519,7 +1520,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     auto baseExpCalc = QuantLib::ext::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
     // Get the max tenor from the config if provided.
-    boost::optional<QuantLib::Period> maxTenor;
+    QuantLib::ext::optional<QuantLib::Period> maxTenor;
     if (!vapo.maxTenor().empty())
         maxTenor = parsePeriod(vapo.maxTenor());
 

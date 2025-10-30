@@ -65,7 +65,7 @@ public:
         reset();
     }
 
-    const std::map<std::string, boost::any>& additionalResults() const override;
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const override;
     //virtual bool checkBarrier(Real, bool) const = 0;
 
 protected:

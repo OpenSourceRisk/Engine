@@ -24,7 +24,7 @@ namespace analytics {
 
 VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                      const std::string& portfolioFilter, const vector<Real>& p,
-                     boost::optional<ore::data::TimePeriod> period,
+                     QuantLib::ext::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
                      std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs,
                      const bool breakdown)

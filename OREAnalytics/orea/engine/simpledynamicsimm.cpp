@@ -90,13 +90,13 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     }
 
     fxDeltaRw_ =
-        simmConfiguration_->weight(CrifRecord::RiskType::FX, std::string("GBP"), boost::none, std::string("USD"));
+        simmConfiguration_->weight(CrifRecord::RiskType::FX, std::string("GBP"), QuantLib::ext::nullopt, std::string("USD"));
 
     fxVegaRw_ =
-        simmConfiguration_->weight(CrifRecord::RiskType::FXVol, std::string("GBPUSD"), boost::none, std::string("USD"));
+        simmConfiguration_->weight(CrifRecord::RiskType::FXVol, std::string("GBPUSD"), QuantLib::ext::nullopt, std::string("USD"));
 
     fxSigma_ =
-        simmConfiguration_->sigma(CrifRecord::RiskType::FXVol, std::string("GBPUSD"), boost::none, std::string("USD"));
+        simmConfiguration_->sigma(CrifRecord::RiskType::FXVol, std::string("GBPUSD"), QuantLib::ext::nullopt, std::string("USD"));
 
     fxHvr_ = simmConfiguration_->historicalVolatilityRatio(CrifRecord::RiskType::FXVol);
 

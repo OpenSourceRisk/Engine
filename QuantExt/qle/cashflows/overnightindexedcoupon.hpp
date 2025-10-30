@@ -251,7 +251,7 @@ public:
     OvernightLeg& withNakedOption(const bool nakedOption);
     OvernightLeg& withLocalCapFloor(const bool localCapFloor);
     OvernightLeg& withInArrears(const bool inArrears);
-    OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
+    OvernightLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
     OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
     OvernightLeg& withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
     OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
@@ -278,7 +278,7 @@ private:
     bool nakedOption_;
     bool localCapFloor_;
     bool inArrears_;
-    boost::optional<Period> lastRecentPeriod_;
+    QuantLib::ext::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;

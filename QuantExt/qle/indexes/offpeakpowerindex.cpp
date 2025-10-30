@@ -67,7 +67,7 @@ const Calendar& OffPeakPowerIndex::peakCalendar() const {
 
 QuantLib::ext::shared_ptr<CommodityIndex> OffPeakPowerIndex::clone(const Date& expiry,
     const Date& optionExpiry,
-    const boost::optional<Handle<PriceTermStructure>>& ts) const {
+    const QuantLib::ext::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     auto offPeakIndex = QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(offPeakIndex_->clone(ed));

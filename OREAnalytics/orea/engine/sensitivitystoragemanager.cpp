@@ -149,7 +149,7 @@ void CamSensitivityStorageManager::addSensitivities(QuantLib::ext::shared_ptr<or
 	<< trade->id() << " sample=" << sampleIndex << " date=" << dateIndex);
 }
 
-boost::any CamSensitivityStorageManager::getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
+QuantLib::ext::any CamSensitivityStorageManager::getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
                                                           const std::string& nettingSetId, const Size dateIndex,
                                                           const Size sampleIndex) const {
 

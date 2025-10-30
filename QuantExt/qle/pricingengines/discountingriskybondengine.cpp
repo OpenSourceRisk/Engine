@@ -39,7 +39,7 @@ namespace QuantExt {
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
     const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
     const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread, Period timestepPeriod,
-    boost::optional<bool> includeSettlementDateFlows, const bool includePastCashflows,
+    QuantLib::ext::optional<bool> includeSettlementDateFlows, const bool includePastCashflows,
     const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival, const bool spreadOnIncome,
     const bool treatSecuritySpreadAsCreditSpread)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
@@ -65,7 +65,7 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows,
+                                                       QuantLib::ext::optional<bool> includeSettlementDateFlows,
                                                        const Handle<YieldTermStructure>& incomeCurve,
                                                        const bool conditionalOnSurvival, const bool spreadOnIncome,
                                                        const bool treatSecuritySpreadAsCreditSpread)
@@ -164,7 +164,7 @@ DiscountingRiskyBondEngine::RecoveryContribution DiscountingRiskyBondEngine::rec
 
 DiscountingRiskyBondEngine::BondNPVCalculationResults
 DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settlementDate,
-                                         boost::optional<bool> includeSettlementDateFlows,
+                                         QuantLib::ext::optional<bool> includeSettlementDateFlows,
                                          const bool conditionalOnSurvival, const bool additionalResults) const {
 
     bool includeRefDateFlows =

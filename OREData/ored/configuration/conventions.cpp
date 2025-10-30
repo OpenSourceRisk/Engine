@@ -1852,7 +1852,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData, 
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData, 
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
@@ -1882,7 +1882,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
@@ -1913,7 +1913,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
@@ -1945,7 +1945,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::BusinessDaysAfter),

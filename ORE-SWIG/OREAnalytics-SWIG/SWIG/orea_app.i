@@ -198,7 +198,7 @@ public:
     void setSensiScenarioDataFromFile(const std::string& fileName);
     void setSensiPricingEngine(const std::string& xml);    
     void setSensiPricingEngineFromFile(const std::string& fileName);
-    void setSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData);
+    void setSensiPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for scenario
     void setScenarioSimMarketParams(const std::string& xml);
     void setScenarioSimMarketParamsFromFile(const std::string& fileName);
@@ -208,6 +208,7 @@ public:
     void setStressSimMarketParams(const std::string& xml); 
     void setStressScenarioData(const std::string& xml); 
     void setStressPricingEngine(const std::string& xml); 
+    void setStressPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for VaR
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b);
@@ -457,7 +458,7 @@ public:
     std::set<std::string> riskFactorNames(const RiskFactorKey::KeyType& riskFactorType) const;
     std::set<RiskFactorKey::KeyType> riskFactorTypes() const;
     std::map<MarketObject, std::set<std::string>>
-    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    marketObjects(const QuantLib::ext::optional<std::string> config = QuantLib::ext::nullopt) const;
     std::map<std::string, std::map<MarketObject, std::set<std::string>>> allMarketObjects() const;
     std::set<std::string> swapindices() const;
     void riskFactorReport(Report& reportOut) const;

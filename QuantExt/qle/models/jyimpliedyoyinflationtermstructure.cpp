@@ -150,9 +150,10 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Use Linear here in line with what is in scenariosimmarket and todaysmarket but should probably be more generic.
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
+    auto baseDate = inflationPeriod(referenceDate_- lag, frequency()).first;
     QL_DEPRECATED_DISABLE_WARNING
     auto yoyCurve = QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
-        referenceDate_, calendar(), dayCounter(), lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
+        referenceDate_, baseDate, baseRate, lag, frequency(), indexIsInterpolated(), dayCounter(), helpers);
     QL_DEPRECATED_ENABLE_WARNING
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;

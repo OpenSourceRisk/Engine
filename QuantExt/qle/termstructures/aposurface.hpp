@@ -24,7 +24,7 @@
 #ifndef quantext_apo_surface_hpp
 #define quantext_apo_surface_hpp
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -48,7 +48,7 @@ public:
                      const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
                      const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseExpCalc, QuantLib::Real beta = 0.0,
                      bool flatStrikeExtrapolation = true,
-                     const boost::optional<QuantLib::Period>& maxTenor = boost::none,
+                     const QuantLib::ext::optional<QuantLib::Period>& maxTenor = QuantLib::ext::nullopt,
                      QuantLib::BlackVolTimeExtrapolation timeExtrapolation = QuantLib::BlackVolTimeExtrapolation::FlatVolatility);
 
     //! \name TermStructure interface
