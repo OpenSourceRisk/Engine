@@ -39,7 +39,8 @@
 
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/commodityschwartzmodel.hpp>
-#include <qle/models/commodityschwartzparametrization.hpp>
+#include <qle/models/commodityschwartzconstantparametrization.hpp>
+#include <qle/models/commodityschwartzpiecewiseconstantparametrization.hpp>
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 //#include <qle/models/commodityschwartzseasonalitymodel.hpp>
@@ -95,16 +96,15 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
         a.push_back(0.2);
         a.push_back(0.3);
         a.push_back(0.4);
-        a.push_back(0.5);
 
         Array times_a_a, a_a;
         times_a_a = Array(times_a.begin(), times_a.end());
         a_a = Array(a.begin(), a.end());
         
-        parametrization = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, driftFreeState);
+        parametrization = QuantLib::ext::make_shared<CommoditySchwartzConstantParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, 0.0, driftFreeState);
         QL_REQUIRE(parametrization != NULL, "CommoditySchwartzParametrization has null pointer");
 
-        parametrizationSeason = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, driftFreeState, times_a_a, a_a, QuantLib::ext::make_shared<QuantLib::NoConstraint>());
+        parametrizationSeason = QuantLib::ext::make_shared<CommoditySchwartzPiecewiseConstantParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, times_a_a, a_a, QuantLib::ext::make_shared<QuantLib::NoConstraint>(),driftFreeState);
         QL_REQUIRE(parametrization != NULL, "CommoditySchwartzSeasonalityParametrization has null pointer");
 
         // TODO test Euler discretization
@@ -138,8 +138,6 @@ std::vector<Size> steps{ 1, 52 };
 BOOST_DATA_TEST_CASE(testMartingaleProperty,
                      bdata::make(driftFreeState) * bdata::make(steps),
                      driftFreeState, steps) {
-
-    //BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
     
     BOOST_TEST_MESSAGE("Testing martingale property in the COM Schwartz model ...");
 
@@ -147,11 +145,11 @@ BOOST_DATA_TEST_CASE(testMartingaleProperty,
     QuantLib::ext::shared_ptr<StochasticProcess> process = data.model->stateProcess();
     QuantLib::ext::shared_ptr<StochasticProcess> processSeason = data.modelSeason->stateProcess();
     QL_REQUIRE(process != NULL, "process has null pointer!");
-
+    std::vector<Real> times = {0.0, 0.1, 0.5, 1.0, 2.0, 5.0, 7.0, 10.0, 20.0};
     BOOST_TEST_MESSAGE("Seasonality values");
-    BOOST_TEST_MESSAGE(data.modelSeason->parametrization()->m(1.0));
-    BOOST_TEST_MESSAGE(data.modelSeason->parametrization()->m(2.0));
-    BOOST_TEST_MESSAGE(data.modelSeason->parametrization()->m(5.0));
+    for (auto t : times)
+        BOOST_TEST_MESSAGE("t: "<<t<<", m("<<t<<"): "<<data.modelSeason->parametrization()->m(t));
+        
     Size n = 100000; // number of paths
     Size seed = 42; // rng seed
     Time t = 10.0;  // simulation horizon
@@ -162,7 +160,6 @@ BOOST_DATA_TEST_CASE(testMartingaleProperty,
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(steps, seed);
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
     MultiPathGenerator<LowDiscrepancy::rsg_type> pgSeason(processSeason, grid, sg, false);
-    //MultiPathGeneratorMersenneTwister pg(process, grid, seed, true);
 
     accumulator_set<double, stats<tag::mean, tag::variance, tag::error_of<tag::mean>>> acc_price, acc_state, acc_price_season, acc_state_season;
 

@@ -350,6 +350,20 @@ public:
                                        const Constraint& constraint = Constraint(),
                                        const std::vector<Real>& weights = std::vector<Real>());
 
+    /*! calibrate com sesonalitites to a sequence of options with expiry times equal to step times in the parametrization */
+    void calibrateComSchwartz1fSeasonalityIterative(const AssetType& assetType, const Size aIdx,
+                                          const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+                                          OptimizationMethod& method, const EndCriteria& endCriteria,
+                                          const Constraint& constraint = Constraint(),
+                                          const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate com parameters globally to a set of com options */
+    void calibrateComSchwartz1fGlobal(const AssetType& assetType, const Size adx,
+                            const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+                            OptimizationMethod& method, const EndCriteria& endCriteria, const std::map<Size, bool>& toCalibrate,
+                            const Constraint& constraint = Constraint(),
+                            const std::vector<Real>& weights = std::vector<Real>());
+
     /*! calibrate infdk volatilities to a sequence of cpi options with
         expiry times equal to step times in the parametrization */
     void calibrateInfDkVolatilitiesIterative(const Size index,
