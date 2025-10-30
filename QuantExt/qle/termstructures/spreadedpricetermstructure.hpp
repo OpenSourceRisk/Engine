@@ -30,7 +30,9 @@
 namespace QuantExt {
 
 //! Spreaded Price term structure
-class SpreadedPriceTermStructure : public PriceTermStructure, public QuantLib::LazyObject {
+class SpreadedPriceTermStructure : public PriceTermStructure,
+                                   public MakeThisPriceCurveSpreadedTreat,
+                                   QuantLib::LazyObject {
 public:
     //! times should be consistent with reference curve day counter
     SpreadedPriceTermStructure(const QuantLib::Handle<PriceTermStructure>& referenceCurve,
@@ -48,7 +50,7 @@ public:
     std::vector<QuantLib::Date> pillarDates() const override;
     
     void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
-                               const std::vector<double>& multiplier);
+                               const std::vector<double>& multiplier) override;
 
 private:
     void performCalculations() const override;
@@ -64,8 +66,6 @@ private:
     std::vector<QuantLib::Handle<PriceTermStructure>> bases_;
     std::vector<double> multiplier_;
     std::vector<std::vector<QuantLib::Real>> basesOffset_;
-
-
 };
 
 } // namespace QuantExt

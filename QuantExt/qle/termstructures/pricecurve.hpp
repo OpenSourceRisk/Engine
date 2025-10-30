@@ -47,6 +47,7 @@ namespace QuantExt {
 template <class Interpolator>
 class InterpolatedPriceCurve : public PriceTermStructure,
                                public QuantLib::LazyObject,
+                               public MakeThisPriceCurveSpreadedTreat,  
                                protected QuantLib::InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
@@ -99,7 +100,7 @@ public:
     //@}
 
     void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
-                               const std::vector<double>& multiplier);
+                               const std::vector<double>& multiplier) override;
 protected:
     //! Used by PiecewisePriceCurve
     InterpolatedPriceCurve(const QuantLib::Date& referenceDate,

@@ -28,7 +28,9 @@
 
 namespace QuantExt {
 
-class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure, public QuantLib::LazyObject {
+class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure,
+                                        public QuantExt::MakeThisPriceCurveSpreadedTreat,
+                                        public QuantLib::LazyObject {
 public:
     CommodityBasisPriceCurveWrapper(const QuantLib::Date& referenceDate,
                                     const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
@@ -67,6 +69,14 @@ public:
     QuantLib::Time minTime() const override { return priceCurve_->minTime(); }
     const QuantLib::Currency& currency() const override { return priceCurve_->currency(); }
     std::vector<QuantLib::Date> pillarDates() const override { return priceCurve_->pillarDates(); }
+    
+    void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
+                               const std::vector<double>& multiplier) override {
+        auto curve = QuantLib::ext::dynamic_pointer_cast<MakeThisPriceCurveSpreadedTreat>(priceCurve_);
+        QL_REQUIRE(curve, "CommodityBasisPriceCurveWrapper::makeThisCurveSpreaded: priceCurve_ doesnt have the MakeThisPriceCurveSpreadedTreat");
+        curve->makeThisCurveSpreaded(bases, multiplier);
+        update();
+    }
 
 private:
     void performCalculations() const override {}

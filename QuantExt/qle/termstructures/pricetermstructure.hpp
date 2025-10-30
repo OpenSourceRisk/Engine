@@ -82,6 +82,14 @@ protected:
     void checkRange(QuantLib::Time t, bool extrapolate) const;
 };
 
+class MakeThisPriceCurveSpreadedTreat {
+public:
+    MakeThisPriceCurveSpreadedTreat() = default;
+    virtual ~MakeThisPriceCurveSpreadedTreat() = default;
+    virtual void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
+                                       const std::vector<double>& multiplier) = 0;
+};
+
 //! Helper class so that the spot price can be pulled from the price curve each time the spot price is requested.
 class DerivedPriceQuote : public QuantLib::Quote, public QuantLib::Observer {
 
