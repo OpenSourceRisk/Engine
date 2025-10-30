@@ -110,9 +110,9 @@ and
 
 Each commodity component models the commodity price curve as 
 \begin{eqnarray}
-\frac{dF(t,T)}{F(t,T)} &=& \sigma\,e^{-\kappa\,(T-t)}\, dW(t)  \label{gabillon1f}
+\frac{dF(t,T)}{F(t,T)} &=& \alpha(T) \sigma\,e^{-\kappa\,(T-t)}\, dW(t)  \label{gabillon1f}
 \end{eqnarray}
-which is a single-factor version of the Gabillon (1991) model that is e.g. described in \cite{Lichters}. It can also be seen as the Schwartz (1997) model formulated in terms of forward curve dynamics. The extension to the full Gabillon model with two factors and time-dependent multiplier
+where $\alpha(T) : = \exp( b(T)) $ is the time dependent \footnote{See section 7.2 in Andersen \cite{Andersen_2008} for the discussion on dependence of seasonality adjustment to calendar days and expiry of future contracts.} multiplier to capture seasonality effect observed in the market for both commodity future price curves and option volatilities. This model is a single-factor version of the Gabillon (1991) model that is e.g. described in \cite{Lichters}. It can also be seen as the Schwartz (1997) model formulated in terms of forward curve dynamics. The extension to the full Gabillon model with two factors and time-dependent multiplier\footnote{Andersen \cite{Andersen_2008} worked on a two factor set up, where the first factor affects the short-end of the futures curve and has the form the $e^{b(T)}$, and the second factor has an additional term containing $e^{a(T)}h_{\infty}$ for long futures maturities.} 
 \begin{eqnarray}
 \frac{dF(t,T)}{F(t,T)} &=& \alpha(t)\,
 \left( \sigma_S \,e^{-\kappa\,(T-t)}\, dW_S(t) + \sigma_L\,\left(1-e^{-\kappa\,(T-t)}\right)\,dW_L(t)\right) \label{gabillon2f}
@@ -128,8 +128,8 @@ X(t) &= X(s)\,e^{-\kappa(t-s)}+ \int_s^t \sigma\,e^{-\kappa(t-u)}\, dW(u)
 \end{align*}
 with 
 \begin{align*}
-F(t,T) &= F(0,T) \:\exp\left( X(t)\,e^{-\kappa\,(T-t)} - \frac{1}{2}\,(V(0,T)-V(t,T))  \right) \\
-V(t,T) &= e^{-2\kappa T}\int_t^T\sigma^2\:e^{2\kappa u}\,du.
+F(t,T) &= F(0,T) \:\exp\left( X(t)\,e^{b(T)-\kappa\,(T-t)} - \frac{1}{2}\,(V(0,T)-V(t,T))  \right) \\
+V(t,T) &= e^{2 (b(T)-\kappa T)}\int_t^T\sigma^2\:e^{2\kappa u}\,du.
 \end{align*}
 Note that 
 $$
