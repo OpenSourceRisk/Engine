@@ -383,6 +383,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     // a builder might update the underlying (e.g. promote it from bond to convertible bond)
 
     for (Size i = 0; i < underlying_.size(); ++i) {
+        underlying_[i]->isSubTrade() = true;
         if (underlyingDerivativeId_[i].empty()) {
             for (auto const& b : TrsUnderlyingBuilderFactory::instance().getBuilders()) {
                 b.second->updateUnderlying(engineFactory->referenceData(), underlying_[i], id());
