@@ -19,7 +19,7 @@
 #include <qle/termstructures/blackvolsurfaceabsolute.hpp>
 #include <qle/math/flatextrapolation.hpp>
 
-#include <ql/experimental/fx/blackdeltacalculator.hpp>
+#include <ql/pricingengines/blackdeltacalculator.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
