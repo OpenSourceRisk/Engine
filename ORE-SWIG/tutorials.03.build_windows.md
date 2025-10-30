@@ -49,6 +49,7 @@ its prerequisites, e.g:
     SET ORE_DIR=C:\repos\ore
 
 # Build ORE and ORE-SWIG
+
 There are two ways to build ORESWIG: using **cmake**, or using **setup.py**.
 With cmake, you can generate the wrapper.  With setup.py you can generate both
 the wrapper and the wheel. Regardless, ORE libraries must be built first.
@@ -74,7 +75,7 @@ Make sure to add the location of the ORE-SWIG package to your PYTHONPATH, e.g:
 If using the setup.py method, you would have to build ORE with cmake as
 demonstrated above, but, when configuring cmake, disable the SWIG build with:
 `-DORE_BUILD-SWIG=OFF`. Once ORE libraries have been built, below are the
-commands to build the ORESWIG Python wrapper and wheel using setup.py.  If you
+commands to build the ORESWIG Python wrapper using setup.py.  If you
 do not require compression, then you can omit the `ORE_USE_ZLIB` environment
 variable.
 
@@ -96,7 +97,6 @@ setup.py.
     python setup.py install
     python -m build --wheel
     deactivate
-    rmdir /s /q env1
 
 The `python setup.py install` should take care of installing ORE as a package
 to be universally used in Python, without needing to set PYTHONPATH. Otherwise,
@@ -113,6 +113,22 @@ of output files, including `cube.dat`.  If you have compression enabled, as
 described above, then `cube.dat` is generated in compressed format (zip).  If
 not then `cube.dat` is generated as a flat (plain text) file.
 
+## Build the wheel with setup.py
+
+Whether you used cmake or setup.py above to build the wrapper, you can use
+setup.py to build the wheel.  If you used setup.py then you already have the
+python virtual environment, and you can reuse it, otherwise you can create a
+new one as shown below.
+
+    cd %ORE_DIR%\ORE-SWIG
+    SET BOOST=C:\repos\boost\boost_1_72_0
+    SET BOOST_LIB64=C:\repos\boost\boost_1_72_0\lib64-msvc-14.2
+    python -m venv env1
+    .\env1\Scripts\activate.bat
+    python -m pip install --upgrade pip
+    python -m pip install build
+    python -m build --wheel
+    deactivate
 
 ### Use the wheel
 
@@ -122,5 +138,4 @@ not then `cube.dat` is generated as a flat (plain text) file.
     pip install %ORE_DIR%\ORE-SWIG\dist\open_source_risk_engine-1.8.13.1-cp312-cp312-win_amd64.whl
     python swap.py
     deactivate
-    rmdir /s /q env1
 

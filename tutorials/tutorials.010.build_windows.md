@@ -64,16 +64,16 @@ Or run a selected test, e.g:
 
 ## QuantExt
 
-    cd %ORE_DIR%/build/QuantExt/test/Release
+    cd %ORE_DIR%\build\QuantExt\test\Release
     quantext-test-suite.exe
 
 ## OREData
 
-    cd %ORE_DIR%/build/OREData/test/Release
+    cd %ORE_DIR%\build\OREData\test\Release
     ored-test-suite.exe
 
 ## OREAnalytics
 
-    cd %ORE_DIR%/build/OREAnalytics/test/Release/
+    cd %ORE_DIR%\build\OREAnalytics\test\Release\
     orea-test-suite.exe
 
