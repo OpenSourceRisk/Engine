@@ -1,3 +1,25 @@
+Changes for the 14th ORE release:
+=================================
+
+ORE v14 includes the following notable changes (May 2025 to October 2025)
+
+- Update of QuantLib: ORE is built on top of QuantLib and version 14 will use the recent QuantLib version v1.40
+- Improved Error Reporting: Missing Fixing ID errors are now always attributed to trade ids.
+- American Option on Commodity Futures: Support finite-difference based pricing of american options on commodity future
+  underlyings.
+- Support for Callable Bonds and Bond Derivatives with callable bond underlying: Support finite-difference based pricing
+  of callable bonds and bond derivatives on callable bond underlyings, Forward, TRS, Options
+  Bond Futures: Support for bond futures with Cheapest To Deliver feature and TRS ond Bond Futures
+- Rounding for Commodity Floating Leg: Add the market convention of rounding prices on commodity float legs.
+- Global rate curve bootstrapping: Rate curve bootstrapping can use a global optimizer, both within one curve and for a
+  set of mutually dependent curves.
+- Improve OI Swap AMC exposures: Introduce refined regression models for overnight coupons in AMC simulation.
+- Delta-Gamma-Adjusted Calibration for Swaptions: Refined calibration for Swaptions, using the delta-gamma adjusted basket
+  approach.
+- Correlation Analytic and Correlation (optional) dependency for XVA: Generate correlations from historical scenarios, with a
+  possibility to use them within the XVA analytic.
+- Bug Fixes: around 100 tickets resolved since v13
+
 Changes for the 13th ORE release:
 =================================
 
