@@ -66,6 +66,8 @@ private:
         std::vector<QuantLib::Date> pillarDates;
         QuantLib::Date latestMaturity;
         QuantLib::ext::shared_ptr<ZeroInflationIndex> index;
+        std::vector<string> mdQuoteLabels;
+        std::vector<double> mdQuoteValues;
     };
 
     CurveBuildResults

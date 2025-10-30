@@ -50,6 +50,8 @@ struct YieldCurveCalibrationInfo {
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
 };
 
 struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
@@ -79,6 +81,8 @@ struct InflationCurveCalibrationInfo {
     QuantLib::Date baseDate;
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> times;
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
 };
 
 struct ZeroInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {

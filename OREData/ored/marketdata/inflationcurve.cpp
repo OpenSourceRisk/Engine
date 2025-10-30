@@ -131,6 +131,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     calInfo->pillarDates.push_back(pillarDates[i]);
                     calInfo->yoyRates.push_back(yoyCurve->yoyRate(pillarDates[i], 0 * Days));
                     calInfo->times.push_back(yoyCurve->timeFromReference(pillarDates[i]));
+                    if (!results.mdQuoteLabels.empty()) {
+                        calInfo->mdQuoteLabels.push_back(results.mdQuoteLabels[i]);
+                        calInfo->mdQuoteValues.push_back(results.mdQuoteValues[i]);
+                    }
                 }
                 calibrationInfo_ = calInfo;
             }
@@ -158,6 +162,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     } catch (...) {
                     }
                     calInfo->forwardCpis.push_back(cpi);
+                    if (!results.mdQuoteLabels.empty()) {
+                        calInfo->mdQuoteLabels.push_back(results.mdQuoteLabels[i]);
+                        calInfo->mdQuoteValues.push_back(results.mdQuoteValues[i]);
+                    }
                 }
                 calibrationInfo_ = calInfo;
             }
@@ -283,6 +291,9 @@ InflationCurve::CurveBuildResults
                         nominalTs, swapStart);
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 helpers.push_back(instrument);
+                results.pillarDates.push_back(instrument->pillarDate());
+                results.mdQuoteLabels.push_back(md->name());
+                results.mdQuoteValues.push_back(md->quote()->value());
             }
         }
     auto curveObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag();
@@ -380,6 +391,8 @@ InflationCurve::CurveBuildResults
             instrument->unregisterWith(Settings::instance().evaluationDate());
             results.pillarDates.push_back(instrument->pillarDate());
             helpers.push_back(instrument);
+            results.mdQuoteLabels.push_back(md->name());
+            results.mdQuoteValues.push_back(md->quote()->value());
         }
     }
     auto curveObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag();

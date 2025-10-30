@@ -194,12 +194,17 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
 
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
         std::string key1 = to_string(info->pillarDates[i]);
-        addRowReport(type, id, "time", key1, "", "", info->times.at(i));
-        addRowReport(type, id, "zeroRate", key1, "", "", info->zeroRates.at(i));
-        addRowReport(type, id, "discountFactor", key1, "", "", info->discountFactors.at(i));
+        addRowReport(type, id, "time", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
+                     info->times.at(i));
+        addRowReport(type, id, "zeroRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
+                     info->zeroRates.at(i));
+        addRowReport(type, id, "discountFactor", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
+                     "", info->discountFactors.at(i));
         if (!iborIndex.empty())
-            addRowReport(type, id, "forwardRate", key1, "", "",
-                         iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
+            addRowReport(type, id, "forwardRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
+                         "", iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
+        if (!info->mdQuoteLabels.empty())
+            addRowReport(type, id, "mdQuote", key1, info->mdQuoteLabels.at(i), "", info->mdQuoteValues.at(i));
     }
 
     // fitted bond curve results
@@ -259,9 +264,14 @@ void MarketCalibrationReport::addInflationCurveImpl(
         addRowReport(type, id, "baseCpi", "", "", "", z->baseCpi);
         for (Size i = 0; i < z->pillarDates.size(); ++i) {
             std::string key1 = ore::data::to_string(z->pillarDates[i]);
-            addRowReport(type, id, "time", key1, "", "", z->times.at(i));
-            addRowReport(type, id, "zeroRate", key1, "", "", z->zeroRates.at(i));
-            addRowReport(type, id, "cpi", key1, "", "", z->forwardCpis.at(i));
+            addRowReport(type, id, "time", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->times.at(i));
+            addRowReport(type, id, "zeroRate", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->zeroRates.at(i));
+            addRowReport(type, id, "cpi", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->forwardCpis.at(i));
+            if (!z->mdQuoteLabels.empty())
+                addRowReport(type, id, "mdQuote", key1, z->mdQuoteLabels.at(i), "", z->mdQuoteValues.at(i));
         }
     }
 
@@ -270,8 +280,12 @@ void MarketCalibrationReport::addInflationCurveImpl(
     if (y) {
         for (Size i = 0; i < y->pillarDates.size(); ++i) {
             std::string key1 = ore::data::to_string(y->pillarDates[i]);
-            addRowReport(type, id, "time", key1, "", "", y->times.at(i));
-            addRowReport(type, id, "yoyRate", key1, "", "", y->yoyRates.at(i));
+            addRowReport(type, id, "time", key1, !y->mdQuoteLabels.empty() ? y->mdQuoteLabels.at(i) : "", "",
+                         y->times.at(i));
+            addRowReport(type, id, "yoyRate", key1, !y->mdQuoteLabels.empty() ? y->mdQuoteLabels.at(i) : "", "",
+                         y->yoyRates.at(i));
+            if (!y->mdQuoteLabels.empty())
+                addRowReport(type, id, "mdQuote", key1, y->mdQuoteLabels.at(i), "", y->mdQuoteValues.at(i));
         }
     }
 }
