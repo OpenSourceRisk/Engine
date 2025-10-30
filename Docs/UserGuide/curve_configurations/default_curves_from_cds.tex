@@ -15,7 +15,7 @@ A description of the default curve. It is for information only and may be left b
 The default curve's currency.
 
 \item \lstinline!Type!:
-For a default curve built from CDS, the \lstinline!Type! should be set to \lstinline!SpreadCDS! if the \lstinline!Quotes! reference CDS spread quotes or \lstinline!Price! if the \lstinline!Quotes! reference upfront price quotes or \lstinline!ConvSpreadCDS! if the \lstinline!Quotes! reference Conventional CDS spread quotes.  Note that if ConvSpreadCDS or Price is used, the model will be the IsdaCdsEngine. Else, MidPointCdsEngine.
+For a default curve built from CDS, the \lstinline!Type! should be set to \lstinline!SpreadCDS! if the \lstinline!Quotes! reference CDS spread quotes or \lstinline!Price! if the \lstinline!Quotes! reference upfront price quotes or \lstinline!ConvSpreadCDS! if the \lstinline!Quotes! reference Conventional CDS spread quotes.  Note that if ConvSpreadCDS is used, the model will be IsdaCdsEngine. Else, MidPointCdsEngine.
 
 \item \lstinline!DiscountCurve!:
 A reference to a valid discount curve specification that will be used to discount cashflows during the bootstrap process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
