@@ -23,11 +23,21 @@
 
 #pragma once
 
+#include <ql/any.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 
+namespace QuantLib {
+class CashFlow;
+class YieldTermStructure;
+class SwaptionVolatilityStructure;
+class OptionletVolatilityStructure;
+} // namespace QuantLib
+
 namespace ore {
 namespace data {
+
+class Market;
 
 struct TradeCashflowReportData {
     QuantLib::Size cashflowNo;
@@ -59,11 +69,13 @@ struct TradeCashflowReportData {
 
 // Populate TradeCashflowReportData based on CashFlow. Note: cashfowNo and legNo will _not_ be populated.
 TradeCashflowReportData getCashflowReportData(
-    ext::shared_ptr<CashFlow> ptrFlow, const bool payer, const double multiplier, const std::string& baseCcy,
-    const std::string ccy, const Date asof, const ext::shared_ptr<YieldTermStructure>& discountCurveCcy,
-    const double fxCcyBase,
-    const std::function<ext::shared_ptr<SwaptionVolatilityStructure>(const std::string& qualifier)>& swaptionVol,
-    const std::function<ext::shared_ptr<OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol);
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow, const bool payer, const double multiplier,
+    const std::string& baseCcy, const std::string ccy, const Date asof,
+    const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discountCurveCcy, const double fxCcyBase,
+    const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
+        swaptionVol,
+    const std::function<
+        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol);
 
 // Populate vector<TradeCashflowReportData> based on additional results map
 void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData>& result,

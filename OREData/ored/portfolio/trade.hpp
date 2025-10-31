@@ -164,7 +164,7 @@ public:
     const string& maturityType() const { return maturityType_; }
 
     virtual bool isExpired(const Date& d) const {
-        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        QuantLib::ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
         if(lastRelevantDate_!=Null<Date>()){
             return QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred(d, inc);
         }else{
