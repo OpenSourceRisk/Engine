@@ -269,6 +269,7 @@ void BondBasket::fromXML(XMLNode* node) {
         auto bonddata = QuantLib::ext::make_shared<ore::data::Bond>();
         bonddata->fromXML(child);
         bonddata->id() = id;
+        bonddata->isSubTrade() = true;
         bonds_.push_back(bonddata);
     }
 }
