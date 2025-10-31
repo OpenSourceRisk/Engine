@@ -1325,7 +1325,7 @@
           }
         ]
       },
-      ".*todaysmarketcalibration.*\\.csv": {
+      ".*marketcalibration.*\\.csv": {
         "keys": [
           "MarketObjectType",
           "MarketObjectId",
