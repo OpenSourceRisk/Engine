@@ -62,19 +62,22 @@ void CommoditySchwartzData::fromXML(XMLNode* node) {
     LOG("Cross-Asset Commodity Kappa initial value = " << kappaValue_);
 
     XMLNode* seasonalityNode = XMLUtils::getChildNode(node, "Seasonality");
-    calibrateSeasonality_ = XMLUtils::getChildValueAsBool(seasonalityNode, "Calibrate", false);
-
+    calibrateSeasonality_ = XMLUtils::getChildValueAsBool(seasonalityNode, "Calibrate", false, false);
     LOG("Cross-Asset Commodity Seasonality calibrate = " << calibrateSeasonality_);
+    
     std::string seasonalityTypeString = XMLUtils::getChildValue(seasonalityNode, "ParamType", false);
     if (seasonalityTypeString.size())
         seasonalityType_ = parseParamType(seasonalityTypeString);
     LOG("Cross-Asset Commodity Seasonality parameter type = " << seasonalityTypeString);
+
     seasonalityTimes_ = XMLUtils::getChildrenValuesAsDoublesCompact(seasonalityNode, "TimeGrid", false);
-    
     LOG("Cross-Asset Commodity Seasonality time grid size = " << seasonalityTimes_.size());
+
     seasonalityValues_ = XMLUtils::getChildrenValuesAsDoublesCompact(seasonalityNode, "InitialValue", false);
-    if (!seasonalityValues_.size())
-        seasonalityValues_ = {0.0};
+    if (!seasonalityValues_.size()){
+        seasonalityValues_.push_back(0);
+        LOG("No seasonality initial values provided, setting to 0.0 by default.");
+    }
     LOG("Cross-Asset Commodity Seasonality initial values size = " << seasonalityValues_.size());
 
     XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationOptions");

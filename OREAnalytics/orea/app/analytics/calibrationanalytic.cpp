@@ -278,11 +278,10 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             // overwrite initial values with calibration results
             comData->sigmaValue() = comPara->parameterValues(0).front();
             comData->kappaValue() = comPara->parameterValues(1).front();
-            std::vector<double> seasonalityValues;
-            for (int i = 0; i < comPara->parameterValues(2).size(); ++i){
-                seasonalityValues.push_back(comPara->parameterValues(2)[i]);
-            }
-            comData->seasonalityValues() = seasonalityValues;
+            times = comPara->parameterTimes(2);
+            values = comPara->parameterValues(2);
+            comData->seasonalityTimes() = std::vector<Real>(times.begin(), times.end());
+            comData->seasonalityValues() = std::vector<Real>(values.begin(), values.end());
             comData->calibrateSigma() = false;
             comData->calibrateKappa() = false;
             comData->calibrateSeasonality() = false;
