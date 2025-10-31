@@ -78,6 +78,17 @@ TradeCashflowReportData getCashflowReportData(
     const std::function<
         QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol);
 
+// Populate TradeCashflowReportData based on Leg(s). Note: cashfowNo and legNo will _not_ be populated.
+std::vector<TradeCashflowReportData> getCashflowReportData(
+    const std::vector<QuantLib::Leg>& legs, const std::vector<bool>& payer, const std::vector<double>& multiplier,
+    const std::string& baseCcy, const std::vector<std::string>& ccys, const Date asof,
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>>& discountCurvesCcy,
+    const std::vector<double>& fxCcyBase,
+    const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
+        swaptionVol,
+    const std::function<
+        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol);
+
 // Populate vector<TradeCashflowReportData> based on additional results map
 void populateReportDataFromAdditionalResults(
     std::vector<TradeCashflowReportData>& result, std::map<Size, Size>& cashflowNumber,

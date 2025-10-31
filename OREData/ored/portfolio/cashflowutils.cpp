@@ -465,5 +465,26 @@ TradeCashflowReportData getCashflowReportData(
     return result;
 }
 
+std::vector<TradeCashflowReportData> getCashflowReportData(
+    const std::vector<QuantLib::Leg>& legs, const std::vector<bool>& payer, const std::vector<double>& multiplier,
+    const std::string& baseCcy, const std::vector<std::string>& ccys, const Date asof,
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>>& discountCurvesCcy,
+    const std::vector<double>& fxCcyBase,
+    const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
+        swaptionVol,
+    const std::function<
+        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol) {
+    std::vector<TradeCashflowReportData> result;
+    for (Size i = 0; i < legs.size(); ++i) {
+        for (Size j = 0; j < legs[i].size(); ++j) {
+            result.push_back(getCashflowReportData(legs[i][j], payer[i], multiplier[i], baseCcy, ccys[i], asof,
+                                                   discountCurvesCcy[i], fxCcyBase[i], swaptionVol, optionletVol));
+            result.back().cashflowNo = j + 1;
+            result.back().legNo = i;
+        }
+    }
+    return result;
+}
+
 } // namespace data
 } // namespace ore
