@@ -5,11 +5,15 @@
 """
 
 import os, sys, math, codecs
-from setuptools import Command
-from setuptools.command.build_ext import build_ext
-from setuptools.command.build import build
-from setuptools._distutils.ccompiler import get_default_compiler
-from setuptools import setup, Extension
+from distutils.cmd import Command
+from distutils.command.build_ext import build_ext
+from distutils.command.build import build
+from distutils.ccompiler import get_default_compiler
+try:
+    from setuptools import setup, Extension
+except:
+    from distutils.core import setup, Extension
+from distutils import sysconfig
 
 class test(Command):
     # Original version of this class posted
@@ -263,7 +267,7 @@ datafiles  = []
 # patch distutils if it can't cope with the "classifiers" or
 # "download_url" keywords
 if sys.version < '2.2.3':
-    from setuptools.dist import DistributionMetadata
+    from distutils.dist import DistributionMetadata
     DistributionMetadata.classifiers = None
     DistributionMetadata.download_url = None
 
