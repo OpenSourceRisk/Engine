@@ -37,6 +37,7 @@
 #include <ored/marketdata/yieldcurve.hpp>
 
 #include <ql/termstructures/globalbootstrap.hpp>
+#include <ql/termstructures/multicurve.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
@@ -136,6 +137,8 @@ private:
         QuantLib::ext::shared_ptr<QuantLib::RateHelper> rateHelper;
         std::string mdQuoteLabel;
         double mdQuoteValue;
+        std::vector<TradeCashflowReportData> cashflowData;
+        std::function<std::vector<TradeCashflowReportData>()> cashflowGenerator;
     };
 
     Date asofDate_;
@@ -152,10 +155,12 @@ private:
     std::vector<InterpolationMethod> interpolationMethod_;
     std::vector<bool> excludeT0FromInterpolation_;
 
-    const Loader& loader_; // only used in ctor
+    const Loader& loader_;
+    QuantLib::ext::shared_ptr<MultiCurve> multiCurve_;
     std::vector<RelinkableHandle<YieldTermStructure>> h_;
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> p_;
     std::vector<QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> calibrationInfo_;
+    std::vector<std::vector<std::function<std::vector<TradeCashflowReportData>()>>> rateHelperCashflowGenerator_;
 
     void buildBootstrappedCurve(const std::set<std::size_t>& indices);
 

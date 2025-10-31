@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/portfolio/cashflowutils.hpp>
+
 #include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
@@ -52,6 +54,7 @@ struct YieldCurveCalibrationInfo {
     std::vector<double> times;
     std::vector<std::string> mdQuoteLabels;
     std::vector<double> mdQuoteValues;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
 };
 
 struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
