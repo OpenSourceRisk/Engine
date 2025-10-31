@@ -47,7 +47,6 @@ namespace QuantExt {
 template <class Interpolator>
 class InterpolatedPriceCurve : public PriceTermStructure,
                                public QuantLib::LazyObject,
-                               public MakeThisPriceCurveSpreadedTreat,  
                                protected QuantLib::InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors

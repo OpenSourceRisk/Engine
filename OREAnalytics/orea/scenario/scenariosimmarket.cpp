@@ -3420,7 +3420,7 @@ void ScenarioSimMarket::applyCurveAlgebraCommodityPriceCurve(
     }
     auto rf = parseRiskFactorKey(a.key() + "/0");
     auto target = commodityIndex(rf.name)->priceCurve();
-    if (auto c = QuantLib::ext::dynamic_pointer_cast<MakeThisPriceCurveSpreadedTreat>(*target)) {
+    if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(*target)) {
         c->makeThisCurveSpreaded(bases, multiplier);

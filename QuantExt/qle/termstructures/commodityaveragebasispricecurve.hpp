@@ -80,6 +80,11 @@ public:
     QuantLib::Time minTime() const override;
     std::vector<QuantLib::Date> pillarDates() const override;
     const QuantLib::Currency& currency() const override { return baseIndex_->priceCurve()->currency(); }
+    void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
+                               const std::vector<double>& multiplier) override {
+        // do nothing, as this curve is already spreaded
+        return;
+    }
     //@}
 
     //! \name Inspectors

@@ -66,6 +66,10 @@ public:
 
     //! The pillar dates for the PriceTermStructure
     virtual std::vector<QuantLib::Date> pillarDates() const = 0;
+    
+    //! Make this curve spreaded for the sim market
+    virtual void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
+                                       const std::vector<double>& multiplier) = 0;
 
 protected:
     /*! \name Calculations
@@ -80,14 +84,6 @@ protected:
 
     //! Extra time range check for minimum time, then calls TermStructure::checkRange
     void checkRange(QuantLib::Time t, bool extrapolate) const;
-};
-
-class MakeThisPriceCurveSpreadedTreat {
-public:
-    MakeThisPriceCurveSpreadedTreat() = default;
-    virtual ~MakeThisPriceCurveSpreadedTreat() = default;
-    virtual void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
-                                       const std::vector<double>& multiplier) = 0;
 };
 
 //! Helper class so that the spot price can be pulled from the price curve each time the spot price is requested.

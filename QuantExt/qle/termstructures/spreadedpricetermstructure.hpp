@@ -31,7 +31,6 @@ namespace QuantExt {
 
 //! Spreaded Price term structure
 class SpreadedPriceTermStructure : public PriceTermStructure,
-                                   public MakeThisPriceCurveSpreadedTreat,
                                    QuantLib::LazyObject {
 public:
     //! times should be consistent with reference curve day counter
