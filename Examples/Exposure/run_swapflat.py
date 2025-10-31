@@ -13,11 +13,12 @@ print("+------------------------------------------------+")
 # Legacy examples 1 and 11
 
 oreex.run("Input/ore_swapflat.xml")
+oreex.run("Input/ore_swapflat_swaptions.xml")
 
 oreex.setup_plot("exposure_swapflat")
 oreex.plot("swapflat/exposure_trade_Swap_20.csv", 2, 3, 'b', "Swap EPE")
 oreex.plot("swapflat/exposure_trade_Swap_20.csv", 2, 4, 'r', "Swap ENE")
-oreex.plot_npv("swapflat/npv.csv", 6, 'g', "NPV Swaptions", marker='s', filter='Swaption', filterCol=1)
+oreex.plot_npv("swapflat/npv_swaptions.csv", 6, 'g', "NPV Swaptions", marker='s', filter='Swaption', filterCol=1)
 oreex.decorate_plot(title="Swap Exposures vs Analytical Swaption Prices")
 oreex.save_plot_to_file()
 
