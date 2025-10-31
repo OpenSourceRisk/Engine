@@ -36,12 +36,7 @@ public:
     };
     typedef QuantLib::BootstrapHelper<QuantLib::ZeroInflationTermStructure> helper;
     // start of curve data
-    static QuantLib::Date initialDate(const QuantLib::ZeroInflationTermStructure* t) {
-        if (t->hasExplicitBaseDate())
-            return t->baseDate();
-        else
-            return QuantLib::inflationPeriod(t->referenceDate() - t->observationLag(), t->frequency()).first;
-    }
+    static QuantLib::Date initialDate(const QuantLib::ZeroInflationTermStructure* t) { return t->baseDate(); }
     // value at reference date
 
     static QuantLib::Rate initialValue(const CPICurve* ts) {
