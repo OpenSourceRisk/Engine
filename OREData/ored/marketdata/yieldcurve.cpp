@@ -528,6 +528,9 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         try {
 
             if (buildCalibrationInfo_) {
+
+                bool overwrittenPillarDates = false;
+
                 if (calibrationInfo_[index] == nullptr)
                     calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
 
@@ -539,6 +542,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                         calibrationInfo_[index]->pillarDates.clear();
                         for (auto const& pd : pillarDates)
                             calibrationInfo_[index]->pillarDates.push_back(pd);
+                        overwrittenPillarDates = true;
                     }
                 } catch (...) {
                     DLOG("Report configuration for yield curves not set - using predefined/default pillar dates.");
@@ -550,6 +554,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                 if (calibrationInfo_[index]->pillarDates.empty()) {
                     for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
                         calibrationInfo_[index]->pillarDates.push_back(asofDate_ + p);
+                    overwrittenPillarDates = true;
                 }
                 for (auto const& d : calibrationInfo_[index]->pillarDates) {
                     calibrationInfo_[index]->zeroRates.push_back(
@@ -557,6 +562,29 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     calibrationInfo_[index]->discountFactors.push_back(p_[index]->discount(d));
                     calibrationInfo_[index]->times.push_back(p_[index]->timeFromReference(d));
                 }
+
+                // if pillar dates != instrument dates we can not populate md quote labels and values
+
+                if (overwrittenPillarDates) {
+                    calibrationInfo_[index]->mdQuoteLabels.clear();
+                    calibrationInfo_[index]->mdQuoteValues.clear();
+                }
+
+                // check validity of calibration info
+
+                QL_REQUIRE(calibrationInfo_[index]->mdQuoteLabels.empty() ||
+                               calibrationInfo_[index]->mdQuoteLabels.size() ==
+                                   calibrationInfo_[index]->pillarDates.size(),
+                           "YieldCurve: calibration info for "
+                               << curveSpec_[index]->name() << " invalid: mdQuoteLabels size ("
+                               << calibrationInfo_[index]->mdQuoteLabels.size() << ") does not match pillarDates size ("
+                               << calibrationInfo_[index]->pillarDates.size() << ")");
+                QL_REQUIRE(
+                    calibrationInfo_[index]->mdQuoteLabels.size() == calibrationInfo_[index]->mdQuoteValues.size(),
+                    "YieldCurve:: calibration info for "
+                        << curveSpec_[index]->name() << " invalid: mdQuoteLabels size ("
+                        << calibrationInfo_[index]->mdQuoteLabels.size() << ") does not match mdQuoteValues size ("
+                        << calibrationInfo_[index]->mdQuoteValues.size() << ")");
             }
 
         } catch (const std::exception& e) {

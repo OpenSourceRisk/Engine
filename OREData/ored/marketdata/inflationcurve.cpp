@@ -107,6 +107,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         std::vector<QuantLib::Date> pillarDates = results.pillarDates;
         if (buildCalibrationInfo) {
 
+            bool overwrittenPillarDates = false;
+
             if (pillarDates.empty()) {
                 // default: fill pillar dates with monthly schedule up to last term given in the curve config (but max
                 // 60y)
@@ -118,6 +120,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     else
                         break;
                 }
+                overwrittenPillarDates = true;
             }
 
             if (config->type() == InflationCurveConfig::Type::YY) {
@@ -131,7 +134,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     calInfo->pillarDates.push_back(pillarDates[i]);
                     calInfo->yoyRates.push_back(yoyCurve->yoyRate(pillarDates[i], 0 * Days));
                     calInfo->times.push_back(yoyCurve->timeFromReference(pillarDates[i]));
-                    if (!results.mdQuoteLabels.empty()) {
+                    if (!results.mdQuoteLabels.empty() && !overwrittenPillarDates) {
                         calInfo->mdQuoteLabels.push_back(results.mdQuoteLabels[i]);
                         calInfo->mdQuoteValues.push_back(results.mdQuoteValues[i]);
                     }
@@ -162,13 +165,32 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     } catch (...) {
                     }
                     calInfo->forwardCpis.push_back(cpi);
-                    if (!results.mdQuoteLabels.empty()) {
+                    if (!results.mdQuoteLabels.empty() && !overwrittenPillarDates) {
                         calInfo->mdQuoteLabels.push_back(results.mdQuoteLabels[i]);
                         calInfo->mdQuoteValues.push_back(results.mdQuoteValues[i]);
                     }
                 }
                 calibrationInfo_ = calInfo;
             }
+
+            // if pillar dates != instrument dates we can not populate md quote labels and values
+
+            if (overwrittenPillarDates) {
+                calibrationInfo_->mdQuoteLabels.clear();
+                calibrationInfo_->mdQuoteValues.clear();
+            }
+
+            // check validity of calibration info
+
+            QL_REQUIRE(calibrationInfo_->mdQuoteLabels.empty() ||
+                           calibrationInfo_->mdQuoteLabels.size() == calibrationInfo_->pillarDates.size(),
+                       "InflationCurve: calibration info mdQuoteLabels size ("
+                           << calibrationInfo_->mdQuoteLabels.size() << ") does not match pillarDates size ("
+                           << calibrationInfo_->pillarDates.size() << ")");
+            QL_REQUIRE(calibrationInfo_->mdQuoteLabels.size() == calibrationInfo_->mdQuoteValues.size(),
+                       "InflationCurve:: calibration info mdQuoteLabels size ("
+                           << calibrationInfo_->mdQuoteLabels.size() << ") does not match mdQuoteValues size ("
+                           << calibrationInfo_->mdQuoteValues.size() << ")");
         }
 
     } catch (std::exception& e) {
