@@ -22,7 +22,7 @@ cases = [ "run_sensi.py",           # 15, 40
           "run_stressscenariogeneration.py",
           "run_scenariostress.py",
           "run_correlation.py",
-          "run_curvealgreba.py"
+          "run_curvealgebra.py"
          ]
 
 # Get max parallel from environment variable, default to 1
