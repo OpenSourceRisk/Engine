@@ -2273,22 +2273,29 @@ void YieldCurve::addSwaps(const std::size_t index, const QuantLib::ext::shared_p
                        "swap quote with fixed start date is not supported for ibor / subperiods swap instruments");
             // Create a swap helper if we do.
             Period swapTenor = swapQuote->term();
-            QuantLib::ext::shared_ptr<RateHelper> swapHelper;
             if (swapConvention->hasSubPeriod()) {
-                swapHelper = QuantLib::ext::make_shared<SubPeriodsSwapHelper>(
+                auto swapHelper = QuantLib::ext::make_shared<SubPeriodsSwapHelper>(
                     swapQuote->quote(), swapTenor, Period(swapConvention->fixedFrequency()),
                     swapConvention->fixedCalendar(), swapConvention->fixedDayCounter(),
                     swapConvention->fixedConvention(), Period(swapConvention->floatFrequency()),
                     swapConvention->index(), swapConvention->index()->dayCounter(), discountCurve_[index],
                     swapConvention->subPeriodsCouponType(), swapSegment->pillarChoice());
+                instruments.push_back({swapHelper, marketQuote->name(), marketQuote->quote()->value()});
             } else {
-                swapHelper = QuantLib::ext::make_shared<SwapRateHelper>(
+                auto swapHelper = QuantLib::ext::make_shared<SwapRateHelper>(
                     swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
                     swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), swapConvention->index(),
                     Handle<Quote>(), 0 * Days, discountCurve_[index], Null<Natural>(), swapSegment->pillarChoice());
+                instruments.push_back({swapHelper, marketQuote->name(), marketQuote->quote()->value(),
+                                       std::function<std::vector<TradeCashflowReportData>()>{[swapHelper, index,
+                                                                                              this]() {
+                                           return getCashflowReportData(
+                                               {swapHelper->swap()->fixedLeg(), swapHelper->swap()->floatingLeg()},
+                                               {false, true}, {1.0, 1.0}, currency_[index].code(),
+                                               {currency_[index].code(), currency_[index].code()}, asofDate_,
+                                               {*discountCurve_[index], *discountCurve_[index]}, {1.0, 1.0}, {}, {});
+                                       }}});
             }
-
-            instruments.push_back({swapHelper, marketQuote->name(), marketQuote->quote()->value()});
         }
     }
 }

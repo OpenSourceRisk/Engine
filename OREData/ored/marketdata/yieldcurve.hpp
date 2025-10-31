@@ -137,7 +137,6 @@ private:
         QuantLib::ext::shared_ptr<QuantLib::RateHelper> rateHelper;
         std::string mdQuoteLabel;
         double mdQuoteValue;
-        std::vector<TradeCashflowReportData> cashflowData;
         std::function<std::vector<TradeCashflowReportData>()> cashflowGenerator;
     };
 
