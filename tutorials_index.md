@@ -29,7 +29,5 @@ This page serves as the index for selected tutorials on building ORE.
 
 [Building ORE Python Wrappers on Posix Systems (e.g. MacOS and Linux)](ORE-SWIG/tutorials.04.build_posix.md)
 
-[Managing Wheels](ORE-SWIG/tutorials.05.wheels.md)
-
 [Run Jupyter Notebook Examples using the published ORE Python module](ORE-SWIG/tutorials.06.notebooks.md)
 
