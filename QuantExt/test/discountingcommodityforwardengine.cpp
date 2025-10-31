@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(testPricing) {
     maturity = Date(19, Feb, 2019);
     forward = QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
     Date npvDate = asof + 2 * Days;
-    engine = QuantLib::ext::make_shared<DiscountingCommodityForwardEngine>(discountCurve, boost::none, npvDate);
+    engine = QuantLib::ext::make_shared<DiscountingCommodityForwardEngine>(discountCurve, QuantLib::ext::nullopt, npvDate);
     forward->setPricingEngine(engine);
     DiscountFactor npvDateDiscount = discountCurve->discount(npvDate);
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1] / npvDateDiscount, tolerance);

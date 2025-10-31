@@ -31,6 +31,7 @@
 #include <orea/simm/simmconfigurationisdav2_6.hpp>
 #include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_7_2412.hpp>
+#include <orea/simm/simmconfigurationisdav2_8_2506.hpp>
 #include <orea/simm/simmconfigurationcalibration.hpp>
 
 #include <ored/portfolio/bondposition.hpp>
@@ -217,6 +218,7 @@ SimmVersion parseSimmVersion(const string& version) {
                                                   {"2.6", SimmVersion::V2_6},
                                                   {"2.7", SimmVersion::V2_6_5},
                                                   {"2.7+2412", SimmVersion::V2_7_2412},
+                                                  {"2.8+2506", SimmVersion::V2_8_2506},
                                                   // old names for backwards compatibility
                                                   {"ISDA_V315", SimmVersion::V1_0},
                                                   {"ISDA_V329", SimmVersion::V1_3},
@@ -284,6 +286,9 @@ QuantLib::ext::shared_ptr<SimmConfiguration> buildSimmConfiguration(const string
         break;
     case SimmVersion::V2_7_2412:
         return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_7_2412>(simmBucketMapper, mporDays);
+        break;
+    case SimmVersion::V2_8_2506:
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_8_2506>(simmBucketMapper, mporDays);
         break;
     default:
         break;

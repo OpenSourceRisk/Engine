@@ -75,8 +75,8 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
 }
 
 XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                             const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs), stressScenarios_(scenarios.get_value_or(inputs->xvaStressScenarioData())) {
+                                             const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
+    : Analytic::Impl(inputs), stressScenarios_(scenarios.value_or(inputs->xvaStressScenarioData())) {
     setLabel(LABEL);
 }
 

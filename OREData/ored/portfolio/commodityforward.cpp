@@ -46,7 +46,7 @@ CommodityForward::CommodityForward(const Envelope& envelope, const string& posit
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
                                    const string& currency, Real quantity, const string& maturityDate, Real strike,
-                                   const Date& futureExpiryDate, const boost::optional<bool>& physicallySettled,
+                                   const Date& futureExpiryDate, const QuantLib::ext::optional<bool>& physicallySettled,
                                    const Date& paymentDate)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
       quantity_(quantity), maturityDate_(maturityDate), strike_(strike), isFuturePrice_(true),
@@ -56,7 +56,7 @@ CommodityForward::CommodityForward(const Envelope& envelope, const string& posit
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
                                    const string& currency, Real quantity, const string& maturityDate, Real strike,
                                    const Period& futureExpiryOffset, const Calendar& offsetCalendar,
-                                   const boost::optional<bool>& physicallySettled, const Date& paymentDate)
+                                   const QuantLib::ext::optional<bool>& physicallySettled, const Date& paymentDate)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
       quantity_(quantity), maturityDate_(maturityDate), strike_(strike), isFuturePrice_(true),
       futureExpiryOffset_(futureExpiryOffset), offsetCalendar_(offsetCalendar), physicallySettled_(physicallySettled),
@@ -227,7 +227,7 @@ void CommodityForward::fromXML(XMLNode* node) {
     maturityDate_ = XMLUtils::getChildValue(commodityDataNode, "Maturity", true);
     strike_ = XMLUtils::getChildValueAsDouble(commodityDataNode, "Strike", true);
 
-    isFuturePrice_ = boost::none;
+    isFuturePrice_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "IsFuturePrice"))
         isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
 
@@ -246,7 +246,7 @@ void CommodityForward::fromXML(XMLNode* node) {
             offsetCalendar_ = parseCalendar(XMLUtils::getNodeValue(n));
     }
 
-    physicallySettled_ = boost::none;
+    physicallySettled_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "PhysicallySettled"))
         physicallySettled_ = parseBool(XMLUtils::getNodeValue(n));
 

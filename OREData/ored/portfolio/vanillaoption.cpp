@@ -101,7 +101,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         // We have a European cash settled option.
 
         // Get the payment date.
-        const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+        const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
         Date paymentDate = expiryDate_;
         if (opd) {
             if (opd->rulesBased()) {
@@ -152,7 +152,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             // Build a QuantExt::CashSettledEuropeanOption if payment date is strictly greater than expiry.
 
             // Has the option been marked as exercised
-            const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+            const QuantLib::ext::optional<OptionExerciseData>& oed = option_.exerciseData();
             bool exercised = false;
             Real exercisePrice = Null<Real>();
             if (oed) {
@@ -219,7 +219,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         // We have an American quanto cash settled option.
 
         // Get the payment date.
-        const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+        const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
         Date paymentDate = expiryDate_;
         if (opd) {
             if (opd->rulesBased()) {
@@ -260,15 +260,15 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         if (forwardDate_ == QuantLib::Date()) {
             // If not European or not cash settled, build QuantLib::VanillaOption.
             if (sameCcy) {
-                LOG("Build VanillaOption for trade " << id());
+                DLOG("Build VanillaOption for trade " << id());
                 vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
             } else {
-                LOG("Build QuantoVanillaOption for trade " << id());
+                DLOG("Build QuantoVanillaOption for trade " << id());
                 vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
                 tradeTypeBuilder = tradeType_ + "American";
             }
         } else {
-            LOG("Built VanillaForwardOption for trade " << id());
+            DLOG("Built VanillaForwardOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_, paymentDate_);
             if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX) {
                 if (exerciseType == QuantLib::Exercise::Type::European) {

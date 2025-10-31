@@ -34,10 +34,10 @@ ParametricVolatility::ParametricVolatility(const std::vector<MarketSmile> market
 
 Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,
                                    const Real inputLognormalShift,
-                                   const boost::optional<Option::Type> inputOptionTypeOpt, const Real timeToExpiry,
+                                   const QuantLib::ext::optional<Option::Type> inputOptionTypeOpt, const Real timeToExpiry,
                                    const Real strike, const Real forward, const MarketQuoteType outputMarketQuoteType,
                                    const Real outputLognormalShift,
-                                   const boost::optional<Option::Type> outputOptionTypeOpt) const {
+                                   const QuantLib::ext::optional<Option::Type> outputOptionTypeOpt) const {
 
     // determine the input and output option types
 

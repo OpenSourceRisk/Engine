@@ -322,9 +322,9 @@ vector<CrifRecord> SaccrCrifGenerator::generateTradeCrifRecords(
             // Dates
             record.saccrEndDate = c.maturity;
             if (c.startDate.has_value())
-                record.saccrLabel1 = c.startDate.get();
+                record.saccrLabel1 = c.startDate.value();
             if (c.endDate.has_value())
-                record.saccrLabel2 = c.endDate.get();
+                record.saccrLabel2 = c.endDate.value();
 
             record.bucket = c.bucket;
 

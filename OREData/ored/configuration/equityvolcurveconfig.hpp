@@ -56,13 +56,13 @@ public:
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                 const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                                const QuantLib::ext::optional<bool>& preferOutOfTheMoney = QuantLib::ext::nullopt);
     //@}
 
     //! \name Serialisation
@@ -82,7 +82,7 @@ public:
     void populateQuotes();
     bool isProxySurface();
     OneDimSolverConfig solverConfig() const;
-    const boost::optional<bool>& preferOutOfTheMoney() const {
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney() const {
         return preferOutOfTheMoney_;
     }
     const ReportConfig& reportConfig() const { return reportConfig_; }
@@ -103,7 +103,7 @@ private:
     string dayCounter_;
     string calendar_;
     OneDimSolverConfig solverConfig_;
-    boost::optional<bool> preferOutOfTheMoney_;
+    QuantLib::ext::optional<bool> preferOutOfTheMoney_;
     ReportConfig reportConfig_;
 
     // Return a default solver configuration. Used by solverConfig() if solverConfig_ is empty.

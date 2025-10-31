@@ -67,7 +67,7 @@ public:
 
     //! Return all of the market objects needed by the portfolio
     std::map<ore::data::MarketObject, std::set<std::string>>
-    marketObjects(const boost::optional<std::string> config = boost::none) const;
+    marketObjects(const QuantLib::ext::optional<std::string> config = QuantLib::ext::nullopt) const;
     std::map<std::string, std::map<ore::data::MarketObject, std::set<std::string>>> allMarketObjects() const {
         return marketObjects_;
     }

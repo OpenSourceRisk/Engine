@@ -648,7 +648,7 @@ QuantLib::Real Swaption::notional() const {
 
 bool Swaption::isExercised() const { return exerciseBuilder_->isExercised(); }
 
-const std::map<std::string, boost::any>& Swaption::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& Swaption::additionalData() const {
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < std::min(legData_.size(), legs_.size()); ++i) {

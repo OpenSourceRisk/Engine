@@ -81,7 +81,7 @@ void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     maturityType_ = "End Date";
 }
 
-const std::map<std::string, boost::any>& ForwardRateAgreement::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& ForwardRateAgreement::additionalData() const {
     QL_REQUIRE(instrument_ != nullptr, "no internal instrument set");
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap =
         QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());

@@ -110,7 +110,7 @@ protected:
         Period tsperiod = parsePeriod(engineParameter("TimestepPeriod", {}, false, "3M"));
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
-            yts, dpts, recovery, spread, tsperiod, boost::none, includePastCashflows, income, true, spreadOnIncome,
+            yts, dpts, recovery, spread, tsperiod, QuantLib::ext::nullopt, includePastCashflows, income, true, spreadOnIncome,
             treatSecuritySpreadAsCreditSpread);
     }
 };

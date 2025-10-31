@@ -66,7 +66,7 @@ public:
     virtual QuantLib::Real NPV() const = 0;
 
     //! Return the additional results of this instrument
-    virtual const std::map<std::string, boost::any>& additionalResults() const = 0;
+    virtual const std::map<std::string, QuantLib::ext::any>& additionalResults() const = 0;
 
     QuantLib::Real additionalInstrumentsNPV() const;
 
@@ -136,7 +136,7 @@ public:
     void reset() override {}
 
     QuantLib::Real NPV() const override;
-    const std::map<std::string, boost::any>& additionalResults() const override;
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const override;
 };
 
 } // namespace data

@@ -77,7 +77,6 @@ private:
     QuantLib::Real accuracy_;
 
     friend class Bootstrap<this_curve>;
-    friend class QuantLib::BootstrapError<this_curve>;
     Bootstrap<this_curve> bootstrap_;
 };
 
@@ -85,8 +84,6 @@ private:
 
 template <class I, template <class> class B, class T>
 inline QuantLib::Date PiecewiseCPIInflationCurve<I, B, T>::baseDate() const {
-    if (!this->hasExplicitBaseDate())
-        this->calculate();
     return base_curve::baseDate();
 }
 

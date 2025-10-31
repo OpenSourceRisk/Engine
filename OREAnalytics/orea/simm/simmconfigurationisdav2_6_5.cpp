@@ -49,8 +49,8 @@ QuantLib::Size SimmConfiguration_ISDA_V2_6_5::group(const string& qualifier, con
     return result;
 }
 
-QuantLib::Real SimmConfiguration_ISDA_V2_6_5::weight(const CrifRecord::RiskType& rt, boost::optional<string> qualifier,
-                                                     boost::optional<std::string> label_1,
+QuantLib::Real SimmConfiguration_ISDA_V2_6_5::weight(const CrifRecord::RiskType& rt, QuantLib::ext::optional<string> qualifier,
+                                                     QuantLib::ext::optional<std::string> label_1,
                                                      const std::string& calculationCurrency) const {
 
     if (rt == CrifRecord::RiskType::FX) {

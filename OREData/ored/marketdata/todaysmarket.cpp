@@ -229,16 +229,16 @@ void TodaysMarket::initialise(const Date& asof) {
 
     // output stats on initialisation phase
 
-    LOG("TodaysMarket build stats:");
+    DLOG("TodaysMarket build stats:");
     boost::timer::nanosecond_type sum = 0;
     for (auto const& t : timings) {
         std::size_t c = counts[t.first].count == 0 ? 1 : counts[t.first].count;
         double timing = static_cast<double>(t.second) / 1.0E6;
-        LOG(std::left << std::setw(34) << t.first << ": " << std::right << std::setprecision(3) << std::setw(15)
+        DLOG(std::left << std::setw(34) << t.first << ": " << std::right << std::setprecision(3) << std::setw(15)
                       << timing << " ms" << std::setw(10) << c << std::setw(15) << timing / c << " ms");
         sum += t.second;
     }
-    LOG("Total build time              : " << std::setw(15) << static_cast<double>(sum) / 1.0E6 << " ms");
+    DLOG("Total build time              : " << std::setw(15) << static_cast<double>(sum) / 1.0E6 << " ms");
 
     // output errors from initialisation phase
 

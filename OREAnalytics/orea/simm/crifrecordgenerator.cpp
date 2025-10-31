@@ -274,14 +274,14 @@ ore::analytics::CrifRecord CrifRecordGenerator::record(const SensitivityRecord& 
                       bucket, label1, label2, currency_, sensitivity, usdSpot_ * sensitivity);
 }
 
-boost::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operator()(const ore::analytics::SensitivityRecord& sr,
+QuantLib::ext::optional<ore::analytics::CrifRecord> CrifRecordGenerator::operator()(const ore::analytics::SensitivityRecord& sr,
                                                                             std::set<std::string>& failedTrades) {
     // Split the sensitivity record factor description into tokens
     vector<string> rfTokens;
     boost::split(rfTokens, sr.desc_1, boost::is_any_of("/"), boost::token_compress_off);
     QL_REQUIRE(!rfTokens.empty(), "Expected one token at least for factor '" << sr.key_1 << "'");
 
-    boost::optional<CrifRecord> result;
+    QuantLib::ext::optional<CrifRecord> result;
     try {
         CrifRecordData data;
         // Case statement to populate the remaining CRIF record entries
