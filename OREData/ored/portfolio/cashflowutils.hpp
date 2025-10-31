@@ -26,6 +26,7 @@
 #include <ql/any.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
+#include <ql/handle.hpp>
 
 namespace QuantLib {
 class CashFlow;
@@ -78,14 +79,12 @@ TradeCashflowReportData getCashflowReportData(
         QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol);
 
 // Populate vector<TradeCashflowReportData> based on additional results map
-void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData>& result,
-                                             std::map<Size, Size>& cashflowNumber,
-                                             const std::map<std::string, QuantLib::ext::any>& addResults,
-                                             const Real multiplier, const std::string& baseCurrency,
-                                             const std::string& npvCurrency,
-                                             QuantLib::ext::shared_ptr<ore::data::Market> market,
-                                             const Handle<YieldTermStructure>& specificDiscountCurve,
-                                             const std::string& configuration, const bool includePastCashflows);
+void populateReportDataFromAdditionalResults(
+    std::vector<TradeCashflowReportData>& result, std::map<Size, Size>& cashflowNumber,
+    const std::map<std::string, QuantLib::ext::any>& addResults, const Real multiplier, const std::string& baseCurrency,
+    const std::string& npvCurrency, QuantLib::ext::shared_ptr<ore::data::Market> market,
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& specificDiscountCurve, const std::string& configuration,
+    const bool includePastCashflows);
 
 } // namespace data
 } // namespace ore
