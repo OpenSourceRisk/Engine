@@ -71,7 +71,7 @@ struct TradeCashflowReportData {
 // Populate TradeCashflowReportData based on CashFlow. Note: cashfowNo and legNo will _not_ be populated.
 TradeCashflowReportData getCashflowReportData(
     QuantLib::ext::shared_ptr<QuantLib::CashFlow> ptrFlow, const bool payer, const double multiplier,
-    const std::string& baseCcy, const std::string ccy, const Date asof,
+    const std::string& baseCcy, const std::string ccy, const QuantLib::Date asof,
     const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discountCurveCcy, const double fxCcyBase,
     const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
         swaptionVol,
@@ -81,7 +81,7 @@ TradeCashflowReportData getCashflowReportData(
 // Populate TradeCashflowReportData based on Leg(s). Note: cashfowNo and legNo will _not_ be populated.
 std::vector<TradeCashflowReportData> getCashflowReportData(
     const std::vector<QuantLib::Leg>& legs, const std::vector<bool>& payer, const std::vector<double>& multiplier,
-    const std::string& baseCcy, const std::vector<std::string>& ccys, const Date asof,
+    const std::string& baseCcy, const std::vector<std::string>& ccys, const QuantLib::Date asof,
     const std::vector<QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>>& discountCurvesCcy,
     const std::vector<double>& fxCcyBase,
     const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
@@ -91,9 +91,10 @@ std::vector<TradeCashflowReportData> getCashflowReportData(
 
 // Populate vector<TradeCashflowReportData> based on additional results map
 void populateReportDataFromAdditionalResults(
-    std::vector<TradeCashflowReportData>& result, std::map<Size, Size>& cashflowNumber,
-    const std::map<std::string, QuantLib::ext::any>& addResults, const Real multiplier, const std::string& baseCurrency,
-    const std::string& npvCurrency, QuantLib::ext::shared_ptr<ore::data::Market> market,
+    std::vector<TradeCashflowReportData>& result, std::map<QuantLib::Size, QuantLib::Size>& cashflowNumber,
+    const std::map<std::string, QuantLib::ext::any>& addResults, const QuantLib::Real multiplier,
+    const std::string& baseCurrency, const std::string& npvCurrency,
+    QuantLib::ext::shared_ptr<ore::data::Market> market,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& specificDiscountCurve, const std::string& configuration,
     const bool includePastCashflows);
 
