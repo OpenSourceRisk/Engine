@@ -42,7 +42,6 @@ void Portfolio::clear() {
 }
 
 void Portfolio::reset() {
-    isBuilt_ = false;
     LOG("Reset portfolio of size " << trades_.size());
     for (auto [id, t] : trades_)
         t->reset();
@@ -175,8 +174,12 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             .log();
     }
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
-    isBuilt_ = true;
 }
+
+bool Portfolio::isBuilt() const {
+    return std::all_of(trades_.begin(), trades_.end(), [](const auto& s) { return s.second->isBuilt(); });
+}
+
 
 Date Portfolio::maturity() const {
     QL_REQUIRE(trades_.size() > 0, "Cannot get maturity of an empty portfolio");
@@ -221,7 +224,6 @@ void Portfolio::add(const QuantLib::ext::shared_ptr<Trade>& trade) {
     QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
     underlyingIndicesCache_.clear();
     trades_[trade->id()] = trade;
-    isBuilt_ = false;
 }
 
 bool Portfolio::has(const string& id) { return trades_.find(id) != trades_.end(); }
@@ -308,6 +310,7 @@ std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shar
     try {
         trade->reset();
         trade->build(engineFactory);
+        trade->setBuilt();
         TLOG("Required Fixings for trade " << trade->id() << ":");
         TLOGGERSTREAM(trade->requiredFixings());
         return std::make_pair(nullptr, true);
@@ -326,6 +329,7 @@ std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shar
             failed->setEnvelope(trade->envelope());
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
+            failed->setBuilt();
             LOG("Built failed trade with id " << failed->id());
             return std::make_pair(failed, false);
         } else {
