@@ -246,6 +246,12 @@ public:
                                                            const std::string& configuration,
                                                            const bool includePastCashflows) const;
 
+    /* set build status, this flag is maintained in buildTrade() and Trade::reset(), i.e. _not_ in Trade::build() */
+    void setBuilt(const bool b = true) const { isBuilt_ = b; }
+
+    /* get build status */
+    bool isBuilt() const { return isBuilt_; }
+
 protected:
     string tradeType_; // class name of the derived class
     QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
@@ -294,6 +300,7 @@ private:
     string id_;
     Envelope envelope_;
     TradeActions tradeActions_;
+    mutable bool isBuilt_ = false;
 };
 
 template <class T>
