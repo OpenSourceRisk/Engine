@@ -1520,6 +1520,55 @@
           }
         ]
       },
+      "(todaysmarketcalibration_cashflows|marketcalibration_cashflows)\\.csv": {
+        "keys": [
+          "MarketObjectType",
+          "MarketObjectId",
+          "PillarDate",
+          "MdLabel",
+          "CashflowNo",
+          "LegNo"
+        ],
+        "use_cols": [
+          "Amount",
+          "Coupon",
+          "fixingValue",
+          "PayDate",
+          "FlowType",
+          "Currency",
+          "AccrualStartDate",
+          "AccrualEndDate",
+          "AccruedAmount",
+          "fixingDate",
+          "Notional"
+        ],
+        "optional_cols": [
+          "PresentValue",
+          "DiscountFactor",
+          "fxRateBase",
+          "BaseCurrency",
+          "PresentValueBase"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "Coupon",
+              "fixingValue",
+              "AccruedAmount",
+              "Notional",
+              "PresentValue",
+              "DiscountFactor",
+              "fxRateBase",
+              "PresentValueBase",
+              "EffectiveFloorVolatility",
+              "EffectiveCapVolatility"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 1e-08
+          }
+        ]
+      },
       ".*(flow|flows|cashflow).*\\.csv": {
         "keys": [
           "TradeId",
