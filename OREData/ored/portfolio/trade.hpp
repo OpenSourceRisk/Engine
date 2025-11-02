@@ -36,6 +36,7 @@
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
+#include <ql/cashflow.hpp>
 
 namespace ore {
 namespace data {
