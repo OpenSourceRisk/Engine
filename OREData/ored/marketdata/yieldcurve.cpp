@@ -568,7 +568,6 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                 if (overwrittenPillarDates) {
                     calibrationInfo_[index]->mdQuoteLabels.clear();
                     calibrationInfo_[index]->mdQuoteValues.clear();
-                    calibrationInfo_[index]->rateHelperCashflows.clear();
                 } else {
 
                     // generate rate helper cashflows (lazily, since we might build multi-curves)
@@ -1358,11 +1357,14 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
 void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> yieldTermStructures;
+    std::vector<std::string> curveSpecNames;
     std::vector<const QuantLib::MultiCurveBootstrapContributor*> multiCurveBootstrapContributors;
     std::vector<std::vector<RateHelperData>> instrumentSets;
     std::vector<Size> mixedInterpolationSizes;
 
     Real maxAccuracy = 0.0;
+
+    vector<RateHelperData> instruments;
 
     for (auto const index : indices) {
 
@@ -1534,6 +1536,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
         auto [yieldts, contr] = buildPiecewiseCurve(index, mixedInterpolationSize, instruments);
 
         yieldTermStructures.push_back(yieldts);
+        curveSpecNames.push_back(curveSpec_[index]->name());
         multiCurveBootstrapContributors.push_back(contr);
         instrumentSets.push_back(instruments);
         mixedInterpolationSizes.push_back(mixedInterpolationSize);
@@ -1551,9 +1554,13 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                 multiCurveBootstrapContributors[i],
                 "All curves in a cycle must use global bootstrap, please adjust the BootstrapConfig of these curves.");
             // we can disregard the returned external handle
-            multiCurve_->addCurve(requiredYieldCurveHandles_[curveSpec_[i]->name()], yieldTermStructures[i],
+            multiCurve_->addCurve(requiredYieldCurveHandles_[curveSpecNames[i]], yieldTermStructures[i],
                                   multiCurveBootstrapContributors[i]);
         }
+    } else {
+        /* we link the handle to the yts to keep the yts alive for the scope of this YieldCurve instance, because we
+           might need it to generate rate helper cashflows (calibration info) despite it was flatttened below */
+        requiredYieldCurveHandles_[curveSpecNames[0]].linkTo(yieldTermStructures[0]);
     }
 
     // flatten the piecewise curves
@@ -2212,28 +2219,40 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
             if (brlCdiIndex) {
                 QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
                            "OIS segment for BRL-CDI does not support pillar choice " << segment->pillarChoice());
-                oisHelper = QuantLib::ext::make_shared<BRLCdiRateHelper>(oisTenor, oisQuote->quote(), brlCdiIndex,
-                                                                         onIndexGiven, discountCurve_[index],
-                                                                         discountCurveGiven_[index], true);
+                auto oisHelper = QuantLib::ext::make_shared<BRLCdiRateHelper>(oisTenor, oisQuote->quote(), brlCdiIndex,
+                                                                              onIndexGiven, discountCurve_[index],
+                                                                              discountCurveGiven_[index], true);
+                instruments.push_back({oisHelper, marketQuote->name(), marketQuote->quote()->value()});
             } else {
-
-                if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>())
-                    oisHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
+                if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>()) {
+                    auto oisHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
                         oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, onIndexGiven,
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->eom(), oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
                         discountCurveGiven_[index], true, oisSegment->pillarChoice());
-                else {
+                    instruments.push_back(
+                        {oisHelper, marketQuote->name(), marketQuote->quote()->value(),
+                         std::function<std::vector<TradeCashflowReportData>()>{[oisHelper, index, this]() {
+                             auto dsc = discountCurveGiven_[index]
+                                            ? *discountCurve_[index]
+                                            : *oisHelper->swap()->iborIndex()->forwardingTermStructure();
+                             return getCashflowReportData(
+                                 {oisHelper->swap()->fixedLeg(), oisHelper->swap()->floatingLeg()}, {false, true},
+                                 {1.0, 1.0}, currency_[index].code(),
+                                 {currency_[index].code(), currency_[index].code()}, asofDate_,
+                                 {dsc, dsc}, {1.0, 1.0}, {}, {});
+                         }}});
+                } else {
                     oisHelper = QuantLib::ext::make_shared<QuantExt::DatedOISRateHelper>(
                         oisQuote->startDate(), oisQuote->maturityDate(), oisQuote->quote(), onIndex, onIndexGiven,
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
                         discountCurveGiven_[index], true, oisSegment->pillarChoice());
+                    instruments.push_back({oisHelper, marketQuote->name(), marketQuote->quote()->value()});
                 }
             }
-            instruments.push_back({oisHelper, marketQuote->name(), marketQuote->quote()->value()});
         }
     }
 }
