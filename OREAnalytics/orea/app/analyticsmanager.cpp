@@ -175,11 +175,12 @@ void AnalyticsManager::runAnalytics(
     }
 
     if (marketCalibrationReport) {
-        auto report = marketCalibrationReport->outputCalibrationReport();
-        if (report) {
-            if (auto rpt = QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(report))
-                reports_["MARKET"]["todaysmarketcalibration"] = rpt;
-        }
+        if (auto rpt =
+                QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(marketCalibrationReport->outputCalibrationReport()))
+            reports_["MARKET"]["todaysmarketcalibration"] = rpt;
+        if (auto rpt =
+                QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(marketCalibrationReport->outputCashflowReport()))
+            reports_["MARKET"]["todaysmarketcalibration_cashflows"] = rpt;
     }
 
     inputs_->writeOutParameters();

@@ -148,9 +148,12 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
     }
 }
 
-MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
-    const QuantLib::ext::shared_ptr<ore::data::Report>& report, std::size_t precision)
-    : ore::analytics::MarketCalibrationReportBase(calibrationFilter, precision), report_(report) {
+MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter,
+                                                 const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                                                 const QuantLib::ext::shared_ptr<ore::data::Report>& report_cashflows,
+                                                 std::size_t precision)
+    : ore::analytics::MarketCalibrationReportBase(calibrationFilter, precision), report_(report),
+      report_cashflows_(report_cashflows) {
     report_->addColumn("MarketObjectType", string())
         .addColumn("MarketObjectId", string())
         .addColumn("ResultId", string())
@@ -159,11 +162,41 @@ MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationF
         .addColumn("ResultKey3", string())
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
+    // this is report is identical to trade cf report from Type through BaseCurrency
+    report_cashflows_->addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectId", string())
+        .addColumn("PillarDate", Date())
+        .addColumn("MdLabel", Date())
+        .addColumn("Type", string())
+        .addColumn("CashflowNo", Size())
+        .addColumn("LegNo", Size())
+        .addColumn("PayDate", Date())
+        .addColumn("FlowType", string())
+        .addColumn("Amount", double(), 4)
+        .addColumn("Currency", string())
+        .addColumn("Coupon", double(), 10)
+        .addColumn("Accrual", double(), 10)
+        .addColumn("AccrualStartDate", Date(), 4)
+        .addColumn("AccrualEndDate", Date(), 4)
+        .addColumn("AccruedAmount", double(), 4)
+        .addColumn("fixingDate", Date())
+        .addColumn("fixingValue", double(), 10)
+        .addColumn("Notional", double(), 4)
+        .addColumn("DiscountFactor", double(), 10)
+        .addColumn("PresentValue", double(), 10)
+        .addColumn("FXRate(Local-Base)", double(), 10)
+        .addColumn("PresentValue(Base)", double(), 10)
+        .addColumn("BaseCurrency", string());
 }
 
 QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCalibrationReport() { 
     report_->end();
     return report_;
+}
+
+QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCashflowReport() {
+    report_cashflows_->end();
+    return report_cashflows_;
 }
 
 void MarketCalibrationReport::addRowReport(const std::string& moType, const std::string& moId,
@@ -182,7 +215,6 @@ const bool MarketCalibrationReportBase::checkCalibrations(string label, string t
     }
     return hasCalibration;
 }
-
 
 void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
     QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
@@ -226,6 +258,41 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
             addRowReport(type, id, "fittedBondCurve.marketYield", y->securities.at(i), "", "",
                          y->marketYields.at(i));
             addRowReport(type, id, "fittedBondCurve.modelYield", y->securities.at(i), "", "", y->modelYields.at(i));
+        }
+    }
+
+    // cashflow results
+    std::cout << "id " << id << " write cashflow report for " << info->pillarDates.size()
+              << " pillar dates, size ratehelper cf " << info->rateHelperCashflows.size() << std::endl;
+    if (!info->rateHelperCashflows.empty()) {
+        for (Size i = 0; i < info->pillarDates.size(); ++i) {
+            std::cout << "pillar " << i << " has " << info->rateHelperCashflows[i].size() << " cfs" << std::endl;
+            for (auto const& d : info->rateHelperCashflows[i]) {
+                report_cashflows_->next()
+                    .add(type)
+                    .add(id)
+                    .add(info->pillarDates[i])
+                    .add(info->mdQuoteLabels[i])
+                    .add(d.cashflowNo)
+                    .add(d.legNo)
+                    .add(d.payDate)
+                    .add(d.flowType)
+                    .add(d.amount)
+                    .add(d.currency)
+                    .add(d.coupon)
+                    .add(d.accrual)
+                    .add(d.accrualStartDate)
+                    .add(d.accrualEndDate)
+                    .add(d.accruedAmount)
+                    .add(d.fixingDate)
+                    .add(d.fixingValue)
+                    .add(d.notional)
+                    .add(d.discountFactor)
+                    .add(d.presentValue)
+                    .add(d.fxRateLocalBase)
+                    .add(d.presentValueBase)
+                    .add(d.baseCurrency);
+            }
         }
     }
 }

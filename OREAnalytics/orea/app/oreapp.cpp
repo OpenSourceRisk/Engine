@@ -264,10 +264,10 @@ void OREApp::analytics() {
 
         QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport =
-                QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
-                                                                       inputs_->todaysMarketCalibrationPrecision());
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(
+                string(), QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize()),
+                QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize()),
+                inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
@@ -541,10 +541,10 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
 
         QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport =
-                QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport,
-                                                                       inputs_->todaysMarketCalibrationPrecision());
+            mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(
+                string(), QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize()),
+                QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize()),
+                inputs_->todaysMarketCalibrationPrecision());
         }
 
         // Run the requested analytics
