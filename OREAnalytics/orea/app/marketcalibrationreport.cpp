@@ -261,11 +261,8 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
     }
 
     // cashflow results
-    std::cout << "id " << id << " write cashflow report for " << info->pillarDates.size()
-              << " pillar dates, size ratehelper cf " << info->rateHelperCashflows.size() << std::endl;
     if (!info->rateHelperCashflows.empty()) {
         for (Size i = 0; i < info->pillarDates.size(); ++i) {
-            std::cout << "pillar " << i << " has " << info->rateHelperCashflows[i].size() << " cfs" << std::endl;
             for (auto const& d : info->rateHelperCashflows[i]) {
                 report_cashflows_->next()
                     .add(type)
