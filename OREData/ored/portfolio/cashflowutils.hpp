@@ -27,6 +27,7 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <ql/handle.hpp>
+#include <ql/cashflow.hpp>
 
 namespace QuantLib {
 class CashFlow;
