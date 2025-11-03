@@ -13,11 +13,9 @@ if (ORE_BUILD_TESTS)
 else()
     SET(COMPONENTS_CONDITIONAL "")
 endif()
-if(${Boost_VERSION_MINOR} LESS 89)
-    find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization system timer log filesystem OPTIONAL_COMPONENTS chrono)
-else()
-    find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log filesystem OPTIONAL_COMPONENTS chrono)
-endif()
+
+find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization system timer log filesystem OPTIONAL_COMPONENTS system chrono)
+
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
