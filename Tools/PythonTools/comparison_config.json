@@ -1229,6 +1229,12 @@
 	    "ShiftSize_1",
 	    "Scenario NPV"
         ],
+        "drop_rows": {
+          "cols": [
+            "Difference"
+          ],
+          "threshold": 0.0
+        },
         "column_settings": [
           {
             "names": [
