@@ -27,10 +27,10 @@
 #include <qle/termstructures/commoditybasispricetermstructure.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/spreadedpricetermstructure.hpp>
+
 namespace QuantExt {
 
-class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure,
-                                        public QuantLib::LazyObject {
+class CommodityBasisPriceCurveWrapper : public QuantExt::CommodityBasisPriceTermStructure, public QuantLib::LazyObject {
 public:
     CommodityBasisPriceCurveWrapper(const QuantLib::Date& referenceDate,
                                     const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,

@@ -56,6 +56,7 @@ public:
     //! Price term structure interface
     const QuantLib::Currency& currency() const override { return model_->currency(); }
     std::vector<QuantLib::Date> pillarDates() const override { return std::vector<QuantLib::Date>(); }
+
     virtual void referenceDate(const Date& d);
     virtual void referenceTime(const Time t);
     void state(const Array& s);
