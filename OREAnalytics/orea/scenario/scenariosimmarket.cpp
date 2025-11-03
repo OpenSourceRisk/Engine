@@ -3366,8 +3366,8 @@ void ScenarioSimMarket::applyCurveAlgebra() {
     for (auto const& a : parameters_->curveAlgebraData().data()) {
         DLOG("Processing curve algebra rule for key " << a.key());
         QL_REQUIRE(a.operationType() == "Spreaded",
-                   "ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(): operation type must be 'Spreaded'.");
-        auto rfKeyTarget = parseRiskFactorKey(a.key() + "/0"); // just to validate the key
+                   "ScenarioSimMarket::applyCurveAlgebra(): operation type must be 'Spreaded'.");
+        auto rfKeyTarget = parseRiskFactorKey(a.key() + "/0");
         switch (rfKeyTarget.keytype) {
         case RiskFactorKey::KeyType::DiscountCurve:
         case RiskFactorKey::KeyType::YieldCurve:
@@ -3380,7 +3380,7 @@ void ScenarioSimMarket::applyCurveAlgebra() {
         default:
             QL_FAIL("ScenarioSimMarket::applyCurveAlgebra(): target key type "
                     << rfKeyTarget.keytype
-                    << " not supported for curve algebra. Expected: DiscountCurve, YieldCurve or PriceCurve.");
+                    << " not supported for curve algebra. Expected: DiscountCurve, YieldCurve, IndexCurve or CommodityCurve. ");
         }
     }
 }

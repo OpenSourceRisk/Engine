@@ -99,7 +99,7 @@ public:
     //@}
 
     void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
-                               const std::vector<double>& multiplier) override;
+                               const std::vector<double>& multiplier);
 protected:
     //! Used by PiecewisePriceCurve
     InterpolatedPriceCurve(const QuantLib::Date& referenceDate,

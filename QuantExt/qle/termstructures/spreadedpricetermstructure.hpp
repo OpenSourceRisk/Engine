@@ -49,7 +49,7 @@ public:
     std::vector<QuantLib::Date> pillarDates() const override;
     
     void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
-                               const std::vector<double>& multiplier) override;
+                               const std::vector<double>& multiplier);
 
 private:
     void performCalculations() const override;

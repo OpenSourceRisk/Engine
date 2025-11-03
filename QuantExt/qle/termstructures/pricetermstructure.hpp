@@ -66,10 +66,6 @@ public:
 
     //! The pillar dates for the PriceTermStructure
     virtual std::vector<QuantLib::Date> pillarDates() const = 0;
-    
-    //! Make this curve spreaded for the sim market
-    virtual void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
-                                       const std::vector<double>& multiplier) = 0;
 
 protected:
     /*! \name Calculations

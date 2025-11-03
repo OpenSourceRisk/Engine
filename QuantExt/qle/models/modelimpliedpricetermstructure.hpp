@@ -56,10 +56,6 @@ public:
     //! Price term structure interface
     const QuantLib::Currency& currency() const override { return model_->currency(); }
     std::vector<QuantLib::Date> pillarDates() const override { return std::vector<QuantLib::Date>(); }
-    void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
-                               const std::vector<double>& multiplier) override {
-        QL_FAIL("ModelImpliedPriceTermStructure::makeThisCurveSpreaded not implemented");
-    }
     virtual void referenceDate(const Date& d);
     virtual void referenceTime(const Time t);
     void state(const Array& s);
