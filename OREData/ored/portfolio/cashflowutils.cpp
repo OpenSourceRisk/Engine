@@ -23,6 +23,7 @@
 
 #include <ored/portfolio/cashflowutils.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
@@ -34,6 +35,7 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/interpolatediborcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/typedcashflow.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/cashflowresults.hpp>
