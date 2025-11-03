@@ -33,7 +33,6 @@
     </YieldCurve>
   </YieldCurves>
   <InflationCurves />
-  <InflationCapFloorPriceSurfaces />
   <InflationCapFloorVolatilities />
   <EquityCurves />
   <EquityVolatilities />
@@ -63,14 +62,12 @@
         </BasisQuotes>
         <BasisConventions>NaturalGas</BasisConventions>
         <DayCounter>A365</DayCounter>
-        <InterpolationMethod>LinearFlat</InterpolationMethod>
+        <InterpolationMethod>BackwardFlat</InterpolationMethod>
         <AddBasis>false</AddBasis>
         <AverageBase>true</AverageBase>
         <PriceAsHistoricalFixing>true</PriceAsHistoricalFixing>
         <!-- <MonthOffset>-1</MonthOffset> -->
       </BasisConfiguration>
-      <DayCounter>A365</DayCounter>
-      <InterpolationMethod>BackwardFlat</InterpolationMethod>
       <Extrapolation>true</Extrapolation>
     </CommodityCurve>
 

@@ -1,13 +1,7 @@
 <Portfolio>
-  <Trade id="Option" version="1">
+  <Trade id="Option">
     <TradeType>CommodityOption</TradeType>
     <Envelope>
-      <Id>O46303157</Id>
-      <CounterParty>IPE</CounterParty>
-      <NettingSetId>IPE-575639</NettingSetId>
-      <AdditionalFields>
-        <discount_curve>USD-FLAT</discount_curve>
-      </AdditionalFields>
     </Envelope>
     <CommodityOptionData>
       <OptionData>
@@ -29,12 +23,7 @@
       </OptionData>
       <Name>NaturalGasBasis</Name>
       <Currency>USD</Currency>
-      <StrikeData>
-        <StrikePrice>
-          <Value>0.0</Value>
-          <Currency>USD</Currency>
-        </StrikePrice>
-      </StrikeData>
+      <Strike>0.0</Strike>
       <Quantity>30000.0</Quantity>
       <IsFuturePrice>true</IsFuturePrice>
       <FutureExpiryDate>2025-10-31</FutureExpiryDate>

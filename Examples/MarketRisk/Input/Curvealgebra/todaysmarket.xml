@@ -1,40 +1,39 @@
 <?xml version='1.0' encoding='utf-8'?>
 <TodaysMarket>
     <Configuration id="default">
-        <DiscountingCurves>default</DiscountingCurves>
-        <YieldCurves>default</YieldCurves>
-        <IndexForwardingCurves>default</IndexForwardingCurves>
-        <SwapIndexCurves>default</SwapIndexCurves>
-        <FxSpots>default</FxSpots>
-        <FxVolatilities>default</FxVolatilities>
-        <SwaptionVolatilities>default</SwaptionVolatilities>
-        <DefaultCurves>default</DefaultCurves>
-        <CDSVolatilities>default</CDSVolatilities>
-        <BaseCorrelations>default</BaseCorrelations>
-        <CapFloorVolatilities>default</CapFloorVolatilities>
-        <ZeroInflationIndexCurves>default</ZeroInflationIndexCurves>
-        <YYInflationIndexCurves>default</YYInflationIndexCurves>
-        <ZeroInflationCapFloorVolatilities>default</ZeroInflationCapFloorVolatilities>
-        <YYInflationCapFloorVolatilities>default</YYInflationCapFloorVolatilities>
-        <EquityCurves>default</EquityCurves>
-        <EquityVolatilities>default</EquityVolatilities>
-        <Securities>default</Securities>
-        <CommodityCurves>default</CommodityCurves>
-        <CommodityVolatilities>default</CommodityVolatilities>
+        <YieldCurvesId>default</YieldCurvesId>
+        <DiscountingCurvesId>default</DiscountingCurvesId>
+        <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+        <SwapIndexCurvesId>default</SwapIndexCurvesId>
+        <FxSpotsId>default</FxSpotsId>
+        <FxVolatilitiesId>default</FxVolatilitiesId>
+        <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+        <DefaultCurvesId>default</DefaultCurvesId>
+        <CDSVolatilitiesId>default</CDSVolatilitiesId>
+        <BaseCorrelationsId>default</BaseCorrelationsId>
+        <CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+        <ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+        <YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+        <ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+        <YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+        <EquityCurvesId>default</EquityCurvesId>
+        <EquityVolatilitiesId>default</EquityVolatilitiesId>
+        <SecuritiesId>default</SecuritiesId>
+        <CommodityCurvesId>default</CommodityCurvesId>
+        <CommodityVolatilitiesId>default</CommodityVolatilitiesId>
     </Configuration>
-    <DiscountingCurves id="default">
-      <DiscountingCurve currency="USD">Yield/USD/USD-DUMMY</DiscountingCurve>
-    </DiscountingCurves>
     <YieldCurves id="default">
       <YieldCurve name="USD-FLAT">Yield/USD/USD-DUMMY</YieldCurve>
     </YieldCurves>
+    <DiscountingCurves id="default">
+      <DiscountingCurve currency="USD">Yield/USD/USD-DUMMY</DiscountingCurve>
+    </DiscountingCurves>
     <IndexForwardingCurves id="default">
         <Index name="USD-SOFR">Yield/USD/USD-DUMMY</Index>
     </IndexForwardingCurves>
     <SwapIndexCurves id="default">
     </SwapIndexCurves>
     <FxSpots id="default">
-        
     </FxSpots>
     <FxVolatilities id="default">
     </FxVolatilities>
@@ -50,6 +49,4 @@
     </CommodityCurves>
     <CommodityVolatilities id="default">
     <CommodityVolatility name="NaturalGasBasis">CommodityVolatility/USD/NaturalGasBasis</CommodityVolatility></CommodityVolatilities>
-    <DefaultCurves id="default">
-    </DefaultCurves>
 </TodaysMarket>

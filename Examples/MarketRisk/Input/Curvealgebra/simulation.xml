@@ -12,7 +12,6 @@
       </BenchmarkCurve>
     </BenchmarkCurves>
     <YieldCurves>
-      <Simulate>true</Simulate>
       <Configuration curve="">
         <Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
         <DayCounter>A365</DayCounter>
@@ -23,38 +22,23 @@
     <Indices>
       <Index>USD-SOFR</Index>
     </Indices>
-    <SwapIndices>
-      <Simulate>false</Simulate>
-    </SwapIndices>
-    <DefaultCurves />
-    <Equities />
-    <SwaptionVolatilities>
-    </SwaptionVolatilities>
-    <CapFloorVolatilities />
-    <FxVolatilities>
-    </FxVolatilities>
-    <FxRates></FxRates>
-    <Securities />
-    <CpiIndices />
-    <ZeroInflationIndexCurves />
     <Commodities>
+      <Simulate>true</Simulate>
       <Names>
         <Name>NaturalGas</Name>
         <Name>NaturalGasBasis</Name>
       </Names>
-      <DayCounters>
-        <DayCounter name="">
-          <DayCounter>A365</DayCounter>
-        </DayCounter>
-      </DayCounters>
-      <Simulate>true</Simulate>
       <Tenors>
         1D,2D,3D,4D,5D,6D,7D,8D,9D,10D,11D,12D,13D,14D,15D,16D,17D,18D,19D,20D,21D,22D,23D,24D,25D,26D,27D,28D,29D,30D,31D,32D,33D,34D,35D,36D,37D,38D,39D,40D,41D,42D,43D,44D,45D,46D,47D,48D,49D,50D,51D,52D,53D,54D,55D,56D,57D,58D,59D,60D,61D,62D,63D,64D,65D,66D,67D,68D,69D,70D,71D,72D,73D,74D,75D,76D,77D,78D,79D,80D,81D,82D,83D,84D,85D,86D,87D,88D,89D,90D,91D,92D,93D,94D,95D,96D,97D,98D,99D,100D,101D,102D</Tenors>
+      <DayCounters>
+          <DayCounter name="">A365</DayCounter>
+      </DayCounters>
     </Commodities>
     <CommodityVolatilities>
       <Simulate>true</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <SimulateATMOnly>true</SimulateATMOnly>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      
       <Names>
         <Name id="NaturalGas">
           <Expiries>
@@ -69,9 +53,6 @@
       </Names>
       <DayCounter>A365</DayCounter>
     </CommodityVolatilities>
-    <DefaultCurves>
-      <Names />
-    </DefaultCurves>
     <CurveAlgebra>
       <Curve>
         <Key>CommodityCurve/NaturalGasBasis</Key>
