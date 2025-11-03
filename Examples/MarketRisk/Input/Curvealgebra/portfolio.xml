@@ -1,40 +1,43 @@
 <Portfolio>
-  <Trade id="Option">
-    <TradeType>CommodityOption</TradeType>
-    <Envelope>
-    </Envelope>
-    <CommodityOptionData>
-      <OptionData>
-        <LongShort>Long</LongShort>
-        <OptionType>Call</OptionType>
-        <Style>European</Style>
-        <Settlement>Cash</Settlement>
-        <PayOffAtExpiry>false</PayOffAtExpiry>
-        <ExerciseDates>
-          <ExerciseDate>2025-10-09</ExerciseDate>
-        </ExerciseDates>
-        <Premiums>
-          <Premium>
-            <Amount>37500.0</Amount>
-            <Currency>USD</Currency>
-            <PayDate>2025-10-09</PayDate>
-          </Premium>
-        </Premiums>
-      </OptionData>
-      <Name>NaturalGasBasis</Name>
-      <Currency>USD</Currency>
-      <Strike>0.0</Strike>
-      <Quantity>30000.0</Quantity>
-      <IsFuturePrice>true</IsFuturePrice>
-      <FutureExpiryDate>2025-10-31</FutureExpiryDate>
-    </CommodityOptionData>
-  </Trade>
-  	<Trade id="BasisSwap">
+	<Trade id="Option">
+		<TradeType>CommodityOption</TradeType>
+		<Envelope>
+			<CounterParty>ABC</CounterParty>
+			<NettingSetId>1234</NettingSetId>
+			<PortfolioIds />
+		</Envelope>
+		<CommodityOptionData>
+			<OptionData>
+				<LongShort>Long</LongShort>
+				<OptionType>Call</OptionType>
+				<Style>European</Style>
+				<Settlement>Cash</Settlement>
+				<PayOffAtExpiry>false</PayOffAtExpiry>
+				<ExerciseDates>
+					<ExerciseDate>2025-10-09</ExerciseDate>
+				</ExerciseDates>
+				<Premiums>
+					<Premium>
+						<Amount>37500.0</Amount>
+						<Currency>USD</Currency>
+						<PayDate>2025-10-09</PayDate>
+					</Premium>
+				</Premiums>
+			</OptionData>
+			<Name>NaturalGasBasis</Name>
+			<Currency>USD</Currency>
+			<Strike>0.0</Strike>
+			<Quantity>30000.0</Quantity>
+			<IsFuturePrice>true</IsFuturePrice>
+			<FutureExpiryDate>2025-10-31</FutureExpiryDate>
+		</CommodityOptionData>
+	</Trade>
+	<Trade id="BasisSwap">
 		<TradeType>CommoditySwap</TradeType>
 		<Envelope>
 			<CounterParty>ABC</CounterParty>
 			<NettingSetId>1234</NettingSetId>
-			<PortfolioIds/>
+			<PortfolioIds />
 		</Envelope>
 		<SwapData>
 			<LegData>
@@ -61,8 +64,8 @@
 						<TermConvention>Unadjusted</TermConvention>
 						<Rule>Backward</Rule>
 						<EndOfMonth>true</EndOfMonth>
-						<FirstDate/>
-						<LastDate/>
+						<FirstDate />
+						<LastDate />
 					</Rules>
 				</ScheduleData>
 				<CommodityFloatingLegData>
@@ -109,8 +112,8 @@
 						<TermConvention>Unadjusted</TermConvention>
 						<Rule>Backward</Rule>
 						<EndOfMonth>true</EndOfMonth>
-						<FirstDate/>
-						<LastDate/>
+						<FirstDate />
+						<LastDate />
 					</Rules>
 				</ScheduleData>
 				<CommodityFloatingLegData>
