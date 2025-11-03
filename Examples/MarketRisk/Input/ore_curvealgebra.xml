@@ -3,7 +3,7 @@
     <Setup>
         <Parameter name="asofDate">2025-09-19</Parameter>
         <Parameter name="inputPath">Input/Curvealgebra</Parameter>
-        <Parameter name="outputPath">Output/Curvealgebra</Parameter>
+        <Parameter name="outputPath">Output/CurveAlgebra</Parameter>
         <Parameter name="logFile">log.txt</Parameter>
         <Parameter name="logMask">31</Parameter>
         <Parameter name="marketDataFile">market.txt</Parameter>
