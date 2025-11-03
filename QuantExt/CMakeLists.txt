@@ -13,11 +13,9 @@ else()
     SET(COMPONENTS_CONDITIONAL "")
 endif()
 
-if(${Boost_VERSION_MINOR} LESS 89)
-    find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization system timer log filesystem OPTIONAL_COMPONENTS chrono)
-else()
-    find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log filesystem OPTIONAL_COMPONENTS chrono)
-endif()
+
+find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log filesystem OPTIONAL_COMPONENTS system chrono)
+
 
 if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
     find_library(RT_LIBRARY rt REQUIRED)
