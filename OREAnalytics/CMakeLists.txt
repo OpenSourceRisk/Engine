@@ -17,7 +17,12 @@ if(ORE_USE_ZLIB)
     find_package(ZLIB REQUIRED)
 endif()
 
-SET(COMPONENT_LIST date_time filesystem iostreams serialization timer thread)
+if(${Boost_VERSION_MINOR} LESS 89)
+    SET(COMPONENT_LIST date_time filesystem iostreams serialization system timer thread)
+else()
+    SET(COMPONENT_LIST date_time filesystem iostreams serialization timer thread)
+endif()
+
 if (ORE_BUILD_TESTS)
     LIST(APPEND COMPONENT_LIST unit_test_framework)
 endif()
