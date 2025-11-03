@@ -87,7 +87,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
             Real effectiveFloorVolatility = Null<Real>();
             Real effectiveCapVolatility = Null<Real>();
 
-            string ccy;
+            std::string ccy;
             if (!cf.currency.empty()) {
                 ccy = cf.currency;
             } else {
@@ -185,7 +185,7 @@ TradeCashflowReportData getCashflowReportData(
     auto ptrTypedCf = ext::dynamic_pointer_cast<TypedCashFlow>(ptrFlow);
     auto ptrFxlTypedCf = ext::dynamic_pointer_cast<FXLinkedTypedCashFlow>(ptrFlow);
 
-    string flowType;
+    std::string flowType;
     Real coupon;
     Real accrual;
     Real notional;
