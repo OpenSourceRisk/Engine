@@ -135,6 +135,7 @@ public:
 private:
     struct RateHelperData {
         QuantLib::ext::shared_ptr<QuantLib::RateHelper> rateHelper;
+        std::string rateHelperType;
         std::string mdQuoteLabel;
         double mdQuoteValue;
         std::function<std::vector<TradeCashflowReportData>()> cashflowGenerator;

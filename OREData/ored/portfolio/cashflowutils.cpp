@@ -178,6 +178,9 @@ TradeCashflowReportData getCashflowReportData(
     const std::function<ext::shared_ptr<SwaptionVolatilityStructure>(const std::string& qualifier)>& swaptionVol,
     const std::function<ext::shared_ptr<OptionletVolatilityStructure>(const std::string& qualifier)>& capFloorVol) {
 
+    QL_REQUIRE(ptrFlow, "getCashflowReportData: prtFlow is null.");
+    QL_REQUIRE(discountCurveCcy || ptrFlow->hasOccurred(asof), "getCashflowReportData: discountCurveCcy is null.");
+
     Real amount = (payer ? -1.0 : 1.0) * ptrFlow->amount();
 
     Date payDate = ptrFlow->date();
