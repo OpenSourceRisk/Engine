@@ -51,7 +51,11 @@ include_directories(${PROJECT_SOURCE_DIR}/../../QuantExt-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/../../OREData-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/../../OREAnalytics-SWIG/SWIG)
 
-find_package (Boost COMPONENTS serialization date_time filesystem REQUIRED)
+if(${Boost_VERSION_MINOR} LESS 89)
+    find_package (Boost COMPONENTS serialization date_time system filesystem REQUIRED)
+else()
+    find_package (Boost COMPONENTS serialization date_time filesystem REQUIRED)
+endif()
 include_directories(${Boost_INCLUDE_DIRS})
 
 # specify library search path (update this when we build ORE with cmake)

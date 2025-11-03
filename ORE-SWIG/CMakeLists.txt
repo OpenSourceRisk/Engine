@@ -32,7 +32,12 @@ get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
 # To build the module, we moreover need Boost, Swig, Python
-set(BOOST_COMPONENT_LIST serialization date_time filesystem timer thread log)
+if(${Boost_VERSION_MINOR} LESS 89)
+    set(BOOST_COMPONENT_LIST serialization date_time filesystem system timer thread log)
+else()
+    set(BOOST_COMPONENT_LIST serialization date_time filesystem timer thread log)
+endif()
+
 if(ORE_USE_ZLIB)
     list(APPEND BOOST_COMPONENT_LIST iostreams)
     if(MSVC)
