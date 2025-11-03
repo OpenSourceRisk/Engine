@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/marketdata/market.hpp>
+
 #include <ql/any.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
@@ -38,8 +40,6 @@ class OptionletVolatilityStructure;
 
 namespace ore {
 namespace data {
-
-class Market;
 
 struct TradeCashflowReportData {
     QuantLib::Size cashflowNo;
