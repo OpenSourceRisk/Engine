@@ -39,10 +39,10 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-BlackScholes::BlackScholes(const Type type, const Size paths, const std::string& currency,
-                           const Handle<YieldTermStructure>& curve, const std::string& index,
-                           const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                           const std::set<Date>& simulationDates,
+BlackScholes::BlackScholes(const Type type, const ModelFlavor modelFlavor, const Size paths,
+                           const std::string& currency, const Handle<YieldTermStructure>& curve,
+                           const std::string& index, const std::string& indexCurrency,
+                           const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
                            const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                            const std::string& calibration, const std::vector<Real>& calibrationStrikes,
                            const Params& params)
@@ -50,7 +50,7 @@ BlackScholes::BlackScholes(const Type type, const Size paths, const std::string&
                    simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params) {}
 
 BlackScholes::BlackScholes(
-    const Type type, const Size paths, const std::vector<std::string>& currencies,
+    const Type type, const ModelFlavor modelFlavor, const Size paths, const std::vector<std::string>& currencies,
     const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
@@ -58,12 +58,12 @@ BlackScholes::BlackScholes(
     const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    const std::string& calibration,
-    const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
+    const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes,
+    const Params& params)
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
+      modelFlavor_(modelFlavor), curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model),
+      correlations_(correlations), calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
 
     // check inputs
 
@@ -85,8 +85,8 @@ BlackScholes::BlackScholes(
                    "pay ccy '" << c << "' not found in currencies list.");
     }
 
-    QL_REQUIRE(calibration_ == "ATM" || calibration_ == "Deal" || calibration == "LocalVol",
-               "calibration '" << calibration_ << "' invalid, expected one of ATM, Deal, LocalVol");
+    QL_REQUIRE(calibration_ == "ATM" || calibration_ == "Deal" || calibration == "Smile",
+               "calibration '" << calibration_ << "' invalid, expected one of ATM, Deal, Smile");
 
     // register with observables
 
@@ -170,15 +170,19 @@ void BlackScholes::performCalculations() const {
     if (indices_.empty())
         return;
 
-    if (type_ == Model::Type::MC) {
-        if (calibration_ == "ATM" || calibration_ == "Deal") {
+    if (type_ == Model::Type::MC && modelFlavor_ == ModelFlavor::BlackScholes) 
             performCalculationsMcBs();
-        } else {
+    else if (type_ == Model::Type::MC && modelFlavor_ == ModelFlavor::LocalVol) 
             performCalculationsMcLv();
-        }
-    } else if (type_ == Model::Type::FD) {
-            performCalculationsFd();
-    }
+    else if (type_ == Model::Type::MC && modelFlavor_ == ModelFlavor::Heston) 
+            perfomCalculationsMcHeston();
+    else if (type_ == Model::Type::FD && modelFlavor_ == ModelFlavor::BlackScholes)
+            performCalculationsFdBs();
+    else if (type_ == Model::Type::FD && modelFlavor_ == ModelFlavor::LocalVol)
+            performCalculationsFdLv();
+    else if (type_ == Model::Type::FD && modelFlavor_ == ModelFlavor::Heston)
+            performCalculationsFdHeston();
+
 }
 
 void BlackScholes::performCalculationsMcBs() const {
@@ -197,7 +201,15 @@ void BlackScholes::performCalculationsMcLv() const {
     generatePathsLv();
 }
 
-void BlackScholes::performCalculationsFd() const {
+void BlackScholes::performCalculationsMcHeston() const {
+    initUnderlyingPathsMc();
+    setReferenceDateValuesMc();
+    if (effectiveSimulationDates_.size() == 1)
+        return;
+    generatePathsHeston();
+}
+
+void BlackScholes::performCalculationsFdBs() const {
 
     // 0c if we only have one effective sim date (today), we set the underlying values = spot
 
@@ -269,6 +281,14 @@ void BlackScholes::performCalculationsFd() const {
     // 6 set additional results
 
     setAdditionalResults();
+}
+
+void BlackScholes::performCalculationsFdLv() const {
+    QL_FAIL("BlackScholes::performCalculationsFdLv() not implemented.");
+}
+
+void BlackScholes::performCalculationsFdHeston() const {
+    QL_FAIL("BlackScholes::performCalculationsFdHeston() not implemented.");
 }
 
 void BlackScholes::initUnderlyingPathsMc() const {
@@ -476,6 +496,10 @@ void BlackScholes::generatePathsLv() const {
 
     setAdditionalResults();
 } // generatePathsLv()
+
+void BlackScholes::generatePathsHeston() const {
+
+}
 
 void BlackScholes::populatePathValuesBs(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                                         const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,

@@ -66,7 +66,7 @@ protected:
 
     virtual void setupDatesAndTimes() const;
 
-    virtual std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const = 0;
+    virtual std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const = 0;
     virtual std::vector<std::vector<Real>> getCurveTimes() const = 0;
     virtual std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const = 0;
 
