@@ -219,6 +219,7 @@ models/fxeqoptionhelper.cpp
 models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
 models/hullwhitebucketing.cpp
+models/hwhistoricalcalibrationmodel.cpp
 models/hwmodel.cpp
 models/infdkvectorised.cpp
 models/infjyparameterization.cpp
@@ -769,6 +770,7 @@ models/gaussianlhplossmodel.hpp
 models/homogeneouspooldef.hpp
 models/hullwhitebucketing.hpp
 models/hwconstantparametrization.hpp
+models/hwhistoricalcalibrationmodel.hpp
 models/hwmodel.hpp
 models/hwparametrization.hpp
 models/hwpiecewiseparametrization.hpp

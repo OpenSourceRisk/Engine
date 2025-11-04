@@ -897,6 +897,52 @@ void InputParameters::setRiskFactorLevel(bool b) {
     riskFactorLevel_ = b;
 }
 
+void InputParameters::setCalibrationModel(const std::string& s) {
+    calibrationModel_ = s; 
+}
+
+void InputParameters::setHwCalibrationMode(const std::string& s) {
+    hwCalibrationMode_ = s; 
+}
+
+void InputParameters::setPcaCalibration(bool b) { pcaCalibration_ = b; }
+
+void InputParameters::setMeanReversionCalibration(bool b) { meanReversionCalibration_ = b; }
+
+void InputParameters::setForeignCurrencies(const std::string& s) { foreignCurrencies_ = parseListOfValues(s); }
+
+void InputParameters::setCurveTenors(const std::string& s) { curveTenors_ = parseListOfValues<Period>(s, &parsePeriod); }
+
+void InputParameters::setCurveInputFile(const std::string& s) { 
+    curveInputFile_ = s;
+}
+
+void InputParameters::setFixingDataFile(const std::string& s) { curveInputFile_ = s; }
+
+void InputParameters::setStartDate(const Date& d) { startDate_ = d; }
+
+void InputParameters::setEndDate(const Date& d) { endDate_ = d; }
+
+void InputParameters::setUseForwardOrZeroRate(const std::string& s) {
+    // value checked in oreapp.cpp
+    if (s == "forward")
+        useForwardRate_ = true;
+    else
+        useForwardRate_ = false;
+}
+
+void InputParameters::setLambda(Real r) { lambda_ = r; }
+
+void InputParameters::setVarianceRetained(Real r) { varianceRetained_ = r; }
+
+void InputParameters::setPcaInputFiles(const std::string& s) { pcaInputFiles_ = parseListOfValues(s); }
+
+void InputParameters::setBasisFunctionNumber(Size s) { basisFunctionNumber_ = s; }
+
+void InputParameters::setKappaUpperBound(Real r) { kappaUpperBound_ = r; }
+
+void InputParameters::setHaltonMaxGuess(Size s) { haltonMaxGuess_ = s; }
+
 OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);
@@ -938,7 +984,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
     calibrationOutputFileName_ = params->get("calibration", "outputFile", false);
-
+    pcaOutputFileName_ = params->get("calibration", "pcaOutputFileName", false);
+    meanReversionOutputFileName_ = params->get("calibration", "meanReversionOutputFileName", false);
     zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     xvaSensiJacobiFileName_ = params->get("xvaSensitivity", "jacobiOutputFile", false);    
     xvaSensiJacobiInverseFileName_ = params->get("xvaSensitivity", "jacobiInverseOutputFile", false);    
@@ -977,6 +1024,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["xva_sensi_jacobi"] = jacobiFileName_;
     fileNameMap_["xva_sensi_jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["parshifts"] = zeroToParShiftFile_;
+    fileNameMap_["pca"] = pcaOutputFileName_;
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);
     if (tmp != "")

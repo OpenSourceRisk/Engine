@@ -24,6 +24,10 @@
 
 #include <orea/app/analytic.hpp>
 
+#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
+
+using namespace ore::data;
+
 namespace ore {
 namespace analytics {
 
@@ -42,10 +46,14 @@ public:
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
+    //void buildHwHistoricalCalibrationModel(bool continueOnError);
+    void buildHwHistoricalCalibrationModelData();
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> builder_;
+    std::unique_ptr<HwHistoricalCalibrationModelData> hwHistoricalModelData_;
+    QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelBuilder> hwHistoricalModelBuilder_;
 };
 
 static const std::set<std::string> calibrationAnalyticSubAnalytics{};
