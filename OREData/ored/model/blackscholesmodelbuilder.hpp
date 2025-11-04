@@ -46,7 +46,7 @@ public:
                              const std::vector<Real>& calibrationStrikes = {},
                              const Handle<YieldTermStructure>& baseCurve = {});
 
-    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
 
 protected:
     std::vector<std::vector<Real>> getCurveTimes() const override;

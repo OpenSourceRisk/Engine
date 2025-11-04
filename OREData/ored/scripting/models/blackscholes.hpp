@@ -47,6 +47,8 @@ namespace data {
 /* This class is the basis for the BlackScholes and LocalVol model implementations */
 class BlackScholes : public ModelImpl {
 public:
+    enum class ModelFlavor { BlackScholes, LocalVol, Heston };
+
     /* For the constructor arguments see ModelImpl, plus:
        - eq, com processes are given with arbitrary riskFreeRate() and dividendYield(), these two curves only define
          the forward curve drift for each asset
@@ -62,8 +64,7 @@ public:
        - calibration strikes are given as a map indexName => strike, if an index is missing in this map, the calibration
          strike will be atmf
     */
-    BlackScholes(
-        const Type type, const Size size, const std::vector<std::string>& currencies,
+    BlackScholes(const Type type, const ModelFlavor modelFlavor, const Size size, const std::vector<std::string>& currencies,
         const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
         const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
@@ -77,8 +78,8 @@ public:
         const Params& params = {});
 
     // ctor for single underlying
-    BlackScholes(const Type Type, const Size size, const std::string& currency, const Handle<YieldTermStructure>& curve,
-                 const std::string& index, const std::string& indexCurrency,
+    BlackScholes(const Type Type, const ModelFlavor modelFlavor, const Size size, const std::string& currency,
+                 const Handle<YieldTermStructure>& curve, const std::string& index, const std::string& indexCurrency,
                  const Handle<BlackScholesModelWrapper>& model, const std::set<Date>& simulationDates,
                  const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                      QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
@@ -129,11 +130,15 @@ protected:
     // BS / LV and type specific code
     void performCalculationsMcBs() const;
     void performCalculationsMcLv() const;
-    void performCalculationsFd() const;
+    void performCalculationsMcHeston() const;
+    void performCalculationsFdBs() const;
+    void performCalculationsFdLv() const;
+    void performCalculationsFdHeston() const;
     void initUnderlyingPathsMc() const;
     void setReferenceDateValuesMc() const;
     void generatePathsBs() const;
     void generatePathsLv() const;
+    void generatePathsHeston() const;
     void populatePathValuesBs(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                               const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                               const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
@@ -143,8 +148,10 @@ protected:
                               const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
                               const std::vector<Real>& t, const std::vector<Real>& dt,
                               const std::vector<Real>& sqrtdt) const;
+    // we probably need void populatePathValuesHeston(...) const;
 
     // input parameters
+    ModelFlavor modelFlavor_;
     std::vector<Handle<YieldTermStructure>> curves_;
     std::vector<Handle<Quote>> fxSpots_;
     std::set<std::string> payCcys_;
