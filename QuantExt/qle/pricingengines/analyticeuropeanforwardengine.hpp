@@ -43,9 +43,9 @@
 #ifndef quantext_analytic_european_forward_engine_hpp
 #define quantext_analytic_european_forward_engine_hpp
 
-#include <qle/instruments/vanillaforwardoption.hpp>
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
-
+#include <qle/instruments/vanillaforwardoption.hpp>
 namespace QuantExt {
 
     //! Pricing engine for European vanilla forward options using analytical formulae
@@ -57,7 +57,9 @@ namespace QuantExt {
             forecasting and discounting.
         */
         explicit AnalyticEuropeanForwardEngine(
-                    const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>&);
+                    const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>&,
+                    const QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                    const QuantLib::Real displacement = 0.0);
 
         /*! This constructor allows to use a different term structure
             for discounting the payoff. As usual, the risk-free rate
@@ -66,11 +68,15 @@ namespace QuantExt {
         */
         AnalyticEuropeanForwardEngine(
              const QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
-             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve);
+             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+             const QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+             const QuantLib::Real displacement = 0.0);
         void calculate() const override;
       private:
         QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process_;
         QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
+        QuantLib::DiffusionModelType modelType_;
+        QuantLib::Real displacement_;
     };
 
 }

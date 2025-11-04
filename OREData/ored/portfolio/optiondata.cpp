@@ -66,17 +66,17 @@ void OptionData::fromXML(XMLNode* node) {
         exerciseDatesSchedule_.fromXML(exScheduleNode);
     }
 
-    automaticExercise_ = boost::none;
+    automaticExercise_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "AutomaticExercise"))
         automaticExercise_ = parseBool(XMLUtils::getNodeValue(n));
 
-    exerciseData_ = boost::none;
+    exerciseData_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "ExerciseData")) {
         exerciseData_ = OptionExerciseData();
         exerciseData_->fromXML(n);
     }
 
-    paymentData_ = boost::none;
+    paymentData_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PaymentData")) {
         paymentData_ = OptionPaymentData();
         paymentData_->fromXML(n);
@@ -84,6 +84,12 @@ void OptionData::fromXML(XMLNode* node) {
 
     midCouponExercise_ =
         parseBool(XMLUtils::getChildValue(node, "MidCouponExercise", false, style_ == "American" ? "true" : "false"));
+
+    if (XMLNode* settlementDataNode = XMLUtils::getChildNode(node, "SettlementData")) {
+        cashSettlementCurrency_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+        cashSettlementFxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
+        cashSettlementFixingDate_ = XMLUtils::getChildValue(settlementDataNode, "FixingDate", false);
+    }
 }
 
 XMLNode* OptionData::toXML(XMLDocument& doc) const {
@@ -139,6 +145,15 @@ XMLNode* OptionData::toXML(XMLDocument& doc) const {
 
     if ((style_ == "American" && !midCouponExercise_) || (style_ != "American" && midCouponExercise_)) {
         XMLUtils::addChild(doc, node, "MidCouponExercise", midCouponExercise_);
+    }
+
+    if (!cashSettlementCurrency_.empty() || !cashSettlementFxIndex_.empty() || !cashSettlementFixingDate_.empty()) {
+        XMLNode* settlementDataNode = XMLUtils::addChild(doc, node, "SettlementData");
+        XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", cashSettlementCurrency_);
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", cashSettlementFxIndex_);
+        if (!cashSettlementFixingDate_.empty()) {
+            XMLUtils::addChild(doc, settlementDataNode, "FixingDate", cashSettlementFixingDate_);
+        }
     }
 
     return node;

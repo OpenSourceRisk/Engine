@@ -44,7 +44,7 @@ FdGaussianCam::FdGaussianCam(
     const Handle<CrossAssetModel>& cam, const std::string& currency, const Handle<YieldTermStructure>& curve,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::set<Date>& simulationDates, const Size stateGridPoints, const Size timeStepsPerYear,
-    const IborFallbackConfig& iborFallbackConfig, const Params& params)
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const Params& params)
     : ModelImpl(Model::Type::FD, params, curve->dayCounter(), stateGridPoints, {currency}, irIndices, {}, {}, {},
                 simulationDates, iborFallbackConfig),
       cam_(cam), currency_(currency), curve_(curve), simulationDates_(simulationDates),
@@ -187,7 +187,7 @@ RandomVariable FdGaussianCam::pay(const RandomVariable& amount, const Date& obsd
 }
 
 RandomVariable FdGaussianCam::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                                  const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                                  const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                   const RandomVariable& addRegressor2) const {
 
     QL_REQUIRE(!memSlot, "FdGaussianCam::npv(): mem slot not allowed.");
@@ -223,7 +223,7 @@ Real FdGaussianCam::extractT0Result(const RandomVariable& result) const {
 
     // roll back to today (if necessary)
 
-    RandomVariable r = npv(result, referenceDate(), Filter(), boost::none, RandomVariable(), RandomVariable());
+    RandomVariable r = npv(result, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
 
     // we expect the results to be determinstic as per LgmBackwardSolver interface
 

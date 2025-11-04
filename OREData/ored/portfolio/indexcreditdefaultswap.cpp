@@ -231,7 +231,7 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     maturityType_ = "Last Coupon Date";
 
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
-                                             basketCreditCurves, boost::none, swap_.recoveryRate(), false));
+                                             basketCreditCurves, QuantLib::ext::nullopt, swap_.recoveryRate(), false));
     setSensitivityTemplate(*cdsBuilder);
     addProductModelEngine(*cdsBuilder);
 
@@ -250,7 +250,7 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     sensitivityDecomposition_ = cdsBuilder->sensitivityDecomposition();
 }
 
-const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& IndexCreditDefaultSwap::additionalData() const {
     setLegBasedAdditionalData(0, 2);
     additionalData_["legNPV[1]"] = instrument_->qlInstrument()->result<Real>("protectionLegNPV");
     additionalData_["legNPV[2]"] = instrument_->qlInstrument()->result<Real>("premiumLegNPVDirty") +

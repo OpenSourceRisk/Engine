@@ -41,20 +41,20 @@ void AnalyticDoubleBarrierBinaryEngine::calculate() const {
         auto it = results_.additionalResults.find("spot");
         if (it != results_.additionalResults.end()) {
             results_.additionalResults["spot_pricing"] = it->second;
-            it->second = 1. / boost::any_cast<Real>(it->second);
+            it->second = 1. / QuantLib::ext::any_cast<Real>(it->second);
         }
         it = results_.additionalResults.find("costOfCarry");
         if (it != results_.additionalResults.end())
-            it->second = -1. * boost::any_cast<Real>(it->second);
+            it->second = -1. * QuantLib::ext::any_cast<Real>(it->second);
 
         // Swap riskFreeRate and dividendYield, discount factor stays what it is
         Real rfRate = Null<Real>();
         Real divYield = Null<Real>();
 
         if (auto tmp = results_.additionalResults.find("riskFreeRate"); tmp != results_.additionalResults.end())
-            rfRate = boost::any_cast<Real>(tmp->second);
+            rfRate = QuantLib::ext::any_cast<Real>(tmp->second);
         if (auto tmp = results_.additionalResults.find("dividendYield"); tmp != results_.additionalResults.end())
-            divYield = boost::any_cast<Real>(tmp->second);
+            divYield = QuantLib::ext::any_cast<Real>(tmp->second);
 
         results_.additionalResults["riskFreeRate"] = divYield;
         results_.additionalResults["dividendYield"] = rfRate;
@@ -63,8 +63,8 @@ void AnalyticDoubleBarrierBinaryEngine::calculate() const {
         auto barrierLowIt = results_.additionalResults.find("barrierLow");
         auto barrierHighIt = results_.additionalResults.find("barrierHigh");
         if (barrierLowIt != results_.additionalResults.end() && barrierHighIt != results_.additionalResults.end()) {
-            barrierLowIt->second = 1. / boost::any_cast<Real>(barrierLowIt->second);
-            barrierHighIt->second = 1. / boost::any_cast<Real>(barrierHighIt->second);
+            barrierLowIt->second = 1. / QuantLib::ext::any_cast<Real>(barrierLowIt->second);
+            barrierHighIt->second = 1. / QuantLib::ext::any_cast<Real>(barrierHighIt->second);
             std::swap(barrierLowIt->second, barrierHighIt->second);
         }
     }

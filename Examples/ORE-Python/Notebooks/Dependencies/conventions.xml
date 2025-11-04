@@ -1508,6 +1508,7 @@
     <Index>USD-SOFR</Index>
     <DateGenerationRule>FirstDayOfMonth</DateGenerationRule>
     <OvernightIndexFutureNettingType>Averaging</OvernightIndexFutureNettingType>
+    <Calendar>CME</Calendar>
   </Future>
   <Future>
     <Id>USD-SOFR-3M-FUTURES</Id>

@@ -75,7 +75,8 @@ void testCalibrationInstrumentRepricing(const Model::Type type, const std::vecto
     params.regressionOrder = 1;
     auto localVol = QuantLib::ext::make_shared<BlackScholes>(
         type, size, "EUR", process->riskFreeRate(), "EQ-DUMMY", "EUR", builder.model(), simDates,
-        IborFallbackConfig::defaultConfig(), "LocalVol", std::vector<Real>{}, params);
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "LocalVol",
+        std::vector<Real>{}, params);
 
     // loop over the calibration options and price them in the local vol model using MC
     // the result should be close to the market price of the options

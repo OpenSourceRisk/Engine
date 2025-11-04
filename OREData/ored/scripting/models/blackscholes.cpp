@@ -42,7 +42,8 @@ using namespace QuantExt;
 BlackScholes::BlackScholes(const Type type, const Size paths, const std::string& currency,
                            const Handle<YieldTermStructure>& curve, const std::string& index,
                            const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                           const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+                           const std::set<Date>& simulationDates,
+                           const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                            const std::string& calibration, const std::vector<Real>& calibrationStrikes,
                            const Params& params)
     : BlackScholes(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, model, {},
@@ -56,7 +57,8 @@ BlackScholes::BlackScholes(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<std::string>& payCcys, const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig, const std::string& calibration,
+    const std::set<Date>& simulationDates, const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const std::string& calibration,
     const std::map<std::string, std::vector<Real>>& calibrationStrikes, const Params& params)
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
@@ -767,7 +769,7 @@ RandomVariable BlackScholes::getNumeraire(const Date& s) const {
 Real BlackScholes::getFxSpot(const Size idx) const { return fxSpots_.at(idx)->value(); }
 
 RandomVariable BlackScholes::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                                 const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                                 const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                  const RandomVariable& addRegressor2) const {
 
     calculate();
@@ -1123,7 +1125,7 @@ Real BlackScholes::extractT0Result(const RandomVariable& value) const {
 
     // roll back to today (if necessary)
 
-    RandomVariable r = npv(value, referenceDate(), Filter(), boost::none, RandomVariable(), RandomVariable());
+    RandomVariable r = npv(value, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
 
     // if result is deterministic, return the value
 

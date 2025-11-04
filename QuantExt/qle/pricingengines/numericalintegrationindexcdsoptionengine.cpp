@@ -188,7 +188,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         Real forwardPriceExclFep = 1.0 - underlyingNpv / arguments_.swap->notional() /
                                              (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
-        Real forwardPrice = forwardPriceExclFep - fep() / arguments_.swap->notional() / discTradeCollToExercise;
+        Real forwardPrice = forwardPriceExclFep - unrealizedFep() / arguments_.swap->notional() / discTradeCollToExercise;
 
         // the default-adjusted index value Vc using a continuous annuity
 
@@ -287,9 +287,9 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             results_.additionalResults["volatility"] = volatility;
             results_.additionalResults["atmVolatility"] = atmVolatility;
             results_.additionalResults["standardDeviation"] = stdDev;
-            results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
+            results_.additionalResults["unrealizedFepAdjustedForwardPrice"] = forwardPrice;
             results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
-            results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
+            results_.additionalResults["unrealizedFepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
             results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
             results_.additionalResults["avgRate_te_tm"] = averageInterestRate;
             results_.additionalResults["exerciseBoundary"] =

@@ -9,7 +9,7 @@
   under the terms of the Modified BSD License.  You should have received a
   copy of the license along with this program.
   The license is also available online at <http://opensourcerisk.org>
-  
+
   This program is distributed on the basis that it will form a useful
   contribution to risk analytics and model standardisation, but WITHOUT
   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -60,7 +60,7 @@ public:
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 private:
     QuantLib::ext::shared_ptr<ore::data::LegData> createLegData() const { return QuantLib::ext::make_shared<ore::data::LegData>(); }
@@ -72,7 +72,24 @@ private:
     void buildLeg(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef,
         const ore::data::LegData& legDatum, const std::string& configuration);
 
+    // Build netted legs
+    void buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const string& configuration);
+
+    // Apply FX settlement if any
+    QuantLib::Leg fxSettledLeg(const QuantLib::Leg& leg, const ore::data::LegData& legData,
+                                           const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
+                                           const std::string& configuration);
+
     std::vector<ore::data::LegData> legData_;
+    bool roundNettedFloatingLegs_ = false;
+    QuantLib::Natural nettingPrecision_ = QuantLib::Null<QuantLib::Natural>();
+
+    // Store original legs before netting and netted leg index for transparency
+    std::vector<QuantLib::Leg> originalLegsBeforeNetting_;
+    std::vector<bool> originalLegPayersBeforeNetting_;
+    std::vector<std::string> originalLegCurrenciesBeforeNetting_;
+    QuantLib::Size nettedLegId_ = QuantLib::Null<QuantLib::Size>();
+    std::set<QuantLib::Size> fixedLegIds_, floatingLegIds_;
 };
 
 } // namespace data

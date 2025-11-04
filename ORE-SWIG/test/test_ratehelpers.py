@@ -17,7 +17,7 @@ class AverageOISRateHelpersTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of Average OIS Rate Helpers"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.fixedRate = QuoteHandle(SimpleQuote(0.05))
         self.spotLagTenor = Period(1,Days)
         self.swapTenor = Period(10,Years)
@@ -47,7 +47,7 @@ class CrossCcyBasisSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of Cross Curency Basis Swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)   
+        Settings.instance().evaluationDate = self.todays_date   
         self.fixedDayCounter=Actual360()
         self.spreadQuote=QuoteHandle(SimpleQuote(0.05))
         self.spotFX=QuoteHandle(SimpleQuote(1.0))
@@ -86,7 +86,7 @@ class TenorBasisSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of Tenor Basis Swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)   
+        Settings.instance().evaluationDate = self.todays_date
         self.spread=QuoteHandle(SimpleQuote(0.02))
         self.swapTenor=Period(3,Months)
         self.forecast_curve = RelinkableYieldTermStructureHandle()
@@ -124,7 +124,7 @@ class SubPeriodsSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of SubPeriods Basis Swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)   
+        Settings.instance().evaluationDate = self.todays_date   
         self.spread=QuoteHandle(SimpleQuote(0.02))
         self.swapTenor=Period(6,Months)
         self.fixedTenor=Period(6,Months)
@@ -147,7 +147,7 @@ class BasisTwoSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test consistency of basis to swap Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.spread=QuoteHandle(SimpleQuote(0.02))
         self.swapTenor=Period(6,Months)
         self.calendar=UnitedStates(UnitedStates.NYSE)
@@ -184,7 +184,7 @@ class OICCBSHelperTest(unittest.TestCase):
     def setUp(self):
         """ Test OICCBS Helper"""
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.settlementDays=2
         self.term=Period(6,Months)
         self.payFloat=Sonia()
@@ -223,7 +223,7 @@ class CrossCcyFixFloatSwapHelperTest(unittest.TestCase):
     def setUp(self):
         """ Set-up crossccyfixfloat rate helper """
         self.todays_date=Date(1,October,2018)
-        Settings.instance().setEvaluationDate(self.todays_date)
+        Settings.instance().evaluationDate = self.todays_date
         self.rate=QuoteHandle(SimpleQuote(0.02))
         self.spotFx=QuoteHandle(SimpleQuote(1.0))
         self.settlementDays=2

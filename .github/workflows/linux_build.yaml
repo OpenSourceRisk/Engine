@@ -23,6 +23,6 @@ jobs:
         sudo apt update
         sudo apt install -y libboost-all-dev libboost-test-dev ninja-build
     - name: cmake configure
-      run : mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DORE_BUILD_SWIG=false -G "Ninja" ..
+      run : mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=false -DQL_BUILD_EXAMPLES=false -DORE_PYTHON_INTEGRATION=ON -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DORE_BUILD_SWIG=false -G "Ninja" ..
     - name: cmake build
       run: cd build/; pwd; cmake --build . -j $(nproc)

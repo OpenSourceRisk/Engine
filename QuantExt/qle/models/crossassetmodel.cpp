@@ -745,6 +745,15 @@ void CrossAssetModel::calibrateIrLgm1fGlobal(const Size ccy,
     update();
 }
 
+void CrossAssetModel::calibrateIrHwVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+    const Size ccy, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
+    hw(ccy)->calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(helpers, method, endCriteria,
+                                                                                constraint, weights);
+    update();
+}
+
 void CrossAssetModel::calibrateBsVolatilitiesIterative(
     const AssetType& assetType, const Size idx, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
     OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
@@ -768,6 +777,42 @@ void CrossAssetModel::calibrateBsVolatilitiesGlobal(
     update();
 }
 
+void CrossAssetModel::calibrateComSchwartz1fSeasonalityIterative(
+    const AssetType& assetType, const Size adx, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
+    QL_REQUIRE(assetType == CrossAssetModel::AssetType::COM, "Unsupported AssetType for BS calibration");
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(assetType, 2, adx, i));
+    }
+    update();
+}
+
+void CrossAssetModel::calibrateComSchwartz1fGlobal(
+    const AssetType& assetType, const Size aIdx, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const std::map<Size, bool>& toCalibrate,
+    const Constraint& constraint, const std::vector<Real>& weights) {
+    
+    QL_REQUIRE(assetType == CrossAssetModel::AssetType::COM, "Unsupported AssetType for BS calibration");
+    // Initialise the parameters to move first to get the size.
+    vector<bool> fixedParams = MoveParameter(CrossAssetModel::AssetType::COM, 0, aIdx, Null<Size>());
+    std::fill(fixedParams.begin(), fixedParams.end(), true);
+
+    // Update fixedParams with parameters that need to be calibrated.
+    for (const auto& kv : toCalibrate) {
+        if (kv.second) {
+            vector<bool> tmp = MoveParameter(CrossAssetModel::AssetType::COM, kv.first, aIdx, Null<Size>());
+            std::transform(fixedParams.begin(), fixedParams.end(), tmp.begin(), fixedParams.begin(),
+                           std::logical_and<bool>());
+        }
+    }
+
+    // Perform the calibration
+    calibrate(helpers, method, endCriteria, constraint, weights, fixedParams);
+
+    update();
+}
 void CrossAssetModel::calibrateInfDkVolatilitiesIterative(
     const Size index, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {

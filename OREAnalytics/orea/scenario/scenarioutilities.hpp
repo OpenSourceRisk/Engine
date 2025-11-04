@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/scenario/scenario.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 
 #include <set>
 
@@ -64,5 +65,11 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
 QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar,
                                      const QuantLib::Real rawValue);
 
+QuantLib::ext::shared_ptr<Scenario>
+absoluteToSpreadedScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario,
+                           const QuantLib::ext::shared_ptr<Scenario>& base,
+                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData);
+
+std::vector<Period> getShiftedTenors(const std::vector<Period>& tenors, const QuantLib::Date& asof, const QuantLib::Date& mpor);
 } // namespace analytics
 } // namespace ore

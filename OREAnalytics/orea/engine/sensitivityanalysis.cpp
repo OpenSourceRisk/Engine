@@ -51,7 +51,7 @@ SensitivityAnalysis::SensitivityAnalysis(
     const bool laxFxConversion, const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-    const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool dryRun)
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
       laxFxConversion_(laxFxConversion), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
@@ -69,7 +69,8 @@ SensitivityAnalysis::SensitivityAnalysis(
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-    const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool dryRun, const std::string& context)
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun,
+    const std::string& context)
     : marketConfiguration_(marketConfiguration), asof_(asof), simMarketData_(simMarketData),
       sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), laxFxConversion_(laxFxConversion),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
@@ -117,6 +118,15 @@ void SensitivityAnalysis::generateSensitivities() {
     std::set<std::string> sensiTemplateIdsFromSensiConfig = getShiftSpecKeys(*sensitivityData_);
 
     // collect the sensi template ids that are relevant for the portfolio
+
+    // we need the portfolio to be built to access the trade sensi template ids
+    map<MarketContext, string> configurations;
+    configurations[MarketContext::pricing] = marketConfiguration_;
+    if (!portfolio_->isBuilt() && market_) {
+        auto factory = QuantLib::ext::make_shared<EngineFactory>(engineData_, market_, configurations, referenceData_,
+                                                                 iborFallbackConfig_);
+        portfolio_->build(factory, "sensi analysis");
+    }
 
     std::set<std::string> sensiTemplateIdsFromPortfolio;
     for (auto const& [_, t] : portfolio_->trades())
@@ -166,8 +176,6 @@ void SensitivityAnalysis::generateSensitivities() {
         }
         scenarioGenerator_ = scenarioGenerators.front();
 
-        map<MarketContext, string> configurations;
-        configurations[MarketContext::pricing] = marketConfiguration_;
         auto ed = QuantLib::ext::make_shared<EngineData>(*engineData_);
         ed->globalParameters()["RunType"] =
             std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");

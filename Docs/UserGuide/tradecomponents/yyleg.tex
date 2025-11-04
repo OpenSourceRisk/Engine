@@ -1,6 +1,10 @@
 \subsubsection{YY Leg Data}
 \label{ss:yylegdata}
 
+A YY (Year-on-Year) leg has coupons that pay the inflation rate over the preceding year rather than the inflation index ratio relative to a base CPI. 
+The inflation linked coupon payments are based on the year-on-year inflation rate defined as 
+$( \frac{I(t_i)}{I(t_{i-1})} - 1 )$, where $(t_i)$ and $(t_{i-1})$ are coupon dates spaced one year apart, or if IrregularYoY is set to \emph{true}, an actual coupon period apart.
+
 Listing \ref{lst:yylegdata} shows an example for a leg of type YY. The YYLegData block contains the following
 elements:
 
@@ -14,11 +18,13 @@ Allowable values: An integer followed by \emph{D},
 \item ObservationLag [Optional]: The observation lag to be applied. Fallback to the index observation lag as specified in the inflation swap conventions of the underlying index, if not specified. 
 
 Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
-%\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 
-%Allowable values:  \emph{true, false} 
+\item Interpolation [Optional]: The type of interpolation that is applied to inflation fixings. \emph{Linear} interpolation means that the inflation fixing for a given date is interpolated linearly between the surrounding - usually monthly - actual fixings, whereas with  \emph{Flat} interpoltion the inflation fixings are constant for each day at the value of the previous/latest actual fixing (flat forward interpolation).  
 
-\item Spreads [Optional]: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
+
+Allowable values:  \emph{Linear, Flat}\\ Defaults to the Interpolation as specified in the inflation swap conventions of the underlying index, if left blank or omitted. 
+
+\item Spreads [Optional]: The spreads applied to the inflation index fixings.  This node contains child elements of type \lstinline!Spread!. As usual, the child element(s) can be a single value, a vector of values or a dated vector of
   values.
 
 \item Gearings [Optional]: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
@@ -30,11 +36,15 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
 \item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate (after applying gearing and spread, if any).
 
-\item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+\item NakedOption [Optional]: If \emph{true} the leg represents only the embedded floor, cap or collar. By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
 
-\item AddInflationNotional [Optional]: If true, the payoff will include the notional of the coupon $N \, \tau \, \frac{I_t}{I_{t-1Y}}$.
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if omitted or left blank.
+\item AddInflationNotional [Optional]: If \emph{true}, the payoff will include the notional of the coupon $N \, \tau \, \frac{I_t}{I_{t-1Y}}$.
 
-\item IrregularYoY [Optional]: If true, instead of using a YoY inflation rate the coupon is based on the inflation rate during the actual coupon period, e.g.  for a 6M coupon the inflation rate will be computed as $\frac{I_t}{I_{t-6m}}-1$.  
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if omitted or left blank.
+\item IrregularYoY [Optional]: If \emph{true}, instead of using a YoY inflation rate the coupon is based on the inflation rate during the actual coupon period, e.g.  for a 6M coupon the inflation rate will be computed as $\frac{I_t}{I_{t-6m}}-1$. 
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if omitted or left blank.
 \end{itemize}
 
 \begin{listing}[H]
@@ -51,23 +61,19 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
         <PaymentConvention>Following</PaymentConvention>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-07-18</StartDate>
-            <EndDate>2021-07-18</EndDate>
+            <StartDate>2025-07-18</StartDate>
+            <EndDate>2031-07-18</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>UK</Calendar>
             <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
             <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
           </Rules>
         </ScheduleData>
         <YYLegData>
           <Index>EUHICPXT</Index>
           <FixingDays>2</FixingDays>
           <ObservationLag>2M</ObservationLag>
-          <Interpolated>true</Interpolated>
+          <Interpolation>Linear</Interpolation>
           <Spreads>
             <Spread>0.0010</Spread>
           </Spreads>
@@ -80,9 +86,9 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
           <Floors>
             <Floor>0.01</Floor>
           </Floors>
-          <NakedOption>N</NakedOption>
+          <NakedOption>false</NakedOption>
           <AddInflationNotional>false</AddInflationNotional>
-					<IrregularYoY>false</IrregularYoY>
+          <IrregularYoY>false</IrregularYoY>
         </YYLegData>
       </LegData>
 \end{minted}

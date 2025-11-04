@@ -162,8 +162,8 @@
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
                                premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
-                               vector<string>(), "", "", "", "Asian", "Arithmetic", boost::none, boost::none,
-                               boost::none);
+                               vector<string>(), "", "", "", "Asian", "Arithmetic", QuantLib::ext::nullopt, QuantLib::ext::nullopt,
+                               QuantLib::ext::nullopt);
 
          QuantLib::ext::shared_ptr<EquityAsianOption> asianOption = QuantLib::ext::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
@@ -261,8 +261,8 @@
 	 PremiumData premiumData;
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
                                premiumData, vector<Real>(), vector<Real>(), "", "", "", vector<string>(),
-                               vector<string>(), "", "", "", "AverageStrike", "Arithmetic", boost::none, boost::none,
-                               boost::none);
+                               vector<string>(), "", "", "", "AverageStrike", "Arithmetic", QuantLib::ext::nullopt, QuantLib::ext::nullopt,
+                               QuantLib::ext::nullopt);
 
          QuantLib::ext::shared_ptr<EquityAsianOption> asianOption = QuantLib::ext::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,

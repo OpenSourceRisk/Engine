@@ -113,9 +113,9 @@ QuantLib::ext::shared_ptr<OptionPaymentDateAdjuster>
 makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData, const std::vector<Date>& expiryDates) {
 
     if (optionData.optionStrip().has_value()) {
-        return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().get());
+        return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().value());
     } else if (optionData.optionData().paymentData().has_value()) {
-        return QuantLib::ext::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().get());
+        return QuantLib::ext::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().value());
     } else {
         return QuantLib::ext::make_shared<OptionPaymentDateAdjuster>();
     }
@@ -169,7 +169,6 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
         legPayers_.push_back(legData_[i].isPayer());
 
         // build legs
-
         auto commLegData =
             (QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[i].concreteLegData()));
         QL_REQUIRE(commLegData, "CommoditySpreadOption leg data should be of type CommodityFloating");
@@ -262,7 +261,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     }
 
     if (optionData_.paymentData().has_value()) {
-        paymentDates = optionData_.paymentData().get().dates();
+        paymentDates = optionData_.paymentData().value().dates();
         QL_REQUIRE(
             paymentDates.size() == legs_[0].size(),
             "Commodityspread option: if explicit payment dates are given, a exercise for each option is required. Got "
@@ -325,8 +324,9 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     // Add premium
     auto configuration = engineBuilder->configuration(MarketContext::pricing);
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier,
-                                       optionData_.premiumData(), -bsInd, ccy, engineFactory, configuration);
+                                       optionData_.premiumData(), -bsInd, ccy, discountCurve, engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";

@@ -535,8 +535,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier, premiumData_,
-                                       -multiplier, parseCurrency(legData_.currency()), engineFactory,
+                                       -multiplier, parseCurrency(legData_.currency()), discountCurve, engineFactory,
                                        engineFactory->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
@@ -564,7 +565,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["startDate"] = to_string(startDate);
 }
 
-const std::map<std::string, boost::any>& CapFloor::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() const {
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
 
@@ -573,9 +574,9 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     additionalData_["notionalCurrency"] = legData_.currency();
     for (Size j = 0; !legs_.empty() && j < legs_[0].size(); ++j) {
         QuantLib::ext::shared_ptr<CashFlow> flow = legs_[0][j];
-        // pick flow with earliest future payment date on this leg
-        if (flow->date() > asof) {
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+        // pick flow with the earliest future accrual period end date on this leg
+        if ((coupon && coupon->accrualEndDate() > asof) || flow->date() > asof) {
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -628,11 +629,12 @@ const std::map<std::string, boost::any>& CapFloor::additionalData() const {
     try {
         if (!legs_.empty()) {
             for (const auto& flow : legs_[0]) {
-                // pick flow with earliest future payment date on this leg
-                if (flow->date() > asof) {
+                QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+                // pick flow with the earliest future accrual period end date on this leg
+                auto date = (coupon) ? coupon->accrualEndDate() : flow->date();
+                if (date > asof) {
                     amounts.push_back(flow->amount());
                     paymentDates.push_back(flow->date());
-                    QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
                     if (coupon) {
                         currentNotionals.push_back(coupon->nominal());
                         rates.push_back(coupon->rate());

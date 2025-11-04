@@ -17,126 +17,20 @@
 */
 
 #include "toplevelfixture.hpp"
-#include "utilities.hpp"
-// clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-// clang-format on
-#include <qle/indexes/equityindex.hpp>
-#include <qle/instruments/multilegoption.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/cdsoptionhelper.hpp>
-#include <qle/models/cirppconstantfellerparametrization.hpp>
-#include <qle/models/commodityschwartzmodel.hpp>
-#include <qle/models/commodityschwartzparametrization.hpp>
-#include <qle/models/cpicapfloorhelper.hpp>
-#include <qle/models/crlgm1fparametrization.hpp>
-#include <qle/models/crossassetanalytics.hpp>
-#include <qle/models/crossassetanalyticsbase.hpp>
-#include <qle/models/crossassetmodel.hpp>
-#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
-#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
-#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
-#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
-#include <qle/models/eqbsconstantparametrization.hpp>
-#include <qle/models/eqbsparametrization.hpp>
-#include <qle/models/eqbspiecewiseconstantparametrization.hpp>
-#include <qle/models/fxbsconstantparametrization.hpp>
-#include <qle/models/fxbsparametrization.hpp>
-#include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-#include <qle/models/fxeqoptionhelper.hpp>
-#include <qle/models/gaussian1dcrossassetadaptor.hpp>
-#include <qle/models/infdkparametrization.hpp>
-#include <qle/models/irlgm1fconstantparametrization.hpp>
-#include <qle/models/irlgm1fparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
-#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
-#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
-#include <qle/models/lgm.hpp>
-#include <qle/models/lgmbackwardsolver.hpp>
-#include <qle/models/lgmconvolutionsolver2.hpp>
-#include <qle/models/lgmimplieddefaulttermstructure.hpp>
-#include <qle/models/lgmimpliedyieldtermstructure.hpp>
-#include <qle/models/linkablecalibratedmodel.hpp>
-#include <qle/models/parametrization.hpp>
-#include <qle/models/piecewiseconstanthelper.hpp>
-#include <qle/models/pseudoparameter.hpp>
-#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
-#include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
-#include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
-#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
-#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
-#include <qle/pricingengines/blackcdsoptionengine.hpp>
-#include <qle/pricingengines/blackmultilegoptionengine.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-#include <qle/pricingengines/depositengine.hpp>
-#include <qle/pricingengines/discountingcommodityforwardengine.hpp>
-#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <qle/pricingengines/discountingequityforwardengine.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/pricingengines/discountingriskybondengine.hpp>
-#include <qle/pricingengines/mcmultilegoptionengine.hpp>
-#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
-#include <qle/pricingengines/paymentdiscountingengine.hpp>
-#include <qle/processes/commodityschwartzstateprocess.hpp>
-#include <qle/processes/crossassetstateprocess.hpp>
-#include <qle/processes/irlgm1fstateprocess.hpp>
-#include <qle/termstructures/pricecurve.hpp>
-#include <ql/cashflows/iborcoupon.cpp>
-#include <ql/currencies/america.hpp>
-#include <ql/currencies/europe.hpp>
+#include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
-#include <ql/indexes/ibor/gbplibor.hpp>
-#include <ql/indexes/ibor/usdlibor.hpp>
-#include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
-#include <ql/instruments/cpicapfloor.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
-#include <ql/instruments/swaption.hpp>
-#include <ql/instruments/vanillaoption.hpp>
-#include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/math/randomnumbers/rngtraits.hpp>
-#include <ql/math/statistics/incrementalstatistics.hpp>
-#include <ql/methods/montecarlo/multipathgenerator.hpp>
-#include <ql/methods/montecarlo/pathgenerator.hpp>
-#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
-#include <ql/models/shortrate/onefactormodels/gsr.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/credit/flathazardrate.hpp>
-#include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
-#include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/time/daycounters/thirty360.hpp>
+#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
+#include <qle/pricingengines/mcmultilegoptionengine.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
-#include <boost/make_shared.hpp>
-// fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
-#if BOOST_VERSION >= 106400
-#include <boost/serialization/array_wrapper.hpp>
-#endif
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/covariance.hpp>
-#include <boost/accumulators/statistics/error_of_mean.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/variates/covariate.hpp>
-#include <boost/make_shared.hpp>
-
-using namespace QuantLib;
 using namespace QuantExt;
-
-using boost::unit_test_framework::test_suite;
-using namespace boost::accumulators;
-namespace bdata = boost::unit_test::data;
-using std::vector;
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
@@ -164,7 +58,7 @@ double bachelierPutPrice(double spot, double strike, double volatility, double t
 }
 
 BOOST_AUTO_TEST_CASE(testBachelier) {
-    // The LGM model converges to the well-known Bachelier approach in case of a zero mean-reversion rate.
+    // The LGM model is approximately close to the well-known Bachelier approach in case of a zero mean-reversion rate.
     // The dynamics defined via the underlying SDE lead to that relationship between the two models.
     // We check that equality for different swaption types (payer and receiver) and different strikes
     // that will cover the practically relevant area.
@@ -221,7 +115,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, 
-            schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+            schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());        
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
@@ -244,7 +138,7 @@ BOOST_AUTO_TEST_CASE(testBachelier) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
-             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
+             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
@@ -324,7 +218,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01)
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional,
-             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());        
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);
@@ -346,7 +240,7 @@ BOOST_AUTO_TEST_CASE(testBachelierManual) {
     for (double strike = -0.01; strike < 0.05; strike += 0.01) 
     {
         ext::shared_ptr<VanillaSwap> swap = ext::make_shared<VanillaSwap>(VanillaSwap::Payer, notional,
-             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
+             schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual360());
         ext::shared_ptr<Swaption> swaption = ext::make_shared<Swaption>(swap, exercise); 
 
         swaption->setPricingEngine(engineLgm);

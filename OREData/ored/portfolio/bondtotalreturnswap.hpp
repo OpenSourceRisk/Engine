@@ -86,6 +86,7 @@ private:
 
     // optional fx terms for composite bond trs
     string fxIndex_ = "";
+    bool applyFxIndexFixingDays_ = false;
 };
 } // namespace data
 } // namespace ore

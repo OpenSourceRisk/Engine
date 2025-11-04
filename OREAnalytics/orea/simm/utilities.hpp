@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ored/portfolio/trade.hpp>
+#include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmcalibration.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <orea/simm/simmconfiguration.hpp>
@@ -33,6 +34,8 @@
 namespace ore {
 namespace analytics {
 
+CrifRecord::ProductClass scheduleProductClassFromOreTrade(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade);
+
 std::vector<std::string> loadFactorList(const std::string& inputFileName, const char delim = '\n');
 
 std::vector<std::vector<double>> loadScenarios(const std::string& inputFileName, const char delim = '\n');
@@ -40,7 +43,7 @@ std::vector<std::vector<double>> loadScenarios(const std::string& inputFileName,
 QuantLib::Matrix loadCovarianceMatrix(const std::string& inputFileName, const char delim = '\n');
 
 //! Ordered SIMM versions
-enum class SimmVersion { V1_0, V1_1, V1_2, V1_3, V1_3_38, V2_0, V2_1, V2_2, V2_3, V2_3_8, V2_5, V2_5A, V2_6, V2_6_5, V2_7_2412 };
+enum class SimmVersion { V1_0, V1_1, V1_2, V1_3, V1_3_38, V2_0, V2_1, V2_2, V2_3, V2_3_8, V2_5, V2_5A, V2_6, V2_6_5, V2_7_2412, V2_8_2506 };
 
 SimmVersion parseSimmVersion(const std::string& version);
 

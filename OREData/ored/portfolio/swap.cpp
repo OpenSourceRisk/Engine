@@ -27,6 +27,7 @@
 #include <ql/cashflows/simplecashflow.hpp>
 
 #include <ql/time/calendars/target.hpp>
+#include <ql/indexes/inflation/euhicp.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -65,7 +66,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     isResetting_ = false;
     allLegsAreSimmPlainVanillaIrLegs_ = true;
     
-    Date today = Settings::instance().evaluationDate();
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -81,13 +81,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         if(!legData_[i].isSimmPlainVanillaIrLeg()){
             
             allLegsAreSimmPlainVanillaIrLegs_ = false;
-        }
-        // We want to activate the FxReset when we hit the start date
-        if (!legData_[i].resetStartDate().empty() && today >= parseDate(legData_[i].resetStartDate())) {
-            requiredFixings_.addFixingDate(parseDate(legData_[i].resetStartDate()), legData_[i].fxIndex());
-            auto indexFixing = market->fxIndex(legData_[i].fxIndex());
-            Real resetFixing = indexFixing->fixing(parseDate(legData_[i].resetStartDate()));
-            legData_[i].setForeignAmount(resetFixing * legData_[i].notionals()[0]);
         }
     }
 
@@ -264,7 +257,7 @@ void Swap::setIsdaTaxonomyFields() {
     additionalData_["isdaTransaction"] = string("");
 }
 
-const std::map<std::string,boost::any>& Swap::additionalData() const {
+const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());

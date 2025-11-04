@@ -23,7 +23,7 @@
 namespace QuantExt {
 
 DiscountingEquityForwardEngine::DiscountingEquityForwardEngine(const Handle<EquityIndex2>& equityIndex,
-    const Handle<YieldTermStructure>& discountCurve, boost::optional<bool> includeSettlementDateFlows, 
+    const Handle<YieldTermStructure>& discountCurve, QuantLib::ext::optional<bool> includeSettlementDateFlows, 
     const Date& settlementDate, const Date& npvDate)
     : equityIndex_(equityIndex), discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate), npvDate_(npvDate) {

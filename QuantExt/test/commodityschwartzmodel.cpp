@@ -39,9 +39,12 @@
 
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/commodityschwartzmodel.hpp>
-#include <qle/models/commodityschwartzparametrization.hpp>
+#include <qle/models/commodityschwartzconstantparametrization.hpp>
+#include <qle/models/commodityschwartzpiecewiseconstantparametrization.hpp>
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+//#include <qle/models/commodityschwartzseasonalitymodel.hpp>
+//#include <qle/models/commodityschwartzseasonalityparametrization.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -81,12 +84,34 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
         sigma = 0.1;
         kappa = 0.05;
 
-        parametrization = QuantLib::ext::make_shared<CommoditySchwartzParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, driftFreeState);
+        std::vector<Real> times_a;
+        std::vector<Real> a;
+
+        times_a.push_back(0.1);
+        times_a.push_back(1.0);
+        times_a.push_back(5.0);
+        times_a.push_back(10.0);
+
+        a.push_back(0.1);
+        a.push_back(0.2);
+        a.push_back(0.3);
+        a.push_back(0.4);
+
+        Array times_a_a, a_a;
+        times_a_a = Array(times_a.begin(), times_a.end());
+        a_a = Array(a.begin(), a.end());
+        
+        parametrization = QuantLib::ext::make_shared<CommoditySchwartzConstantParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, 0.0, driftFreeState);
         QL_REQUIRE(parametrization != NULL, "CommoditySchwartzParametrization has null pointer");
+
+        parametrizationSeason = QuantLib::ext::make_shared<CommoditySchwartzPiecewiseConstantParametrization>(USDCurrency(), "WTI", ts, fx, sigma, kappa, times_a_a, a_a, QuantLib::ext::make_shared<QuantLib::NoConstraint>(),driftFreeState);
+        QL_REQUIRE(parametrization != NULL, "CommoditySchwartzSeasonalityParametrization has null pointer");
 
         // TODO test Euler discretization
         model =
             QuantLib::ext::make_shared<CommoditySchwartzModel>(parametrization, CommoditySchwartzModel::Discretization::Exact);
+        modelSeason =
+            QuantLib::ext::make_shared<CommoditySchwartzModel>(parametrizationSeason, CommoditySchwartzModel::Discretization::Exact);
     }
 
     SavedSettings backup;
@@ -95,7 +120,9 @@ struct CommoditySchwartzModelTestData : public qle::test::TopLevelFixture {
     Handle<QuantExt::PriceTermStructure> ts;
     Real kappa, sigma;
     QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> parametrization;
+    QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> parametrizationSeason;
     QuantLib::ext::shared_ptr<CommoditySchwartzModel> model;
+    QuantLib::ext::shared_ptr<CommoditySchwartzModel> modelSeason;
 }; // CommoditySchwarzModelTestData
 
 } // namespace
@@ -111,15 +138,18 @@ std::vector<Size> steps{ 1, 52 };
 BOOST_DATA_TEST_CASE(testMartingaleProperty,
                      bdata::make(driftFreeState) * bdata::make(steps),
                      driftFreeState, steps) {
-
-    //BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
     
     BOOST_TEST_MESSAGE("Testing martingale property in the COM Schwartz model ...");
 
     CommoditySchwartzModelTestData data(driftFreeState);
     QuantLib::ext::shared_ptr<StochasticProcess> process = data.model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> processSeason = data.modelSeason->stateProcess();
     QL_REQUIRE(process != NULL, "process has null pointer!");
-
+    std::vector<Real> times = {0.0, 0.1, 0.5, 1.0, 2.0, 5.0, 7.0, 10.0, 20.0};
+    BOOST_TEST_MESSAGE("Seasonality values");
+    for (auto t : times)
+        BOOST_TEST_MESSAGE("t: "<<t<<", m("<<t<<"): "<<data.modelSeason->parametrization()->m(t));
+        
     Size n = 100000; // number of paths
     Size seed = 42; // rng seed
     Time t = 10.0;  // simulation horizon
@@ -129,18 +159,24 @@ BOOST_DATA_TEST_CASE(testMartingaleProperty,
     TimeGrid grid(t, steps);
     LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(steps, seed);
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
-    //MultiPathGeneratorMersenneTwister pg(process, grid, seed, true);
+    MultiPathGenerator<LowDiscrepancy::rsg_type> pgSeason(processSeason, grid, sg, false);
 
-    accumulator_set<double, stats<tag::mean, tag::variance, tag::error_of<tag::mean>>> acc_price, acc_state;
+    accumulator_set<double, stats<tag::mean, tag::variance, tag::error_of<tag::mean>>> acc_price, acc_state, acc_price_season, acc_state_season;
 
     Array state(1);
+    Array stateSeason(1);
     for (Size j = 0; j < n; ++j) {
         Sample<MultiPath> path = pg.next();
+        Sample<MultiPath> pathSeason = pgSeason.next();
         Size l = path.value[0].length() - 1;
         state[0] = path.value[0][l];
+        stateSeason[0] = pathSeason.value[0][l];
         Real price = data.model->forwardPrice(t, T, state);
+        Real priceSeason = data.modelSeason->forwardPrice(t, T, stateSeason);
         acc_price(price);
         acc_state(state[0]);
+        acc_price_season(priceSeason);
+        acc_state_season(stateSeason[0]);
     }
 
     BOOST_TEST_MESSAGE("sigma = " << data.model->parametrization()->sigmaParameter());
@@ -162,12 +198,38 @@ BOOST_DATA_TEST_CASE(testMartingaleProperty,
                            << " vs expected " << expected);
         BOOST_TEST(fabs(found - expected) < error, "Martingale test failed for F(t,T) evolution, found " << found << ", expected " << expected);
     }
+
+    // Martingale test with seasonality for F(t,T)
+    {
+        Real found = mean(acc_price_season);
+        Real expected = data.parametrizationSeason->priceCurve()->price(T);
+        Real error = error_of<tag::mean>(acc_price_season);
+        
+        BOOST_TEST_MESSAGE("Check that E[F(t,T)] = F(0,T)");
+        BOOST_TEST_MESSAGE("Avg = " << found
+                           << " +- " << error
+                           << " vs expected " << expected);
+        BOOST_TEST(fabs(found - expected) < error, "Martingale test failed for F(t,T) evolution, found " << found << ", expected " << expected);
+    }
     
     // Martingale test for the state variable
     { 
         Real found = mean(acc_state);
         Real expected = 0;
         Real error = error_of<tag::mean>(acc_state);
+
+        BOOST_TEST_MESSAGE("Check that the mean of the state variable is zero");
+        BOOST_TEST_MESSAGE("Avg = " << found
+                           << " +- " << error_of<tag::mean>(acc_state)
+                           << " vs expected " << expected);
+        BOOST_TEST(fabs(found - expected) < error, "Martingale test failed for the state variable, found " << found << ", expected " << expected);
+    }
+
+    // Martingale test with seasonalty for the state variable
+    { 
+        Real found = mean(acc_state_season);
+        Real expected = 0;
+        Real error = error_of<tag::mean>(acc_state_season);
 
         BOOST_TEST_MESSAGE("Check that the mean of the state variable is zero");
         BOOST_TEST_MESSAGE("Avg = " << found
@@ -198,9 +260,31 @@ BOOST_DATA_TEST_CASE(testMartingaleProperty,
                    "Simulated variance of the state variable does match expectation, found " << found << ", expected " << expected);
         
     }
+
+    // Variance test for the state variable with seasonality, implicit in the first test above 
+    {
+        Real found = variance(acc_state_season);
+        Real expected = data.parametrizationSeason->variance(t);
+        // FIXME: What's the MC error here? I assume that the mean error is smaller than the error of variance estimate, so re-using it.
+        Real error = error_of<tag::mean>(acc_state_season); 
+
+        QuantLib::ext::shared_ptr<CommoditySchwartzStateProcess> stateProcessSeason = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzStateProcess>(processSeason);
+        QL_REQUIRE(stateProcessSeason, "state process is null");
+        Real expected2 = stateProcessSeason->variance(0.0, 0.0, t);
+
+        // consistency check, should be identical
+        BOOST_TEST(fabs(expected - expected2) < 1e-10, "Inconsistent state variable variance " << expected << " vs " << expected2);
+                    
+        BOOST_TEST_MESSAGE("Check that the variance of the state variable matches expectation");
+        BOOST_TEST_MESSAGE("Var = " << found
+                           << " +- " << error
+                           << " vs expected " << expected);
+        BOOST_TEST(fabs(found - expected2) < error,
+                   "Simulated variance of the state variable does match expectation, found " << found << ", expected " << expected);
+        
+    }
     
 } // testMartingaleProperty
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

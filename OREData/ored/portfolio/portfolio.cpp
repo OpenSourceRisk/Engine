@@ -176,6 +176,11 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
 }
 
+bool Portfolio::isBuilt() const {
+    return std::all_of(trades_.begin(), trades_.end(), [](const auto& s) { return s.second->isBuilt(); });
+}
+
+
 Date Portfolio::maturity() const {
     QL_REQUIRE(trades_.size() > 0, "Cannot get maturity of an empty portfolio");
     Date mat = Date::minDate();
@@ -255,7 +260,7 @@ map<string, RequiredFixings::FixingDates> Portfolio::fixings(const Date& settlem
         auto fixings = t.second->fixings(settlementDate);
         for (const auto& [index, fixingDates] : fixings) {
             if (!fixingDates.empty()) {
-                result[index].addDates(fixingDates);
+                result[index].addDates(fixingDates, t.first);
             }
         }
     }
@@ -305,6 +310,7 @@ std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shar
     try {
         trade->reset();
         trade->build(engineFactory);
+        trade->setBuilt();
         TLOG("Required Fixings for trade " << trade->id() << ":");
         TLOGGERSTREAM(trade->requiredFixings());
         return std::make_pair(nullptr, true);
@@ -323,6 +329,7 @@ std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shar
             failed->setEnvelope(trade->envelope());
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
+            failed->setBuilt();
             LOG("Built failed trade with id " << failed->id());
             return std::make_pair(failed, false);
         } else {

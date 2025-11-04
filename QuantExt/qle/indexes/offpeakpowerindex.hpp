@@ -67,8 +67,9 @@ public:
     //@}
 
     //! Implement the base clone.
-    QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate,
-        const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
+    QuantLib::ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
+        const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
+        const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const override;
 
 protected:
     //! \name CommodityIndex interface

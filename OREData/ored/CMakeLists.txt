@@ -1,8 +1,8 @@
 # cpp files, this list is maintained manually
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
-configuration/bootstrapconfig.cpp
 configuration/baseltrafficlightconfig.cpp
+configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
@@ -95,6 +95,7 @@ model/inflation/infjydata.cpp
 model/inflation/inflationmodeldata.cpp
 model/irhwmodeldata.cpp
 model/irlgmdata.cpp
+model/irmodelbuilder.cpp
 model/irmodeldata.cpp
 model/lgmbuilder.cpp
 model/lgmdata.cpp
@@ -117,6 +118,7 @@ portfolio/basketvarianceswap.cpp
 portfolio/bestentryoption.cpp
 portfolio/bond.cpp
 portfolio/bondbasket.cpp
+portfolio/bondfuture.cpp
 portfolio/bondoption.cpp
 portfolio/bondposition.cpp
 portfolio/bondrepo.cpp
@@ -129,6 +131,7 @@ portfolio/builders/bond.cpp
 portfolio/builders/bondoption.cpp
 portfolio/builders/bondrepo.cpp
 portfolio/builders/bondtotalreturnswap.cpp
+portfolio/builders/callablebond.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capflooredaveragebmacouponleg.cpp
 portfolio/builders/capflooredaverageonindexedcouponleg.cpp
@@ -192,6 +195,8 @@ portfolio/builders/swap.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
+portfolio/callablebond.cpp
+portfolio/callablebondreferencedata.cpp
 portfolio/callableswap.cpp
 portfolio/capfloor.cpp
 portfolio/cashposition.cpp
@@ -297,6 +302,7 @@ portfolio/referencedatafactory.cpp
 portfolio/riskparticipationagreement.cpp
 portfolio/schedule.cpp
 portfolio/scriptedtrade.cpp
+portfolio/strikeresettableoption.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
 portfolio/tarf.cpp
@@ -331,6 +337,7 @@ scripting/engines/amccgcurrencyswapengine.cpp
 scripting/engines/amccgfxforwardengine.cpp
 scripting/engines/amccgfxoptionengine.cpp
 scripting/engines/amccgmultilegoptionengine.cpp
+scripting/engines/amccgpricingengine.cpp
 scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
@@ -493,6 +500,7 @@ model/inflation/infjydata.hpp
 model/inflation/inflationmodeldata.hpp
 model/irhwmodeldata.hpp
 model/irlgmdata.hpp
+model/irmodelbuilder.hpp
 model/irmodeldata.hpp
 model/lgmbuilder.hpp
 model/lgmdata.hpp
@@ -517,6 +525,7 @@ portfolio/basketvarianceswap.hpp
 portfolio/bestentryoption.hpp
 portfolio/bond.hpp
 portfolio/bondbasket.hpp
+portfolio/bondfuture.hpp
 portfolio/bondoption.hpp
 portfolio/bondposition.hpp
 portfolio/bondrepo.hpp
@@ -526,10 +535,12 @@ portfolio/builders/ascot.hpp
 portfolio/builders/asianoption.hpp
 portfolio/builders/balanceguaranteedswap.hpp
 portfolio/builders/bond.hpp
+portfolio/builders/bondfuture.hpp
 portfolio/builders/bondoption.hpp
 portfolio/builders/bondrepo.hpp
 portfolio/builders/bondtotalreturnswap.hpp
 portfolio/builders/cachingenginebuilder.hpp
+portfolio/builders/callablebond.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capflooredaveragebmacouponleg.hpp
 portfolio/builders/capflooredaverageonindexedcouponleg.hpp
@@ -595,6 +606,8 @@ portfolio/builders/swaption.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
+portfolio/callablebond.hpp
+portfolio/callablebondreferencedata.hpp
 portfolio/callableswap.hpp
 portfolio/capfloor.hpp
 portfolio/cashposition.hpp
@@ -703,6 +716,7 @@ portfolio/riskparticipationagreement.hpp
 portfolio/schedule.hpp
 portfolio/scriptedtrade.hpp
 portfolio/simmcreditqualifiermapping.hpp
+portfolio/strikeresettableoption.hpp
 portfolio/structuredconfigurationerror.hpp
 portfolio/structuredconfigurationwarning.hpp
 portfolio/structuredtradeerror.hpp

@@ -45,8 +45,8 @@ public:
                                bool flatFirstPeriod = true,
                                const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
                                const QuantLib::Real capFloorVolDisplacement = 0.0,
-                               const boost::optional<VolatilityType> optionletVolType = boost::none,
-                               const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
+                               const QuantLib::ext::optional<VolatilityType> optionletVolType = QuantLib::ext::nullopt,
+                               const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement = QuantLib::ext::nullopt,
                                bool interpOnOptionlets = true, const Interpolator& i = Interpolator(),
                                const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
                                const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
@@ -99,8 +99,8 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     bool flatFirstPeriod, const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
-    const boost::optional<VolatilityType> optionletVolType,
-    const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
+    const QuantLib::ext::optional<VolatilityType> optionletVolType,
+    const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap, const Period& rateComputationPeriod, const Size onCapSettlementDays)
     : OptionletStripper(capFloorSurface, index, discount, optionletVolType ? *optionletVolType : capFloorVolType,
                         optionletVolDisplacement ? *optionletVolDisplacement : 0.0, rateComputationPeriod,

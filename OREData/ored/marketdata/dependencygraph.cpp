@@ -147,12 +147,12 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
            This dependency type can not be handled via required curve ids or names. */
 
         if (g[*v].obj == MarketObject::IndexCurve) {
-            if (iborFallbackConfig_.isIndexReplaced(g[*v].name, asof_)) {
+            if (iborFallbackConfig_->isIndexReplaced(g[*v].name, asof_)) {
                 bool foundRfrIndex = false;
                 for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                     if (*w != *v) {
                         if (g[*w].obj == MarketObject::IndexCurve &&
-                            g[*w].name == iborFallbackConfig_.fallbackData(g[*v].name).rfrIndex) {
+                            g[*w].name == iborFallbackConfig_->fallbackData(g[*v].name).rfrIndex) {
                             g.add_edge(*v, *w);
                             foundRfrIndex = true;
                             TLOG("add edge (ibor-fallback) from vertex #" << index[*v] << " " << g[*v] << " to #"

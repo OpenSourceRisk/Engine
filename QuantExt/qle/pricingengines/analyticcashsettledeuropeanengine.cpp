@@ -20,6 +20,7 @@
 #include <ql/exercise.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 
 using QuantLib::close;
 using QuantLib::Date;
@@ -43,14 +44,18 @@ using std::string;
 namespace QuantExt {
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const bool flipResults)
-    : underlyingEngine_(bsp), bsp_(bsp), flipResults_(flipResults) {
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const bool flipResults,
+    QuantLib::DiffusionModelType model, double displacement)
+    : underlyingEngine_(bsp, model, displacement), bsp_(bsp), flipResults_(flipResults) {
     registerWith(bsp_);
 }
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
-    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const Handle<YieldTermStructure>& discountCurve, const bool flipResults)
-    : underlyingEngine_(bsp, discountCurve), bsp_(bsp), discountCurve_(discountCurve), flipResults_(flipResults) {
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& bsp,
+    const Handle<YieldTermStructure>& discountCurve, const bool flipResults, QuantLib::DiffusionModelType model,
+    double displacement)
+    : underlyingEngine_(bsp, discountCurve, model, displacement), bsp_(bsp), discountCurve_(discountCurve),
+      flipResults_(flipResults) {
     registerWith(bsp_);
     registerWith(discountCurve_);
 }
@@ -98,16 +103,24 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             results_.vega = 0.0;
         }
 
+        double fxRate = 1.0;
+        if (arguments_.fxIndex != nullptr) {
+            Date fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
+                                  ? *arguments_.cashSettlementFxFixingDate
+                                  : arguments_.fxIndex->fixingDate(expiryDate);
+            fxRate = arguments_.fxIndex->fixing(fixingDate, false);
+        }
+
         // Discount factor to payment date.
         DiscountFactor df_tp = dts->discount(arguments_.paymentDate);
         Time delta_tp = dts->timeFromReference(arguments_.paymentDate);
 
         // Only value, rho and theta are meaningful now.
-        results_.value = df_tp * payoffAmount;
-        results_.rho = -delta_tp * results_.value;
+        results_.value = df_tp * payoffAmount * fxRate;
+        results_.rho = -delta_tp * results_.value * fxRate;
         results_.theta = 0.0;
         if (delta_tp > 0.0 && !close(delta_tp, 0.0)) {
-            results_.theta = -std::log(df_tp) / delta_tp * results_.value;
+            results_.theta = -std::log(df_tp) / delta_tp * results_.value * fxRate;
         }
         results_.thetaPerDay = results_.theta / 365.0;
 
@@ -120,6 +133,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         results_.additionalResults["payoffAmount"] = payoffAmount;
         results_.additionalResults["discountFactor"] = df_tp;
         results_.additionalResults["timeToExpiry"] = delta_tp;
+        results_.additionalResults["settlementFxFwd"] = fxRate;
 
     } else {
 
@@ -144,7 +158,8 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         underlyingEngine_.calculate();
 
         // Discount factor from payment date back to expiry date i.e. P(t_e, t_p) when rates are deterministic.
-        DiscountFactor df_te_tp = dts->discount(arguments_.paymentDate) / dts->discount(expiryDate);
+        DiscountFactor df_te = dts->discount(expiryDate);
+        DiscountFactor df_te_tp = dts->discount(arguments_.paymentDate) / df_te;
         Time delta_te_tp = dts->timeFromReference(arguments_.paymentDate) - dts->timeFromReference(expiryDate);
 
         // Populate this engine's results using the results from the underlying engine.
@@ -152,7 +167,16 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             dynamic_cast<const CashSettledEuropeanOption::results*>(underlyingEngine_.getResults());
         QL_REQUIRE(underlyingResults, "Underlying engine expected to have compatible results.");
 
-        results_.value = df_te_tp * underlyingResults->value;
+        double fxRate = 1.0;
+        Date fixingDate = Date();
+        if (arguments_.fxIndex != nullptr) {
+            fixingDate = arguments_.cashSettlementFxFixingDate.has_value()
+                                  ? *arguments_.cashSettlementFxFixingDate
+                                  : arguments_.fxIndex->fixingDate(expiryDate);
+            fxRate = arguments_.fxIndex->fixing(fixingDate, false);
+        }
+
+        results_.value = df_te_tp * underlyingResults->value * fxRate;
         results_.delta = df_te_tp * underlyingResults->delta;
         results_.deltaForward = df_te_tp * underlyingResults->deltaForward;
         results_.elasticity = underlyingResults->elasticity;
@@ -169,7 +193,19 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
         // Take the additional results from the underlying engine and add more.
         results_.additionalResults = underlyingResults->additionalResults;
+        std::vector<QuantExt::CashFlowResults> cfResults;
+        cfResults.emplace_back();
+        cfResults.back().amount = results_.value / (df_te_tp * df_te);
+        cfResults.back().payDate = arguments_.paymentDate;
+        cfResults.back().legNumber = 0;
+        cfResults.back().type = "ExpectedFlow";
+        if (fixingDate != Date()){
+            cfResults.back().fixingDate = fixingDate;
+            cfResults.back().fixingValue = fxRate;
+        }
+        results_.additionalResults["cashFlowResults"] = cfResults;
         results_.additionalResults["discountFactorTeTp"] = df_te_tp;
+        results_.additionalResults["settlementFxFwd"] = fxRate;
     }
 
     
@@ -183,7 +219,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             if (it != results_.additionalResults.end()) {
                 string resPricing = res + "_pricing";
                 results_.additionalResults[resPricing] = it->second;
-                it->second = 1. / boost::any_cast<Real>(it->second);
+                it->second = 1. / QuantLib::ext::any_cast<Real>(it->second);
             }
         }
 
@@ -193,9 +229,9 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         Real divDiscount = Null<Real>();
 
         if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
-            rfDiscount = boost::any_cast<Real>(tmp->second);
+            rfDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
         if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
-            divDiscount = boost::any_cast<Real>(tmp->second);
+            divDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
 
         results_.additionalResults["riskFreeDiscount"] = divDiscount;
         results_.additionalResults["dividendDiscount"] = rfDiscount;

@@ -64,6 +64,7 @@ public:
     //! Check, get, add a single market point
     bool has(const ore::analytics::RiskFactorKey& key) const override { return baseScenario_->has(key); }
     const std::vector<ore::analytics::RiskFactorKey>& keys() const override { return baseScenario_->keys(); }
+    const std::vector<ore::analytics::RiskFactorKey>& delta_keys() const { return delta_->keys(); }
     void add(const ore::analytics::RiskFactorKey& key, Real value) override;
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 

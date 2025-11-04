@@ -64,14 +64,15 @@ public:
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
         const string& inputType = "TermVolatilities",
-        const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = boost::none);
+        const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = QuantLib::ext::nullopt);
 
     //! Detailled constructor for proxy config
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
                                   const std::string& proxySourceCurveId, const std::string& proxySourceIndex,
                                   const std::string& proxyTargetIndex,
                                   const QuantLib::Period& proxySourceRateComputationPeriod = 0 * Days,
-                                  const QuantLib::Period& proxyTargetRateComputationPeriod = 0 * Days);
+                                  const QuantLib::Period& proxyTargetRateComputationPeriod = 0 * Days,
+                                  double proxyScalingFactor = 1.0);
 
     //! \name XMLSerializable interface
     //@{
@@ -116,8 +117,9 @@ public:
     const std::string& proxyTargetIndex() const { return proxyTargetIndex_; };
     const QuantLib::Period& proxySourceRateComputationPeriod() const { return proxySourceRateComputationPeriod_; }
     const QuantLib::Period& proxyTargetRateComputationPeriod() const { return proxyTargetRateComputationPeriod_; }
+    double proxyScalingFactor() const { return proxyScalingFactor_; }
     //
-    const boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
+    const QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
         return parametricSmileConfiguration_;
     }
     //
@@ -162,8 +164,9 @@ private:
     std::string proxyTargetIndex_;
     QuantLib::Period proxySourceRateComputationPeriod_;
     QuantLib::Period proxyTargetRateComputationPeriod_;
+    double proxyScalingFactor_ = 1.0;
     //
-    boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
+    QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
     //
     ReportConfig reportConfig_;
 

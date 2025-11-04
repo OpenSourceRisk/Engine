@@ -39,7 +39,7 @@
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <iostream>
 
 namespace ore {
@@ -107,6 +107,7 @@ public:
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
     virtual void buildConfigurations(const bool = false){};
+    void setUp();
     void initialise();
     
     virtual void buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -173,7 +174,7 @@ public:
     
     const Timer& getTimer();
     void startTimer(const std::string& key) { timer_.start(key); }
-    boost::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
+    QuantLib::ext::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
         return timer_.stop(key, returnTimer);
     }
     void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }

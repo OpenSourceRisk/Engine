@@ -385,13 +385,11 @@ public:
             QL_REQUIRE(right.which() == ValueTypeWhich::Number, "invalid assignment: type "
                                                                     << valueTypeLabels.at(ref.first.which()) << " <- "
                                                                     << valueTypeLabels.at(right.which()));
-            Real t = boost::get<RandomVariable>(ref.first).time();
+            // disable check in assignments
             boost::get<RandomVariable>(ref.first).setTime(Null<Real>());
             ref.first = conditionalResult(filter.top(), boost::get<RandomVariable>(right),
                                           boost::get<RandomVariable>(ref.first));
             boost::get<RandomVariable>(ref.first).updateDeterministic();
-            if (boost::get<RandomVariable>(ref.first).time() == Null<Real>())
-                boost::get<RandomVariable>(ref.first).setTime(t);
         }
         TRACE("assign( " << v->name << "[" << (ref.second + 1) << "] ) := " << ref.first << " ("
                          << valueTypeLabels.at(right.which()) << ") using filter " << filter.top(),
@@ -884,7 +882,7 @@ public:
         Date obs = boost::get<EventVec>(obsdate).value;
         // roll back to past dates is treated as roll back to TODAY for convenience
         obs = std::max(obs, model_->referenceDate());
-        boost::optional<long> mem(boost::none);
+        QuantLib::ext::optional<long> mem(QuantLib::ext::nullopt);
         if (hasMemSlot) {
             RandomVariable v = boost::get<RandomVariable>(memSlot);
             QL_REQUIRE(v.deterministic(), "memory slot must be deterministic");

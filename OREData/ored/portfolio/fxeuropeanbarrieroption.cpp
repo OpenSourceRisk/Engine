@@ -138,7 +138,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
-    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
     if (opd) {
         if (opd->rulesBased()) {
             const Calendar& cal = opd->calendar();
@@ -188,7 +188,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         if (settlementType == Settlement::Cash) {
 
             // Has the option been marked as exercised
-            const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+            const QuantLib::ext::optional<OptionExerciseData>& oed = option_.exerciseData();
             if (oed) {
                 QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
                                                           << io::iso_date(oed->date())
@@ -364,8 +364,9 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, soldCcy,
-                engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+                discountCurve, engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(qlInstrument, mult, additionalInstruments, additionalMultipliers));

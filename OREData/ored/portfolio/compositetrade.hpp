@@ -96,10 +96,14 @@ public:
     //@{
     std::map<std::string, RequiredFixings::FixingDates> fixings(const QuantLib::Date& settlementDate) const override;
     std::map<AssetClass, std::set<std::string>> underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
     bool isExpired(const Date& d) const override;
     void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
     void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
+    virtual std::vector<TradeCashflowReportData> cashflows(const std::string& baseCurrency,
+                                                           const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                                           const std::string& configuration,
+                                                           const bool includePastCashflows) const override;
     //@}
 
 private:

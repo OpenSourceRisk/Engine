@@ -29,7 +29,7 @@
 #include <orea/app/analytics/portfoliodetailsanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
-#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
+#include <orea/app/analytics/scenariogenerationanalytic.hpp>
 #include <orea/app/analytics/sensitivitystressanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
@@ -40,6 +40,7 @@
 #include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 #include <orea/app/analytics/calibrationanalytic.hpp>
+#include <orea/app/analytics/correlationanalytic.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
 #include <orea/app/analytics/bacvaanalytic.hpp>
@@ -68,12 +69,13 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("IM_SCHEDULE", {}, IMScheduleAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARAMETRIC_VAR", {}, ParametricVarAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARCONVERSION", {}, ParConversionAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("CORRELATION", {}, CorrelationAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PNL", {}, PnlAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PNL_EXPLAIN", {}, PnlExplainAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PORTFOLIO_DETAILS", {}, PortfolioDetailsAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PRICING", pricingAnalyticSubAnalytics, PricingAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO", {}, ScenarioAnalytic, false);
-        ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO_STATISTICS", {}, ScenarioStatisticsAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO_GENERATION", {}, ScenarioGenerationAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SIMM", {}, SimmAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA", xvaAnalyticSubAnalytics, XvaAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("STRESS", {}, StressTestAnalytic, false);

@@ -57,7 +57,7 @@ public:
     void reset() override;
     QuantLib::Real NPV() const override;
     Real multiplier2() const override { return (isLong_ ? 1.0 : -1.0); }
-    const std::map<std::string, boost::any>& additionalResults() const override;
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const override;
     void updateQlInstruments() override {
         for (QuantLib::Size i = 0; i < underlyingInstruments_.size(); ++i)
             underlyingInstruments_[i]->update();
@@ -104,6 +104,8 @@ public:
 
     virtual bool exercise() const = 0;
 
+    Real cachedExerciseValue() const { return cachedExerciseValue_; }
+  
 protected:
     bool isLong_;
     bool isPhysicalDelivery_;
@@ -118,6 +120,7 @@ protected:
     mutable QuantLib::Date exerciseDate_;
     mutable QuantLib::Date settlementDate_;
     mutable Real cachedNpv_;
+    mutable Real cachedExerciseValue_ = QuantLib::Null<Real>();
 };
 
 //! European Option Wrapper

@@ -37,7 +37,8 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
     const Handle<Quote>& stickySpot, const Handle<YieldTermStructure>& stickyDividendTs,
     const Handle<YieldTermStructure>& stickyRiskFreeTs, const Handle<YieldTermStructure>& movingDividendTs,
     const Handle<YieldTermStructure>& movingRiskFreeTs, bool stickyStrike)
-    : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter()),
+    : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter(),
+                                   referenceVol->volType(), referenceVol->shift()),
       referenceVol_(referenceVol), movingSpot_(movingSpot), times_(times), moneyness_(moneyness),
       volSpreads_(volSpreads), stickySpot_(stickySpot), stickyDividendTs_(stickyDividendTs),
       stickyRiskFreeTs_(stickyRiskFreeTs), movingDividendTs_(movingDividendTs), movingRiskFreeTs_(movingRiskFreeTs),

@@ -125,7 +125,7 @@ protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const std::string& discountCurveName,
                                                         const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const bool useFxSpot) override {
+                                                        const Date& expiryDate, const bool useFxSpot, const std::optional<Currency>&) override {
         std::vector<Time> bucketTimesDeltaGamma =
             parseListOfValues<Time>(engineParameter("BucketTimesDeltaGamma"), &parseReal);
         std::vector<Time> bucketTimesVega = parseListOfValues<Time>(engineParameter("BucketTimesVega"), &parseReal);
@@ -187,7 +187,7 @@ protected:
 
         return QuantLib::ext::make_shared<DiscountingFxForwardEngineDeltaGamma>(
             domCcy, domCcyCurve, forCcy, forCcyCurve, fx, bucketTimes, computeDelta, computeGamma, linearInZero,
-            boost::none, Date(), Date(), applySimmExemptions);
+            QuantLib::ext::nullopt, Date(), Date(), applySimmExemptions);
     }
 };
 

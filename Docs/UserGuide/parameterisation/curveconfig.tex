@@ -108,7 +108,8 @@ The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuratio
 Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
 In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input. 
 \item Interpolation: Optional. Possible values: Linear, Hagan2002Lognormal, Hagan2002Normal, Hagan2002NormalZeroBeta,
-  Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. If not given, defaults to Linear.
+  Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy\footnote{FlochKennedy shows unstable results and
+  is considered experimental. More work is needed.}. If not given, defaults to Linear.
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to
   specify initial values for calibrated parameters, to exclude single parameters from calibration and to set calibration
   parameters. See Example 59 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
@@ -639,59 +640,82 @@ elements are the following:
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <InflationCurves>
-   <InflationCurve>
-       <CurveId>USCPI_ZC_Swaps</CurveId>
-       <CurveDescription>Estimation Curve for USCPI</CurveDescription>
-       <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
-       <Type>ZC</Type>
-       <Quotes>
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/1Y</Quote>
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/2Y</Quote>
-           ...
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
-           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
-       </Quotes>
-       <Conventions>USCPI_INFLATIONSWAP</Conventions>
-       <Extrapolation>true</Extrapolation>
-       <Calendar>US</Calendar>
-       <DayCounter>A365</DayCounter>
-       <Lag>3M</Lag>
-       <Frequency>Monthly</Frequency>
-       <BaseRate>0.01</BaseRate>
-       <Tolerance>0.000000000001</Tolerance>
-       <Seasonality>
-           <BaseDate>20160101</BaseDate>
-           <Frequency>Monthly</Frequency>
-           <Factors>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/MAR</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/APR</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/MAY</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/JUN</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/JUL</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/AUG</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/SEP</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/OCT</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
-               <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
-           </Factors>
-           <OverrideFactors>
-               1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00
-           </OverrideFactors>
-       </Seasonality>
-   </InflationCurve>
+    <InflationCurve>
+        <CurveId>USCPI_ZC_Swaps</CurveId>
+        <CurveDescription>Estimation Curve for USCPI</CurveDescription>
+        <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
+        <Type>ZC</Type>
+        <Segments>
+            <Segment>
+                <Conventions>USCPI_INFLATIONSWAP_2M</Conventions>
+                <Quotes>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/3M</Quote>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/4M</Quote>
+                    <!-- ...more quotes... -->
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/24M</Quote>
+                </Quotes>
+            </Segment>
+            <Segment>
+                <Conventions>USCPI_INFLATIONSWAP</Conventions>
+                <Quotes>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/3Y</Quote>
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/4Y</Quote>
+                    <!-- ...more quotes... -->
+                    <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
+                </Quotes>
+            </Segment>
+        </Segments>
+        <Extrapolation>true</Extrapolation>
+        <Calendar>US</Calendar>
+        <DayCounter>A365</DayCounter>
+        <Lag>3M</Lag>
+        <Frequency>Monthly</Frequency>
+        <BaseRate/>
+        <Tolerance>0.000000000001</Tolerance>
+        <InterpolationVariable>ZeroRate</InterpolationVariable>
+        <InterpolationMethod>Linear</InterpolationMethod>
+        <UseLastFixingDate>false</UseLastFixingDate>
+        <Seasonality>
+            <BaseDate>20160101</BaseDate>
+            <Frequency>Monthly</Frequency>
+            <Factors>
+                <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
+                <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
+                <!-- ...more quotes... -->
+                <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
+            </Factors>
+        </Seasonality>
+    </InflationCurve>
 </InflationCurves>
 \end{minted}
 \caption{Inflation Curve Configuration}
 \label{lst:inflationcurve_configuration}
 \end{longlisting}
 
+\paragraph{Legacy Schema}
+The legacy schema (still supported) uses a single block for quotes and conventions:
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCurve>
+    <CurveId>USCPI_ZC_Swaps</CurveId>
+    <CurveDescription>Estimation Curve for USCPI</CurveDescription>
+    <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
+    <Type>ZC</Type>
+    <Quotes>
+        <Quote>ZC_INFLATIONSWAP/RATE/USCPI/1Y</Quote>
+        <!-- ...more quotes... -->
+        <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
+    </Quotes>
+    <Conventions>USCPI_INFLATIONSWAP</Conventions>
+    <!-- ... -->
+</InflationCurve>
+\end{minted}
+
 \begin{itemize}
 \item {\tt NominalTermStructure}: The interest rate curve to be used to strip the inflation curve.
 \item {\tt Type}: The type of the curve, {\tt ZC} for zero coupon, {\tt YY} for year on year.
-\item {\tt Quotes}: The instruments' market quotes from which to bootstrap the curve.
-\item {\tt Conventions}: The conventions applicable to the curve instruments.
+\item {\tt Segments}: Allows multiple instrument/convention blocks.
+\item {\tt Quotes}: Legacy (use instead segments). The instruments' market quotes from which to bootstrap the curve.
+\item {\tt Conventions}: Legacy (use instead segments). The conventions applicable to the curve instruments.
 \item {\tt Lag}: The observation lag used in the term structure.
 \item {\tt Frequency}: The frequency of index fixings.
 \item {\tt BaseRate}: The rate at $t=0$, this introduces an additional degree of freedom to get a smoother curve. If not
@@ -699,6 +723,14 @@ elements are the following:
 \item {\tt InterpolationVariable}: Optional, the variable on which the interpolation of the zero inflation curve is
   performed. The allowable values \emph{ZeroRate} and \emph{PriceIndex}. If not provided, the default value is \emph{ZeroRate}. Ignored for year on year inflation curves.
 \item {\tt InterpolationMethod}: Only relevant if InterpolationVariable is PriceIndex, allowed is \emph{Linear} and \emph{LogLinear}. Defaults to \emph{Linear}.
+\end{itemize}
+
+The segment block defines instruments to use for curve building, with their quotes and swap conventions.
+
+\paragraph{Segment Schema}
+\begin{itemize}
+\item {\tt Conventions}: The conventions applicable to the segment's instruments.
+\item {\tt Quotes}: The instruments' market quotes for the segment.
 \end{itemize}
 
 The optional seasonality block defines a multiplicative seasonality and contains the following elements:
@@ -714,9 +746,13 @@ The optional seasonality block defines a multiplicative seasonality and contains
   block.
 \end{itemize}
 
-We note that if zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
+\paragraph{Notes}
+\begin{itemize}
+\item All swaps used in segments must reference the same inflation index name for curve building, but can differ in their swap conventions (e.g., lag, interpolation).
+\item If zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
 converted to year on year swap quotes on the fly, using the plain forward rates, i.e. no convexity adjustment is
 applied.
+\end{itemize}
 
 \subsubsection{Inflation Cap/Floor Volatility Surfaces}
 

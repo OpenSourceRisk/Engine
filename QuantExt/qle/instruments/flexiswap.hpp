@@ -67,7 +67,7 @@ public:
               const std::vector<Real>& flooredRate, const DayCounter& floatingDayCount,
               const std::vector<Real>& lowerNotionalBound, const QuantLib::Position::Type optionPosition,
               const std::vector<bool>& notionalCanBeDecreased = std::vector<bool>(),
-              boost::optional<BusinessDayConvention> paymentConvention = boost::none);
+              QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt);
 
     //! \name Inspectors
     //@{

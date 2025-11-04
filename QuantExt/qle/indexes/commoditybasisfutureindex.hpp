@@ -52,7 +52,8 @@ public:
     //! Implement the base clone. Ajust the base future to match the same contract month
     QuantLib::ext::shared_ptr<CommodityIndex>
     clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
-          const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const override;
+          const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
+          const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const override;
 
     QuantLib::Real pastFixing(const QuantLib::Date& fixingDate) const override;
 

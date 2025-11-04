@@ -86,22 +86,20 @@ class BondIndex : public Index {
 };
 
 %shared_ptr(BondFuturesIndex)
-class BondFuturesIndex : public BondIndex {
+class BondFuturesIndex : public Index {
     public:
-        BondFuturesIndex(
-            const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false,
-            const bool relative = true, const Calendar& fixingCalendar = NullCalendar(),
-            const ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
-            const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-            const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
-            const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
-            const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(), 
-	        const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
-            const QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar,
-            const double priceQuoteBaseValue = 1.0);
+        BondFuturesIndex(const std::string& futureContract, const QuantLib::Date& futureExpiryDate = Date(),
+                         const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd = nullptr,
+                         const QuantLib::Real conversionFactor = QuantLib::Null<QuantLib::Real>(),
+                         const bool dirty = false);
         std::string name() const;
         Rate forecastFixing(const Date& fixingDate) const;
-        const QuantLib::Date& expiryDate() const;
+        const QuantLib::Date& futureExpiryDate() const;
+
+        const std::string& futureContract() const;
+        const QuantLib::Date& futureExpiryDate() const;
+        const QuantLib::ext::shared_ptr<QuantLib::Bond>& ctd();
+        const bool dirty() const;
 };
 
 %shared_ptr(ConstantMaturityBondIndex)
@@ -224,7 +222,8 @@ class CommodityIndex : public Index {
         //virtual Real forecastFixing(const QuantLib::Date& fixingDate) const;
         //virtual Real pastFixing(const QuantLib::Date& fixingDate) const;
         ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expireDate = QuantLib::Date(),
-                                              const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::mpme) const = 0;
+                                              const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
+                                              const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::mpme) const = 0;
 };
 
 // QuantExt Commodity Spot Index
@@ -234,7 +233,8 @@ class CommoditySpotIndex : public CommodityIndex {
     CommoditySpotIndex(const std::string& underlyingName, const Calendar& fixingCalendar,
                    const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
     ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
-                                          const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const;
+                                          const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
+                                          const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const;
 };
 
 // QuantExt Commodity Futures Index
@@ -250,7 +250,8 @@ public:
         const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
 
     ext::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate = QuantLib::Date(),
-        const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts = boost::none) const;
+        const QuantLib::Date& optionExpiryDate = QuantLib::Date(),
+        const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts = QuantLib::ext::nullopt) const;
 };
 
 // QuantLib BMA Index (not yet wrapped in QL v1.14)
@@ -331,6 +332,5 @@ qle_export_overnight_instance(COPIbr);
 qle_export_overnight_instance(CORRA);
 qle_export_overnight_instance(DKKOis);
 qle_export_overnight_instance(SEKSior);
-qle_export_overnight_instance(Tonar);
 
 #endif

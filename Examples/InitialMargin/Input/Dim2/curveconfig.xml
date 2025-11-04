@@ -63,7 +63,8 @@
     <SwaptionVolatility>
       <CurveId>EUR</CurveId>
       <CurveDescription>EUR normal swaption volatilities</CurveDescription>
-      <Dimension>Smile</Dimension>
+      <!--<Dimension>Smile</Dimension>-->
+      <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <OutputVolatilityType>Normal</OutputVolatilityType>
       <Extrapolation>Flat</Extrapolation>
@@ -71,18 +72,19 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</OptionTenors>
-      <SwapTenors>5Y,10Y</SwapTenors>
+      <SwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SwapTenors>
       <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
       <SmileOptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</SmileOptionTenors>
-      <SmileSwapTenors>1Y,5Y,10Y</SmileSwapTenors>
+      <SmileSwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SmileSwapTenors>
       <SmileSpreads>-0.1, -0.05, -0.04, -0.03, -0.02, -0.015, -0.01, -0.0075, -0.005, -0.0025, -0.00125, 0.00125, 0.0025, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.1</SmileSpreads>
       <Report/>
     </SwaptionVolatility>
     <SwaptionVolatility>
       <CurveId>GBP</CurveId>
       <CurveDescription>GBP normal swaption volatilities</CurveDescription>
-      <Dimension>Smile</Dimension>
+      <!--<Dimension>Smile</Dimension>-->
+      <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <OutputVolatilityType>Normal</OutputVolatilityType>
       <Extrapolation>Flat</Extrapolation>
@@ -90,11 +92,11 @@
       <Calendar>UK settlement</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</OptionTenors>
-      <SwapTenors>5Y,10Y</SwapTenors>
+      <SwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SwapTenors>
       <ShortSwapIndexBase>GBP-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>GBP-CMS-30Y</SwapIndexBase>
       <SmileOptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</SmileOptionTenors>
-      <SmileSwapTenors>1Y,5Y,10Y</SmileSwapTenors>
+      <SmileSwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SmileSwapTenors>
       <SmileSpreads>-0.1, -0.05, -0.04, -0.03, -0.02, -0.015, -0.01, -0.0075, -0.005, -0.0025, -0.00125, 0.00125, 0.0025, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.1</SmileSpreads>
       <Report/>
     </SwaptionVolatility>
@@ -117,7 +119,8 @@
     <SwaptionVolatility>
       <CurveId>USD-SOFR</CurveId>
       <CurveDescription>USD-SOFR normal swaption volatilities</CurveDescription>
-      <Dimension>Smile</Dimension>
+      <!--<Dimension>Smile</Dimension>-->
+      <Dimension>ATM</Dimension>
       <VolatilityType>Normal</VolatilityType>
       <OutputVolatilityType>Normal</OutputVolatilityType>
       <Extrapolation>Flat</Extrapolation>
@@ -125,11 +128,11 @@
       <Calendar>JoinHolidays(US settlement, UK settlement)</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</OptionTenors>
-      <SwapTenors>1Y,5Y,10Y</SwapTenors>
+      <SwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SwapTenors>
       <ShortSwapIndexBase>USD-CMS-SOFR-1Y</ShortSwapIndexBase>
       <SwapIndexBase>USD-CMS-SOFR-30Y</SwapIndexBase>
       <SmileOptionTenors>6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</SmileOptionTenors>
-      <SmileSwapTenors>5Y,10Y</SmileSwapTenors>
+      <SmileSwapTenors>1Y,2Y,3Y,4Y,5Y,10Y</SmileSwapTenors>
       <SmileSpreads>-0.1, -0.05, -0.04, -0.03, -0.02, -0.015, -0.01, -0.0075, -0.005, -0.0025, -0.00125, 0.00125, 0.0025, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.1</SmileSpreads>
       <QuoteTag>SOFR</QuoteTag>
       <Report/>
@@ -293,11 +296,24 @@
       <CurveDescription>Generic EUR Default Curve</CurveDescription>
       <Currency>EUR</Currency>
       <Type>HazardRate</Type>
-      <DiscountCurve>Yield/EUR/EUR-ESTER</DiscountCurve>
+      <DiscountCurve>Yield/EUR/EUR-EONIA</DiscountCurve>
       <DayCounter>A365</DayCounter>
       <RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SR/EUR</RecoveryRate>
       <Quotes>
         <Quote>HAZARD_RATE/RATE/CPTY_A/SR/EUR/0Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>BANK</CurveId>
+      <CurveDescription>BANK EUR Default curve</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve>Yield/EUR/EUR-ESTER</DiscountCurve>
+      <DayCounter>A365</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/BANK/SR/EUR/0Y</Quote>
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
@@ -1530,6 +1546,44 @@
         <DontThrowSteps>10</DontThrowSteps>
       </BootstrapConfig>
       <Report/>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>BANK_EUR_BORROW</CurveId>
+      <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+	<ZeroSpread>
+	  <Type>Zero Spread</Type>
+	  <Quotes>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/2Y</Quote>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/5Y</Quote>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/10Y</Quote>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/20Y</Quote>
+	  </Quotes>
+	  <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+	  <ReferenceCurve>EUR-EONIA</ReferenceCurve>
+	</ZeroSpread>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>BANK_EUR_LEND</CurveId>
+      <CurveDescription>BANK's average lending spread in EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+	<ZeroSpread>
+	  <Type>Zero Spread</Type>
+	  <Quotes>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/2Y</Quote>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/5Y</Quote>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/10Y</Quote>
+	    <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/20Y</Quote>
+	  </Quotes>
+	  <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+	  <ReferenceCurve>EUR-EONIA</ReferenceCurve>
+	</ZeroSpread>
+      </Segments>
     </YieldCurve>
   </YieldCurves>
   <InflationCurves/>

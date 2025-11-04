@@ -621,7 +621,7 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
     npvCurrency_ = notionalCurrency_ = data_.bondData().currency();
     maturity_ = qlUnderlyingBond->maturityDate();
     maturityType_ = "Underlying Bond's Maturity Date";
-    notional_ = qlUnderlyingBond->notional();
+    notional_ = underlyingBond.notional();
     legs_ = {qlUnderlyingBond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {data_.bondData().isPayer()};
@@ -720,13 +720,9 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
     QL_REQUIRE(
-        bond->instrument() && bond->instrument()->qlInstrument(),
+        qlBond,
         "ConvertibleBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
         "(either the instrument wrapper or the ql instrument is null)");
-
-    Date expiry = checkForwardBond(securityId).first;
-    if (expiry != Date())
-        modifyToForwardBond(expiry, qlBond, engineFactory, referenceData, securityId);
 
     BondBuilder::Result res;
     res.bond = qlBond;
@@ -751,15 +747,6 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     res.modelBuilder = b->second;
 
     return res;
-}
-
-void ConvertibleBondBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
-                                                 const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                                                 const std::string& securityId) const {
-
-    DLOG("ConvertibleBondBuilder::modifyToForwardBond called for " << securityId);
-    QL_FAIL("ConvertibleBondBuilder::modifyToForwardBond not implememted");
 }
 
 } // namespace data

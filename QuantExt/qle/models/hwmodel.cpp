@@ -28,6 +28,10 @@ HwModel::HwModel(const QuantLib::ext::shared_ptr<IrHwParametrization>& parametri
     QL_REQUIRE(parametrization_ != nullptr, "HwModel: parametrization is null");
     stateProcess_ =
         QuantLib::ext::make_shared<IrHwStateProcess>(parametrization_, measure_, discretization_, evaluateBankAccount_);
+    arguments_.resize(2);
+    arguments_[0] = parametrization_->parameter(0);
+    arguments_[1] = parametrization_->parameter(1);
+    registerWith(parametrization_->termStructure());
 }
 
 QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
@@ -71,6 +75,16 @@ Size HwModel::m() const { return parametrization_->m(); }
 Size HwModel::n_aux() const { return evaluateBankAccount_ && measure_ == Measure::BA ? n() : 0; }
 Size HwModel::m_aux() const {
     return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? m() : 0;
+}
+
+void HwModel::calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveVolatilityRaw(i));
+    }
+    update();
 }
 
 } // namespace QuantExt

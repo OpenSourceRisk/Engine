@@ -15,11 +15,13 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/utilities/null_deleter.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-
-#include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -35,12 +37,13 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const bool domesticIndexGiven, const bool foreignDiscountCurveGiven, const bool domesticDiscountCurveGiven,
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
     const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, bool eom, bool spreadOnForeignCcy,
-    boost::optional<Period> foreignTenor, boost::optional<Period> domesticTenor, Size foreignPaymentLag,
-    Size domesticPaymentLag, boost::optional<bool> foreignIncludeSpread, boost::optional<Period> foreignLookback,
-    boost::optional<Size> foreignFixingDays, boost::optional<Size> foreignRateCutoff,
-    boost::optional<bool> foreignIsAveraged, boost::optional<bool> domesticIncludeSpread,
-    boost::optional<Period> domesticLookback, boost::optional<Size> domesticFixingDays,
-    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged, const bool telescopicValueDates)
+    QuantLib::ext::optional<Period> foreignTenor, QuantLib::ext::optional<Period> domesticTenor, Size foreignPaymentLag,
+    Size domesticPaymentLag, QuantLib::ext::optional<bool> foreignIncludeSpread, QuantLib::ext::optional<Period> foreignLookback,
+    QuantLib::ext::optional<Size> foreignFixingDays, QuantLib::ext::optional<Size> foreignRateCutoff,
+    QuantLib::ext::optional<bool> foreignIsAveraged, QuantLib::ext::optional<bool> domesticIncludeSpread,
+    QuantLib::ext::optional<Period> domesticLookback, QuantLib::ext::optional<Size> domesticFixingDays,
+    QuantLib::ext::optional<Size> domesticRateCutoff, QuantLib::ext::optional<bool> domesticIsAveraged, const bool telescopicValueDates,
+    const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex),
@@ -57,7 +60,7 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
       foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
       domesticLookback_(domesticLookback), domesticFixingDays_(domesticFixingDays),
       domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged),
-      telescopicValueDates_(telescopicValueDates) {
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice) {
 
     foreignCurrency_ = foreignCcyIndex_->currency();
     domesticCurrency_ = domesticCcyIndex_->currency();
@@ -151,50 +154,9 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
-
-/* May need to adjust latestDate_ if you are projecting libor based
-   on tenor length rather than from accrual date to accrual date. */
-    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
-        if (termStructureHandle_ == foreignCcyIndex_->forwardingTermStructure()) {
-            Size numCashflows = swap_->leg(0).size();
-            Date endDate = latestDate_;
-            if (numCashflows > 0) {
-                for (Size i = numCashflows - 1; i >= 0; i--) {
-                    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(0)[i]);
-                    if (!lastFloating)
-                        continue;
-                    else {
-                        Date fixingValueDate = foreignCcyIndex_->valueDate(lastFloating->fixingDate());
-                        endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                        Date endValueDate = foreignCcyIndex_->maturityDate(fixingValueDate);
-                        latestDate_ = std::max(latestDate_, endValueDate);
-                        break;
-                    }
-                }
-            }
-        }
-        if (termStructureHandle_ == domesticCcyIndex_->forwardingTermStructure()) {
-            Size numCashflows = swap_->leg(1).size();
-            Date endDate = latestDate_;
-            if (numCashflows > 0) {
-                for (Size i = numCashflows - 1; i >= 0; i--) {
-                    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
-                        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[i]);
-                    if (!lastFloating)
-                        continue;
-                    else {
-                        Date fixingValueDate = domesticCcyIndex_->valueDate(lastFloating->fixingDate());
-                        endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                        Date endValueDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                        latestDate_ = std::max(latestDate_, endValueDate);
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    maturityDate_ = swap_->maturityDate();
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {!foreignIndexGiven_, !domesticIndexGiven_});
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {

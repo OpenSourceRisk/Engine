@@ -529,7 +529,7 @@ public:
 
     // refdate <= obsdate required
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                            const boost::optional<long>& memSlot, const std::size_t addRegressor1,
+                            const QuantLib::ext::optional<long>& memSlot, const std::size_t addRegressor1,
                             const std::size_t addRegressor2) const = 0;
     ...
 
@@ -723,7 +723,7 @@ void XvaAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoa
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
-            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
         return;
     }
 \end{minted}
@@ -761,6 +761,8 @@ calculation by setting the hard coded boolean {\tt bumpCvaSensis=true} in orea/e
 The Dynamic Delta sensitivity calculation for IM modeling using AAD is in development in ORE and in an experimental,
 proof of concept state at the time of writing this text.
 
+\subsubsection{General Setup}
+
 The starting point are the conditional portfolio npvs on valuation times $t$
 
 $$
@@ -795,6 +797,11 @@ $$
 \frac{\partial}{\partial p} = \frac{\partial}{\partial m} \frac{\partial m}{\partial z} \frac{\partial z}{\partial p}
 $$
 
+Note: We generally decompose a portfolio into subportfolios and compute the dynamic delta on each subportfolio
+separately. See \ref{aad:dynamic_delta_subportfolios}
+
+\subsubsection{Model Parameters}
+
 Table \ref{tab:aad_modelparams} lists the model parameters that we use\footnote{see modelcg.hpp, we only list
 non-derived parameters and those used in GaussianCamCG}. Model parameters are generally identified by their type and a
 subset of additional keys (qualifier1, qualifier2, date, date2, date3, index, index2, hash).
@@ -822,7 +829,7 @@ subset of additional keys (qualifier1, qualifier2, date, date2, date3, index, in
 \label{tab:aad_modelparams}
 \end{table}
 
-\underline{A Computing derivatives of conditional portfolio npvs to model parameters $m$}
+\subsubsection{Computing derivatives of conditional portfolio npvs to model parameters $m$}
 
 We use
 
@@ -839,11 +846,11 @@ $$
 to model parameters $m$.
 
 
-\underline{B Computing derivatives of model parameters $m$ to zero market risk factors $z$}
+\subsubsection{Computing derivatives of model parameters $m$ to zero market risk factors $z$}
 
 The relevant model parameters are dsc, lgm\_zeta, fxbs\_sigma and logFxSpot.
 
-\underline{B1 IR zero rate deltas}
+\underline{IR zero rate deltas}
 
 Suppose we have a sensitivity $s$ of $\bar{X}$ to a model parameter of type dsc referencing a maturity time $T$, $T >
 t$, i.e.
@@ -910,7 +917,7 @@ $$
 
 As a final step, we distribute the sensitivity on predefined buckets linearly.
 
-\underline{B2  FX deltas}
+\underline{FX deltas}
 
 Assume a sensitivity $s$ of $\bar{X}$ to a model parameter of type logFxSpot:
 
@@ -939,7 +946,7 @@ $$
 
 Note also that this is the derivative w.r.t. to a relative shift in $S(t)$ resp. $S(0)$.
 
-\underline{B3  IR vegas}
+\underline{IR vegas}
 
 A sensitivity $s$ of $\bar{X}$ to a model parameter of type lgm\_zeta
 
@@ -951,7 +958,7 @@ with $T>t$ is directly distributed on the defined bucket structure linearly. The
 par-conversion step, see below.
 
 
-\underline{B4  FX vegas}
+\underline{FX vegas}
 
 A sensitivity $s$ of $\bar{X}$ to a model parameter of type fxbs\_sigma
 
@@ -962,9 +969,9 @@ $$
 with $T>t$ is converted to a market vega in the par-conversion step, see below.
 
 
-\underline{C Computing derivatives of zero market risk factors $z$ to par market risk factors $p$}
+\subsubsection{Computing derivatives of zero market risk factors $z$ to par market risk factors $p$}
 
-\underline{C1 IR zero to par rate deltas}
+\underline{IR zero to par rate deltas}
 
 The conversion of IR zero to par rate deltas follow the usual procedure via Jacobian transformation. There are possible simplifications that can be exploited to speed up the conversion. We currently apply both of them in ore:
 
@@ -973,7 +980,7 @@ The conversion of IR zero to par rate deltas follow the usual procedure via Jaco
 \item time-independent par conversion
 \end{itemize}
 
-\underline{C2 IR vega par conversion}
+\underline{IR vega par conversion}
 
 The conversion of sensitivities to the lgm\_zeta parameter to sensitivities to implied swaption vol is done in analogy
 to the IR delta par conversion by specifying a set of swaptions and calculating the Jaocbian of these swaptions to the
@@ -985,7 +992,7 @@ currently:
 \item time-independent par conversion
 \end{itemize}
 
-\underline{C3 FX vega par conversion}
+\underline{FX vega par conversion}
 
 The conversion of sensitivities to the fxbs\_sigma parameter to sensitivities to implied fx option vols is done in
 analogy to the IR delta par conversion by specifying a set of fx options and calculating the Jacobian of these fx
@@ -996,3 +1003,142 @@ apply both in ore currently:
 \item state-independent par conversion
 \item time-independent par conversion
 \end{itemize}
+
+\subsubsection{Portfolio decomposition}\label{aad:dynamic_delta_subportfolios}
+
+In general the calculations described in the previous sections are performed on suitable subsets of the whole
+portfolio. First of all, if the dynamic delta is required for each individual trade, these subsets consist of a single
+trade. If the dynamic delta is only required on the portfolio level, the porfolio is first decomposed into
+
+\begin{itemize}
+\item ``plain vanilla'' trades for which the calculations can be done on an the level of aggregated npvs
+\item complex trades which require an individual calculation for each trade
+\end{itemize}
+
+Linear trades like vanilla ir single and cross currency swaps and fx forwards fall into the first category while trades
+involving optionality and other exotic features fall into the second category.
+
+\subsubsection{Portfolio decomposition: Plain Vanilla Part}
+
+The plain vanilla part of the portfolio can be further subdivided by common regressor sets required to calculate
+conditional expectations. In general, conditional expectations for both values and derivatives of plain vanilla trades
+can be calculated using a simple linear regression with polynomial basis functions, as assposed to complex trades that
+might require more advanced models. The complexity of e.g. QR or SVD underlying the linear regression analysis is
+$O(mn^2)$ with $m$ the number of observations, $n$ the number of regressor variables, $m > n$, i.e. quadratic in the
+number of regressors. Therefore it is reasonable to run the regression analyses on subportfolios with a smallest
+possible set of regressors instead of combining trades with disjoint regressors.
+\subsubsection{Portfolio decomposition: Complex Part}
+
+The trades falling into the complex part of the portfolio are calculated one by one. As an example we consider a
+Bermudan swaption, i.e. an option to enter a vanilla underlying at multiple exercise times. Denote the exercise times by
+
+$$
+{ t_1, t_2, \ldots, t_n }
+$$
+
+For each exercise time the Longstaff-Schwartz algorithm yields an exercise indicator $e_i$, $i=1,\ldots,n$, which is $1$
+if the option is exercised at time $t_i$ and $0$ otherwise. We introduce
+
+$$
+E_i := \sum_{j=1}^i e_j
+$$
+
+indicating that the option was exercised on or before time $t_i$. Now consider a simulation time $t_{sim}$ with an
+associated exercised value $v_e$ representing the path value of the exercised-into underlying at $t_{sim}$ and a
+future option value $f_e$ representing the continuation value of the option at $t_{sim}$ in case the option was not
+yet exercised. We proceed with calculating conditional expectations of $v_e$
+
+\begin{equation}\label{aad:calc1}
+V_e := E( v_e | \mathcal{F}_t )
+\end{equation}
+
+and $f_e$
+
+\begin{equation}\label{aad:calc2}
+F_e := E( f_e | \mathcal{F}_t )
+\end{equation}
+
+at $t = t_{sim}$ using an appropriate regression analysis. We set the trade exposure $T$ at $t_{sim}$ to
+
+\begin{equation}\label{aad:calc3}
+T := E_i V_e + 1_{F_e > 0} (1 - E_i) F_e
+\end{equation}
+
+where $i$ is determined such that $E_i$ is the relevant exercise indicator (set $i=0$ and $E_0 := 0$ if $t_{sim} <
+t_1$). Not that we floor $F_e$ at $0$ which is not guaranteed due to artifacts of the regression model.
+
+For the purpose of dynamic delta calculation we differentiate $V_e$ and $F_e$ w.r.t. a model parameter $m$
+by taking the conditional expectations of the derivatives of $v_e$
+
+\begin{equation}\label{aad:calc4}
+\frac{\partial V_e}{\partial m} = E \left( \frac{\partial}{\partial m} v_e \bigg| \mathcal{F}_t \right)
+\end{equation}
+
+and of $f_e$
+
+\begin{equation}\label{aad:calc5}
+\frac{\partial F_e}{\partial m} = E \left( \frac{\partial}{\partial m} f_e \bigg| \mathcal{F}_t \right)
+\end{equation}
+
+to recombine these to the derivative of $T$
+
+\begin{equation}\label{aad:calc6}
+\frac{\partial T}{\partial m} = E_i \frac{\partial V_e}{\partial m} + 1_{F_e > 0} (1 - E_i) \frac{\partial F_e}{\partial m}
+\end{equation}
+
+Note on indicator derivatives: We do not consider non-trivial indicator derivatives of $E_i$ since this is an indicator
+of {\em past} exercise. The treatment of derivatives for {\em future} exercise indicators that are implicit in the
+calculation of $F_e$ are not detailled here, we refer to the known result that such indicators do not require
+differentiation, see e.g. the discussion in \cite{piterbarg_deltas_callable_libor_exotics}, section 10. Finally, we do
+not consider derivatives of $1_{F_e > 0}$ because this indicator reflects regression model artifcats only.
+
+Note on decomposition: One may ask why we do not directly consider the path value $T'$ of the exotic trade, i.e.
+
+$$
+T' := E_i v_e + (1- E_i) f_e
+$$
+
+and the partial derivative
+
+$$
+\frac{\partial T'}{\partial m} = E_i \frac{\partial v_e}{\partial m} + (1- E_i) \frac{\partial f_e}{\partial m}
+$$
+
+and then take the conditional expectation,
+
+\begin{equation}\label{aad:calc7}
+E\left( \frac{\partial T'}{\partial m} \bigg| \mathcal{F}_t \right)  =
+E\left( E_i \frac{\partial v_e}{\partial m} + (1- E_i) \frac{\partial f_e}{\partial m} \bigg| \mathcal{F}_t \right)
+\end{equation}
+
+This would be more consistent with the plan vanilla trades and would not require a distinction of vanilla and exotic
+trades in the implementation. However, it would also not allow to floor $F_e$ at zero as in \ref{aad:calc3} and - much
+more importantly - this would also require to include suitable regressors to explain past exercise decisions represented
+by $E_i$, such as e.g. suitable model states at all past exercise times $t_1, t_2, \ldots, t_i$, since $E_i$ is part of
+the regressand, i.e. inside the conditional expectation operator in \ref{aad:calc7} as opposed to \ref{aad:calc6} where
+it is not part of the regressand.
+
+To keep the implementation of the above decomposition approach as general as possible, we introduce
+
+\begin{itemize}
+\item component path values of the exotic trade $c_1, c_2, \ldots, c_N$
+\item a mini computation graph representing the calculation of the target exposure value $T = T(c_1,\ldots,c_N)$ as of
+  function of the components $c_i$
+\end{itemize}
+
+The components in the example above are $c_1 = v_e$ and $c_2 = f_e$ and the mini computation graph represents the
+calculations in equations \ref{aad:calc1}, \ref{aad:calc2}, \ref{aad:calc3}. The derivatives calculation then assigns
+$\partial V_e \partial m$ and $\partial F_e\partial m$ to $c_1$ resp. $c_2$ and replays the mini
+computation graph on these values to arrive at $\partial T\partial m$ from equation \ref{aad:calc6}.
+
+To give another example, for a TaRF we would have one component $c_1$ representing the path value $f_e$ of the TaRF under the
+assumption that it was not terminated before the current simulation time. The function $T$ would be given by
+
+$$
+T(c_1) := (1-E_i) E( c_1 | \mathcal{F}_t )
+$$
+
+where $E_i$ denotes the indicator that is $1$ if the structured was terminated before the simulation time. In addition
+we note that the regression model to calculate $E(c_1|\mathcal{F}_t )$ should include the accumulated profit of the TaRF
+as a regressor since this is important to explain the future termination probability.
+

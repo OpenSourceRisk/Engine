@@ -175,8 +175,8 @@ void MarketRiskReport::initialise() {
 }
 
 void MarketRiskReport::initialiseRiskGroups() {
-    static boost::mutex mutex_;
-    boost::lock_guard<boost::mutex> lock(mutex_);
+    static std::mutex mutex_;
+    std::lock_guard<std::mutex> lock(mutex_);
 
     riskGroups_ = QuantLib::ext::make_shared<MarketRiskGroupContainer>();
     tradeGroups_ = QuantLib::ext::make_shared<TradeGroupContainer>();
@@ -267,6 +267,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
         sensiAgg = ext::make_shared<SensitivityAggregator>(tradeIdGroups_);
     
     bool runDetailTrd = runTradeDetail(reports);
+    bool runDetailRF = runRiskFactorDetail(reports);
     addPnlCalculators(reports);
 
     // Loop over all the risk groups
@@ -412,7 +413,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                     if (covCalculator || pnlCalculators_.size() > 0) {
                         sensiPnlCalculator_->calculateSensiPnl(srs, deltaKeys, scube->second, pnlCalculators_,
                                                                 covCalculator, tradeIds_, includeGammaMargin_,
-                                                                includeDeltaMargin_, runDetailTrd);
+                                                                includeDeltaMargin_, runDetailTrd, runDetailRF);
 
                         covarianceMatrix_ = covCalculator->covariance();
                     }

@@ -106,18 +106,11 @@ InterpolatedCPIInflationCurve<Interpolator>::InterpolatedCPIInflationCurve(
       QuantLib::InterpolatedCurve<Interpolator>(interpolator) {}
 
 template <class T> QuantLib::Date InterpolatedCPIInflationCurve<T>::baseDate() const {
-    if (hasExplicitBaseDate())
-        return ZeroInflationTermStructure::baseDate();
-    else
-        return dates_.front();
+
+    return ZeroInflationTermStructure::baseDate();
 }
 
-template <class T> QuantLib::Date InterpolatedCPIInflationCurve<T>::maxDate() const {
-    if (hasExplicitBaseDate())
-        return dates_.back();
-    else
-        return QuantLib::inflationPeriod(dates_.back(), frequency()).second;
-}
+template <class T> QuantLib::Date InterpolatedCPIInflationCurve<T>::maxDate() const { return dates_.back(); }
 
 template <class T> inline QuantLib::Rate InterpolatedCPIInflationCurve<T>::forwardCPIImpl(QuantLib::Time t) const {
     return this->interpolation_(t, true);

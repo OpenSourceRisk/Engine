@@ -101,7 +101,6 @@ public:
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& subType() const { return subType_; }
-    const std::string& paymentLag() const { return paymentLag_; }
     const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices() const { return quotedDirtyPrices_; }
 
     //! XMLSerializable interface
@@ -121,9 +120,6 @@ public:
 
     //! return isda sub type "Single Name", "Index" or throw if sub type can not be mapped
     std::string isdaBaseProduct() const;
-
-    // set payment lag
-    void setPaymentLag(std::string paymentLag) { paymentLag_ = paymentLag; }
 
 private:
     void initialise();
@@ -149,7 +145,6 @@ private:
     bool isPayer_;
     bool isInflationLinked_;
     string subType_;
-    string paymentLag_;
     std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = std::nullopt;
 };
 
@@ -209,12 +204,6 @@ struct BondBuilder {
     virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const = 0;
-    virtual void modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
-                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                                     const std::string& securityId) const = 0;
-    // function returns empty Date and String, if the securityId is not a forward bond
-    static std::pair<Date, std::string> checkForwardBond(const std::string& securityId);
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory, std::integral_constant<bool, true>> {
@@ -233,11 +222,6 @@ struct VanillaBondBuilder : public BondBuilder {
     virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const override;
-
-    void modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
-                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                             const std::string& securityId) const override;
 };
 
 } // namespace data

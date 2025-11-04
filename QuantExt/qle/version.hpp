@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 - 2023 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -23,29 +23,10 @@
 #ifndef quantext_version_hpp
 #define quantext_version_hpp
 
-// Boost Version
-// Boost 1.63 has been tested on Linux
-// Any boost version above 1.46 might work (we use boost filesystem 3 which is the default
-// from 1.46 - so some modification will be needed for pre 1.46).
-// The unit tests require 1.61 or higher
-//
-// Note that for MSVC 2013 the boost config file needs 1.57 (but this can be modified).
-// Note that for MSVC 2015 the boost config file needs 1.58 (but this can be modified).
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106300
-#error using an old version of Boost, please update.
-#endif
-
-// We require QuantLib 1.30
-#include <ql/version.hpp>
-#if QL_HEX_VERSION < 0x013000f0
-#error using an old version of QuantLib, please update.
-#endif
-
 //! Version string
-#define OPEN_SOURCE_RISK_VERSION "1.8.13.1"
+#define OPEN_SOURCE_RISK_VERSION "1.8.14.0"
 
 //! Version number
-#define OPEN_SOURCE_RISK_VERSION_NUM 1081301
+#define OPEN_SOURCE_RISK_VERSION_NUM 1081400
 
 #endif

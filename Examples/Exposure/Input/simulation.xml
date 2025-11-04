@@ -213,20 +213,26 @@
     <CommodityModels>
       <CommoditySchwartz name="COMDTY_WTI_USD">
         <Currency>USD</Currency>
-        <CalibrationType>BestFit</CalibrationType>
+        <CalibrationType>Bootstrap</CalibrationType>
         <Sigma>
-          <Calibrate>true</Calibrate>
+          <Calibrate>false</Calibrate>
           <InitialValue>0.1</InitialValue>
         </Sigma>
         <Kappa>
           <Calibrate>false</Calibrate>
           <InitialValue>0.0</InitialValue>
         </Kappa>
+        <Seasonality>
+          <Calibrate>true</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1, 2, 3, 4, 5, 10 </TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01 </InitialValue>
+        </Seasonality>
         <CalibrationOptions>
           <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
           <Strikes/>
         </CalibrationOptions>
-        <DriftFreeState>true</DriftFreeState>
+        <DriftFreeState>false</DriftFreeState>
       </CommoditySchwartz>
     </CommodityModels>
     <CreditModels>
