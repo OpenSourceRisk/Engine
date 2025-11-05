@@ -21,7 +21,6 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
-
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -87,38 +86,36 @@ void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrat
 
 void CalibrationAnalyticImpl::buildHwHistoricalCalibrationModelData() {
     if (!hwHistoricalModelData_)
-        hwHistoricalModelData_ = std::make_unique<HwHistoricalCalibrationModelData>();
+        hwHistoricalModelData_ = QuantLib::ext::make_shared<HwHistoricalCalibrationModelData>();
 
     HwHistoricalCalibrationDataLoader loader(inputs_->baseCurrency(), inputs_->foreignCurrencies(),
                                              inputs_->curveTenors(), inputs_->startDate(), inputs_->endDate());
 
-    hwHistoricalModelData_->asOf = inputs_->asof();
-    hwHistoricalModelData_->curveTenors = inputs_->curveTenors();
-    hwHistoricalModelData_->useForwardRate = inputs_->useForwardRate();
+    hwHistoricalModelData_->setAsOf(inputs_->asof());
+    hwHistoricalModelData_->setCurveTenors(inputs_->curveTenors());
+    hwHistoricalModelData_->setUseForwardRate(inputs_->useForwardRate());
 
     if (inputs_->pcaCalibration()) {
         loader.loadHistoricalCurveDataFromCsv(inputs_->curveInputFile());
         loader.loadFixings(inputs_->fixingDataFile());
         loader.cleanData();
-        hwHistoricalModelData_->lambda = inputs_->lambda();
-        hwHistoricalModelData_->varianceRetained = inputs_->varianceRetained();
-        hwHistoricalModelData_->irCurves = loader.moveIrCurves();
-        hwHistoricalModelData_->fxSpots = loader.moveFxSpots();
-        hwHistoricalModelData_->pcaCalibration = true;
+        hwHistoricalModelData_->setLambda(inputs_->lambda());
+        hwHistoricalModelData_->setVarianceRetained(inputs_->varianceRetained());
+        hwHistoricalModelData_->setIrCurves(loader.moveIrCurves());
+        hwHistoricalModelData_->setFxSpots(loader.moveFxSpots());
+        hwHistoricalModelData_->setPcaCalibration(true);
     } else {
         loader.loadPCAFromCsv(inputs_->pcaInputFiles());
-        hwHistoricalModelData_->eigenValues = loader.moveEigenValue();
-        hwHistoricalModelData_->eigenVectors = loader.moveEigenVector();
-        hwHistoricalModelData_->pcaCalibration = false;
+        hwHistoricalModelData_->setPcaFromInput(loader.moveEigenValue(), loader.moveEigenVector());
+        hwHistoricalModelData_->setPcaCalibration(false);
     }
 
     if (inputs_->meanReversionCalibration()) {
-        hwHistoricalModelData_->basisFunctionNumber = inputs_->basisFunctionNumber();
-        hwHistoricalModelData_->kappaUpperBound = inputs_->kappaUpperBound();
-        hwHistoricalModelData_->haltonMaxGuess = inputs_->haltonMaxGuess();
-        hwHistoricalModelData_->meanReversionCalibration = true;
+        hwHistoricalModelData_->setMeanReversionParams(inputs_->basisFunctionNumber(), inputs_->kappaUpperBound(),
+                                                       inputs_->haltonMaxGuess());
+        hwHistoricalModelData_->setMeanReversionCalibration(true);
     } else
-        hwHistoricalModelData_->meanReversionCalibration = false;
+        hwHistoricalModelData_->setMeanReversionCalibration(false);
 }
 
 void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -423,15 +420,52 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             LOG(msg);
             CONSOLEW(msg);
             hwHistoricalModelBuilder_ = ext::make_shared<HwHistoricalCalibrationModelBuilder>(
-                *hwHistoricalModelData_, inputs_->pcaCalibration(), inputs_->meanReversionCalibration(), false);
+                hwHistoricalModelData_, inputs_->pcaCalibration(), inputs_->meanReversionCalibration(), false);
+            if (inputs_->pcaCalibration()) {
+                // Write PCA reports
+                LOG("Write PCA Results Reports");
+                boost::filesystem::path p(inputs_->pcaOutputFileName());
+                std::string outputDir = p.stem().string();
+                for (auto const& ccyMatrix : hwHistoricalModelData_->eigenValues()) {
+                    Array eigenValue = ccyMatrix.second;
+                    std::string ccy = ccyMatrix.first;
+                    Matrix eigenVector = hwHistoricalModelData_->eigenVectors().find(ccy)->second;
+                    Size principalComponent = hwHistoricalModelData_->principalComponents().find(ccy)->second;
+
+                    CSVFileReport report(outputDir + "_" + ccy + ".csv");
+                    ReportWriter().writePcaReport(ccy, eigenValue, eigenVector, principalComponent, report);
+                }
+                LOG("PCA Results Reports written");
+            }
             if (inputs_->meanReversionCalibration()) {
-                // Write to simulation.xml
-                string fileName = inputs_->resultsPath().string() + "/simulation.xml";
+                // Write Mean Reversion reports
+                LOG("Write Mean Reversion Results Report");
+                boost::filesystem::path p(inputs_->meanReversionOutputFileName());
+                std::string outputDir = p.stem().string();
+                for (auto const& ccyMatrix : hwHistoricalModelData_->v()) {
+                    std::string ccy = ccyMatrix.first;
+                    Matrix v = ccyMatrix.second;
+                    Matrix kappa = hwHistoricalModelData_->kappa().find(ccy)->second;
+                    CSVFileReport report(outputDir + "_" + ccy + ".csv");
+                    ReportWriter().writeMeanReversionReport(v, kappa, report);
+                }
+                LOG("Mean Reversion Results Report written");
+
+                // Write simulation.xml
+                std::string fileName = inputs_->resultsPath().string() + "/simulation.xml";
                 hwHistoricalModelData_->toFile(fileName);
-                string xml = hwHistoricalModelData_->toXMLStringUnformatted();
+                std::string xml = hwHistoricalModelData_->toXMLStringUnformatted();
                 auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "HwHistoricalCalibrationModel", xml);
                 analytic()->addReport("CALIBRATION", "hwhistoricalcalibration", report);
+
+                // write simulation_StatisticalWithRiskNeutralVolatility.xml
+                fileName =
+                    inputs_->resultsPath().string() + "/simulation_StatisticalWithRiskNeutralVolatility.xml";
+                XMLDocument doc;
+                XMLNode* root = hwHistoricalModelData_->toXML2(doc);
+                doc.appendNode(root);
+                doc.toFile(fileName);
             }
         } else {
             QL_FAIL("CalibrationAnalytic::Unsupported HW calibration mode " << inputs_->hwCalibrationMode());

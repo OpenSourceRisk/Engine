@@ -53,10 +53,10 @@ public:
     const std::map<std::string, Matrix>& getEigenVector() const { return eigenVector_; }
 
     // Move
-    std::map<std::string, std::map<Date, std::vector<Real>>> moveIrCurves() const { return std::move(irCurves_); }
-    std::map<std::string, std::map<Date, Real>> moveFxSpots() const { return std::move(fxSpots_); }
-    std::map<std::string, Array> moveEigenValue() const { return std::move(eigenValue_); }
-    std::map<std::string, Matrix> moveEigenVector() const { return std::move(eigenVector_); }
+    std::map<std::string, std::map<Date, std::vector<Real>>> moveIrCurves() { return std::move(irCurves_); }
+    std::map<std::string, std::map<Date, Real>> moveFxSpots() { return std::move(fxSpots_); }
+    std::map<std::string, Array> moveEigenValue() { return std::move(eigenValue_); }
+    std::map<std::string, Matrix> moveEigenVector() { return std::move(eigenVector_); }
 
 private:
     void loadIr(const std::string& curveId, const Date& d, const std::vector<Real>& df);

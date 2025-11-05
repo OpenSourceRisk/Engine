@@ -1747,8 +1747,8 @@ void OREAppInputParameters::loadParameters() {
                     QL_REQUIRE(tmpReal > 0.0 && tmpReal <= 1.0, "Variance retained must be 0 < lambda <= 1");
                     setVarianceRetained(tmpReal);
 
-                    // tmp = params_->get("calibration", "pcaOutputFileName", false);
-                    // setPcaOutputFileName(tmp);
+                    tmp = params_->get("calibration", "pcaOutputFileName", false);
+                    setPcaOutputFileName(tmp);
                 } else {
                     setPcaCalibration(false);
                 }
@@ -1771,8 +1771,8 @@ void OREAppInputParameters::loadParameters() {
                         tmp = params_->get("calibration", "haltonMaxGuess", false);
                         setHaltonMaxGuess(parseInteger(tmp));
 
-                        // tmp = params_->get("calibration", "meanReversionOutputFileName", false);
-                        // setMeanReversionOutputFileName(tmp);
+                        tmp = params_->get("calibration", "meanReversionOutputFileName", false);
+                        setMeanReversionOutputFileName(tmp);
                     }
                 } else {
                     setMeanReversionCalibration(false);

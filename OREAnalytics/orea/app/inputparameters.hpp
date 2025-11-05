@@ -368,6 +368,8 @@ public:
     void setBasisFunctionNumber(Size s);
     void setKappaUpperBound(Real r);
     void setHaltonMaxGuess(Size s);
+    void setPcaOutputFileName(const std::string& fileName);
+    void setMeanReversionOutputFileName(const std::string& fileName);
 
     // Setters for xva
     void setXvaUseDoublePrecisionCubes(const bool b) { xvaUseDoublePrecisionCubes_ = b; }
@@ -840,6 +842,8 @@ public:
     Size basisFunctionNumber() const { return basisFunctionNumber_; }
     Real kappaUpperBound() const { return kappaUpperBound_; }
     Size haltonMaxGuess() const { return haltonMaxGuess_; }
+    const std::string& pcaOutputFileName() const { return pcaOutputFileName_; }
+    const std::string& meanReversionOutputFileName() const { return meanReversionOutputFileName_; }
 
     /*****************
      * Getters for xva
@@ -1252,6 +1256,8 @@ protected:
     Size basisFunctionNumber_;
     Real kappaUpperBound_;
     Size haltonMaxGuess_;
+    std::string pcaOutputFileName_;
+    std::string meanReversionOutputFileName_;
 
     /*******************
      * EXPOSURE analytic

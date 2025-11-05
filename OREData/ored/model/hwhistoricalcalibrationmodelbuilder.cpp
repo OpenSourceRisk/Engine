@@ -11,7 +11,7 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-HwHistoricalCalibrationModelBuilder::HwHistoricalCalibrationModelBuilder(HwHistoricalCalibrationModelData& data,
+HwHistoricalCalibrationModelBuilder::HwHistoricalCalibrationModelBuilder(QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelData>& data,
                                                                          const bool runPcaCalibration,
                                                                          const bool runMeanReversionCalibration,
                                                                          const bool continueOnError)
@@ -30,14 +30,14 @@ void HwHistoricalCalibrationModelBuilder::performCalculations() {
     if (runPcaCalibration_) {
         DLOG("HwHistoricalCalibrationModelBuilder: starting PCA calibration");
         try {
-            model_->pcaCalibration(data_.varianceRetained);
+            model_->pcaCalibration(data_->varianceRetained());
         } catch (std::exception& e) {
             if (!continueOnError_)
                 QL_FAIL("PCA calibration failed: " << e.what());
             WLOG("PCA calibration error ignored: " << e.what());
         }
     } else {
-        QL_REQUIRE(!data_.eigenValues.empty() && !data_.eigenVectors.empty(),
+        QL_REQUIRE(!data_->eigenValues().empty() && !data_->eigenVectors().empty(),
                    "No eigenvalues and eigenvectors found from input files.");
         DLOG("HwHistoricalCalibrationModelBuilder: PCA skipped, eigenvalues and eigenvectors read from input files.");
     }
@@ -45,7 +45,8 @@ void HwHistoricalCalibrationModelBuilder::performCalculations() {
     // Mean Reversion stage
     if (runMeanReversionCalibration_) {
         try {
-            model_->meanReversionCalibration(data_.basisFunctionNumber, data_.kappaUpperBound, data_.haltonMaxGuess);
+            model_->meanReversionCalibration(data_->basisFunctionNumber(), data_->kappaUpperBound(),
+                                             data_->haltonMaxGuess());
         } catch (std::exception& e) {
             if (!continueOnError_)
                 QL_FAIL("Mean reversion calibration failed: " << e.what());
@@ -60,27 +61,22 @@ void HwHistoricalCalibrationModelBuilder::performCalculations() {
 void HwHistoricalCalibrationModelBuilder::buildModel() {
     LOG("Start building HwHistoricalCalibratonModel");
     if (runPcaCalibration_)
-        model_ = std::make_unique<QuantExt::HwHistoricalCalibrationModel>(
-            data_.asOf, data_.curveTenors, data_.lambda, data_.useForwardRate, data_.irCurves, data_.fxSpots);
+        model_ = std::make_unique<QuantExt::HwHistoricalCalibrationModel>(data_->asOf(), data_->curveTenors(),
+                                                                          data_->lambda(), data_->useForwardRate(),
+                                                                          data_->irCurves(), data_->fxSpots());
     else
         model_ = std::make_unique<QuantExt::HwHistoricalCalibrationModel>(
-            data_.asOf, data_.curveTenors, data_.useForwardRate, data_.eigenValues, data_.eigenVectors);
+            data_->asOf(), data_->curveTenors(), data_->useForwardRate(), data_->eigenValues(), data_->eigenVectors());
     LOG("Building HwHistoricalCalibratonModel done");
 }
 
 void HwHistoricalCalibrationModelBuilder::extractOutputs() const { 
     if (runPcaCalibration_) {
-        data_.principalComponents = model_->principalComponent();
-        data_.eigenValues = model_->eigenValue();
-        data_.eigenVectors = model_->eigenVector();
-        data_.rho = model_->rho();
-        data_.fxSigma = model_->fxSigma();
+        data_->setPcaResults(model_->eigenValue(), model_->eigenVector(), model_->principalComponent(),
+                             model_->fxSigma(), model_->rho());
     }
     if (runMeanReversionCalibration_) {
-        data_.kappa = model_->kappa();
-        data_.v = model_->v();
-        data_.irSigma = model_->irSigma();
-        data_.irKappa = model_->irKappa();
+        data_->setMeanReversionResults(model_->kappa(), model_->v(), model_->irSigma(), model_->irKappa());
     }
 }
 

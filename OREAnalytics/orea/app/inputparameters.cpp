@@ -943,6 +943,11 @@ void InputParameters::setKappaUpperBound(Real r) { kappaUpperBound_ = r; }
 
 void InputParameters::setHaltonMaxGuess(Size s) { haltonMaxGuess_ = s; }
 
+void InputParameters::setPcaOutputFileName(const std::string& s) { pcaOutputFileName_ = s; }
+
+void InputParameters::setMeanReversionOutputFileName(const std::string& s) { meanReversionOutputFileName_ = s; }
+
+
 OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);
@@ -984,8 +989,6 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
     calibrationOutputFileName_ = params->get("calibration", "outputFile", false);
-    pcaOutputFileName_ = params->get("calibration", "pcaOutputFileName", false);
-    meanReversionOutputFileName_ = params->get("calibration", "meanReversionOutputFileName", false);
     zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     xvaSensiJacobiFileName_ = params->get("xvaSensitivity", "jacobiOutputFile", false);    
     xvaSensiJacobiInverseFileName_ = params->get("xvaSensitivity", "jacobiInverseOutputFile", false);    

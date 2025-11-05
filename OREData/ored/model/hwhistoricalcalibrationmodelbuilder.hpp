@@ -20,7 +20,7 @@ namespace data {
 
 class HwHistoricalCalibrationModelBuilder {
 public:
-    HwHistoricalCalibrationModelBuilder(HwHistoricalCalibrationModelData& data, const bool runPcaCalibration = true,
+    HwHistoricalCalibrationModelBuilder(QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelData>& data, const bool runPcaCalibration = true,
                                         const bool runMeanReversionCalibration = false, const bool continueOnError = false);
 
 private:
@@ -29,7 +29,7 @@ private:
     void buildModel();
     void extractOutputs() const;
 
-    HwHistoricalCalibrationModelData& data_;
+    QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelData>& data_;
     std::unique_ptr<QuantExt::HwHistoricalCalibrationModel> model_;
     bool runPcaCalibration_;
     bool runMeanReversionCalibration_;

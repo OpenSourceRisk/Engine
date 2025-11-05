@@ -52,7 +52,7 @@ protected:
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> builder_;
-    std::unique_ptr<HwHistoricalCalibrationModelData> hwHistoricalModelData_;
+    QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelData> hwHistoricalModelData_;
     QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelBuilder> hwHistoricalModelBuilder_;
 };
 

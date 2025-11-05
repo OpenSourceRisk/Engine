@@ -2896,5 +2896,46 @@ void ReportWriter::writeCapitalCrifReport(ore::data::Report& report,
     report.end();
 }
   
+
+void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
+                             const Size& principalComponent, ore::data::Report& reportOut){
+    QL_REQUIRE((eigenValue.size() == eigenVector.columns() && eigenVector.rows() == eigenVector.columns()),
+                "EigenVector and EigenValue size not match.");
+    reportOut.addColumn("EigenValue", double(), 15)
+        .addColumn("EigenVector", double(), 15)
+        .addColumn("Currency", double(), 15)
+        .addColumn(ccy, double(), 15);
+    for (Size i = 3; i < eigenValue.size(); ++i) {
+        reportOut.addColumn("", double(), 15);
+    }
+    for (Size i = 0; i < principalComponent; ++i) {
+        reportOut.next().add(eigenValue[i]);
+        for (Size j = 0; j < eigenValue.size(); ++j) {
+            reportOut.add(eigenVector[j][i]);
+        }
+    }
+    reportOut.end();
+}
+
+void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut) {
+    QL_REQUIRE(v.rows() == kappa.rows(), "v and kappa must have same rows.");
+    for (Size i = 0; i < v.columns(); ++i) {
+        reportOut.addColumn("v_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < kappa.columns(); ++i) {
+        reportOut.addColumn("kappa_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < v.rows(); ++i) {
+        reportOut.next();
+        for (Size j = 0; j < v.columns(); ++j) {
+            reportOut.add(v[i][j]);
+        }
+        for (Size j = 0; j < kappa.columns(); ++j) {
+            reportOut.add(kappa[i][j]);
+        }
+    }
+    reportOut.end();
+}
+  
 } // namespace analytics
 } // namespace ore
