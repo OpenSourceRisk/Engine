@@ -1759,21 +1759,20 @@ void OREAppInputParameters::loadParameters() {
                     tmp = params_->get("calibration", "pcaInputFileName", false);
                     if (!tmp.empty()) {
                         setPcaInputFiles(tmp);
-                    } else {
-                        tmp = params_->get("calibration", "basisFunctionNumber", false);
-                        Size tmpInt = parseInteger(tmp);
-                        QL_REQUIRE(tmpInt > 0, "Basis function number must be > 0 for Calibration Analytics");
-                        setBasisFunctionNumber(tmpInt);
-
-                        tmp = params_->get("calibration", "kappaUpperBound", false);
-                        setKappaUpperBound(parseReal(tmp));
-
-                        tmp = params_->get("calibration", "haltonMaxGuess", false);
-                        setHaltonMaxGuess(parseInteger(tmp));
-
-                        tmp = params_->get("calibration", "meanReversionOutputFileName", false);
-                        setMeanReversionOutputFileName(tmp);
                     }
+                    tmp = params_->get("calibration", "basisFunctionNumber", false);
+                    Size tmpInt = parseInteger(tmp);
+                    QL_REQUIRE(tmpInt > 0, "Basis function number must be > 0 for Calibration Analytics");
+                    setBasisFunctionNumber(tmpInt);
+
+                    tmp = params_->get("calibration", "kappaUpperBound", false);
+                    setKappaUpperBound(parseReal(tmp));
+
+                    tmp = params_->get("calibration", "haltonMaxGuess", false);
+                    setHaltonMaxGuess(parseInteger(tmp));
+
+                    tmp = params_->get("calibration", "meanReversionOutputFileName", false);
+                    setMeanReversionOutputFileName(tmp);
                 } else {
                     setMeanReversionCalibration(false);
                 }
