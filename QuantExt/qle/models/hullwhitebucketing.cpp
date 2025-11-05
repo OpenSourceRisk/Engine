@@ -39,12 +39,8 @@ Bucketing::Bucketing(const Real lowerBound, const Real upperBound, const Size n)
 
 Size Bucketing::index(const Real x) const {
     if (uniformBuckets_) {
-        const double bucket = std::floor((x - lowerBound_) / h_) + 1;
-        const double maxBucket = static_cast<double>(buckets_.size() - 1);
-        return bucket <= 0.0
-                   ? 0
-                   : (bucket >= maxBucket || QuantLib::close_enough(bucket, maxBucket) ? buckets_.size() - 1
-                                                                                       : static_cast<Size>(bucket));
+        return static_cast<Size>(std::min(static_cast<double>(buckets_.size()) - 1.0,
+                                          std::max(0.0, std::floor((x - lowerBound_) / h_) + 1)));
     } else {
         return std::upper_bound(buckets_.begin(), buckets_.end(), x) - buckets_.begin();
     }
