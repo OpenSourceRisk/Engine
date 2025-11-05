@@ -36,9 +36,9 @@ Real LocalVol::initialValue(const Size indexNo) const {
 }
 
 Real LocalVol::atmForward(const Size indexNo, const Real t) const {
-    return ore::data::atmForward(model_->generalizedBlackScholesProcesses()[0]->x0(),
-                                 model_->generalizedBlackScholesProcesses()[0]->riskFreeRate(),
-                                 model_->generalizedBlackScholesProcesses()[0]->dividendYield(), timeGrid_.back());
+    return ore::data::atmForward(model_->generalizedBlackScholesProcesses()[indexNo]->x0(),
+                                 model_->generalizedBlackScholesProcesses()[indexNo]->riskFreeRate(),
+                                 model_->generalizedBlackScholesProcesses()[indexNo]->dividendYield(), timeGrid_.back());
 }
 
 Real LocalVol::compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const {

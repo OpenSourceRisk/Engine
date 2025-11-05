@@ -39,6 +39,9 @@ private:
     Real atmForward(const Size indexNo, const Real t) const override;
     Real compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const override;
 
+    RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
+                                        const RandomVariable& barrier, const bool above) const override;
+
     void performCalculationsMc() const;
     void performCalculationsFd() const;
     void generatePaths() const;
@@ -46,6 +49,9 @@ private:
                             const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                             const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
     void setAdditionalResults() const;
+
+    // only for MC
+    mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
 };
 
 } // namespace data

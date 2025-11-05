@@ -129,9 +129,16 @@ protected:
     // helper functions
     Matrix getCorrelation() const;
     std::vector<Real> getCalibrationStrikes() const;
-
     void initUnderlyingPathsMc() const;
     void setReferenceDateValuesMc() const;
+
+    struct comp {
+        comp(const std::string& indexInput) : indexInput_(indexInput) {}
+        template <typename T> bool operator()(const std::pair<IndexInfo, QuantLib::ext::shared_ptr<T>>& p) const {
+            return p.first.name() == indexInput_;
+        }
+        const std::string indexInput_;
+    };
 
     // input parameters
     std::vector<Handle<YieldTermStructure>> curves_;
@@ -159,7 +166,6 @@ protected:
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
     mutable bool inTrainingPhase_ = false;   // are we currently using training paths?
-    mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
     mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_; // stored regression coefficients
 
     // used for FD only:
