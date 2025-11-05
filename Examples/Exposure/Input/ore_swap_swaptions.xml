@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output/swap</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_swap_swaptions.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
+    <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+    <Parameter name="currencyConfiguration">../../Input/currencies.xml</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">xois_eur</Parameter>
+    <Parameter name="pricing">xois_eur</Parameter>
+    <Parameter name="simulation">xois_eur</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv_swaptions.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+      <Parameter name="additionalResultsReportPrecision">12</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>
