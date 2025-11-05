@@ -24,6 +24,7 @@
 
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
+#include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 
 #include <ql/pricingengine.hpp>
 
@@ -39,15 +40,22 @@ CreditPortfolioSensitivityDecomposition IndexCreditDefaultSwapOptionEngineBuilde
         engineParameter("SensitivityDecomposition", {}, false, "Underlying"));
 }
 
-std::vector<std::string>
-IndexCreditDefaultSwapOptionEngineBuilder::keyImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId,
-                                                   const std::string& volCurveId,
-                                                   const std::vector<std::string>& creditCurveIds) {
+std::vector<std::string> IndexCreditDefaultSwapOptionEngineBuilder::keyImpl(
+    const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
+    const std::vector<std::string>& creditCurveIds, const QuantLib::Date& indexStartDate,
+    const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
+    const std::vector<double>& constituentNotionals) {
 
     std::vector<std::string> res{ccy.code()};
     res.insert(res.end(), creditCurveIds.begin(), creditCurveIds.end());
     res.push_back(creditCurveId);
     res.push_back(volCurveId);
+    res.push_back(to_string(indexStartDate));
+    res.push_back(to_string(indexTenor));
+    res.push_back(to_string(indexCoupon));
+    for (const auto& notional : constituentNotionals) {
+        res.push_back(to_string(notional));
+    }
     return res;
 }
 
@@ -57,7 +65,10 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Market> market,
                   const std::string& configurationInCcy, const std::string& configurationPricing,
                   const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
-                  const std::vector<std::string>& creditCurveIds, const bool generateAdditionalResults) {
+                  const std::vector<std::string>& creditCurveIds, const bool generateAdditionalResults,
+                  const bool calibrateToIndexLevel, const QuantLib::Date& indexStartDate,
+                  const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
+                  const std::vector<double>& constituentNotionals) {
 
     QuantLib::Handle<QuantLib::YieldTermStructure> ytsInCcy = market->discountCurve(ccy.code(), configurationInCcy);
     QuantLib::Handle<QuantLib::YieldTermStructure> ytsPricing = market->discountCurve(ccy.code(), configurationPricing);
@@ -69,6 +80,11 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
         return QuantLib::ext::make_shared<ENGINE>(creditCurve->curve(), recovery->value(), ytsInCcy, ytsPricing, vol,
                                                   generateAdditionalResults);
     } else if (curve == "Underlying") {
+        QuantLib::Real indexRecovery = QuantLib::Null<QuantLib::Real>();
+        try {
+            indexRecovery = market->recoveryRate(creditCurveId, configurationPricing)->value();
+        } catch (...) {
+        }
         std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> dpts;
         std::vector<QuantLib::Real> recovery;
         for (auto& c : creditCurveIds) {
@@ -76,10 +92,19 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
             dpts.push_back(tmp->curve());
             recovery.push_back(market->recoveryRate(c, configurationPricing)->value());
         }
-        QuantLib::Real indexRecovery = QuantLib::Null<QuantLib::Real>();
-        try {
-            indexRecovery = market->recoveryRate(creditCurveId, configurationPricing)->value();
-        } catch (...) {
+        if(calibrateToIndexLevel && !creditCurveId.empty()) {
+            auto indexCreditCurve = market->defaultCurve(creditCurveId, configurationPricing);
+            QuantLib::Handle<QuantLib::Quote> indexRecovery = market->recoveryRate(creditCurveId, configurationPricing);
+            auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
+                indexStartDate, indexTenor, indexCoupon, indexRecovery, indexCreditCurve->curve(), ytsInCcy);
+            auto res = curveCalibration->calibratedCurves(creditCurveIds, constituentNotionals, dpts, recovery);
+            if (res.success) {
+                dpts = res.curves;
+            } else {
+                ALOG("Calibration of constituent curves to index spread failed, proceeding with non-calibrated "
+                     "curves. Got "
+                     << res.errorMessage << "continue with non-calibrated curves.");
+            }
         }
         return QuantLib::ext::make_shared<ENGINE>(dpts, recovery, ytsInCcy, ytsPricing, vol, indexRecovery,
                                                   generateAdditionalResults);
@@ -93,7 +118,11 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId,
                                              const std::string& volCurveId,
-                                             const std::vector<std::string>& creditCurveIds) {
+                                             const std::vector<std::string>& creditCurveIds,
+                                             const QuantLib::Date& indexStartDate,
+                                             const QuantLib::Period& indexTenor,
+                                             const QuantLib::Real& indexCoupon,
+                                             const std::vector<double>& constituentNotionals) {
 
     bool generateAdditionalResults = false;
     if (auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
@@ -102,15 +131,19 @@ BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, cons
     }
 
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
+    std::string calibrateToIndexStr = engineParameter("CalibrateConstituentsToIndexLevel", {}, false, "false");
+    bool calibrateToIndex = parseBool(calibrateToIndexStr);
     return genericEngineImpl<QuantExt::BlackIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults);
+        generateAdditionalResults, calibrateToIndex, indexStartDate, indexTenor, indexCoupon, constituentNotionals);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsOptionEngineBuilder::engineImpl(
     const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
-    const std::vector<std::string>& creditCurveIds) {
+    const std::vector<std::string>& creditCurveIds, const QuantLib::Date& indexStartDate,
+    const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
+    const std::vector<double>& constituentNotionals) {
 
     bool generateAdditionalResults = false;
     if (auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
@@ -119,10 +152,12 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsO
     }
 
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
+    std::string calibrateToIndexStr = engineParameter("CalibrateConstituentsToIndexLevel", {}, false, "false");
+    bool calibrateToIndex = parseBool(calibrateToIndexStr);
     return genericEngineImpl<QuantExt::NumericalIntegrationIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults);
+        generateAdditionalResults, calibrateToIndex, indexStartDate, indexTenor, indexCoupon, constituentNotionals);
 }
 
 } // namespace data

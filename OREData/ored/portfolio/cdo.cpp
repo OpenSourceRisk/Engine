@@ -599,7 +599,8 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                 engineFactory->builder("IndexCreditDefaultSwap"));
             QL_REQUIRE(cdsEngineBuilder, "Trade " << id() << " needs a IndexCreditDefaultSwapEngineBuilder.");
             cds->setPricingEngine(cdsEngineBuilder->engine(ccy, creditCurveIdWithTerm(), creditCurves, string("Index"),
-                                                           fixedRecovery, false));
+                                                        false, Date(), 0*Days, runningRate, basketNotionals, fixedRecovery, false));
+                                                           
         } else {
             cds->setPricingEngine(cdoEngineBuilder->engine(ccy, true, creditCurveIdWithTerm(), creditCurves, dpts,
                                                            recoveryRates, calibrateConstiuentCurves, fixedRecovery));

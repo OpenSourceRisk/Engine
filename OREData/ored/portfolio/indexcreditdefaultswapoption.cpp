@@ -274,7 +274,8 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // Set engine on the underlying CDS.
     auto ccy = parseCurrency(npvCurrency_);
     std::string overrideCurve = iCdsOptionEngineBuilder->engineParameter("Curve", {}, false, "Underlying");
-
+    bool overrideCurveCalibration =
+        parseBool(iCdsOptionEngineBuilder->engineParameter("CalibrateConstituentCurves", {}, false, "false"));
     auto creditCurveId = this->creditCurveId();
     // warn if that is not possible, except for trades on custom baskets
     if (swap_.basket().constituents().empty() && splitCurveIdWithTenor(creditCurveId).second == 0 * Days) {
@@ -284,26 +285,25 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
                                           swap_.creditCurveId() + "')")
             .log();
     }
-
-    // for cash settlement build the underlying swap with the inccy discount curve
-    Settlement::Type settleType = parseSettlementType(option_.settlement());
-    cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
-                                                    swap_.recoveryRate(), settleType == Settlement::Cash));
-
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
 
     // Determine the index term;
     effectiveIndexTerm_ = 5 * Years;
+    Date indexStart = swap_.indexStartDateHint() == Date() ? schedule.dates().front() : swap_.indexStartDateHint();
     if (!indexTerm_.empty()) {
         // if the option has an explicit index term set, we use that
         effectiveIndexTerm_ = parsePeriod(indexTerm_);
     } else {
         // otherwise we derive the index term from the start date (or an externally set hint for that)
-        effectiveIndexTerm_ = QuantExt::implyIndexTerm(swap_.indexStartDateHint() == Date() ? schedule.dates().front()
-                                                                                        : swap_.indexStartDateHint(),
-                                                   schedule.dates().back());
+        effectiveIndexTerm_ = QuantExt::implyIndexTerm(indexStart, schedule.dates().back());
     }
+
+    // for cash settlement build the underlying swap with the inccy discount curve
+    Settlement::Type settleType = parseSettlementType(option_.settlement());
+    cds->setPricingEngine(iCdsEngineBuilder->engine(
+        ccy, creditCurveId, constituentIds, overrideCurve, overrideCurveCalibration, indexStart, effectiveIndexTerm_,
+        runningCoupon, constituentNtls, swap_.recoveryRate(), settleType == Settlement::Cash));
 
     // Build the option
     auto option = QuantLib::ext::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
@@ -312,7 +312,9 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
-    option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds));
+    option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds,
+                                                             indexStart, effectiveIndexTerm_, runningCoupon,
+                                                             constituentNtls));
     setSensitivityTemplate(*iCdsOptionEngineBuilder);
     addProductModelEngine(*iCdsOptionEngineBuilder);
 

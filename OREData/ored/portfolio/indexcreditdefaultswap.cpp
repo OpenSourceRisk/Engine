@@ -19,6 +19,7 @@
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
 #include <qle/instruments/indexcreditdefaultswap.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -229,9 +230,12 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
 
     maturity_ = cds->coupons().back()->date();
     maturityType_ = "Last Coupon Date";
-
-    cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
-                                             basketCreditCurves, QuantLib::ext::nullopt, swap_.recoveryRate(), false));
+    Date indexStartDate = swap_.indexStartDateHint() != Date() ? swap_.indexStartDateHint() : schedule.dates().front();
+    Real indexCoupon = fixedLegData->rates().front();
+    Period indexTerm = QuantExt::implyIndexTerm(indexStartDate, schedule.dates().back());
+    cds->setPricingEngine(cdsBuilder->engine(
+        parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(), basketCreditCurves, QuantLib::ext::nullopt,
+        QuantLib::ext::nullopt, indexStartDate, indexTerm, indexCoupon, basketNotionals, swap_.recoveryRate(), false));
     setSensitivityTemplate(*cdsBuilder);
     addProductModelEngine(*cdsBuilder);
 

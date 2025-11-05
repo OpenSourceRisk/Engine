@@ -40,7 +40,9 @@ namespace data {
 
 class IndexCreditDefaultSwapEngineBuilder
     : public CachingPricingEngineBuilder<vector<string>, const Currency&, const string&, const vector<string>&,
-                                         const QuantLib::ext::optional<string>&, Real, bool> {
+                                         const QuantLib::ext::optional<string>&, const QuantLib::ext::optional<bool>&,
+                                         const QuantLib::Date&, const QuantLib::Period&, const QuantLib::Real&,
+                                         const std::vector<double>&, Real, bool> {
 
 public:
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition();
@@ -50,8 +52,11 @@ protected:
         : CachingEngineBuilder(model, engine, {"IndexCreditDefaultSwap"}) {}
 
     vector<string> keyImpl(const Currency& ccy, const string& creditCurveId, const vector<string>& creditCurveIds,
-                           const QuantLib::ext::optional<string>& overrideCurve, Real recoveryRate = Null<Real>(),
-                           const bool inCcyDiscountCurve = false) override;
+                           const QuantLib::ext::optional<string>& overrideCurve,
+                           const QuantLib::ext::optional<bool>& calibrateConstituentCurvesOverride,
+                           const QuantLib::Date& indexStartDate, const QuantLib::Period& indexTerm,
+                           const QuantLib::Real& indexCoupon, const std::vector<double>& constituentNotionals, 
+                           Real recoveryRate = Null<Real>(), const bool inCcyDiscountCurve = false) override;
 };
 
 //! Midpoint Engine Builder class for IndexCreditDefaultSwaps
@@ -68,6 +73,11 @@ protected:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                 const vector<string>& creditCurveIds,
                                                 const QuantLib::ext::optional<string>& overrideCurve,
+                                                const QuantLib::ext::optional<bool>& calibrateConstituentCurvesOverride,
+                                                const QuantLib::Date& indexStartDate,
+                                                const QuantLib::Period& indexTerm,
+                                                const QuantLib::Real& indexCoupon,
+                                                const std::vector<double>& constituentNotionals,
                                                 Real recoveryRate = Null<Real>(),
                                                 const bool inCcyDiscountCurve = false) override;
 };
