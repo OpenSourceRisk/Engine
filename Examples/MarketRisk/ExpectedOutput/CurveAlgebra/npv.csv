@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+BasisSwap,CommoditySwap,2026-03-09,0.468493,-9253250.000000,USD,-9253250.000000,USD,105090000.00,USD,105090000.00,1234,ABC
+Option,CommodityOption,2025-10-09,0.054795,19972500.000000,USD,19972500.000000,USD,0.00,USD,0.00,1234,ABC
