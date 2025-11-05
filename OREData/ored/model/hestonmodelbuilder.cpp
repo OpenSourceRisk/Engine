@@ -34,27 +34,20 @@ namespace data {
 HestonModelBuilder::HestonModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
                                        const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                                        const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                                       const Size timeStepsPerYear, const Type lvType,
-                                       const std::vector<Real>& calibrationMoneyness,
+                                       const Size timeStepsPerYear, const std::vector<Real>& calibrationMoneyness,
                                        const std::string& referenceCalibrationGrid, const bool dontCalibrate,
                                        const Handle<YieldTermStructure>& baseCurve)
-    : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
-      lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
+      calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
       dontCalibrate_(dontCalibrate) {}
 
-std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::getCalibratedProcesses() const {
+std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::getCalibratedProcesses() const {
 
     calculate();
 
-    std::vector<Date> referenceCalibrationDates;
-    if (!referenceCalibrationGrid_.empty())
-        referenceCalibrationDates = ore::data::DateGrid(referenceCalibrationGrid_).dates();
-    Date lastRefCalDate = Date::minDate();
+    // TODO populate processes with heston processes, handle dontCalibrate_
 
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> processes;
-
-    // fill processes with heston processes, handle dontCalibrate_
-
     return processes;
 }
 
@@ -91,6 +84,10 @@ std::vector<std::vector<std::pair<Real, Real>>> HestonModelBuilder::getVolTimesS
         }
     }
     return volTimesStrikes;
+}
+
+AssetModelWrapper::ProcessType HestonModelBuilder::processType() const {
+    return AssetModelWrapper::ProcessType::Heston;
 }
 
 } // namespace data

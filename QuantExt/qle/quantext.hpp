@@ -280,8 +280,8 @@
 #include <qle/methods/projectedvariatemultipathgenerator.hpp>
 #include <qle/methods/projectedvariatepathgeneratorfactory.hpp>
 #include <qle/models/annuitymapping.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 #include <qle/models/basket.hpp>
-#include <qle/models/blackscholesmodelwrapper.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>

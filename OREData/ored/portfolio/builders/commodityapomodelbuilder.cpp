@@ -24,17 +24,16 @@
 namespace ore {
 namespace data {
 
-CommodityApoModelBuilder::CommodityApoModelBuilder(const Handle<YieldTermStructure>& curve,
-                                                   const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
-                                                   const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo,
-                                                   const bool dontCalibrate)
-    : BlackScholesModelBuilderBase(curve, QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
-                                              Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)),
-                                              Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(
-                                                  0, NullCalendar(), 0.0, Actual365Fixed())),
-                                              Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(
-                                                  0, NullCalendar(), 0.0, Actual365Fixed())),
-                                              vol)),
+CommodityApoModelBuilder::CommodityApoModelBuilder(
+    const Handle<YieldTermStructure>& curve, const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
+    const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo, const bool dontCalibrate)
+    : AssetModelBuilderBase(curve, QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+                                       Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)),
+                                       Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(
+                                           0, NullCalendar(), 0.0, Actual365Fixed())),
+                                       Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantLib::FlatForward>(
+                                           0, NullCalendar(), 0.0, Actual365Fixed())),
+                                       vol)),
       apo_(apo), dontCalibrate_(dontCalibrate) {}
 
 void CommodityApoModelBuilder::setupDatesAndTimes() const {
@@ -42,10 +41,12 @@ void CommodityApoModelBuilder::setupDatesAndTimes() const {
     return;
 }
 
-std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>
-CommodityApoModelBuilder::getCalibratedProcesses() const {
+std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> CommodityApoModelBuilder::getCalibratedProcesses() const {
     // nothing to do, return original processes
-    return processes_;
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> result(processes_.size());
+    std::transform(processes_.begin(), processes_.end(), result.begin(),
+                   [](const QuantLib::ext::shared_ptr<StochasticProcess>& p) { return p; });
+    return result;
 }
 
 std::vector<std::vector<Real>> CommodityApoModelBuilder::getCurveTimes() const {
@@ -90,6 +91,10 @@ std::vector<std::vector<std::pair<Real, Real>>> CommodityApoModelBuilder::getVol
         }
     }
     return {result};
+}
+
+AssetModelWrapper::ProcessType CommodityApoModelBuilder::processType() const {
+    return AssetModelWrapper::ProcessType::BlackScholes;
 }
 
 } // namespace data

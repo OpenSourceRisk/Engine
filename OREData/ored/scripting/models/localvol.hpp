@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/scripting/models/blackscholes.hpp
-    \brief black scholes model class for n underlyings (fx, equity or commodity)
+    \brief black scholes / local vol model class for n underlyings (fx, equity or commodity)
     \ingroup utilities
 */
 
@@ -28,8 +28,7 @@
 namespace ore {
 namespace data {
 
-/* This class is the basis for the BlackScholes and LocalVol model implementations */
-class BlackScholes final : public AssetModel {
+class LocalVol final : public AssetModel {
 public:
     using AssetModel::AssetModel;
 
@@ -42,9 +41,12 @@ private:
     void performCalculationsMc() const;
     void performCalculationsFd() const;
     void generatePaths() const;
-    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                            const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                            const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
+    void populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                              const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                              const Matrix& correlation, const Matrix& sqrtCorr,
+                              const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                              const std::vector<Real>& t, const std::vector<Real>& dt,
+                              const std::vector<Real>& sqrtdt) const;
     void setAdditionalResults() const;
 };
 

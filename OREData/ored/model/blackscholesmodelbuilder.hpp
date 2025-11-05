@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/model/blackscholesmodelbuilderbase.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
 
 namespace ore {
 namespace data {
@@ -31,7 +31,7 @@ namespace data {
 using namespace ore::data;
 using namespace QuantLib;
 
-class BlackScholesModelBuilder : public BlackScholesModelBuilderBase {
+class BlackScholesModelBuilder final : public AssetModelBuilderBase {
 public:
     BlackScholesModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
                              const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
@@ -47,6 +47,8 @@ public:
                              const Handle<YieldTermStructure>& baseCurve = {});
 
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
+
+    AssetModelWrapper::ProcessType processType() const override;
 
 protected:
     std::vector<std::vector<Real>> getCurveTimes() const override;
