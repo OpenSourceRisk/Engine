@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CurveConfiguration>
+  <FXSpots />
+  <FXVolatilities>
+  </FXVolatilities>
+  <SwaptionVolatilities>
+  </SwaptionVolatilities>
+  <CapFloorVolatilities>
+  </CapFloorVolatilities>
+  <CDSVolatilities />
+  <DefaultCurves>
+  </DefaultCurves>
+  <YieldCurves>
+    <YieldCurve>
+      <CurveId>USD-DUMMY</CurveId>
+      <CurveDescription>USD discount=1 curve</CurveDescription>
+      <Currency>USD</Currency>
+      <DiscountCurve />
+      <Segments>
+        <Direct>
+          <Type>Discount</Type>
+          <Quotes>
+            <Quote>DISCOUNT/RATE/USD/USD-DUMMY/1D</Quote>
+            <Quote>DISCOUNT/RATE/USD/USD-DUMMY/50Y</Quote>
+          </Quotes>
+          <Conventions>USD-ZERO-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+  </YieldCurves>
+  <InflationCurves />
+  <InflationCapFloorVolatilities />
+  <EquityCurves />
+  <EquityVolatilities />
+  <Securities />
+  <BaseCorrelations />
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>NaturalGas</CurveId>
+      <CurveDescription>NaturalGas</CurveDescription>
+      <Currency>USD</Currency>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/NaturalGas/*</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>BackwardFlat</InterpolationMethod>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+    <CommodityCurve>
+      <CurveId>NaturalGasBasis</CurveId>
+      <CurveDescription>NaturalGasBasis</CurveDescription>
+      <Currency>USD</Currency>
+      <BasisConfiguration>
+        <BasePriceCurve>NaturalGas</BasePriceCurve>
+        <BasePriceConventions>NaturalGas</BasePriceConventions>
+        <BasisQuotes>
+          <Quote>COMMODITY_FWD/PRICE/NaturalGasBasis/*</Quote>
+        </BasisQuotes>
+        <BasisConventions>NaturalGas</BasisConventions>
+        <DayCounter>A365</DayCounter>
+        <InterpolationMethod>BackwardFlat</InterpolationMethod>
+        <AddBasis>false</AddBasis>
+        <AverageBase>true</AverageBase>
+        <PriceAsHistoricalFixing>true</PriceAsHistoricalFixing>
+        <!-- <MonthOffset>-1</MonthOffset> -->
+      </BasisConfiguration>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+
+  </CommodityCurves>
+  <CommodityVolatilities>
+    <CommodityVolatility>
+      <CurveId>NaturalGasBasis</CurveId>
+      <CurveDescription>NaturalGasBasis</CurveDescription>
+      <Currency>USD</Currency>
+      <VolatilityConfig>
+        <StrikeSurface>
+          <QuoteType>ImpliedVolatility</QuoteType>
+          <VolatilityType>Normal</VolatilityType>
+          <ExerciseType>European</ExerciseType>
+          <Strikes>*</Strikes>
+          <Expiries>*</Expiries>
+          <TimeInterpolation>Linear</TimeInterpolation>
+          <StrikeInterpolation>Cubic</StrikeInterpolation>
+          <Extrapolation>true</Extrapolation>
+          <TimeExtrapolation>Linear</TimeExtrapolation>
+          <StrikeExtrapolation>Flat</StrikeExtrapolation>
+        </StrikeSurface>
+      </VolatilityConfig>
+      <DayCounter>A365</DayCounter>
+      <Calendar>ICE_FuturesUS</Calendar>
+      <FutureConventions>NaturalGas</FutureConventions>
+      <PriceCurveId>Commodity/USD/NaturalGasBasis</PriceCurveId>
+      <YieldCurveId>Yield/USD/USD-DUMMY</YieldCurveId>
+    </CommodityVolatility>
+  </CommodityVolatilities>
+  <Correlations />
+  <YieldVolatilities />
+</CurveConfiguration>
