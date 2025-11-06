@@ -1162,7 +1162,8 @@
         "use_cols": [
 	    "Base NPV",
 	    "ShiftSize_1",
-	    "Scenario NPV"
+	    "Scenario NPV",
+            "Difference"
         ],
         "drop_rows": {
           "cols": [
