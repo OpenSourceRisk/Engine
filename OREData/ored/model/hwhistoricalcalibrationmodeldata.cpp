@@ -22,8 +22,8 @@ namespace ore {
 namespace data {
 
 XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
+    XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
     if (meanReversionCalibration_) {
-        XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
         // Output IR parameters
         XMLNode* irModel = XMLUtils::addChild(doc, crossAssetModel, "InterestRateModels");
         for (auto const& ccyMatrix : irKappa_) {
@@ -51,7 +51,13 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
             XMLNode* sigma = XMLUtils::addChild(doc, volatility, "InitialValue");
             XMLNode* rows = XMLUtils::addChild(doc, sigma, "Sigma");
             for (Size i = 0; i < sigma_vec.size(); ++i) {
-                XMLUtils::addGenericChildAsList(doc, rows, "Row", sigma_vec[i]);
+                vector<string> formattedRow;
+                for (Real val : sigma_vec[i]) {
+                    std::ostringstream oss;
+                    oss << std::defaultfloat << val;
+                    formattedRow.push_back(oss.str());
+                }
+                XMLUtils::addGenericChildAsList(doc, rows, "Row", formattedRow);
             }
             XMLNode* reversion = XMLUtils::addChild(doc, irHwNf, "Reversion");
             XMLUtils::addChild(doc, reversion, "Calibrate", "N");
@@ -59,7 +65,13 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
             XMLUtils::addChild(doc, reversion, "ParamType", "Constant");
             XMLUtils::addChild(doc, reversion, "TimeGrid");
             XMLNode* kappa = XMLUtils::addChild(doc, reversion, "InitialValue");
-            XMLUtils::addGenericChildAsList(doc, kappa, "Kappa", kappa_vec);
+            vector<string> formattedKappa;
+            for (Real val : kappa_vec) {
+                std::ostringstream oss;
+                oss << std::defaultfloat << val;
+                formattedKappa.push_back(oss.str());
+            }
+            XMLUtils::addGenericChildAsList(doc, kappa, "Kappa", formattedKappa);
         }
         if (pcaCalibration_) {
             // Output FX and correlation parameters only when pca calibration is set to true
@@ -73,7 +85,10 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
                 XMLUtils::addChild(doc, volatility, "Calibrate", "N");
                 XMLUtils::addChild(doc, volatility, "ParamType", "Constant");
                 XMLUtils::addChild(doc, volatility, "TimeGrid");
-                XMLUtils::addChild(doc, volatility, "InitialValue", ccyMatrix.second);
+                
+                std::ostringstream oss;
+                oss << std::defaultfloat << ccyMatrix.second;
+                XMLUtils::addChild(doc, volatility, "InitialValue", oss.str());
             }
             XMLNode* corrModel = XMLUtils::addChild(doc, crossAssetModel, "InstantaneousCorrelations");
             string correlation;
@@ -83,20 +98,21 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
                 for (Size i = 0; i < ccyMatrix.second.rows(); ++i) {
                     for (Size j = 0; j < ccyMatrix.second.columns(); ++j) {
                         std::ostringstream oss;
-                        oss << ccyMatrix.second[i][j];
+                        oss << std::defaultfloat << ccyMatrix.second[i][j];
                         vector<string> attrs{ccyMatrix.first.first, ccyMatrix.first.second, std::to_string(i),
-                                                std::to_string(j)};
+                                             std::to_string(j)};
                         XMLUtils::addChild(doc, corrModel, "Correlation", oss.str(), attrNames, attrs);
                     }
                 }
             }
         }
     }
+    return crossAssetModel;
 }
 
 XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
+    XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
     if (meanReversionCalibration_) {
-        XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
         // Output IR parameters
         XMLNode* irModel = XMLUtils::addChild(doc, crossAssetModel, "InterestRateModels");
         for (auto const& ccyMatrix : irKappa_) {
@@ -113,16 +129,24 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
             XMLUtils::addChild(doc, reversion, "ParamType", "Constant");
             XMLUtils::addChild(doc, reversion, "TimeGrid");
             XMLNode* kappa = XMLUtils::addChild(doc, reversion, "InitialValue");
-            XMLUtils::addGenericChildAsList(doc, kappa, "Kappa", kappa_vec);
+            vector<string> formattedKappa;
+            for (Real val : kappa_vec) {
+                std::ostringstream oss;
+                oss << std::defaultfloat << val;
+                formattedKappa.push_back(oss.str());
+            }
+            XMLUtils::addGenericChildAsList(doc, kappa, "Kappa", formattedKappa);
 
             XMLNode* pcaV = XMLUtils::addChild(doc, irHwNf, "PCAV");
             Matrix vCcy = v_.find(ccyMatrix.first)->second;
             for (Size i = 0; i < vCcy.rows(); i++) {
-                vector<Real> vec;
+                vector<string> formattedRow;
                 for (Size j = 0; j < vCcy.columns(); j++) {
-                    vec.push_back(vCcy[i][j]);
+                    std::ostringstream oss;
+                    oss << std::defaultfloat << vCcy[i][j];
+                    formattedRow.push_back(oss.str());
                 }
-                XMLUtils::addGenericChildAsList(doc, pcaV, "Loadings", vec);
+                XMLUtils::addGenericChildAsList(doc, pcaV, "Loadings", formattedRow);
             }
 
             XMLNode* pcaSigma = XMLUtils::addChild(doc, irHwNf, "PCASigma");
@@ -130,15 +154,19 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
             XMLUtils::addChild(doc, pcaSigma, "ParamType", "Piecewise");
             XMLUtils::addChild(doc, pcaSigma, "TimeGrid");
             Real firstEigenValue = eigenValues_.find(ccyMatrix.first)->second[0];
-            XMLUtils::addChild(doc, pcaSigma, "InitialValue", firstEigenValue);
+            std::ostringstream ossFirst;
+            ossFirst << std::defaultfloat << firstEigenValue;
+            XMLUtils::addChild(doc, pcaSigma, "InitialValue", ossFirst.str());
 
             XMLNode* pcaSigmaRatios = XMLUtils::addChild(doc, irHwNf, "PCASigmaRatios");
-            vector<Real> ratios;
-            ratios.push_back(1.0);
+            vector<string> formattedRatios;
+            formattedRatios.push_back("1"); // First ratio is always 1
             for (Size i = 1; i < eigenValues_.find(ccyMatrix.first)->second.size(); i++) {
-                ratios.push_back(eigenValues_.find(ccyMatrix.first)->second[i] / firstEigenValue);
+                std::ostringstream oss;
+                oss << std::defaultfloat << (eigenValues_.find(ccyMatrix.first)->second[i] / firstEigenValue);
+                formattedRatios.push_back(oss.str());
             }
-            XMLUtils::addGenericChildAsList(doc, pcaSigmaRatios, "Ratios", ratios);
+            XMLUtils::addGenericChildAsList(doc, pcaSigmaRatios, "Ratios", formattedRatios);
         }
         if (pcaCalibration_) {
             // Output FX and correlation parameters only when pca calibration is set to true
@@ -152,7 +180,10 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
                 XMLUtils::addChild(doc, volatility, "Calibrate", "N");
                 XMLUtils::addChild(doc, volatility, "ParamType", "Constant");
                 XMLUtils::addChild(doc, volatility, "TimeGrid");
-                XMLUtils::addChild(doc, volatility, "InitialValue", ccyMatrix.second);
+
+                std::ostringstream oss;
+                oss << std::defaultfloat << ccyMatrix.second;
+                XMLUtils::addChild(doc, volatility, "InitialValue", oss.str());
             }
             XMLNode* corrModel = XMLUtils::addChild(doc, crossAssetModel, "InstantaneousCorrelations");
             string correlation;
@@ -162,7 +193,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
                 for (Size i = 0; i < ccyMatrix.second.rows(); ++i) {
                     for (Size j = 0; j < ccyMatrix.second.columns(); ++j) {
                         std::ostringstream oss;
-                        oss << ccyMatrix.second[i][j];
+                        oss << std::defaultfloat << ccyMatrix.second[i][j];
                         vector<string> attrs{ccyMatrix.first.first, ccyMatrix.first.second, std::to_string(i),
                                              std::to_string(j)};
                         XMLUtils::addChild(doc, corrModel, "Correlation", oss.str(), attrNames, attrs);
@@ -171,6 +202,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
             }
         }
     }
+    return crossAssetModel;
 }
 
 } // namespace data

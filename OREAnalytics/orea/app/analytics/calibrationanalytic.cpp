@@ -462,10 +462,10 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 // Write simulation.xml
                 std::string fileName = inputs_->resultsPath().string() + "/simulation.xml";
                 hwHistoricalModelData_->toFile(fileName);
-                std::string xml = hwHistoricalModelData_->toXMLStringUnformatted();
-                auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "HwHistoricalCalibrationModel", xml);
-                analytic()->addReport("CALIBRATION", "hwhistoricalcalibration", report);
+                //std::string xml = hwHistoricalModelData_->toXMLStringUnformatted();
+                //auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                //ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "HwHistoricalCalibrationModel", xml);
+                //analytic()->addReport("CALIBRATION", "hwhistoricalcalibration", report);
 
                 // write simulation_StatisticalWithRiskNeutralVolatility.xml
                 fileName =
