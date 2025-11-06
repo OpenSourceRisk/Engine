@@ -917,7 +917,7 @@ void InputParameters::setCurveInputFile(const std::string& s) {
     curveInputFile_ = s;
 }
 
-void InputParameters::setFixingDataFile(const std::string& s) { curveInputFile_ = s; }
+void InputParameters::setFixingDataFile(const std::string& s) { fixingDataFile_ = s; }
 
 void InputParameters::setStartDate(const Date& d) { startDate_ = d; }
 

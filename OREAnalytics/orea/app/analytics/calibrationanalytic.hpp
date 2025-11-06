@@ -64,6 +64,7 @@ public:
                                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
         : Analytic(std::make_unique<CalibrationAnalyticImpl>(inputs), calibrationAnalyticSubAnalytics, inputs, analyticsManager, false,
                    false, false, false) {}
+    bool requiresMarketData() const override;
 };
 
 } // namespace analytics

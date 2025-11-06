@@ -44,8 +44,10 @@ namespace analytics {
 
 void CalibrationAnalyticImpl::setUpConfigurations() {
     LOG("CalibrationAnalytic::setUpConfigurations() called");
-    analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+    if (inputs_->calibrationModel() == "CAM") {
+        analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
+        analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+    }
 }
 
 QuantLib::ext::shared_ptr<EngineFactory> CalibrationAnalyticImpl::engineFactory() {
@@ -412,10 +414,11 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
         analytic()->addReport("CALIBRATION", "calibration", report);
     } else if (inputs_->calibrationModel() == "HW") {
         if (inputs_->hwCalibrationMode() == "Historical") {
-            msg = "Calibration: Read market data";
+            msg = "Calibration: Read historical market data";
             LOG(msg);
             CONSOLEW(msg);
             buildHwHistoricalCalibrationModelData();
+            CONSOLE("OK");
             msg = "Calibration: Build model";
             LOG(msg);
             CONSOLEW(msg);
@@ -423,30 +426,35 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 hwHistoricalModelData_, inputs_->pcaCalibration(), inputs_->meanReversionCalibration(), false);
             if (inputs_->pcaCalibration()) {
                 // Write PCA reports
-                LOG("Write PCA Results Reports");
-                boost::filesystem::path p(inputs_->pcaOutputFileName());
-                std::string outputDir = p.stem().string();
+                LOG("Write PCA Results Reports to " << inputs_->pcaOutputFileName());
+                boost::filesystem::path outputDir = inputs_->resultsPath();
+                boost::filesystem::path baseFileName(inputs_->pcaOutputFileName());
+                std::string stem = baseFileName.stem().string();
+                std::string extension = baseFileName.extension().string();
                 for (auto const& ccyMatrix : hwHistoricalModelData_->eigenValues()) {
                     Array eigenValue = ccyMatrix.second;
                     std::string ccy = ccyMatrix.first;
                     Matrix eigenVector = hwHistoricalModelData_->eigenVectors().find(ccy)->second;
                     Size principalComponent = hwHistoricalModelData_->principalComponents().find(ccy)->second;
 
-                    CSVFileReport report(outputDir + "_" + ccy + ".csv");
+                    CSVFileReport report((outputDir / (stem + "_" + ccy + extension)).string());
                     ReportWriter().writePcaReport(ccy, eigenValue, eigenVector, principalComponent, report);
                 }
                 LOG("PCA Results Reports written");
             }
             if (inputs_->meanReversionCalibration()) {
                 // Write Mean Reversion reports
-                LOG("Write Mean Reversion Results Report");
-                boost::filesystem::path p(inputs_->meanReversionOutputFileName());
-                std::string outputDir = p.stem().string();
+                LOG("Write Mean Reversion Results Report to " << inputs_->meanReversionOutputFileName());
+                boost::filesystem::path outputDir = inputs_->resultsPath();
+                boost::filesystem::path baseFileName(inputs_->meanReversionOutputFileName());
+                std::string stem = baseFileName.stem().string();
+                std::string extension = baseFileName.extension().string();
                 for (auto const& ccyMatrix : hwHistoricalModelData_->v()) {
                     std::string ccy = ccyMatrix.first;
                     Matrix v = ccyMatrix.second;
                     Matrix kappa = hwHistoricalModelData_->kappa().find(ccy)->second;
-                    CSVFileReport report(outputDir + "_" + ccy + ".csv");
+
+                    CSVFileReport report((outputDir / (stem + "_" + ccy + extension)).string());
                     ReportWriter().writeMeanReversionReport(v, kappa, report);
                 }
                 LOG("Mean Reversion Results Report written");
@@ -476,6 +484,21 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     CONSOLE("OK");
 
     ProgressMessage("Running Calibration Analytic", 1, 1).log();
+}
+
+bool CalibrationAnalytic::requiresMarketData() const {
+    if (inputs_->calibrationModel() == "CAM")
+        return true;
+    else if (inputs_->calibrationModel() == "HW") {
+        if (inputs_->hwCalibrationMode() == "Historical")
+            return false;
+        else
+            QL_FAIL("CalibrationAnalytic::requiresMarketData(): Unknown HW calibration mode "
+                    << inputs_->hwCalibrationMode());
+    } else
+        QL_FAIL("CalibrationAnalytic::requiresMarketData(): Unknown calibration model "
+                << inputs_->calibrationModel());
+    return false;
 }
 
 } // namespace analytics

@@ -1720,11 +1720,11 @@ void OREAppInputParameters::loadParameters() {
 
                     tmp = params_->get("calibration", "curveInputFile", false);
                     QL_REQUIRE(!tmp.empty(), "Curve input files must be provided for Calibration Analytics");
-                    setCurveInputFile(tmp);
+                    setCurveInputFile((inputPath_ / tmp).generic_string());
 
                     tmp = params_->get("calibration", "fixingDataFile", false); // Switch to general fixings later
                     QL_REQUIRE(!tmp.empty(), "Fx spot historical fixings must be provided for Calibration Analytics");
-                    setFixingDataFile(tmp);
+                    setFixingDataFile((inputPath_ / tmp).generic_string());
 
                     tmp = params_->get("calibration", "startDate", false);
                     QL_REQUIRE(!tmp.empty(), "Start date must be provided for Calibration Analytics");
@@ -1748,7 +1748,7 @@ void OREAppInputParameters::loadParameters() {
                     setVarianceRetained(tmpReal);
 
                     tmp = params_->get("calibration", "pcaOutputFileName", false);
-                    setPcaOutputFileName(tmp);
+                    setPcaOutputFileName((resultsPath_ / tmp).generic_string());
                 } else {
                     setPcaCalibration(false);
                 }
@@ -1758,7 +1758,7 @@ void OREAppInputParameters::loadParameters() {
 
                     tmp = params_->get("calibration", "pcaInputFileName", false);
                     if (!tmp.empty()) {
-                        setPcaInputFiles(tmp);
+                        setPcaInputFiles((inputPath_ / tmp).generic_string());
                     }
                     tmp = params_->get("calibration", "basisFunctionNumber", false);
                     Size tmpInt = parseInteger(tmp);
@@ -1772,7 +1772,7 @@ void OREAppInputParameters::loadParameters() {
                     setHaltonMaxGuess(parseInteger(tmp));
 
                     tmp = params_->get("calibration", "meanReversionOutputFileName", false);
-                    setMeanReversionOutputFileName(tmp);
+                    setMeanReversionOutputFileName((resultsPath_ / tmp).generic_string());
                 } else {
                     setMeanReversionCalibration(false);
                 }
