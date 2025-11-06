@@ -2118,6 +2118,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setExposureProfilesUseCloseOutValues(parseBool(tmp));
 
+    tmp = params_->get("pfe", "writeIndividualExposureReports", false);
+    if (tmp != "")
+        setWriteIndividualExposureReports(parseBool(tmp));
+
     tmp = params_->get("pfe", "quantile", false);
     if (tmp != "")
         setPfeQuantile(parseReal(tmp));
@@ -2479,6 +2483,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xva", "exposureProfilesUseCloseOutValues", false);
     if (tmp != "")
         setExposureProfilesUseCloseOutValues(parseBool(tmp));
+
+    tmp = params_->get("xva", "writeIndividualExposureReports", false);
+    if (tmp != "")
+        setWriteIndividualExposureReports(parseBool(tmp));
 
     tmp = params_->get("xva", "quantile", false);
     if (tmp != "")
