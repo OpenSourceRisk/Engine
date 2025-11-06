@@ -4,7 +4,7 @@ FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \  
-  ca-certificates dos2unix python3 python3-pip python3-venv python3-dev libxml2-utils xsltproc git \
+  ca-certificates dos2unix python3 python3-pip python3-venv python3-dev libxml2-utils xsltproc curl git \
   -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
   && update-ca-certificates \
   && apt-get clean \
