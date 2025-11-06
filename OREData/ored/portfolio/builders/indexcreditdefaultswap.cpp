@@ -93,20 +93,34 @@ QuantLib::ext::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineIm
         bool calibrateConstituentCurves =
             calibrateConstituentCurvesOverride
                 ? *calibrateConstituentCurvesOverride
-                : parseBool(engineParameter("CalibrateConstituentCurves", {}, false, "false"));
+                : parseBool(engineParameter("CalibrateUnderlyingCurves", {}, false, "false"));
+        std::string runType = "";
+        auto it = globalParameters_.find("RunType");
+        if (it != globalParameters_.end()) {
+            runType = it->second;
+        }
+        calibrateConstituentCurves = calibrateConstituentCurves && runType != "PortfolioAnalyser";
         if (calibrateConstituentCurves && !creditCurveId.empty()) {
+            TLOG("IndexCreditDefaultSwap: Calibrate constituent curves to index spread");
             auto indexCreditCurve = indexCdsDefaultCurve(market_, creditCurveId, configuration(MarketContext::pricing));
             QuantLib::Handle<QuantLib::Quote> indexRecovery =
                 market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
             auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
                 indexStartDate, indexTerm, indexCoupon, indexRecovery, indexCreditCurve->curve(), discountCurve);
             auto res = curveCalibration->calibratedCurves(creditCurveIds, constituentNotionals, dpts, recovery);
+            TLOG("Calibration success: " << res.success);            
             if (res.success) {
+                TLOG("maturity,marketNPV,impliedNPV,calibrationFactor:");
+                for (Size i = 0; i < res.marketNpv.size(); ++i) {
+                    TLOG(res.cdsMaturity[i] << res.marketNpv[i] << "," << res.impliedNpv[i] << ","
+                                            << res.calibrationFactor[i]);
+                }
                 dpts = res.curves;
             } else {
-                ALOG("Calibration of constituent curves to index spread failed, proceeding with non-calibrated "
+                ALOG("IndexCreditDefaultSwap: Calibration of constituent curves to index spread failed, "
+                     "proceeding with non-calibrated "
                      "curves. Got "
-                     << res.errorMessage << "continue with non-calibrated curves.");
+                     << res.errorMessage << " continue with non-calibrated curves.");
             }
         }
         return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, discountCurve);

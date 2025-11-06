@@ -40,6 +40,17 @@ CreditPortfolioSensitivityDecomposition IndexCreditDefaultSwapOptionEngineBuilde
         engineParameter("SensitivityDecomposition", {}, false, "Underlying"));
 }
 
+bool IndexCreditDefaultSwapOptionEngineBuilder::calibrateUnderlyingCurves() const {
+    
+    std::string runType = "";
+    auto it = globalParameters_.find("RunType");
+    if (it != globalParameters_.end()) {
+        runType = it->second;
+    }
+    bool calibrateUnderlyingCurves = parseBool(engineParameter("CalibrateUnderlyingCurves", {}, false, "false"));
+    return calibrateUnderlyingCurves && runType != "PortfolioAnalyser";
+}
+
 std::vector<std::string> IndexCreditDefaultSwapOptionEngineBuilder::keyImpl(
     const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
     const std::vector<std::string>& creditCurveIds, const QuantLib::Date& indexStartDate,
@@ -92,18 +103,27 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
             dpts.push_back(tmp->curve());
             recovery.push_back(market->recoveryRate(c, configurationPricing)->value());
         }
+        
         if(calibrateToIndexLevel && !creditCurveId.empty()) {
+            TLOG("IndexCreditDefaultSwapOption: Calibrate constituent curves to index spread");
             auto indexCreditCurve = market->defaultCurve(creditCurveId, configurationPricing);
             QuantLib::Handle<QuantLib::Quote> indexRecovery = market->recoveryRate(creditCurveId, configurationPricing);
             auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
                 indexStartDate, indexTenor, indexCoupon, indexRecovery, indexCreditCurve->curve(), ytsInCcy);
             auto res = curveCalibration->calibratedCurves(creditCurveIds, constituentNotionals, dpts, recovery);
+            TLOG("Calibration success: " << res.success);            
             if (res.success) {
+                TLOG("maturity,marketNPV,impliedNPV,calibrationFactor:");
+                for (Size i = 0; i < res.marketNpv.size(); ++i) {
+                    TLOG(res.cdsMaturity[i] << res.marketNpv[i] << "," << res.impliedNpv[i] << ","
+                                            << res.calibrationFactor[i]);
+                }
                 dpts = res.curves;
             } else {
-                ALOG("Calibration of constituent curves to index spread failed, proceeding with non-calibrated "
+                ALOG("IndexCreditDefaultSwapOption: Calibration of constituent curves to index spread failed, "
+                     "proceeding with non-calibrated "
                      "curves. Got "
-                     << res.errorMessage << "continue with non-calibrated curves.");
+                     << res.errorMessage << " continue with non-calibrated curves.");
             }
         }
         return QuantLib::ext::make_shared<ENGINE>(dpts, recovery, ytsInCcy, ytsPricing, vol, indexRecovery,
@@ -129,14 +149,13 @@ BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, cons
         genAddParam != globalParameters_.end()) {
         generateAdditionalResults = parseBool(genAddParam->second);
     }
-
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
-    std::string calibrateToIndexStr = engineParameter("CalibrateConstituentsToIndexLevel", {}, false, "false");
-    bool calibrateToIndex = parseBool(calibrateToIndexStr);
+    
     return genericEngineImpl<QuantExt::BlackIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults, calibrateToIndex, indexStartDate, indexTenor, indexCoupon, constituentNotionals);
+        generateAdditionalResults, calibrateUnderlyingCurves(), indexStartDate, indexTenor, indexCoupon,
+        constituentNotionals);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsOptionEngineBuilder::engineImpl(
@@ -152,12 +171,11 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsO
     }
 
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
-    std::string calibrateToIndexStr = engineParameter("CalibrateConstituentsToIndexLevel", {}, false, "false");
-    bool calibrateToIndex = parseBool(calibrateToIndexStr);
+
     return genericEngineImpl<QuantExt::NumericalIntegrationIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults, calibrateToIndex, indexStartDate, indexTenor, indexCoupon, constituentNotionals);
+        generateAdditionalResults, calibrateUnderlyingCurves(), indexStartDate, indexTenor, indexCoupon, constituentNotionals);
 }
 
 } // namespace data

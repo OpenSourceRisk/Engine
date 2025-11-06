@@ -64,6 +64,8 @@ protected:
                                      const std::string& volCurveId, const std::vector<std::string>& creditCurveIds,
                                      const QuantLib::Date& indexStartDate, const QuantLib::Period& indexTenor,
                                      const QuantLib::Real& indexCoupon, const std::vector<double>&) override;
+
+    bool calibrateUnderlyingCurves() const;
 };
 
 //! Black CDS option engine builder for index CDS options.
