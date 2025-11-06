@@ -1153,6 +1153,36 @@
           }
         ]
       },
+      "xvacg-cva-sensi-scenario\\.csv": {
+        "keys": [
+            "TradeId",
+	    "Factor",
+	    "Up/Down"
+        ],
+        "use_cols": [
+	    "Base NPV",
+	    "ShiftSize_1",
+	    "Scenario NPV"
+        ],
+        "drop_rows": {
+          "cols": [
+            "Difference"
+          ],
+          "threshold": 0.0
+        },
+        "column_settings": [
+          {
+            "names": [
+		"Base NPV",
+		"ShiftSize_1",
+		"Scenario NPV",
+		"Difference"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": 1e-4
+          }
+        ]
+      },
       ".*scenario.*\\.csv": {
         "keys": [
           "TradeId",
@@ -1215,36 +1245,6 @@
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-6
-          }
-        ]
-      },
-      "xvacg-cva-sensi-scenario\\.csv": {
-        "keys": [
-            "TradeId",
-	    "Factor",
-	    "Upd/Down"
-        ],
-        "use_cols": [
-	    "Base NPV",
-	    "ShiftSize_1",
-	    "Scenario NPV"
-        ],
-        "drop_rows": {
-          "cols": [
-            "Difference"
-          ],
-          "threshold": 0.0
-        },
-        "column_settings": [
-          {
-            "names": [
-		"Base NPV",
-		"ShiftSize_1",
-		"Scenario NPV",
-		"Difference"
-            ],
-            "abs_tol": 0.05,
-            "rel_tol": 1e-4
           }
         ]
       },
