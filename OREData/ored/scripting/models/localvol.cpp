@@ -28,23 +28,7 @@ void LocalVol::performModelCalculations() const {
     if (type_ == Model::Type::MC)
         performCalculationsMc();
     else if (type_ == Model::Type::FD)
-        performCalculationsFd();
-}
-
-Real LocalVol::initialValue(const Size indexNo) const {
-    return model_->generalizedBlackScholesProcesses()[indexNo]->x0();
-}
-
-Real LocalVol::atmForward(const Size indexNo, const Real t) const {
-    return ore::data::atmForward(model_->generalizedBlackScholesProcesses()[indexNo]->x0(),
-                                 model_->generalizedBlackScholesProcesses()[indexNo]->riskFreeRate(),
-                                 model_->generalizedBlackScholesProcesses()[indexNo]->dividendYield(), t);
-}
-
-Real LocalVol::compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const {
-    const auto& p = model_->generalizedBlackScholesProcesses().at(indexNo);
-    return p->dividendYield()->discount(d1) / p->dividendYield()->discount(d2) /
-           (p->riskFreeRate()->discount(d1) / p->riskFreeRate()->discount(d2));
+        performCalculationsFd(true);
 }
 
 void LocalVol::performCalculationsMc() const {
@@ -54,8 +38,6 @@ void LocalVol::performCalculationsMc() const {
         return;
     generatePaths();
 }
-
-void LocalVol::performCalculationsFd() const { QL_FAIL("LocalVol::performCalculationsFdLv() not implemented."); }
 
 void LocalVol::generatePaths() const {
 
@@ -194,42 +176,6 @@ void LocalVol::populatePathValuesLv(const Size nSamples, std::map<Date, std::vec
         }
     }
 } // populatePathValuesLV()
-
-void LocalVol::setAdditionalResults() const {
-
-    Matrix correlation = getCorrelation();
-
-    for (Size i = 0; i < indices_.size(); ++i) {
-        for (Size j = 0; j < i; ++j) {
-            additionalResults_["LocalVol.Correlation_" + indices_[i].name() + "_" + indices_[j].name()] =
-                correlation(i, j);
-        }
-    }
-
-    std::vector<Real> calibrationStrikes = getCalibrationStrikes();
-
-    for (Size i = 0; i < calibrationStrikes.size(); ++i) {
-        additionalResults_["LocalVol.CalibrationStrike_" + indices_[i].name()] =
-            (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
-    }
-
-    for (Size i = 0; i < indices_.size(); ++i) {
-        Size timeStep = 0;
-        for (auto const& d : effectiveSimulationDates_) {
-            Real t = timeGrid_[positionInTimeGrid_[timeStep]];
-            Real forward = atmForward(i, t);
-            if (timeStep > 0) {
-                Real volatility = model_->generalizedBlackScholesProcesses()[i]->blackVolatility()->blackVol(
-                    t, (calibrationStrikes.empty() || calibrationStrikes[i] == Null<Real>()) ? forward
-                                                                                             : calibrationStrikes[i]);
-                additionalResults_["LocalVol.Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
-                    volatility;
-            }
-            additionalResults_["LocalVol.Forward_" + indices_[i].name() + "_" + ore::data::to_string(d)] = forward;
-            ++timeStep;
-        }
-    }
-}
 
 } // namespace data
 } // namespace ore

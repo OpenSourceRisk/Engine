@@ -23,23 +23,19 @@
 
 #pragma once
 
-#include <ored/scripting/models/assetmodel.hpp>
+#include <ored/scripting/models/blackscholeslocalvolbase.hpp>
 
 namespace ore {
 namespace data {
 
-class LocalVol final : public AssetModel {
+class LocalVol final : public BlackScholesLocalVolBase {
 public:
-    using AssetModel::AssetModel;
+    using BlackScholesLocalVolBase::BlackScholesLocalVolBase;
 
 private:
     void performModelCalculations() const override;
-    Real initialValue(const Size indexNo) const override;
-    Real atmForward(const Size indexNo, const Real t) const override;
-    Real compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const override;
 
     void performCalculationsMc() const;
-    void performCalculationsFd() const;
     void generatePaths() const;
     void populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                               const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
@@ -47,7 +43,6 @@ private:
                               const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
                               const std::vector<Real>& t, const std::vector<Real>& dt,
                               const std::vector<Real>& sqrtdt) const;
-    void setAdditionalResults() const;
 };
 
 } // namespace data

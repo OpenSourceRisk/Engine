@@ -23,29 +23,25 @@
 
 #pragma once
 
-#include <ored/scripting/models/blackscholeslocalvolbase.hpp>
+#include <ored/scripting/models/assetmodel.hpp>
 
 namespace ore {
 namespace data {
 
-class BlackScholes final : public BlackScholesLocalVolBase {
+/* This class is the basis for the BlackScholes and LocalVol model implementations */
+class BlackScholesLocalVolBase : public AssetModel {
 public:
-    using BlackScholesLocalVolBase::BlackScholesLocalVolBase;
+    using AssetModel::AssetModel;
 
-private:
-    void performModelCalculations() const override;
+protected:
+    // shared impl for BlackScholes and LocalVol
 
-    RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                        const RandomVariable& barrier, const bool above) const override;
+    Real initialValue(const Size indexNo) const override;
+    Real atmForward(const Size indexNo, const Real t) const override;
+    Real compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const override;
 
-    void performCalculationsMc() const;
-    void generatePaths() const;
-    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                            const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                            const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
-
-    // only used for MC
-    mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
+    void performCalculationsFd(const bool localVol) const;
+    void setAdditionalResults() const;
 };
 
 } // namespace data

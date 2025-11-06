@@ -1354,7 +1354,7 @@ void ScriptedTradeEngineBuilder::buildFdLocalVol(
     model_ = QuantLib::ext::make_shared<LocalVol>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "LocalVol", filteredStrikes, params_);
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 

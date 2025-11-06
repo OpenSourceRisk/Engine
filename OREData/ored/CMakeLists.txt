@@ -353,6 +353,7 @@ scripting/grammar.cpp
 scripting/models/assetmodel.cpp
 scripting/models/blackscholes.cpp
 scripting/models/blackscholescg.cpp
+scripting/models/blackscholeslocalvolbase.cpp
 scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
@@ -778,6 +779,7 @@ scripting/models/amcmodel.hpp
 scripting/models/assetmodel.hpp
 scripting/models/blackscholes.hpp
 scripting/models/blackscholescg.hpp
+scripting/models/blackscholeslocalvolbase.hpp
 scripting/models/dummymodel.hpp
 scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
