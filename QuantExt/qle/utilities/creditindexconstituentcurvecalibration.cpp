@@ -32,7 +32,7 @@ CreditIndexConstituentCurveCalibration::CalibrationResults CreditIndexConstituen
 
         auto maturity = cdsMaturity(indexStartDate_, indexTenor_, DateGeneration::Rule::CDS2015);
         if (maturity > Settings::instance().evaluationDate()) {
-            Schedule cdsSchedule(indexStartDate_, maturity, 3 * Months, WeekendsOnly(), Unadjusted, Unadjusted,
+            Schedule cdsSchedule(indexStartDate_, maturity, 3 * Months, WeekendsOnly(), Following, Unadjusted,
                                  DateGeneration::Rule::CDS2015, false);
             indexCDS = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
                 Protection::Buyer, totalNotional, remainingNotionals, 0.0, indexSpread_, cdsSchedule, Following,
