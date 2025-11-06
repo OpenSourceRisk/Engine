@@ -41,7 +41,7 @@ protected:
     Real compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const override;
 
     void performCalculationsFd(const bool localVol) const;
-    void setAdditionalResults() const;
+    void setAdditionalResults(const bool localVol) const;
 };
 
 } // namespace data

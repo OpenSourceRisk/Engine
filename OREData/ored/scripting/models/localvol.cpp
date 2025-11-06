@@ -107,7 +107,7 @@ void LocalVol::generatePaths() const {
                              correlation, sqrtCorr, deterministicDrift, eqComIdx, t, dt, sqrtdt);
     }
 
-    setAdditionalResults();
+    setAdditionalResults(true);
 } // generatePathsLv()
 
 void LocalVol::populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,

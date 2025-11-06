@@ -156,7 +156,7 @@ void BlackScholes::generatePaths() const {
                            drift, sqrtCov);
     }
 
-    setAdditionalResults();
+    setAdditionalResults(false);
 } // generatePathsBs()
 
 void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,

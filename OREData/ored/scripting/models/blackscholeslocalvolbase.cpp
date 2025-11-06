@@ -113,16 +113,18 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
 
     // 6 set additional results
 
-    setAdditionalResults();
+    setAdditionalResults(localVol);
 }
 
-void BlackScholesLocalVolBase::setAdditionalResults() const {
+void BlackScholesLocalVolBase::setAdditionalResults(const bool localVol) const {
+
+    std::string label = localVol ? "LocalVol" : "BlackScholes";
 
     Matrix correlation = getCorrelation();
 
     for (Size i = 0; i < indices_.size(); ++i) {
         for (Size j = 0; j < i; ++j) {
-            additionalResults_["BlackScholes.Correlation_" + indices_[i].name() + "_" + indices_[j].name()] =
+            additionalResults_[label + ".Correlation_" + indices_[i].name() + "_" + indices_[j].name()] =
                 correlation(i, j);
         }
     }
@@ -130,7 +132,7 @@ void BlackScholesLocalVolBase::setAdditionalResults() const {
     std::vector<Real> calibrationStrikes = getCalibrationStrikes();
 
     for (Size i = 0; i < calibrationStrikes.size(); ++i) {
-        additionalResults_["BlackScholesLocalVolBase.CalibrationStrike_" + indices_[i].name()] =
+        additionalResults_[label + ".CalibrationStrike_" + indices_[i].name()] =
             (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
     }
 
@@ -143,11 +145,10 @@ void BlackScholesLocalVolBase::setAdditionalResults() const {
                 Real volatility = model_->generalizedBlackScholesProcesses()[i]->blackVolatility()->blackVol(
                     t, (calibrationStrikes.empty() || calibrationStrikes[i] == Null<Real>()) ? forward
                                                                                              : calibrationStrikes[i]);
-                additionalResults_["BlackScholesLocalVolBase.Volatility_" + indices_[i].name() + "_" +
-                                   ore::data::to_string(d)] = volatility;
+                additionalResults_[label + ".Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
+                    volatility;
             }
-            additionalResults_["BlackScholesLocalVolBase.Forward_" + indices_[i].name() + "_" +
-                               ore::data::to_string(d)] = forward;
+            additionalResults_[label + ".Forward_" + indices_[i].name() + "_" + ore::data::to_string(d)] = forward;
             ++timeStep;
         }
     }
