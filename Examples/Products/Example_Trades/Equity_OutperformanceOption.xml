@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="OutperformanceOption1#KnockIn">
+        <TradeType>EquityOutperformanceOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <EquityOutperformanceOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <Settlement>Cash</Settlement>
+                <ExerciseDates>
+                    <ExerciseDate>2025-03-03</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <Currency>USD</Currency>
+            <Notional>500000</Notional>
+            <Underlying1>
+                <Type>Equity</Type>
+                <Name>RIC:.SPX</Name>
+            </Underlying1>
+            <Underlying2>
+                <Type>Equity</Type>
+                <Name>RIC:.NDX</Name>
+            </Underlying2>
+            <InitialPrice1>11500</InitialPrice1>
+            <InitialPrice2>14000</InitialPrice2>
+            <StrikeReturn>0.01</StrikeReturn>
+            <KnockInPrice>12000</KnockInPrice>
+        </EquityOutperformanceOptionData>
+    </Trade>
+</Portfolio>

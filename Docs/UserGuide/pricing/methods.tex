@@ -1,0 +1,319 @@
+
+The following table provides an overview over the pricing approaches taken per product type.
+The subsequent sections elaborate on these approaches for groups of products by asset class.
+
+\medskip
+
+{\footnotesize
+%\begin{center}
+%\begin{table}[hbt]
+\begin{supertabular}{|p{1cm}|p{5cm}|p{5cm}|p{2cm}|}
+\hline
+Asset Class & Product Type & Pricing Model & Calibration \\
+\hline
+\hline
+IR & 
+Interest Rate Swap & 
+Discounted Cashflows	&
+\\
+\hline
+IR	&
+Forward Rate Agreement	&
+Discounted Cashflows &
+\\
+% \hline
+% IR & 
+% Single Currency Basis Swap & 
+% Discounted Cashflows	&
+% \\
+\hline
+IR/FX & 
+Cross Currency Swap & 
+Discounted Cashflows &	 
+\\
+\hline
+IR & 
+OIS Swap & 
+Discounted Cashflows & 
+\\
+\hline
+IR & 
+Zero Coupon Swap & 
+Discounted Cashflows & 
+\\
+\hline
+IR & 
+BMA Swap & 
+Discounted Cashflows & 
+\\
+\hline
+IR & 
+CMS Swap, Cap/Floor & 
+Linear Terminal Swap Rate Model (LTSR) & 
+\\
+\hline
+IR & 
+Cap, Floor Collar on IBOR & 
+Black Model for log-normal and shifted log-normal volatilities;
+Bachelier Model for normal volatilities	& 
+Smile used \\
+\hline
+% IR & 
+% Digital Cap, Floor on IBOR & 
+% Call/Put spreads used; 
+% Black Model for log-normal and shifted log-normal volatilities;
+% Bachelier Model for normal volatilities	& 
+% Smile used \\
+% \hline
+IR	&
+European Vanilla Swaption	&
+Black Model for log-normal and shifted log-normal volatilities;
+Bachelier Model for normal volatilities	&
+Smile used \\
+\hline
+IR	&
+Bermudan Vanilla Swaption	& 
+Linear Gauss Markov (LGM)	&
+Smile used \\
+\hline
+IR & 
+Cap, Floor Collar on CMS &	
+Linear Terminal Swap Rate Model (LTSR) & 
+Smile used \\
+\hline
+IR	&
+European CMS Spread Option &
+Log-Normal Swap Rate Model  &
+Smile used \\
+\hline
+IR	&
+Flexi Swap	&
+Jamshidian Replication, Linear Gauss Markov &
+Smile used \\
+\hline
+IR	&
+Balance Guaranteed Swap	&
+as Flexi Swap &
+Smile used \\
+\hline
+IR	&
+Bond Option &
+Black Model &
+Smile used \\
+\hline
+IR	&
+Swap with Formula-based Coupon	&
+Log-Normal Swap and Ibor Rate Model &
+Smile used \\
+\hline
+\hline
+FX	&
+FX Forward	&
+Discounted Cashflows	&
+\\
+\hline
+FX	&
+FX Swap	&
+Discounted Cashflows&
+\\
+\hline
+FX	& 
+European FX Option	&
+Garman-Kohlhagen Model	&
+Smile used\\
+\hline
+FX	&
+American FX Option	&
+Finite Difference Methods with the Black-Scholes framework &
+Smile used\\
+\hline
+FX	&
+FX Barrier Option	&
+Garman-Kohlhagen Model with analytic formulas &
+Smile used\\
+\hline
+FX	&
+Digital FX Option	&
+Garman-Kohlhagen Model with analytic formulas &
+Smile used \\
+\hline
+FX	&
+Digital FX Barrier Option	&
+Finite Difference Methods with the Black-Scholes framework	&
+Smile used \\
+\hline
+FX & 
+FX Touch Option	&
+Garman-Kohlhagen Model with analytic American engine&
+Smile used\\
+\hline
+FX	&
+FX Double Touch Option	&
+Garman-Kohlhagen Model with analytic formulas &
+Smile used \\
+\hline 
+FX	&
+FX Double Barrier Option	&
+Garman-Kohlhagen Model with analytic formulas &
+Smile used \\
+\hline 
+FX	&
+FX Variance and Volatility Swap	&
+Replicating portfolio method &
+Smile used \\
+\hline
+\hline
+INF	&
+CPI Swap &
+Discounted Cashflows	&
+\\
+% \hline
+% INF	&
+% CPI Cap, Floor 	&
+% Black Model for log-normal and shifted log-normal volatilities;
+% Bachelier Model for normal volatilities &
+% Smile used \\
+\hline
+INF	&
+YoY Inflation Swap	&
+Discounted Cashflows &
+\\
+% \hline
+% INF	&
+% YoY Inflation Cap, Floor	&
+% Black Model for log-normal and shifted log-normal volatilities;
+% Bachelier Model for normal volatilities &
+% Smile used\\
+\hline
+\hline
+EQ	&
+Equity Forward	&
+Discounted Cashflows	&
+\\
+\hline
+EQ	&
+Equity Barrier Option	&
+Black Model &
+Smile used\\
+\hline
+EQ	&
+Equity Double Barrier Option	&
+Black Model &
+Smile used\\
+\hline
+EQ	&
+Equity Swap	&
+Discounted Cashflows	&
+\\
+\hline
+EQ	& 
+European Equity Option	&
+Black Model	&
+Smile used
+\\
+\hline
+EQ	& 
+Quanto European Equity Option	&
+Black Model	&
+Smile used
+\\
+\hline
+EQ	&
+Equity Variance Swap	&
+Replicating portfolio method &
+Smile used \\
+\hline
+\hline
+FX/EQ	&
+Double Digital Option	&
+Black Model	&
+ATM \\
+\hline
+FX/EQ	&
+Autocallable Type 01	&
+Black Model	&
+ATM \\
+\hline
+FX/EQ	&
+Performance Option Type 01	&
+Black Model	&
+ATM \\
+\hline
+FX/EQ	&
+Window Barrier Option &
+Black Model	&
+ATM \\
+\hline
+FX/EQ	&
+Target Redemption Forward (TaRF)	&
+Black Model	&
+ATM \\
+\hline
+\hline
+CR	&
+Credit Default Swap	&
+Default Curves, Discounted Cashflows	&
+\\
+\hline
+CR	&
+CDS Option	&
+Black Model	&
+\\
+\hline
+CR	&
+Synthetic CDO &
+Gauss Copula and Hull-White Bucketing	&
+\\
+\hline
+CR	&
+Risk Participation Agreement &
+European Swaption Representation or LGM Grid &
+\\
+\hline
+CR	&
+Credit Linked Swap &
+Discounted Cashflows &
+\\
+\hline
+\hline
+COM	&
+Commodity Forward	&
+Discounted Cashflows	&
+\\
+\hline
+COM	&
+European Commodity Option	&
+Black Model	&
+Smile used \\
+\hline
+COM	&
+Commodity Swap	&
+Discounted Cashflows	&
+\\
+\hline
+COM	&
+Commodity Basis Swap	&
+Discounted Cashflows	&
+\\
+\hline
+COM	&
+Commodity Swaption	&
+Black Model 	&
+\\
+\hline
+COM	&
+Commodity Average Price Option&
+Black Model 	&
+\\
+\hline
+\hline
+HYB	&
+Composite Trade	&
+Deferred to component trades &
+\\
+\hline
+\end{supertabular}
+%\caption{Overview of models and calibration used by product type}
+%\end{table}
+%\end{center}
+}

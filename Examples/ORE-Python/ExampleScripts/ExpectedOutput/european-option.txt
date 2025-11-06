@@ -1,0 +1,16 @@
+RUN european-option.py
+                           Method  Option value  Error estimate  Actual error
+0                        Analytic      0.030334             NaN           NaN
+1                 Heston analytic      0.030334             NaN  1.963646e-09
+2                      Heston COS      0.030334             NaN  2.195312e-09
+3                        Integral      0.030334             NaN  7.588359e-08
+4                    Finite diff.      0.030334             NaN  5.009078e-08
+5                   Binomial (JR)      0.030287             NaN  4.716327e-05
+6                  Binomial (CRR)      0.030342             NaN  7.191643e-06
+7                  Binomial (EQP)      0.030392             NaN  5.790680e-05
+8           Binomial (Trigeorgis)      0.030342             NaN  7.383271e-06
+9                 Binomial (Tian)      0.030303             NaN  3.140168e-05
+10                  Binomial (LR)      0.030334             NaN  1.085642e-08
+11              Binomial (Joshi4)      0.030334             NaN  2.399435e-13
+12    Monte Carlo (pseudo-random)      0.033163        0.004099  2.828806e-03
+13  Monte Carlo (low-discrepancy)      0.030293             NaN  4.137692e-05

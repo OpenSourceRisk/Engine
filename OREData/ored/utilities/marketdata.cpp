@@ -17,12 +17,18 @@
 */
 
 #include <ored/configuration/conventions.hpp>
+
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/marketdata.hpp>
+
+#include <ored/portfolio/bondutils.hpp>
+
+#include <qle/indexes/fxindex.hpp>
 
 #include <ql/time/imm.hpp>
 
@@ -78,8 +84,31 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
                                                               << "' or default configuration.");
 }
 
+
+std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate){
+    std::ostringstream oss;
+    oss << "__CDO_" << creditCurveId << "_&_REC_" << std::fixed << std::setprecision(2) << assumedRecoveryRate << "_&_";
+    return oss.str();
+}
+
+QuantLib::Handle<QuantExt::CreditCurve> indexTrancheSpecificCreditCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                                                        const std::string& creditCurveId,
+                                                                        const std::string& configuration,
+                                                                        const double assumedRecoveryRate) {
+    Handle<QuantExt::CreditCurve> curve;
+    std::string name = indexTrancheSpecificCreditCurveName(creditCurveId, assumedRecoveryRate);
+    try {
+        curve = market->defaultCurve(name, configuration);
+    } catch (const std::exception&) {
+        DLOG("Could not find index tranche specific credit curve " << name << " so just using "
+                               << creditCurveId << " default curve.");
+        curve = market->defaultCurve(creditCurveId, configuration);
+    }
+    return curve;
+}
+
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
-    auto tmp = "__SECCRCRV_" + securityId + "_&_" + creditCurveId + "_&_";
+    auto tmp = "__SECCRCRV_" + StructuredSecurityId(securityId).securityId() + "_&_" + creditCurveId + "_&_";
     return tmp;
 }
 
@@ -128,6 +157,18 @@ std::string prettyPrintInternalCurveName(std::string name) {
                                  name.substr(pos2 + 11, pos3 - (pos2 + 11)) + "(" +
                                      name.substr(pos3 + 3, pos4 - (pos3 + 3)) + ")");
                     pos = pos + (pos4 - pos2 - 12);
+                    found = true;
+                }
+            }
+        }
+        else if(pos2 = name.find("__CDO_", pos); pos != std::string::npos) {
+            std::size_t pos3 = name.find("_&_REC_", pos2);
+            if (pos3 != std::string::npos) {
+                std::size_t pos4 = name.find("_&_", pos3 + 7);
+                if (pos4 != std::string::npos) {
+                    name.replace(pos2, pos4 + 3 - pos2,
+                                 name.substr(pos2 + 6, pos3 - (pos2 + 6)));
+                    pos = pos + pos3 - pos2 - 6;
                     found = true;
                 }
             }
@@ -255,10 +296,24 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const QuantLib::ext
     return market->defaultCurve(p.first, config);
 }
 
+Handle<QuantExt::BaseCorrelationTermStructure>
+indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market,
+                                 const std::string& baseCorrelationCurveId, const std::string& configuration) {
+    Handle<QuantExt::BaseCorrelationTermStructure> curve;
+    try {
+        curve = market->baseCorrelation(baseCorrelationCurveId, configuration);
+    } catch (const std::exception&) {
+        DLOG("Could not find base correlation curve " << baseCorrelationCurveId
+                                                      << ", fall back on curve id without tenor.");
+    }
+    auto p = splitCurveIdWithTenor(baseCorrelationCurveId);
+    return market->baseCorrelation(p.first, configuration);
+}
+
 // will have to split the date into month and year in caller.  are there any utilities to do this?
 // Is the FutureConvention rule available from caller?
 std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear, QuantLib::Period tenor,
-                                              FutureConvention::DateGenerationRule rule) { 
+                                              FutureConvention::DateGenerationRule rule, const Calendar& calendar) {
     // Create a Overnight index future helper
     Date startDate, endDate;
     if (rule == FutureConvention::DateGenerationRule::IMM) {
@@ -267,8 +322,8 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
         startDate = IMM::nextDate(refStart, false);
         endDate = IMM::nextDate(refEnd, false);
     } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-        endDate = Date(1, expiryMonth, expiryYear) + 1 * Months;
-        startDate = endDate - tenor;
+        endDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months, Following);
+        startDate = calendar.adjust(endDate - tenor, Following);
     }
     return std::make_pair(startDate, endDate);
 }
@@ -277,6 +332,37 @@ Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiry
     Date refDate(1, expiryMonth, expiryYear);
     Date immDate = IMM::nextDate(refDate, false);
     return immDate;
+}
+
+std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows) {
+    if (fxIndex == nullptr) {
+        WLOG("fxIndexNameForDailyLowsOrHighs: fxIndex is null, can not derive index name for lows");
+        return std::string();
+    }
+    std::string oreName;
+    std::string indexFamilyName = fxIndex->familyName();
+    try {
+        oreName = IndexNameTranslator::instance().oreName(fxIndex->name());
+    } catch (const std::exception& e) {
+        WLOG("fxIndexNameForDailyLowsOrHighs: could not get ore name for fx index " << fxIndex->name());
+        return std::string();
+    }
+    // Dont support generic indices
+    if (!isFxIndex(oreName)) {
+        return std::string();
+    }
+
+    DLOG("Got oreName " << oreName);
+    std::string lowHigh = lows ? "_LOW" : "_HIGH";
+    return oreName.replace(oreName.find(indexFamilyName), indexFamilyName.size(), indexFamilyName + lowHigh);
+}
+
+std::string fxIndexNameForDailyLows(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
+    return fxIndexNameForDailyLowsOrHighs(fxIndex, true);
+}
+
+std::string fxIndexNameForDailyHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex) {
+    return fxIndexNameForDailyLowsOrHighs(fxIndex, false);
 }
 
 } // namespace data

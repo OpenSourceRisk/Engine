@@ -62,16 +62,18 @@ public:
         const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
         const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
         const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
-        const std::string& amcPathDataInput, const std::string& amcPathDataOutput,
-        bool amcIndividualTrainingInput, bool amcIndividualTrainingOutput,
+        const std::string& amcPathDataInput, const std::string& amcPathDataOutput, bool amcIndividualTrainingInput,
+        bool amcIndividualTrainingOutput,
         const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         const bool handlePseudoCurrenciesTodaysMarket = true,
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cubeFactory = {},
         const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams = nullptr);
+        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams = nullptr,
+        const bool continueOnCalibrationError = false, const bool allowModelFallbacks = false);
 
     //! build cube in single threaded run
     void buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -125,13 +127,16 @@ private:
     std::string configurationCrCalibration_;
     std::string configurationFinalModel_;
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-    ore::data::IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     bool handlePseudoCurrenciesTodaysMarket_;
     std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cubeFactory_;
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
+    bool continueOnCalibrationError_ = false;
+    bool allowModelFallbacks_ = false;
+
     // result cubes for multi-threaded run
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
 };

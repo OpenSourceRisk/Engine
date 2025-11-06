@@ -32,18 +32,54 @@ namespace QuantExt {
    the values and derivatives and apply the deleter to improve memory consumption */
 
 template <class T>
-void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
-                        const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
-                        std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
-                        const std::size_t conditionalExpectationOpId = 0,
-                        const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
+void forwardDerivatives(
+    const ComputationGraph& g, std::vector<T>& values, std::vector<T>& derivatives,
+    const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*, const QuantLib::Size)>>&
+        grad,
+    std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+    const std::vector<std::function<T(const std::vector<const T*>&, const QuantLib::Size)>>& fwdOps = {},
+    const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
+        fwdOpRequiresNodesForDerivatives = {},
+    const std::vector<bool>& fwdOpKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
+    const std::function<T(const std::vector<const T*>&, const QuantLib::Size)>& conditionalExpectation = {},
+    std::function<void(T&)> fwdOpPreDeleter = {}, const std::vector<bool>& fwdOpAllowsPredeletion = {}) {
 
     if (g.size() == 0)
         return;
 
+    std::size_t redBlockId = 0;
+
     // loop over the nodes in the graph in forward order
 
     for (std::size_t node = 0; node < g.size(); ++node) {
+
+        if (g.redBlockId(node) != redBlockId) {
+
+            // delete the values in the previous red block
+
+            auto range = g.redBlockRanges()[redBlockId - 1];
+            QL_REQUIRE(range.second != ComputationGraph::nan,
+                       "forwardDerivatives(): red block " << redBlockId << " was not closed.");
+            for (std::size_t n = range.first; n < range.second; ++n) {
+                if (g.redBlockId(n) == redBlockId && !fwdOpKeepNodes[n])
+                    deleter(values[n]);
+            }
+
+            // populate the values in the current red block
+
+            if (g.redBlockId(node) > 0) {
+                auto range = g.redBlockRanges()[g.redBlockId(node) - 1];
+                QL_REQUIRE(range.second != ComputationGraph::nan,
+                           "forwardDerivatives(): red block " << g.redBlockId(node) << " was not closed.");
+                forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives, fwdOpKeepNodes,
+                                  range.first, range.second, true, fwdOpPreDeleter, fwdOpAllowsPredeletion);
+            }
+
+            // update the red block id
+
+            redBlockId = g.redBlockId(node);
+        }
+
         if (!g.predecessors(node).empty()) {
 
             // propagate the derivatives from predecessors of a node to the node
@@ -56,11 +92,11 @@ void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values,
             if (g.opId(node) == conditionalExpectationOpId && conditionalExpectation) {
 
                 args[0] = &derivatives[g.predecessors(node)[0]];
-                derivatives[node] = conditionalExpectation(args);
+                derivatives[node] = conditionalExpectation(args, node);
 
             } else {
 
-                auto gr = grad[g.opId(node)](args, &values[node]);
+                auto gr = grad[g.opId(node)](args, &values[node], node);
 
                 for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
                     derivatives[node] += derivatives[g.predecessors(node)[p]] * gr[p];

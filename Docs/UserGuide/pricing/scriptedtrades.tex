@@ -1,0 +1,191 @@
+\subsubsection{Window Barrier Options}
+\label{pricing::windowbarrieroption}
+
+Window Barrier Options are priced using a Black-Scholes process for the
+underlying calibrated to its quoted market ATM volatility.
+The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleAssetOption.
+
+\subsubsection{CMS / Libor Asian Cap Floor}
+\label{pricing::ir_asian_capfloor}
+
+Asian Cap / Floors on Libor / CMS underlyings are priced in a Hull White 1F model calibrated to ATM coterminal
+swaptions. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+\subsubsection{CMS Volatility Swap}
+\label{pricing::ir_cms_volatilityswap}
+
+Volatility Swap on CMS underlyings are priced in a Hull White 1F model calibrated to ATM coterminal
+swaptions. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+\subsubsection{Forward Volatility Agreement}
+\label{pricing::forward_volatility_agreement}
+
+A Forward Volatility Agreement is priced using a Black-Scholes process for the underlying calibrated to its quoted
+market ATM volatility. The premium of the underlying delta-neutral straddle option is calculated using the Black-76
+model, assuming a strike price equal to the forward rate. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleAssetOption.
+
+\subsubsection{Correlation Swap}
+\label{pricing::correlation_swap}
+
+A Correlation Swap is priced using a Black-Scholes process for the underlyings calibrated to their quoted market
+ATM volatilities. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is MultiAssetOption.
+
+\subsubsection{Asset Linked Cliquet Option}
+\label{pricing::asset_linked_cliquet_option}
+
+An Asset Linked Cliquet Option is priced using a Hull White 1F model for the linked CMS
+underlying (calibrated to ATM coterminal swaptions) and a Black-Scholes process for all
+other underlyings.
+
+\subsubsection{CMS Cap / Floor with Barrier}
+\label{pricing::cms_capfloor_barrier}
+
+A CMS Cap Floor with a barrier in an underlying index is priced using a Hull White 1F model for the CMS underlying/s
+(calibrated to ATM coterminal swaptions) and a Black-Scholes process for the barrier underlying (calibrated to
+their quoted market ATM volatilities). The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is IrHybrid.
+
+\subsubsection{Fixed Strike Forward Starting Option}
+\label{pricing::fixed_strike_forward_starting_option}
+
+A Forward Starting Option with a fixed strike is priced using a Black-Scholes process for the underlying
+calibrated to its quoted market ATM volatility. The premium of the forward starting option is calculated
+using the Black-76 model. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleAssetOption.
+
+\subsubsection{Floating Strike Forward Starting Option}
+\label{pricing::floating_strike_forward_starting_option}
+
+A Forward Starting Option with a floating strike is priced using a Black-Scholes process for the underlying
+calibrated to its quoted market ATM volatility. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleAssetOption.
+
+\subsubsection{Forward Starting Swaption}
+\label{pricing::forward_starting_swaption}
+
+A Forward Starting Swaption is priced in a Hull White 1F model calibrated to ATM coterminal
+swaptions. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+\subsubsection{Ladder Lock-In Option}
+\label{pricing::ladder_lockin_option}
+
+Ladder lock-in options are priced using a Black-Scholes process for the underlying calibrated to its quoted market
+ATM volatility. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleAssetOption.
+
+\subsubsection{Floored Average CPI Zero Coupon Inflation Index Swap}
+\label{pricing::floored_average_cpi_zciis}
+
+A Floored Average CPI Zero Coupon Inflation Index Swap is priced in a Dodgson-Kainth (DK) model calibrated to coterminal 
+swaptions and zero coupon inflation caps and floors. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+\subsubsection{Moving Maximum Year-on-Year Inflation Index Swap}
+\label{pricing::movingMaximumYYIIS}
+
+A Moving Maximum Year-on-Year Inflation Index Swap is priced in a Dodgson-Kainth (DK) model calibrated to coterminal
+swaptions and zero coupon inflation caps and floors. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+\subsubsection{Irregular Year-on-Year Inflation Index Swap}
+\label{pricing::irregularYYIIS}
+
+A Irregular Year-on-Year Inflation Index Swapp is priced in a Dodgson-Kainth (DK) model calibrated to coterminal
+swaptions and zero coupon inflation caps and floors. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+
+\subsubsection{LPI Swap}
+\label{pricing::lpiswap}
+
+A LPI Swap is priced in a Dodgson-Kainth (DK) model calibrated to coterminal
+swaptions and zero coupon inflation caps and floors. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+
+\subsubsection{Lapse Risk Hedge Swap}
+\label{pricing::lapse_risk_hedge_swap}
+
+A Lapse Risk Hedge Swap is priced in a Hull White 1F model calibrated to ATM coterminal. 
+
+The percentage of redeemed units $\Delta N$ in the computation of the lapse risk hedge amount is assumed to be deterministic and 
+the historical fixings and all forward projections are provided by the client in the trade xml. If the client does not provide any or all forward projections, we assume all missing future projections to be constant and equalt to the last known rate.
+
+There are no price sensitivties in respect to $\Delta N$ computed and since there is volatility in the process of redeemed units the price for both embedded options are underestimated.
+
+The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is SingleUnderlyingIrOption.
+
+\subsubsection{Pricing Model Details for Scripted Trades}\label{pricing::scriptedtrade_mc}
+
+Depending on the product classification of a scripted trade we apply pricing models and parameters as listed in table
+\ref{pricing::scriptedtrade_parameters}. The meaning of these parameters are as follows:
+
+\begin{itemize}
+\item Model / Engine: The model and its numerical solution. The following pairs are available:
+  \begin{itemize}
+  \item BlackScholes / MC: A single or multivariate Black Scholes process. For multivariate processes the Brownian
+    motions are coupled by a time-constant instantaneous correlation. The process is evolved using exact moments,
+    therefore in the single variate (or zero correlation) case large time steps between the relevant simulation times
+    for a trade can be taken. For a multivariate process with non-zero correlations the given number of time steps per
+    year is used to determine time intervals on which an average of the integrated volatility is used to compute the
+    covariance with other process components. The process is evolved using Sobol low discrepancy sequences with Brownian
+    Bridge interpolation. The volatility terms structure at the ATMF strike is used to evolve each process component.
+  \item GaussianCam / MC: IR components are represented by LGM1F models, FX, EQ, COMM components by Black Scholes
+    processes with stochastic drift term and the Inf component by Dodgson-Kainth (DK) model. IR components are calibrated 
+    to ATM coterminal swaptions, the Inf component to coterminal inflation caps/floors, FX, EQ and COMM
+    components to ATMF options. The calibration expiries are chosen as the relevant simulation times for each trade. If
+    more than one component is present they are coupled by a time-constant instantaneous correlation. The process is
+    evolved using exact moments, therefore large time steps between the relevant simulation times can be taken.
+  \end{itemize}
+  \item Samples: The number of samples used in MC engines.
+  \item Regression Order: If a product requires the computation of conditional expected NPVs (typically to take exercise
+    decisions in Bermudan / American structures), the order of the regression polynomials.
+  \item Time Steps / Year: The number of time steps / year used for the process discretisation.
+\end{itemize}
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{l|l|l|l|l}
+Product & Model / Engine & Samples & Regression Order & Time Steps / Year \\
+\hline
+SingleAssetOption(EQ) & BlackScholes / MC & 10k & 6 & na \\
+SingleAssetOption(FX) & BlackScholes / MC & 10k& 6 & na \\
+SingleAssetOption(COMM) & BlackScholes / MC & 10k& 6 & na \\
+MultiAssetOption(EQ) & BlackScholes / MC & 10k& 2 & 24 \\
+MultiAssetOption(FX) & BlackScholes / MC & 10k & 2 & 24 \\
+MultiAssetOption(COMM) & BlackScholes / MC & 10k & 2 & 24 \\
+SingleUnderlyingIrOption & GaussianCam / MC & 10k & 6 & na \\
+MultiUnderlyingIrOption & GaussianCam / MC & 10k & 2 & na \\
+IrHybrid(EQ) & GaussianCam / MC & 10k & 2 & na \\
+IrHybrid(FX) & GaussianCam / MC & 10k & 2 & na \\
+IrHybrid(COMM) & GaussianCam / MC & 10k & 2 & na \\
+IrHybrid(Inf) & GaussianCam / MC & 10k & 2 & na \\
+\hline
+\end{tabular}
+\caption{Scripted Trade Pricing Parameters}
+\label{pricing::scriptedtrade_parameters}
+\end{center}
+\end{table}

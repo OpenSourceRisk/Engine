@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="ND_CLP_Settled_In_USD_nonXCCY">
+        <TradeType>Swap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <valuation_date>2025-02-10</valuation_date>
+                <party_id>party</party_id>
+            </AdditionalFields>
+        </Envelope>
+        <SwapData>
+            <Settlement>Cash</Settlement>
+            <LegData>
+                <LegType>Fixed</LegType>
+                <Payer>false</Payer>
+                <!--<Currency>CLP</Currency>-->
+                <Currency>USD</Currency>
+                <!-- Payment currency is USD rather than CLP -->
+                <Notionals>
+                    <Notional>851000000</Notional>
+                    <!-- in CLP -->
+                </Notionals>
+                <Indexings>
+                    <Indexing>
+                        <Index>FX-TR20H-CLP-USD</Index>
+                        <!-- to convert CLP flows into USD -->
+                        <InitialFixing>0.0012</InitialFixing>
+                        <FixingConvention>P</FixingConvention>
+                        <IsInArrears>false</IsInArrears>
+                    </Indexing>
+                </Indexings>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <FixedLegData>
+                    <Rates>
+                        <Rate>0.030200</Rate>
+                    </Rates>
+                </FixedLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2027-04-04</StartDate>
+                        <EndDate>2037-04-03</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>US</Calendar>
+                        <Convention>MF</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>true</Payer>
+                <!--<Currency>CLP</Currency>-->
+                <Currency>USD</Currency>
+                <!-- Payment currency is USD rather than CLP -->
+                <Notionals>
+                    <Notional>851000000</Notional>
+                    <!-- in CLP -->
+                </Notionals>
+                <Indexings>
+                    <Indexing>
+                        <Index>FX-TR20H-CLP-USD</Index>
+                        <!-- to convert CLP flows into USD -->
+                        <InitialFixing>0.0012</InitialFixing>
+                        <FixingConvention>P</FixingConvention>
+                        <IsInArrears>false</IsInArrears>
+                    </Indexing>
+                </Indexings>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <FloatingLegData>
+                    <Index>CLP-CAMARA</Index>
+                    <Spreads>
+                        <Spread>0.015</Spread>
+                    </Spreads>
+                    <IsInArrears>false</IsInArrears>
+                    <IncludeSpread>true</IncludeSpread>
+                </FloatingLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2027-04-04</StartDate>
+                        <EndDate>2037-04-03</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>US</Calendar>
+                        <Convention>MF</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </SwapData>
+    </Trade>
+</Portfolio>

@@ -1,0 +1,1052 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="BondTRS">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingBondTRSEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="ForwardBond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingForwardBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">3M</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxOptionAmerican">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+      <Parameter name="EnforceMonotoneVariance">true</Parameter>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model>
+    <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <!-- shift horizon as ratio of maturity time -->
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.20</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">30</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">30</Parameter>
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="AmericanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <!-- shift horizon as ratio of maturity time -->
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.0001</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="StateGridPoints">64</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="MesherEpsilon">1E-4</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFloor">
+    <Model>IborCapModel</Model>
+    <ModelParameters/>
+    <Engine>IborCapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="YYCapFloor">
+    <Model>YYCapModel</Model>
+    <ModelParameters/>
+    <Engine>YYCapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CpiCapFloor">
+    <Model>CpiCapModel</Model>
+    <ModelParameters/>
+    <Engine>CpiCapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="useLastFixingDate">true</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFlooredIborLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters>
+      <!-- Black76 or BivariateLognormal -->
+      <Parameter name="TimingAdjustment">Black76</Parameter>
+      <!-- Correlation Parameter for BivariateLognormal -->
+      <Parameter name="Correlation">1.0</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFlooredOvernightIndexedCouponLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackOvernightIndexedCouponPricer</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFlooredAverageONIndexedCouponLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackAverageONIndexedCouponPricer</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CappedFlooredCpiLegCoupons">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters>
+      <Parameter name="useLastFixingDate">true</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CappedFlooredCpiLegCashFlows">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters>
+      <Parameter name="useLastFixingDate">true</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CapFlooredAverageBMACouponLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackAverageBMACouponPricer</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingEquityForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="QuantoEquityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters>
+      <Parameter name="FXSource">GENERIC</Parameter>
+    </ModelParameters>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityOptionAmerican">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+      <Parameter name="EnforceMonotoneVariance">true</Parameter>
+      <Parameter name="SensitivityTemplate">EQ_FD</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityOutperformanceOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticOutperformanceOptionEngine</Engine>
+    <EngineParameters>
+      <Parameter name="IntegrationPoints">32</Parameter>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters>
+      <Parameter name="OpenEndDateReplacement">50Y</Parameter>
+    </ModelParameters>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CreditLinkedSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCreditLinkedSwapEngine</Engine>
+    <EngineParameters>
+        <Parameter name="TimeStepsPerYear">24</Parameter>
+        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- CMS Linear TRS Model -->
+  <Product type="CMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+      <Parameter name="MeanReversion">0.0</Parameter>
+      <!-- RateBound, VegaRatio, PriceThreshold, BsStdDev -->
+      <Parameter name="Policy">RateBound</Parameter>
+      <!-- RateBounds for ln / sln volatility input -->
+      <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+      <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+      <!-- RateBounds for normal volatility input -->
+      <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+      <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+      <!-- Only required for policy VegaRatio -->
+      <Parameter name="VegaRatio">0.01</Parameter>
+      <!-- Only required for policy PriceThreshold -->
+      <Parameter name="PriceThreshold">0.0000001</Parameter>
+      <!-- Only required for policy BsStdDev -->
+      <Parameter name="BsStdDev">3.0</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="DurationAdjustedCMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+      <Parameter name="MeanReversion">0.0</Parameter>
+      <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+      <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+      <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+      <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+      <Parameter name="ZeroVolatility">false</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- CMS Spread Brigo Mercurio Model -->
+  <Product type="CMSSpread">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters>
+      <Parameter name="Correlation_EUR">0.8</Parameter>
+      <Parameter name="Correlation_USD">0.75</Parameter>
+      <Parameter name="Correlation_GBP">0.72</Parameter>
+      <Parameter name="Correlation_CHF">0.7</Parameter>
+    </ModelParameters>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="IntegrationPoints">16</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCommodityForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommoditySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>CommoditySwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommoditySwaption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+      <Parameter name="beta">2.05</Parameter>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommoditySpreadOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>CommoditySpreadOptionEngine</Engine>
+    <EngineParameters>
+      <Parameter name="beta">2.05</Parameter>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityOptionForward">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityAveragePriceOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>AnalyticalApproximation</Engine>
+    <EngineParameters>
+      <Parameter name="beta">0</Parameter>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="IndexCreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointIndexCdsEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>LognormalAdjustedIndexSpread</Model>
+    <ModelParameters/>
+    <Engine>NumericalIntegrationEngine</Engine>
+    <EngineParameters>
+      <Parameter name="FepCurve">Index</Parameter>
+      <Parameter name="Curve">Index</Parameter>
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FlexiSwap">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">HullWhite</Parameter>
+      <Parameter name="Tolerance">0.02</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="method">Automatic</Parameter>
+      <Parameter name="singleSwaptionThreshold">20.0</Parameter>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">30</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">30</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BalanceGuaranteedSwap">
+    <Model>LGM-FlexiSwap</Model>
+    <ModelParameters>
+      <Parameter name="MinCPRMultiplier">0.0</Parameter>
+      <Parameter name="MaxCPRMultiplier">2.0</Parameter>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">HullWhite</Parameter>
+      <Parameter name="Tolerance">0.02</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="method">Automatic</Parameter>
+      <Parameter name="singleSwaptionThreshold">20.0</Parameter>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">30</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">30</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="SensiTrade">
+    <Model>SensiTrade</Model>
+    <ModelParameters/>
+    <Engine>SensiTradeEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SwaptionTenors">1Y,2Y</Parameter>
+      <Parameter name="CapFloorStrikes">0.01</Parameter>
+      <Parameter name="InflationTenors">6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Parameter>
+      <Parameter name="SensitivityTemplate">SensiTrade</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="SyntheticCDO">
+    <Model>GaussCopula</Model>
+    <ModelParameters>
+      <Parameter name="correlation">0.0</Parameter>
+      <Parameter name="min">-5.0</Parameter>
+      <Parameter name="max">5.0</Parameter>
+      <Parameter name="steps">64</Parameter>
+      <!-- Stochastic recovery switch, default = N, i.e. deterministic recovery -->
+      <Parameter name="useStochasticRecovery">Y</Parameter>
+      <!-- Recovery rate grid to be used with stochastic recovery -->
+      <!-- Constant:   Use the flat market recovery rate R -->
+      <!-- Markit2020: Use a three-pillar recovery rate grid [0.1, R, 2*R - 0.1] -->
+      <Parameter name="recoveryRateGrid">Markit2020</Parameter>
+      <!-- Recovery rate probabilities, associated with the recovery rate grid -->
+      <Parameter name="recoveryRateProbabilities">0.35,0.3,0.35</Parameter>
+    </ModelParameters>
+    <Engine>Bucketing</Engine>
+    <EngineParameters>
+      <Parameter name="buckets">372</Parameter>
+      <!-- Choices: Underlying, DeltaWeighted -->
+      <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
+      <!-- Usage of QL::LossDist vs HullWhiteBucekting -->
+      <!-- Y: Use QuantLib::LossDist when justified, i.e. for deterministic recovery -->
+      <!-- N: Use HullWhiteBucketing for both deterministic and stochastic recovery -->
+      <Parameter name="useLossDistWhenJustified">N</Parameter>
+      <!-- Applies to QuantLib::LossDist -->
+      <Parameter name="homogeneousPoolWhenJustified">N</Parameter>
+      <!--<Parameter name="useQuadrature">Y</Parameter>-->
+      <Parameter name="calibrateConstituentCurves">N</Parameter>
+      <Parameter name="calibrationIndexTerms">3Y,5Y</Parameter>
+      <Parameter name="SensitivityTemplate">CR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Copied directly from the Regression tests -->
+  <Product type="FormulaBasedCoupon">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters>
+      <Parameter name="FXSource">GENERIC</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="Seed">42</Parameter>
+      <Parameter name="Sobol">Y</Parameter>
+      <Parameter name="SalvageCorrelationMatrix">Y</Parameter>
+      <Parameter name="SensitivityTemplate">IR_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxVarianceSwap">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters>
+      <Parameter name="StaticTodaysSpot">false</Parameter>
+    </ModelParameters>
+    <Engine>ReplicatingVarianceSwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Segment</Parameter>
+      <Parameter name="Bounds">PriceThreshold</Parameter>
+      <Parameter name="Accuracy">1E-5</Parameter>
+      <Parameter name="MaxIterations">1000</Parameter>
+      <Parameter name="Steps">1000</Parameter>
+      <Parameter name="PriceThreshold">1E-10</Parameter>
+      <Parameter name="MaxPriceThresholdSteps">500</Parameter>
+      <Parameter name="PriceThresholdStep">0.1</Parameter>
+      <Parameter name="FixedMinStdDevs">-5.0</Parameter>
+      <Parameter name="FixedMaxStdDevs">5.0</Parameter>
+      <Parameter name="SensitivityTemplate">FX_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityVarianceSwap">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>ReplicatingVarianceSwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Segment</Parameter>
+      <Parameter name="Bounds">PriceThreshold</Parameter>
+      <Parameter name="Accuracy">1E-5</Parameter>
+      <Parameter name="MaxIterations">1000</Parameter>
+      <Parameter name="Steps">1000</Parameter>
+      <Parameter name="PriceThreshold">1E-10</Parameter>
+      <Parameter name="MaxPriceThresholdSteps">500</Parameter>
+      <Parameter name="PriceThresholdStep">0.1</Parameter>
+      <Parameter name="FixedMinStdDevs">-5.0</Parameter>
+      <Parameter name="FixedMaxStdDevs">5.0</Parameter>
+      <Parameter name="SensitivityTemplate">EQ_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityVarianceSwap">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>ReplicatingVarianceSwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Segment</Parameter>
+      <Parameter name="Bounds">PriceThreshold</Parameter>
+      <Parameter name="Accuracy">1E-5</Parameter>
+      <Parameter name="MaxIterations">1000</Parameter>
+      <Parameter name="Steps">1000</Parameter>
+      <Parameter name="PriceThreshold">1E-10</Parameter>
+      <Parameter name="MaxPriceThresholdSteps">500</Parameter>
+      <Parameter name="PriceThresholdStep">0.1</Parameter>
+      <Parameter name="FixedMinStdDevs">-5.0</Parameter>
+      <Parameter name="FixedMaxStdDevs">5.0</Parameter>
+      <Parameter name="SensitivityTemplate">COMM_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxDigitalOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxDigitalOptionEuropeanCS">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxBarrierOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticBarrierEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxDigitalBarrierOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesBarrierEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxDoubleBarrierOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDoubleBarrierEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxDoubleTouchOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDoubleBarrierBinaryEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Taken from the unit tests -->
+  <Product type="FxTouchOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDigitalAmericanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCommodityForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="ConvertibleBond">
+    <Model>DefaultableEquityJumpDiffusion</Model>
+    <ModelParameters>
+      <Parameter name="p">0.0</Parameter>
+      <Parameter name="eta">1.0</Parameter>
+      <Parameter name="AdjustEquityForward">true</Parameter>
+      <Parameter name="AdjustEquityVolatility">false</Parameter>
+      <Parameter name="AdjustDiscounting">false</Parameter>
+      <Parameter name="AdjustCreditSpreadToRR">true</Parameter>
+      <Parameter name="ZeroRecoveryOverwrite">true</Parameter>
+      <Parameter name="TreatSecuritySpreadAsCreditSpread">true</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+      <Parameter name="MesherIsStatic">true</Parameter>
+      <Parameter name="Bootstrap.CalibrationGrid">6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y,40Y,50Y</Parameter>
+      <Parameter name="Bootstrap.TimeStepsPerYear">24</Parameter>
+      <Parameter name="Bootstrap.StateGridPoints">400</Parameter>
+      <Parameter name="Bootstrap.MesherEpsilon">1E-5</Parameter>
+      <Parameter name="Bootstrap.MesherScaling">1.5</Parameter>
+      <Parameter name="Bootstrap.Mode">Alternating</Parameter>
+      <Parameter name="Pricing.TimeStepsPerYear">24</Parameter>
+      <Parameter name="Pricing.StateGridPoints">100</Parameter>
+      <Parameter name="Pricing.MesherEpsilon">1E-4</Parameter>
+      <Parameter name="Pricing.MesherScaling">1.5</Parameter>
+      <Parameter name="Pricing.ConversionRatioDiscretisationGrid">0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0,1.05,1.1,1.15,1.2,1.25,1.5,1.75,2.0</Parameter>
+      <Parameter name="SensitivityTemplate">EQ_FD</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="RiskParticipationAgreement_Vanilla">
+    <Model>Black</Model>
+    <ModelParameters>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="MatchUnderlyingTenor">true</Parameter>
+    </ModelParameters>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
+      <Parameter name="MaxGapDays">400</Parameter>
+      <Parameter name="MaxDiscretisationPoints">20</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="RiskParticipationAgreement_Vanilla_XCcy">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
+      <Parameter name="MaxGapDays">400</Parameter>
+      <Parameter name="MaxDiscretisationPoints">20</Parameter>
+      <Parameter name="SensitivityTemplate">FX_Semianalytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="RiskParticipationAgreement_Structured">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.02</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">30</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">30</Parameter>
+      <Parameter name="MaxGapDays">400</Parameter>
+      <Parameter name="MaxDiscretisationPoints">20</Parameter>
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="RiskParticipationAgreement_TLock">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.02</Parameter>
+      <Parameter name="CalibrationInstrumentSpacing">3M</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">30</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">30</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <!-- shared parameters -->
+      <Parameter name="BaseCcy">USD</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
+      <Parameter name="IrReversion">0.0</Parameter>
+      <Parameter name="IrReversion_CHF">0.0</Parameter>
+      <Parameter name="IrReversion_EUR">0.0</Parameter>
+      <Parameter name="IrReversion_GBP">0.0</Parameter>
+      <Parameter name="IrReversion_USD">0.0</Parameter>
+      <Parameter name="IrReversion_JPY">0.0</Parameter>
+      <Parameter name="IrReversion_TWD">0.0</Parameter>
+      <Parameter name="IrReversion_HKD">0.0</Parameter>
+      <Parameter name="FullDynamicIr">true</Parameter>
+      <Parameter name="FullDynamicFx">true</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Calibration">Deal</Parameter>
+      <Parameter name="Model">BlackScholes</Parameter>
+      <Parameter name="InfModelType">DK</Parameter>
+      <!-- product specific parameters -->
+      <Parameter name="Model_SingleUnderlyingIrOption">GaussianCam</Parameter>
+      <Parameter name="Model_MultiUnderlyingIrOption">GaussianCam</Parameter>
+      <Parameter name="Model_IrHybrid(EQ)">GaussianCam</Parameter>
+      <Parameter name="Model_IrHybrid(FX)">GaussianCam</Parameter>
+      <Parameter name="Model_IrHybrid(COMM)">GaussianCam</Parameter>
+      <Parameter name="Model_IrHybrid(HYBRID)">GaussianCam</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <!-- shared parameters -->
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="StateGridPoints">200</Parameter>
+      <Parameter name="MesherEpsilon">1E-4</Parameter>
+      <Parameter name="MesherScaling">1.5</Parameter>
+      <Parameter name="MesherConcentration">0.1</Parameter>
+      <Parameter name="MesherMaxConcentratingPoints">9999</Parameter>
+      <Parameter name="MesherIsStatic">true</Parameter>
+      <Parameter name="RegressionOrder">2</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">999.9</Parameter>
+      <!-- product specific parameters -->
+      <Parameter name="RegressionOrder_SingleAssetOption(EQ)">6</Parameter>
+      <Parameter name="RegressionOrder_SingleAssetOption(FX)">6</Parameter>
+      <Parameter name="RegressionOrder_SingleAssetOption(COMM)">6</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
+      <Parameter name="UseAD_SingleAssetOptionAD(EQ)">true</Parameter>
+      <Parameter name="UseAD_SingleAssetOptionAD(FX)">true</Parameter>
+      <Parameter name="UseAD_SingleAssetOptionAD(COMM)">true</Parameter>
+      <Parameter name="UseAD_MultiAssetOptionAD(EQ)">true</Parameter>
+      <Parameter name="UseAD_MultiAssetOptionAD(FX)">true</Parameter>
+      <Parameter name="UseAD_MultiAssetOptionAD(COMM)">true</Parameter>
+      <Parameter name="UseAD_MultiAssetOptionAD(HYBRID)">true</Parameter>
+      <Parameter name="UseCG_SingleAssetOptionCG(EQ)">true</Parameter>
+      <Parameter name="UseCG_SingleAssetOptionCG(FX)">true</Parameter>
+      <Parameter name="UseCG_SingleAssetOptionCG(COMM)">true</Parameter>
+      <Parameter name="UseCG_MultiAssetOptionCG(EQ)">true</Parameter>
+      <Parameter name="UseCG_MultiAssetOptionCG(FX)">true</Parameter>
+      <Parameter name="UseCG_MultiAssetOptionCG(COMM)">true</Parameter>
+      <Parameter name="UseCG_MultiAssetOptionCG(HYBRID)">true</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOption(EQ)">EQ_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOption(FX)">FX_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOption(COMM)">COMM_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionAD(EQ)">EQ_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionAD(FX)">FX_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionAD(COMM)">COMM_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionBwd(EQ)">EQ_FD</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionBwd(FX)">FX_FD</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionBwd(COMM)">COMM_FD</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionCG(EQ)">EQ_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionCG(FX)">FX_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleAssetOptionCG(COMM)">COMM_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOption(EQ)">EQ_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOption(FX)">FX_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOption(COMM)">COMM_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOption(HYBRID)">HYBRID_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionAD(EQ)">EQ_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionAD(FX)">FX_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionAD(COMM)">COMM_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionAD(HYBRID)">HYBRID_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionCG(EQ)">EQ_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionCG(FX)">FX_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionCG(COMM)">COMM_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiAssetOptionCG(HYBRID)">HYBRID_MC</Parameter>
+      <Parameter name="SensitivityTemplate_SingleUnderlyingIrOption">IR_MC</Parameter>
+      <Parameter name="SensitivityTemplate_MultiUnderlyingIrOption">IR_MC</Parameter>
+      <Parameter name="SensitivityTemplate_IrHybrid(EQ)">HYBRID_MC</Parameter>
+      <Parameter name="SensitivityTemplate_IrHybrid(FX)">HYBRID_MC</Parameter>
+      <Parameter name="SensitivityTemplate_IrHybrid(COMM)">HYBRID_MC</Parameter>
+      <Parameter name="SensitivityTemplate_IrHybrid(HYBRID)">HYBRID_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityOptionEuropeanCS">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityOptionEuropeanCS">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityOptionAmerican">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+      <Parameter name="EnforceMonotoneVariance">true</Parameter>
+      <Parameter name="SensitivityTemplate">COMM_FD</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDeltaVega">Y</Parameter>
+      <Parameter name="ComputeGamma">N</Parameter>
+      <Parameter name="BucketTimesDeltaGamma">
+	0.0417, 0.0833, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0
+      </Parameter>
+      <Parameter name="BucketTimesVega">
+	0.0417, 0.0833, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0
+      </Parameter>
+    </EngineParameters>
+  </Product>
+<!--
+  <Product type="FxOptionEuropeanCS">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+    </Product>
+-->
+  <Product type="BondRepo">
+    <Model>Accrual</Model>
+    <ModelParameters>
+      <Parameter name="IncludeSecurityLeg">true</Parameter>
+    </ModelParameters>
+    <Engine>AccrualRepoEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityCliquetOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>MCScript</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="RegressionOrder">6</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="ScriptedLibraryOverride">false</Parameter>
+      <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BondOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackBondOptionEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityBarrierOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticBarrierEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityDoubleBarrierOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDoubleBarrierEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityDigitalOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityTouchOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticDigitalAmericanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Ascot">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>Intrinsic</Engine>
+    <EngineParameters>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="SensitivityTemplate">EQ_FD</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityEuropeanCompositeOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityAsianOptionArithmeticPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EquityAsianOptionArithmeticStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxAsianOptionArithmeticPrice">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxAsianOptionArithmeticStrike">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CBO">
+    <Model>OneFactorCopula</Model>
+    <ModelParameters/>
+    <Engine>MonteCarloCBOEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Samples">1000</Parameter>
+      <Parameter name="Bins">20</Parameter>
+      <Parameter name="Seed">42</Parameter>
+      <Parameter name="LossDistributionPeriods"/>
+      <Parameter name="Correlation">0.2</Parameter>
+      <Parameter name="SensitivityTemplate">CR_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityAveragePriceBarrierOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>MonteCarlo</Engine>
+    <EngineParameters>
+      <Parameter name="beta">0</Parameter>
+      <Parameter name="samples">10000</Parameter>
+      <Parameter name="seed">42</Parameter>
+      <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxOptionForward">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Global Parameters -->
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <Parameter name="PseudoCurrency.TreatAsFX">false</Parameter>
+    <Parameter name="PseudoCurrency.BaseCurrency">USD</Parameter>
+    <Parameter name="PseudoCurrency.FXIndexTag">GENERIC</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XAU">PM:XAUUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XAG">PM:XAGUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XPT">PM:XPTUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XPD">PM:XPDUSD</Parameter>
+    <Parameter name="ImplyAbsMaturityForRegex">^RED:[0-9A-Z]{9}$</Parameter>
+  </GlobalParameters>
+</PricingEngines>

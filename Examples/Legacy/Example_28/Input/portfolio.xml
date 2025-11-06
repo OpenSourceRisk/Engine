@@ -1,0 +1,32 @@
+<Portfolio>
+  <Trade id="FXFWD_1Y">
+    <TradeType>FxForward</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>NS</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxForwardData>
+      <ValueDate>2017-02-06</ValueDate>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>11000000</BoughtAmount>
+      <SoldCurrency>GBP</SoldCurrency>
+      <SoldAmount>9009771.17020212</SoldAmount>
+    </FxForwardData>
+  </Trade>
+  <Trade id="FXFWD_5Y">
+    <TradeType>FxForward</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>NS</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxForwardData>
+      <ValueDate>2021-02-05</ValueDate>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>11000000</BoughtAmount>
+      <SoldCurrency>GBP</SoldCurrency>
+      <SoldAmount>9512182.29875867</SoldAmount>
+    </FxForwardData>
+  </Trade>
+</Portfolio>

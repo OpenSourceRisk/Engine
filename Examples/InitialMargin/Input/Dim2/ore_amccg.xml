@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2025-02-10</Parameter>
+    <Parameter name="inputPath">Input/Dim2</Parameter>
+    <Parameter name="outputPath">Output/Dim2/AmcCg</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">marketdata_flatvol.csv</Parameter>
+    <Parameter name="fixingDataFile">fixings.csv</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
+    <Parameter name="buildFailedTrades">true</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="infcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="npv">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+      <Parameter name="additionalResultsReportPrecision">12</Parameter>
+    </Analytic>
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="amc">Y</Parameter>
+      <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
+      <Parameter name="amcCg">CubeGeneration</Parameter>
+      <!-- external device config -->
+      <Parameter name="xvaCgUseExternalComputeDevice">false</Parameter>
+      <Parameter name="xvaCgExternalDeviceCompatibilityMode">false</Parameter>
+      <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">false</Parameter>
+      <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
+      <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
+      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade,FxForward</Parameter>
+      <Parameter name="simulationConfigFile">simulation_amccg.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
+      <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
+      <!-- enable dynamic IM -->
+      <Parameter name="xvaCgDynamicIM">true</Parameter>
+      <!-- calculate dynamic IM on each nth time step -->
+      <Parameter name="xvaCgDynamicIMStepSize">1</Parameter>
+      <!-- regression order in xva cg engine -->
+      <Parameter name="xvaCgRegressionOrder">4</Parameter>
+      <Parameter name="xvaCgRegressionOrderDynamicIm">4</Parameter>
+      <!-- regression variance cutoff in xva cg engine, the cutoff is disabled when the parameter is not given -->
+      <!-- <Parameter name="xvaCgRegressionVarianceCutoff">0.01</Parameter> -->
+      <!-- <Parameter name="xvaCgRegressionVarianceCutoffDynamicIm">0.01</Parameter> -->
+      <!-- whether to use python integration (conditional expectation calculation) -->
+      <Parameter name="xvaCgUsePythonIntegration">false</Parameter>
+      <Parameter name="xvaCgUsePythonIntegrationDynamicIm">false</Parameter>
+      <!-- enable trade level breakdown in xva cg engine -->
+      <Parameter name="xvaCgTradeLevelBreakdown">false</Parameter>
+      <!-- enable memory management using red nodes in xva cg engine -->
+      <Parameter name="xvaCgUseRedBlocks">true</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <!-- <Parameter name="cubeFile">cube.csv.gz</Parameter> -->
+      <!-- <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter> -->
+      <!-- <Parameter name="scenariodump">scenariodump.csv</Parameter> -->
+    </Analytic>
+    <Analytic type="xva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="cubeFile">cube.csv.gz</Parameter>
+      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="exposureProfiles">Y</Parameter>
+      <Parameter name="exposureProfilesByTrade">Y</Parameter>
+      <Parameter name="quantile">0.95</Parameter>
+      <Parameter name="calculationType">Symmetric</Parameter>
+      <Parameter name="allocationMethod">None</Parameter>
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
+      <Parameter name="exerciseNextBreak">N</Parameter>
+      <Parameter name="cva">Y</Parameter>
+      <Parameter name="dva">N</Parameter>
+      <!--<Parameter name="dvaName">BANK</Parameter>-->
+      <Parameter name="fva">N</Parameter>
+      <!--
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      -->
+      <Parameter name="colva">N</Parameter>
+      <Parameter name="collateralSpread">0.0000</Parameter>
+      <Parameter name="collateralFloor">N</Parameter>
+      <Parameter name="dim">Y</Parameter>
+      <!-- DynamicIM requires xvaCgDynamicIM = true under simulation above -->
+      <Parameter name="dimModel">DynamicIM</Parameter>
+      <Parameter name="dimQuantile">0.99</Parameter>
+      <Parameter name="dimHorizonCalendarDays">14</Parameter>
+      <Parameter name="dimRegressionOrder">2</Parameter>
+      <Parameter name="dimRegressors"/>
+      <Parameter name="dimScaling">1.0</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
+      <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
+      <Parameter name="dimOutputGridPoints">0</Parameter>
+      <!-- cover n std devs around mean of the data in dim distribution output, or "inf" to cover all of the  data -->
+      <Parameter name="dimDistributionCoveredStdDevs">5.0</Parameter>
+      <!-- grid size for dim distribution report -->
+      <Parameter name="dimDistributionGridSize">50</Parameter>
+      <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
+      <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
+      <!-- <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter> -->
+      <!-- <Parameter name="netCubeOutputFile">netcube.csv</Parameter> -->
+    </Analytic>
+  </Analytics>
+</ORE>

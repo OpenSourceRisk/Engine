@@ -38,7 +38,9 @@ Rate BRLCdiCouponPricer::swapletRate() const {
 
     // Already fixed part of the coupon
     while (i < n && fixingDates[i] < today) {
+        QL_DEPRECATED_DISABLE_WARNING
         Rate pastFixing = IndexManager::instance().getHistory(index_->name())[fixingDates[i]];
+        QL_DEPRECATED_ENABLE_WARNING
         QL_REQUIRE(pastFixing != Null<Real>(), "Missing " << index_->name() << " fixing for " << fixingDates[i]);
         compoundFactor *= pow(1.0 + pastFixing, dt[i]);
         ++i;
@@ -47,7 +49,7 @@ Rate BRLCdiCouponPricer::swapletRate() const {
     // Today is a border case. If there is a fixing use it. If not, it will be projected in the next block.
     if (i < n && fixingDates[i] == today) {
         try {
-            Rate pastFixing = IndexManager::instance().getHistory(index_->name())[fixingDates[i]];
+            Rate pastFixing = index_->timeSeries()[fixingDates[i]];
             if (pastFixing != Null<Real>()) {
                 compoundFactor *= pow(1.0 + pastFixing, dt[i]);
                 ++i;

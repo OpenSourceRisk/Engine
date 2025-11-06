@@ -38,6 +38,8 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
     fxRates_.clear();
     fxRatesNotional_.clear();
     legs_.clear();
+    legPayers_.clear();
+    legCurrencies_.clear();
 
     populateFromReferenceData(engineFactory->referenceData());
 
@@ -70,7 +72,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
             fxRatesNotional_[i] = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
 
         QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
-        Real effectiveMultiplier = instrumentWrapper->multiplier();
+        Real effectiveMultiplier = (indexQuantity_ == Null<Real>() ? instrumentWrapper->multiplier() : indexQuantity_);
         if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
             effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
         }
@@ -81,19 +83,10 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
                                      instrumentWrapper->additionalMultipliers()[i]);
         }
 
-        bool isDuplicate = false;
-        try {
-            if (instrumentWrapper->additionalResults().find("cashFlowResults") !=
-                trade->instrument()->additionalResults().end())
-                isDuplicate = true;
-        } catch (...) {
-        }
-        if (!isDuplicate) {
-            // For cashflows
-            legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
-            legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
-            legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
-        }
+        // For cashflows
+        legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
+        legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
+        legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
 
         maturity_ = std::max(maturity_, trade->maturity());
         if (maturity_ == trade->maturity())
@@ -152,10 +145,15 @@ void CompositeTrade::fromXML(XMLNode* node) {
     }
 
     portfolioId_ = XMLUtils::getChildValue(compNode, "BasketName", false);
+    indexQuantity_ = Null<Real>();
 
     XMLNode* tradesNode = XMLUtils::getChildNode(compNode, "Components");
     if (portfolioBasket_ && portfolioId_.empty()) {
         QL_REQUIRE(tradesNode, "Required a Portfolio Id or a Components Node.");
+    } else if (portfolioBasket_) {
+        if (auto n = XMLUtils::getChildNode(compNode, "IndexQuantity")) {
+            indexQuantity_ = parseReal(XMLUtils::getNodeValue(n));
+        }
     }
     if ((portfolioBasket_ && portfolioId_.empty()) || (!portfolioBasket_)) {
 
@@ -253,6 +251,7 @@ std::map<AssetClass, std::set<std::string>>
 CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     map<AssetClass, std::set<std::string>> result;
+    populateFromReferenceData(referenceDataManager);
     for (const auto& t : trades_) {
         auto underlyings = t->underlyingIndices(referenceDataManager);
         for (const auto& kv : underlyings) {
@@ -262,7 +261,7 @@ CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataM
     return result;
 }
 
-const std::map<std::string, boost::any>& CompositeTrade::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& CompositeTrade::additionalData() const {
     additionalData_.clear();
     Size counter = 0;
     for (auto const& t : trades_) {
@@ -274,7 +273,7 @@ const std::map<std::string, boost::any>& CompositeTrade::additionalData() const 
     return additionalData_;
 }
 
-void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
+void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) const{
 
     if (!portfolioId_.empty() && referenceData != nullptr &&
         (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
@@ -288,7 +287,7 @@ void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<R
 }
 
 void CompositeTrade::getTradesFromReferenceData(
-    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
+    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const{
 
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty cbo reference datum given");
@@ -309,6 +308,18 @@ bool CompositeTrade::isExpired(const Date& d) const {
     }
     // if we get here all the trades are expired and so is the composite
     return true;
+}
+
+std::vector<TradeCashflowReportData> CompositeTrade::cashflows(const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+    const std::string& configuration,
+    const bool includePastCashflows) const {
+    std::vector<TradeCashflowReportData> cashflows;
+    for (const auto& t : trades_) {
+		auto tradeCashflows = t->cashflows(baseCurrency, market, configuration, includePastCashflows);
+		cashflows.insert(cashflows.end(), tradeCashflows.begin(), tradeCashflows.end());
+	}
+    return cashflows;
 }
 
 } // namespace data

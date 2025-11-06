@@ -53,12 +53,12 @@ public:
         const QuantLib::ext::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
         const Schedule& domesticSchedule, const QuantLib::ext::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
         const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic = true, Size foreignPaymentLag = 0,
-        Size recPaymentLag = 0, boost::optional<bool> foreignIncludeSpread = boost::none,
-        boost::optional<Period> foreignLookback = boost::none, boost::optional<Size> foreignFixingDays = boost::none,
-        boost::optional<Size> foreignRateCutoff = boost::none, boost::optional<bool> foreignIsAveraged = boost::none,
-        boost::optional<bool> domesticIncludeSpread = boost::none,
-        boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
-        boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none,
+        Size recPaymentLag = 0, QuantLib::ext::optional<bool> foreignIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> foreignLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> foreignFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> foreignRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> foreignIsAveraged = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> domesticIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> domesticLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> domesticFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> domesticRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> domesticIsAveraged = QuantLib::ext::nullopt,
         const bool telescopicValueDates = false,
 	bool fairSpreadLegIsForeign = true);
     //@}
@@ -127,16 +127,16 @@ private:
     Size foreignPaymentLag_;
     Size domesticPaymentLag_;
     // OIS only
-    boost::optional<bool> foreignIncludeSpread_;
-    boost::optional<QuantLib::Period> foreignLookback_;
-    boost::optional<QuantLib::Size> foreignFixingDays_;
-    boost::optional<Size> foreignRateCutoff_;
-    boost::optional<bool> foreignIsAveraged_;
-    boost::optional<bool> domesticIncludeSpread_;
-    boost::optional<QuantLib::Period> domesticLookback_;
-    boost::optional<QuantLib::Size> domesticFixingDays_;
-    boost::optional<Size> domesticRateCutoff_;
-    boost::optional<bool> domesticIsAveraged_;
+    QuantLib::ext::optional<bool> foreignIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> foreignLookback_;
+    QuantLib::ext::optional<QuantLib::Size> foreignFixingDays_;
+    QuantLib::ext::optional<Size> foreignRateCutoff_;
+    QuantLib::ext::optional<bool> foreignIsAveraged_;
+    QuantLib::ext::optional<bool> domesticIncludeSpread_;
+    QuantLib::ext::optional<QuantLib::Period> domesticLookback_;
+    QuantLib::ext::optional<QuantLib::Size> domesticFixingDays_;
+    QuantLib::ext::optional<Size> domesticRateCutoff_;
+    QuantLib::ext::optional<bool> domesticIsAveraged_;
     bool telescopicValueDates_;
     bool fairSpreadLegIsForeign_;
 

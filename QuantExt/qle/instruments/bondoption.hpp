@@ -35,7 +35,9 @@ class BondOption : public QuantLib::Instrument {
 public:
     BondOption(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying, const CallabilitySchedule& putCallSchedule,
                const bool knocksOutOnDefault = false)
-        : underlying_(underlying), putCallSchedule_(putCallSchedule), knocksOutOnDefault_(knocksOutOnDefault) {}
+        : underlying_(underlying), putCallSchedule_(putCallSchedule), knocksOutOnDefault_(knocksOutOnDefault) {
+        registerWith(underlying);
+}
 
     bool isExpired() const override;
     void deepUpdate() override {
@@ -50,6 +52,8 @@ public:
     class engine;
 
 private:
+    /* See Forward Bond on the justification of overriding calculate() here. */
+    void calculate() const override;
     void setupArguments(PricingEngine::arguments*) const override;
     const QuantLib::ext::shared_ptr<QuantLib::Bond> underlying_;
     const CallabilitySchedule putCallSchedule_;

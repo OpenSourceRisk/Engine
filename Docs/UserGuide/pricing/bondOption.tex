@@ -1,0 +1,87 @@
+\subsubsection{Bond Option}
+\label{pricing:ir_bondoption}
+
+Bond Options are European options and usually valued using the Black's model, which assumes that the value of the
+underlying bond at exercise time $T$ in the future has a lognormal distribution. The pricing formula for a Bond Option
+that {\em knocks out} if the bond defaults before the option expiry is
+
+\begin{eqnarray*}
+NPV^{call}_{\text{knock-out}}&=& (1-p) P(0,T)\left[F_BN(d_1)-KN(d_2)\right] \\
+NPV^{put}_{\text{knock-out}}&=& (1-p) P(0,T)\left[KN(-d_2)-F_BN(-d_1)\right] \\
+d_1&=&\frac{\ln(F_B/K)+\sigma_B^2T/2}{\sigma_B\sqrt{T}}\\ 
+d_2&=&d_1-\sigma_B\sqrt{T} 
+\end{eqnarray*}
+
+where $F_B$ is the forward bond price, $\sigma_B$ is the price volatility, $K$ is the strike price of the bond option,
+$T$ is its time to option maturity, $P(0,T)$ is the (risk-free) discount factor for maturity $T$, and $p$ is the default
+probability of the bond until the option expiry. If a yield volatility $\sigma_y$ is given, the price volatility is
+derived as
+
+\begin{equation}
+\sigma_B = \sigma_Y  D y
+\end{equation}
+
+if $\sigma_y$ is a lognormal volatility and
+
+\begin{equation}
+\sigma_B = \sigma_Y  D  (y + s)
+\end{equation}
+
+if $\sigma_y$ is a shifted lognormal volatility with shift $s$ and
+
+\begin{equation}
+\sigma_B = \sigma_Y  D
+\end{equation}
+
+if $\sigma_Y$ is a normal volatility. Here $D$ denotes the forward modified duration and $y$ the forward yield of the
+bond w.r.t. $F_B$.
+
+The forward bond price $F_B$ is computed as for a plain bond but a) only taking cashflows into account that are paid
+after the option expiry and b) using forward discount factors on the underlying's reference curve (including a security
+spread, if given) and forward survival probabilities computed from the underlying's credit curve as of the option expiry
+date, i.e. the forward price is computed {\em conditional on survival} of the underlying until the option expiry.
+
+If the option {\em does not knock out} if the bonds defaults before the option expiry, the forward bond price used to
+calculate the option price in the Black formula above is replaced by the weighted sum of the forward bond price
+conditional on survival until the option expiry weighted with the survival probability of the bond until the option
+eypiry and the recovery value of the bond weighted with the default probability of the bond until option expiry, i.e. in
+this case we have
+
+\begin{eqnarray*}
+F_{B, \text{no knock-out}} &=& (1-p) F_B + p R \\
+NPV^{call}_{\text{no knock-out}}&=& P(0,T)\left[F_{B, \text{no knock-out}}N(d_1)-KN(d_2)\right] \\
+NPV^{put}_{\text{no knock-out}}&=& P(0,T)\left[KN(-d_2)-F_{B, \text{no knock-out}}N(-d_1)\right] \\
+d_1&=&\frac{\ln(F_{B, \text{no knock-out}}/K)+\sigma_B^2T/2}{\sigma_B\sqrt{T}}\\ 
+d_2&=&d_1-\sigma_B\sqrt{T} 
+\end{eqnarray*}
+
+where $R$ is the recovery value of the bond in case of a default before option expiry. The forward modified duration $D$
+and forward yield $y$ is computed w.r.t. $F_{B, \text{no knock-out}}$ in this case.
+
+The cashflow reports provide the relevant future cashflows of the underlying bond and the non-discounted option npv at expiry date. 
+The sum of the column present value of the underlying bond cashflows is equal to the price of the forward Bond $F_B$.
+
+The additional results provided together with the cashflows and NPV are described in table
+\ref{tab:additional_results_bond_option}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|p{5cm}|p{10cm}|}
+  \hline
+  Result Label & Description \\
+  \hline
+  knockOutProbability & The probability $p$, that the bond defaults before option expiry . \\
+  \hline
+  CashStrike & The strike in terms of cash. \\
+  \hline
+  FwdCashPrice & The forward cash price of the bond, $(1-p) F_B + p R$. \\
+  \hline
+  PriceVol & The volatility used. \\
+  \hline
+  ExpectedBondRecovery & The expected recovery from the underlying bond in case of defaulting before expiry ($p R$). \\
+  \hline
+\end{tabular}
+\end{center}
+\caption{Additional Results Bond Option}
+\label{tab:additional_results_bond_option}
+\end{table}

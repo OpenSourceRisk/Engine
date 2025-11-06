@@ -33,110 +33,134 @@ namespace data {
 
 class FixedLegBuilder : public LegBuilder {
 public:
-    FixedLegBuilder() : LegBuilder("Fixed") {}
+    FixedLegBuilder() : LegBuilder(LegType::Fixed) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class ZeroCouponFixedLegBuilder : public LegBuilder {
 public:
-    ZeroCouponFixedLegBuilder() : LegBuilder("ZeroCouponFixed") {}
+    ZeroCouponFixedLegBuilder() : LegBuilder(LegType::ZeroCouponFixed) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class FloatingLegBuilder : public LegBuilder {
 public:
-    FloatingLegBuilder() : LegBuilder("Floating") {}
+    FloatingLegBuilder() : LegBuilder(LegType::Floating) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class CashflowLegBuilder : public LegBuilder {
 public:
-    CashflowLegBuilder() : LegBuilder("Cashflow") {}
+    CashflowLegBuilder() : LegBuilder(LegType::Cashflow) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class CPILegBuilder : public LegBuilder {
 public:
-    CPILegBuilder() : LegBuilder("CPI") {}
+    CPILegBuilder() : LegBuilder(LegType::CPI) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class YYLegBuilder : public LegBuilder {
 public:
-    YYLegBuilder() : LegBuilder("YY") {}
+    YYLegBuilder() : LegBuilder(LegType::YY) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class CMSLegBuilder : public LegBuilder {
 public:
-    CMSLegBuilder() : LegBuilder("CMS") {}
+    CMSLegBuilder() : LegBuilder(LegType::CMS) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class CMBLegBuilder : public LegBuilder {
 public:
-    CMBLegBuilder() : LegBuilder("CMB") {}
+    CMBLegBuilder() : LegBuilder(LegType::CMB) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class DigitalCMSLegBuilder : public LegBuilder {
 public:
-    DigitalCMSLegBuilder() : LegBuilder("DigitalCMS") {}
+    DigitalCMSLegBuilder() : LegBuilder(LegType::DigitalCMS) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class CMSSpreadLegBuilder : public LegBuilder {
 public:
-    CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
+    CMSSpreadLegBuilder() : LegBuilder(LegType::CMSSpread) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class DigitalCMSSpreadLegBuilder : public LegBuilder {
 public:
-    DigitalCMSSpreadLegBuilder() : LegBuilder("DigitalCMSSpread") {}
+    DigitalCMSSpreadLegBuilder() : LegBuilder(LegType::DigitalCMSSpread) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 class EquityLegBuilder : public LegBuilder {
 public:
-    EquityLegBuilder() : LegBuilder("Equity") {}
+    EquityLegBuilder() : LegBuilder(LegType::Equity) {}
     Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
-                 const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                 const bool useXbsCurves = false) const override;
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                 const bool attachPricer = true,
+                 std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines =
+                     nullptr) const override;
 };
 
 } // namespace data

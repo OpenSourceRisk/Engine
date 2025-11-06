@@ -40,9 +40,11 @@ public:
         const QuantLib::ext::shared_ptr<std::vector<std::vector<QuantLib::Path>>>& bufferedPaths);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return grid_; }
 
 private:
     const std::vector<Size> stateProcessProjection_;
+    TimeGrid grid_;
     const QuantLib::ext::shared_ptr<std::vector<std::vector<QuantLib::Path>>> bufferedPaths_;
     Size maxTargetIndex_;
     mutable Size currentPath_;

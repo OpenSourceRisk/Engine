@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     engineparams2["IntegrationPoints"] = "16";
     engineData->engineParameters("CMSSpread") = engineparams2;
     engineData->model("Swap") = "DiscountedCashflows";
-    engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 

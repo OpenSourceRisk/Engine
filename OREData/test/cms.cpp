@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(testCMSAnalyticHagan) {
     engineData->engineParameters("CMS") = engineparams;
 
     engineData->model("Swap") = "DiscountedCashflows";
-    engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(testCMSNumericalHagan) {
     engineData->engineParameters("CMS") = engineparams;
 
     engineData->model("Swap") = "DiscountedCashflows";
-    engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(testCMSLinearTsr) {
     engineData->engineParameters("CMS") = engineparams;
 
     engineData->model("Swap") = "DiscountedCashflows";
-    engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     engineData->engineParameters("CMS") = engineparams;
 
     engineData->model("Swap") = "DiscountedCashflows";
-    engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 

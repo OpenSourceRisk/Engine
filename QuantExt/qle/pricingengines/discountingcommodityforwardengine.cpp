@@ -27,12 +27,14 @@ using namespace QuantLib;
 namespace QuantExt {
 
 DiscountingCommodityForwardEngine::DiscountingCommodityForwardEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                                     boost::optional<bool> includeSettlementDateFlows,
-                                                                     const Date& npvDate)
+                                                                     QuantLib::ext::optional<bool> includeSettlementDateFlows,
+                                                                     const Date& npvDate,
+                                                                     const Handle<Quote>& npvFxConversion)
     : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
-      npvDate_(npvDate) {
+      npvDate_(npvDate), npvFxConversion_(npvFxConversion) {
 
     registerWith(discountCurve_);
+    registerWith(npvFxConversion_);
 }
 
 void DiscountingCommodityForwardEngine::calculate() const {
@@ -99,6 +101,9 @@ void DiscountingCommodityForwardEngine::calculate() const {
         cashFlowResults.push_back(cf1);
         cashFlowResults.push_back(cf2);
         results_.additionalResults["cashFlowResults"] = cashFlowResults;
+        if (!npvFxConversion_.empty()) {
+            results_.value *= npvFxConversion_->value();
+        }
     }
 }
 

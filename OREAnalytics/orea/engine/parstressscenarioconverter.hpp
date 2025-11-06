@@ -42,6 +42,16 @@ std::set<RiskFactorKey::KeyType> disabledParRates(bool irCurveParRates, bool irC
 //! Convert all par shifts in a single stress test scenario to zero shifts
 class ParStressScenarioConverter {
 public:
+    struct ParRateScenarioData {
+        RiskFactorKey parKey;
+        double baseParRate;
+        double shiftedParRate;
+    };
+    struct ConversionResults {
+        StressTestScenarioData::StressTestData updatedScenario;
+        std::vector<ParRateScenarioData> parRateScenarioData;
+    };
+
     ParStressScenarioConverter(
         const QuantLib::Date& asof, const std::vector<RiskFactorKey>& sortedParInstrumentRiskFactorKeys,
         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
@@ -51,8 +61,7 @@ public:
         bool useSpreadedTermStructure);
 
     //! Convert par shifts in a stress scenario to zero shifts
-    ore::analytics::StressTestScenarioData::StressTestData
-    convertScenario(const StressTestScenarioData::StressTestData& scenario) const;
+    ConversionResults convertScenario(const StressTestScenarioData::StressTestData& scenario) const;
 
 private:
     //! check if the scenario can be converted

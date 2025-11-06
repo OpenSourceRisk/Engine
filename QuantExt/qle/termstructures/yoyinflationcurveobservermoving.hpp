@@ -89,7 +89,7 @@ protected:
 };
 
 // template definitions
-
+QL_DEPRECATED_DISABLE_WARNING
 template <class Interpolator>
 YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
     Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
@@ -125,6 +125,7 @@ YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
     for (Size i = 0; i < this->quotes_.size(); i++)
         registerWith(this->quotes_[i]);
 }
+QL_DEPRECATED_ENABLE_WARNING
 
 template <class T> Date YoYInflationCurveObserverMoving<T>::baseDate() const {
     // if indexIsInterpolated we fixed the dates in the constructor

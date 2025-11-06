@@ -26,6 +26,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
@@ -33,8 +34,6 @@
 #include <ql/types.hpp>
 #include <ql/termstructures/bootstraphelper.hpp>
 
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
 #include <ql/shared_ptr.hpp>
 #include <ql/optional.hpp>
 
@@ -614,7 +613,7 @@ public:
     //! Default destructor
     virtual ~BondYieldShiftedYieldCurveSegment() {}
     //@}
-    
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
@@ -652,14 +651,15 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
-    YieldCurveConfig() {}
+    YieldCurveConfig(QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr) : iborFallbackConfig_(iborFallbackConfig) {}
     //! Detailed constructor
     YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                      const string& discountCurveID, const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const string& interpolationVariable = "Discount", const string& interpolationMethod = "LogLinear",
                      const string& zeroDayCounter = "A365", bool extrapolation = true,
                      const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-                     const Size mixedInterpolationCutoff = 1);
+                     const Size mixedInterpolationCutoff = 1,
+                     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig = nullptr);
     //! Default destructor
     virtual ~YieldCurveConfig() {}
     //@}
@@ -681,6 +681,7 @@ public:
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
+    bool excludeT0FromInterpolation() const { return excludeT0FromInterpolation_; }
     //@}
 
     //! \name Setters
@@ -697,7 +698,7 @@ public:
     const vector<string>& quotes() override;
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     // Mandatory members
     string currency_;
@@ -712,6 +713,8 @@ private:
     BootstrapConfig bootstrapConfig_;
     Size mixedInterpolationCutoff_;
     ReportConfig reportConfig_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+    bool excludeT0FromInterpolation_ = false;
 };
 
 // Map form curveID to YieldCurveConfig

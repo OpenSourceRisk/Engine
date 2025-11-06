@@ -175,7 +175,7 @@ public:
     VanillaCrossCurrencySwap(bool payFixed, Currency fixedCcy, Real fixedNominal, const Schedule& fixedSchedule,
                              Rate fixedRate, const DayCounter& fixedDayCount, Currency floatCcy, Real floatNominal,
                              const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
-                             Rate floatSpread, boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                             Rate floatSpread, QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                              const bool isPhysicallySettled = true, const bool isResettable = false);
 };
 
@@ -192,7 +192,7 @@ public:
                       std::vector<Rate> fixedRates, const DayCounter& fixedDayCount, Currency floatCcy,
                       std::vector<Real> floatNominals, const Schedule& floatSchedule,
                       const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, std::vector<Rate> floatSpreads,
-                      boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                      QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                       const bool isPhysicallySettled = true, const bool isResettable = false);
 
     // fixed/fixed
@@ -200,7 +200,7 @@ public:
                       std::vector<Rate> fixedRates1, const DayCounter& fixedDayCount1, Currency ccy2,
                       std::vector<Real> nominals2, const Schedule& schedule2, std::vector<Rate> fixedRates2,
                       const DayCounter& fixedDayCount2,
-                      boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                      QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                       const bool isPhysicallySettled = true, const bool isResettable = false);
 
     // floating/floating
@@ -208,7 +208,7 @@ public:
                       const QuantLib::ext::shared_ptr<IborIndex>& iborIndex1, std::vector<Rate> spreads1, Currency ccy2,
                       std::vector<Real> nominals2, const Schedule& schedule2,
                       const QuantLib::ext::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
-                      boost::optional<BusinessDayConvention> paymentConvention = boost::none,
+                      QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt,
                       const bool isPhysicallySettled = true, const bool isResettable = false);
 };
 } // namespace QuantExt

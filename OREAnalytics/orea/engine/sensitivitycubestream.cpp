@@ -30,13 +30,15 @@ namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
 
-SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const string& currency)
-    : SensitivityCubeStream(std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>{cube}, currency) {}
+SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube,
+                                             const string& currency,
+                                             const QuantLib::ext::shared_ptr<Portfolio>& portfolio)
+    : SensitivityCubeStream(std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>{cube}, currency, portfolio) {}
 
 SensitivityCubeStream::SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes,
-                                             const string& currency)
-    : cubes_(cubes), currency_(currency), canComputeGamma_(false) {
-
+                                             const string& currency,
+                                             const QuantLib::ext::shared_ptr<Portfolio>& portfolio)
+    : cubes_(cubes), currency_(currency), portfolio_(portfolio), canComputeGamma_(false) {
     // Set the value of canComputeGamma_ based on up and down risk factors.
 
     canComputeGamma_ = true;
@@ -51,11 +53,17 @@ SensitivityCubeStream::SensitivityCubeStream(const std::vector<QuantLib::ext::sh
         break;
     }
 
+    // Create a trade currency map if portfolio is provided
+    if (portfolio_) {
+        tradeCurrency_.reserve(portfolio_->trades().size());
+        for (auto const& tr : portfolio_->trades())
+            tradeCurrency_.emplace(tr.first, tr.second->npvCurrency());
+    }
+
     reset();
 }
 
 SensitivityRecord SensitivityCubeStream::next() {
-
     if (cubes_.size() == 0)
         return SensitivityRecord();
 
@@ -81,6 +89,7 @@ SensitivityRecord SensitivityCubeStream::next() {
     sr.tradeId = tradeIdx_->first;
     sr.isPar = false;
     sr.currency = currency_;
+    sr.tradeCurrency = currentTradeCurrency_;
     sr.baseNpv = cubes_[currentCubeIdx_]->npv(tradeIdx);
 
     if (currentDeltaKey_ != currentDeltaKeys_.end()) {
@@ -105,7 +114,6 @@ SensitivityRecord SensitivityCubeStream::next() {
         sr.gamma = cubes_[currentCubeIdx_]->crossGamma(tradeIdx_->first, *currentCrossGammaKey_);
         ++currentCrossGammaKey_;
     }
-
     TLOG("Next record is: " << sr);
     return sr;
 }
@@ -115,6 +123,10 @@ void SensitivityCubeStream::updateForNewTrade() {
     currentCrossGammaKeys_.clear();
 
     if (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end()) {
+
+        // add trade currency
+        if (!tradeCurrency_.empty())
+            currentTradeCurrency_ = tradeCurrency_.find(tradeIdx_->first)->second;
 
         // add delta keys
 

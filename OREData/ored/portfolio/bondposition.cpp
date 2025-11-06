@@ -187,8 +187,8 @@ Real BondPositionInstrumentWrapper::NPV() const {
     return result;
 }
 
-const std::map<std::string, boost::any>& BondPositionInstrumentWrapper::additionalResults() const {
-    static std::map<std::string, boost::any> emptyMap;
+const std::map<std::string, QuantLib::ext::any>& BondPositionInstrumentWrapper::additionalResults() const {
+    static std::map<std::string, QuantLib::ext::any> emptyMap;
     return emptyMap;
 }
 

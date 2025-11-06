@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EQAsianOption">
+        <TradeType>EquityAsianOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <EquityAsianOptionData>
+            <Currency>USD</Currency>
+            <Quantity>1</Quantity>
+            <StrikeData>
+                <Value>3100</Value>
+                <Currency>USD</Currency>
+            </StrikeData>
+            <Underlying>
+                <Type>Equity</Type>
+                <Name>RIC:.SPX</Name>
+                <Currency>USD</Currency>
+            </Underlying>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <PayoffType>Asian</PayoffType>
+                <ExerciseDates>
+                    <ExerciseDate>2026-01-28</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <Settlement>2026-02-02</Settlement>
+            <ObservationDates>
+                <Rules>
+                    <StartDate>2025-07-12</StartDate>
+                    <EndDate>2026-01-19</EndDate>
+                    <Tenor>1D</Tenor>
+                    <Calendar>US</Calendar>
+                    <Convention>F</Convention>
+                    <Rule>Forward</Rule>
+                </Rules>
+            </ObservationDates>
+        </EquityAsianOptionData>
+    </Trade>
+</Portfolio>

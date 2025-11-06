@@ -24,8 +24,12 @@ namespace ore {
 namespace analytics {
 
 void populateResults(QuantLib::ext::shared_ptr<MarketRiskGroup> mrg, PnlExplainReport::PnlExplainResults& result,
-                     QuantLib::Real deltaPnl, QuantLib::Real gammaPnl, QuantLib::Real pnl) {
-    if (mrg->riskClass() == MarketRiskConfiguration::RiskClass::All) {
+                     QuantLib::Real deltaPnl, QuantLib::Real gammaPnl, QuantLib::Real pnl, std::string riskFactor = "") {
+        
+    if (riskFactor != "")
+        result.riskFactor = riskFactor; 
+    
+     if (mrg->riskClass() == MarketRiskConfiguration::RiskClass::All) {
         if (mrg->riskType() == MarketRiskConfiguration::RiskType::DeltaGamma) {
             result.delta = deltaPnl;
             result.gamma = gammaPnl;
@@ -79,37 +83,51 @@ void populateResults(QuantLib::ext::shared_ptr<MarketRiskGroup> mrg, PnlExplainR
 }
 
 void PnlExplainReport::createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
-    QL_REQUIRE(reports->reports().size() == 1, "We should only report for PNL Explain");
-    QL_REQUIRE(reports->reports().size() == 1, "We should only report for PNL Explain");
-    QuantLib::ext::shared_ptr<InMemoryReport> report =
-        QuantLib::ext::dynamic_pointer_cast<ore::data::InMemoryReport>(reports->reports().at(0));
-    QL_REQUIRE(report, "PNL report must be an InMemoryReport");
+    QL_REQUIRE(reports->reports().size() == 3, "We in total three reports to create PNL Explain report");
 
-    pnlReportColumnSize_ = report->columns();
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlReport =
+        QuantLib::ext::dynamic_pointer_cast<ore::data::InMemoryReport>(reports->reports().at(0));  
+    QL_REQUIRE(pnlReport, "PNL report must be an InMemoryReport");
 
-    report->addColumn("ScenarioPnl", double(), 6)
-        .addColumn("TotalDelta", double(), 6)
-        .addColumn("TotalGamma", double(), 6)
-        .addColumn("TotalVega", double(), 6)
-        .addColumn("IrDelta", double(), 6)
-        .addColumn("IrGamma", double(), 6)
-        .addColumn("IrVega", double(), 6)
-        .addColumn("EqDelta", double(), 6)
-        .addColumn("EqGamma", double(), 6)
-        .addColumn("EqVega", double(), 6)
-        .addColumn("FxDelta", double(), 6)
-        .addColumn("FxGamma", double(), 6)
-        .addColumn("FxVega", double(), 6)
-        .addColumn("InfDelta", double(), 6)
-        .addColumn("InfGamma", double(), 6)
-        .addColumn("InfVega", double(), 6)
-        .addColumn("CreditDelta", double(), 6)
-        .addColumn("CreditGamma", double(), 6)
-        .addColumn("CreditVega", double(), 6)
-        .addColumn("CommDelta", double(), 6)
-        .addColumn("CommGamma", double(), 6)
-        .addColumn("CommVega", double(), 6)
-    ;
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainReport =
+        QuantLib::ext::dynamic_pointer_cast<ore::data::InMemoryReport>(reports->reports().at(2)); 
+    QL_REQUIRE(pnlExplainReport, "PNL report must be an InMemoryReport");
+
+    pnlReportColumnSize_ = pnlReport->columns();
+    //copy pnl report colums to pnl explain report
+    for (QuantLib::Size i = 0; i < pnlReportColumnSize_; i++) {
+        //columns with double has 6 decimal digit
+        if (pnlReport->columnType(i).which() == 1)
+            pnlExplainReport->addColumn(pnlReport->header(i), pnlReport->columnType(i), 6);
+        else
+            pnlExplainReport->addColumn(pnlReport->header(i), pnlReport->columnType(i));
+    }
+
+    if (runRiskFactorDetail(reports))
+        pnlExplainReport->addColumn("RiskFactor", std::string());  
+        
+    pnlExplainReport->addColumn("ScenarioPnl", double(), 6)
+            .addColumn("TotalDelta", double(), 6)
+            .addColumn("TotalGamma", double(), 6)
+            .addColumn("TotalVega", double(), 6)
+            .addColumn("IrDelta", double(), 6)
+            .addColumn("IrGamma", double(), 6)
+            .addColumn("IrVega", double(), 6)
+            .addColumn("EqDelta", double(), 6)
+            .addColumn("EqGamma", double(), 6)
+            .addColumn("EqVega", double(), 6)
+            .addColumn("FxDelta", double(), 6)
+            .addColumn("FxGamma", double(), 6)
+            .addColumn("FxVega", double(), 6)
+            .addColumn("InfDelta", double(), 6)
+            .addColumn("InfGamma", double(), 6)
+            .addColumn("InfVega", double(), 6)
+            .addColumn("CreditDelta", double(), 6)
+            .addColumn("CreditGamma", double(), 6)
+            .addColumn("CreditVega", double(), 6)
+            .addColumn("CommDelta", double(), 6)
+            .addColumn("CommGamma", double(), 6)
+            .addColumn("CommVega", double(), 6);      
 }
 
 void PnlExplainReport::handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
@@ -118,7 +136,7 @@ void PnlExplainReport::handleSensiResults(const QuantLib::ext::shared_ptr<Market
 }
 
 void PnlExplainReport::addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
-    pnlCalculators_.push_back(QuantLib::ext::make_shared<PNLCalculator>(period_.get()));
+    pnlCalculators_.push_back(QuantLib::ext::make_shared<PNLCalculator>(period_.value()));
 }
 
 void PnlExplainReport::writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
@@ -168,6 +186,32 @@ void PnlExplainReport::writeReports(const QuantLib::ext::shared_ptr<MarketRiskRe
             populateResults(mrg, results_[tId], tdeltaPnl, tgammaPnl, tpnl);
         }
     }
+
+    if (runRiskFactorDetail(reports)) {        
+        PNLCalculator::RiskFactorTradePnLStore riskFactorTradeSensiPnls = pnlCalculators_[0]->riskFactorTradePnls();
+        PNLCalculator::RiskFactorTradePnLStore riskFactorFoTradeSensiPnls = pnlCalculators_[0]->riskFactorFoTradePnls();
+        QL_REQUIRE(riskFactorTradeSensiPnls.size() == 1,
+                   "PNLExplainReport::writeReports - should have exactly 1 sensi pnl for each trade");
+        QL_REQUIRE(riskFactorFoTradeSensiPnls.size() == 1,
+                   "PNLExplainReport::writeReports - should have exactly 1 fo sensi pnl for each trade");
+
+        for (QuantLib::Size i = 0; i < tradeIds_.size(); i++) {  
+            std::map<std::string, std::vector<QuantLib::Real>> mapRiskFacforTradePnl = riskFactorTradeSensiPnls[0];
+            std::map<std::string, std::vector<QuantLib::Real>> mapRiskFacforFoTradePnl = riskFactorFoTradeSensiPnls[0];
+            auto tId = tradeIds_.at(i);
+            for (auto const& x : mapRiskFacforTradePnl){
+                Real rfTpnl = mapRiskFacforTradePnl[x.first][i];
+                Real rfTdeltaPnl = mapRiskFacforFoTradePnl[x.first][i];//riskFactorFoTradeSensiPnls[x.first][i];
+                Real rfTgammaPnl = rfTpnl - rfTdeltaPnl;
+                std::string tID_rfID = tId + "_" + x.first;
+                auto itt = results_.find(tID_rfID);
+                if (itt == results_.end())
+                    results_[tID_rfID] = PnlExplainResults();
+
+                populateResults(mrg, results_[tID_rfID], rfTdeltaPnl, rfTgammaPnl, rfTpnl, x.first);
+            }
+        }
+    }
 }
 
 bool PnlExplainReport::includeDeltaMargin(
@@ -180,11 +224,15 @@ bool PnlExplainReport::includeGammaMargin(
 }
 
 void PnlExplainReport::closeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
-    QuantLib::ext::shared_ptr<InMemoryReport> report =
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlReport =
         QuantLib::ext::dynamic_pointer_cast<ore::data::InMemoryReport>(reports->reports().at(0));  
-    
-    for (Size j = 0; j <  report->rows(); j++) {
-        string tradeId = boost::get<std::string>(report->data(0, j));
+    QuantLib::ext::shared_ptr<InMemoryReport> sensireport =
+        QuantLib::ext::dynamic_pointer_cast<ore::data::InMemoryReport>(reports->reports().at(1)); 
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainReport =
+        QuantLib::ext::dynamic_pointer_cast<ore::data::InMemoryReport>(reports->reports().at(2)); 
+
+    for (Size j = 0; j <  pnlReport->rows(); j++) {
+        string tradeId = boost::get<std::string>(pnlReport->data(0, j));
         PnlExplainResults res;
         const auto& r = results_.find(tradeId);
         if (r == results_.end())
@@ -192,30 +240,104 @@ void PnlExplainReport::closeReports(const QuantLib::ext::shared_ptr<MarketRiskRe
         else
             res = r->second;            
         
-        report->next();
-        report->jumpToColumn(pnlReportColumnSize_);
-        report->add(res.pnl)
-            .add(res.delta)
-            .add(res.gamma)
-            .add(res.vega)
-            .add(res.irDelta)
-            .add(res.irGamma)
-            .add(res.irVega)
-            .add(res.eqDelta)
-            .add(res.eqGamma)
-            .add(res.eqVega)
-            .add(res.fxDelta)
-            .add(res.fxGamma)
-            .add(res.fxVega)
-            .add(res.infDelta)
-            .add(res.infGamma)
-            .add(res.infVega)
-            .add(res.creditDelta)
-            .add(res.creditGamma)
-            .add(res.creditVega)
-            .add(res.comDelta)
-            .add(res.comGamma)
-            .add(res.comVega);
+        pnlExplainReport->next();
+        for (QuantLib::Size i = 0; i < pnlReportColumnSize_; i++) {
+            pnlExplainReport->add(pnlReport->data(i, j));
+        }
+        pnlExplainReport->jumpToColumn(pnlReportColumnSize_);
+        if(requireRiskFactorPnl_){
+            // close trade level results
+            pnlExplainReport->add(res.riskFactor)
+                .add(res.pnl)
+                .add(res.delta)
+                .add(res.gamma)
+                .add(res.vega)
+                .add(res.irDelta)
+                .add(res.irGamma)
+                .add(res.irVega)
+                .add(res.eqDelta)
+                .add(res.eqGamma)
+                .add(res.eqVega)
+                .add(res.fxDelta)
+                .add(res.fxGamma)
+                .add(res.fxVega)
+                .add(res.infDelta)
+                .add(res.infGamma)
+                .add(res.infVega)
+                .add(res.creditDelta)
+                .add(res.creditGamma)
+                .add(res.creditVega)
+                .add(res.comDelta)
+                .add(res.comGamma)
+                .add(res.comVega);
+            // close rf level results
+            for (Size k = 0; k <  sensireport->rows(); k++) {
+                string tradeIdSensi = boost::get<std::string>(sensireport->data(0, k));
+                if(tradeId == tradeIdSensi){
+                    string rfId = boost::get<std::string>(sensireport->data(2, k));
+                    string tradeId_rfId = tradeId + "_" + rfId;
+                    PnlExplainResults res;
+                    const auto& r = results_.find(tradeId_rfId);
+                    if (r == results_.end())
+                        res = PnlExplainResults();
+                    else
+                        res = r->second;
+                    pnlExplainReport->next();
+                    for (QuantLib::Size i = 0; i < pnlReportColumnSize_; i++) {
+                        pnlExplainReport->add(pnlReport->data(i, j));
+                    }
+                    pnlExplainReport->jumpToColumn(pnlReportColumnSize_);
+                    pnlExplainReport->add(res.riskFactor)
+                        .add(res.pnl)
+                        .add(res.delta)
+                        .add(res.gamma)
+                        .add(res.vega)
+                        .add(res.irDelta)
+                        .add(res.irGamma)
+                        .add(res.irVega)
+                        .add(res.eqDelta)
+                        .add(res.eqGamma)
+                        .add(res.eqVega)
+                        .add(res.fxDelta)
+                        .add(res.fxGamma)
+                        .add(res.fxVega)
+                        .add(res.infDelta)
+                        .add(res.infGamma)
+                        .add(res.infVega)
+                        .add(res.creditDelta)
+                        .add(res.creditGamma)
+                        .add(res.creditVega)
+                        .add(res.comDelta)
+                        .add(res.comGamma)
+                        .add(res.comVega);
+                }
+            }
+        }
+        else {
+            // close trade level results
+            pnlExplainReport->add(res.pnl)
+                .add(res.delta)
+                .add(res.gamma)
+                .add(res.vega)
+                .add(res.irDelta)
+                .add(res.irGamma)
+                .add(res.irVega)
+                .add(res.eqDelta)
+                .add(res.eqGamma)
+                .add(res.eqVega)
+                .add(res.fxDelta)
+                .add(res.fxGamma)
+                .add(res.fxVega)
+                .add(res.infDelta)
+                .add(res.infGamma)
+                .add(res.infVega)
+                .add(res.creditDelta)
+                .add(res.creditGamma)
+                .add(res.creditVega)
+                .add(res.comDelta)
+                .add(res.comGamma)
+                .add(res.comVega);
+        }
     }
 
     MarketRiskReport::closeReports(reports);

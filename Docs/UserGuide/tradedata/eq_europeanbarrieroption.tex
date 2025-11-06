@@ -1,16 +1,58 @@
 \subsubsection{Equity European Barrier Option}
 
-European exercise, European barrier.
+\ifdefined\IncludePayoff{{\bf Payoff}
 
-The \lstinline!EquityEuropeanBarrierOptionData!  node is the trade data container for the \emph{EquityEuropeanBarrierOption} trade type. The barrier level of an Equity European Barrier Option is quoted in the currency of the 
-underlying Equity spot price. The \lstinline!EquityEuropeanBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
-specific to the Equity European Barrier Option. 
+An Equity European Barrier option gives the buyer the right, but not the obligation, to buy 
+a set number of shares of a single name equity or an equity index, at a 
+predetermined strike price, at one predetermined time in the future. This right may be withdrawn depending
+upon an Equity spot price or index reaching a predetermined barrier level at the
+predetermined time, the underlying is monitored only at expiry with a
+single barrier.
+
+For this right the buyer pays a premium to the seller. Settlement can be
+either cash or physical delivery.
+
+Single Equity European Barrier options can be knock-in or knock-out:
+\begin{itemize}
+\item A knock-in option is a barrier option that only comes into existence/becomes 
+active when the Equity spot rate reaches the barrier level at expiry.
+\item A knock-out option starts its life active, but ceases to exist/becomes 
+inactive, if the barrier is reached at expiry.
+\end{itemize}
+
+When a Single Equity European Barrier option expires inactive, the payoff may be zero, or 
+there may be a cash rebate (barrier rebate) paid out as a fraction of the 
+original option premium.
+
+There are four main types of Single European Barrier Equity Options:
+\begin{itemize}
+\item Up-and-out: The Equity spot price starts below the barrier level and has to 
+move up for the option to be knocked out.
+\item Down-and-out: The Equity spot price starts above the barrier level and has 
+to move down for the option to become knocked out.
+\item Up-and-in: The Equity spot price starts below the barrier level and has to 
+move up for the option to become activated.
+\item Down-and-in: The Equity spot price starts above the barrier level and has 
+to move down for the option to become activated.
+\end{itemize}
+
+{\bf Input}}
+
+\else
+
+European exercise, European barrier.
 
 An Equity European Barrier Option gives the buyer the right, but not the obligation, to buy 
 a set number of shares of a single name equity or an equity index, at a 
 predetermined strike price, at one predetermined time in the future. This right may be withdrawn depending upon
 an Eqity spot price or index reaching a predetermined barrier level at the predetermined time, the
 underlying is monitored only at expiry with a single barrier (European Barrier style).
+
+\fi
+
+The \lstinline!EquityEuropeanBarrierOptionData!  node is the trade data container for the \emph{EquityEuropeanBarrierOption} trade type. The barrier level of an Equity European Barrier Option is quoted in the currency of the 
+underlying Equity spot price. The \lstinline!EquityEuropeanBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
+specific to the Equity European Barrier Option. 
 
 The structure of an example \lstinline!EquityEuropeanBarrierOptionData! node for an Equity European Barrier Option is shown in Listing
 \ref{lst:eqeuropeanbarrieroption_data}.

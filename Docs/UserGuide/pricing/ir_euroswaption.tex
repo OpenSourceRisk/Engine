@@ -1,0 +1,89 @@
+\subsubsection{European Swaption}
+\label{pricing:ir_euroswaption}
+
+Standard European Swaptions are priced using the Black model for log-normal and shifted
+log-normal volatilities, and the Bachelier model for normal volatilities. The 
+full volatility smile (cube) is taken into account where available.
+
+Trades are considered a ``standard European swaption'' if the following criteria are met:
+
+\begin{itemize}
+\item the exercise type is set to European (if set to Bermudan, and only one exercise date is present, this does {\em not} count as European!)
+\item the underlying has exactly two legs, one payer, one receiever and one of type ``Fixed'', one of type ``Floating''
+\item the underlying notional is constant
+\item the underlying fixed rate is constant
+\item the underlying float margin is constant
+\item the underlying float gearing is constant
+\item the underlying float index is Ibor (OIS, BMA do not count as Standard) and fixes in advance (i.e. not in arrears)
+\item the underlying has no embedded caps / floors
+\end{itemize}
+
+If a trade is not classified as ``standard European'', it is priced using the Bermudan pricer, see
+\ref{pricing:ir_bermswaption}.
+
+\subsubsection*{Black model - log-normal volatilities}
+
+A swaption can be regarded as a single option on the forward swap rate with 
+repeated payoffs. Assuming the forward swap rate $F(t;t_s, t_e)$ for swaption 
+expiry (start) $t_s$, to underlying swap maturity (end) $t_e$ follows 
+Geometric Brownian Motion under the swap forward measure,
+$$
+dF / F = \sigma_{t_s,t_e}(t)\,dW(t)
+$$
+Then the Black model gives the following analytical solution for the present 
+value of a European swaption (assuming log-normal volatilities):
+$$
+\NPV = N \,\sum_{i=1}^n \mbox{Black}(K, F(t_0; t_s,t_e), \sigma_{t_s,t_e} \sqrt{t_s},\omega)\cdot A_{t_s t_e}
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $K$: strike rate
+\item $F(t_0,t_s,t_e)$: the forward projected swap rate from swaption expiry 
+to underlying swap maturity at time 0 
+\item $\sigma_{t_s,t_e}$: the volatility of the forward swap rate corresponding 
+to the start $t_s$ and end $t_e$ of the period
+\item $\omega$: 1 for a payer swaption, -1 for a receiver swaption
+\item $A_{t_s t_e}$: an annuity at time 0, for physical settlement and cash settlement using the collateralized cash
+  price method, this is
+$$
+A_{t_s, t_e} = \sum_{i=s+1}^e \delta_i\,P(t_i) 
+$$
+and for cash settlement using the par yield curve method, this is
+$$
+A_{t_s, t_e} = P(t_s) \sum_{i=s+1}^e \delta_i\,(1+y)^{-(t_i-t_s)}
+$$
+with $y$ denoting the fair swap rate observed at the option expiry date.
+\item $\delta_i$: the daycount fraction in years for the period from $t_{i-1}$ to $t_i$
+\item $P(t_i)$: the discount factor for time $t_i$
+\end{itemize}
+
+See Black Model, Section \ref{models:black}, for more details.
+
+\subsubsection*{Black model - shifted log-normal volatilities}
+
+For shifted log-normal volatilities, the present value of a European swaption 
+uses the same analytical solution as above, but with forward swap rate $F$ and 
+strike K amended to include a displacement parameter.  
+See Section \ref{models:black}.
+
+\subsubsection*{Bachelier model - normal volatilities}
+
+Under the Bachelier model it is assumed the forward swap rate $F(t; t_s, t_e)$  
+for swaption expiry (start) $t_s$ to underlying swap maturity (end) $t_e$ follows 
+Arithmetic Brownian Motion under the swap forward measure:
+$$
+dF=\sigma_{t_s,t_e}(t)\,dW(t)
+$$
+Then, the Bachelier model gives the following analytical solution for the 
+present value of a European swaption, assuming normal volatilities:
+$$
+\NPV=N\,\sum_{i=1}^n\mbox{Bachelier}(K,F(t_0; t_s, t_e),\sigma_{t_s,t_e}\sqrt{t_s},\omega)\cdot A_{t_s t_e}
+$$
+See Bachelier Model, Section \ref{models:bachelier}, for more details.
+
+\subsubsection*{Numerical engines}
+
+Alternatively, a European Swaption can be priced using one of the numerical pricers that are designed for Bermudan /
+American Swaptions. See section \ref{pricing:ir_bermswaption} for possible configurations of the numerical integration
+and finite-difference pricers, they work for product type ``EuropeanSwaption'' as well.

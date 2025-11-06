@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="CommodityOption">
+        <TradeType>CommodityOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <CommodityOptionData>
+            <OptionData>
+                <LongShort>Short</LongShort>
+                <OptionType>Put</OptionType>
+                <Style>European</Style>
+                <Settlement>Cash</Settlement>
+                <PayOffAtExpiry>false</PayOffAtExpiry>
+                <ExerciseDates>
+                    <ExerciseDate>2026-04-19</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <Name>NYMEX:CL</Name>
+            <Currency>USD</Currency>
+            <Strike>70</Strike>
+            <Quantity>500000</Quantity>
+        </CommodityOptionData>
+    </Trade>
+</Portfolio>

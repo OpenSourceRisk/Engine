@@ -41,6 +41,9 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     DLOG("ScriptedTrade::build() called for trade " << id());
 
+    auto rt = engineFactory->engineData()->globalParameters().find("RunType");
+    isPfAnalyserRun_ = rt != engineFactory->engineData()->globalParameters().end() && rt->second == "PortfolioAnalyser";
+
     auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(engineFactory->builder("ScriptedTrade"));
 
     QL_REQUIRE(builder, "no builder found for ScriptedTrade");
@@ -68,9 +71,10 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date latestPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData,
-                                         premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), engineFactory,
-                                         builder->configuration(MarketContext::pricing));
+                                         premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), discountCurve, 
+                                         engineFactory, builder->configuration(MarketContext::pricing));
     maturity_ = std::max(maturity_, latestPremiumDate);
     if (maturity_ == latestPremiumDate)
         maturityType_ = "Latest Premium Date";
@@ -141,7 +145,7 @@ void ScriptedTrade::setIsdaTaxonomyFields() {
 }
 
 QuantLib::Real ScriptedTrade::notional() const {
-    if (instrument_->qlInstrument()->isExpired())
+    if (isPfAnalyserRun_ || instrument_->qlInstrument()->isExpired())
         return 0.0;
     // try to get the notional from the additional results of the instrument
     auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
@@ -162,7 +166,7 @@ QuantLib::Real ScriptedTrade::notional() const {
 }
 
 std::string ScriptedTrade::notionalCurrency() const {
-    if (instrument_->qlInstrument()->isExpired())
+    if (isPfAnalyserRun_ || instrument_->qlInstrument()->isExpired())
         return npvCurrency_;
     // try to get the notional ccy from the additional results of the instrument
     auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
@@ -563,6 +567,13 @@ void ScriptedTradeScriptData::fromXML(XMLNode* node) {
     if (XMLNode* ns = XMLUtils::getChildNode(node, "ConditionalExpectation")) {
         conditionalExpectationModelStates_ = XMLUtils::getChildrenValues(ns, "ModelStates", "ModelState", false);
     }
+    if (XMLNode* ns = XMLUtils::getChildNode(node, "AmcCg")) {
+        amcCgComponents_ = XMLUtils::getChildrenValues(ns, "Components", "Component");
+        if (XMLNode* t = XMLUtils::getChildNode(ns, "Target")) {
+            amcCgTargetValue_ = XMLUtils::getChildValue(t, "Value", false);
+            amcCgTargetDerivative_ = XMLUtils::getChildValue(t, "Value", false);
+        }
+    }
     if (XMLNode* peOverwrite = XMLUtils::getChildNode(node, "PricingEngineConfigOverwrite")) {
         {
         std::vector<std::string> keys;
@@ -604,6 +615,13 @@ XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(calibrations, c.toXML(doc));
     }
     XMLUtils::addChildren(doc, n, "StickyCloseOutStates", "StickyCloseOutState", stickyCloseOutStates_);
+    XMLNode* amccg = doc.allocNode("AmcCg");
+    XMLUtils::appendNode(n, amccg);
+    XMLUtils::addChildren(doc, amccg, "Components", "Component", amcCgComponents_);
+    XMLNode* target = doc.allocNode("Target");
+    XMLUtils::appendNode(amccg, target);
+    XMLUtils::addChild(doc, target, "Value", amcCgTargetValue_);
+    XMLUtils::addChild(doc, target, "Derivative", amcCgTargetDerivative_);
     XMLNode* condExp = doc.allocNode("ConditionalExpectation");
     XMLUtils::appendNode(n, condExp);
     XMLUtils::addChildren(doc, condExp, "ModelStates", "ModelState", conditionalExpectationModelStates_);

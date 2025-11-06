@@ -83,7 +83,8 @@ HistoricalPnlGenerator::HistoricalPnlGenerator(
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams, const std::string& configuration,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData, const IborFallbackConfig& iborFallbackConfig,
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     bool dryRun, const std::string& context)
     : useSingleThreadedEngine_(false), portfolio_(portfolio), hisScenGen_(hisScenGen), engineData_(engineData),
       nThreads_(nThreads), today_(today), loader_(loader), curveConfigs_(curveConfigs),

@@ -55,11 +55,17 @@ ScenarioGeneratorBuilder::build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetMo
         tmp->resetCache(data_->getGrid()->timeGrid().size() - 1);
     }
 
-    auto pathGen = pf->build(data_->sequenceType(), process, data_->getGrid()->timeGrid(), data_->seed(),
-                             data_->ordering(), data_->directionIntegers());
+    Size timeStepsPerYear = data_->timeStepsPerYear() == Null<Size>() ? 0 : data_->timeStepsPerYear();
+    Size steps = std::max(std::lround(timeStepsPerYear * data_->getGrid()->timeGrid().back() + 0.5), 1l);
+    std::vector<double> times(data_->getGrid()->timeGrid().begin(), data_->getGrid()->timeGrid().end());
+    TimeGrid processTimeGrid(times.begin(), times.end(), steps);
 
-    return QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(model, pathGen, scenarioFactory, marketConfig, asof, data_->getGrid(), initMarket,
-                                                                        configuration, amcPathDataInput, data_->samples());
+    auto pathGen = pf->build(data_->sequenceType(), process, processTimeGrid, data_->seed(), data_->ordering(),
+                             data_->directionIntegers());
+
+    return QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(
+        model, pathGen, scenarioFactory, marketConfig, asof, data_->getGrid(), initMarket, configuration,
+        amcPathDataInput, data_->samples());
 }
 } // namespace analytics
 } // namespace ore

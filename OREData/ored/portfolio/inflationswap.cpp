@@ -31,7 +31,7 @@ void InflationSwap::checkInflationSwap(const vector<LegData>& legData) {
     // An Inflation Swap must have at least one CPI or YY leg
     bool hasInflationLeg = false;
     for (Size i = 0; i < legData.size(); i++)
-        if (legData[i].legType() == "CPI" || legData[i].legType() == "YY") {
+        if (legData[i].legType() == LegType::CPI || legData[i].legType() == LegType::YY) {
             hasInflationLeg = true;
             break;
         }
@@ -52,10 +52,10 @@ void InflationSwap::setIsdaTaxonomyFields() {
 
     // ISDA taxonomy, override Swap settings Base Product and add Transaction here
     additionalData_["isdaBaseProduct"] = string("Inflation Swap");
-    if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == "CPI"; }) !=
+    if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == LegType::CPI; }) !=
         legData_.end())
         additionalData_["isdaTransaction"] = string("Zero Coupon");
-    else if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == "YY"; }) !=
+    else if (std::find_if(legData_.begin(), legData_.end(), [](const LegData& d) { return d.legType() == LegType::YY; }) !=
              legData_.end())
         additionalData_["isdaTransaction"] = string("Year on Year");
 }

@@ -285,7 +285,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // determine the fair swap rate
 
-    Real atmForward = -floatingNpv / fixedBps;
+    Real atmForward = close_enough(fixedBps, 0.0) ? 0.0 : -floatingNpv / fixedBps;
 
     // determine the spread correction
 

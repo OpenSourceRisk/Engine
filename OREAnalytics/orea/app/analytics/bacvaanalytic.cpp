@@ -30,11 +30,14 @@ void BaCvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
+void BaCvaAnalyticImpl::buildDependencies() {
+    auto saccrAnalytic =
+        AnalyticFactory::instance().build(saccrLookupKey, inputs_, analytic()->analyticsManager(), true).second;
+    addDependentAnalytic(saccrLookupKey, saccrAnalytic);
+}
+
 void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                 const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("BaCvaAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);
@@ -49,8 +52,8 @@ void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     QL_REQUIRE(inputs_->nettingSetManager() != nullptr, "No netting set configuration provided for BA-CVA calculation");
 
     // build BA-CVA calculator
-    QuantLib::ext::shared_ptr<BaCvaCalculator> baCvaCalculator =
-        QuantLib::ext::make_shared<BaCvaCalculator>(saccrAnalytic->saccr(), inputs_->baseCurrency());
+    QuantLib::ext::shared_ptr<BaCvaCalculator> baCvaCalculator = QuantLib::ext::make_shared<BaCvaCalculator>(
+        saccrAnalytic->saccrCalculator(), saccrAnalytic->saccrTradeData(), inputs_->baseCurrency());
     analytic()->addTimer("BaCvaCalculator", baCvaCalculator->timer());
 
     // generate report
@@ -58,7 +61,7 @@ void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     ReportWriter(inputs_->reportNaString()).writeBaCvaReport(baCvaCalculator, *baCvaReport);
     LOG("BA-CVA Calculation - Completed");
 
-    analytic()->reports()[label()]["bacva"] = baCvaReport;
+    analytic()->addReport(label(), "bacva", baCvaReport);
 }
 
 } // namespace analytics

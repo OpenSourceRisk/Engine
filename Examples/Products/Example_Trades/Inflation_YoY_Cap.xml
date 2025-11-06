@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="YearOnYear_Cap">
+        <TradeType>CapFloor</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <valuation_date>2025-02-10</valuation_date>
+                <party_id>party</party_id>
+            </AdditionalFields>
+        </Envelope>
+        <CapFloorData>
+            <LongShort>Long</LongShort>
+            <LegData>
+                <LegType>YY</LegType>
+                <Payer>false</Payer>
+                <Currency>EUR</Currency>
+                <Notionals>
+                    <Notional>10000000</Notional>
+                </Notionals>
+                <DayCounter>ACT/ACT</DayCounter>
+                <PaymentConvention>Following</PaymentConvention>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2025-12-29</StartDate>
+                        <EndDate>2030-12-29</EndDate>
+                        <Tenor>1Y</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>ModifiedFollowing</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <YYLegData>
+                    <Index>EUHICPXT</Index>
+                    <FixingDays>2</FixingDays>
+                    <ObservationLag>3M</ObservationLag>
+                </YYLegData>
+            </LegData>
+            <Caps>
+                <Cap>0.03</Cap>
+            </Caps>
+            <Floors/>
+        </CapFloorData>
+    </Trade>
+</Portfolio>

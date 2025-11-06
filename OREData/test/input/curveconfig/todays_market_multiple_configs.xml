@@ -4,12 +4,15 @@
   </Configuration>
   <Configuration id="collateral_inccy">
     <DiscountingCurvesId>ois</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="xois_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <Configuration id="xois_usd">
     <DiscountingCurvesId>xois_usd</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
   </Configuration>
   <DiscountingCurves id="xois_usd">
     <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>

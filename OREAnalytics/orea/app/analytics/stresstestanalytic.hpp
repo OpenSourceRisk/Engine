@@ -43,9 +43,9 @@ public:
 class StressTestAnalytic : public Analytic {
 public:
     StressTestAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false, false) {}
+                       const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, analyticsManager, false, false,
+                   false, false) {}
 };
 
 } // namespace analytics

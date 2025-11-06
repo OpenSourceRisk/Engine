@@ -28,9 +28,9 @@ CloneScenarioFactory::CloneScenarioFactory(const QuantLib::ext::shared_ptr<Scena
     QL_REQUIRE(baseScenario_ != NULL, "base scenario pointer must not be NULL");
 }
 
-const QuantLib::ext::shared_ptr<Scenario> CloneScenarioFactory::buildScenario(Date asof, bool isAbsolute,
+const QuantLib::ext::shared_ptr<Scenario> CloneScenarioFactory::buildScenario(QuantLib::Date asof, bool isAbsolute,
                                                                               bool isPar, const std::string& label,
-                                                                              Real numeraire) const {
+                                                                              QuantLib::Real numeraire) const {
     QuantLib::ext::shared_ptr<Scenario> newScen = baseScenario_->clone();
     QL_REQUIRE(asof == newScen->asof(),
                "unexpected asof date (" << asof << "), does not match base - " << baseScenario_->asof());

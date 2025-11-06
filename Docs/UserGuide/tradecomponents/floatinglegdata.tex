@@ -31,8 +31,12 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <NakedOption>false</NakedOption>
                     <LocalCapFloor>false</LocalCapFloor>
                     <HistoricalFixings>
-            			<Fixing fixingDate="2016-02-01">0.2</Fixing>
-			        </HistoricalFixings>
+                        <Fixing fixingDate="2016-02-01">0.2</Fixing>
+                    </HistoricalFixings>
+                    <BackStubInterpolation>
+                        <ShortIndex>USD-LIBOR-1M</ShortIndex>
+                        <LongIndex>USD-LIBOR-3M</LongIndex>
+                    </BackStubInterpolation>
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -306,5 +310,24 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   the reset schedule.
 
 \item \lstinline!HistoricalFixings! [Optional]: This node allows for the specification of an custom trade specific fixings. Supported for underlying OIS / IBOR / term rate
-  index. If a historical fixing for date in the provided list is needed for pricing,  the custom fixings will be used instead of an exisiting global index fixings.
+index. If a historical fixing for date in the provided list is needed for pricing,  the custom fixings will be used instead of an exisiting global index fixings.
+
+\item \lstinline!FrontStubInterpolation! [Optional]: This node allows for the specification of interpolation between two indices for the front stub period of the leg.
+Supported for underlying IBOR / term rate index. The interpolated fixing is calculated as a linear interpolation between the two given indices based on the accrual days of the coupon.
+The node contains the following child elements:
+  \begin{itemize}
+  \item ShortIndex: The index to be used for the short side of the interpolation.
+  \item LongIndex: The index to be used for the long side of the interpolation.
+  \item RoundingType: [Optional] The type of rounding to be applied to the interpolated fixing. If omitted, no rounding is applied.
+  Allowable values: \emph{Up}, \emph{Down}, \emph{Closest}, \emph{Floor}, \emph{Ceiling}.
+  \item RoundingPrecision: [Optional] The number of decimal places to which the interpolated fixing percentage is rounded,
+  e.g. RoundingPrecision 2 rounds 2.341\% to 2.34\% (Closest). If omitted, no rounding is applied.
+  \end{itemize}
+Note that rounding does not apply to interpolated fixing forecasts.
+
+\item \lstinline!BackStubInterpolation! [Optional]: Same as \lstinline!FrontStubInterpolation! but for the back stub period of the leg.
+
+\item \lstinline!StubUseOriginalCurve! [Optional]: Boolean flag to indicate whether the original index curve should be used for stub interpolation fixing forecasts.
+  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
+
 \end{itemize}

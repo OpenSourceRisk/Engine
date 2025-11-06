@@ -1,0 +1,6 @@
+#TradeId,NettingSetId,CVA,DVA,FBA,FCA,FBAexOwnSP,FCAexOwnSP,FBAexAllSP,FCAexAllSP,COLVA,MVA,OurKVACCR,TheirKVACCR,OurKVACVA,TheirKVACVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,BaselEPE,BaselEEPE
+,CPTY_A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,0.00,#N/A,0.00,0.00,0.00,0.00,0.00,#N/A,#N/A,None,0.00,0.00
+FX_Forward_2D,CPTY_A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,None,0.00,0.00
+FX_Forward_3D,CPTY_A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,None,0.00,0.00
+FX_Forward_7D,CPTY_A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,None,0.00,0.00
+SCRIPTED_FX_TARF,CPTY_A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,None,0.00,0.00

@@ -1,0 +1,28 @@
+\subsubsection{CPI Cap/Floor}
+\label{pricing:inf_zciicapfloor}
+
+The CPI Cap/Floor payoff is
+$$
+\Pi_{ZCIICF}(T) = N\,\left(\omega\left(\frac{I(T)}{I(T_0)} - K\right)\right)^+
+$$
+where $\omega=1$ for the Cap and $\omega=-1$ for the Floor.
+
+\medskip
+To price the Cap/Floor, one considers the {\em Forward Inflation Index} 
+$$
+F(t,T) = \frac{I(t)}{I(T_0)}\,\frac{P_r(t,T)}{P(t,T)}, \qquad  F(T,T) = \frac{I(T)}{I(T_0)}
+$$
+where $P_r(t,T)$ is the ``Real Rate Bond Price'' curve stripped from CPI Swap quotes. 
+$F(t,T)$ is a ratio of tradable assets and a Martingale in the T-Forward measure. 
+
+\medskip
+We then assume that $F(t,T)$ follows Geometric Brownian Motion without drift in the 
+$T$-Forward measure, so that we obtain a Black pricing formula for the CPI Cap/Floor
+$$
+\NPV(0) = N\:P(T)\:\mbox{Black}(K, F(0,T),\sigma\sqrt{T},\omega)
+$$
+
+\medskip
+CPI Caps/Floors are primarily quoted in terms of cap and floor prices by maturity and 
+strike rate $r$ (with $K=(1+r)^{T-T_0}$). We convert them to equivalent 
+Black volatilities $\sigma_{r,T}$. 

@@ -21,15 +21,16 @@
 namespace QuantExt {
 
 void EquityCouponPricer::AdditionalResultCache::clear() {
-    initialPrice = Null<Real>();
+    currentPeriodStartPrice = Null<Real>();
     startFixingTotal = Null<Real>();
     startFixing = Null<Real>();
-    startFxFixing = Null<Real>();
+    currentPeriodStartFxFixing = Null<Real>();
     endFixingTotal = Null<Real>();
     endFixing = Null<Real>();
-    endFxFixing = Null<Real>();
+    currentPeriodEndFxFixing = Null<Real>();
     pastDividends = Null<Real>();
     forecastDividends = Null<Real>();
+    dividendFactor = Null<Real>();
 }
 
 Rate EquityCouponPricer::swapletRate() {
@@ -37,13 +38,15 @@ Rate EquityCouponPricer::swapletRate() {
 
     // Start fixing shouldn't include dividends as the assumption of continuous dividends means they will have been paid
     // as they accrued in the previous period (or at least at the end when performance is measured).
-    additionalResultCache_.initialPrice = coupon_->initialPrice();
+    additionalResultCache_.currentPeriodStartPrice = coupon_->initialPrice();
     additionalResultCache_.endFixing = equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
-
+    
     // fx rates at start and end, at start we only convert if the initial price is not already in target ccy
-    additionalResultCache_.startFxFixing =
+    additionalResultCache_.currentPeriodStartFxFixing =
         fxIndex_ && !coupon_->initialPriceIsInTargetCcy() ? fxIndex_->fixing(coupon_->fixingStartDate()) : 1.0;
-    additionalResultCache_.endFxFixing = fxIndex_ ? fxIndex_->fixing(coupon_->fixingEndDate()) : 1.0;
+    additionalResultCache_.currentPeriodEndFxFixing = fxIndex_ ? fxIndex_->fixing(coupon_->fixingEndDate()) : 1.0;
+
+    additionalResultCache_.dividendFactor = coupon_->dividendFactor();
 
     Real dividends = 0.0;
 
@@ -68,15 +71,18 @@ Rate EquityCouponPricer::swapletRate() {
 
     if (returnType_ == EquityReturnType::Dividend)
         return dividends; 
-    else if (additionalResultCache_.initialPrice == 0)
-        return (additionalResultCache_.endFixing + dividends * dividendFactor_) * additionalResultCache_.endFxFixing;
+    else if (additionalResultCache_.currentPeriodStartPrice == 0)
+        return (additionalResultCache_.endFixing + dividends * dividendFactor_) *
+               additionalResultCache_.currentPeriodEndFxFixing;
     else if (returnType_ == EquityReturnType::Absolute)
-        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) * additionalResultCache_.endFxFixing -
-                additionalResultCache_.initialPrice * additionalResultCache_.startFxFixing);
+        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) *
+                    additionalResultCache_.currentPeriodEndFxFixing -
+                additionalResultCache_.currentPeriodStartPrice * additionalResultCache_.currentPeriodStartFxFixing);
     else
-        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) * additionalResultCache_.endFxFixing -
-                additionalResultCache_.initialPrice * additionalResultCache_.startFxFixing) /
-               (additionalResultCache_.initialPrice * additionalResultCache_.startFxFixing);
+        return ((additionalResultCache_.endFixing + dividends * dividendFactor_) *
+                    additionalResultCache_.currentPeriodEndFxFixing -
+                additionalResultCache_.currentPeriodStartPrice * additionalResultCache_.currentPeriodStartFxFixing) /
+               (additionalResultCache_.currentPeriodStartPrice * additionalResultCache_.currentPeriodStartFxFixing);
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {

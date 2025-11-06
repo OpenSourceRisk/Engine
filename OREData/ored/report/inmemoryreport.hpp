@@ -44,7 +44,7 @@ public:
     explicit InMemoryReport(Size bufferSize=0) : i_(0), bufferSize_(bufferSize), cacheIndex_(0) {}
     ~InMemoryReport() override;
 
-    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
+    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0, bool scientific = false) override;
     Report& next() override;
     Report& add(const ReportType& rt) override;
     Report& add(const InMemoryReport& report);
@@ -75,6 +75,7 @@ private:
     vector<string> headers_;
     vector<ReportType> columnTypes_;
     vector<Size> columnPrecision_;
+    vector<bool> columnScientific_;
     vector<vector<ReportType>> data_;
     vector<string> files_;
     std::map<std::string, size_t> headersMap_;

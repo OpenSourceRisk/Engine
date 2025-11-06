@@ -593,10 +593,13 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
+    data->engineParameters("Swap")["SensitivityTemplate"] = "IR_Analytical";
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
+    data->engineParameters("EuropeanSwaption")["SensitivityTemplate"] = "IR_Analytical";
 
-    QuantLib::ext::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, initMarket);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
 
     cpu_timer t2;
     t2.start();

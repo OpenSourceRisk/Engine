@@ -55,28 +55,7 @@ DynamicDeltaVaRCalculator::DynamicDeltaVaRCalculator(
   : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays, currentIM),
     dimHelper_(dimHelper), ddvOrder_(ddvOrder) {}
 
-map<string, Real> DynamicDeltaVaRCalculator::unscaledCurrentDIM() {
-
-    map<string, Real> currentDIM;
-
-    Real thetaFactor = static_cast<Real>(horizonCalendarDays_) / 365.25;
-
-    map<string, std::vector<QuantLib::ext::shared_ptr<Trade>>> nettingSetTrades;
-    for (const auto& [tradeId, trade] : portfolio_->trades()) {
-        string nettingSetId = trade->envelope().nettingSetId();
-        nettingSetTrades[nettingSetId].push_back(trade);
-    }
-
-    for (const auto& nid : nettingSetIds_) {
-        LOG("Process netting set " << nid);
-
-        currentDIM[nid] = dimHelper_->var(nid, ddvOrder_, quantile_, thetaFactor);
-
-        DLOG("T0 IM (DDV) - {" << nid << "} = " << currentDIM[nid]);
-    }
-
-    return currentDIM;
-}
+const map<string, Real>& DynamicDeltaVaRCalculator::unscaledCurrentDIM() const { return currentDIM_; }
 
 void DynamicDeltaVaRCalculator::build() {
 
@@ -129,6 +108,15 @@ void DynamicDeltaVaRCalculator::build() {
         }
 
         i++;
+    }
+
+    // current dim
+
+    currentDIM_.clear();
+    for (const auto& nid : nettingSetIds_) {
+        DLOG("Process netting set " << nid);
+        currentDIM_[nid] = dimHelper_->var(nid, ddvOrder_, quantile_, thetaFactor);
+        DLOG("T0 IM (DDV) - {" << nid << "} = " << currentDIM_[nid]);
     }
 }
 

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <Parameter name="Model">GaussianCam</Parameter>
+      <Parameter name="BaseCcy">USD</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
+      <Parameter name="IrReversion_EUR">0.0050</Parameter>
+      <Parameter name="IrReversion_USD">0.0050</Parameter>
+      <Parameter name="FullDynamicFx">true</Parameter>
+      <Parameter name="FullDynamicIr">true</Parameter>
+      <!-- DK or JY -->
+      <Parameter name="InfModelType">JY</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="RegressionOrder">4</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">1.0</Parameter>
+      <Parameter name="ZeroVolatility">false</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+  </GlobalParameters>
+</PricingEngines>

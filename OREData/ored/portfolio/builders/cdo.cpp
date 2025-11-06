@@ -28,6 +28,7 @@
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/utilities/creditcurves.hpp>
 
 namespace ore {
 namespace data {
@@ -42,14 +43,15 @@ std::vector<Handle<DefaultProbabilityTermStructure>> buildPerformanceOptimizedDe
     Handle<DefaultProbabilityTermStructure> clientCurve;
     Handle<DefaultProbabilityTermStructure> baseCurve;
     vector<Time> baseCurveTimes;
-    
+    DLOG("build performance optimized curves");
     for (const auto& targetCurve : curves) {
         //For all but the first curve use a spreaded curve, with the first curve as reference and
         //the inital spread between the curve and the first curve, keep the spread constant
         //in case of a spreaded curve we need to use the underlying reference curve to retrieve the
         //correct pillar times, otherwise the interpolation grid is to coarse and we wouldnt match
         //today's market prices
-        vector<Time> targetCurveTimes = ore::data::SyntheticCDO::extractTimeGridDefaultCurve(targetCurve);
+        vector<Time> targetCurveTimes = getCreditCurveTimes(targetCurve);
+        
         // Sort times we need to interpolate an all pillars of the base and target curve
         std::sort(targetCurveTimes.begin(), targetCurveTimes.end());
         // Use the first curve as basis curve and update times
@@ -75,37 +77,20 @@ std::vector<Handle<DefaultProbabilityTermStructure>> buildPerformanceOptimizedDe
             if (baseCurve->allowsExtrapolation())
                 clientCurve->enableExtrapolation();
         }
+        DLOG("got " << targetCurveTimes.size() << " numbers of times for target curve");
+        DLOG("got " << baseCurveTimes.size() << " numbers of times for base curve");
         dpts.push_back(clientCurve);
     }
     return dpts;
 }
 
-QuantLib::ext::shared_ptr<PricingEngine> GaussCopulaBucketingCdoEngineBuilder::engineImpl(
-    const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-    const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor,
-    const QuantLib::Real fixedRecovery) {
-    if (isIndexCDS) {
+QuantLib::ext::shared_ptr<PricingEngine>
+CdoEngineBuilder::engineImpl(const Currency& ccy, bool isIndex, const std::string& qualifier,
+                             const std::vector<std::string>& creditCurves,
+                             const std::vector<Handle<DefaultProbabilityTermStructure>>& dpts, const std::vector<double>& recovery,
+                             const bool calibrated, const Real fixedRecovery) {
+    if (isIndex) {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
-        std::vector<Real> recovery;
-        for (auto& c : creditCurves) {
-            Real recoveryRate = market_->recoveryRate(c, configuration(MarketContext::pricing))->value();
-            Handle<DefaultProbabilityTermStructure> targetCurve;
-            
-            auto it = globalParameters_.find("RunType");
-            if (calibrateConstituentCurve() &&  it != globalParameters_.end() && it->second != "PortfolioAnalyser") {
-                auto orgCurve = market_->defaultCurve(c, configuration(MarketContext::pricing))->curve();
-                targetCurve =
-                    SyntheticCDO::buildCalibratedConstiuentCurve(orgCurve, calibrationFactor);
-            } else {
-                targetCurve = market_->defaultCurve(c, configuration(MarketContext::pricing))->curve();
-            }
-            recovery.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : recoveryRate);
-            dpts.push_back(targetCurve);
-        }
-        if (optimizedSensitivityCalculation()) {
-            dpts = buildPerformanceOptimizedDefaultCurves(dpts);
-        }
         return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, yts);
     } else {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));

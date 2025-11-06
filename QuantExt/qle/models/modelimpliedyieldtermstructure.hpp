@@ -93,7 +93,7 @@ private:
     const Handle<YieldTermStructure> targetCurve_;
 };
 
-//! Lgm Implied Yts Spot Corrected
+//! Model Implied Yts Spot Corrected
 /*! the target curve should have a reference date consistent with
   the model's term structure
 

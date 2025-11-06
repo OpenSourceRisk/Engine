@@ -37,13 +37,14 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
+#include <qle/termstructures/scenario.hpp>
 
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/doublebarriertype.hpp>
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/bond.hpp>
@@ -332,6 +333,18 @@ template <class T> std::vector<T> parseListOfValues(string s, std::function<T(st
     return vec;
 }
 
+template <class T> std::vector<T> parseListOfValuesAsInt(string s, std::function<T(string)> parser) {
+    boost::trim(s);
+    std::vector<T> vec;
+    boost::char_separator<char> sep(",");
+    boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+    for (auto r : tokens) {
+        boost::trim(r);
+        vec.push_back(parser(r));
+    }
+    return vec;
+}
+
 template <class T> std::vector<T> parseVectorOfValues(std::vector<std::string> str, std::function<T(string)> parser) {
     std::vector<T> vec;
     for (auto s : str) {
@@ -341,6 +354,9 @@ template <class T> std::vector<T> parseVectorOfValues(std::vector<std::string> s
 }
 
 std::vector<string> parseListOfValues(string s, const char escape = '\\', const char delim = ',',
+                                      const char quote = '\"');
+
+std::vector<int> parseListOfValuesAsInt(string s, const char escape = '\\', const char delim = ',',
                                       const char quote = '\"');
 
 enum class AmortizationType {
@@ -471,10 +487,10 @@ QuantLib::YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const std::st
 */
 QuantExt::CrossAssetModel::AssetType parseCamAssetType(const std::string& s);
 
-/*! Convert boost::any to pair<string,string>, including the valueType and the value
+/*! Convert QuantLib::ext::any to pair<string,string>, including the valueType and the value
     \ingroup utilities
 */
-std::pair<string, string> parseBoostAny(const boost::any& anyType, Size precision = 8);
+std::pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size precision = 8);
 
 //! Convert text to QuantLib::RateAveraging::Type
 QuantLib::RateAveraging::Type parseOvernightIndexFutureNettingType(const std::string& s);
@@ -581,6 +597,12 @@ QuantLib::Pillar::Choice parsePillarChoice(const std::string& s);
 */
 QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s);
 
+//! Convert text to QuantExt::McMultiLegBaseEngine::VarGroupMode
+/*!
+\ingroup utilities
+*/
+QuantExt::McMultiLegBaseEngine::VarGroupMode parseVarGroupMode(const std::string& s);
+
 enum MporCashFlowMode { Unspecified, NonePay, BothPay, WePay, TheyPay };
 
 //! Convert text to MporCashFlowMode
@@ -625,7 +647,28 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type);
 //! parse integration policy
 QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s);
 
+//! Enum to control behavior when small diagonal elements are encountered in par conversion matrix
+enum class ParConversionMatrixRegularisation {
+    Silent,        //!< Set small diagonal elements to 0.01 without warnings (default behavior)
+    Warning,       //!< Set small diagonal elements to 0.01 but issue structured warnings
+    Disable        //!< Disable regularisation, use original diagonal elements as-is
+};
+
+//! Convert text to ParConversionMatrixRegularisation
+/*!
+\ingroup utilities
+*/
+ParConversionMatrixRegularisation parseParConversionMatrixRegularisation(const std::string& s);
+
+//! Write ParConversionMatrixRegularisation
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation regularisation);
+
 std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
 
+std::string splitByLastDelimiter(const std::string& s, const std::string& delimeter);
+std::string removeAfterLastDelimiter(const std::string& s, const std::string& delimeter);
 } // namespace data
 } // namespace ore

@@ -119,11 +119,12 @@ void YoYCapFloorHelper::createCapFloor() {
         yoyConvention_, DateGeneration::Backward, false);
 
     // YoY leg.
+    QL_DEPRECATED_DISABLE_WARNING
     Leg yoyLeg = yoyInflationLeg(yoySchedule, paymentCalendar_, yoyIndex_, observationLag_)
         .withNotionals(1.0)
         .withPaymentDayCounter(yoyDayCount_)
         .withPaymentAdjustment(paymentConvention_);
-
+    QL_DEPRECATED_ENABLE_WARNING
     // YoY cap floor.
     vector<Rate> strikes{ strike_ };
     yoyCapFloor_ = QuantLib::ext::make_shared<YoYInflationCapFloor>(type_, yoyLeg, strikes);

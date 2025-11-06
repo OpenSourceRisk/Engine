@@ -53,17 +53,15 @@ private:
 };
 
 // is the given random variable deterministic and zero?
-inline bool isDeterministicAndZero(const ExternalRandomVariable& x) {
-    return false;
-}
+inline bool isDeterministicAndZero(const ExternalRandomVariable& x) { return false; }
 
 using ExternalRandomVariableOp =
-    std::function<ExternalRandomVariable(const std::vector<const ExternalRandomVariable*>&)>;
+    std::function<ExternalRandomVariable(const std::vector<const ExternalRandomVariable*>&, const Size)>;
 
 std::vector<ExternalRandomVariableOp> getExternalRandomVariableOps();
 
 using ExternalRandomVariableGrad = std::function<std::vector<ExternalRandomVariable>(
-    const std::vector<const ExternalRandomVariable*>&, const ExternalRandomVariable*)>;
+    const std::vector<const ExternalRandomVariable*>&, const ExternalRandomVariable*, const Size)>;
 
 std::vector<ExternalRandomVariableGrad> getExternalRandomVariableGradients();
 

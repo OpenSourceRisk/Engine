@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+FX_TaRF,ScriptedTrade,2024-02-22,1.059885,557.690117,USD,557.690117,USD,#N/A,#N/A,#N/A,CPTY_A,CPTY_A

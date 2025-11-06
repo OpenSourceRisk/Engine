@@ -19,6 +19,7 @@
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/trade.hpp>
 
 #include <ql/time/date.hpp>
@@ -33,28 +34,27 @@ namespace analytics {
 ExposureCalculator::ExposureCalculator(
     const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
-    const QuantLib::ext::shared_ptr<Market>& market,
-    bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
-    const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-    const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues)
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData,
+    const QuantLib::ext::shared_ptr<Market>& market, bool exerciseNextBreak, const string& baseCurrency,
+    const string& configuration, const Real quantile, const CollateralExposureHelper::CalculationType calcType,
+    const bool multiPath, const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues, bool continueOnError,
+    bool useDoublePrecisionCubes)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
-       market_(market), exerciseNextBreak_(exerciseNextBreak),
-      baseCurrency_(baseCurrency), configuration_(configuration),
-      quantile_(quantile), calcType_(calcType),
-      multiPath_(multiPath), dates_(cube->dates()),
-      today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA),
-      exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues) {
+      aggregationScenarioData_(aggregationScenarioData), market_(market), exerciseNextBreak_(exerciseNextBreak),
+      baseCurrency_(baseCurrency), configuration_(configuration), quantile_(quantile), calcType_(calcType),
+      multiPath_(multiPath), dates_(cube->dates()), today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)),
+      flipViewXVA_(flipViewXVA), exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues),
+      continueOnError_(continueOnError) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
-    if (multiPath) {
-        exposureCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(
-            market->asofDate(), portfolio_->ids(), dates_,
-            cube_->samples(), EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
+    // EPE, ENE, allocatedEPE, allocatedENE
+    if (useDoublePrecisionCubes) {
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+            market->asofDate(), portfolio_->ids(), dates_, multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     } else {
-        exposureCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(
-            market->asofDate(), portfolio_->ids(), dates_,
-            1, EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(
+            market->asofDate(), portfolio_->ids(), dates_, multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     }
 
     set<string> nettingSetIdsSet;
@@ -71,7 +71,6 @@ ExposureCalculator::ExposureCalculator(
 
 void ExposureCalculator::build() {
     LOG("Compute trade exposure profiles, " << (flipViewXVA_ ? "inverted (flipViewXVA = Y)" : "regular (flipViewXVA = N)"));
-    size_t i = 0;
     const Date today = market_->asofDate();
     const DayCounter dc = ActualActual(ActualActual::ISDA);
 
@@ -87,10 +86,9 @@ void ExposureCalculator::build() {
         included.
         This may effect DateGrids with daily data points*/
     const Date baselMaxEEPDate = WeekendsOnly().adjust(today + 1 * Years + 4 * Days);
-    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
-        auto trade = tradeIt->second;
-        string tradeId = tradeIt->first;
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
         string nettingSetId = trade->envelope().nettingSetId();
+        std::size_t i = cube_->getTradeIndex(tradeId);
         LOG("Aggregate exposure for trade " << tradeId);
         if (nettingSetDefaultValue_.find(nettingSetId) == nettingSetDefaultValue_.end()) {
             nettingSetDefaultValue_[nettingSetId] = vector<vector<Real>>(dates_.size(), vector<Real>(cube_->samples(), 0.0));
@@ -104,24 +102,46 @@ void ExposureCalculator::build() {
         TradeActions ta = trade->tradeActions();
         if (exerciseNextBreak_ && !ta.empty()) {
             // loop over actions and pick next mutual break, if available
-            vector<TradeAction> actions = ta.actions();
-            for (Size j = 0; j < actions.size(); ++j) {
-                DLOG("TradeAction for " << tradeId << ", actionType " << actions[j].type() << ", actionOwner "
-                                        << actions[j].owner());
-                // FIXME: Introduce enumeration and parse text when building trade
-                if (actions[j].type() == "Break" && actions[j].owner() == "Mutual") {
-                    QuantLib::Schedule schedule = ore::data::makeSchedule(actions[j].schedule());
-                    vector<Date> dates = schedule.dates();
-                    std::sort(dates.begin(), dates.end());
-                    Date today = Settings::instance().evaluationDate();
-                    for (Size k = 0; k < dates.size(); ++k) {
-                        if (dates[k] > today && dates[k] < nextBreakDate) {
-                            nextBreakDate = dates[k];
-                            DLOG("Next break date for trade " << tradeId << ": "
-                                                              << QuantLib::io::iso_date(nextBreakDate));
-                            break;
+            const vector<TradeAction>& actions = ta.actions();
+            try {
+                for (Size j = 0; j < actions.size(); ++j) {
+                    DLOG("TradeAction for " << tradeId << ", actionType " << actions[j].type() << ", actionOwner "
+                                            << actions[j].owner());
+                    // FIXME: Introduce enumeration and parse text when building trade
+                    if (actions[j].type() == "Break" && actions[j].owner() == "Mutual") {
+                        QuantLib::Schedule schedule = ore::data::makeSchedule(actions[j].schedule());
+                        vector<Date> dates = schedule.dates();
+                        std::sort(dates.begin(), dates.end());
+                        Date today = Settings::instance().evaluationDate();
+                        for (Size k = 0; k < dates.size(); ++k) {
+                            if (dates[k] > today && dates[k] < nextBreakDate) {
+                                nextBreakDate = dates[k];
+                                DLOG("Next break date for trade " << tradeId << ": "
+                                                                << QuantLib::io::iso_date(nextBreakDate));
+                                break;
+                            }
                         }
                     }
+                }
+            } catch (std::exception& e) {
+                if (continueOnError_) {
+                    StructuredTradeErrorMessage(tradeId, trade->tradeType(),
+                                                "Error processing trade actions",
+                                                std::string(e.what()) + ", excluding trade from netting set " + std::string(nettingSetId) + ".")
+                        .log();
+                    ee_b_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    eee_b_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    pfe_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    epe_b_[tradeId] = 0.0;
+                    eepe_b_[tradeId] = 0.0;
+                    epe_bTimeWeighted_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                    eepe_bTimeWeighted_[tradeId] = std::vector<Real>(dates_.size() + 1, 0.0);
+                } else {
+                    StructuredTradeErrorMessage(tradeId, trade->tradeType(),
+                                                "Error processing trade actions",
+                                                e.what())
+                        .log();
+                    throw e;
                 }
             }
         }
@@ -170,7 +190,7 @@ void ExposureCalculator::build() {
                 else
                     closeOutValue = d > nextBreakDate && exerciseNextBreak_
                                         ? 0.0
-                                        : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
+                                        : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k, aggregationScenarioData_);
 
                 Real positiveCashFlow = cubeInterpretation_->getMporPositiveFlows(cube_, i, j, k);
                 Real negativeCashFlow = cubeInterpretation_->getMporNegativeFlows(cube_, i, j, k);
@@ -218,11 +238,12 @@ void ExposureCalculator::build() {
 }
 
 vector<Real> ExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
+    Size tidx = exposureCube_->getTradeIndex(tid);
     vector<Real> exp(dates_.size() + 1, 0.0);
-    exp[0] = exposureCube_->getT0(tid, index);
+    exp[0] = exposureCube_->getT0(tidx, index);
     for (Size i = 0; i < dates_.size(); i++) {
         for (Size k = 0; k < exposureCube_->samples(); k++) {
-            exp[i + 1] += exposureCube_->get(tid, dates_[i], k, index);
+            exp[i + 1] += exposureCube_->get(tidx, i, k, index);
         }
         exp[i + 1] /= exposureCube_->samples();
     }

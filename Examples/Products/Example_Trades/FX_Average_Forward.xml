@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="FX_AVG_FWD">
+        <TradeType>FxAverageForward</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FxAverageForwardData>
+            <PaymentDate>2025-09-30</PaymentDate>
+            <ObservationDates>
+                <Dates>
+                    <Calendar>US</Calendar>
+                    <Convention>Following</Convention>
+                    <Tenor>1M</Tenor>
+                    <Dates>
+                        <Date>2025-09-02</Date>
+                        <Date>2025-09-03</Date>
+                        <Date>2025-09-04</Date>
+                        <Date>2025-09-05</Date>
+                        <Date>2025-09-08</Date>
+                        <Date>2025-09-09</Date>
+                        <Date>2025-09-10</Date>
+                        <Date>2025-09-11</Date>
+                        <Date>2025-09-12</Date>
+                        <Date>2025-09-15</Date>
+                        <Date>2025-09-16</Date>
+                        <Date>2025-09-17</Date>
+                        <Date>2025-09-18</Date>
+                        <Date>2025-09-19</Date>
+                        <Date>2025-09-22</Date>
+                        <Date>2025-09-23</Date>
+                        <Date>2025-09-24</Date>
+                        <Date>2025-09-25</Date>
+                        <Date>2025-09-26</Date>
+                        <Date>2025-09-29</Date>
+                        <Date>2025-09-30</Date>
+                    </Dates>
+                </Dates>
+            </ObservationDates>
+            <FixedPayer>true</FixedPayer>
+            <!-- Fair with single observation at pay date -->
+            <ReferenceNotional>8614</ReferenceNotional>
+            <ReferenceCurrency>EUR</ReferenceCurrency>
+            <SettlementNotional>10000</SettlementNotional>
+            <SettlementCurrency>USD</SettlementCurrency>
+            <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+        </FxAverageForwardData>
+    </Trade>
+</Portfolio>

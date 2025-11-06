@@ -114,10 +114,10 @@ public:
     QuantLib::ext::shared_ptr<InterestRateIndex> ir() const { return ir_; }
     QuantLib::ext::shared_ptr<IborIndex> irIbor() const { return irIbor_; }
     // nullptr if it is no ibor fallback index
-    QuantLib::ext::shared_ptr<FallbackIborIndex> irIborFallback(const IborFallbackConfig& iborFallbackConfig,
+    QuantLib::ext::shared_ptr<FallbackIborIndex> irIborFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                                         const Date& asof = QuantLib::Date::maxDate()) const;
     // nullptr if it is no overnight fallback index
-    QuantLib::ext::shared_ptr<FallbackOvernightIndex> irOvernightFallback(const IborFallbackConfig& iborFallbackConfig,
+    QuantLib::ext::shared_ptr<FallbackOvernightIndex> irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 								  const Date& asof = QuantLib::Date::maxDate()) const;
     QuantLib::ext::shared_ptr<SwapIndex> irSwap() const { return irSwap_; }
     QuantLib::ext::shared_ptr<ZeroInflationIndex> inf() const { return inf_; }
@@ -206,7 +206,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
   The function returns a ql inflation index accounting for the interpolation (but without ts attached),
   and the ORE index name without the #F, #L suffix.
 */
-QuantExt::ext::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
+std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName);
 
 /*! Builds an index (EQ-SP5-EUR, FX-ECB-EUR-USD, ...) that can be used in scripted trades, from an underlying */

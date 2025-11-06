@@ -26,6 +26,10 @@ void BarrierData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BarrierData");
     type_ = XMLUtils::getChildValue(node, "Type", true);
     style_ = XMLUtils::getChildValue(node, "Style", false);
+    strictComparison_ = std::nullopt;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "StrictComparison")) {
+        strictComparison_ = XMLUtils::getNodeValue(n);
+    }    
     XMLNode* levelData = XMLUtils::getChildNode(node, "LevelData");
     if (levelData) {
         vector<XMLNode*> lvls = XMLUtils::getChildrenNodes(levelData, "Level");
@@ -43,6 +47,11 @@ void BarrierData::fromXML(XMLNode* node) {
     rebate_ = XMLUtils::getChildValueAsDouble(node, "Rebate", false);
     rebateCurrency_ = XMLUtils::getChildValue(node, "RebateCurrency", false);
     rebatePayTime_ = XMLUtils::getChildValue(node, "RebatePayTime", false);
+    auto tmp = XMLUtils::getChildValue(node, "OverrideTriggered", false);
+    if (tmp.empty())
+        overrideTriggered_ = std::nullopt;
+    else
+        overrideTriggered_ = parseBool(tmp);
     initialized_ = true;
 }
 
@@ -51,12 +60,17 @@ XMLNode* BarrierData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Type", type_);
     if (!style_.empty())
         XMLUtils::addChild(doc, node, "Style", style_);
+    if (strictComparison_) {
+        XMLUtils::addChild(doc, node, "StrictComparison", *strictComparison_);
+    }
     XMLUtils::addChild(doc, node, "Rebate", rebate_);
     XMLUtils::addChildren(doc, node, "Levels", "Level", levels_);
     if (!rebateCurrency_.empty())
         XMLUtils::addChild(doc, node, "RebateCurrency", rebateCurrency_);
     if (!rebatePayTime_.empty())
         XMLUtils::addChild(doc, node, "RebatePayTime", rebatePayTime_);
+    if (overrideTriggered_)
+        XMLUtils::addChild(doc, node, "OverrideTriggered", *overrideTriggered_);
     return node;
 }
 } // namespace data

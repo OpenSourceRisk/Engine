@@ -41,22 +41,23 @@ namespace data {
 class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine,
                                           public AmcCgPricingEngine {
 public:
-    ScriptedInstrumentPricingEngineCG(const std::string& npv,
-                                      const std::vector<std::pair<std::string, std::string>>& additionalResults,
-                                      const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-                                      const QuantLib::ext::shared_ptr<Context>& context,
-                                      const Model::McParams& mcParams, const double indicatorSmoothingForValues,
-                                      const double indicatorSmoothingForDerivatives, const std::string& script = "",
-                                      const bool interactive = false, const bool generateAdditionalResults = false,
-                                      const bool includePastCashflows = false, const bool useCachedSensis = false,
-                                      const bool useExternalComputeFramework = false,
-                                      const bool useDoublePrecisionForExternalCalculation = false);
+    ScriptedInstrumentPricingEngineCG(
+        const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
+        const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
+        const std::vector<std::string>& amcCgComponents, const std::string& amcCgTargetValue,
+        const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
+        const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
+        const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+        const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
+        const bool includePastCashflows = false, const bool useCachedSensis = false,
+        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
-    std::string npvName() const override { return npv_; }
 
-    void buildComputationGraph() const override;
+    void buildComputationGraph(const bool stickyCloseOutDateRun = false,
+                               std::vector<TradeExposure>* tradeExposure = nullptr,
+                               TradeExposureMetaInfo* tradeExposureMetaInfo = nullptr) const override;
 
 private:
     void calculate() const override;
@@ -99,16 +100,21 @@ private:
     mutable double baseNpv_;
     mutable std::vector<std::pair<std::size_t, double>> baseModelParams_;
     mutable std::vector<double> sensis_;
-    mutable std::map<std::string, boost::any> instrumentAdditionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> instrumentAdditionalResults_;
 
     // inputs
 
     std::string npv_;
     std::vector<std::pair<std::string, std::string>> additionalResults_;
     QuantLib::ext::shared_ptr<ModelCG> model_;
+    std::set<std::string> minimalModelCcys_;
+    std::vector<std::string> amcCgComponents_;
+    std::string amcCgTargetValue_;
+    std::string amcCgTargetDerivative_;
+
     ASTNodePtr ast_;
     QuantLib::ext::shared_ptr<Context> context_;
-    Model::McParams mcParams_;
+    Model::Params params_;
     double indicatorSmoothingForValues_;
     double indicatorSmoothingForDerivatives_;
     std::string script_;
@@ -118,6 +124,9 @@ private:
     bool useCachedSensis_;
     bool useExternalComputeFramework_;
     bool useDoublePrecisionForExternalCalculation_;
+
+    // state
+    mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
 };
 
 } // namespace data

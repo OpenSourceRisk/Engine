@@ -102,7 +102,7 @@ QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSi
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
         inputs_->continueOnError(), analytic()->configurations().sensiScenarioData->useSpreadedTermStructures(), false,
-        overrideTenors, *inputs_->iborFallbackConfig(), true);
+        overrideTenors, inputs_->iborFallbackConfig(), true);
     return simMarket;
 }
 
@@ -322,7 +322,9 @@ ZeroSensiResults XvaSensitivityAnalyticImpl::convertXvaResultsToSensiCubes(
     return results;
 }
 
-void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, 
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     // Used for the raw report
     QL_REQUIRE(scenarioGenerator != nullptr,
                "Internal error: Can not compute XVA sensi without valid scenario generator.");
@@ -336,15 +338,18 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
-            // auto newAnalytic =
-            //     ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
-	    auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, scenario, simMarketParams);
-            auto newAnalytic = xvaAnalytic.second;
+            auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
+            XvaAnalyticImpl* xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
+            xvaImpl->setOffsetScenario(scenario);
+            xvaImpl->setOffsetSimMarketParams(simMarketParams);
 	    
-	    CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
-            newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
+	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
+            xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
+            auto rpts = xvaAnalytic->reports();
+            auto it = rpts.find("XVA");
+            QL_REQUIRE(it != rpts.end(), "XVA report not found in XVA analytic reports");
+            for (auto [name, rpt] : it->second) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     xvaReports[name].push_back(rpt);
@@ -373,8 +378,8 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeni
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*zeroSensiReport, ssTrade, ssNetting, xvaZeroSeniCubes.tradeNettingSetMap_,
-                                       inputs_->sensiThreshold());
-        analytic()->reports()[label()]["xva_zero_sensitivity_" + to_string(valueAdjustment)] = zeroSensiReport;
+                                       inputs_->xvaSensiThreshold());
+        analytic()->addReport(label(), "xva_zero_sensitivity_" + to_string(valueAdjustment), zeroSensiReport);
     }
     LOG("XvaSensitivityAnalyticImpl::createZeroReports done");
 }
@@ -394,6 +399,11 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
 
     parAnalysis->computeParInstrumentSensitivities(simMarket);
 
+    QuantLib::ext::shared_ptr<InMemoryReport> parScenarioRatesReport =
+        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    parAnalysis->writeParRatesReport(*parScenarioRatesReport);
+    analytic()->addReport(label(), "scenario_par_rates", parScenarioRatesReport);
+
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
 
@@ -401,12 +411,12 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
         QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
-        analytic()->reports()[label()]["xva_sensi_jacobi"] = jacobiReport;
+        analytic()->addReport(label(), "xva_sensi_jacobi", jacobiReport);
 
         QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         parConverter->writeConversionMatrix(*jacobiInverseReport);
-        analytic()->reports()[label()]["xva_sensi_jacobi_inverse"] = jacobiInverseReport;
+        analytic()->addReport(label(), "xva_sensi_jacobi_inverse", jacobiInverseReport);
     }
 
     ParSensiResults results;
@@ -423,10 +433,9 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
 
     // Store the par sensi stream in the base anlytics class in case we want to post process later (e.g. for SACVA)
     auto nettingSetCube = results.nettingParSensiCube_[XvaResults::Adjustment::CVA];
-    analytic()->parCvaSensiCubeStream() =
-        QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
+    setParCvaSensiCubeStream(QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency()));
 
-    QL_REQUIRE(analytic()->parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
+    QL_REQUIRE(parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
 
     return results;
 }
@@ -441,8 +450,8 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
-                                       inputs_->sensiThreshold(), inputs_->xvaSensiOutputPrecision());
-        analytic()->reports()[label()]["xva_par_sensitivity_" + to_string(valueAdjustment)] = report;
+                                       inputs_->xvaSensiThreshold(), inputs_->xvaSensiOutputPrecision());
+        analytic()->addReport(label(), "xva_par_sensitivity_" + to_string(valueAdjustment), report);
     }
 }
 
@@ -485,7 +494,7 @@ void XvaSensitivityAnalyticImpl::createDetailReport(
         }
         auto report = concatenateReports(extendedReports);
         if (report != nullptr) {
-            analytic()->reports()[label()][reportName] = report;
+            analytic()->addReport(label(), reportName, report);
         }
     }
 }

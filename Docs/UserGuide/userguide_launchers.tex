@@ -1,0 +1,82 @@
+%========================================================
+\section{Launchers and Visualisation}\label{sec:visualisation}
+%========================================================
+
+\subsection{Jupyter}\label{sec:jupyter}
+
+ORE comes with an experimental Jupyter notebook for launching ORE batches and in particular for drilling into NPV cube
+data.  The notebook is located in directory {\tt FrontEnd/Python/Visualization/npvcube}. To launch the notebook, change
+to this directory and follow instructions in the {\tt Readme.txt}. In a nutshell, type\footnote{With Mac OS X, you may
+  need to set the environment variable {\tt LANG} to {\tt en\_US.UTF-8} before running jupyter, as mentioned in the
+  installation section \ref{sec:python}.}
+
+\medskip
+\centerline{\tt jupyter notebook}
+\medskip
+
+to start the ipython console and open a browser window. From the list of files displayed in the browser then click
+
+\medskip
+\centerline{\tt ore\_jupyter\_dashboard.ipynb} 
+\medskip
+
+to open the ORE notebook. The notebook offers
+\begin{itemize}
+\item launching an ORE job
+\item selecting an NPV cube file and netting sets or trades therein
+\item plotting a 3d exposure probability density surface
+\item viewing exposure probability density function at a selected future time
+\item viewing expected exposure evolution through time  
+\end{itemize}
+
+The cube file loaded here by default when processing all cells of the notebook (without changing it or launching a ORE
+batch) is taken from {\tt Example\_7} (FX Forwards and FX Options).
+
+%\todo[inline]{Add Jupyter section}
+
+\subsection{Calc}\label{sec:calc}
+
+ORE comes with a simple LibreOffice Calc \cite{LO} sheet as an ORE launcher and basic result viewer. This is
+demonstrated on the example in section \ref{example:exposure_swapflat}. It is currently based on the stable LibreOffice version 5.0.6
+and tested on OS X. \\
+
+To launch Calc, open a terminal, change to directory {\tt Examples/Example\_1}, and run
+
+\medskip
+{\centerline{\tt ./launchCalc.sh} }
+\medskip
+
+%This will show the blank sheet in figure \ref{fig_14}.
+%\begin{figure}[h]
+%\begin{center}
+%\includegraphics[scale=0.4]{demo_calc_1}
+%\end{center}
+%\caption{Calc sheet after launching.}
+%\label{fig_14}
+%\end{figure}
+The user can choose a configuration (one of the {\tt ore*.xml} files in Example\_1's subfolder Input) by hitting the
+'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once
+completed, standard ORE reports (NPV, Cashflow, XVA) are loaded into several sheets. Moreover, exposure evolutions can
+then be viewed by hitting 'View' which shows the result in figure \ref{fig_16}.  \\
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.4]{demo_calc_2}
+\end{center}
+\caption{Calc sheet after hitting 'Run'.}
+\label{fig_16}
+\end{figure}
+
+This demo uses simple Libre Office Basic macros which call Python scripts to execute ORE. The Libre Office Python uno
+module (which comes with Libre Office) is used to communicate between Python and Calc to upload results into the sheets.
+
+%\todo[inline]{Remove hard-coded file names from Python scripts}
+%\todo[inline]{Calc example on Windows and Linux} 
+%\todo[inline]{Harmonise layout with Excel launcher} 
+
+\subsection{Excel}\label{sec:excel}
+
+ORE also comes with a basic Excel sheet to demonstrate launching ORE and presenting results in Excel. This demo is more
+self-contained than the Calc demo in the previous section, as it uses VBA only rather than calls to external Python
+scripts. The Excel demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. Then modify the paths on the first
+sheet, and kick off the ORE process.
+

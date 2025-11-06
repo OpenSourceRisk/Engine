@@ -66,7 +66,7 @@ ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& d
     } else if (tokens.size() == 2 && (tokens[0] == "Up" || tokens[0] == "Down")) {
         type_ = tokens[0] == "Up" ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
 
-        auto temp = deconstructFactor(tokens[1]);
+        auto temp = QuantExt::deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
 
@@ -76,11 +76,11 @@ ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& d
     } else if (tokens.size() == 3 && tokens[0] == "Cross") {
         type_ = ScenarioDescription::Type::Cross;
 
-        auto temp = deconstructFactor(tokens[1]);
+        auto temp = QuantExt::deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
 
-        temp = deconstructFactor(tokens[2]);
+        temp = QuantExt::deconstructFactor(tokens[2]);
         key2_ = temp.first;
         indexDesc2_ = temp.second;
 
@@ -149,57 +149,6 @@ ostream& operator<<(ostream& out, const ShiftScenarioGenerator::ScenarioDescript
     if (scenarioDescription.factor2() != "")
         out << ":" << scenarioDescription.factor2();
     return out;
-}
-
-pair<RiskFactorKey, string> deconstructFactor(const string& factor) {
-
-    // If string is empty
-    if (factor.empty()) {
-        return make_pair(RiskFactorKey(), "");
-    }
-
-    boost::escaped_list_separator<char> sep('\\', '/', '\"');
-    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(factor, sep);
-
-    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
-
-    // first 3 tokens are the risk factor key, the remainder are the description
-    ostringstream o;
-    if (tokens.size() > 3) {
-        o << tokens[3];
-        Size i = 4;
-        while (i < tokens.size()) {
-            o << "/" << tokens[i];
-            i++;
-        }
-    }
-
-    return make_pair(RiskFactorKey(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2])), o.str());
-}
-
-string reconstructFactor(const RiskFactorKey& key, const string& desc) {
-    // If risk factor is empty
-    if (key == RiskFactorKey()) {
-        return "";
-    }
-
-    // If valid risk factor
-    return to_string(key) + "/" + desc;
-}
-
-QuantLib::ext::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<string>& addTokens) {
-    // Use deconstructFactor to split in to pair: [key, additional token str]
-    auto p = deconstructFactor(str);
-
-    // The additional tokens
-    boost::escaped_list_separator<char> sep('\\', '/', '\"');
-    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(p.second, sep);
-
-    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
-    addTokens = tokens;
-
-    // Return the key value
-    return QuantLib::ext::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
 }
 
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
@@ -360,5 +309,22 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
         }
     }
 }
+
+ShiftScenarioLoaderGenerator::ShiftScenarioLoaderGenerator(
+    const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+    const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const QuantLib::ext::weak_ptr<ScenarioSimMarket>& simMarket)
+    : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), scenarioReader_(scenarioReader) {
+    while (scenarioReader->next()) {
+        auto scenario = scenarioReader->scenario();
+        if (scenario->label() == "BASE") {
+            baseScenario_ = scenario;
+            continue; // skip base scenario, already added
+        }
+        scenarios_.push_back(scenario);
+    }
+}
+
 } // namespace analytics
 } // namespace ore

@@ -72,6 +72,7 @@ private:
     Real strike_;
     string payoffCurrency_;
     Real payoffAmount_;
+    std::string fxIndex_;
 };
 } // namespace data
 } // namespace oreplus

@@ -130,7 +130,7 @@ Real DimHelper::var(const std::string& nettingSetId, const Size order, const Rea
     Matrix gamma;
     Real theta;
 
-    std::tie(delta, gamma, theta) = boost::any_cast<std::tuple<Array, Matrix, Real>>(r);
+    std::tie(delta, gamma, theta) = QuantLib::ext::any_cast<std::tuple<Array, Matrix, Real>>(r);
     const Matrix& cov = covariances_[dateIndex == Null<Size>() ? 0 : dateIndex + 1];
 
     // check if gamma is zero, then we can compute a delta var irrespective of the order that is given

@@ -21,7 +21,7 @@
 #include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 
-#include <ql/experimental/fx/blackdeltacalculator.hpp>
+#include <ql/pricingengines/blackdeltacalculator.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>

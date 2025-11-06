@@ -53,7 +53,10 @@ public:
         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar, const QuantLib::Currency& floatCurrency,
         const QuantLib::Schedule& floatSchedule, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
         const QuantLib::BusinessDayConvention& floatPaymentBdc, QuantLib::Natural floatPaymentLag, const QuantLib::Calendar& floatPaymentCalendar,
-        const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true);
+        const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true,
+        QuantLib::ext::optional<bool> floatIncludeSpread = QuantLib::ext::nullopt, QuantLib::ext::optional<Period> floatLookback = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> floatFixingDays = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> floatRateCutoff = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> floatIsAveraged = QuantLib::ext::nullopt);
 
     //@}
     //! \name Instrument interface
@@ -76,6 +79,11 @@ public:
     const QuantLib::Schedule& floatSchedule() const { return floatSchedule_; }
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
     QuantLib::Spread floatSpread() const { return floatSpread_; }
+    QuantLib::ext::optional<bool> floatIncludeSpread() const { return floatIncludeSpread_; }
+    QuantLib::ext::optional<Period> floatLookback() const { return floatLookback_; }
+    QuantLib::ext::optional<Size> floatFixingDays() const { return floatFixingDays_; }
+    QuantLib::ext::optional<Size> floatRateCutoff() const { return floatRateCutoff_; }
+    QuantLib::ext::optional<bool> floatIsAveraged() const { return floatIsAveraged_; }
     //@}
 
     //! \name Additional interface
@@ -119,10 +127,15 @@ private:
     QuantLib::BusinessDayConvention floatPaymentBdc_;
     QuantLib::Natural floatPaymentLag_;
     QuantLib::Calendar floatPaymentCalendar_;
-
+    bool telescopicValueDates_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     bool resetsOnFloatLeg_;
     bool receiveFixed_;
+    QuantLib::ext::optional<bool> floatIncludeSpread_;
+    QuantLib::ext::optional<Period> floatLookback_;
+    QuantLib::ext::optional<Size> floatFixingDays_;
+    QuantLib::ext::optional<Size> floatRateCutoff_;
+    QuantLib::ext::optional<bool> floatIsAveraged_;
 
     mutable QuantLib::Spread fairSpread_;
     mutable QuantLib::Rate fairFixedRate_;

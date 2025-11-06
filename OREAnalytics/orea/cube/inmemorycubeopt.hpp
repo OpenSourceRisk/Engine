@@ -46,7 +46,7 @@ public:
 
     InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                     Size depth, const T& t = T())
-        : asof_(asof), dates_(dates), samples_(samples), depth_(depth), t0data_(new T[depth_ * samples_]),
+        : asof_(asof), dates_(dates), samples_(samples), depth_(depth),
           data_(dates_.size(), std::vector<T*>(ids.size())) {
 
         Size pos = 0;
@@ -107,6 +107,8 @@ public:
         }
         data_[j][i][d * samples_ + k] = static_cast<T>(value);
     }
+
+    bool usesDoublePrecision() const override;
 
 private:
     void check(Size i, Size j, Size k, Size d) const {

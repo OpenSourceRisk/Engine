@@ -1,0 +1,694 @@
+\subsubsection{Convertible Bond}
+\label{pricing::convertible_bond}
+
+A convertible bond is priced in a jump diffusion model, see \cite{Andersen_Buffum_2002}.
+
+\underline{Basics}
+
+The model dynamics for the stock price $S(t)$ is given by
+
+\begin{equation}\label{formula:convertible_bond_sde}
+  dS / S(t^-) = (r(t) - q(t) + \eta h(t, S(t^-))) dt + \sigma(t) dW(t) - \eta dN(t)
+\end{equation}
+
+with a risk free rate $r(t)$, a continuous dividend yield $q(t)$, a default intensity $h(t,S)$, a volatility
+$\sigma(t)$, a default loss fraction for the equity $\eta \in [0,1]$ and a Cox process $N(t)$ with
+
+\begin{equation}
+  E_t(dN(t)) = h(t,S(t^-)) dt
+\end{equation}
+
+The notation $S(t^-)$ is shorthand for $\lim_{\epsilon\downarrow 0} S(t-\epsilon)$. The first jump of $N(t)$ represents
+the default of the equity. See equation (1) in \cite{Andersen_Buffum_2002}. We support a local default intensity of the
+form
+
+\begin{equation}
+h(t,S(t)) = h_0(t) \left( \frac{S(0)}{S(t)} \right)^p
+\end{equation}
+
+with a deterministic function $h_0(t)$ that is independent from $S(t)$ and a parameter $p \geq 0$. The parameters $p$
+and $\eta$ can be set in the pricing engine configuration.
+
+Both $h_0(t)$ and $\sigma(t)$ are calibrated to market data, i.e. to a market default curve and a market equity
+volatility surface. In general this requires the numerical evolution of the density of $S_t$ via its Fokker-Planck PDE.
+The corner case $p=0$ allows for a simplified treatment and faster calibration of the model.
+
+The value of a derivative $V = V(t,S)$ is computed by solving the PDE corresponding to the SDE
+\ref{formula:convertible_bond_sde}. We do this in terms of the log equity price, i.e. we introduce a new variable
+$z = \ln(S)$, and write $v(t,z) = V(t,e^z)$, see also (6) in \cite{Andersen_Buffum_2002}:
+
+\begin{eqnarray}\label{formula:convertible_bond_pde}
+v_t + \left( r(t)-q(t)+\eta h(t,e^z)-\frac{1}{2}\sigma(t)^2 \right) v_z + \frac{1}{2}\sigma(t)^2 v_{zz}  \\
+- (r(t)+h(t,e^z)) v + h(t,e^z) R(t,e^z) = 0
+\end{eqnarray}
+
+Here, $R(t,e^z)$ is a recovery term paid in case of the equity default, which may depend on time $t$ and the {\em
+  pre-default} stock price $e^z$.
+
+\underline{Non-Exchangeables Recovery Term}
+
+For non-exchangeables, the default of the equity is the same as the default of the bond issuer. We assume a
+deterministic, constant recovery rate $\rho$ for the bond in terms of the (oustanding) nominal $N_t$ . We assume that in
+case of the issuer default the investor has a claim on the higher of $\rho N_t$ and the conversion value on the
+recovered equity price $C^R_t S(t) (1-\eta)$, i.e. we have
+
+\begin{equation}
+R(t,e^z) = \max \{ \rho N_t, C^R_t e^z (1-\eta) \}
+\end{equation}
+
+For $\eta = 1$ this simplifies to $R = R(t) = \rho N_t$, independent of the equity price $S = e^z$. Conversion is always
+possible in the case of a default, even if no voluntary conversion right could be exercised e.g. due to a contingent
+conversion clause at the time of default.
+
+\underline{Exchangeables Recovery Term}
+
+For exchangeables, we have to consider two sources of default risk, the bond issuer default risk and the equity issuer
+default risk. We denote the associated default intensities by $h^B(t,e^z)$ for the bond issuer and $h^S(t,e^z)$ for the
+equity issuer. The pricing PDE \ref{formula:convertible_bond_pde} is modified to
+
+\begin{eqnarray}\label{formula:convertible_bond_pde_exchangeables}
+  v_t + \left( r(t)-q(t)+\eta h^S(t,e^z)-\frac{1}{2}\sigma(t)^2 \right) v_z + \frac{1}{2}\sigma(t)^2 v_{zz} \\
+  - (r(t)+h^S(t,e^z) + h^B(t,e^z)) v \\
++ h^S(t,e^z) R^S(t,e^z) + h^B(t,e^z)R^B(t,e^z) = 0
+\end{eqnarray}
+
+For non-secured exchangeables,
+
+\begin{itemize}
+\item in case of the bond issuer default, the investor has a claim on the bond recovery value only, i.e.
+  $$R^B(t,e^z) = \rho N_t$$
+\item in case of the equity issuer default, the convertible bond transaction terminates, but the investor has still a claim on
+  the full notional of the bond, i.e.
+  $$R^S(t,e^z) = N_t$$
+\end{itemize}
+
+For secured exchangeables,
+
+\begin{itemize}
+\item in case of the bond issuer default, the investor has a claim on the (non-defaulted) equity conversion value plus
+  the recovery value on the bond notional less the conversion value, i.e.
+  $$R^B(t,e^z) = C^R_t e^z + \max( \rho(N_t - C^R_t e^z),0) $$
+\item in case of the equity issuer default, the convertible bond transaction terminates, but the investor has still a claim on
+  the full notional of the bond, i.e.
+  $$R^S(t,e^z) = N_t$$
+\end{itemize}
+
+\underline{Calibration of $h_0$ and $\sigma$ to market data}
+
+We fix a set of calibration times $t_1, \ldots, t_n$ and assume $h_0$ and $\sigma$ to be piecewise flat w.r.t. this time
+grid. Our aim is to bootstrap the functions $h_0$ and $\sigma$ so that market values for defaultable bonds and ATM
+equity options are matched by model prices for these instruments, i.e. for the defaultable bond we have the condition
+
+\begin{equation}\label{formula:convertible_bond_defbond_match}
+  P^{mkt}_D(0,t_i) = P^{mdl}_D(0,t_i) = E \left( e^{-\int_0^t r(s) ds} 1_{\tau > t_i} \right)
+\end{equation}
+
+for $i=1,\ldots,n$, where $P^{mkt}_D(0,t_i)$ is the market value of a defaultable bond paying $1$ at $t_i$ and
+$P^{mdl}(0,t_i)$ is the model value of this bond with $\tau$ denoting the model default time (first jump time). The
+market value $P^{mkt}_D(0,t_i)$ is computed as the product of the risk free zero bond price and the survival probability
+up to time $t_i$. Both the zero bond price and the survival probability are computed on the rate and credit curves
+stripped from market instruments in the usual way. The condition for the equity option reads
+
+\begin{equation}\label{formula:convertible_equity_option_match}
+C^{mkt}(K,t_i) = C^{mdl}(K,t_i) = E \left( e^{-\int_0^t r(s) ds} 1_{\tau > t_i} (S - K)^+ \right)
+\end{equation}
+
+where $C^{mkt}(K,t_i)$ is the price of an equity call option at strike $K$ and with maturity $t_i$, computed on the
+market equity forward curve and volatility surface. $C^{mdl}(K,t_i)$ is the corresponding model price.
+
+In general we follow the calibration procedure outlined in \cite{Andersen_Buffum_2002}, section 4.2 with a 2-dimensional
+minimization of the sum of squares of relative pricing errors for defaultable zero bonds and ATM equity options at each
+calibration time $t_i$. The Fokker-Planck equation for the transition density $p(t,z,s,y)$ for times $s\geq t$ is
+
+\begin{eqnarray}\label{formula:convertible_fokker_planck}
+  p_s - \frac{1}{2} p_{yy} \sigma(s,e^y)^2 + \\
+        \left( r(s)-q(s)+\eta h(s,e^y)-\frac{1}{2} \sigma(s,e^y)^2 \right) p_y + \\
+        \left( r + h(s,e^y) + h_y(s,e^y) \right) p = 0
+\end{eqnarray}
+
+also compare {\cite{Andersen_Buffum_2002}, equation 11, where we assume $\sigma$ independent of $y$ in our setup (at
+  least for the time being). For our parametrisation
+
+\begin{equation}
+  h(s,e^y) = h_0(s) ( S(0) / e^y )^p
+\end{equation}
+
+we have
+
+\begin{equation}
+  h_y(s,e^y) = -p h(s,e^y)
+\end{equation}
+
+For $p=0$ we can use a simplified approach for the bootstrap: In this case, the piecewise hazard rate $h_0$ can be
+directly set to
+
+\begin{equation}\label{formula:convertible_bondmatch_p0}
+  h_0(t) = \frac{ -\ln (S(t_i) / S(t_{i-1}))}{t_i-t_{i-1}}
+\end{equation}
+
+for $t_{i-1} \leq t < t_i$. The model volatility $\sigma$ can be set to
+
+\begin{equation}\label{formula:convertible_equitymatch_p0}
+  \sigma(t) = \sqrt{ V^2 t_i - \sum_{j=0}^{i-1} \sigma(t_j)^2 (t_{j+1} - t_j) }
+\end{equation}
+
+for $t_{i-1} \leq t < t_i$. Here, $V$ is computed as the implied Black volatility of the market option premium
+$C(K,t_i)$ weighted with the market survival probability $S(0,t_i)$ and using an adjusted forward level $F^*$
+
+\begin{equation}
+  F^* = \frac{F}{S(0,t_i)^\eta}
+\end{equation}
+
+where $F$ is the market equity forward level.
+
+Notice that for \underline{exchangeables}, the equity-linked market default curve is used to calibrate
+$h(s,e^y) = h^S(s,e^y)$ in \ref{formula:convertible_fokker_planck}. The bond-linked term $h^B(t,e^z)$ in the pricing PDE
+\ref{formula:convertible_bond_pde_exchangeables} on the other hand is directly derived from the bond-linked market
+default curve and has no impact on the model calibration.
+
+For \underline{cross-currency} the model calibration is done in the target equity currency, i.e. {\em after} switching
+from $S^*$ to $S$, see the next section on this.
+
+\underline{Cross Currency}
+
+If the stock denominates in a different currency ccy1 than the bond ccy2, we proceed as follows. Let $S^*$ be the
+original equity price process in ccy1, i.e. (compare \ref{formula:convertible_bond_sde}):
+
+\begin{equation}
+  dS^* / S^*(t^-) = (r_{ccy1}(t) - q(t) + \eta h^*(t, S^*(t^-))) dt + \sigma(t) dW(t) - \eta dN(t)
+\end{equation}
+
+where we index $r(t)$ by the equity currency for clarity. We assume the FX rate process $X$ converting one unit of ccy1 into
+ccy2 to follow a lognormal dynamics
+
+\begin{equation}
+  dX / X = (r_{ccy2}(t) - r_{ccy1}(t)) dt + \sigma_X(t) dW_X(t)
+\end{equation}
+
+with risk free rates $r_{ccy2}$ and $r_{ccy1}$ in ccy2 (domestic currency) resp. ccy1 (foreign currency). The
+instantenous correlation between FX and equity process is assumed to be $\rho$, i.e.
+
+\begin{equation}
+  dW dW_X = \rho dt
+\end{equation}
+
+ We now set $S:=XS^*$, which is a synthetic equity denominated in ccy2 and work out its dynamics. By Ito,
+
+\begin{equation}
+  dS = d(XS^*) = XdS^* + S^*dX + dXdS^*
+\end{equation}
+
+so after some simplifications
+
+\begin{equation}
+  dS / S = (r_{ccy2} - q + \rho \sigma \sigma_X + \eta h(t, S(t^-))) dt + \sqrt{\sigma^2 + \sigma_X^2 + 2
+    \rho\sigma\sigma_X} d\tilde{W} - \eta dN(t)
+\end{equation}
+
+Note that we replaced $h^*(t,S^*)$ with a new function $h(t,S)$. We will parametrise this new $h(t,S)$ as
+$ h(t,S) = h_0(t) (S_0/S)^p$ to obtain the model for $S$. This dynamics is still in the ccy1 measure. Changing the
+measure to ccy2 gives the final dynamics
+
+\begin{equation}\label{formula:convertible_bond_xccy_dynamics}
+  dS / S = (r_{ccy2} - q + \eta h(t, S(t^-))) dt + \sqrt{\sigma^2 + \sigma_X^2 + 2\rho\sigma\sigma_X} d\tilde{W} - \eta dN(t)
+\end{equation}
+
+i.e. we can proceed an in the single currency case with a modified equity volatility
+$\sqrt{\sigma^2 + \sigma_X^2 + 2\rho\sigma\sigma_X}$.
+
+\underline{Perpetuals}
+
+Perpetuals are priced by cutting off the maturity at the evaluation date plus a period specified in the pricing engine
+parameters of the Bond trade type under ``OpenEndDateReplacement''. A typical setting for this value is 30Y or
+50Y. Notice that the parameter is read from the Bond trade type configuration rather than the ConvertibleBond trade type
+configuration, even for convertible bonds.
+
+A perpetual convertible bond does not pay any final redemption at its virtual maturity date.
+
+\underline{Dividend Handling}
+
+Currently, we support a continuous dividend model. The absolute dividend amount $D$ paid between $0<t_1<t_2$ as seen
+from $t_2$ is estimated as
+
+\begin{equation}
+  D = S_{t_2} \left( e^{\int_{t_1}^{t_2} q(s) ds} - 1 \right)
+\end{equation}
+
+Historical dividends with ex-dividend date before the evaluation date are added to this value, as appropriate.
+
+\underline{N-of-M triggers}
+
+N-of-M triggers are priced following the implied barrier aprroach proposed in Jasper Anderluh and Hans van der Weide:
+Parisian Options – The Implied Barrier Concept, M. Bubak et al. (Eds.): ICCS 2004, LNCS 3039, pp. 851–858,
+2004. Springer-Verlag Berlin Heidelberg 2004.
+
+\underline{Curves used in practice (benchmark curve, equity forecast)}
+
+In practice we use a benchmark curve $b$ to discount the bond value instead of the equity forecast curve $r$. We modify
+the pricing PDE \ref{formula:convertible_bond_pde}, \ref{formula:convertible_bond_pde_exchangeables} in a
+straightforward way by replacing $r$ with $b$ in the discounting term, i.e. the former PDE becomes
+
+\begin{eqnarray}\label{formula:convertible_bond_pde_with_benchmark_curve}
+v_t + \left( r(t)-q(t)+\eta h(t,e^z)-\frac{1}{2}\sigma(t)^2 \right) v_z + \frac{1}{2}\sigma(t)^2 v_{zz}  \\
+- (b(t)+h(t,e^z)) v + h(t,e^z) R(t,e^z) = 0
+\end{eqnarray}
+
+and likewise for the latter PDE. The benchmark curve also includes a security spread, if defined. Notice that we do not
+modify the Fokker-Planck PDE \ref{formula:convertible_fokker_planck} for model calibration, i.e. in the calibration step
+we use $r$ as the discounting curve always.
+
+Moreover, for the cross-currency case we have a drift term for the original equity $S^*$
+
+\begin{equation}
+  r - q + \eta h
+\end{equation}
+
+Here, $r$ (equity forecast curve) is not necessarily identical to $r_{ccy1}$ (xccy-consistent discounting curve for
+ccy1). Therefore the drift for the currency-changed $S$ is given by
+
+\begin{equation}
+  r + ( r_{ccy2} - r_{ccy1}) - q + \eta h
+\end{equation}
+
+If $r=r_{ccy1}$ this expression obviously collapsed to \ref{formula:convertible_bond_xccy_dynamics}.
+
+\underline{Model Flavour Selection}
+
+There are some pricing engine parameters that control the model behaviour on a fundamental level, see table
+\ref{tab:convertiblebond_model_flavours}. These flags can be used to mimick the behaviour of other vendor models.
+
+\begin{table}[h]
+  \begin{tabular}{p{5cm}|p{11cm}}
+    Paramteter & Description \\
+    \hline
+    AdjustEquityForward & If false, the term $\eta h(t,e^z)$ in the coefficient of
+    $v_z$ in \ref{formula:convertible_bond_pde} is set to zero, i.e. the hazard rate $h$ is still used in the
+    discounting term, but the equity drift is not corrected upwards accordingly. The default value is true. \\ \hline
+
+    AdjustEquityVolatility & If false, the market equity volatility input is not adjusted, but directly used in the
+    pricing model. This setting is only possible if $p=0$. It will then set the weighting with the market survival
+    probability $S(0,t_i)$ in the context of formula \ref{formula:convertible_equitymatch_p0} to zero, i.e. $V$ is taken
+    as the market implied volatility without adjustment. The default value is true. \\ \hline
+
+    AdjustDiscounting & If false, the adjustment of the discounting rate $r$ to the benchmark curve $b$ is suppressed,
+    i.e. the change of the PDE \ref{formula:convertible_bond_pde} to
+    \ref{formula:convertible_bond_pde_with_benchmark_curve} is {\em not} made (see section ``Curves used in practice''
+    above). The default value is true. \\ \hline
+
+    ZeroRecoveryOverwrite & If true, the recovery rate $\rho$ of the convertible
+    bond is overwritten with zero. This option is usually used in conjunction with AdjustCreditSpreadToRR set to true
+    (see below). The default value is false. \\ \hline
+
+    AdjustCreditSpreadToRR & If true, the credit curve $h(\cdot)$ is adjusted by a factor $\frac{1-R}{1-\rho}$ where $R$
+    is the recovery rate associated to the market default curve and $\rho$ is the recovery rate of the bond. Usually,
+    $R=\rho$, i.e. the bond recovery rate is the same as the recovery rate of the associated credit curve. In this case,
+    the flag has no effect, since the multiplier is $1$. However, when $\rho$ is overwritten with zero due to the flag
+    ZeroRecoveryOverwrite set to true, the flag AdjustCreditSpreadToRR should also be set to true. The default value is
+    false. \\ \hline
+
+    TreatSecuritySpreadAsCreditSpread & If true, the security spread is not incoroporated into the benchmark curve $b$
+    as described above, but rather added as a spread on top of the credit curve, i.e. it is added to $h(t,e^z)$. For
+    exchangeables, the security spread is added to {\em both} $h^B$ and $h^S$, i.e. it simultaneously increases the credit
+    pread of both the equity and the bond component. Since the security spread is understood as an effective discounting spread,
+    it is scaled by $s \rightarrow s / (1-\rho)$ before it is added to $h$, where $\rho$ is the recovery rate of the bond.
+    The default value is false. \\ \hline
+  \end{tabular}
+  \caption{Convertible bond model flavours}
+  \label{tab:convertiblebond_model_flavours}
+\end{table}
+
+\underline{Numerical Implementation of the Calibration}
+
+The model is calibrated on a configurable set of times
+
+\begin{equation}\label{formula:convertible_calgrid}
+t_1,\ldots,t_m
+\end{equation}
+
+specified under \verb+Bootstrap.CalibrationGrid+ in the pricing engine configuration. All tenors from the specified grid
+before the maturity date of the convertible bond are kept and the maturity date itself is added to the resulting grid to
+avoid calibration for times beyond the bond maturity and at the same time ensuring that we do not need to extrapolate
+model functions beyond the last calibration point in the pricing.
+
+The case $p=0$ does not require any particular numerical methods, the piecewise flat model functions $h_0$ and $\sigma$
+can be directly computed as described in formulae \ref{formula:convertible_bondmatch_p0} and
+\ref{formula:convertible_equitymatch_p0}.
+
+For $p>0$ the solution of the Fokker-Planck PDE is numerically solved using a discretisation of the state variable
+$y(t)=\ln(S(t))$
+
+\begin{equation}
+  y_1, \ldots, y_n
+\end{equation}
+
+The grid geometry is determined by the following parameters (configurable in the pricing engine configuration with
+parameter labels given in brackets):
+
+\begin{itemize}
+\item the number $n$ of grid points (\verb+Bootstrap.StateGridPoints+)
+\item an optional mesher concentration $m_c$ to generate a non-uniform grid \\ (\verb+Bootstrap.MesherConcentration+)
+\item a mesher epsilon $m_\epsilon$ (\verb+Bootstrap.MesherEpsilon+)
+\item a mesher scaling $m_s$ (\verb+Bootstrap.MesherScaling+)
+\end{itemize}
+
+The minimum value $y_1$ and maximum value $y_n$ covered by the grid are determined as follows. First, the time original
+calibration time grid \ref{formula:convertible_calgrid} is enriched by additional points to ensure that a certain given
+number of time steps per year (specified as \verb+Boostrap.TimeStepsPerYear+) is used for the numerical solution of the
+PDE later on, i.e.
+
+\begin{equation}
+  t_1, \ldots, t_m \rightarrow t'_1, \ldots, t'_M
+\end{equation}
+
+with the refined time grid $t'_i$ and $M\geq m$. On each grid point $t'_i$ we compute the forward equity price $F(t'_i)$
+for $i=1,\ldots,M$ and set
+
+\begin{eqnarray}
+y_1 = \ln \left( \min_{i=1}^M F(t_i) \right) - m_S \sigma_M(t_M)\sqrt{t_M} \Phi^{-1}(1 - m_\epsilon) \\
+y_n = \ln \left( \max_{i=1}^M F(t_i) \right) + m_S \sigma_m(t_M)\sqrt{t_M} \Phi^{-1}(1 - m_\epsilon)
+\end{eqnarray}
+
+where $\sigma_M(t_M)$ is the market volatility for an ATMF call option with expiry $t_M$.
+
+If the mesher concentration $m_c$ is not given, a uniform grid ${y_i}_{i=1,\ldots,n}$ will be built. Otherwise a grid
+concentrated around and contaning $\ln(S)$ as a grid point will be contructed following the approach described in
+\cite{Clark_FXBook}, 7.11.3., i.e. using an $\sinh(\cdot)$-transformation for the uniform grid points.
+
+To each state variable grid point $y_i$ we associate the width
+
+\begin{equation}
+\Delta y_i = \frac{y_{i+1} - y_{i-1}}{2}
+\end{equation}
+
+where we set $y_0 =y_1 - (y_2 - y_1) / 2$ and $y_{n+1} = y_n + (y_n - y_{n-1}) / 2$. The initial Dirac condition
+$\delta(y-y(0))$ is numerically approximated as
+
+\begin{eqnarray}
+  p_j = \alpha / \Delta y_j \\
+  p_{j+1} = (1-\alpha) / \Delta y_{j+1}
+\end{eqnarray}
+
+where $j$ is the unique index for which $y_j \leq y(0) < y_{j+1}$ and $\alpha = (y_{j+1} - y(0)) / (y_{j+1}-y_j)$
+(notice that $1 \leq j < n - 1$). This ensures
+
+\begin{equation}
+  \sum_{i=1}^n p_i \Delta y_i = 1
+\end{equation}
+
+The Fokker-Planck PDE is solved numerically using the Crank-Nicholson scheme. The first $d$ steps are evolved using an
+implicit Euler scheme to account for the singular initial condition, with $d=5$. The calibration proceeds as follows
+(also cf. section 4.2 of \cite{Andersen_Buffum_2002}):
+
+\begin{enumerate}
+\item Set $i=1$.
+\item \label{algo:convertible_cal_2} Evolve the PDE for the discretised probability $p$ from $t_{i-1}$ to $t_i$ on the
+  refined time grid $t'_j$, i.e. stepping over all $t_{i-1} \leq t'_j \leq t_i$ using preliminary parameters $h_0^*$ and
+  $\sigma^*$ for the piecewise model functions $h_0$ and $\sigma$ on the interval $[t_{i-1}, t_i)$ (where we set
+  $t_0 :=0$). For $i>1$ start with the parameters found for $i-1$. For $i=1$ start with parameters that are calculated
+  for $p=0$ as a start value.
+\item Compute the model prices for a defaultable zero bond with maturity $t_i$ as
+  $$P^{mdl}_D(0,t_i) = \sum_{i=1}^n p_i \Delta y_i$$
+  and for an equity option with expiry $t_i$ and ATMF strike $K$ \footnote{for the smallest $i$ s.t. $y_i>\ln(K)$ we
+    replace $\Delta y_i$ with $(y_i - \ln(K)) + (y_{i+1}-y_i) / 2$ to account for the fact that $\ln(K)$ in general does
+    not lie on the midpoint between $y_{i-1} \leq \ln(K) < y_i$.}
+  $$C^{mdl}(K,t_i) = \sum_{i \text{ s.t. } y_i > \ln(K)} p_i \Delta y_i ( e^{y_i} - K) $$
+\item Minimize $T(h_0^*,\sigma^*)$ using a Levenberg-Marquardt optimizer by repeating step \ref{algo:convertible_cal_2}
+  until the optimizer has converged to a solution. The minimization is either done (chosen via the pricing configuration
+  parameter \verb+Bootstrap.Mode+)
+  \begin{itemize}
+  \item Simultaneously: The target function is defined as
+    $$T(h_0^*,\sigma^*) = \left( \frac{P^{mdl} - P^{mkt}}{P^{mkt}} \right)^2  + \left( \frac{C^{mdl} - C^{mkt}}{C^{mkt}} \right)^2$$
+    and minimized in two variables simultaneously.
+  \item Alternating: The target function
+    $$T(h_0^*) = \left( \frac{P^{mdl} - P^{mkt}}{P^{mkt}} \right)^2$$
+  is minimized with fixed $\sigma^*$. The found solution $h^*$ for $h_0$ is kept and the target function
+    $$T(\sigma^*) = \left( \frac{C^{mdl} - C^{mkt}}{C^{mkt}} \right)^2$$
+    is minimized with this fixed $h^*$. The found solution $\sigma^*$ for $\sigma$ is kept and the two optimizations in
+    $h^*$ and $\sigma^*$ and repeated until the change in both solutions is below a threshold.
+  \end{itemize}
+\item Set the piecewise flat model functions $h_0$ and $\sigma$ on $[t_{i-1},t_i)$ to the solution found in the
+  optimisation for step $i$.
+\item Increase $i$ by $1$ and go to \ref{algo:convertible_cal_2} if $i<m$, otherwise stop.
+\end{enumerate}
+
+After the procedure above has finished we have calibrated model functions $h_0(t)$ and $\sigma(t)$ so that market
+defaultable zero bonds and ATMF equity optinos are repriced by the model on the calibration grid $t_1,\ldots,t_m$. For
+$t > t_m$ we extrapolate the model functions flat (notice this is never used in the context of convertible bond pricing
+due to the construction of the calibration grid, see the start of this section).
+
+\underline{Numerical Implementation of the Pricing}
+
+For the pricing of the convertible bond, we build a set of event times
+
+\begin{equation}
+  t_1, \ldots, t_m
+\end{equation}
+
+associated to pricing events
+
+\begin{itemize}
+\item underlying bond flow payment
+\item issuer call date
+\item investor put date
+\item voluntary conversion date
+\item mandatory conversion date
+\item contingent conversion trigger observation date
+\item conversion ratio reset (due to a conversion reset or dividend protection with conversion ratio adjustment)
+\item dividend pass through (due to dividend protection with pass through)
+\end{itemize}
+
+The set of event times is enriched to ensure a minimum number of grid points per year (taken from parameter
+\verb+Pricing.TimeStepsPerYear+ in the pricing engine configuration) for the numerical PDE solution, similar to what is
+done for the calibration step:
+
+\begin{equation}
+  t_1, \ldots, t_m \rightarrow t'_1, \ldots, t'_M
+\end{equation}
+
+The refined times $t'_i$ are also used to approximate American call / puts and conversion rights, i.e. it is assumed
+that on each such grid point the respective right can be exercised as an approximation to daily exercises of these
+options.
+
+The state variable $y=\ln(S)$ is discretised on a uniform grid
+
+\begin{equation}
+  y_1, \ldots, y_n
+\end{equation}
+
+where the number of grid points is taken from the pricing configuration parameter \verb+Pricing.StateGridPoints+. The
+boundaries are determined in a similar way to the calibration step, i.e.
+
+\begin{eqnarray}
+y_1 = \ln \left( \min_{i=1}^M F(t_i) \right) - m_S \sigma_M(t_M)\sqrt{t_M} \Phi^{-1}(1 - m_\epsilon) \\
+y_n = \ln \left( \max_{i=1}^M F(t_i) \right) + m_S \sigma_m(t_M)\sqrt{t_M} \Phi^{-1}(1 - m_\epsilon)
+\end{eqnarray}
+
+with $m_\epsilon$ taken from \verb+Pricing.MesherEpsilon+, $m_S$ from \verb+Pricing.MesherScaling+.
+
+The PDE is solved using a Crank-Nicholson scheme. We use the following vectors during the rollback. The vector $v$ is
+initialised with $0$ at $t=t_m$. The vector $w$ is left uninitialised for the time being:
+
+\begin{itemize}
+\item $(v_i)_{i=1,\ldots,n}$: the value of the convertible bond at $y_i$
+\item $(w_i)_{i=1,\ldots,n}$: the value of the convertible bond at $y_i$ assuming no conversion is possible during
+  conversion periods with contingent conversion triggers observed at the start of these periods
+\end{itemize}
+
+The vector $w$ is used to model contingent conversion rights where the trigger is observed at the start of a conversion
+period. In this case, both $v$ and $w$ need to be rolled back and on the observation date it is decided how to update
+the value vector $v$, see below for details.
+
+In the presence of either conversion reset events or dividend protection events with conversion ratio adjustments,
+instead of $v$ and $w$ we need several parallel versions of $v$ and $w$ for a discretised set of conversion ratios
+$cr_1,\ldots,cr_K$. The conversion ratios are discretised by setting
+
+\begin{equation}
+  cr_k = CR \cdot m_k
+\end{equation}
+
+where the multipliers $m_k$ for $k=1,\ldots,K$ are taken from the pricing engine parameter
+\verb+Pricing.ConversionRatioDiscretisationGrid+ and $CR$ is the initial conversion ratio from the term sheet. We then
+have to deal with $2K$ vectors instead of only $2$:
+
+\begin{itemize}
+\item $(v_i^k)_{i=1,\ldots,n}^{k=1,\ldots,K}$
+\item $(w_i^k)_{i=1,\ldots,n}^{k=1,\ldots,K}$
+\end{itemize}
+
+As before, the vectors $v^k$ are initialised with $0$ while the $w^k$ are left uninitialised during periods without
+contingent conversion rights. To ease notation we will write $v^k_i$ for $v_i$ in the following if no discretization of
+the conversion rate is required, i.e. we set $k=K=1$ in this case.
+
+The pricing algorithm proceeds as follows:
+
+\begin{enumerate}
+\item Set $i := M$
+\item \label{algo:convertible_rollback_1} If on $t_i$ there is a conversion right contingent on the observation of a
+  trigger at an earlier $t_{i'}$, $i'<i$ and $w^k$ is not initialised, initialise $w^k$ with $v^k$ (for $k=1,\ldots,K$)
+\item Update $v_j^k$ according to voluntary (contingent) conversion rights:
+  \begin{enumerate}
+  \item compute the exercise value $E_j = cr_k e^{y_j} N_t / N_0$
+  \item if there is a contingent conversion trigger check on $t_i$:
+    \begin{enumerate}
+    \item if the check is on the start of period check for future contingent converion rights: if the conversion right
+      is not triggered, i.e.
+      $$cr_k e^{y_j} \leq B$$
+      set $v_j^k$ to $w_j^k$ (future conversion is not possible), otherwise do not update $v_j^k$ (future conversion is
+      possible). Uninitialise all $w^k$'s.
+    \item if the check is a spot check and the conversion right is triggered, i.e.
+      $$cr_k e^{y_j} > B$$
+      set $v_j^k$ to $\max(v_j^k, E_j)$.
+    \end{enumerate}
+  \item if there is no contingent conversion trigger check on $t_i$, update $v_j^k$ to $\max(v_j^k, E_j)$
+  \end{enumerate}
+\item If on $t_i$ there is a conversion ratio reset (due to a conversion reset feature or a dividend protection or a
+  reset of the conversion ratio to a fixed value)
+  \begin{enumerate}
+  \item  for all $k=1,\ldots,K$, $j=1,\ldots,n$:
+  \item interpolate $v_j^k$ linearly from the $v_j^\kappa$ on the adjusted conversion ratio $cr'=cr'(cr_k, y_j)$ which
+    is always computable as a function of the assumed conversion ratio for $v^k$ and the log equity price $y_j$ for the
+    involved reset and dividend protection features.
+  \item interpolate $w_j^k$ from $w_j^\kappa$ analoguously, if $w$ is initialised
+  \end{enumerate}
+\item If no conversion resets occur on $t_i$ or prior to $t_i$, collapse the $v^k$ to one $v$ by interpolating the $v$
+  from the $v^k$ on the initial conversion ratio, and do the same with $w^k$ (if initialised)
+\item If there is a mandatory conversion right on $t_i$ set $v^k_j$ (and $w^k_j$ if initialised) to the mandatory
+  conversion payoff, which is a function of $y_j$.
+\item If there is an issuer call right on $t_i$ and no conversion (voluntary or mandatory) has been exercised in the
+  above steps on the same $t_i$, update
+  $$v_j^k \rightarrow \min(\max(c, f), v_j^k)$$
+  where $f$ is the forced conversion value
+  $$f = cr_k e^{y_j} N_t/N_0$$
+  and $c$ is the amount to be paid by the issuer in case of a call. If the call is soft, only update
+  $v_j^k$ if the soft call is triggered, i.e.
+  $$e^{y_j} > T N_0 / cr_k$$
+  If $w$ is initialised, update $w$ analogously. Notice that a forced coversion can be exercised regardless of a
+  contingent conversion clause active.
+\item If there is an investor put on $t_i$, update
+  $$v_j^k \rightarrow \max( v_j^k, p)$$ where $p$ is the put price to be paid by the issuer in case of a put exercise by
+  the investor. Notice that if a call was exercised before, the put overrides the call. Also, a put overrides a
+  conversion (voluntary or mandatory) on the same date, because the investor will exercise the put or conversion
+  whatever is more valuable, and in case of a mandatory conversion and a put on the same date (unlikely in a real term
+  sheet) we favor the put over the mandatory conversion.
+\item If there is a dividend protection pass through on $t_i$ add the relevant amount to $v_j^k$ (and $w_j^k$ if
+  initialised).
+\item If a bond cashflow is paid on $t_i$, add the amount to $v_j^k$ (and $w_j^k$ if initialised)
+\item Roll back $v_j^k$ (and $w_j^k$ if initialised) from $t_i$ to $t_{i-1}$. If $i>1$ go to step
+  \ref{algo:convertible_rollback_1}.
+\end{enumerate}
+
+After the algorithm has finished, the NPV of the convertible is interpolated from $v_j$.
+
+\underline{Additional pricing engine results}
+
+The following additional results are provided by the pricer:
+
+Results concerning the processing of events on the FD grid: 
+
+\begin{itemize}
+\item time: the time associated to the FD grid point
+\item date: an event date associated to the time
+\item notional: the current notional of the underlying bond
+\item accrual: the current accrual of the underlying bond
+\item flow: bond flow payments
+\item call: issuer call events:
+  \begin{itemize}
+  \item \verb+@1.0+ hard call with price $1.0$
+  \item \verb+@1.0 s@1.3+ soft call with price $1.0$ and trigger $1.3$
+  \end{itemize}
+\item put: investor put events:
+  \begin{itemize}
+  \item \verb+@1.0+ put with price $1.0$
+  \end{itemize}
+\item conversion: conversion event:
+  \begin{itemize}
+  \item \verb+@0.03+ voluntary conversion with conversion ratio $0.03$
+  \item \verb+@0.03 c@1.3+ contingent conversion with conversion ratio $0.03$ and coco barrier $1.3$
+  \item \verb+@0.03 c@1.3b+ as before, but check is on the next date in the past without being marked with \verb+b+
+  \item \verb+peps(0.03,0.04)+: mandatory conversion with PEPS barriers $0.03$ and $0.04$ 
+  \end{itemize}
+\item CR\_reset: conversion ratio reset event:
+  \begin{itemize}
+  \item \verb+0.8@0.9/CP0+ conversion ratio reset with gearing $0.8$ and threshold $0.9$, reference price is the initial
+    conversion price
+  \item \verb+0.8@0.9/CPT+ as before, but reference price is the current conversion price
+  \item \verb+DP(i,0.23)@0.17+ dividend protection conversion ratio reset, relevant period starts at time index $i+1$,
+    dividend yield over relevant period (without historical dividends) is $0.23$, threshold is $0.17$
+  \end{itemize}
+\item div\_passth: dividend passthroughs:
+  \begin{itemize}
+    \item \verb+@0.17+: dividend pass-through event with threshhold $0.17$
+  \end{itemize}
+\item curr\_cr: the current conversion ratio associated to the time index, if there are conversion ratio reset events or
+  dividend protection events with conversion ratio reset active, the number is displayed with the suffix \verb+s+ for
+  stochastic (in which case several PDE planes for different discretized conversion ratios are rolled back)
+\item fxConv: the fx conversion factor from Equity to Bond currency for the time index.
+\item eq\_fwd: the equity forward price at the time index (value is output just for info purposes)
+\item div\_amt: the expected dividend amount relevant for dividend pass through or conversion rate adjustments based on
+  the dividend protection feature (calculated using the equity forward price, value is output just for info purposes)
+\item conv\_val: the expected conversion value at the time index based on the equity forward and current conversion
+  ratio (excluding stochastic adjustments, value is output just for info purposes)
+\item conv\_prc: the expected conversion price at the time index based on the equity forward and current conversion
+  ratio (excluding stochastic adjustments, value is output just for info purposes)
+\end{itemize}
+
+Results concerning the pricing:
+
+\begin{itemize}
+\item BondFloor: the bond floor value
+\item trade.tMax: the maximum time relevant for the trade
+\item market.discountRate(tMax): the benchmark curve discount rate at tMax
+\item market.creditSpread(tMax): the hazard rate at tMax, for exchangeables this is the hazard rate associated to the
+  equity credit risk
+\item market.exchangeableBondSpread(tMax): the hazard rate at tMax associated to the bond credit risk (only filled for
+  exchangeables)
+\item market.discountinngSpread: the additional (security) spread applied to discounting
+\item market.recoveryRate: the recovery rate applied in the model (in case of a bond default)
+\item market.equitySpot: the equity spot
+\item market.equityForward(tMax): the equity forward at tMax
+\item market.equityVolatility(tMax): the equity market volatility at tMax
+\item model.fdGridSize: the number of grid points for the FD solve (in time direction)
+\item model.eta: the model parameter eta (equity default loss ratio)
+\item model.p: the model parameter p (credit-equity linkage)
+\item model.calibrationTimes: the times on which the model is calibrated
+\item model.h0: the calibrated model parameter $h_0$ on the calibration time grid
+\item model.sigma: the calibrated model parameter $\sigma$ on the calibration time grid
+\item conversionIndicator: the pv of a hypothetical instrument paying $1$ when the conversion is exercised
+\end{itemize}
+
+Results concerning the processing of events before or on the evaluation date:
+
+\begin{itemize}
+\item historicEvents.initialConversionRatio: The initial conversion ratio of the bond.
+\item historicEvents.crReset: Data concerning historic conversion ratio resets:
+  \begin{itemize}
+  \item crReset\_DATE\_S: the share price on the reset date
+  \item crReset\_DATE\_threshold: the threshold
+  \item crReset\_DATE\_referenceCP: the reference conversion price
+  \item crReset\_DATE\_gearing: the gearing
+  \item crReset\_DATE\_floor: the floor
+  \item crReset\_DATE\_globalFloor: the global floor
+  \item crReset\_DATE\_currentCr: the conversion ratio before the reset event
+  \item crReset\_DATE\_adjustedCr: the conversion ratio after the reset event
+  \end{itemize}
+\item historicEvents.crReset\_DP: Data concerning historic dividend protection conversion ratio adjustments:
+  \begin{itemize}
+  \item crReset\_DP\_DATE\_div\_DATE1\_DATE2: the dividends for the adjustment period date1/2
+  \item crReset\_DP\_DATE\_S: the share price on the reset ddate
+  \item crReset\_DP\_DATE\_threshold: the threshold
+  \item crReset\_DP\_DATE\_currentCr: the conversion ratio before the reset event
+  \item crReset\_DP\_DATE\_adjustedCr: the conversion ratio after the reset event
+  \end{itemize}
+\item historicEvents.coco: Data concerning contingent conversion with start of period observation:
+  \begin{itemize}
+  \item coco\_DATE\_S: the share price on the observation date
+  \item coco\_DATE\_cocoBarrier: the barrier
+  \item coco\_DATE\_currentCr: the conversion ratio on the observation date
+  \item coco\_DATE\_triggered: whether the barrier is triggered (i.e. conversion is allowed)
+  \end{itemize}
+\item historicEvents.accruedDividends\_DATE1\_DATE2: dividends between the last dividend protection date before the
+  evaluation date and the evaluation date, which enter the next (future) dividend reset event or pass through
+\end{itemize}
+
+
+

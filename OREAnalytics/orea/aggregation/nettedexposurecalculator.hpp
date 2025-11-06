@@ -69,7 +69,7 @@ public:
                              //  vm margin and mtm)  constant during first mpor period,
                              //  analog for overcollaterializations in case of negative mtm.
                              const bool firstMporCollateralAdjustment,
-			     const bool exposureProfilesUseCloseOutValues = false);
+                             const bool exposureProfilesUseCloseOutValues = false, const bool useDoublePrecisionCubes = false);
 
     virtual ~NettedExposureCalculator() {}
     const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -161,11 +161,10 @@ protected:
     std::map<string, std::vector<TimeAveragedExposure>> timeAveragedNettedExposure_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
 
-    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>>
-    collateralPaths(const string& nettingSetId,
-        const Real& nettingSetValueToday,
-        const vector<vector<Real>>& nettingSetValue,
-        const Date& nettingSetMaturity);
+    vector<QuantLib::ext::shared_ptr<CollateralAccount>> collateralPaths(const string& nettingSetId,
+                                                                         const Real& nettingSetValueToday,
+                                                                         const vector<vector<Real>>& nettingSetValue,
+                                                                         const Date& nettingSetMaturity);
 
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;

@@ -92,11 +92,12 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
        - two legs in different currencies with arbitrary coupons allowed, no optionData though
     */
 
-    std::set<std::string> legTypes;
+    std::set<LegType> legTypes;
     std::set<bool> legPayers;
     bool hasCapFloors = false, hasIborInArrears = false;
     for (auto const& l : underlying_) {
-        QL_REQUIRE(l.legType() == "Fixed" || l.legType() == "Floating" || l.legType() == "Cashflow",
+        QL_REQUIRE(l.legType() == LegType::Fixed || l.legType() == LegType::Floating ||
+                   l.legType() == LegType::Cashflow,
                    "RiskParticipationAgreement: leg type " << l.legType()
                                                            << " not supported, expected Fixed, Floating, Cashflow");
         legTypes.insert(l.legType());
@@ -114,8 +115,8 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
         productVariant = "RiskParticipationAgreement_Vanilla_XCcy";
         QL_REQUIRE(!optionData_, "XCcy Risk Participation Agreement does not allow for OptionData");
     } else if (underlying_.size() == 2 &&
-               (legTypes == std::set<std::string>{"Fixed", "Floating"} ||
-                legTypes == std::set<std::string>{"Cashflow", "Floating"}) &&
+               (legTypes == std::set<LegType>{LegType::Fixed, LegType::Floating} ||
+                legTypes == std::set<LegType>{LegType::Cashflow, LegType::Floating}) &&
                legPayers == std::set<bool>{false, true} && !hasCapFloors && !hasIborInArrears && !optionData_) {
         productVariant = "RiskParticipationAgreement_Vanilla";
     } else {

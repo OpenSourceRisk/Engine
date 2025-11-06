@@ -3,7 +3,7 @@
   <Product type="Swap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <Engine>DiscountingSwapEngineOptimised</Engine>
+    <Engine>DiscountingSwapEngine</Engine>
     <EngineParameters/>
   </Product>
   <Product type="CrossCurrencySwap">
@@ -132,6 +132,20 @@
       <Parameter name="TimingAdjustment">Black76</Parameter>
       <!-- Correlation Parameter for BivariateLognormal -->
       <Parameter name="Correlation">1.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Formula Based Coupons -->
+  <Product type="FormulaBasedCoupon">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters>
+      <Parameter name="FXSource">ECB</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+      <Parameter name="Samples">1000</Parameter>
+      <Parameter name="Seed">42</Parameter>
+      <Parameter name="Sobol">Y</Parameter>
+      <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
     </EngineParameters>
   </Product>
   <Product type="EquityForward">

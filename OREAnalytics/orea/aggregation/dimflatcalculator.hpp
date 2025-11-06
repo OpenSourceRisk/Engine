@@ -50,7 +50,7 @@ public:
          //! Additional output of the MC simulation loop with numeraires, index fixings, FX spots etc
         const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData);
 
-    map<string, Real> unscaledCurrentDIM() override { return currentIM_; }
+    const map<string, Real>& unscaledCurrentDIM() const override { return currentIM_; }
     void build() override;
     void exportDimEvolution(ore::data::Report& dimEvolutionReport) const override;
     const vector<Real>& dimResults(const std::string& nettingSet) const;

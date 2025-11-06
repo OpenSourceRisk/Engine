@@ -27,8 +27,9 @@ StrippedCappedFlooredYoYInflationCoupon::StrippedCappedFlooredYoYInflationCoupon
     const ext::shared_ptr<CappedFlooredYoYInflationCoupon>& underlying)
     : YoYInflationCoupon(underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
                          underlying->accrualEndDate(), underlying->fixingDays(), underlying->yoyIndex(),
-                         underlying->observationLag(), underlying->dayCounter(), underlying->gearing(),
-                         underlying->spread(), underlying->referencePeriodStart(), underlying->referencePeriodEnd()),
+                         underlying->observationLag(), underlying->interpolation(), underlying->dayCounter(),
+                         underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
+                         underlying->referencePeriodEnd()),
       underlying_(underlying) {
     registerWith(underlying);
 }

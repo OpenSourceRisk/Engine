@@ -28,7 +28,7 @@
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/referencedata.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -36,21 +36,24 @@ namespace data {
 /*! TRS trade class */
 class TRS : public Trade {
 public:
+    enum class FXConversion { Start, End };
     class ReturnData : public XMLSerializable {
     public:
-        ReturnData() : payer_(false), initialPrice_(Null<Real>()), payUnderlyingCashFlowsImmediately_(false) {}
+        ReturnData()
+            : payer_(false), initialPrice_(Null<Real>()), payUnderlyingCashFlowsImmediately_(false) {}
         ReturnData(const bool payer, const std::string& currency, const ScheduleData& scheduleData,
                    const std::string& observationLag, const std::string& observationConvention,
                    const std::string& observationCalendar, const std::string& paymentLag,
                    const std::string& paymentConvention, const std::string& paymentCalendar,
                    const std::vector<std::string>& paymentDates, const Real initialPrice,
                    const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
-                   const boost::optional<bool> payUnderlyingCashFlowsImmediately)
+                   const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
+                   const QuantLib::ext::optional<FXConversion> fxConversion)
             : payer_(payer), currency_(currency), scheduleData_(scheduleData), observationLag_(observationLag),
               observationCalendar_(observationCalendar), paymentLag_(paymentLag), paymentConvention_(paymentConvention),
               paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), initialPrice_(initialPrice),
               initialPriceCurrency_(initialPriceCurrency), fxTerms_(fxTerms),
-              payUnderlyingCashFlowsImmediately_(payUnderlyingCashFlowsImmediately) {}
+              payUnderlyingCashFlowsImmediately_(payUnderlyingCashFlowsImmediately), fxConversion_(fxConversion) {}
 
         bool payer() const { return payer_; }
         const std::string& currency() const { return currency_; }
@@ -65,12 +68,11 @@ public:
         Real initialPrice() const { return initialPrice_; }
         const std::string& initialPriceCurrency() const { return initialPriceCurrency_; }
         const std::vector<std::string>& fxTerms() const { return fxTerms_; }
-        boost::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
-        const std::string& portfolioId() const { return portfolioId_; }
-        void setPortfolioId(std::string portfolioId) { portfolioId_ = portfolioId; }
-
+        QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
+        QuantLib::ext::optional<FXConversion> fxConversionAtPeriodEnd() const { return fxConversion_; }
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
+        FXConversion parseFXConversion(string fxConv_);
 
     private:
         bool payer_;
@@ -80,10 +82,10 @@ public:
             paymentCalendar_;
         std::vector<std::string> paymentDates_;
         Real initialPrice_;
-        std::string portfolioId_;
         std::string initialPriceCurrency_;
         std::vector<std::string> fxTerms_; // FX index strings
-	boost::optional<bool> payUnderlyingCashFlowsImmediately_;
+        QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately_;
+        QuantLib::ext::optional<FXConversion> fxConversion_;
     };
 
     class FundingData : public XMLSerializable {
@@ -178,6 +180,8 @@ protected:
     void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
     void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
     std::string portfolioId_;
+    bool portfolioDeriv_;
+    double indexQuantity_;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

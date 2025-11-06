@@ -66,9 +66,9 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
     // Cross Currency Swap legs must be either Fixed, Floating or Cashflow and exactly two of Fixed and/or Floating
     vector<Size> legDataIdx;
     for (Size i = 0; i < legData_.size(); i++) {
-        if (legData_[i].legType() == "Fixed" || legData_[i].legType() == "Floating")
+        if (legData_[i].legType() == LegType::Fixed || legData_[i].legType() == LegType::Floating)
             legDataIdx.push_back(i);
-        else if (legData_[i].legType() == "Cashflow")
+        else if (legData_[i].legType() == LegType::Cashflow)
             continue;
         else
             QL_FAIL("CrossCurrencySwap leg #" << i + 1 << " must be Fixed, Floating or Cashflow");
@@ -89,9 +89,9 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
 
         // Get relevant index currency for the first leg - defaults to the leg ccy
         Currency legIndexCcy0 = legCcy0;
-        if (legData0.legType() == "Fixed") {
+        if (legData0.legType() == LegType::Fixed) {
             getIndexingCurrency(legData0, legCcy0, legIndexCcy0);
-        } else if (legData0.legType() == "Floating") {
+        } else if (legData0.legType() == LegType::Floating) {
             auto floatingLeg = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(legData0.concreteLegData());
             if (floatingLeg)
                 legIndexCcy0 = parseIborIndex(floatingLeg->index())->currency();
@@ -99,9 +99,9 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
 
         // Get relevant index currency for the second leg - defaults to the leg ccy
         Currency legIndexCcy1 = legCcy1;
-        if (legData1.legType() == "Fixed") {
+        if (legData1.legType() == LegType::Fixed) {
             getIndexingCurrency(legData1, legCcy1, legIndexCcy1);
-        } else if (legData1.legType() == "Floating") {
+        } else if (legData1.legType() == LegType::Floating) {
             auto floatingLeg = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(legData1.concreteLegData());
             if (floatingLeg)
                 legIndexCcy1 = parseIborIndex(floatingLeg->index()) ->currency();

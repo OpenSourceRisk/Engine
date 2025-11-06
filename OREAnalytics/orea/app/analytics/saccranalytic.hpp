@@ -22,10 +22,12 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
-#include <orea/engine/saccr.hpp>
 
 namespace ore {
 namespace analytics {
+
+class SaccrCalculator;
+class SaccrTradeData;
 
 class SaCcrAnalyticImpl : public Analytic::Impl {
 public:
@@ -41,15 +43,21 @@ public:
 class SaCcrAnalytic : public Analytic {
 public:
     SaCcrAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-                  const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<SaCcrAnalyticImpl>(inputs), {"SA_CCR"}, inputs) {}
+                  const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<SaCcrAnalyticImpl>(inputs), {"SA_CCR"}, inputs, analyticsManager) {}
 
-    const QuantLib::ext::shared_ptr<SACCR> saccr() const { return saccr_; }
-    void setSaccr(QuantLib::ext::shared_ptr<SACCR> saccr) { saccr_ = saccr; }
+    const QuantLib::ext::shared_ptr<SaccrCalculator> saccrCalculator() const { return saccrCalculator_; }
+    const QuantLib::ext::shared_ptr<SaccrTradeData> saccrTradeData() const { return saccrTradeData_; }
+    void setSaccrCalculator(QuantLib::ext::shared_ptr<SaccrCalculator> saccrCalculator) {
+        saccrCalculator_ = saccrCalculator;
+    }
+    void setSaccrTradeData(QuantLib::ext::shared_ptr<SaccrTradeData> saccrTradeData) {
+        saccrTradeData_ = saccrTradeData;
+    }
 
 private:
-    QuantLib::ext::shared_ptr<SACCR> saccr_;
+    QuantLib::ext::shared_ptr<SaccrCalculator> saccrCalculator_;
+    QuantLib::ext::shared_ptr<SaccrTradeData> saccrTradeData_;
 };
 
 } // namespace analytics

@@ -53,7 +53,8 @@ public:
     Calendar calendar() const override;
     Natural settlementDays() const override;
 
-    void makeThisCurveSpreaded(const Handle<YieldTermStructure>& base);
+    void makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
+                               const std::vector<double>& multiplier);
 
 protected:
     void performCalculations() const override;
@@ -67,8 +68,9 @@ private:
     Extrapolation extrapolation_;
     mutable std::vector<Real> data_;
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
-    Handle<YieldTermStructure> base_;
-    std::vector<Real> baseOffset_;
+    std::vector<Handle<YieldTermStructure>> bases_;
+    std::vector<double> multiplier_;
+    std::vector<std::vector<Real>> basesOffset_;
 };
 
 } // namespace QuantExt

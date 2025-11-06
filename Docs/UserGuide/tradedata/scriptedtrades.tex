@@ -1,0 +1,2443 @@
+\subsubsection{Volatility Barrier Options}
+\label{SubSectionVolatilityBarrier}
+
+Options with volatility barriers are represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction. Each of the supported variations and their payoff script
+name are shown in Table \ref{tab:barrier_options}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Volatility Barrier Option Variation & Payoff Script Name \\
+\hline
+\hline
+European Volatility Barrier Option & VolatilityBarrierOption \\
+\hline
+Dual European Binary Option with Volatility Barrier & DualEuroBinaryOption \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Volatility Barrier Option variations and associated script names.}
+\label{tab:barrier_options}
+\end{table}
+
+Trade input and the associated payoff script are described in the following for all supported variations.
+
+\subsubsection*{European Volatility Barrier Option}
+
+The traditional trade representation is as follows:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="VolBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+  	<Envelope>
+  	   <CounterParty>CPTY_A</CounterParty>
+  	   <NettingSetId>CPTY_A</NettingSetId>
+  	   <AdditionalFields/>
+  	</Envelope>
+  	<VolatilityBarrierOptionData>
+        <LongShort type="longShort">Long</LongShort>
+        <SettlementDate type="event">2020-07-20</SettlementDate>
+        <ValuationSchedule type="event">
+            <ScheduleData>
+              <Rules>
+                <StartDate>2020-01-15</StartDate>
+                <EndDate>2020-07-10</EndDate>
+                <Tenor>1D</Tenor>
+                <Calendar>US</Calendar>
+                <Convention>Following</Convention>
+                <TermConvention>Following</TermConvention>
+                <Rule>Forward</Rule>
+              </Rules>
+            </ScheduleData>
+        </ValuationSchedule>
+        <CallNotional type="number">120</CallNotional>
+        <PutNotional type="number">10000</PutNotional>
+        <BarrierLevel type="number">5</BarrierLevel>
+        <BarrierType type="barrierType">UpIn</BarrierType>
+        <Underlying type="index">FX-ECB-JPY-USD</Underlying>
+        <CallCcy type="currency">USD</CallCcy>
+        <PutCcy type="currency">JPY</PutCcy>
+        <PayCcy type="currency">USD</PayCcy>
+        <Expiry type="event">2020-07-15</Expiry>
+        <Premium type="number">10</Premium>        
+        <PremiumDate type="event">2020-07-18</PremiumDate>
+    </VolatilityBarrierOptionData>
+</Trade>
+\end{minted}
+
+The VolatilityBarrierOption script referenced in the trade above is shown in listing
+\ref{lst:fxvol_barrier_option}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+   REQUIRE {CallNotional >= 0}  AND {PutNotional >= 0};
+   REQUIRE {BarrierLevel >= 0}  AND {Premium >= 0};
+
+   NUMBER d, realisedVariance, realisedVolatility, currPrice, pay;
+   NUMBER prevPrice, payoff, strike, TriggerProbability, knockedIn, premium, expectedN;
+
+   strike = CallNotional/PutNotional;
+
+   FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+     currPrice = Underlying(ValuationSchedule[d]);
+     prevPrice = Underlying(ValuationSchedule[d-1]);
+
+    realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+
+   END;
+
+   expectedN = SIZE(ValuationSchedule) - 1;
+   realisedVolatility = 100 * sqrt((252/expectedN)) * sqrt(realisedVariance);
+
+   IF {BarrierType == 1 AND realisedVolatility <= BarrierLevel} OR 
+      {BarrierType == 2 AND realisedVolatility >= BarrierLevel} THEN
+         TriggerProbability = 1;
+         knockedIn = 1;
+         payoff = LongShort * knockedIn * max((strike - Underlying(Expiry)), 0) * PutNotional;
+   END;
+
+   premium = PAY(Premium, Expiry, PremiumDate, PayCcy);
+
+   pay = PAY(payoff, Expiry, SettlementDate, PayCcy);
+
+   Option = pay - premium;
+\end{minted}
+\caption{Payoff script for a VolatilityBarrierOption.}
+\label{lst:fxvol_barrier_option}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!VolatilityBarrierOptionData! node below.
+
+\begin{itemize}
+  \item{}[currency] \lstinline!CallCcy!: The call currency. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[currency] \lstinline!PutCcy!: The put currency. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[number] \lstinline!CallNotional!: The amount of CallCcy that will be purchased if the option is exercised. \\
+  Allowable values: Any non-negative number.
+    \item{}[number] \lstinline!PutNotional!: The amount of PutCcy that will be sold if the option is exercised. \\
+  Allowable values: Any non-negative number.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to exchanging PutNotional in PutCcy for CallNotional in CallCcy at expiry. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[index] \lstinline!Underlying!: Underlying FX/EQ/COM index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[barrierType] \lstinline!BarrierType!: Whether the barrier is a (\emph{DownIn} or \emph{UpIn}) barrier. \\
+  Allowable values: \emph{DownIn, UpIn}.
+  \item{}[number] \lstinline!BarrierLevel!: The agreed volatility barrier level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!PremiumDate!: The date on which the option premium is paid. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!Premium!: The option premium. \\
+  Allowable values: Any non-negative real number.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Dual European Binary Option with Volatility Barrier}
+
+The traditional trade representation is as follows:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="DualEuroBinaryOption">
+  <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+        <CounterParty>CPTY_A</CounterParty>
+  	<NettingSetId>CPTY_A</NettingSetId>
+  	<AdditionalFields/>
+     </Envelope>
+  <DualEuroBinaryOptionData>
+     <SettlementDate type="event">2020-07-20</SettlementDate>
+     <SettlementAmount type="number">10000</SettlementAmount>
+     <VolSchedule type="event">
+         <ScheduleData>
+           <Rules>
+             <StartDate>2020-01-15</StartDate>
+             <EndDate>2020-07-10</EndDate>
+             <Tenor>1D</Tenor>
+             <Calendar>US</Calendar>
+             <Convention>Following</Convention>
+             <TermConvention>Following</TermConvention>
+             <Rule>Forward</Rule>
+           </Rules>
+         </ScheduleData>
+     </VolSchedule>
+     <VolBarrierLevel type="number">5</VolBarrierLevel>
+     <VolBarrierType type="barrierType">UpIn</VolBarrierType>
+     <BarrierLevel type="number">0.007</BarrierLevel>
+     <BarrierType type="barrierType">DownIn</BarrierType>         
+     <BarrierDate type="event">2020-07-18</BarrierDate>
+     <Underlying type="index">FX-ECB-JPY-USD</Underlying>
+     <PayCcy type="currency">USD</PayCcy>
+     <Expiry type="event">2020-07-15</Expiry>
+     <Premium type="number">10</Premium>        
+     <PremiumDate type="event">2020-07-18</PremiumDate>
+ </DualEuroBinaryOptionData>
+</Trade>
+\end{minted}
+
+The DualEuroBinaryOption script referenced in the trade above is shown in listing
+\ref{lst:dual_binary_option}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+   NUMBER d, realisedVariance, realisedVolatility, currPrice, pay;
+        NUMBER prevPrice, payoff, strike, TriggerProbability, knockedIn, premium, expectedN;
+
+        FOR d IN (2, SIZE(VolSchedule), 1) DO
+          currPrice = Underlying(VolSchedule[d]);
+          prevPrice = Underlying(VolSchedule[d-1]);
+
+          realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+
+        END;
+
+        expectedN = SIZE(VolSchedule) - 1;
+        realisedVolatility = 100 * sqrt((252/expectedN)) * sqrt(realisedVariance);
+
+        IF BarrierType == 1 AND VolBarrierType == 1 THEN
+          IF {realisedVolatility <= VolBarrierLevel AND Underlying(BarrierDate) <= BarrierLevel} THEN
+            TriggerProbability = 1;
+            payoff = SettlementAmount;
+          END;
+        END;
+
+        IF BarrierType == 2 AND VolBarrierType == 1 THEN
+          IF {realisedVolatility <= VolBarrierLevel AND Underlying(BarrierDate) >= BarrierLevel} THEN
+            TriggerProbability = 1;
+            payoff = SettlementAmount;
+          END;
+        END;
+
+        IF BarrierType == 1 AND VolBarrierType == 2 THEN
+          IF {realisedVolatility >= VolBarrierLevel AND Underlying(BarrierDate) <= BarrierLevel} THEN
+            TriggerProbability = 1;
+            payoff = SettlementAmount;
+          END;
+        END;
+
+        IF BarrierType == 2 AND VolBarrierType == 2 THEN
+          IF {realisedVolatility >= VolBarrierLevel AND Underlying(BarrierDate) >= BarrierLevel} THEN
+            TriggerProbability = 1;
+            payoff = SettlementAmount;
+          END;
+        END;
+
+        premium = PAY(Premium, Expiry, PremiumDate, PayCcy);
+
+        pay = PAY(payoff, Expiry, SettlementDate, PayCcy);
+
+        Option = pay - premium;
+\end{minted}
+\caption{Payoff script for a DualEuroBinaryOption.}
+\label{lst:dual_binary_option}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!DualEuroBinaryOptionData! node below.
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to receiving the settlement amount at expiry. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[barrierType] \lstinline!BarrierType!: Whether the underlying barrier is a (\emph{DownIn} or \emph{UpIn}) barrier. \\
+  Allowable values: \emph{DownIn, UpIn}.
+  \item{}[number] \lstinline!BarrierLevel!: The agreed underlying barrier level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[event] \lstinline!BarrierDate!: The date on which the underlying barrier event is determined. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!VolBarrierType!: Whether the realized volatility barrier is a (\emph{DownIn} or \emph{UpIn}) barrier. \\
+  Allowable values: \emph{DownIn, UpIn}.
+  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[number] \lstinline!SettlementAmount!: The settlement amount. \\
+  Allowable values: Any non-negative real number.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!PremiumDate!: The date on which the option premium is paid. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!Premium!: The option premium. \\
+  Allowable values: Any non-negative real number.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection{CMS / Libor Asian Cap Floor}
+
+% we only have a scripted trade representation for this at the moment
+
+Asian Cap / Floors on CMS / Libor underlyings are represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="Scripted_Asian_CMS_Floor">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <AsianIrCapFloorData>
+    <NotionalAmount type="number">83000000</NotionalAmount>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlying type="index">EUR-CMS-10Y</Underlying>
+    <FixingLagDc type="dayCounter">ActActISDA</FixingLagDc>
+    <MinFixingLag type="number">0.05</MinFixingLag>
+    <MaxFixingLag type="number">10.05</MaxFixingLag>
+    <OptionType type="optionType">Floor</OptionType>
+    <Strike type="number">0.015</Strike>
+    <Gearing type="number">1.0</Gearing>
+    <Spread type="number">0.0</Spread>
+    <DayCountFraction type="dayCounter">30/360</DayCountFraction>
+    <FixedAmount type="number">3305890</FixedAmount>
+    <FixedAmountPayDate type="event">2017-11-29</FixedAmountPayDate>
+    <PayCcy type="currency">EUR</PayCcy>
+    <AccrualSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2027-11-28</StartDate>
+          <EndDate>2037-11-28</EndDate>
+          <Tenor>3M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>MF</Convention>
+          <TermConvention>MF</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </AccrualSchedule>
+    <FixingSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2018-02-28</StartDate>
+          <EndDate>2037-10-28</EndDate>
+          <Tenor>1M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>MF</Convention>
+          <TermConvention>MF</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </FixingSchedule>
+  </AsianIrCapFloorData>
+</Trade>
+\end{minted}
+
+The script referenced in the trade above is shown in Listing \ref{lst:ir_asian_capfloor_script}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+NUMBER f, fixing, p, l, noFixings;
+FOR p IN (1, SIZE(AccrualSchedule) - 1) DO
+   fixing = 0;
+   noFixings = 0;
+   FOR f IN (1, SIZE(FixingSchedule)) DO
+      l =  dcf( FixingLagDc, FixingSchedule[f], AccrualSchedule[p+1] );
+      IF l >= MinFixingLag AND l <= MaxFixingLag THEN
+        fixing = fixing + Underlying(FixingSchedule[f]);
+        noFixings = noFixings + 1;
+     END;
+   END;
+   IF noFixings >= 1 THEN
+     fixing = fixing / noFixings;
+   END;
+   Option = Option + LongShort * PAY( NotionalAmount * max( OptionType *
+                             (Gearing * fixing + Spread - Strike), 0 ) *
+                             dcf( DayCountFraction, AccrualSchedule[p], AccrualSchedule[p+1] ),
+                             AccrualSchedule[p+1], AccrualSchedule[p+1], PayCcy );
+END;
+Option = Option - LongShort * PAY( FixedAmount, FixedAmountPayDate,
+                                   FixedAmountPayDate, PayCcy );
+\end{minted}
+\caption{Payoff script for an Asian Cap/Floor on CMS or Libor.}
+\label{lst:ir_asian_capfloor_script}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!AsianIrCapFloorData! node below.
+
+\begin{itemize}
+    \item{}[number] \lstinline!NotionalAmount!: The notional amount of the cap / floor. \\
+    Allowable values: Any positive real number.
+    \item{}[longShort] \lstinline!LongShort!: \emph{Long} if we buy the option. \emph{Short} if we sell the option.
+    Allowable values: \emph{Long, Short}
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+    Allowable values: See Section \ref{data_index} for allowable values, only CMS and Ibor interest rate indices are allowed.
+  \item{}[dayCounter] \lstinline!FixingLagDc!: The day counter used to determine the fixing dates to be included into the averaging
+    for one period. All fixing dates that have a distance to the payment date of the period falling into the interval
+    [MinFixingLag, MaxFixingLag] are included in the average. The distance is measured as the day count fraction between
+    the fixing date and the payment date. Typically this day counter will be set to ActActISDA and MinFixingLag nad
+    MaxFixingLag will be numbers chosen appropriately so that all relevant fixing dates are included for all periods. \\
+    Allowable values: Any valid day counter, see \ref{tab:daycount}
+  \item{}[number] \lstinline!MinFixingLag!: The minimum distance of a fixing date from a payment date to be included into the
+    averaging for that payment. Expressed in number of years. See FixingLagDc for more details.\\
+    Allowable values: Any positive number.
+  \item{}[number] \lstinline!MaxFixingLag!: The maximum distance of a fixing date from a payment date to be included into the
+    averaging for that payment. Expressed in number of years. See FixingLagDc for more details.\\
+    Allowable values: Any positive number.
+  \item{}[optionType] \lstinline!OptionType!: The payoff type. See the Product Description for [CMS / Libor Asian Cap Floor] for the full payoff specification.\\
+    Allowable values: Cap, Floor.
+  \item{}[number] \lstinline!Strike!: The strike of the cap or floor.\\
+    Allowable values: Any number.
+  \item{}[number] \lstinline!Gearing!: The gearing to multiply the averaged index fixing with.\\
+    Allowable values: Any number.
+  \item{}[number] \lstinline!Spread!: The spread to add to the averaged index fixing.\\
+    Allowable values: Any number.
+  \item{}[dayCounter] \lstinline!DayCountFraction!: The day count fraction for the coupon amount calculation.\\
+    Allowable values: Any valid day counter, see \ref{tab:daycount}
+  \item{}[number] \lstinline!FixedAmount!: A fixed amount to be paid by the option holder.\\
+    Allowable values: Any number. A positive number represents a payment of the option holder.
+  \item{}[event] \lstinline!FixedAmountPayDate!: The payment date of the fixed amount.\\
+    Allowable values: Any date.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency for the cap / floor payoff and also the fixed amount. Notice section \ref{sss:payccy_st}.\\
+    Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[event] \lstinline!AccrualSchedule!: The schedule defining the accrual schedule of the cap / floor. The payment dates are
+    given as the last date of each accrual period.\\
+    Allowable values: See \ref{ss:schedule_data}
+  \item{}[event] \lstinline!FixingSchedule!: The schedule defining the fixing dates of the underlying.\\
+    Allowable values: See \ref{ss:schedule_data}
+\end{itemize}
+
+\subsubsection{CMS Volatility Swap}
+
+Constant Maturity Volatility Swap are represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="ConstantMaturityVolatilitySwap">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+        <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ConstantMaturityVolatilitySwapData>
+        <NotionalAmount type="number">2500000000</NotionalAmount>
+      <Underlyings type="index">
+        <Value>USD-CMS-1Y</Value>
+        <Value>USD-CMS-5Y</Value>
+      </Underlyings>
+      <LongShort type="longShort">Long</LongShort>
+      <Strike type="number">0.0575</Strike>
+    <DayCountFraction type="dayCounter">A365</DayCountFraction>
+      <PayCcy type="currency">USD</PayCcy>
+      <Settlement type="event">2020-09-10</Settlement>
+      <ResetSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-08-04</StartDate>
+          <EndDate>2020-09-04</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>USD</Calendar>
+          <Convention>MF</Convention>
+          <TermConvention>MF</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+      </ResetSchedule>  
+    </ConstantMaturityVolatilitySwapData>
+</Trade>
+
+\end{minted}
+
+The script referenced in the trade above is shown in Listing \ref{lst:ir_cms_volatilityswap}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+REQUIRE SIZE(Underlyings) <= 2;
+
+NUMBER i, u, fixings[SIZE(Underlyings)], fixing, spreadRate;
+
+FOR i IN (1, SIZE(ResetSchedule) - 1, 1) DO
+  FOR u IN (1, SIZE(Underlyings), 1) DO
+    fixings[u] = fixings[u] + pow(Underlyings[u](ResetSchedule[i+1]) - Underlyings[u](ResetSchedule[i]), 2);
+  END;
+END;
+
+IF SIZE(Underlyings) == 1 THEN
+  spreadRate = sqrt(fixings[1]);
+ELSE
+  spreadRate = sqrt(fixings[1]) - sqrt(fixings[2]);
+END;
+
+Swap = LongShort * PAY(NotionalAmount * (15.8745 * (spreadRate / i) - Strike / 100) * 
+     dcf(DayCountFraction, ResetSchedule[1], ResetSchedule[i+1]), Settlement, Settlement, PayCcy);
+\end{minted}
+\caption{Payoff script for a CMS Volatility Swap.}
+\label{lst:ir_cms_volatilityswap}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!ConstantMaturityVolatilitySwapData! node below.
+
+\begin{itemize}
+  \item{}[number] \lstinline!NotionalAmount!: The notional amount of the CMS Volatility Swap. \\
+    Allowable values: Any positive real number.
+  \item{}[index] \lstinline!Underlyings!: List of underyling CMS indices. \\
+    Allowable values: See Section \ref{data_index} for allowable values, only CMS is allowed.
+  \item{}[longShort] \lstinline!LongShort!: \emph{Long} if own party is volatility payer. \emph{Short} if own party is strike payer.\\
+    Allowable values: \emph{Long, Short}
+  \item{}[number] \lstinline!Strike!: The strike of the CMS Volatility Swap for 100 notional.\\
+    Allowable values: Any number.
+  \item{}[dayCounter] \lstinline!DayCountFraction!: The day count fraction for the fixing period calculation.\\
+    Allowable values: Any valid day counter, see \ref{tab:daycount}
+  \item{}[currency] \lstinline!PayCcy!: The payment currency for the payoff.  Notice section \ref{sss:payccy_st}.\\
+    Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[event] \lstinline!Settlement!: The payment date for the CMS Volatility Swap.\\
+    Allowable values: See \ref{ss:schedule_data}
+  \item{}[event] \lstinline!ResetSchedule!: The schedule defining the reset dates of the underlying.\\
+    Allowable values: See \ref{ss:schedule_data}
+\end{itemize}
+
+\subsubsection{Forward Volatility Agreement} 
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+Forward Volatility Agreements are represented as {\em scripted trades}, refer to Section 
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="FX_ForwardVolatilityAgreement">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <ForwardVolatilityAgreementData>
+    <FvaDate type="event">2019-07-25</FvaDate>
+    <OptionExpiry type="event">2020-01-27</OptionExpiry>
+    <PremiumDate type="event">2019-07-29</PremiumDate>
+    <Underlying type="index">FX-ECB-GBP-USD</Underlying>
+    <LongShort type="longShort">Long</LongShort>
+    <ImpliedVolStrike type="number">0.09675</ImpliedVolStrike>
+    <Quantity type="number">89000000</Quantity>
+    <PayCcy type="currency">USD</PayCcy>
+    <SettlementDate type="event">2020-01-29</SettlementDate>
+  </ForwardVolatilityAgreementData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:forward_volatility_agreement}. 
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+REQUIRE TODAY <= FvaDate;
+REQUIRE FvaDate <= PremiumDate;
+REQUIRE FvaDate < OptionExpiry;
+REQUIRE Quantity >= 0;
+REQUIRE ImpliedVolStrike > 0;
+
+NUMBER forwardStrike, fixedPremium, floatingPayoff;
+
+forwardStrike = Underlying(FvaDate, OptionExpiry);
+fixedPremium = black(1, FvaDate, OptionExpiry, forwardStrike, forwardStrike, ImpliedVolStrike) +
+               black(-1, FvaDate, OptionExpiry, forwardStrike, forwardStrike, ImpliedVolStrike);
+floatingPayoff = abs(forwardStrike - Underlying(OptionExpiry));
+
+FVA = LongShort * Quantity * (PAY(fixedPremium, FvaDate, PremiumDate, PayCcy) +
+        PAY(floatingPayoff, OptionExpiry, SettlementDate, PayCcy));
+\end{minted} 
+\caption{Payoff script for a Forward Volatility Agreement.} 
+\label{lst:forward_volatility_agreement} 
+\end{listing} 
+ 
+The meanings and allowable values of the elements in the \lstinline!ForwardVolatilityAgreementData! node below. 
+ 
+\begin{itemize} 
+  \item{}[event] \lstinline!FvaDate!: The date when the underlying straddle option is exchanged. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    This must be greater than or equal to the trade valuation date, less than or equal
+    to the trade \lstinline!PremiumDate!, and less than the \lstinline!OptionExpiry!
+    date.
+  \item{}[event] \lstinline!OptionExpiry!: The straddle option expiry date. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    This must be greater than the \lstinline!FvaDate!.
+  \item{}[event] \lstinline!PremiumDate!: The premium payment date. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    This must be greater than or equal to the \lstinline!FvaDate!.
+  \item{}[index] \lstinline!Underlying!: Underlying index.
+    Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[longShort] \lstinline!LongShort!: \emph{Long} if own party is long in the straddle option. \emph{Short} if own party is short in the straddle option.\\ 
+    Allowable values: \emph{Long, Short} 
+  \item{}[number] \lstinline!ImpliedVolStrike!: The implied volatility rate to be used in calculating the premium of the straddle option.\\
+    Allowable values: Any positive real number.
+  \item{}[number] \lstinline!Quantity!: The notional amount of the option. For an FX underlying, this is the amount in \lstinline!CCY1!.
+  For an EQ underlying, this is the number of options exchanged.\\
+    Allowable values: Any non-negative number.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+  \item{}[event] \lstinline!SettlementDate!: The settlement date for the option payoff after exercise.\\ 
+    Allowable values: See See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize} 
+
+\subsubsection{Correlation Swap} 
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+Correlation Swaps are represented as {\em scripted trades}, refer to Section 
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="FX_CorrelationSwap">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <CorrelationSwapData>
+    <Amount type="number">20000</Amount>
+    <FixedRate type="number">0.07</FixedRate>
+    <FixedRatePayer type="bool">false</FixedRatePayer>
+    <Underlyings type="index">
+      <Value>FX-TR20H-USD-TRY</Value>
+      <Value>FX-TR20H-USD-JPY</Value>
+    </Underlyings>
+    <DeterminationDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2017-11-02</StartDate>
+          <EndDate>2018-11-01</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>US</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </DeterminationDates>
+    <SettlementDate type="event">2018-11-02</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </CorrelationSwapData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:correlation_swap}. Note that the $1/(n-1)$ term for the covariances in correlation swap product description does not appear in the script. This is because the terms cancel each other out in the equation for $\rho_{\rm float}$.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+REQUIRE FixedRate >= -1 AND FixedRate <= 1;
+REQUIRE Amount >= 0;
+REQUIRE DeterminationDates[SIZE(DeterminationDates)] <= SettlementDate;
+REQUIRE SIZE(Underlyings) == 2;
+
+NUMBER floatingRate, i, covXY, covXX, covYY, logReturnX, logReturnY;
+
+FOR i IN (2, SIZE(DeterminationDates), 1) DO
+  logReturnX = ln(Underlyings[1](DeterminationDates[i])/Underlyings[1](DeterminationDates[i-1]));
+  logReturnY = ln(Underlyings[2](DeterminationDates[i])/Underlyings[2](DeterminationDates[i-1]));
+
+  covXY = covXY + (logReturnX * logReturnY);
+  covXX = covXX + pow(logReturnX, 2);
+  covYY = covYY + pow(logReturnY, 2);
+END;
+
+floatingRate = covXY / sqrt(covXX * covYY);
+
+Swap = FixedRatePayer * Amount * 100 * PAY((floatingRate - FixedRate),
+        DeterminationDates[SIZE(DeterminationDates)], SettlementDate, PayCcy);
+\end{minted} 
+\caption{Payoff script for a Correlation Swap.} 
+\label{lst:correlation_swap} 
+\end{listing} 
+ 
+The meanings and allowable values of the elements in the \lstinline!CorrelationSwapData! node below. 
+ 
+\begin{itemize} 
+  \item{}[number] \lstinline!Amount!: The notional amount (per percent correlation). \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!FixedRate!: The agreed correlation rate for the fixed leg. \\
+  Allowable values: Any real number between -1 and 1.
+  \item{}[bool] \lstinline!FixedRatePayer!: Flag indicating whether own party pays the fixed leg. \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[index] \lstinline!Underlyings!: The two underlyings. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!DeterminationDates!: The schedule defining the observation dates for the correlation calculation. \\
+  Allowable values: See \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!SettlementDate!: Settlement date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection{Asset Linked Cliquet Option}
+
+% we only have a scripted trade representation for this at the moment 
+
+An Asset Linked Cliquet Option is a derivative whose payoff depends on the value of a basket
+of underlyings. At each valuation date, the party in the long position pays the following amount to the other party:
+
+Asset Linked Cliquet Options are represented as {\em scripted trades}, refer to Section 
+\ref{app:scriptedtrade} for an introduction. The following trade XML is an example of
+a CMS-linked equity cliquet option (FX crossed).
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="Scripted_Cliquet">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <AssetLinkedCliquetOptionData>
+    <Nominal type="number">1000000</Nominal>
+    <LongShort type="longShort">Long</LongShort>
+    <PayCurrency type="currency">EUR</PayCurrency>
+    <ValuationDates type="event">
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            .....
+          </Dates>
+        </Dates>
+      </ScheduleData>
+    </ValuationDates>
+    <PaymentDates type="event">
+      <DerivedSchedule>
+        <BaseSchedule>ValuationDates</BaseSchedule>
+        <Shift>2D</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>F</Convention>
+      </DerivedSchedule>
+    </PaymentDates>
+    <Underlyings type="index">
+        <Value>EQ-RIC:.SPX</Value>
+        <Value>EQ-RIC:.STOXX50E</Value>
+    </Underlyings>
+    <FXConversions type="index">
+      <Value>FX-ECB-USD-USD</Value>
+      <Value>FX-ECB-EUR-USD</Value>
+    </FXConversions>
+    <Weights type="number">
+      <Value>0.6</Value>
+      <Value>0.4</Value>
+    </Weights>
+    <LinkedUnderlying type="index">EUR-CMS-10Y</LinkedUnderlying>
+    <PayStrike type="number">1.06</PayStrike>
+    <RecStrike type="number">1.12</RecStrike>
+  </AssetLinkedCliquetOptionData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing
+\ref{lst:asset_linked_cliquet_option}. In the example trade XML above, the basket ``base''
+currency is USD, with all underlyings in the basket being converted to this currency
+using the specified FX index. Since EQ-RIC:.SPX is already denominated in USD, the FX index \emph{FX-ECB-USD-USD} is used to denote an FX rate of 1.0, i.e.\ no conversion.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+NUMBER B, r, i, j, currentNotional, value;
+
+FOR i IN (2, SIZE(ValuationDates), 1) DO
+  B = 0;
+  FOR j IN (1, SIZE(Underlyings), 1) DO
+    r = Underlyings[j](ValuationDates[i]) / Underlyings[j](ValuationDates[i-1])
+        * FXConversions[j](ValuationDates[i-1]) / FXConversions[j](ValuationDates[i]);
+    B = B + Weights[j] * r;
+  END;
+
+  value = value + PAY( Nominal * 
+                       (max( RecStrike + LinkedUnderlying(ValuationDates[i-1]) - B, 0) -
+                        max( B - PayStrike - LinkedUnderlying(ValuationDates[i-1]), 0)),
+                       ValuationDates[i], PaymentDates[i], PayCurrency );
+END;
+
+Option = LongShort * value;
+currentNotional = Nominal;
+\end{minted} 
+\caption{Payoff script for an Asset Linked Cliquet Option.} 
+\label{lst:asset_linked_cliquet_option} 
+\end{listing} 
+ 
+The meanings and allowable values of the elements in the \lstinline!AssetLinkedCliquetOptionData!
+node below. 
+ 
+\begin{itemize} 
+  \item{}[number] \lstinline!Nominal!: The notional amount. \\
+  Allowable values: Any non-negative number.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. The long party
+  would receive payments on the value of \lstinline!LinkedUnderlying! and would pay on the
+  value of the basket of \lstinline!Underlyings!, and vice versa for the short position. \\
+  Allowable values: \emph{Long} or \emph{Short}
+  \item{}[bool] \lstinline!PayCurrency!: The payment currency. \\
+  Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+  \item{}[event] \lstinline!ValuationDates!: The schedule defining the dates for determining
+  the cashflow amounts. \\
+  Allowable values: See \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!PaymentDates!: Settlement dates corresponding to each determination date
+  in \lstinline!ValuationDates!.
+  Allowable values: See \ref{ss:schedule_data}.
+  \item{}[index] \lstinline!Underlyings!: Basket of underlyings. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[index] \lstinline!FXConversions!: FX indices for determining FX cross conversion of each
+  underlying in \lstinline!Underlyings!. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!Weights!: Basket weights.
+  Allowable values: A vector of numbers with the same size as \lstinline!Underlyings!
+  \item{}[index] \lstinline!LinkedUnderlying!: Asset directly linked to the option cashflows. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!PayStrike!: Strike on the value of the basket underlying, paid by the
+  party in the short position.
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!RecStrike!: Strike on the value of the basket underlying, received by
+  the party in the long position.
+  Allowable values: Any non-negative number.
+\end{itemize}
+
+\subsubsection{CMS Cap / Floor with Barrier} 
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+A CMS Cap / Floor with a barrier in an underlying is represented as {\em scripted trades}, refer to Section 
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="CMS_CapFloor_with_FxBarrier">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <CMSCapFloorBarrierData>
+    <Notional type="number">5000000000</Notional>
+    <Strike type="number">0.037</Strike>
+    <PremiumAmount type="number">955000</PremiumAmount>
+    <PremiumCurrency type="currency">USD</PremiumCurrency>
+    <PremiumDate type="event">2018-12-04</PremiumDate>
+    <OptionExpiry type="event">2019-12-02</OptionExpiry>
+    <Quantity type="number">1</Quantity>
+    <OptionType type="optionType">Call</OptionType>
+    <LongShort type="longShort">Long</LongShort>
+    <CMSUnderlyings type="index">
+      <Value>USD-CMS-10Y</Value>
+      <Value>USD-CMS-2Y</Value>
+    </CMSUnderlyings>
+    <Gearing type="number">1.0</Gearing>
+    <Spread type="number">0.00000</Spread>
+    <BarrierUnderlying type="index">FX-ECB-USD-JPY</BarrierUnderlying>
+    <BarrierLevel type="number">105.01525</BarrierLevel>
+    <BarrierType type="barrierType">DownIn</BarrierType>
+    <SettlementDate type="event">2019-12-04</SettlementDate>
+    <SettlementCurrency type="currency">USD</SettlementCurrency>
+  </CMSCapFloorBarrierData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:cms_capfloor_barrier}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+REQUIRE TODAY <= PremiumDate AND PremiumDate < OptionExpiry;
+REQUIRE OptionExpiry <= SettlementDate AND Notional >= 0 AND Quantity >= 0;
+REQUIRE PremiumAmount >= 0 AND BarrierLevel >= 0 AND Gearing >= 0;
+REQUIRE BarrierType == 1 OR BarrierType == 2 OR BarrierType == 3 OR BarrierType == 4;
+REQUIRE SIZE(CMSUnderlyings) <= 2;
+
+NUMBER barrierFixing, cmsFixing, exercisePayoff, premium;
+
+barrierFixing = BarrierUnderlying(OptionExpiry);
+
+IF {{BarrierType == 1 OR BarrierType == 4} AND barrierFixing <= BarrierLevel}
+OR {{BarrierType == 2 OR BarrierType == 3} AND barrierFixing >= BarrierLevel} THEN
+  IF SIZE(CMSUnderlyings) == 1 THEN
+    cmsFixing = CMSUnderlyings[1](OptionExpiry);
+  ELSE
+    cmsFixing = CMSUnderlyings[1](OptionExpiry) - CMSUnderlyings[2](OptionExpiry);
+  END;
+  exercisePayoff = Notional * Quantity *
+                    max(0, OptionType * ((Gearing * cmsFixing) + Spread - Strike));
+END;
+
+exercisePayoff = LOGPAY(exercisePayoff, OptionExpiry, SettlementDate,
+                        SettlementCurrency, 1, ExercisePayoff);
+premium = LOGPAY(Quantity * PremiumAmount, PremiumDate, PremiumDate,
+                 PremiumCurrency, 0, Premium);
+Option = LongShort * (exercisePayoff - premium);
+\end{minted} 
+\caption{Payoff script for a CMS Cap / Floor with FX Barrier.} 
+\label{lst:cms_capfloor_barrier} 
+\end{listing} 
+ 
+The meanings and allowable values of the elements in the \lstinline!CMSCapFloorBarrierData! node below.
+ 
+\begin{itemize} 
+  \item{}[number] \lstinline!Notional!: Notional amount. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Strike!: The option cap / floor level. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!PremiumAmount!: The premium amount paid (for each option). \\
+  Allowable values: Any non-negative number.
+  \item{}[currency] \lstinline!PremiumCurrency!: The currency that the premium is paid in. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[event] \lstinline!PremiumDate!: Premium pay date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!OptionExpiry!: Option expiration date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number]: \lstinline!Quantity!: The number of options exchanged \\
+  Allowable values: Any non-negative number.
+  \item{}[optionType] \lstinline!OptionType!: Option type. \\
+  Allowable values: \\lstinline!emph!{Call, Put}.
+  \item{}[longShort] LongShort: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[index] \lstinline!CMSUnderlyings!: List of underlying CMS indices. If one value is specified, the fixing is given by
+  the value of the CMS index. If two values are specified, the fixing is given as the spread between the two, see
+  Listing \ref{lst:cms_capfloor_barrier}.\\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!Gearing!: The gearing to multiply the CMS fixing with.\\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Spread!: The spread to add to the CMS fixing.\\
+  Allowable values: Any number.
+  \item{}[index] \lstinline!BarrierUnderlying!: Barrier underlying index. This is generic to any asset class. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!BarrierLevel!: Agreed barrier value. \\
+  Allowable values: Any non-negative number.
+  \item{}[barrierType] \lstinline!BarrierType!: The type of barrier. Note that \emph{DownIn} and
+  \emph{UpOut} are equivalent. Likewise for \emph{UpIn} and \emph{DownOut}. \\
+  Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}
+  \item{}[event] \lstinline!SettlementDate!: Settlement date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!SettlementCurrency!: Settlement currency. Notice section \ref{sss:payccy_st}. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\end{itemize}
+
+\subsubsection{Fixed Strike Forward Starting Option}
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+A Forward Starting Option with a fixed strike is represented as {\em scripted trades}, refer to Section 
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="EQ_FixedStrikeForwardStartingOption">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <FixedStrikeForwardStartingOptionData>
+    <ForwardDate type="event">2019-12-20</ForwardDate>
+    <PremiumDate type="event">2019-12-24</PremiumDate>
+    <OptionExpiry type="event">2020-12-18</OptionExpiry>
+    <DayCountFraction type="dayCounter">A365</DayCountFraction>
+    <Underlying type="index">EQ-RIC:.STOXX50E</Underlying>
+    <UnderlyingDrift type="number">-0.0492</UnderlyingDrift>
+    <DiscountRate type="number">0.0000</DiscountRate>
+    <ImpliedVolatility type="number">0.2365</ImpliedVolatility>
+    <LongShort type="longShort">Long</LongShort>
+    <PutCall type="optionType">Put</PutCall>
+    <Strike type="number">10000</Strike>
+    <Quantity type="number">900000</Quantity>
+    <SettlementDate type="event">2020-12-22</SettlementDate>
+    <SettlementCurrency type="currency">EUR</SettlementCurrency>
+  </FixedStrikeForwardStartingOptionData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:fixed_strike_forward_starting_option}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+REQUIRE {TODAY < ForwardDate} AND {ForwardDate <= PremiumDate};
+REQUIRE {PremiumDate < OptionExpiry} AND {OptionExpiry <= SettlementDate};
+REQUIRE {Strike > 0} AND {ImpliedVolatility > 0} AND {Quantity >= 0};
+
+NUMBER optionTerm, forwardFixing, premium, exercisePayoff;
+
+optionTerm = dcf(DayCountFraction, ForwardDate, OptionExpiry);
+forwardFixing = Underlying(ForwardDate) * exp(UnderlyingDrift * optionTerm);
+
+premium = black(PutCall, ForwardDate, OptionExpiry, Strike,forwardFixing,
+                ImpliedVolatility) * exp(-DiscountRate * optionTerm);
+
+premium = PAY(premium, ForwardDate, PremiumDate, SettlementCurrency);
+exercisePayoff = PAY(max(0, PutCall * (Underlying(OptionExpiry) - Strike)),
+                  OptionExpiry, SettlementDate, SettlementCurrency);
+
+Option = LongShort * Quantity * (exercisePayoff - premium);
+\end{minted} 
+\caption{Payoff script for a Fixed Strike Forward Starting Option.} 
+\label{lst:fixed_strike_forward_starting_option} 
+\end{listing} 
+ 
+The meanings and allowable values in the \
+\lstinline!FixedStrikeForwardStartingOptionData! node below.
+ 
+\begin{itemize} 
+  \item{}[event] \lstinline!ForwardDate!: The date when the underlying option is exchanged (and the premium is determined). \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!PremiumDate!: Premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!OptionExpiry!: Option expiration date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[dayCounter] \lstinline!DayCountFraction!: The day count convention used in calculating the option premium. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!UnderlyingDrift!: The agreed drift in the underlying asset used in calculating the option premium. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!DiscountRate!: The agreed discount rate used in calculating the option premium. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!ImpliedVolatility!: The implied volatility used in calculating the option premium. \\
+  Allowable values: Any positive number.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[optionType] \lstinline!PutCall!: Option type. \\
+  Allowable values: \emph{Call, Put}.
+  \item{}[number] \lstinline!Strike!: The fixed strike price of the option. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!Quantity!: The number of options exchanged. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!SettlementDate!: Settlement date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!SettlementCurrency!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection{Floating Strike Forward Starting Option}
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+A Forward Starting Option with a floating strike is represented as {\em scripted trades}, refer to Section 
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="EQ_FloatingStrikeForwardStartingOption">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <FloatingStrikeForwardStartingOptionData>
+    <ForwardDate type="event">2019-12-30</ForwardDate>
+    <PremiumDate type="event">2018-08-27</PremiumDate>
+    <OptionExpiry type="event">2020-12-30</OptionExpiry>
+    <PremiumAmount type="number">26000000</PremiumAmount>
+    <PremiumCurrency type="currency">EUR</PremiumCurrency>
+    <Underlying type="index">EQ-RIC:.STOXX50E</Underlying>
+    <LongShort type="longShort">Long</LongShort>
+    <PutCall type="optionType">Put</PutCall>
+    <Strike type="number">0.93</Strike>
+    <Notional type="number">600000000</Notional>
+    <SettlementDate type="event">2021-01-03</SettlementDate>
+    <SettlementCurrency type="currency">EUR</SettlementCurrency>
+  </FloatingStrikeForwardStartingOptionData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:floating_strike_forward_starting_option}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+REQUIRE TODAY < ForwardDate;
+REQUIRE PremiumDate < OptionExpiry;
+REQUIRE OptionExpiry <= SettlementDate;
+REQUIRE {Strike > 0} AND {Notional >= 0} AND {PremiumAmount > 0};
+
+NUMBER premium, indexInitial, indexFinal, strikePrice, exercisePayoff;
+
+premium = PAY(PremiumAmount, PremiumDate, PremiumDate, PremiumCurrency);
+indexInitial = Underlying(ForwardDate);
+indexFinal = Underlying(OptionExpiry);
+strikePrice = Strike * indexInitial;
+exercisePayoff = PAY(Notional * max(0, PutCall * (indexFinal - strikePrice) / indexInitial),
+                  OptionExpiry, SettlementDate, SettlementCurrency);
+
+Option = LongShort * (exercisePayoff - premium);
+\end{minted} 
+\caption{Payoff script for a Floating Strike Forward Starting Option.} 
+\label{lst:floating_strike_forward_starting_option} 
+\end{listing} 
+ 
+The meanings and allowable values in the \lstinline!FloatingStrikeForwardStartingOptionData! node below.
+ 
+\begin{itemize} 
+  \item{}[event] \lstinline!ForwardDate!: The date when the underlying option is exchanged (and the premium is determined). \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!PremiumDate!: Premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!OptionExpiry!: Option expiration date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!PremiumAmount!: The total option premium amount. \\
+  Allowable values: Any non-negative number.
+  \item{}[currency] \lstinline!PremiumCurrency!: The currency that the premium is paid in. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[optionType] \lstinline!PutCall!: Option type. \\
+  Allowable values: \emph{Call, Put}.
+  \item{}[number] \lstinline!Strike!: The strike price of the option, as a percentage of the underlying index, in decimal form. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!Notional!: Notional amount. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!SettlementDate!: Settlement date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!SettlementCurrency!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection{Forward Starting Swaption}
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+A Forward Starting Swaption is represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+  <Trade id="IR_ForwardStartingSwaption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ForwardStartingSwaptionData>
+      <DeterminationDate type="event">2021-06-25</DeterminationDate>
+      <SwaptionType type="number">0</SwaptionType>
+      <LongShort type="longShort">Long</LongShort>
+      <PremiumDate type="event">2023-06-28</PremiumDate>
+      <PremiumAmount type="number">23400000.00</PremiumAmount>
+      <PremiumCurrency type="currency">USD</PremiumCurrency>
+      <OptionExpiry type="event">2023-06-26</OptionExpiry>
+      <Underlying type="index">USD-LIBOR-3M</Underlying>
+      <Notional type="number">3000000000.00</Notional>
+      <PayCcy type="currency">USD</PayCcy>
+      <FixedDayCountFraction type="dayCounter">T360</FixedDayCountFraction>
+      <FixedSchedule type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2023-06-28</StartDate>
+            <EndDate>2024-06-28</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>NYB,LNB</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+        </ScheduleData>
+      </FixedSchedule>
+      <FloatingDayCountFraction type="dayCounter">A360</FloatingDayCountFraction>
+      <FloatingSchedule type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2023-06-28</StartDate>
+            <EndDate>2024-06-28</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>NYB,LNB</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+        </ScheduleData>
+      </FloatingSchedule>
+      <FixingSchedule type="event">
+        <DerivedSchedule>
+          <BaseSchedule>FloatingSchedule</BaseSchedule>
+          <Shift>-2D</Shift>
+          <Calendar>USA</Calendar>
+          <Convention>MF</Convention>
+        </DerivedSchedule>
+      </FixingSchedule>
+    </ForwardStartingSwaptionData>
+  </Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:forward_starting_swaption}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+REQUIRE {TODAY <= DeterminationDate} AND {DeterminationDate < OptionExpiry};
+REQUIRE {OptionExpiry <= FixedSchedule[1]} AND {OptionExpiry <= FloatingSchedule[1]};
+REQUIRE {PremiumAmount >= 0} AND {Notional >= 0};
+REQUIRE {SwaptionType == -1} OR {SwaptionType == 0} OR {SwaptionType == 1};
+
+NUMBER d, floatingAccrualFraction, forwardRate, numerator;
+NUMBER fixedAccrualFraction, denominator;
+NUMBER fairRate, floatingLegNpv, fixedLegNpv, exercisePayoff, totalExercisePayoff, premium;
+NUMBER floatingAccrualFractions[SIZE(FloatingSchedule)-1], fixedAccrualFractions[SIZE(FixedSchedule)-1];
+
+FOR d IN (2, SIZE(FloatingSchedule), 1) DO
+  floatingAccrualFraction = dcf(FloatingDayCountFraction, FloatingSchedule[d-1], FloatingSchedule[d]);
+  floatingAccrualFractions[d-1] = floatingAccrualFraction;
+  forwardRate = Underlying(DeterminationDate, FixingSchedule[d-1]);
+  numerator = numerator + PAY(forwardRate * floatingAccrualFraction, DeterminationDate, FloatingSchedule[d], PayCcy);
+END;
+
+FOR d IN (2, SIZE(FixedSchedule), 1) DO
+  fixedAccrualFraction = dcf(FixedDayCountFraction, FixedSchedule[d-1], FixedSchedule[d]);
+  fixedAccrualFractions[d-1] = fixedAccrualFraction;
+  denominator = denominator + PAY(fixedAccrualFraction, DeterminationDate, FixedSchedule[d], PayCcy);
+END;
+
+fairRate = numerator / denominator;
+
+FOR d IN (2, SIZE(FloatingSchedule), 1) DO
+  forwardRate = Underlying(OptionExpiry, FixingSchedule[d-1]);
+  floatingLegNpv = floatingLegNpv + PAY(forwardRate * floatingAccrualFractions[d-1], OptionExpiry, FloatingSchedule[d], PayCcy);
+END;
+
+FOR d IN (2, SIZE(FixedSchedule), 1) DO
+  fixedLegNpv = fixedLegNpv + PAY(fixedAccrualFractions[d-1], OptionExpiry, FixedSchedule[d-1], PayCcy);
+END;
+fixedLegNpv = fairRate * fixedLegNpv;
+
+IF SwaptionType == 0 THEN
+  exercisePayoff = abs(fixedLegNpv - floatingLegNpv);
+ELSE
+  exercisePayoff = SwaptionType * (fixedLegNpv - floatingLegNpv);
+END;
+
+totalExercisePayoff = LOGPAY(Notional * exercisePayoff, OptionExpiry, OptionExpiry, PayCcy, 1, ExercisePayoff);
+premium = LOGPAY(PremiumAmount, PremiumDate, PremiumDate, PremiumCurrency, 0, Premium);
+
+FSS = LongShort * (totalExercisePayoff - premium);
+\end{minted} 
+\caption{Payoff script for a Forward Starting Swaption.} 
+\label{lst:forward_starting_swaption} 
+\end{listing} 
+ 
+The meanings and allowable values in the \lstinline!ForwardStartingSwaptionData! node below.
+ 
+\begin{itemize} 
+  \item{}[event] \lstinline!DeterminationDate!: The date when the fixed rate is determined and/or the straddle is exchanged. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!SwaptionType!: The swaption type: payer, receiver or straddle. \\
+  Allowable values: \emph{-1} for Payer, \emph{1} for Receiver, or \emph{0} for Straddle.
+  \item{}[event] \lstinline!PremiumDate!: The premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!PremiumAmount!: Option premium amount in \emph{PremiumPayCcy}. \\
+  Allowable values: Any non-negative number.
+  \item{}[currency] \lstinline!PremiumCurrency!: The currency that the premium is paid in. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[event] \lstinline!OptionExpiry!: Option expiry date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. \\
+  \item{}[index] \lstinline!Underlying!: Underlying IR index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!Notional!: The notional amount of the underlying swap. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!PayCcy!: The currency of the underlying swap notional. Notice section \ref{sss:payccy_st}. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[dayCounter] \lstinline!FixedDayCountFraction!: The day count fraction for the underlying swap fixed payments. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[event] \lstinline!FixedSchedule!: The schedule defining the period dates of the underlying swap fixed leg. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[dayCounter] \lstinline!FloatingDayCountFraction!: The day count fraction for the underlying swap floating payments. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[event] \lstinline!FloatingSchedule!: The schedule defining the period dates of the underlying swap floating leg. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[event] \lstinline!FixingSchedule!: The fixing schedule of the floating leg payments, derived from the \emph{FloatingSchedule}. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+\end{itemize}
+
+\subsubsection{Ladder Lock-In Option}
+ 
+% we only have a scripted trade representation for this at the moment 
+
+A Ladder Lock-In Option is represente a {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="EQ_LadderLockInOption">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <LadderLockInOptionData>
+    <LongShort type="longShort">Long</LongShort>
+    <Quantity type="number">1000</Quantity>
+    <PutCall type="optionType">Call</PutCall>
+    <PremiumAmount type="number">5000</PremiumAmount>
+    <PremiumDate type="event">2021-01-29</PremiumDate>
+    <Underlying type="index">EQ-RIC:.SPX</Underlying>
+    <LockInLevels type="number">
+      <Value>3750</Value>
+      <Value>3800</Value>
+      <Value>3850</Value>
+      <Value>3900</Value>
+      <Value>3950</Value>
+      <Value>4000</Value>
+      <Value>4050</Value>
+      <Value>4100</Value>
+    </LockInLevels>
+    <ObservationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2021-06-25</StartDate>
+          <EndDate>2022-06-25</EndDate>
+          <Tenor>3D</Tenor>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Calendar>US</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ObservationSchedule>
+    <Strike type="number">3714.24</Strike>
+    <SettlementDate type="event">2022-06-29</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </LadderLockInOptionData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:ladder_lockin_option}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+NUMBER sortedLevels[SIZE(LockInLevels)], price;
+NUMBER payoff, premium, lockIn, d, l, lastLockIn;
+
+FOR l IN (1, SIZE(LockInLevels), 1) DO
+  sortedLevels[l] = LockInLevels[l];
+END;
+SORT(sortedLevels);
+
+IF PutCall == 1 THEN
+  REQUIRE Strike <= sortedLevels[1];
+ELSE
+  REQUIRE Strike >= sortedLevel[SIZE(sortedLevels)];
+END;
+
+lastLockIn = Strike;
+
+FOR d IN (1, SIZE(ObservationSchedule), 1) DO
+  price = Underlying(ObservationSchedule[d]);
+
+  FOR l IN (1, SIZE(sortedLevels), 1) DO
+    IF PutCall*price >= PutCall*sortedLevels[l] THEN
+      lockIn = sortedLevels[l];
+      IF PutCall*lockIn >= PutCall*lastLockIn THEN
+        lastLockIn = lockIn;
+        payoff = PAY(Quantity * PutCall * (lastLockIn - Strike),
+                     ObservationSchedule[d],
+                     SettlementDate, PayCcy);
+      END;
+    END;
+  END;
+END;
+
+premium = PAY(Premium, PremiumDate, PremiumDate, PayCcy);
+
+Option = LongShort * (payoff - premium);
+
+NUMBER currentNotional;
+currentNotional = Quantity * Strike;
+\end{minted} 
+\caption{Payoff script for a Ladder Lock-In Option.} 
+\label{lst:ladder_lockin_option} 
+\end{listing} 
+ 
+The meanings and allowable values in the \lstinline!LadderLockInOptionData! node below.
+ 
+\begin{itemize} 
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long}, \emph{Short}
+  \item{}[number] \lstinline!Quantity!: Option notional amount. For an FX underlying, this is the amount of
+  the base currency. For an EQ underlying, this is the number of options exchanged. \\
+  Allowable values: Any non-negative number
+  \item{}[optionType] \lstinline!PutCall!: Option type. \\
+  Allowable values \emph{Call}, \emph{Put}
+  \item{}[number] \lstinline!PremiumAmount!: Total option premium amount. \\
+  Allowable values: Any number
+  \item{}[event] \lstinline!PremiumDate!: Option premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[index] \lstinline!Underlying!: Option underlying index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[number] \lstinline!LockInLevels!: Underlying price lock-in levels. \\
+  Allowable values: Any number
+  \item{}[event] \lstinline!ObservationSchedule!: The schedule defining the observation dates for determining price lock-ins. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[number] \lstinline!Strike!: The option strike price. \\
+  Allowable values: Any number
+  \item{}[event] \lstinline!SettlementDate!: Settlement date of the option's exercise payoff. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency of the option. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection{Floored Average CPI Zero Coupon Inflation Index Swap}
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+A Floored Average CPI Zero Coupon Inflation Index Swap is represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="test_flooredAverageCPIZCIIS">
+<TradeType>ScriptedTrade</TradeType>
+<Envelope>
+<CounterParty>CPTY_A</CounterParty>
+<NettingSetId>CPTY_A</NettingSetId>
+<AdditionalFields/>
+</Envelope>
+<FlooredAverageCPIZCIISData>
+<Notional type='number'>10000000</Notional>
+<PayCurrency type='currency'>EUR</PayCurrency>
+<FixedDayCounter type='dayCounter'>Year</FixedDayCounter>
+<FixedRate type='number'>0.02398</FixedRate>
+<PayFixLeg type='bool'>true</PayFixLeg>
+<FixedLegSchedule type='event'>
+<ScheduleData>
+<Rules>
+<StartDate>2009-03-01</StartDate>
+<EndDate>2048-03-01</EndDate>
+<Tenor>1Y</Tenor>
+<Calendar>TARGET</Calendar>
+<Convention>ModifiedFollowing</Convention>
+<TermConvention>ModifiedFollowing</TermConvention>
+<Rule>Forward</Rule>
+<EndOfMonth/>
+<FirstDate/>
+<LastDate/>
+</Rules>
+</ScheduleData>
+</FixedLegSchedule>
+<FloatDayCounter type='dayCounter'>1/1</FloatDayCounter>
+<CPIIndex type='index'>EUHICPXT</CPIIndex>
+<FloatLegSchedule type='event'>
+<ScheduleData>
+<Rules>
+<StartDate>2009-03-01</StartDate>
+<EndDate>2048-03-01</EndDate>
+<Tenor>1Y</Tenor>
+<Calendar>TARGET</Calendar>
+<Convention>F</Convention>
+<TermConvention>F</TermConvention>
+<Rule>Forward</Rule>
+<EndOfMonth/>
+<FirstDate/>
+<LastDate/>
+</Rules>
+</ScheduleData>
+</FloatLegSchedule>
+<Floor type='number'>0.0</Floor>
+<BaseCPI type='number'>89.99</BaseCPI>
+<ObservationSchedule type='event'>
+<ScheduleData>
+<Rules>
+<StartDate>2009-03-01</StartDate>
+<EndDate>2048-03-01</EndDate>
+<Tenor>1M</Tenor>
+<Calendar>TARGET</Calendar>
+<Convention>MF</Convention>
+<TermConvention>MF</TermConvention>
+<Rule>Forward</Rule>
+<EndOfMonth/>
+<FirstDate/>
+<LastDate/>
+</Rules>
+</ScheduleData>
+</ObservationSchedule>
+<FixingSchedule type='event'>
+<DerivedSchedule>
+<BaseSchedule>ObservationSchedule</BaseSchedule>
+<Shift>-3M</Shift>
+<Calendar>TARGET</Calendar>
+<Convention>ModifiedFollowing</Convention>
+</DerivedSchedule>
+</FixingSchedule>
+</FlooredAverageCPIZCIISData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:floored_average_cpi_zciis}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+NUMBER FixedLegNpv, FloatLegNpv;
+NUMBER i, j, obs_start, obs_end, lpi, average_lpi;
+NUMBER fixedCpnRate, fixedAmount, floatAmount;
+
+FOR i IN(2, SIZE(FixedLegSchedule), 1) DO
+fixedAmount = LOGPAY(-1 * PayFixLeg * (pow(1+FixedRate, dcf(FixedDayCounter, FixedLegSchedule[1], FixedLegSchedule[i]))-1) * Notional,
+FixedLegSchedule[i], FixedLegSchedule[i], PayCurrency, 0, Interest, i);
+FixedLegNpv = FixedLegNpv + fixedAmount;
+END;
+
+FOR i IN(2, SIZE(FloatLegSchedule), 1) DO
+IF FloatLegSchedule[i] >= TODAY THEN
+obs_end = DATEINDEX(FloatLegSchedule[i], ObservationSchedule, GEQ);
+obs_start = DATEINDEX(FloatLegSchedule[i-1], ObservationSchedule, GT);
+average_lpi = 0;
+FOR j IN(obs_start, obs_end, 1) DO
+average_lpi = average_lpi + CPIIndex(FixingSchedule[j]);
+END;
+average_lpi = average_lpi / (obs_end-obs_start+1);
+lpi = max(average_lpi/BaseCPI, 1+Floor) - 1;
+floatAmount = LOGPAY(PayFixLeg *lpi * Notional * dcf(FloatDayCounter,FloatLegSchedule[i-1],FloatLegSchedule[i]),
+FloatLegSchedule[i], FloatLegSchedule[i], PayCurrency, 1, Interest, SIZE(FixedLegSchedule)+i);
+FloatLegNpv = FloatLegNpv+floatAmount;
+END;
+END;
+
+Value = FloatLegNpv+FixedLegNpv;
+\end{minted} 
+\caption{Payoff script for a Floored Average CPI Zero Coupon Inflation Index Swap.} 
+\label{lst:floored_average_cpi_zciis} 
+\end{listing} 
+ 
+The meanings and allowable values in the \lstinline!flooredAverageCPIZCIISData! node below.
+ 
+\begin{itemize} 
+  \item{}[number] \lstinline!Notional!: The notional amount of the underlying swap. \\
+  Allowable values: Any non-negative number.
+  \item{}[currency] \lstinline!PayCurrency!: Deal currency. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[dayCounter] \lstinline!FixedDayCounter!: The day count fraction for the fixed payments of the zero coupon leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[number] \lstinline!FixedRate!: The payed rate of the fixed zero coupon leg. \\
+  Allowable values: Any number.
+  \item{}[event] \lstinline!FixedLegSchedule!: The fixing schedule of the fixed zero coupon leg payments\\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[dayCounter] \lstinline!FloatDayCounter!: The day count fraction for the floating payments of the inflation leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[event] \lstinline!FloatingSchedule!: The schedule defining the period dates of the swap inflation leg. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[number] \lstinline!Floor!: Floor level of the inflation coupons.
+  Allowable values: Any number.
+  \item{}[number] \lstinline!BaseCPI!: The fixed initial (base) inflation index average used as denumerator in den CPI ratio of all inflation coupons
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!ObservationSchedule!: The schedule defining the observation dates for the averaging of the inflation index.\\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  \item{}[event] \lstinline!FixingSchedule!: The schedule is derived from the observation schedule and the index observation lag.\\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData.
+  
+\end{itemize}
+
+\subsubsection{Moving Maximum Year-on-Year Inflation Index Swap}
+
+% we only have a scripted trade representation for this at the moment 
+
+A Moving Maximum Year-on-Year Inflation Index Swap is represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+
+\begin{minted}[fontsize=\footnotesize]{xml} 
+  <Trade id="test_maxmax_YoY">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <MovingMaxYYIISData>
+    <Notional type='number'>10000000</Notional>
+    <PayCurrency type='currency'>EUR</PayCurrency>
+    <IborLegDayCounter type='dayCounter'>ACT/360</IborLegDayCounter>
+    <IborSpread type='number'>0.0070</IborSpread>
+    <IborIndex type='index'>EUR-EURIBOR-6M</IborIndex>
+    <PayIborLeg type='bool'>false</PayIborLeg>
+    <IborLegSchedule type='event'>
+      <ScheduleData>
+        <Rules>
+          <StartDate>2021-06-02</StartDate>
+          <EndDate>2026-06-02</EndDate>
+          <Tenor>6M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>ModifiedFollowing</Convention>
+          <TermConvention>ModifiedFollowing</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth/>
+          <FirstDate/>
+          <LastDate/>
+        </Rules>
+      </ScheduleData>
+    </IborLegSchedule>
+    <IborLegFixingSchedule type='event'>
+      <DerivedSchedule>
+        <BaseSchedule>IborLegSchedule</BaseSchedule>
+        <Shift>-2D</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>ModifiedFollowing</Convention>
+      </DerivedSchedule>
+    </IborLegFixingSchedule>
+    <InflationLeg1_DayCounter type='dayCounter'>1/1</InflationLeg1_DayCounter>
+    <InflationLeg1_CPI type='index'>EUHICPXT</InflationLeg1_CPI>
+    <InflationLeg1_Schedule type='event'>
+      <ScheduleData>
+        <Rules>
+          <StartDate>2021-06-02</StartDate>
+          <EndDate>2026-06-02</EndDate>
+          <Tenor>6M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>ModifiedFollowing</Convention>
+          <TermConvention>ModifiedFollowing</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth/>
+          <FirstDate/>
+          <LastDate/>
+        </Rules>
+      </ScheduleData>
+    </InflationLeg1_Schedule>
+    <InflationLeg1_Gearing type='number'>0.00125</InflationLeg1_Gearing>
+    <InflationLeg1_Floor type='number'>1</InflationLeg1_Floor>
+    <InflationLeg1_InitialCPI type='number'>105.1</InflationLeg1_InitialCPI>
+    <InflationLeg1_SubtractNotional type='bool'>false</InflationLeg1_SubtractNotional>
+    <InflationLeg1_FixingSchedule type='event'>
+      <DerivedSchedule>
+        <BaseSchedule>InflationLeg1_Schedule</BaseSchedule>
+        <Shift>-3M</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>ModifiedFollowing</Convention>
+      </DerivedSchedule>
+    </InflationLeg1_FixingSchedule>
+    <InflationLeg2_DayCounter type='dayCounter'>1/1</InflationLeg2_DayCounter>
+    <InflationLeg2_CPI type='index'>EUHICPXT</InflationLeg2_CPI>
+    <InflationLeg2_Schedule type='event'>
+      <ScheduleData>
+        <Rules>
+          <StartDate>2021-06-02</StartDate>
+          <EndDate>2026-06-02</EndDate>
+          <Tenor>6M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>ModifiedFollowing</Convention>
+          <TermConvention>ModifiedFollowing</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth/>
+          <FirstDate/>
+          <LastDate/>
+        </Rules>
+      </ScheduleData>
+    </InflationLeg2_Schedule>
+    <InflationLeg2_Gearing type='number'>1</InflationLeg2_Gearing>
+    <InflationLeg2_Floor type='number'>0</InflationLeg2_Floor>
+    <InflationLeg2_InitialCPI type='number'>105.1</InflationLeg2_InitialCPI>
+    <InflationLeg2_SubtractNotional type='bool'>true</InflationLeg2_SubtractNotional>
+    <InflationLeg2_FixingSchedule type='event'>
+      <DerivedSchedule>
+        <BaseSchedule>InflationLeg2_Schedule</BaseSchedule>
+        <Shift>-3M</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>ModifiedFollowing</Convention>
+      </DerivedSchedule>
+    </InflationLeg2_FixingSchedule>
+  </MovingMaxYYIISData>
+</Trade>
+\end{minted}
+
+The script referenced in the trade above is shown in Listing \ref{lst:movingMaxYYIIS}.
+
+\begin{listing}[hbt]
+  \begin{minted}[fontsize=\footnotesize]{Basic} 
+NUMBER i;
+NUMBER iborLegStartIdx, iborLegNPV, iborAmount;
+NUMBER infLeg1NPV, infLeg1Amount, infLeg1MaxIndexFixing, infLeg1Rate;
+NUMBER infLeg2NPV, infLeg2Amount, infLeg2MaxIndexFixing, infLeg2Rate;
+
+iborLegNPV = 0;
+
+FOR i IN(2, SIZE(IborLegSchedule), 1) DO
+iborAmount = LOGPAY(-1 * PayIborLeg * (IborIndex(IborLegFixingSchedule[i-1])+IborSpread) * Notional * 
+                    dcf(IborLegDayCounter, IborLegSchedule[i-1], IborLegSchedule[i]),
+                    IborLegSchedule[i], IborLegSchedule[i], PayCurrency, 0, Interest, i);
+iborLegNPV = iborLegNPV + iborAmount;
+END;
+
+infLeg1NPV = 0;
+infLeg1MaxIndexFixing = InflationLeg1_InitialCPI;
+FOR i IN(2, SIZE(InflationLeg1_Schedule), 1) DO
+  IF i > 2 THEN 
+    infLeg1MaxIndexFixing = max(infLeg1MaxIndexFixing,InflationLeg1_CPI(InflationLeg1_FixingSchedule[i-1]));
+  END;
+  infLeg1Rate = InflationLeg1_CPI(InflationLeg1_FixingSchedule[i])/infLeg1MaxIndexFixing;
+  IF InflationLeg1_SubtractNotional == 1 THEN
+    infLeg1Rate = infLeg1Rate - 1;
+  END;
+  infLeg1Rate = max(infLeg1Rate, InflationLeg1_Floor);
+  infLeg1Amount = LOGPAY(PayIborLeg * infLeg1Rate * Notional * InflationLeg1_Gearing * 
+    dcf(InflationLeg1_DayCounter,InflationLeg1_Schedule[i-1],InflationLeg1_Schedule[i]),
+    InflationLeg1_Schedule[i], InflationLeg1_Schedule[i], PayCurrency, 1, Interest, SIZE(IborLegSchedule)+i);
+  infLeg1NPV = infLeg1NPV+infLeg1Amount;
+END;
+
+infLeg2NPV = 0;
+infLeg2MaxIndexFixing = InflationLeg2_InitialCPI;
+FOR i IN(2, SIZE(InflationLeg2_Schedule), 1) DO
+  IF i > 2 THEN 
+    infLeg2MaxIndexFixing = max(infLeg2MaxIndexFixing, InflationLeg2_CPI(InflationLeg2_FixingSchedule[i-1]));
+  END;
+  infLeg2Rate = InflationLeg2_CPI(InflationLeg2_FixingSchedule[i])/infLeg2MaxIndexFixing;
+  IF InflationLeg2_SubtractNotional == 1 THEN
+    infLeg2Rate = infLeg2Rate - 1;
+  END;
+  infLeg2Rate = max(infLeg2Rate, InflationLeg2_Floor);
+  infLeg2Amount = LOGPAY(PayIborLeg * infLeg2Rate * Notional * InflationLeg2_Gearing * 
+            dcf(InflationLeg2_DayCounter,InflationLeg2_Schedule[i-1],InflationLeg2_Schedule[i]),
+            InflationLeg2_Schedule[i], InflationLeg2_Schedule[i], PayCurrency, 2, Interest, SIZE(IborLegSchedule)+SIZE(InflationLeg1_Schedule)+i);
+  infLeg2NPV = infLeg2NPV+infLeg2Amount;
+END;
+
+Value =  iborLegNPV + infLeg1NPV+infLeg2NPV;
+\end{minted}
+  \caption{Payoff script for a Moving Max Year-on-Year Inflation Index Swap.}
+  \label{lst:movingMaxYYIIS}
+\end{listing}
+
+The meanings and allowable values in the \lstinline!MovingMaxYYIISData! node below.
+
+\begin{itemize}
+  \item{}[number] \lstinline!Notional!: the notional amount of the underlying swap. \\
+  Allowable values: Any non-negative number.
+  \item{}[currency] \lstinline!PayCurrency!:  the currency of the underlying swap notional. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[dayCounter] \lstinline!IborLegDayCounter!:  the day count fraction for the Ibor floating leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[number] \lstinline!IborSpread!: the spread added to the Ibor fixing. \\
+  Allowable values: Any number.
+  \item{}[index] \lstinline!IborIndex!:  the underlying Ibor Index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[bool] \lstinline!PayIborLeg!: the payer/receiver flag. \\
+  Allowable values: Boolean node, the set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!IborLegSchedule!:  the payment schedule of the Ibor floating leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[event] \lstinline!IborLegFixingSchedule!: the fixing schedule of the Ibor floating leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[dayCounter] \lstinline!InflationLeg1_DayCounter!: the day count fraction for the first inflation leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[index] \lstinline!InflationLeg1_CPI!:  the underlying CPI index of the first inflation leg. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!InflationLeg1_Schedule!: the payment schedule of the first inflation leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[event] \lstinline!InflationLeg1_FixingSchedule!: the fixing dates of the first inflation index. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[number] \lstinline!InflationLeg1_Gearing!:  the gearing of the first inflation leg. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!InflationLeg1_Floor!:  the floor rate of the first inflation leg. \\
+  Allowable values: Any  number.
+  \item{}[number] \lstinline!InflationLeg1_InitialCPI!: the initial base fixing for the first inflation coupon. \\
+  Allowable values: Any non-negative number.
+  \item{}[bool] \lstinline!InflationLeg1_SubtractNotional!: leg pays the inflation rate instead of the ratio if true. \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc. The
+  full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[dayCounter] \lstinline!InflationLeg2_DayCounter!: the day count fraction for the second inflation leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[index] \lstinline!InflationLeg2_CPI!:  the underlying CPI index of the second inflation leg. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!InflationLeg2_Schedule!: the payment schedule of the second inflation leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[event] \lstinline!InflationLeg2_FixingSchedule!: the fixing dates of the second inflation index. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[number] \lstinline!InflationLeg2_Gearing!:  the gearing of the second inflation leg. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!InflationLeg2_Floor!:  the floor rate of the second inflation leg. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!InflationLeg2_InitialCPI!: the initial base fixing for the second inflation coupon. \\
+  Allowable values: Any non-negative number.
+  \item{}[bool] \lstinline!InflationLeg2_SubtractNotional!: leg pays the inflation rate instead of the ratio if true.
+  full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+\end{itemize}
+
+\subsubsection{Irregular Year-on-Year Inflation Index Swap}
+
+% we only have a scripted trade representation for this at the moment 
+
+An Irregular Year-on-Year Inflation Index Swap is represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+
+\begin{minted}[fontsize=\footnotesize]{xml} 
+  <Trade id="test_irregularYYIIS">
+	<TradeType>ScriptedTrade</TradeType>
+	<Envelope>
+		<CounterParty>CPTY_A</CounterParty>
+		<NettingSetId>CPTY_A</NettingSetId>
+		<AdditionalFields/>
+	</Envelope>
+	<IrregularYYIISData>
+		<Notional type='number'>10000000</Notional>
+		<PayCurrency type='currency'>EUR</PayCurrency>
+		<IborLegDayCounter type='dayCounter'>ACT/360</IborLegDayCounter>
+		<IborSpread type='number'>0.0070</IborSpread>
+		<IborIndex type='index'>EUR-EURIBOR-6M</IborIndex>
+		<PayIborLeg type='bool'>true</PayIborLeg>
+		<IborLegSchedule type='event'>
+			<ScheduleData>
+				<Rules>
+					<StartDate>2021-06-02</StartDate>
+					<EndDate>2026-06-02</EndDate>
+					<Tenor>6M</Tenor>
+					<Calendar>TARGET</Calendar>
+					<Convention>ModifiedFollowing</Convention>
+					<TermConvention>ModifiedFollowing</TermConvention>
+					<Rule>Forward</Rule>
+					<EndOfMonth/>
+					<FirstDate/>
+					<LastDate/>
+				</Rules>
+			</ScheduleData>
+		</IborLegSchedule>
+		<IborLegFixingSchedule type='event'>
+			<DerivedSchedule>
+				<BaseSchedule>IborLegSchedule</BaseSchedule>
+				<Shift>-2D</Shift>
+				<Calendar>TARGET</Calendar>
+				<Convention>ModifiedFollowing</Convention>
+			</DerivedSchedule>
+		</IborLegFixingSchedule>
+		<InflationLeg1_DayCounter type='dayCounter'>1/1</InflationLeg1_DayCounter>
+		<InflationLeg1_CPI type='index'>EUHICPXT</InflationLeg1_CPI>
+		<InflationLeg1_Schedule type='event'>
+			<ScheduleData>
+				<Rules>
+					<StartDate>2021-06-02</StartDate>
+					<EndDate>2026-06-02</EndDate>
+					<Tenor>6M</Tenor>
+					<Calendar>TARGET</Calendar>
+					<Convention>ModifiedFollowing</Convention>
+					<TermConvention>ModifiedFollowing</TermConvention>
+					<Rule>Forward</Rule>
+					<EndOfMonth/>
+					<FirstDate/>
+					<LastDate/>
+				</Rules>
+			</ScheduleData>
+		</InflationLeg1_Schedule>
+		<InflationLeg1_Gearing type='number'>0.00125</InflationLeg1_Gearing>
+		<InflationLeg1_Floor type='number'>0</InflationLeg1_Floor>
+		<InflationLeg1_InitialCPI type='number'>105.1</InflationLeg1_InitialCPI>
+		<InflationLeg1_SubtractNotional type='bool'>false</InflationLeg1_SubtractNotional>
+		<InflationLeg1_FixingSchedule type='event'>
+			<DerivedSchedule>
+				<BaseSchedule>InflationLeg1_Schedule</BaseSchedule>
+				<Shift>-3M</Shift>
+				<Calendar>TARGET</Calendar>
+				<Convention>ModifiedFollowing</Convention>
+			</DerivedSchedule>
+		</InflationLeg1_FixingSchedule>
+		<InflationLeg2_DayCounter type='dayCounter'>1/1</InflationLeg2_DayCounter>
+		<InflationLeg2_CPI type='index'>EUHICPXT</InflationLeg2_CPI>
+		<InflationLeg2_Schedule type='event'>
+			<ScheduleData>
+				<Rules>
+					<StartDate>2021-06-02</StartDate>
+					<EndDate>2026-06-02</EndDate>
+					<Tenor>6M</Tenor>
+					<Calendar>TARGET</Calendar>
+					<Convention>ModifiedFollowing</Convention>
+					<TermConvention>ModifiedFollowing</TermConvention>
+					<Rule>Forward</Rule>
+					<EndOfMonth/>
+					<FirstDate/>
+					<LastDate/>
+				</Rules>
+			</ScheduleData>
+		</InflationLeg2_Schedule>
+		<InflationLeg2_Gearing type='number'>1</InflationLeg2_Gearing>
+		<InflationLeg2_Floor type='number'>0</InflationLeg2_Floor>
+		<InflationLeg2_InitialCPI type='number'>105.1</InflationLeg2_InitialCPI>
+		<InflationLeg2_SubtractNotional type='bool'>true</InflationLeg2_SubtractNotional>
+		<InflationLeg2_FixingSchedule type='event'>
+			<DerivedSchedule>
+				<BaseSchedule>InflationLeg2_Schedule</BaseSchedule>
+				<Shift>-3M</Shift>
+				<Calendar>TARGET</Calendar>
+				<Convention>ModifiedFollowing</Convention>
+			</DerivedSchedule>
+		</InflationLeg2_FixingSchedule>
+	</IrregularYYIISData>
+</Trade>
+\end{minted}
+
+The script referenced in the trade above is shown in Listing \ref{lst:movingMaxYYIIS}.
+
+\begin{listing}[hbt]
+  \begin{minted}[fontsize=\footnotesize]{Basic} 
+    NUMBER i;
+    NUMBER iborLegStartIdx, iborLegNPV, iborAmount;
+    NUMBER infLeg1NPV, infLeg1Amount, infLeg1MaxIndexFixing, infLeg1Rate;
+      NUMBER infLeg2NPV, infLeg2Amount, infLeg2MaxIndexFixing, infLeg2Rate;
+
+    iborLegNPV = 0;
+    
+    FOR i IN(2, SIZE(IborLegSchedule), 1) DO
+    iborAmount = LOGPAY(-1 * PayIborLeg * (IborIndex(IborLegFixingSchedule[i-1])+IborSpread) * Notional * dcf(IborLegDayCounter, IborLegSchedule[i-1], IborLegSchedule[i]),
+                          IborLegSchedule[i], IborLegSchedule[i], PayCurrency, 0, Interest, i);
+    iborLegNPV = iborLegNPV + iborAmount;
+    END;
+    
+    infLeg1NPV = 0;
+    infLeg1MaxIndexFixing = InflationLeg1_InitialCPI;
+    FOR i IN(2, SIZE(InflationLeg1_Schedule), 1) DO
+      IF i > 2 THEN 
+        infLeg1MaxIndexFixing = InflationLeg1_CPI(InflationLeg1_FixingSchedule[i-1]);
+      END;
+      infLeg1Rate = InflationLeg1_CPI(InflationLeg1_FixingSchedule[i])/infLeg1MaxIndexFixing;
+      IF InflationLeg1_SubtractNotional == 1 THEN
+        infLeg1Rate = infLeg1Rate - 1;
+      END;
+      infLeg1Rate = max(infLeg1Rate, InflationLeg1_Floor);
+      infLeg1Amount = LOGPAY(PayIborLeg * infLeg1Rate * Notional * InflationLeg1_Gearing * dcf(InflationLeg1_DayCounter,InflationLeg1_Schedule[i-1],InflationLeg1_Schedule[i]),
+                InflationLeg1_Schedule[i], InflationLeg1_Schedule[i], PayCurrency, 1, Interest, SIZE(IborLegSchedule)+i);
+      infLeg1NPV = infLeg1NPV+infLeg1Amount;
+    END;
+    
+    infLeg2NPV = 0;
+    infLeg2MaxIndexFixing = InflationLeg2_InitialCPI;
+    FOR i IN(2, SIZE(InflationLeg2_Schedule), 1) DO
+      IF i > 2 THEN 
+        infLeg2MaxIndexFixing = InflationLeg2_CPI(InflationLeg2_FixingSchedule[i-1]);
+      END;
+      infLeg2Rate = InflationLeg2_CPI(InflationLeg2_FixingSchedule[i])/infLeg2MaxIndexFixing;
+      IF InflationLeg2_SubtractNotional == 1 THEN
+        infLeg2Rate = infLeg2Rate - 1;
+      END;
+      infLeg2Rate = max(infLeg2Rate, InflationLeg2_Floor);
+      infLeg2Amount = LOGPAY(PayIborLeg * infLeg2Rate * Notional * InflationLeg2_Gearing * dcf(InflationLeg2_DayCounter,InflationLeg2_Schedule[i-1],InflationLeg2_Schedule[i]),
+                InflationLeg2_Schedule[i], InflationLeg2_Schedule[i], PayCurrency, 2, Interest, SIZE(IborLegSchedule)+SIZE(InflationLeg1_Schedule)+i);
+      infLeg2NPV = infLeg2NPV+infLeg2Amount;
+    END;
+    
+    Value =  iborLegNPV + infLeg1NPV+infLeg2NPV;
+\end{minted}
+  \caption{Payoff script for an Irregular Year-on-Year Inflation Index Swap.}
+  \label{lst:irregularYYIIS}
+\end{listing}
+
+The meanings and allowable values in the \lstinline!MovingMaxYYIISData! node below.
+
+\begin{itemize}
+  \item{}[number] \lstinline!Notional!: the notional amount of the underlying swap. \\
+  Allowable values: Any non-negative number.
+  \item{}[currency] \lstinline!PayCurrency!:  the currency of the underlying swap notional. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[dayCounter] \lstinline!IborLegDayCounter!:  the day count fraction for the Ibor floating leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[number] \lstinline!IborSpread!: the spread added to the Ibor fixing. \\
+  Allowable values: Any number.
+  \item{}[index] \lstinline!IborIndex!:  the underlying Ibor Index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[bool] \lstinline!PayIborLeg!: the payer/receiver flag. \\
+  Allowable values: Boolean node, the set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!IborLegSchedule!:  the payment schedule of the Ibor floating leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[event] \lstinline!IborLegFixingSchedule!: the fixing schedule of the Ibor floating leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[dayCounter] \lstinline!InflationLeg1_DayCounter!: the day count fraction for the first inflation leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[index] \lstinline!InflationLeg1_CPI!:  the underlying CPI index of the first inflation leg. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!InflationLeg1_Schedule!: the payment schedule of the first inflation leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[event] \lstinline!InflationLeg1_FixingSchedule!: the fixing dates of the first inflation index. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[number] \lstinline!InflationLeg1_Gearing!:  the gearing of the first inflation leg. Can be used to represent the coupon rate. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!InflationLeg1_Floor!:  the floor rate of the first inflation leg. \\
+  Allowable values: Any  number.
+  \item{}[number] \lstinline!InflationLeg1_InitialCPI!: the initial base fixing for the first inflation coupon. \\
+  Allowable values: Any non-negative number.
+  \item{}[bool] \lstinline!InflationLeg1_SubtractNotional!: leg pays the inflation rate instead of the ratio if true. \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc. The
+  full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[dayCounter] \lstinline!InflationLeg2_DayCounter!: the day count fraction for the second inflation leg. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[index] \lstinline!InflationLeg2_CPI!:  the underlying CPI index of the second inflation leg. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!InflationLeg2_Schedule!: the payment schedule of the second inflation leg. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[event] \lstinline!InflationLeg2_FixingSchedule!: the fixing dates of the second inflation index. \\
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+  \item{}[number] \lstinline!InflationLeg2_Gearing!:  the gearing of the second inflation leg. Can be used to represent the coupon rate. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!InflationLeg2_Floor!:  the floor rate of the second inflation leg. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!InflationLeg2_InitialCPI!: the initial base fixing for the second inflation coupon. \\
+  Allowable values: Any non-negative number.
+  \item{}[bool] \lstinline!InflationLeg2_SubtractNotional!: leg pays the inflation rate instead of the ratio if true.
+  full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+\end{itemize}
+
+\subsubsection{LPI Swap}
+
+% we only have a scripted trade representation for this at the moment 
+
+An LPI Swap is represented as {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+
+\begin{minted}[fontsize=\footnotesize]{xml} 
+ <Trade id="seasonedAmoritizingLPI">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <LPISwapData>
+      <PayCurrency type='currency'>GBP</PayCurrency>
+      <PayFixLeg type='bool'>true</PayFixLeg>
+      <FixedDayCounter type='dayCounter'>Year</FixedDayCounter>
+      <ZeroCouponRate type='number'>0.035</ZeroCouponRate>
+      <FixedLegSchedule type='event'>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2018-09-01</StartDate>
+            <EndDate>2025-09-01</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>GBP</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate>2021-09-01</FirstDate>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </FixedLegSchedule>
+      <FixedLegNotionals type='number'>
+        <Value>1000000</Value>
+        <Value>900000</Value>
+        <Value>800000</Value>
+        <Value>700000</Value>
+        <Value>600000</Value>
+      </FixedLegNotionals>
+      <!-- Inflation floating leg -->
+      <CPIIndex type='index'>UKRPI</CPIIndex>
+      <FloatLegSchedule type='event'>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2018-09-01</StartDate>
+            <EndDate>2025-09-01</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>GBP</Calendar>
+            <Convention>Unadjusted</Convention>
+            <TermConvention>Unadjusted</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </FloatLegSchedule>
+      <FirstPaymentDate type='event'>2021-09-01</FirstPaymentDate>
+      <FloatFlegNotional type='number'>
+        <Value>1000000</Value>
+        <Value>900000</Value>
+        <Value>800000</Value>
+        <Value>700000</Value>
+        <Value>600000</Value>
+      </FloatFlegNotional>
+      <Floor type='number'>0.00</Floor>
+      <Cap type='number'>0.05</Cap>
+      <FixingSchedule type='event'>
+        <DerivedSchedule>
+          <BaseSchedule>FloatLegSchedule</BaseSchedule>
+          <Shift>-2M</Shift>
+          <Calendar>GBP</Calendar>
+          <Convention>Unadjusted</Convention>
+        </DerivedSchedule>
+      </FixingSchedule>
+    </LPISwapData>
+  </Trade>
+\end{minted}
+
+The script referenced in the trade above is shown in Listing \ref{lst:lpiSwap}.
+
+\begin{listing}[hbt]
+  \begin{minted}[fontsize=\footnotesize]{Basic} 
+      NUMBER FixedLegNpv, FloatLegNpv;
+      NUMBER i,j;
+      NUMBER zeroCouponRate;
+      NUMBER notional;
+      NUMBER forwardCPI[SIZE(FloatLegSchedule)];
+      NUMBER LPI[SIZE(FloatLegSchedule)-1];
+      NUMBER floatingRate[SIZE(FloatLegSchedule)];
+      NUMBER capPrice[SIZE(FloatLegSchedule)-1];
+      NUMBER floorPrice[SIZE(FloatLegSchedule)-1];
+      NUMBER cappedFlooredRate[SIZE(FloatLegSchedule)-1];
+      NUMBER floatAmount[SIZE(FloatLegSchedule)];
+      NUMBER FixedAmount[SIZE(FixedLegSchedule)-1];
+      NUMBER FixedRate[SIZE(FixedLegSchedule)-1];
+      NUMBER FloatNotionals[SIZE(FloatLegSchedule)-1];
+      NUMBER NumberOfInfPayments;
+      REQUIRE SIZE(FixedLegSchedule) >= 2;
+      REQUIRE SIZE(FloatLegSchedule) >= 2;
+      
+      FOR i IN(2, SIZE(FixedLegSchedule), 1) DO
+        FixedRate[i-1] = pow(1+ZeroCouponRate, dcf(FixedDayCounter, FixedLegSchedule[1], FixedLegSchedule[i]))-1.0;
+        IF FixedLegSchedule[i] > TODAY THEN
+          
+          notional = FixedLegNotionals[1];
+          IF SIZE(FixedLegNotionals)>1 THEN
+            notional = FixedLegNotionals[i-1];
+          END;
+          FixedAmount[i-1] = -1 * PayFixLeg * FixedRate[i-1] * notional;
+          FixedLegNpv = FixedLegNpv +LOGPAY(FixedAmount[i-1],
+                              TODAY, FixedLegSchedule[i], PayCurrency, 1, ZeroCoupon);
+        END;
+      END;
+      
+      forwardCPI[1] = CPIIndex(FixingSchedule[1]);
+      floatingRate[1] = 1.0;
+      FOR i IN(2, SIZE(FloatLegSchedule), 1) DO
+        IF FloatLegSchedule[i] >= FirstPaymentDate THEN
+          NumberOfInfPayments = NumberOfInfPayments + 1;
+          IF SIZE(FloatFlegNotional) == 1 THEN
+            FloatNotionals[i-1] = FloatFlegNotional[1];
+          ELSE
+            FloatNotionals[i-1] = FloatFlegNotional[NumberOfInfPayments];
+          END;
+        END;
+        forwardCPI[i] = CPIIndex(FixingSchedule[i]);
+        LPI[i-1] = forwardCPI[i] / forwardCPI[i-1] - 1.0;
+        capPrice[i-1] = max(0.0, LPI[i-1] - Cap);
+        floorPrice[i-1] = max(0.0, Floor - LPI[i-1]);
+        cappedFlooredRate[i-1] = LPI[i-1] - capPrice[i-1] + floorPrice[i-1];
+        floatingRate[i] = floatingRate[i-1] * (min(Cap, max(Floor, LPI[i-1])) + 1.0);
+        IF FloatLegSchedule[i] > TODAY AND FloatLegSchedule[i] >= FirstPaymentDate THEN
+          floatAmount[i] = PayFixLeg * (floatingRate[i] - 1.0) * FloatNotionals[i-1];
+          
+          FloatLegNpv = FloatLegNpv+LOGPAY(floatAmount[i],
+            FloatLegSchedule[i], FloatLegSchedule[i], PayCurrency, 2, Inflation);
+        END;
+      END;
+      
+      Value = FloatLegNpv+FixedLegNpv;
+\end{minted}
+  \caption{Payoff script for an LPI Swap.}
+  \label{lst:lpiSwap}
+\end{listing}
+
+The meanings and allowable values in the \lstinline!LPISwapData! node below.
+
+\begin{itemize}
+  \item{}[currency] \lstinline!PayCurrency!:  the currency of the underlying swap notional. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.  
+  \item{}[bool] \lstinline!PayFixLeg!: the payer/receiver flag. \\
+    Allowable values: Boolean node, the set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[dayCounter] \lstinline!FixedDayCounter!:  the daycounter used to compute the number of years between the startDate and fixed leg payment date. Should be \emph{Year}.\\
+    Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[number] \lstinline!ZeroCouponRate!: the fixed rate.\\
+    Allowable values: Any number.
+\item{}[event] \lstinline!FixedLegSchedule!: the payment schedule of the fixed leg, set \emph{FirstDate} in case that the first payment date is delayed. \\
+In the example listing, the swap starts in Sep 2020 and pays yearly but the base date of the swap is Sep 2018. So we set the first date to Sep 2021 and Schedule Start Date to Sep 2018. On the first coupon date, Sep 2021, the coupon pays $(1+r)^(2021-2018)$.
+\item{}[number] \lstinline!FixedLegNotionals!: The notional of the fixed leg.\\
+Allowable values: A vector of numbers. The size of the vector must be either one or matches the payment schedule, one notional for each payment date.
+  \item{}[index] \lstinline!CPIIndex!:  the underlying inflation Index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+\item{}[event] \lstinline!FloatLegSchedule!: the payment schedule of the floating leg
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+\item{}[event] \lstinline!FirstPaymentDate!: the first payment date, in our example the float schedule start Sep 2018 and ends Sep 2025. The first payment date is Sep 2021, the first coupon pays, the product of the capped floor YoY growth factors from 2019 to 2021.\\
+Allowable values: A date.
+  \item{}[number] \lstinline!FloatFlegNotional!: The notional of the fixed leg.
+  Allowable values: A vector of numbers. The size of the vector must be either one or matches the payment schedule, one notional for each payment date.
+
+\item{}[number] \lstinline!Cap!: The cap rate.
+  Allowable values: Any number
+  \item{}[number] \lstinline!Floor!: The floor rate.
+\item{}[event] \lstinline!FixingSchedule!: The fixing schedule of the floating leg
+  Allowable values: See Section \ref{app:scriptedtrade} DerivedSchedule.
+\end{itemize}
+
+\subsubsection{Lapse Risk Hedge Swap}
+ 
+% we only have a scripted trade representation for this at the moment 
+
+A  Lapse Hedge Swap is represente a {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="Scripted_LapsHedgeSwapSample">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <LapseHedgeSwapData>
+    <Payer type="bool">false</Payer>
+    <Notional type="number">1000000</Notional>
+    <LapseHedgePercentage type="number">0.70</LapseHedgePercentage>
+    <deltaN type="number">
+      <Value>0.01</Value>
+      <Value>0.02</Value>
+      <Value>0.03</Value>
+      <Value>0.02</Value>
+      <Value>0.015</Value>
+      <Value>0.03</Value>
+      <Value>0.009</Value>
+      <Value>0.010</Value>
+      <Value>0.017</Value>
+      <Value>0.016</Value>
+      <Value>0.014</Value>
+      <Value>0.015</Value>
+    </deltaN>
+    <SettlementCurrency type="currency">EUR</SettlementCurrency>
+    <Paydaycounter type="dayCounter">Actual/360</Paydaycounter>
+    <IRS type="number">0.0015</IRS>
+    <IRSSpread type="number">0.0010</IRSSpread>
+    <Tau type="number">0.08333333333</Tau>
+    <Fee type="number">0.10</Fee>
+    <IMS type="number">
+      <Value>1</Value>
+      <Value>0.995</Value>
+      <Value>0.990</Value>
+      <Value>0.985</Value>
+      <Value>0.980</Value>
+      <Value>0.975</Value>
+      <Value>0.970</Value>
+      <Value>0.965</Value>
+      <Value>0.960</Value>
+      <Value>0.955</Value>
+      <Value>0.950</Value>
+      <Value>0.945</Value>
+    </IMS>
+    <PHFV type="number">
+      <Value>1</Value>
+      <Value>0.999</Value>
+      <Value>0.998</Value>
+      <Value>0.997</Value>
+      <Value>0.996</Value>
+      <Value>0.995</Value>
+      <Value>0.994</Value>
+      <Value>0.993</Value>
+      <Value>0.992</Value>
+      <Value>0.991</Value>
+      <Value>0.990</Value>
+      <Value>0.989</Value>
+    </PHFV>
+    <Penalty type="number">
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+      <Value>0.05</Value>
+    </Penalty>
+    <ExitPrice type="number">
+      <Value>0.0045</Value>
+      <Value>0.0044</Value>
+    </ExitPrice>
+    <ExitFee type="number">
+      <Value>0.0055</Value>
+      <Value>0.0054</Value>
+    </ExitFee>
+    <InitialExchangeFee type="number">0.005</InitialExchangeFee>
+    <InitialExchangeDate type="event">
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>2020-12-01</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+    </InitialExchangeDate>
+    <ValuationDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>20200731</StartDate>
+          <EndDate>20210630</EndDate>
+          <Tenor>1M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>Unadjusted</Convention>
+          <TermConvention>Unadjusted</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth>True</EndOfMonth>
+          <FirstDate/>
+          <LastDate/>
+        </Rules>
+      </ScheduleData>
+    </ValuationDates>
+    <PaymentDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>20201221</StartDate>
+          <EndDate>20210621</EndDate>
+          <Tenor>3M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>Preceding</Convention>
+          <TermConvention>Preceding</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth>False</EndOfMonth>
+        </Rules>
+      </ScheduleData>
+    </PaymentDates>
+    <ExerciseDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>20201221</StartDate>
+          <EndDate>20210321</EndDate>
+          <Tenor>3M</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>Preceding</Convention>
+          <TermConvention>Preceding</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth>False</EndOfMonth>
+        </Rules>
+      </ScheduleData>
+    </ExerciseDates>
+  </LapseHedgeSwapData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:lapse_risk_hedge_swap}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+  REQUIRE {SIZE(ValuationDates) == SIZE(IMS)};
+  REQUIRE {SIZE(ValuationDates) == SIZE(PHFV)};
+  REQUIRE {SIZE(ValuationDates) == SIZE(Penalty)};
+  REQUIRE {SIZE(ExerciseDates) == SIZE(ExitPrice)};
+  REQUIRE {SIZE(ExerciseDates) == SIZE(ExitFee)};
+  NUMBER underlyingNPV, upfrontNPV, callNPVReceiver, callNPVPayer;
+  NUMBER estimatedReceiverCallPayoff, estimatedPayerCallPayoff;
+  NUMBER dN[SIZE(ValuationDates)], dM[SIZE(ExerciseDates)], famc[SIZE(ValuationDates)], lapsRiskHedgeAmount[SIZE(ValuationDates)];
+  NUMBER lastValuationDateIndex, lastKnownDeltaNIndex, payDateIndex;
+  NUMBER i, j, k;
+  NUMBER legNo;
+  legNo = 1;
+  lastValuationDateIndex  = SIZE(ValuationDates)-1;
+  underlyingNPV = 0;
+  callNPVReceiver = 0;
+  callNPVPayer = 0;
+  upfrontNPV = 0;
+  IF SIZE(InitialExchangeDate) == 1 AND InitialExchangeDate[1] > TODAY THEN
+    upfrontNPV = LOGPAY(Notional * InitialExchangeFee, InitialExchangeDate[1],InitialExchangeDate[1], SettlementCurrency, legNo, InitialExchange);
+  END;
+  IF SIZE(deltaN) < SIZE(ValuationDates) THEN
+    FOR i IN (1, SIZE(ValuationDates), 1) DO
+      IF i <= SIZE(deltaN) THEN
+        dN[i] = deltaN[i];
+      ELSE
+        dN[i] = deltaN[SIZE(deltaN)];
+      END;
+    END;
+  ELSE
+    dN = deltaN;
+  END;
+  FOR i IN (1, SIZE(ValuationDates)-1, 1) DO
+    famc[i] = 0;
+    FOR j IN (i + 1, SIZE(ValuationDates), 1) DO
+      famc[i] = famc[i] + Tau * Fee * IMS[j] * PHFV[j] * (1.0 + Tau * IRS) / pow((1 + IRS + IRSSpread), dcf(Paydaycounter, ValuationDates[i], ValuationDates[j]));
+    END;
+    lapsRiskHedgeAmount[i] = Notional * dN[i] * LapseHedgePercentage * (famc[i]-Penalty[i]*PHFV[i+1]);
+  END;
+  FOR i IN (SIZE(ExerciseDates), 1, -1) DO
+    IF ExerciseDates[i] > TODAY THEN
+      dM[i] = 0;
+      lastKnownDeltaNIndex = DATEINDEX(ExerciseDates[i], ValuationDates, GT);
+      REQUIRE {lastKnownDeltaNIndex <= SIZE(ValuationDates)};
+      IF lastKnownDeltaNIndex > 1 THEN
+        FOR j IN (1, lastKnownDeltaNIndex - 1, 1) DO
+          dM[i] = dM[i] + dN[j];
+        END;
+      END;
+      FOR j IN (lastValuationDateIndex, 1, -1) DO
+        payDateIndex = DATEINDEX(ValuationDates[j], PaymentDates, GEQ);
+        REQUIRE {payDateIndex <= SIZE(PaymentDates)};
+        IF PaymentDates[payDateIndex] > ExerciseDates[i] THEN
+          underlyingNPV = underlyingNPV + LOGPAY(max(lapsRiskHedgeAmount[j],0), ValuationDates[j], PaymentDates[payDateIndex], SettlementCurrency, legNo, HedgeAmount);
+          lastValuationDateIndex = lastValuationDateIndex - 1; 
+        END;
+      END;
+      
+      estimatedReceiverCallPayoff = Notional * (1-dM[i]) * ExitPrice[i] - NPV(underlyingNPV, ExerciseDates[i]);
+      IF estimatedReceiverCallPayoff > 0 AND estimatedReceiverCallPayoff > NPV(callNPVReceiver, ExerciseDates[i], estimatedReceiverCallPayoff > 0) THEN
+        callNPVReceiver = Notional * (1-dM[i]) * ExitPrice[i] - underlyingNPV;
+        callNPVPayer = 0;
+      END; 
+
+      estimatedPayerCallPayoff = NPV(underlyingNPV, ExerciseDates[i]) - Notional * ((1-dM[i]) * ExitPrice[i] + ExitFee[i]);
+      IF estimatedPayerCallPayoff > 0 AND estimatedPayerCallPayoff > NPV(callNPVPayer, ExerciseDates[i], estimatedPayerCallPayoff > 0) THEN
+        callNPVPayer = underlyingNPV - Notional * ((1-dM[i]) * ExitPrice[i] + ExitFee[i]);
+        callNPVReceiver = 0;
+      END; 
+      
+    END;
+  END;
+  FOR j IN (lastValuationDateIndex, 1, -1) DO
+    payDateIndex = DATEINDEX(ValuationDates[j], PaymentDates, GEQ);
+    REQUIRE {payDateIndex <= SIZE(PaymentDates)};
+    IF PaymentDates[payDateIndex] > TODAY THEN
+      underlyingNPV = underlyingNPV + LOGPAY(max(lapsRiskHedgeAmount[j], 0), ValuationDates[j], PaymentDates[payDateIndex], SettlementCurrency, legNo, HedgeAmount);
+    END;
+  END;
+
+  npv = Payer * (upfrontNPV - underlyingNPV - callNPVReceiver + callNPVPayer);
+\end{minted} 
+\caption{Payoff script for a Lapse Risk Hedge Swap.} 
+\label{lst:lapse_risk_hedge_swap} 
+\end{listing} 
+ 
+The meanings and allowable values in the \lstinline!LapseHedgeSwapData! node below.
+ 
+\begin{itemize} 
+  \item{}[bool] \lstinline!Payer!: Own party position in the option, \emph{True} if own party pay the Lapse Risk Hedge Amount and receive the initial exchange \\
+  Allowable values: \emph{True}, \emph{False}
+  \item{}[number] \lstinline!Notional!: Notional amount. \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!LapseHedgePercentage!: Percentage of the hedge notional. \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!deltaN!: means the  percentage  of  the  Underlying’s  redeemed  units(  number  of  units redeemed during the relevant Calculation Period divided by the initial number of units sold, net of cancellations). 
+  Need to provide a list of values for each valuation date (the observed percentage of redeemed units for past dates and  the expected value for each future valuation date). If there are no expected values provided, we keep the last provided rate constant.
+  Allowable values: Any non-negative number
+  \item{}[currency] \lstinline!SettlementCurrency!: The payment currency.
+  Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+  \item{}[dayCounter] \lstinline!Paydaycounter!:  the day count fraction used to compute the the residual maturity in the calculation of the Lapse Risk Hedge Amount. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[number] \lstinline!IRS!: The historical fixing of the swap rate as specified in the termsheet. \\
+  Allowable values: Any number
+  \item{}[number] \lstinline!IRSSpread!: The spread on the fixed swap rate used in the denumerator in the calculation of the \emph{FAMC} amount.\\
+  Allowable values: Any number
+  \item{}[number] \lstinline!Tau!: time fraction as specified in the termsheet, usually its $\frac{1}{12}$. \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!Fee!: means  an  amount  corresponding  to  the  fees  collected  by receiver party with respect to the Underlying expressed as an annual percentage. \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!IMS!: the list of the Initial Month Survivors in the zero lapse assumption, as agreed between the parties for each valuation date. \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!PHFV!: the list of the  expected  Policy  Holder  Fund  Value  as  agreed between the parties for each valuation date.  \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!Penalty!: the list of the penalties collected  by the receiver in  respect  of  the Underlying, as a consequence of the exercised redemptions, for each valuation date.  \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!ExitPrice!: the list of exit price for all Bermuda Option Exercise Dates as agreed between the parties.   \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!ExitFee!:  the list of exit fees, payable if the the payer party exercise their call right, for all Bermuda Option Exercise Dates as agreed between the parties. \\
+  Allowable values: Any non-negative number
+  \item{}[number] \lstinline!InitialExchangeFee!: percentage of the notional payable by the receiver party as a upfront / initial exchange fee \\
+  Allowable values: Any non-negative number
+  \item{}[event] \lstinline!InitialExchangeDate!: Initital exchange payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!ValuationDates!: Lapse Risk Hedge amount evaluation dates. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!PaymentDates!: On  each Lapse  Risk  Hedge Amount Payment Date,the payer party pays the sum of the Lapse Risk Hedge Amounts determined for the corresponding calculation period. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!ExerciseDates!: Bermudan exercise dates \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
+
+\clearpage

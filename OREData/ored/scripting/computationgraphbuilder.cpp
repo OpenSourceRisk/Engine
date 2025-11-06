@@ -118,11 +118,14 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<IfThenElseNode>,
                   public Visitor<LoopNode> {
 public:
-    ASTRunner(ComputationGraph& g, const std::vector<std::string>& opLabels, const QuantLib::ext::shared_ptr<ModelCG> model,
-              const bool generatePayLog, const bool includePastCashflows, const std::string& script, bool& interactive,
-              Context& context, ASTNode*& lastVisitedNode, std::set<std::size_t>& keepNodes,
+    ASTRunner(ComputationGraph& g, const std::vector<std::string>& opLabels,
+              const QuantLib::ext::shared_ptr<ModelCG> model,
+              const std::optional<std::set<std::string>>& minimalModelCcys, const bool generatePayLog,
+              const bool includePastCashflows, const std::string& script, bool& interactive, Context& context,
+              ASTNode*& lastVisitedNode, std::set<std::size_t>& keepNodes,
               std::vector<ComputationGraphBuilder::PayLogEntry>& payLogEntries)
-        : g_(g), opLabels_(opLabels), model_(model), size_(model ? model->size() : 1), generatePayLog_(generatePayLog),
+        : g_(g), opLabels_(opLabels), model_(model), minimalModelCcys_(minimalModelCcys),
+          size_(model ? model->size() : 1), generatePayLog_(generatePayLog),
           includePastCashflows_(includePastCashflows), script_(script), interactive_(interactive),
           keepNodes_(keepNodes), payLogEntries_(payLogEntries), context_(context), lastVisitedNode_(lastVisitedNode) {
         filter.emplace(size_, true);
@@ -1164,14 +1167,15 @@ public:
         Date obs = boost::get<EventVec>(obsdate).value;
 	// roll back to past dates is treated as roll back to TODAY for convenience
         obs = std::max(obs, model_->referenceDate());
-        boost::optional<long> mem(boost::none);
+        std::optional<long> mem(std::nullopt);
         if (hasMemSlot) {
             RandomVariable v = boost::get<RandomVariable>(memSlot);
             QL_REQUIRE(v.deterministic(), "memory slot must be deterministic");
             mem = static_cast<long>(v.at(0));
         }
         value.push(RandomVariable()); // uninitialized, since model dependent
-        std::size_t node = model_->npv(amount_node, obs, regFilter_node, mem, addRegressor1_node, addRegressor2_node);
+        std::size_t node = model_->npv(amount_node, obs, regFilter_node, mem, {addRegressor1_node, addRegressor2_node},
+                                       model_->npvRegressors(obs, minimalModelCcys_));
         value_node.push(node);
         if (hasMemSlot) {
             TRACE("npvmem( " << amount << " , " << obsdate << " , " << memSlot << " , " << regFilter << " , "
@@ -1209,7 +1213,9 @@ public:
             node = cg_const(g_, 0.0);
         } else {
             // otherwise check whether a fixing is present in the historical time series
+            QL_DEPRECATED_DISABLE_WARNING
             TimeSeries<Real> series = IndexManager::instance().getHistory(IndexInfo(und).index()->name());
+            QL_DEPRECATED_ENABLE_WARNING
             if (series[obs] == Null<Real>()) {
                 value.push(RandomVariable(model_->size(), 0.0));
                 node = cg_const(g_, 0.0);
@@ -1463,6 +1469,7 @@ public:
     ComputationGraph& g_;
     const std::vector<std::string> opLabels_;
     const QuantLib::ext::shared_ptr<ModelCG> model_;
+    const std::optional<std::set<std::string>> minimalModelCcys_;
     const Size size_;
     const bool generatePayLog_;
     const bool includePastCashflows_;
@@ -1489,8 +1496,8 @@ void ComputationGraphBuilder::run(const bool generatePayLog, const bool includeP
     payLogEntries_.clear();
 
     ASTNode* loc;
-    ASTRunner runner(g_, opLabels_, model_, generatePayLog, generatePayLog && includePastCashflows, script, interactive,
-                     *context_, loc, keepNodes_, payLogEntries_);
+    ASTRunner runner(g_, opLabels_, model_, minimalModelCcys_, generatePayLog, generatePayLog && includePastCashflows,
+                     script, interactive, *context_, loc, keepNodes_, payLogEntries_);
 
     randomvariable_output_pattern pattern;
     if (model_ == nullptr || model_->type() == ModelCG::Type::MC) {

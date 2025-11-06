@@ -65,7 +65,8 @@ std::vector<Size> stopLightBounds(const std::vector<Real>& stopLightP, const Siz
 
 /* Uses pretabulated values, throws if no suitable values are tabulated (single portfolio case only) */
 std::vector<Size> stopLightBoundsTabulated(const std::vector<Real>& stopLightP, const Size observations,
-                                           const Size numberOfDays = 10, const Real p = 0.99);
+                                           const Size numberOfDays = 10, const Real p = 0.99, const std::vector<int>& obsNb = std::vector<int>{},
+                                           const std::vector<int>& amberLimit = std::vector<int>{}, const std::vector<int>& redLimit = std::vector<int>{});
 
 /* Same as above, but for non-overlapping and independent observations */
 std::vector<Size> stopLightBounds(const std::vector<Real>& stopLightP, const Size observations, const Real p,

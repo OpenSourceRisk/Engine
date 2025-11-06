@@ -25,6 +25,7 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/report/report.hpp>
 
 namespace ore {
@@ -34,16 +35,21 @@ namespace analytics {
 class ScenarioWriter : public ScenarioGenerator {
 public:
     //! Constructor
-    ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',',
-                   const string& filemode = "w+", const std::vector<RiskFactorKey>& headerKeys = {});
+    ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
+                   const char sep = ',', const string& filemode = "w+",
+                   const std::vector<RiskFactorKey>& headerKeys = {}, const bool writeDuplicateDates = true, 
+                   QuantLib::Size precision = 8);
 
     //! Constructor to write single scenarios
     ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+",
-                   const std::vector<RiskFactorKey>& headerKeys = {});
+                   const std::vector<RiskFactorKey>& headerKeys = {}, const bool writeDuplicateDates = true, 
+                   QuantLib::Size precision = 8);
 
     //! Constructor to write into an in-memory report for later io
-    ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, QuantLib::ext::shared_ptr<ore::data::Report> report,
-                   const std::vector<RiskFactorKey>& headerKeys = {});
+    ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src,
+                   QuantLib::ext::shared_ptr<ore::data::Report> report,
+                   const std::vector<RiskFactorKey>& headerKeys = {}, const bool writeDuplicateDates = true, 
+                   QuantLib::Size precision = 8);
 
     //! Destructor
     virtual ~ScenarioWriter();
@@ -71,6 +77,12 @@ private:
     Size i_;
     const char sep_ = ',';
     std::vector<RiskFactorKey> headerKeys_;
+    bool writeDuplicateDates_ = true;
+    QuantLib::Size precision_ = 8;
+
+    Size writtenDatesScenario_ = 0;
+    std::set<Date> writtenDates_;
+    std::size_t keysHash_ = 0;
 };
 } // namespace analytics
 } // namespace ore

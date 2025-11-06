@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ReferenceData>
+  <ReferenceDatum id="SP5E">
+    <Type>EquityIndex</Type>
+    <EquityIndexReferenceData>
+      <Underlying>
+        <Name>Lufthansa</Name>
+        <Weight>0.5</Weight>
+      </Underlying>
+      <Underlying>
+        <Name>SPXE</Name>
+        <Weight>0.5</Weight>
+      </Underlying>
+    </EquityIndexReferenceData>
+  </ReferenceDatum>
+</ReferenceData>

@@ -44,7 +44,6 @@
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/currencies/america.hpp>

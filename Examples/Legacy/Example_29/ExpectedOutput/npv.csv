@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+SWAP_TRY_FIXED_USD_FLOAT,Swap,2021-02-09,5.011221,0.000000,USD,0.000000,USD,10000000.00,USD,10000000.00,NS,CP

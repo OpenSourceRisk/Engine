@@ -71,6 +71,9 @@ public:
         XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
         return node;
     }
+
+private:
+    void populateRequiredIds() const override {}
 };
 } // namespace data
 } // namespace ore

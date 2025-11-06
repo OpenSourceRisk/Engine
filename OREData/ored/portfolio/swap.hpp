@@ -74,7 +74,7 @@ public:
     const vector<LegData>& legData() const { return legData_; }
     //@}
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 protected:
     virtual QuantLib::ext::shared_ptr<LegData> createLegData() const;

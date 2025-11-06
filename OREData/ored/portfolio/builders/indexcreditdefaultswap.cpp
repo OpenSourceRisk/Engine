@@ -35,7 +35,7 @@ CreditPortfolioSensitivityDecomposition IndexCreditDefaultSwapEngineBuilder::sen
 
 vector<string> IndexCreditDefaultSwapEngineBuilder::keyImpl(const Currency& ccy, const string& creditCurveId,
                                                             const vector<string>& creditCurveIds,
-                                                            const boost::optional<string>& overrideCurve,
+                                                            const QuantLib::ext::optional<string>& overrideCurve,
                                                             Real recoveryRate, const bool inCcyDiscountCurve) {
     vector<string> res{ccy.code()};
     res.insert(res.end(), creditCurveIds.begin(), creditCurveIds.end());
@@ -49,7 +49,7 @@ vector<string> IndexCreditDefaultSwapEngineBuilder::keyImpl(const Currency& ccy,
 
 QuantLib::ext::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
     const Currency& ccy, const string& creditCurveId, const vector<string>& creditCurveIds,
-    const boost::optional<string>& overrideCurve, Real recoveryRate, const bool inCcyDiscountCurve) {
+    const QuantLib::ext::optional<string>& overrideCurve, Real recoveryRate, const bool inCcyDiscountCurve) {
 
     std::string curve = overrideCurve ? *overrideCurve : engineParameter("Curve", {}, false, "Underlying");
 

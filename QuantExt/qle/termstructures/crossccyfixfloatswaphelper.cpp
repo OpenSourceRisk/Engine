@@ -16,12 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
+#include <qle/utilities/ratehelpers.hpp>
+
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/utilities/null_deleter.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
+
+#include <boost/make_shared.hpp>
 
 using QuantExt::CrossCcySwapEngine;
 using QuantLib::close;
@@ -35,11 +38,16 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
-    const Handle<Quote>& spread, bool endOfMonth)
+    const Handle<Quote>& spread, bool endOfMonth, bool telescopicValueDates, QuantLib::Pillar::Choice pillarChoice,
+    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
+    QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
-      floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth) {
+      floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth),
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice),
+      includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
+      isAveraged_(isAveraged) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -111,17 +119,14 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule, 0.0,
                                          fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
                                          index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
-                                         paymentLag, paymentCalendar_));
+                                         paymentLag, paymentCalendar_, telescopicValueDates_, includeSpread_, lookback_,
+                                         fixingDays_, rateCutoff_, isAveraged_));
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
 
-    // Swap is Payer => first leg is fixed leg
-    latestRelevantDate_ = earliestDate_;
-    for (Size i = 0; i < swap_->leg(0).size(); ++i) {
-        latestRelevantDate_ = std::max(latestRelevantDate_, swap_->leg(0)[i]->date());
-    }
-    pillarDate_ = latestDate_ = latestRelevantDate_;
+    latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {false, false});
+    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
 
     // Attach engine
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(

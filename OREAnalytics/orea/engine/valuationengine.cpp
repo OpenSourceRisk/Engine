@@ -77,8 +77,8 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                                 const ErrorPolicy errorPolicy, bool mporStickyDate,
                                 QuantLib::ext::shared_ptr<analytics::NPVCube> outputCubeNettingSet,
                                 QuantLib::ext::shared_ptr<analytics::NPVCube> outputCptyCube,
-                                vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>> cptyCalculators,
-                                bool dryRun) {
+                                vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>> cptyCalculators, bool dryRun,
+                                Errors* errors) {
 
     struct SimMarketResetter {
         SimMarketResetter(QuantLib::ext::shared_ptr<SimMarket> simMarket) : simMarket_(simMarket) {}
@@ -150,6 +150,8 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
             string expMsg = string("T0 valuation error: ") + e.what();
             StructuredTradeErrorMessage(tradeId, trade->tradeType(), "ScenarioValuation", expMsg.c_str()).log();
             tradeHasT0Error[i] = true;
+            if (errors)
+                errors->t0.insert(i);
         }
 
         if (om == ObservationMode::Mode::Unregister) {
@@ -204,14 +206,14 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                 std::tie(priceTime, upTime) =
                     populateCube(valueDate, cubeDateIndex, sample, true, false, scenarioUpdated, trades, errorPolicy,
                                  tradeHasT0Error, tradeHasSampleError, calculators, outputCube, outputCubeNettingSet,
-                                 counterparties, cptyCalculators, outputCptyCube);
+                                 counterparties, cptyCalculators, outputCptyCube, errors);
                 pricingTime += priceTime;
                 updateTime += upTime;
                 if (closeOutDate != Date()) {
                     std::tie(priceTime, upTime) =
                         populateCube(closeOutDate, cubeDateIndex, sample, false, mporStickyDate, scenarioUpdated,
                                      trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                                     outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
+                                     outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                     pricingTime += priceTime;
                     updateTime += upTime;
                 }
@@ -234,7 +236,7 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                         std::tie(priceTime, upTime) =
                             populateCube(d, valueDateIndex, sample, false, mporStickyDate, scenarioUpdated, trades,
                                          errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                                         outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
+                                         outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                         pricingTime += priceTime;
                         updateTime += upTime;
                         scenarioUpdated = true;
@@ -250,7 +252,7 @@ void ValuationEngine::buildCube(const QuantLib::ext::shared_ptr<data::Portfolio>
                     std::tie(priceTime, upTime) =
                         populateCube(d, cubeDateIndex, sample, true, false, scenarioUpdated, trades, errorPolicy,
                                      tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                                     outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube);
+                                     outputCubeNettingSet, counterparties, cptyCalculators, outputCptyCube, errors);
                     pricingTime += priceTime;
                     updateTime += upTime;
                     scenarioUpdated = true;
@@ -316,7 +318,8 @@ void ValuationEngine::runCalculators(bool isCloseOutDate,
                                      const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
                                      QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
                                      QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const Date& d,
-                                     const Size cubeDateIndex, const Size sample, const string& label) {
+                                     const Size cubeDateIndex, const Size sample, const string& label,
+                                     Errors* errors) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
     for (auto& calc : calculators)
         calc->initScenario();
@@ -342,6 +345,8 @@ void ValuationEngine::runCalculators(bool isCloseOutDate,
             StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "ScenarioValuation", expMsg.c_str()).log();
             outputCube->remove(j, sample, errorPolicy == ErrorPolicy::RemoveSample);
             tradeHasSampleError[j] = true;
+            if (errors)
+                errors->samples.insert(std::make_pair(j, sample));
         }
     }
 }
@@ -379,7 +384,7 @@ std::pair<double, double> ValuationEngine::populateCube(
     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
     QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const std::map<string, Size>& counterparties,
     const vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
-    QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube) {
+    QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube, Errors* errors) {
     double pricingTime = 0;
     double updateTime = 0;
     QL_REQUIRE(cubeDateIndex >= 0, "first date should be a valuation date");
@@ -409,7 +414,7 @@ std::pair<double, double> ValuationEngine::populateCube(
         tradeExercisable(false, trades);
     // loop over trades
     runCalculators(!isValueDate, trades, errorPolicy, tradeHasT0Error, tradeHasSampleError, calculators, outputCube,
-                   outputCubeNettingSet, d, cubeDateIndex, sample, simMarket_->label());
+                   outputCubeNettingSet, d, cubeDateIndex, sample, simMarket_->label(), errors);
     if (isStickyDate && !isValueDate) // switch on again, if sticky
         tradeExercisable(true, trades);
     // loop over counterparty names

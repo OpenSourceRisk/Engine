@@ -1,0 +1,127 @@
+%--------------------------------------------------------------------------------
+\subsubsection{Collateral Bond Obligaton CBO}
+
+We consider an $n$ tranche CBO, or Cashflow CDO. 
+The underlying assets consist of a portfolio of corporate bonds or loans with either amortising or bullet structures. 
+The portfolio can contain fixed or floating rate obligations. 
+Maturities cover a range and do need not coincide. 
+We assume that hazard rate and/or security spread data is available and provided externally.
+
+The deal is assumed to be structured as a cashflow securitisation. 
+Interest and Notional repayments are directed in an order of priority first to the senior note holder. 
+We assume the  available pool for Notional repayments consists of scheduled bond notional repayments and recovery amounts. 
+The pool available for interest payments consists of coupons received on the portfolio during the payment period in question.
+
+Class N notes or equity receive the excess pool coupon available after other items in the interest waterfall are discharged.
+
+A typical Interest and Notional waterfall is given in the following.
+
+\bigskip
+{\bf Interest Waterfall:}
+
+\begin{enumerate}
+\item Senior Fees
+\item Interest due on Senior notes
+\item Redemption of Senior notes if over-collateralisation or interest coverage tests not met (sufficient to ensure tests are met)
+\item Interest due on next most Senior notes
+\item Redemption of next most Senior notes if over-collateralisation or interest coverage tests not met (sufficient to ensure tests are met)
+\item $\vdots$
+\item Subordinated Fees
+\item Residual split between management incentive fee and Equity notes
+\end{enumerate}
+
+\bigskip
+
+We explicitly write down the pricing formula for each of the CBO notes. First some notation:
+\begin{itemize}
+\item $t_i$ are the scheduled payment dates of the trade, 
+\item $C_{k}(t_i)$  are the coupons paid on the Class $k$ notes on the ith payment date
+\item $N_{k}(t_i)$  are the outstanding notionals.
+\item $R_k(t_i)$  are the notional redemptions payable on the ith payment date. Note $N_k(t_i)=N_k(t_{i-1})-R_k(t_i)$.
+\item $D(t,t_i)$ are the discount factors with respect to the evaluation date $t$.
+\item $\Pi_k$ is the present values of the notes which we seek
+\end{itemize}
+
+When we take expectations we assume that time to default and interest rates are independent and so all payments are multiplied 
+by the Banks risk free discount factor to the payment date and the symbol $\E$ is reserved for expectations under the Credit Measure.
+
+Using these conventions we can write the present values as
+\begin{eqnarray}
+\Pi_k & = & \sum_{i=1}^n \E(C_k(t_i))D(t,t_i) + \sum_{i=1}^n \E(R_k(t_i))D(t,t_i).
+\end{eqnarray}
+
+We will assume in the following that we know the marginal probability of default of each underlying asset 
+to any desired date and that we use a standard copula framework (see section \ref{ss:syntheticcdo}) to compute expectations in the presence of joint defaults.
+
+% \subsection*{Implementation}
+
+% The complexity in this product (as opposed to a standard tranched synthetic CDO) comes from the conditional dependence between the interest available for payment and the outstanding notional on which it is to be paid.
+
+% Throughout this section we do not attempt to price the following trade features:
+% \begin{itemize}
+% \item Event driven termination rights
+% \item Purchased or sold termination rights
+% \item Management Rights
+% \end{itemize}
+
+% We model the trade using a non-trivial modification to  standard Synthetic Unfunded CDO pricing framework as follows:
+
+% \medskip
+% First we make the stylised assumptions (for the Loss-Bucketing algorithm)
+
+% \begin{itemize}
+% \item The interest waterfall is simplified: All available interest after fixed fees is paid first to the senior note holder and so on down the waterfall with the excess interest paid to the equity note holder.
+% \item All principal waterfall is simplified: principal repayments (including recovery amounts) are paid first to the senior note holders and then on down the waterfall to the equity note holders.
+% \item Interest unpaid in a period on a class of notes is not made up in a following period.
+% \end{itemize}
+
+% This approach captures the principal feature of the trade while omitting fees, IC, OC tests and catch-up interest payments.
+% The MonteCarlo implementation is less restrictive and allows for fees and coverage tests.
+
+% First we calculate the notionals, $N_k(t)$. To do this we need the distributions of the redemptions on a single asset which is given by
+% $$
+% Red^j(t)=\left\{ 
+% \begin{array}{ll} 
+% R^jN^j{\bf1} _{\{\tau^j< t\} }, & \hspace{0.1 in} t<t^j_n, \\
+% R^jN^j{\bf1} _{\{\tau^j < t^j_n\} }+N^j{\bf1} _{\{\tau^j\geq t^j_n\}}, & \hspace{0.1 in} t\geq t^j_n. 
+% \end{array} 
+% \right.
+% $$
+% This can be expressed using indicator functions as
+% $$
+% Red^j(t) =R^jN^j{\bf1} _{\{\tau^j< t\} }{\bf1} _{\{t<t^j_n\} }
+% +N^j\left[ R^j{\bf1} _{\{\tau^j < t^j_n\} }+{\bf1} _{\{\tau^j\geq t^j_n\}}
+% \right]{\bf1} _{\{t\geq t^j_n\} },
+% $$
+% where $\tau^j$ is the time to default of the jth asset and $R^j$ the recovery rate on the $j$th asset and $t_n^j$ the maturity date of the $j$th asset. The distribution of the portfolio redemption to time $t$ is thus calculated as
+% $$
+% Red(t)=\sum_j Red^j(t).
+% $$
+
+\subsection*{MonteCarlo algorithm}
+
+A systematic numerical way of evaluation the time to default of the redemption flows is a MonteCarlo simulation. 
+Correlated default times are generated by drawing correlated Gaussian random variates for each sample path and each underlying bond / loan. 
+Those variates, e.g. $y$, are transformed into default times exploiting the following relationship: 
+
+$$
+\tau = \frac{ ln \left( 1- N \left( y \right) \right) } { h \left( t \right) } 
+$$
+
+The redemption / principal flows together with the interest flows are assigned into a time grid created from the tranche’s payment dates. 
+Those collections are allocated subsequently on each MC path in each time step to through the following waterfall structure to the tranches.
+For simplicity a two tranche case is shown, more tranche are possible. 
+
+\begin{itemize}
+	\item Senior fees (paid from interest collections)
+	\item Interest due on senior notes (paid from interest collections)
+	\item Redemption on senior notes, upon coverage test breach (paid from interest collections)
+	\item Interest due on junior notes (paid from interest collections)
+	\item Redemptions on senior notes until paid in full (paid from principal collections)
+	\item Redemptions on junior notes until paid in full (paid from principal collections)
+	\item Junior fees (paid from interest collections)
+	\item Residual payments split between junior note and incentive fee (paid from both collections)
+\end{itemize}
+
+These tranche cashflows can be discounted to calculate the NPV for each tranche in each MC path. 
+Finally, the reported NPV is the average of all path NPVs. 

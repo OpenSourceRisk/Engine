@@ -111,7 +111,7 @@ public:
     //@}
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     Dimension dimension_;
     CorrelationType correlationType_;

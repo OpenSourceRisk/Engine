@@ -1,0 +1,26 @@
+<Simulation>
+	<Market>
+		<BaseCurrency>USD</BaseCurrency>
+		<Currencies>
+			<Currency>USD</Currency>
+		</Currencies>
+		<YieldCurves>
+			<Configuration curve="">
+				<Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+				<Interpolation>LogLinear</Interpolation>
+				<Extrapolation>FlatZero</Extrapolation>
+			</Configuration>
+		</YieldCurves>
+		<Indices>
+			<Index>USD-FedFunds</Index>
+		</Indices>
+		<BenchmarkCurves/>
+		<CreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</CreditStates>
+		<AggregationScenarioDataCreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</AggregationScenarioDataCreditStates>
+	</Market>
+</Simulation>
+

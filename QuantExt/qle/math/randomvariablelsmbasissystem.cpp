@@ -148,8 +148,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Laguerre: {
             GaussLaguerrePolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -157,8 +157,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Hermite: {
             GaussHermitePolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -166,8 +166,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Hyperbolic: {
             GaussHyperbolicPolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -175,8 +175,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Legendre: {
             GaussLegendrePolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -184,8 +184,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Chebyshev: {
             GaussChebyshevPolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -193,8 +193,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Chebyshev2nd: {
             GaussChebyshev2ndPolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -207,36 +207,69 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
 }
 
 VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order,
-                                                        QuantLib::LsmBasisSystem::PolynomialType type) {
+                                                        QuantLib::LsmBasisSystem::PolynomialType type,
+                                                        const std::set<std::set<Size>>& varGroups) {
     QL_REQUIRE(dim > 0, "zero dimension");
     // get single factor basis
     VF_R pathBasis = pathBasisSystem(order, type);
     VF_A ret;
-    // 0-th order term
-    VF_R term(dim, pathBasis[0]);
-    ret.push_back(MultiDimFct(term));
-    // start with all 0 tuple
-    VV tuples(1, std::vector<Size>(dim));
-    // add multi-factor terms
-    for (Size i = 1; i <= order; ++i) {
-        tuples = next_order_tuples(tuples);
-        // now we have all tuples of order i
-        // for each tuple add the corresponding term
-        for (Size j = 0; j < tuples.size(); ++j) {
-            for (Size k = 0; k < dim; ++k)
-                term[k] = pathBasis[tuples[j][k]];
-            ret.push_back(MultiDimFct(term));
+    VF_R term(dim);
+
+    // set up collection of all tuples
+    std::set<std::vector<Size>> allTuples;
+    if (varGroups.empty()) {
+        VV tuples(1, std::vector<Size>(dim));
+        allTuples.insert(tuples.begin(), tuples.end());
+        for (Size i = 1; i <= order; ++i) {
+            tuples = next_order_tuples(tuples);
+            allTuples.insert(tuples.begin(), tuples.end());
         }
+    } else {
+        for (auto const& g : varGroups) {
+            std::set<std::vector<Size>> tmpTuples;
+            VV tuples(1, std::vector<Size>(g.size()));
+            tmpTuples.insert(tuples.begin(), tuples.end());
+            for (Size i = 1; i <= order; ++i) {
+                tuples = next_order_tuples(tuples);
+                tmpTuples.insert(tuples.begin(), tuples.end());
+            }
+            for (auto const& t : tmpTuples) {
+                std::vector<Size> fullTuple(dim);
+                for (Size k = 0; k < g.size(); ++k)
+                    fullTuple[*std::next(g.begin(), k)] = t[k];
+                allTuples.insert(fullTuple);
+            }
+        }
+    }
+    // add multi-factor terms
+    for (auto const& t : allTuples) {
+        for (Size k = 0; k < dim; ++k)
+            term[k] = pathBasis[t[k]];
+        ret.push_back(MultiDimFct(term));
     }
     return ret;
 }
 
-Real RandomVariableLsmBasisSystem::size(Size dim, Size order) {
+namespace {
+Real basisSystemSize(Size dim, Size order) {
     // see e.g. proposition 3 in https://murphmath.wordpress.com/2012/08/22/counting-monomials/
     return boost::math::binomial_coefficient<Real>(
         dim + order, order,
         boost::math::policies::make_policy(
             boost::math::policies::overflow_error<boost::math::policies::ignore_error>()));
+}
+} // namespace
+
+Real RandomVariableLsmBasisSystem::size(Size dim, Size order, const std::set<std::set<Size>>& varGroups) {
+    if (varGroups.empty()) {
+        return basisSystemSize(dim, order);
+    } else {
+        Real result = 0.0;
+        for (auto const& g : varGroups) {
+            result += basisSystemSize(g.size(), order);
+        }
+        return result;
+    }
 }
 
 } // namespace QuantExt

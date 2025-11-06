@@ -159,6 +159,7 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
         Real npv = 0.0;
         auto w = matcher.representativeSwaption(evalDates[i],
                                                 RepresentativeSwaptionMatcher::InclusionCriterion::PayDateGtExercise);
+
         if (w) {
             w->setPricingEngine(blackEngine);
             npv = w->NPV();
@@ -251,7 +252,9 @@ void runTest(const std::vector<Real>& nominals, const bool isPayer, const Real e
                 acc[i](std::max(lgmUnderlying.NPV(), 0.0) / lgm->numeraire(evalTimes[i], path[0][i + 1]));
             }
             Settings::instance().evaluationDate() = today;
+            QL_DEPRECATED_DISABLE_WARNING
             IndexManager::instance().clearHistory(lgmEuribor->name());
+            QL_DEPRECATED_ENABLE_WARNING
         }
         for (Size i = 0; i < nTimes; ++i) {
             epe_sim[i] = mean(acc[i]);

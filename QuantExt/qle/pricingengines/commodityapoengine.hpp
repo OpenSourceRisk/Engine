@@ -24,12 +24,12 @@
 #ifndef quantext_commodity_apo_engine_hpp
 #define quantext_commodity_apo_engine_hpp
 
+#include <ql/pricingengines/diffusioncalculator.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/blackscholesmodelwrapper.hpp>
-
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -54,19 +54,23 @@ struct MomentMatchingResults {
     Real firstMoment();
     Real secondMoment();
     Real stdDev();
-    Time timeToExpriy();
+    Time timeToExpiry();
+    QuantLib::VolatilityType volType = QuantLib::VolatilityType::ShiftedLognormal;
+    QuantLib::Real displacement = 0.0;
 };
 
 // Matches the first two moments of a lognormal distribution
 // For options with accruals the strike of the options need to be adjusted by the accruals
-// See Iain Clark - Commodity Option Pricing A Practitioner’s Guide - Section 2.74
+// See Iain Clark - Commodity Option Pricing A Practitioner's Guide - Section 2.74
 MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
     const ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
     const ext::shared_ptr<QuantLib::BlackVolTermStructure>& vol,
     const std::function<double(const QuantLib::Date& expiry1, const QuantLib::Date& expiry2)>& rho,
-    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>());
-}
+    QuantLib::Real strike = QuantLib::Null<QuantLib::Real>(), const QuantLib::Date& exerciseDate = Date(),
+    QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+    const Real displacement = 0.0);
 
+} // namespace CommodityAveragePriceOptionMomementMatching
 
 /*! Commodity APO Engine base class
     Correlation is parametrized as \f$\rho(s, t) = \exp(-\beta * \abs(s - t))\f$
@@ -76,12 +80,16 @@ class CommodityAveragePriceOptionBaseEngine : public CommodityAveragePriceOption
 public:
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
-                                          QuantLib::Real beta = 0.0);
+                                          QuantLib::Real beta = 0.0,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                          QuantLib::Real displacement = 0.0);
 
     // if you want speed-optimized observability, use the other constructor
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                           const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
-                                          QuantLib::Real beta = 0.0);
+                                          QuantLib::Real beta = 0.0,
+                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+                                          QuantLib::Real displacement = 0.0);
 
 protected:
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2
@@ -94,7 +102,7 @@ protected:
     bool isModelDependent() const;
 
     /*! Check barriers on given (log-)price */
-    bool barrierTriggered(const Real price, const bool logPrice) const;
+    bool barrierTriggered(const Real price, const bool logPrice, const int strictBarrier) const;
 
     /*! Check whether option is alive depending on whether barrier was triggered */
     bool alive(const bool barrierTriggered) const;
@@ -104,6 +112,8 @@ protected:
     QuantLib::Real beta_;
     // used in checkBarrier() for efficiency, must be set by methods calling checkBarrier(p, true)
     mutable QuantLib::Real logBarrier_;
+    QuantLib::DiffusionModelType modelType_;
+    QuantLib::Real displacement_;
 };
 
 /*! Commodity APO Analytical Engine

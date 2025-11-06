@@ -23,6 +23,7 @@
 
 #pragma once
 #include <orea/engine/parsensitivityanalysis.hpp>
+#include <orea/engine/parstressscenarioconverter.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -32,6 +33,7 @@
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/report/report.hpp>
 
 namespace ore {
 namespace analytics {
@@ -46,9 +48,11 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket,
         const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig);
 
-    //! Convert all par shifts to zero shifts for all scenarios defined in the stresstest
+    //! Convert all par shifts to zero shifts for all scenarios defined in the stresstest, if a report is given output
+    //! the base and scenario base rates
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> convertStressScenarioData(
-        const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& scenarioData) const;
+        const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& scenarioData,
+        const QuantLib::ext::shared_ptr<ore::data::Report>& parRateScenarioReport = nullptr) const;
 
     //! Creates a SimMarket, aligns the pillars and strikes of sim and sensitivity scenario market, computes par
     //! sensitivites
@@ -59,7 +63,12 @@ private:
     //! get a set of risk factors which will be interpreted as zero rate shifts
     std::set<RiskFactorKey::KeyType> zeroRateRiskFactors(bool irCurveParRates, bool irCapFloorParRates,
                                                          bool creditParRates) const;
-                                                         
+
+    //! write for each scenario the base (t0) par rates and the shifted par rates under the scenario into
+    //! a report
+    void writeParRateScenarioReport(const std::map<std::string, std::vector<ParStressScenarioConverter::ParRateScenarioData>>& reportData,
+                                    const QuantLib::ext::shared_ptr<ore::data::Report>& outputReport) const;
+
     QuantLib::Date asof_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;

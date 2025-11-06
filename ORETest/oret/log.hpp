@@ -23,10 +23,17 @@
 #pragma once
 
 #include <boost/lexical_cast.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/file.hpp>
 #include <boost/test/unit_test.hpp>
 #include <ored/utilities/log.hpp>
 
 using ore::data::Logger;
+using ore::data::ProgressMessage;
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(messageType, "MessageType", std::string);
 
 namespace ore {
 namespace test {
@@ -56,6 +63,7 @@ public:
 */
 void setupTestLogging(int argc, char** argv) {
 
+    std::string logFile;
     for (int i = 1; i < argc; ++i) {
 
         // --ore_log_mask indicates we want ORE logging
@@ -76,6 +84,25 @@ void setupTestLogging(int argc, char** argv) {
             ore::data::Log::instance().switchOn();
             ore::data::Log::instance().setMask(mask);
         }
+
+        if (boost::starts_with(argv[i], "--ore_log_file")) {
+            std::vector<std::string> strs;
+            boost::split(strs, argv[i], boost::is_any_of("="));
+            if (strs.size() > 1) {
+                logFile = strs[1];
+            }
+        }
+    }
+
+    if (!logFile.empty()) {
+        auto file_sink = boost::log::add_file_log(boost::log::keywords::file_name = logFile,
+                                                  boost::log::keywords::auto_flush = true);
+        file_sink->set_filter(!boost::log::expressions::has_attr("NoConsole") && messageType != ProgressMessage::name);
+    } else { 
+        // explicitly add a console log, we can disable StructuredLogging to console for tests that expected to fail
+        auto console_sink = boost::log::add_console_log(std::clog);
+        console_sink->set_filter(!boost::log::expressions::has_attr("NoConsole") &&
+                                 messageType != ProgressMessage::name);
     }
 }
 

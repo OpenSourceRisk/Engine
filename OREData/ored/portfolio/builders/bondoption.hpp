@@ -95,7 +95,8 @@ protected:
         }
 
         return QuantLib::ext::make_shared<QuantExt::BlackBondOptionEngine>(
-            discountCurve, yieldVola, yts, dpts, recovery, spread, parsePeriod(engineParameter("TimestepPeriod")));
+            discountCurve, yieldVola, yts, dpts, recovery, spread,
+            parsePeriod(engineParameter("TimestepPeriod", {}, false, "3M")));
     };
 };
 } // namespace data

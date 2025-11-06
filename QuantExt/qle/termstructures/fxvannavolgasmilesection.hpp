@@ -25,7 +25,7 @@
 #define quantext_fx_vanna_volga_smile_section_hpp
 
 #include <ql/experimental/barrieroption/vannavolgainterpolation.hpp>
-#include <ql/experimental/fx/blackdeltacalculator.hpp>
+#include <ql/pricingengines/blackdeltacalculator.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 
 namespace QuantExt {

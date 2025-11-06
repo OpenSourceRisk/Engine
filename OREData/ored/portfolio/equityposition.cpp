@@ -171,11 +171,13 @@ void EquityPositionInstrumentWrapperEngine::calculate() const {
             tmp *= arguments_.fxConversion_[i]->value();
         }
         result += tmp * arguments_.weights_[i];
+        results_.additionalResults["Name_" + std::to_string(i)] = arguments_.equities_[i]->name();
     }
     if (!arguments_.npvCcyConversion_.empty()) {
         result *= arguments_.npvCcyConversion_->value();
     }
     results_.value = result;
+    results_.additionalResults["Quantity"] = arguments_.quantity_;
 }
 
 } // namespace data

@@ -59,7 +59,7 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
 
         auto it = yieldCurves.find(config->yieldTermStructure());
         if (it != yieldCurves.end()) {
-            discountCurve_ = it->second->handle();
+            discountCurve_ = it->second->handle(config->yieldTermStructure());
         } else {
             QL_FAIL("The yield term structure, " << config->yieldTermStructure()
                                                  << ", required in the building "
@@ -567,12 +567,13 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         // Required by the QL pricesurface but not used
         Rate startRate = 0.0;
         // Build the term structure
+        QL_DEPRECATED_DISABLE_WARNING
         QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>
             yoySurface = QuantLib::ext::make_shared<
                 QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
                 0, config->observationLag(), index, startRate, discountCurve_, config->dayCounter(), config->calendar(),
                 config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice);
-
+        QL_DEPRECATED_ENABLE_WARNING
         std::vector<Period> optionletTerms = {yoySurface->maturities().front()};
         while (optionletTerms.back() != terms.back()) {
             optionletTerms.push_back(optionletTerms.back() + Period(1, Years));
@@ -689,7 +690,7 @@ void InflationCapFloorVolCurve::setCalibrationInfo(
                         cpiVolSurface_->dayCounter(), lastKnownFixingDate, calibrationInfo_->optionObservationDates[i]);
                     stddev = std::sqrt(ttm * vol * vol);
                 } else {
-                    stddev = sqrt(cpiVolSurface_->totalVariance(calibrationInfo_->optionObservationDates[i], strike, 0 * Days));
+                    stddev = std::sqrt(cpiVolSurface_->totalVariance(calibrationInfo_->optionObservationDates[i], strike, 0 * Days));
                 }
 
                 strikeGrowths[i][j] = std::pow(1 + strike, ttm);

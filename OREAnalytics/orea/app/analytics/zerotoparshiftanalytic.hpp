@@ -42,12 +42,10 @@ public:
 
 class ZeroToParShiftAnalytic : public Analytic {
 public:
-    ZeroToParShiftAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<ZeroToParShiftAnalyticImpl>(inputs), {"ZEROTOPARSHIFT"}, inputs, false, false,
-                   false, false) {}
+    ZeroToParShiftAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                           const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<ZeroToParShiftAnalyticImpl>(inputs), {"ZEROTOPARSHIFT"}, inputs, analyticsManager,
+                   false, false, false, false) {}
 };
 
 } // namespace analytics

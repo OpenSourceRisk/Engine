@@ -37,15 +37,6 @@ Real impliedQuote(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& i);
 //! true if key type and name are equal, do not care about the index though
 bool riskFactorKeysAreSimilar(const ore::analytics::RiskFactorKey& x, const ore::analytics::RiskFactorKey& y);
 
-double impliedVolatility(const QuantLib::CapFloor& cap, double targetValue,
-                         const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
-                         QuantLib::VolatilityType type, double displacement);
-
-double impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, double targetValue,
-                         const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
-                         QuantLib::VolatilityType type, double displacement,
-                         const QuantLib::Handle<QuantLib::YoYInflationIndex>& index = {});
-
 double impliedVolatility(const RiskFactorKey& key, const ParSensitivityInstrumentBuilder::Instruments& instruments);
 
 

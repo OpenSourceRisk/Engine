@@ -344,6 +344,7 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
     std::string knockOutProfitAmount = "0", knockOutProfitAmountPoints = "0", knockOutProfitEvents = "0";
     for (auto const& b : barriers_) {
         QL_REQUIRE(b.style().empty() || b.style() == "European", "only european barrier style supported");
+        QL_REQUIRE(!b.overrideTriggered(), "OverrideTriggered is not supported");
         if (b.type() == "CumulatedProfitCap" && !b.levels().empty())
             knockOutProfitAmount = boost::lexical_cast<std::string>(b.levels().front().value());
         else if (b.type() == "CumulatedProfitCapPoints" && !b.levels().empty())

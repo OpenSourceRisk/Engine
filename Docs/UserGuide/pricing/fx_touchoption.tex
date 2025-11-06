@@ -1,0 +1,12 @@
+\subsubsection{FX Touch Option}
+\label{pricing:fx_touchoption}
+
+FX Touch Options are priced analytically using the Garman-Kohlhagen 
+model and log-normal volatilities.  Deterministic IR rates are assumed. Volatility 
+structures with smile are used where available.
+
+The Garman-Kohlhagen model assumes that the spot FX rate $X$ follows Geometric 
+Brownian Motion:
+$$
+dX/X=\mu(t)\,dt+\sigma(t)\,dW
+$$

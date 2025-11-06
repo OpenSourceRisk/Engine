@@ -85,7 +85,7 @@ public:
                                          const std::vector<Time>& bucketTimes = std::vector<Time>(),
                                          const bool computeDelta = false, const bool computeGamma = false,
                                          const bool linearInZero = true,
-                                         boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                         QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                          const Date& settlementDate = Date(), const Date& npvDate = Date(),
                                          const bool applySimmExemptions = false);
 
@@ -106,7 +106,7 @@ private:
     Handle<Quote> spotFx_;
     const std::vector<Time> bucketTimes_;
     const bool computeDelta_, computeGamma_, linearInZero_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;
     Date npvDate_;
     bool applySimmExemptions_;

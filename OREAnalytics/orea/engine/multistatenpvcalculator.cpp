@@ -66,7 +66,7 @@ std::vector<Real> MultiStateNPVCalculator::multiStateNpv(Size tradeIndex, const 
 
         std::vector<Real> stateNpv;
         try {
-            stateNpv = boost::any_cast<std::vector<Real>>(tmp->second);
+            stateNpv = QuantLib::ext::any_cast<std::vector<Real>>(tmp->second);
         } catch (const std::exception& e) {
             QL_FAIL("unexpected type of result stateNpv: " << e.what());
         }

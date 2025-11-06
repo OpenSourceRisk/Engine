@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EquityOption_isin_ccy_mic">
+        <TradeType>EquityOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <EquityOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <Settlement>Cash</Settlement>
+                <ExerciseDates>
+                    <ExerciseDate>2025-03-10</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <Underlying>
+                <Type>Equity</Type>
+                <Name>GB0005405286</Name>
+                <IdentifierType>ISIN</IdentifierType>
+                <Currency>HKD</Currency>
+                <Exchange>XHKG</Exchange>
+            </Underlying>
+            <Currency>HKD</Currency>
+            <Strike>50</Strike>
+            <StrikeCurrency>HKD</StrikeCurrency>
+            <Quantity>775</Quantity>
+        </EquityOptionData>
+    </Trade>
+</Portfolio>

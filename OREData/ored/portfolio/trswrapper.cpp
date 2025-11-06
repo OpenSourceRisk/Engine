@@ -44,8 +44,10 @@ TRSWrapper::TRSWrapper(
     const Currency& fundingCurrency, const Size fundingResetGracePeriod, const bool paysAsset, const bool paysFunding,
     const Leg& additionalCashflowLeg, const bool additionalCashflowLegPayer, const Currency& additionalCashflowCurrency,
     const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxIndexAsset, const QuantLib::ext::shared_ptr<FxIndex>& fxIndexReturn,
-    const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
-    const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices)
+                       const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
+                       const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices,
+                       const QuantLib::ext::optional<TRS::FXConversion>& fxConversion)
+
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),
       portfolioInitialPrice_(portfolioInitialPrice), portfolioId_(portfolioId),
@@ -56,7 +58,7 @@ TRSWrapper::TRSWrapper(
       additionalCashflowLeg_(additionalCashflowLeg), additionalCashflowLegPayer_(additionalCashflowLegPayer),
       additionalCashflowCurrency_(additionalCashflowCurrency), fxIndexAsset_(fxIndexAsset),
       fxIndexReturn_(fxIndexReturn), fxIndexAdditionalCashflows_(fxIndexAdditionalCashflows),
-      addFxIndices_(addFxIndices) {
+      addFxIndices_(addFxIndices), fxConversion_(fxConversion) {
 
     QL_REQUIRE(!paymentSchedule_.empty(), "TRSWrapper::TRSWrapper(): payment schedule must not be empty()");
 
@@ -166,6 +168,7 @@ void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     a->fxIndexReturn_ = fxIndexReturn_;
     a->fxIndexAdditionalCashflows_ = fxIndexAdditionalCashflows_;
     a->addFxIndices_ = addFxIndices_;
+    a->fxConversion_ = fxConversion_;
 }
 
 void TRSWrapper::arguments::validate() const {
@@ -247,6 +250,9 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
             } else {
                 // The start valuation date is <= today, we determine the start value from the initial price or a
                 // historical fixing
+                Date fxDate = arguments_.fxConversion_ != TRS::FXConversion::End
+                                  ? v0
+                                  : (endDate == Null<Date>() ? today : endDate);
                 Real s0 = 0.0, fx0 = 1.0;
                 if (nth == 0 && arguments_.initialPrice_ != Null<Real>() &&
                     v0 == arguments_.valuationSchedule_.front()) {
@@ -255,13 +261,13 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                                                           << arguments_.initialPriceCurrency_);
                         s0 = arguments_.initialPrice_ *
                              (arguments_.underlying_.size() == 1 ? arguments_.underlyingMultiplier_[i] : 1.0);
-                        fx0 = getFxConversionRate(v0, arguments_.initialPriceCurrency_, arguments_.returnCurrency_,
+                        fx0 = getFxConversionRate(fxDate, arguments_.initialPriceCurrency_, arguments_.returnCurrency_,
                                                   false);
                         usingInitialPrice = true;
                     }
                 } else {
                     s0 = getUnderlyingFixing(i, v0, false) * arguments_.underlyingMultiplier_[i];
-                    fx0 = getFxConversionRate(v0, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
+                    fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                 }
                 DLOG("start value (underlying " << std::to_string(i + 1) << "): s0=" << s0 << " fx0=" << fx0 << " => "
                                                 << fx0 * s0 << " on " << v0 << " in nth current period " << nth);
@@ -374,17 +380,30 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+        auto tmp = getUnderlyingNPV(i);
+        return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
     try {
         auto tmp = arguments_.underlyingIndex_[i]->fixing(adjustedDate);
         return tmp;
     } catch (const std::exception&) {
-        if (adjustedDate == today)
-            return arguments_.underlying_[i]->instrument()->NPV() / arguments_.underlyingMultiplier_[i];
+        if (adjustedDate == today) {
+            auto tmp = getUnderlyingNPV(i);
+            return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
+        }
         else
             throw;
+    }
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
+    if (QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]) != nullptr ||
+        QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) != nullptr) {
+        Date today = Settings::instance().evaluationDate();
+        return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
+    } else {
+        return arguments_.underlying_[i]->instrument()->NPV();
     }
 }
 
@@ -431,7 +450,7 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
                 if (endDate == Null<Date>()) {
-                    s1 = arguments_.underlying_[i]->instrument()->NPV();
+                    s1 = getUnderlyingNPV(i);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
                 } else {
                     s1 = getUnderlyingFixing(i, endDate, false) * arguments_.underlyingMultiplier_[i];

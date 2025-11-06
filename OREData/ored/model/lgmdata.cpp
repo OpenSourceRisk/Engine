@@ -99,25 +99,13 @@ std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type)
 
 QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping parseFloatSpreadMapping(const string& s) {
     if (boost::algorithm::to_upper_copy(s) == "NEXTCOUPON")
-        return QuantExt::AnalyticLgmSwaptionEngine::nextCoupon;
+        return QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::nextCoupon;
     else if (boost::algorithm::to_upper_copy(s) == "PRORATA")
-        return QuantExt::AnalyticLgmSwaptionEngine::proRata;
+        return QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::proRata;
     else if (boost::algorithm::to_upper_copy(s) == "SIMPLE")
-        return QuantExt::AnalyticLgmSwaptionEngine::simple;
+        return QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping::simple;
     else
         QL_FAIL("FloatSpreadMapping '" << s << "' not recognized");
-}
-
-std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
-    if (m == QuantExt::AnalyticLgmSwaptionEngine::nextCoupon)
-        oss << "NextCoupon";
-    else if (m == QuantExt::AnalyticLgmSwaptionEngine::proRata)
-        oss << "ProRata";
-    else if (m == QuantExt::AnalyticLgmSwaptionEngine::simple)
-        oss << "Simple";
-    else
-        QL_FAIL("FloatSpreadMapping type not covered");
-    return oss;
 }
 
 void LgmData::clear() {
@@ -235,8 +223,8 @@ XMLNode* LgmData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, parameterTransformationNode, "ShiftHorizon", shiftHorizon_);
     XMLUtils::addChild(doc, parameterTransformationNode, "Scaling", scaling_);
 
-    XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", ore::data::to_string(floatSpreadMapping_));
-
+    XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", to_string(floatSpreadMapping_));
+    
     return lgmNode;
 }
 

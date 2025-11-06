@@ -25,12 +25,13 @@ namespace QuantExt {
 FixedRateFXLinkedNotionalCoupon::FixedRateFXLinkedNotionalCoupon(
     const QuantLib::Date& fxFixingDate, QuantLib::Real foreignAmount,
     QuantLib::ext::shared_ptr<FxIndex> fxIndex,
-    const QuantLib::ext::shared_ptr<FixedRateCoupon>& underlying)
+    const QuantLib::ext::shared_ptr<FixedRateCoupon>& underlying,
+    const Date& fxResetStart, Real domesticAmount)
     : FixedRateCoupon(underlying->date(), foreignAmount, underlying->rate(),
         underlying->dayCounter(), underlying->accrualStartDate(),
         underlying->accrualEndDate(), underlying->referencePeriodStart(),
         underlying->referencePeriodEnd()),
-    FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
+    FXLinked(fxFixingDate, foreignAmount, fxIndex, fxResetStart, domesticAmount), underlying_(underlying) {
     registerWith(FXLinked::fxIndex());
     registerWith(underlying_);
 }

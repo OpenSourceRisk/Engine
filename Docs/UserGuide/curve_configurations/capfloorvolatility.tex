@@ -1,7 +1,7 @@
 \subsubsection{Cap Floor Volatility Structures}
 \label{sss:capfloorconfig}
 
-The cap volatility structure parameterisation allows the user to pick out term cap volatilities or optionlet volatilities in the market data. 
+The cap volatility structure parameterisation allows the user to pick out term cap volatilities or optionlet volatilities in the market data.
 
 If term cap volatilities are given, users can define how they should be stripped to create an optionlet volatility structure. The parameterisation allows for three separate types of input term cap volatility structures:
 
@@ -27,7 +27,7 @@ For term cap volatilities, the structure of the XML, i.e.\ the nodes that are ne
 
 When set to \lstinline!TermVolatilities!, a column of sequential caps or floors, are created for each strike level out to the maximum cap maturity configured. In other words, if the index tenor is 6M, the first cap created would have a maturity of 1Y, the second cap 18M, the third cap 2Y and so on until we have a cap with maturity equal to the maximum maturity tenor in the configuration. The volatility for each of these caps or floors is then interpolated from the term cap volatility surface using the configured interpolation. Finally, the optionlet volatility at each cap or floor maturity, starting from the first, is derived in turn such that the column of cap or floor volatilities are matched.
 
-When set to \lstinline!OptionletVolatilities!, the optionlet volatility structure pillar dates are set to the fixing dates on the last caplet on each of the configured caps or floors i.e.\ caps or floors with the maturities in the configured \lstinline!Tenors! or \lstinline!AtmTenors!. The optionlet volatilities on these pillar dates are then solved for such that the configured cap or floor volatilities are matched. 
+When set to \lstinline!OptionletVolatilities!, the optionlet volatility structure pillar dates are set to the fixing dates on the last caplet on each of the configured caps or floors i.e.\ caps or floors with the maturities in the configured \lstinline!Tenors! or \lstinline!AtmTenors!. The optionlet volatilities on these pillar dates are then solved for such that the configured cap or floor volatilities are matched.
 
 In the following sections, we describe six XML configurations separately for clarity:
 
@@ -68,10 +68,10 @@ Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinlin
 \item \lstinline!OutputVolatilityType!: Specifies the vol used for caplet bootstrap and result surface, one of {\tt Normal},
   {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
 
-\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
-{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift.
 
-\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift.
 
 \item \lstinline!Extrapolation!:
 Indicates the extrapolation in the time direction before the first optionlet volatility and after the last optionlet volatility. The extrapolation occurs on the stripped optionlet volatilities. The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. If set to \lstinline!Flat!, the first optionlet volatility is used before the first time and the last optionlet volatility is used after the last time. If set to \lstinline!Linear!, the interpolation method configured in \lstinline!InterpolationMethod! is used to extrapolate.
@@ -169,10 +169,10 @@ Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinlin
 \item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
   {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
 
-\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
-{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift.
 
-\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift.
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
@@ -270,10 +270,10 @@ Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinlin
 \item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
   {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
 
-\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
-{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift.
 
-\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift.
 
 \item \lstinline!Extrapolation!:
 Indicates the extrapolation in the time and strike direction. The extrapolation occurs on the stripped optionlet volatilities. The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times or strikes. If set to \lstinline!Flat!, the optionlet volatility on the time strike boundary is used if the optionlet surface is queried outside the allowable times or strikes. If set to \lstinline!Linear!, the interpolation method configured in \lstinline!InterpolationMethod! is used to extrapolate either time or strike direction.
@@ -371,10 +371,10 @@ Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinlin
 \item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
   {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
 
-\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
-{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift.
 
-\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift.
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times or strikes. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! node values described below.
@@ -492,10 +492,10 @@ Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinlin
 \item \lstinline!OutputVolatilityType!: Specified the vol used for caplet bootstrap and result surface, one of {\tt Normal},
   {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release 1.83.0
 
-\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
-{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift.
 
-\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift.
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
@@ -587,10 +587,10 @@ Indicates the cap floor volatility type. It may be \lstinline!Normal!, \lstinlin
   {\tt Lognormal} or {\tt ShiftedLognormal}, defaults to {\ Normal} for backwards compatibility before release
   1.83.0. Only available for SABR interpolation if input type is set to optionlet vols.
 
-\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is 
-{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift. 
+\item \lstinline!OutputShift!: Specifies the vol shift used for caplet bootstrap and result surface (if OutputVolatilityType is
+{\tt Lognormal} or {\tt ShiftedLognormal}), defaults to input market data shift.
 
-\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift. 
+\item \lstinline!ModelShift!: Specifies the vol shift used for SABR model (if applicable). Defaults to input market data shift.
 
 \item \lstinline!Extrapolation!:
 The allowable values are \lstinline!None!, \lstinline!Flat! and \lstinline!Linear!. If set to \lstinline!None!, extrapolation is turned off and an exception is thrown if the optionlet surface is queried outside the allowable times. Otherwise, extrapolation is allowed and the type of extrapolation is determined by the \lstinline!TimeInterpolation! node value described below.
@@ -703,4 +703,86 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \end{minted}
 \caption{Cap floor surface with optionlet volatilities input.}
 \label{lst:capfloorvol_parametric_smile_config}
+\end{longlisting}
+
+% ===========================================================================
+% Proxy Configuration
+% ===========================================================================
+
+\subsubsection{Proxy Cap Floor Volatility Configuration}
+
+In addition to the standard cap floor volatility configurations described above, ORE supports proxy cap floor volatility surfaces. A proxy configuration allows you to create a cap floor volatility surface by referencing an existing cap floor volatility surface and adjusting it for different underlying indices and optionally applying a scaling factor.
+
+Listing \ref{lst:capfloorvol_proxy_configuration} shows the layout for parameterising a proxy cap floor volatility surface. The meaning of each of the nodes is as follows:
+
+\begin{itemize}
+\item
+\lstinline!CurveId!: Unique identifier for the cap floor volatility structure.
+
+\item \lstinline!CurveDescription! [Optional]:
+A description of the volatility structure. It is for information only and may be left blank.
+
+\item \lstinline!ProxyConfig!:
+Contains the proxy configuration settings. This node is required for proxy configurations and should be omitted for direct cap floor volatility configurations.
+
+\item \lstinline!Source! (within ProxyConfig):
+Specifies the source cap floor volatility surface to use as the base for the proxy.
+
+\item \lstinline!CurveId! (within Source):
+The curve identifier of the source cap floor volatility surface that will be used as the base. This must reference an existing cap floor volatility curve configuration.
+
+\item \lstinline!Index! (within Source):
+The interest rate index associated with the source cap floor volatility surface.
+
+\item \lstinline!RateComputationPeriod! [Optional] (within Source):
+The rate computation period for the source index. This is only required for OIS or BMA/SIFMA indices and should be omitted for standard IBOR indices.
+
+\item \lstinline!Target! (within ProxyConfig):
+Specifies the target configuration for the proxy surface.
+
+\item \lstinline!Index! (within Target):
+The target interest rate index for which the proxy surface will provide volatilities. This allows you to create a volatility surface for one index based on the volatility surface of another similar index.
+
+\item \lstinline!RateComputationPeriod! [Optional] (within Target):
+The rate computation period for the target index. This is only required for OIS or BMA/SIFMA indices and should be omitted for standard IBOR indices.
+
+\item \lstinline!ONCapSettlementDays! [Optional] (within Target):
+Settlement days for overnight index cap structures. Only relevant when the target index is an overnight index.
+
+\item \lstinline!ScalingFactor! [Optional] (within ProxyConfig):
+An optional scaling factor to multiply the proxied volatility surface. If omitted, defaults to 1.0 (no scaling). This allows you to scale the entire volatility surface up or down by a constant factor. For example, a value of 1.1 would increase all volatilities by 10\%, while 0.9 would decrease them by 10\%. The scaling factor must be positive.
+
+\end{itemize}
+
+The proxy mechanism works by:
+\begin{enumerate}
+\item Taking the base volatility surface from the specified source curve
+\item Adjusting the volatilities for differences in forward rate levels between the source and target indices
+\item Optionally applying the scaling factor to all volatilities
+\item Producing an optionlet volatility structure suitable for pricing instruments on the target index
+\end{enumerate}
+
+This feature is particularly useful when you have a well-calibrated volatility surface for one index (e.g., USD-LIBOR-3M) and want to create a similar surface for a related index (e.g., USD-SOFR) by applying appropriate adjustments and scaling.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CapFloorVolatility>
+  <CurveId>USD-SOFR</CurveId>
+  <CurveDescription>USD SOFR Cap Floor Volatility via USD LIBOR Proxy</CurveDescription>
+  <ProxyConfig>
+    <Source>
+      <CurveId>USD-LIBOR-3M</CurveId>
+      <Index>USD-LIBOR-3M</Index>
+    </Source>
+    <Target>
+      <Index>USD-SOFR</Index>
+      <RateComputationPeriod>3M</RateComputationPeriod>
+      <ONCapSettlementDays>2</ONCapSettlementDays>
+    </Target>
+    <ScalingFactor>0.95</ScalingFactor>
+  </ProxyConfig>
+</CapFloorVolatility>
+\end{minted}
+\caption{Proxy cap floor volatility configuration with scaling factor.}
+\label{lst:capfloorvol_proxy_configuration}
 \end{longlisting}

@@ -29,6 +29,7 @@
 #include <ql/termstructures/bootstraperror.hpp>
 #include <ql/termstructures/bootstraphelper.hpp>
 #include <ql/utilities/dataformatters.hpp>
+#include <functional>
 
 namespace QuantExt {
 
@@ -109,7 +110,8 @@ private:
     mutable bool initialized_, validCurve_, loopRequired_;
     mutable QuantLib::Size firstAliveHelper_, alive_;
     mutable std::vector<QuantLib::Real> previousData_;
-    mutable std::vector<QuantLib::ext::shared_ptr<QuantLib::BootstrapError<Curve> > > errors_;
+    mutable std::vector<std::function<QuantLib::Real(QuantLib::Real)>> errors_;
+    mutable std::vector<QuantLib::ext::shared_ptr<typename Traits::helper>> helpers_;
     QuantLib::Real accuracy_;
     QuantLib::Real globalAccuracy_;
     bool dontThrow_;
@@ -157,6 +159,7 @@ template <class Curve> void IterativeBootstrap<Curve>::initialize() const {
     dates.resize(alive_ + 1);
     times.resize(alive_ + 1);
     errors_.resize(alive_ + 1);
+    helpers_.resize(alive_ + 1);
     dates[0] = firstDate;
     times[0] = ts_->timeFromReference(dates[0]);
 
@@ -169,7 +172,7 @@ template <class Curve> void IterativeBootstrap<Curve>::initialize() const {
         const QuantLib::ext::shared_ptr<typename Traits::helper>& helper = ts_->instruments_[j];
         dates[i] = helper->pillarDate();
         times[i] = ts_->timeFromReference(dates[i]);
-
+        
         // check for duplicated pillars
         QL_REQUIRE(dates[i - 1] != dates[i], "more than one instrument with pillar " << dates[i]);
 
@@ -188,8 +191,12 @@ template <class Curve> void IterativeBootstrap<Curve>::initialize() const {
         // convergence loop is required even if the Interpolator is local
         if (dates[i] != latestRelevantDate)
             loopRequired_ = true;
-
-        errors_[i] = QuantLib::ext::make_shared<QuantLib::BootstrapError<Curve> >(ts_, helper, i);
+        helpers_[i] = helper;
+        errors_[i] = [i, ts=ts_, &helpers=helpers_](QuantLib::Real guess) {
+            Traits::updateGuess(ts->data_, guess, i);
+            ts->interpolation_.update();
+            return helpers[i]->quoteError();
+        };
     }
     ts_->maxDate_ = maxDate;
 
@@ -289,9 +296,9 @@ template <class Curve> void IterativeBootstrap<Curve>::calculate() const {
 
             try {
                 if (validData)
-                    solver_.solve(*errors_[i], accuracy, guess, minValues[i - 1], maxValues[i - 1]);
+                    solver_.solve(errors_[i], accuracy, guess, minValues[i - 1], maxValues[i - 1]);
                 else
-                    firstSolver_.solve(*errors_[i], accuracy, guess, minValues[i - 1], maxValues[i - 1]);
+                    firstSolver_.solve(errors_[i], accuracy, guess, minValues[i - 1], maxValues[i - 1]);
             } catch (std::exception& e) {
                 if (validCurve_) {
                     // the previous curve state might have been a
@@ -316,7 +323,7 @@ template <class Curve> void IterativeBootstrap<Curve>::calculate() const {
                 if (dontThrow_) {
                     // Use the fallback value
                     ts_->data_[i] =
-                        detail::dontThrowFallback(*errors_[i], minValues[i - 1], maxValues[i - 1], dontThrowSteps_);
+                        detail::dontThrowFallback(errors_[i], minValues[i - 1], maxValues[i - 1], dontThrowSteps_);
 
                     // Remember to update the interpolation. If we don't and we are on the last "i", we will still
                     // have the last attempted value in the solver being used in ts_->interpolation_.
@@ -328,8 +335,8 @@ template <class Curve> void IterativeBootstrap<Curve>::calculate() const {
                             << QuantLib::io::ordinal(i)
                             << " alive instrument, "
                                "pillar "
-                            << errors_[i]->helper()->pillarDate() << ", maturity "
-                            << errors_[i]->helper()->maturityDate() << ", reference date " << ts_->dates_[0] << ": "
+                            << helpers_[i]->pillarDate() << ", maturity "
+                            << helpers_[i]->maturityDate() << ", reference date " << ts_->dates_[0] << ": "
                             << e.what());
                 }
             }

@@ -32,15 +32,17 @@ namespace analytics {
 class XvaStressAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA_STRESS";
-    explicit XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
+    explicit XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+    void buildDependencies() override;
+    void setStressScenarios(const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressScenarios) { stressScenarios_ = stressScenarios; }
 
 private:
     void runStressTest(const QuantLib::ext::shared_ptr<ore::analytics::StressScenarioGenerator>& scenarioGenerator,
                        const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
-    void writeCubes(const std::string& label, const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic);
+    void writeCubes(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& xvaAnalytic);
     void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports);
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressScenarios_;
@@ -48,15 +50,11 @@ private:
 
 class XvaStressAnalytic : public Analytic {
 public:
-    explicit XvaStressAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr,
-        const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {})
-        : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs, scenarios), {"XVA_STRESS"}, inputs, true, false,
-                   false, false) {
-        impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
-    }
+    explicit XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                               const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+        const QuantLib::ext::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {})
+        : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs, scenarios), {"XVA_STRESS"}, inputs, analyticsManager,
+                   true, false, false, false) {}
 };
 
 } // namespace analytics

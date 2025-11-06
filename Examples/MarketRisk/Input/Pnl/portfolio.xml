@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<Portfolio>
+
+  <Trade id="SwapLeg">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>1000000</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.05</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20230201</StartDate>
+            <EndDate>20240201</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+
+  <Trade id="SwapLegFlow">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>1000000</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.05</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20220205</StartDate>
+            <EndDate>20240205</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+
+  <!--
+  <Trade id="ScriptedRangeAccrual">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ScriptedTradeData>
+      <Script>
+	<Code><![CDATA[
+	NUMBER N, AccrualDays, Payoff, U, i;
+
+	N = SIZE(FixingDates);
+	AccrualDays = 0;
+	
+	FOR i IN (1, SIZE(FixingDates), 1) DO
+	
+	  U = Underlying(FixingDates[i]);
+
+	  IF {U >= LowerBound AND U <= UpperBound} THEN
+	    AccrualDays = AccrualDays + 1;
+	  END;
+
+	END;
+
+	Payoff = Notional * FixedRate * YearFraction * AccrualDays / N;
+
+	Value = PAY( Payoff, PayDate, PayDate, Currency);
+	]]></Code>
+	<NPV>Value</NPV>
+      </Script>
+      <Data>
+	<Number>
+	  <Name>Notional</Name>
+	  <Value>100.0</Value>
+	</Number>
+	<Currency>
+	  <Name>Currency</Name>
+	  <Value>USD</Value>
+	</Currency>
+	<Number>
+	  <Name>FixedRate</Name>
+	  <Value>0.05</Value>
+	</Number>
+	<Number>
+	  <Name>YearFraction</Name>
+	  <Value>1.013889</Value>
+	</Number>
+	<Event>
+	  <Name>FixingDates</Name>
+	  <ScheduleData>
+            <Rules>
+              <StartDate>2023-02-01</StartDate>
+              <EndDate>2024-02-01</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>US</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth/>
+              <FirstDate/>
+              <LastDate/>
+            </Rules>
+          </ScheduleData>
+	</Event>
+	<Event>
+	  <Name>PayDate</Name>
+	  <Value>2024-02-02</Value>
+	</Event>
+	<Index>
+	  <Name>Underlying</Name>
+	  <Value>USD-SOFR</Value>
+	</Index>
+	<Number>
+	  <Name>UpperBound</Name>
+	  <Value>0.049</Value>
+	</Number>
+	<Number>
+	  <Name>LowerBound</Name>
+	  <Value>0.046</Value>
+	</Number>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+-->
+</Portfolio>

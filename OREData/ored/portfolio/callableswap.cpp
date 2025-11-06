@@ -66,7 +66,7 @@ void CallableSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     requiredFixings_.addData(swap_.requiredFixings());
 }
 
-const std::map<std::string, boost::any>& CallableSwap::additionalData() const { return swap_.additionalData(); }
+const std::map<std::string, QuantLib::ext::any>& CallableSwap::additionalData() const { return swap_.additionalData(); }
 
 void CallableSwap::fromXML(XMLNode* node) {
     Trade::fromXML(node);

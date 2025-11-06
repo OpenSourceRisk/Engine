@@ -28,8 +28,6 @@
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/stochasticprocess.hpp>
 
-#include <boost/unordered_map.hpp>
-
 namespace QuantExt {
 using namespace QuantLib;
 

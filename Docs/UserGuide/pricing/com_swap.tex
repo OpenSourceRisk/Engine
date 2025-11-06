@@ -1,0 +1,34 @@
+\subsubsection{Commodity Swap}
+\label{pricing:com_swap}
+
+As in Section \ref{pricing:com_forward}, the commodity forwarding
+curve is used for respective underlying commodity.
+ The net present value of each calculation period in a Commodity Swap 
+can be computed following \cite{Clark_2014}:
+$$
+\NPV_{Period} = \mbox{Quantity}\cdot \omega\cdot \left(\frac{1}{n}\sum_{i=1}^n F(0,T_i) - K\right) \cdot P(T)
+$$
+where:
+\begin{itemize}
+\item Quantity: number of units of the underlying commodity
+\item $K$: strike price
+\item the sum runs over all fixing dates $t_i$ in the calculation
+  period, $i=1, ..., n$
+\item $F(0,T_i)$: the forward commodity price for maturity $T_i$ seen at
+  time 0 (valuation date), $T_i$ is the prompt futures expiry date
+  associated with the fixing date $t_i$ if the Swap references Futures
+  prices, or it is the fixing date $t_i$ if the  Swap references
+  Commodity spot prices.
+\item $P(T)$: the discount factor for settlement date $T$ typically 5
+  business days after the last fixing date in the period
+\item $\omega$: +1 for a long Commodity Swap, -1 otherwise 
+\end{itemize}
+
+As the payoff can also be rolled up into a single payment we
+generalize the pricing formula, taking the sum over all fixings dates
+in all calculation periods
+$$
+\NPV_{Total} = \mbox{Quantity}\cdot \omega\cdot \frac{1}{N}\sum_{i=1}^N\left( F(0,T_i) - K\right) \cdot P(T^{Set}_i)
+$$
+where $T^{Set}_i$ denotes the settlement date associated with each fixing,
+possibly linked to the following period end or swap maturity.

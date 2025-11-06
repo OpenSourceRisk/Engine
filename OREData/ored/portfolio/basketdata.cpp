@@ -203,7 +203,7 @@ const string& BasketConstituent::issuerName() const { return issuerName_; }
 
 const string& BasketConstituent::creditCurveId() const { return creditCurveId_; }
 
-const boost::optional<CdsReferenceInformation>& BasketConstituent::cdsReferenceInfo() const {
+const QuantLib::ext::optional<CdsReferenceInformation>& BasketConstituent::cdsReferenceInfo() const {
     return cdsReferenceInfo_;
 }
 

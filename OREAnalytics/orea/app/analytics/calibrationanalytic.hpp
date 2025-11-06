@@ -41,7 +41,7 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
-    void buildCrossAssetModel(bool continueOnError);
+    void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
@@ -52,11 +52,9 @@ static const std::set<std::string> calibrationAnalyticSubAnalytics{};
 
 class CalibrationAnalytic : public Analytic {
 public:
-    explicit CalibrationAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<CalibrationAnalyticImpl>(inputs), calibrationAnalyticSubAnalytics, inputs, false,
+    explicit CalibrationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                 const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<CalibrationAnalyticImpl>(inputs), calibrationAnalyticSubAnalytics, inputs, analyticsManager, false,
                    false, false, false) {}
 };
 

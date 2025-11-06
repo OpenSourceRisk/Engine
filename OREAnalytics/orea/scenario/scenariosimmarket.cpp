@@ -249,6 +249,7 @@ void ScenarioSimMarket::addYieldCurve(const QuantLib::ext::shared_ptr<Market>& i
                                              ? initMarket->discountCurve(key, configuration)
                                              : initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
+    QL_REQUIRE(!tenors.empty(), "yield curve tenors must not be empty");
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
     // include today
 
@@ -304,7 +305,8 @@ ScenarioSimMarket::ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& in
                                      const std::string& configuration, const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
-                                     const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig,
+                                     const bool allowPartialScenarios,
+                                     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                      const bool handlePseudoCurrencies,
                                      const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : ScenarioSimMarket(initMarket, parameters, QuantLib::ext::make_shared<FixingManager>(initMarket->asofDate()),
@@ -317,7 +319,8 @@ ScenarioSimMarket::ScenarioSimMarket(
     const QuantLib::ext::shared_ptr<FixingManager>& fixingManager, const std::string& configuration,
     const ore::data::CurveConfigurations& curveConfigs, const ore::data::TodaysMarketParameters& todaysMarketParams,
     const bool continueOnError, const bool useSpreadedTermStructures, const bool cacheSimData,
-    const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
+    const bool allowPartialScenarios, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool handlePseudoCurrencies, const QuantLib::ext::shared_ptr<Scenario>& offSetScenario)
     : SimMarket(handlePseudoCurrencies), parameters_(parameters), fixingManager_(fixingManager),
       filter_(QuantLib::ext::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
       cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
@@ -444,6 +447,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         DayCounter dc = wrapperIndex->dayCounter();
                         vector<Time> yieldCurveTimes(1, 0.0);        // include today
                         vector<Date> yieldCurveDates(1, asof_);
+                        QL_REQUIRE(!parameters->yieldCurveTenors(name).empty(),
+                                   "yield curve tenors must not be empty");
                         QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days,
                                    "yield curve tenors must not include t=0");
                         for (auto& tenor : parameters->yieldCurveTenors(name)) {
@@ -486,9 +491,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             ich->enableExtrapolation();
 
                         QuantLib::ext::shared_ptr<IborIndex> i = index->clone(ich);
-                        if (iborFallbackConfig_.isIndexReplaced(name, asof_)) {
+                        if (iborFallbackConfig_ && iborFallbackConfig_->isIndexReplaced(name, asof_)) {
                             // handle ibor fallback indices
-                            auto fallbackData = iborFallbackConfig_.fallbackData(name);
+                            auto fallbackData = iborFallbackConfig_->fallbackData(name);
                             auto f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
                             QL_REQUIRE(f != iborIndices_.end(),
                                        "Could not build ibor fallback index '"
@@ -504,15 +509,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(i))
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
                                 original, rfrInd, fallbackData.spread, fallbackData.switchDate,
-                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                    iborFallbackConfig_->useRfrCurveInSimulationMarket());
                                         else
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
                                                 i, rfrInd, fallbackData.spread, fallbackData.switchDate,
-                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                                iborFallbackConfig_->useRfrCurveInSimulationMarket());
                             DLOG("built ibor fall back index '"
                                  << name << "' with rfr index '" << fallbackData.rfrIndex << "', spread "
-                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha
-                                 << iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha << iborFallbackConfig_->useRfrCurveInSimulationMarket());
                         }
                         iborIndices_.insert(
                             make_pair(make_pair(Market::defaultConfiguration, name), Handle<IborIndex>(i)));
@@ -672,6 +676,43 @@ ScenarioSimMarket::ScenarioSimMarket(
                     } catch (const std::exception& e) {
                         DLOG("skipping this object: " << e.what());
                     }
+
+                    try {
+                        DLOG("Adding security conversion factor " << name << " from configuration " << configuration);
+                        Real v = initMarket->conversionFactor(name, configuration)->value();
+                        auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
+                        if(useSpreadedTermStructures_) {
+                            auto m = [v](Real x) { return x * v; };
+                            conversionFactors_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name),
+                                          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(
+                                              Handle<Quote>(q), m))));
+                        } else {
+                            conversionFactors_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
+                        }
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
+                    }
+
+                    try {
+                        DLOG("Adding security price " << name << " from configuration " << configuration);
+                        Real v = initMarket->securityPrice(name, configuration)->value();
+                        auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
+                        if(useSpreadedTermStructures_) {
+                            auto m = [v](Real x) { return x * v; };
+                            securityPrices_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name),
+                                          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(
+                                              Handle<Quote>(q), m))));
+                        } else {
+                            securityPrices_.insert(
+                                make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
+                        }
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
+                    }
+
                 }
                 break;
 
@@ -711,11 +752,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                         isAtm = QuantLib::ext::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr ||
                                 QuantLib::ext::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr;
 
+                        DLOG("YieldVol T0  source is atm     : " << (isAtm ? "True" : "False"));
+                        DLOG("YieldVol ssm target is cube    : " << (isCube ? "True" : "False"));
+
                         Handle<SwaptionVolatilityStructure> svp;
                         if (param.second.first) {
-                            LOG("Simulating yield vols for ccy " << name);
-                            DLOG("YieldVol T0  source is atm     : " << (isAtm ? "True" : "False"));
-                            DLOG("YieldVol ssm target is cube    : " << (isCube ? "True" : "False"));
+                            DLOG("Simulating yield vols for ccy " << name);
                             DLOG("YieldVol simulate atm only     : " << (simulateAtmOnly ? "True" : "False"));
                             if (simulateAtmOnly) {
                                 QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
@@ -839,23 +881,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = parameters_->swapVolSmileDynamics(name) == "StickyStrike";
                                 QuantLib::ext::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 QuantLib::ext::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
-                                if (!stickyStrike) {
+                                if (!swapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(swapIndexBase);
+                                        simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
+                                }
+                                if (!shortSwapIndexBase.empty()) {
                                     try {
                                         addSwapIndexToSsm(shortSwapIndexBase);
+                                        simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
                                     } catch (const std::exception& e) {
                                         processException(e, name, param.first, simDataWritten);
                                         gotException = true;
                                     }
-                                    simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
-                                    simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
-                                    if (simSwapIndex == nullptr || simShortSwapIndex == nullptr)
-                                        stickyStrike = true;
                                 }
                                 if (!swapIndexBase.empty())
                                     swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
@@ -1198,6 +1240,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         auto wrapper = initMarket->defaultCurve(name, configuration);
                         vector<Handle<Quote>> quotes;
 
+                        QL_REQUIRE(!parameters->defaultTenors(name).empty(),
+                                   "default curve tenors must not be empty");
                         QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days,
                                    "default curve tenors must not include t=0");
 
@@ -1270,7 +1314,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+                        DLOG("Adding recovery rate " << name << " from configuration " << configuration);
                         Real v = initMarket->recoveryRate(name, configuration)->value();
                         auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : v);
                         if(useSpreadedTermStructures_) {
@@ -1308,12 +1352,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << "  cds vols..");
+                        DLOG("building " << name << "  cds vols..");
                         Handle<QuantExt::CreditVolCurve> wrapper = initMarket->cdsVol(name, configuration);
                         Handle<QuantExt::CreditVolCurve> cvh;
                         bool stickyStrike = parameters_->cdsVolSmileDynamics(name) == "StickyStrike";
                         if (param.second.first) {
-                            LOG("Simulating CDS Vols for " << name);
+                            DLOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
                             vector<Volatility> vols;
                             vector<Time> times;
@@ -1382,7 +1426,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                         } else {
                             string decayModeString = parameters->cdsVolDecayMode();
-                            LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
+                            DLOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
                             // TODO support strike and term dependence, hardcoded term 5y
@@ -1433,7 +1477,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         bool stickyStrike = parameters_->fxVolSmileDynamics(name) == "StickyStrike";
 
                         if (param.second.first) {
-                            LOG("Simulating FX Vols for " << name);
+                            DLOG("Simulating FX Vols for " << name);
                             auto& expiries = parameters->fxVolExpiries(name);
                             Size m = expiries.size();
                             Calendar cal = wrapper->calendar();
@@ -1639,14 +1683,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         Handle<BlackVolTermStructure>(wrapper), times, quotes[0],
                                         !parameters->simulateFxVolATMOnly());
                                 } else {
-                                    LOG("ATM FX Vols (BlackVarianceCurve3) for " << name);
+                                    DLOG("ATM FX Vols (BlackVarianceCurve3) for " << name);
                                     QuantLib::ext::shared_ptr<BlackVolTermStructure> atmCurve;
                                     atmCurve = QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false);
                                     // if we have a surface but are only simulating atm vols we wrap the atm curve and
                                     // the full t0 surface
                                     if (parameters->simulateFxVolATMOnly()) {
-                                        LOG("Simulating FX Vols (FXVolatilityConstantSpread) for " << name);
+                                        DLOG("Simulating FX Vols (FXVolatilityConstantSpread) for " << name);
                                         fxVolCurve = QuantLib::ext::make_shared<BlackVolatilityConstantSpread>(
                                             Handle<BlackVolTermStructure>(atmCurve), wrapper);
                                     } else {
@@ -1658,7 +1702,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         } else {
                             string decayModeString = parameters->fxVolDecayMode();
-                            LOG("Deterministic FX Vols with decay mode " << decayModeString << " for " << name);
+                            DLOG("Deterministic FX Vols with decay mode " << decayModeString << " for " << name);
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
                             // currently only curves (i.e. strike independent) FX volatility structures are
@@ -1759,7 +1803,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                     writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {strikes, times});
                                     simDataWritten = true;
-                                    LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
+                                    DLOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
                                     
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = QuantLib::ext::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
@@ -1877,7 +1921,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         Handle<BlackVolTermStructure>(wrapper), times, quotes[0],
                                         !parameters->simulateEquityVolATMOnly());
                                 } else {
-                                    LOG("ATM EQ Vols (BlackVarianceCurve3) for " << name);
+                                    DLOG("ATM EQ Vols (BlackVarianceCurve3) for " << name);
                                     QuantLib::ext::shared_ptr<BlackVolTermStructure> atmCurve;
                                     atmCurve = QuantLib::ext::make_shared<BlackVarianceCurve3>(0, NullCalendar(),
                                                                                        wrapper->businessDayConvention(),
@@ -1885,7 +1929,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     // if we have a surface but are only simulating atm vols we wrap the atm curve and
                                     // the full t0 surface
                                     if (parameters->simulateEquityVolATMOnly()) {
-                                        LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
+                                        DLOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
                                         eqVolCurve = QuantLib::ext::make_shared<BlackVolatilityConstantSpread>(
                                             Handle<BlackVolTermStructure>(atmCurve), wrapper);
                                     } else {
@@ -2059,7 +2103,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << " zero inflation curve");
+                        DLOG("building " << name << " zero inflation curve");
 
                         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(name, configuration);
                         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
@@ -2071,6 +2115,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Time> zeroCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
+                        QL_REQUIRE(!parameters->zeroInflationTenors(name).empty(),
+                                   "zero inflation tenors must not be empty");
                         QL_REQUIRE(parameters->zeroInflationTenors(name).front() > 0 * Days,
                                    "zero inflation tenors must not include t=0");
 
@@ -2129,7 +2175,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(make_pair(make_pair(Market::defaultConfiguration, name), zh));
 
-                        LOG("building " << name << " zero inflation curve done");
+                        DLOG("building " << name << " zero inflation curve done");
                     } catch (const std::exception& e) {
                         processException(e, name, param.first, simDataWritten);
                         gotException = true;
@@ -2141,7 +2187,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << " zero inflation cap/floor volatility curve...");
+                        DLOG("building " << name << " zero inflation cap/floor volatility curve...");
                         Handle<QuantLib::CPIVolatilitySurface> wrapper =
                             initMarket->cpiInflationCapFloorVolatilitySurface(name, configuration);
                         Handle<ZeroInflationIndex> zeroInflationIndex =
@@ -2153,7 +2199,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
-                            LOG("Simulating zero inflation cap/floor vols for index name " << name);
+                            DLOG("Simulating zero inflation cap/floor vols for index name " << name);
 
                             DayCounter dc = wrapper->dayCounter();
                             vector<Period> optionTenors = parameters->zeroInflationCapFloorVolExpiries(name);
@@ -2257,8 +2303,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Time> yoyCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
+                        QL_REQUIRE(!parameters->yoyInflationTenors(name).empty(),
+                                   "yoy inflation tenors must not be empty");
                         QL_REQUIRE(parameters->yoyInflationTenors(name).front() > 0 * Days,
-                                   "zero inflation tenors must not include t=0");
+                                   "yoy inflation tenors must not include t=0");
 
                         for (auto& tenor : parameters->yoyInflationTenors(name)) {
                             Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
@@ -2318,16 +2366,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << " yoy inflation cap/floor volatility curve...");
+                        DLOG("building " << name << " yoy inflation cap/floor volatility curve...");
                         Handle<QuantExt::YoYOptionletVolatilitySurface> wrapper =
                             initMarket->yoyCapFloorVol(name, configuration);
-                        LOG("Initial market "
+                        DLOG("Initial market "
                             << name << " yoy inflation cap/floor volatility type = " << wrapper->volatilityType());
                         Handle<QuantExt::YoYOptionletVolatilitySurface> hYoYCapletVol;
 
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
-                            LOG("Simulating yoy inflation optionlet vols for index name " << name);
+                            DLOG("Simulating yoy inflation optionlet vols for index name " << name);
                             vector<Period> optionTenors = parameters->yoyInflationCapFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
                             vector<Real> strikes = parameters->yoyInflationCapFloorVolStrikes(name);
@@ -2394,7 +2442,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         yoyCapFloorVolSurfaces_.emplace(std::piecewise_construct,
                                                         std::forward_as_tuple(Market::defaultConfiguration, name),
                                                         std::forward_as_tuple(hYoYCapletVol));
-                        LOG("Simulation market yoy inflation cap/floor volatility type = "
+                        DLOG("Simulation market yoy inflation cap/floor volatility type = "
                             << hYoYCapletVol->volatilityType());
                     } catch (const std::exception& e) {
                         processException(e, name, param.first, simDataWritten);
@@ -2429,7 +2477,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                     bool simDataWritten = false;
                     try {
-                        LOG("building commodity curve for " << name);
+                        DLOG("building commodity curve for " << name);
 
                         // Time zero initial market commodity curve
                         Handle<PriceTermStructure> initialCommodityCurve =
@@ -2542,7 +2590,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building commodity volatility for " << name);
+                        DLOG("building commodity volatility for " << name);
 
                         // Get initial base volatility structure
                         Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
@@ -2650,9 +2698,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (!isSurface) {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceCurve3.");
                                 if (useSpreadedTermStructures_) {
+                                    // if simulate atm only is false, we use the ATM slice from the wrapper only
+                                    // the smile dynamics is sticky strike here always (if t0 is a surface)
                                     newVol =
                                         Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<SpreadedBlackVolatilityCurve>(
-                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], true));
+                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], !parameters->simulateCommodityVolATMOnly()));
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
@@ -2716,7 +2766,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("Adding correlations for " << name << " from configuration " << configuration);
+                        DLOG("Adding correlations for " << name << " from configuration " << configuration);
 
                         vector<string> tokens = getCorrelationTokens(name);
                         QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << name);
@@ -2835,36 +2885,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::ConversionFactor:
-                for (const auto& name : param.second.second) {
-                    bool simDataWritten = false;
-                    try {
-                        DLOG("Adding ConversionFactor " << name << " from configuration " << configuration);
-                        Real v;
-                        try {
-                            v = initMarket->conversionFactor(name, configuration)->value();
-                        } catch (...) {
-                            DLOG("ConversionFactor " << name << " uses default value of 1.0.");
-                            v = 1.0;
-                        }
-
-                        auto q = QuantLib::ext::make_shared<SimpleQuote>(v);
-                        conversionFactors_.insert(
-                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
-
-                        if (param.second.first) // is set to false within ScenarioSimMarketParameters::fromXML
-                            simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
-                                               std::forward_as_tuple(q));
-
-                        writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {});
-                        simDataWritten = true;
-                    } catch (const std::exception& e) {
-                        processException(e, name, param.first, simDataWritten);
-                        gotException = true;
-                    }
-                }
-                break;
-
             case RiskFactorKey::KeyType::SurvivalWeight:
                 // nothing to do, these are written to asd
                 break;
@@ -2879,7 +2899,7 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
 
             if (!param.second.second.empty()) {
-                LOG("built " << std::left << std::setw(25) << param.first << std::right << std::setw(10)
+                DLOG("built " << std::left << std::setw(25) << param.first << std::right << std::setw(10)
                              << param.second.second.size() << std::setprecision(3) << std::setw(15)
                              << static_cast<double>(timer.elapsed().wall) / 1E6 << " ms");
             }
@@ -2995,6 +3015,12 @@ ScenarioSimMarket::ScenarioSimMarket(
         baseScenarioAbsolute_ = tmpAbs;
     }
     LOG("building base scenario done");
+
+    if (ScenarioInformation::instance().isEnabled()) {
+        scenarioInformationSetter_ = QuantLib::ext::make_shared<QuantExt::ScenarioInformationSetter>();
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(baseScenarioAbsolute_);
+    }
 }
 
 void ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName) {
@@ -3032,9 +3058,22 @@ void ScenarioSimMarket::reset() {
     filter_ = filterBackup;
 }
 
-void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const QuantLib::ext::shared_ptr<QuantExt::Scenario>& s) {
 
+    auto scenario = s;
+    if (useSpreadedTermStructures_ && scenario->isAbsolute())
+        scenario = absoluteToSpreadedScenario(s, baseScenarioAbsolute_, parameters_);
+    
     currentScenario_ = scenario;
+
+    if (ScenarioInformation::instance().isEnabled()){
+        QuantLib::ext::shared_ptr<QuantExt::Scenario> currentScenarioAbsolute = currentScenario_;
+        if (!currentScenario_->isAbsolute())
+            currentScenarioAbsolute =
+                addDifferenceToScenario(baseScenarioAbsolute_, currentScenario_, baseScenarioAbsolute_->asof());
+        scenarioInformationSetter_->setParentScenario(baseScenarioAbsolute_);
+        scenarioInformationSetter_->setChildScenario(currentScenarioAbsolute);
+    }
 
     // 1 handle delta scenario
 
@@ -3327,22 +3366,29 @@ void ScenarioSimMarket::applyCurveAlgebra() {
     for (auto const& a : parameters_->curveAlgebraData().data()) {
         DLOG("Applying operation type " << a.operationType());
         if (a.operationType() == "Spreaded") {
-            DLOG("curve " << a.key() << " is spreaded over " << a.argument(0));
-            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), getYieldCurve(a.argument(0)));
-        } else
-        // add more operations here...
-        {
+            std::vector<Handle<YieldTermStructure>> bases;
+            std::vector<double> multiplier;
+            for (auto const& arg : a.arguments()) {
+                auto v = parseListOfValues(arg);
+                bases.push_back(getYieldCurve(v[0]));
+                multiplier.push_back(v.size() <= 1 ? 1.0 : parseReal(v[1]));
+                DLOG("curve " << a.key() << " is set as spreaded over " << v[0] << ", multiplier "
+                              << multiplier.back());
+            }
+            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), bases, multiplier);
+        } else {
             QL_FAIL("curve algebra rule type '" << a.operationType() << "' not recognized. Expected: 'Spreaded'.");
         }
     }
 }
 
 void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
-                                                           const Handle<YieldTermStructure>& base) {
+                                                            const std::vector<Handle<YieldTermStructure>>& bases,
+                                                            const std::vector<double>& multiplier) {
     if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
-        c->makeThisCurveSpreaded(base);
+        c->makeThisCurveSpreaded(bases, multiplier);
     } else {
         QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
                 "supported curve types. Internal error, contact dev.");

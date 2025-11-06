@@ -26,7 +26,7 @@
 
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/irmodel.hpp>
-#include <qle/models/lgmcalibrationinfo.hpp>
+#include <qle/models/irmodelcalibrationinfo.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
 #include <ql/math/comparison.hpp>
@@ -50,8 +50,8 @@ public:
     LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization,
                            const Measure measure = Measure::LGM, const Discretization = Discretization::Euler,
                            const bool evaluateBankAccount = true,
-                           const QuantLib::ext::shared_ptr<Integrator>& integrator = QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8,
-                                                                                                                 100));
+                           const QuantLib::ext::shared_ptr<Integrator>& integrator =
+                               QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 16));
 
     //! IrModel interface
 
@@ -173,8 +173,8 @@ inline void LinearGaussMarkovModel::update() {
 inline void LinearGaussMarkovModel::generateArguments() { update(); }
 
 inline QuantLib::ext::shared_ptr<StochasticProcess> LinearGaussMarkovModel::stateProcess() const {
-    QL_REQUIRE(measure_ == Measure::LGM, "LinearGaussMarkovModel::stateProcess() only supports measure = LGM");
-    return stateProcess_;
+    // implementation only supports LGM measure, therefore return nullptr for other measures
+    return measure_ == Measure::LGM ? stateProcess_ : nullptr;
 }
 
 inline QuantLib::Real

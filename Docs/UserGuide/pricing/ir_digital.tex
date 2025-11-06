@@ -1,0 +1,59 @@
+\subsubsection{Digital Cap/Floor}
+\label{pricing:ir_digital}
+
+Digital Cap/Floors are cash or nothing instruments on an IBOR underlying. 
+They can be priced 
+\begin{itemize}
+\item analytically using formulas developed by (Rubinstein \& Reiner, 1991) 
+based on the Black-Scholes framework, see (Haug, 1997) Ch 4.19.2, or
+\item as vanilla Cap or Floor spreads
+\end{itemize}
+
+\subsubsection*{Analytical Digital Cap/Floor}
+
+According to \cite{Rubinstein_1991} the present value of a single cap/floor 
+can be expressed as follows:
+$$
+\NPV = N\cdot P(T) \cdot \Phi(\omega\,d), \qquad 
+d = \frac{1}{\sigma\sqrt{T}}\left(\ln\frac{F_T}{K} - \frac{\sigma^2\,T}{2} \right)
+$$
+where:
+\begin{itemize}
+\item $N$: the amount to be paid at expiration if the cap/floor is in-the-money
+\item $P(T)$: the discount factor for option expiry time $T$
+\item $\Phi(\cdot)$: the cumulative standard normal distribution
+\item $\omega$: 1 for a cap, -1 for a floor
+\item $F_T$: the forward projected IBOR rate for the period that is capped/floored, as seen today
+\item $K$: the cap/floor strike
+\item $\sigma$: the cap/floor volatility
+\end{itemize}
+
+\subsubsection*{Digital Cap/Floor as Cap/Floor Spread}
+
+Alternatively, when a more accurate reflection of volatility smiles is a priority, 
+Digital Cap/Floors can also be priced using call/put spreads (i.e. by approximating 
+the digital cap/floor payment with the difference between two vanilla caps/floors). 
+Given a digital cap/floor with strike level $K$, the two vanilla cap/floors will 
+have strike levels $K_- \leq K$ and  $K_+ \geq K$, where $K_\pm = K\pm\epsilon$ 
+and $\epsilon$ is small.
+
+\medskip
+The present value of a digital cap and floor with strike $K$ and payout amount 
+$M$ can be expressed in terms of vanilla caps and floors with notional $N$ and 
+strikes $K_\pm$ as per:
+\begin{align*}
+\NPV_{DigitalCap} (M,K) &\approx \NPV_{Cap}(N,K_{-} ) - \NPV_{Cap}(N,K_{+}) \\
+\NPV_{DigitalFloor} (M,K)  &\approx \NPV_{Floor} (N,K_{+} )  - \NPV_{Floor}(N,K_{-}) 
+\end{align*}
+where:
+\begin{itemize}
+\item $M$: the amount to be paid at expiration if the digital cap/floor is 
+in-the-money
+\item $N = M/(K_{+} - K_{-})$: the notional of the vanilla cap/floor
+\end{itemize}
+
+The vanilla caps and floors are priced as IBOR caps/floors as per the previous 
+section using Black or Bachelier  models depending on normal or log-normal 
+volatilities.
+
+\todo[inline]{Digital IBOR Cap/Floor pricing not implemented yet}

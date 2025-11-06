@@ -33,7 +33,8 @@ public:
                              const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
                              const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
                              const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
-                             const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days);
+                             const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days,
+                             double scalingFactor = 1.0);
 
     QuantLib::Rate minStrike() const override { return baseVol_->minStrike(); }
     QuantLib::Rate maxStrike() const override { return baseVol_->maxStrike(); }
@@ -53,6 +54,7 @@ private:
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> targetIndex_;
     QuantLib::Period baseRateComputationPeriod_;
     QuantLib::Period targetRateComputationPeriod_;
+    double scalingFactor_;
 };
 
 } // namespace QuantExt

@@ -1,9 +1,28 @@
 \subsubsection{European Option Contingent on a Barrier}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+This product is a plain vanilla European option on a single underlying (FX, Equity, Commodity or InterestRate) with a
+knock-in/knock-out feature on another underlying asset. The barrier can be continuously monitored (American) or only at
+the option expiry date (European). For a knock-in (knock-out) barrier, the option is valid when the price of the
+underlying barrier moves inside (outside) the barrier, otherwise the payoff is zero. For a European-style barrier, we
+support FX, Equity, Commodity and InterestRate underlyings. We do not support InterestRate for American-style barriers.
+
+For example, for a European option with a continuous down-in barrier, the option payoff will only apply if the barrier
+underlying price was less than or equal to the agreed barrier level at any point over the life of the trade. For a
+continuous up-out barrier, the option will be `knocked-out' if the barrier underlying price is greater than or equal to
+the agreed barrier level at any point over the life of the trade, and the final option payoff will be zero.
+
+{\bf Input}}
+
+\else
+
 European exercise, American or European barrier, multi-asset
 
 This is a plain vanilla European option on a given underlying, whose final payoff is contingent on the
 price level of another underlying (forming the barrier). Both underlyings can be of multiple asset classes.
+
+\fi
 
 The trade container for this product is the \verb+EuropeanOptionBarrierData+ node, and the corresponding
 trade type is EuropeanOptionBarrier. The barrier can be continuously monitored (American) or only be

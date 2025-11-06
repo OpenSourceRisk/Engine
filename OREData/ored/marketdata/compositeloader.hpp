@@ -51,7 +51,7 @@ public:
     std::set<QuantLib::Date> asofDates() const override {
         std::set<QuantLib::Date> result;
         auto tmp1 = a_->asofDates();
-        auto tmp2 = a_->asofDates();
+        auto tmp2 = b_->asofDates();
         result.insert(tmp1.begin(), tmp1.end());
         result.insert(tmp2.begin(), tmp2.end());
         return result;

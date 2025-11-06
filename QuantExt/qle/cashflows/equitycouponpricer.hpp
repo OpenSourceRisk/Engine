@@ -36,15 +36,16 @@ using namespace QuantLib;
 class EquityCouponPricer : public virtual Observer, public virtual Observable {
 public:
     struct AdditionalResultCache {
-        Real initialPrice;
+        Real currentPeriodStartPrice;
         Real startFixingTotal;
         Real startFixing;
-        Real startFxFixing;
+        Real currentPeriodStartFxFixing;
         Real endFixingTotal;
         Real endFixing;
-        Real endFxFixing;
+        Real currentPeriodEndFxFixing;
         Real pastDividends;
         Real forecastDividends;
+        Real dividendFactor;
 
         void clear();
     };

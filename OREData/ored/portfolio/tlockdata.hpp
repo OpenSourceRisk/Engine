@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/legdata.hpp>

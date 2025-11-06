@@ -41,8 +41,6 @@ public:
     CashPosition(const Envelope& env, const string& currency, double amount)
         : Trade("CashPosition", env), currency_(currency), amount_(amount) {}
 
-    bool hasCashflows() const override { return false; }
-
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override { return amount_; }

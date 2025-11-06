@@ -40,6 +40,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
@@ -111,8 +112,10 @@ public:
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
         BOND,
+        BOND_FUTURE,
         BOND_OPTION,
         INDEX_CDS_OPTION,
+        INDEX_CDS_TRANCHE,
         COMMODITY_SPOT,
         COMMODITY_FWD,
         CORRELATION,
@@ -1154,7 +1157,8 @@ public:
     FXForwardQuote() {}
     //! Constructor
     FXForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy,
-                   const boost::variant<QuantLib::Period, FxFwdString>& term, Real conversionFactor = 1.0)
+                   const boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date>& term,
+                   Real conversionFactor = 1.0)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_FWD), unitCcy_(unitCcy), ccy_(ccy),
           term_(term), conversionFactor_(conversionFactor) {}
 
@@ -1167,13 +1171,13 @@ public:
     //@{
     const string& unitCcy() const { return unitCcy_; }
     const string& ccy() const { return ccy_; }
-    const boost::variant<QuantLib::Period, FxFwdString>& term() const { return term_; }
+    const boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date>& term() const { return term_; }
     Real conversionFactor() const { return conversionFactor_; }
     //@}
 private:
     string unitCcy_;
     string ccy_;
-    boost::variant<QuantLib::Period, FxFwdString> term_;
+    boost::variant<QuantLib::Period, FxFwdString, QuantLib::Date> term_;
     Real conversionFactor_;
     //! Serialization
     friend class boost::serialization::access;
@@ -1623,25 +1627,28 @@ public:
     BaseCorrelationQuote() {}
     //! Constructor
     BaseCorrelationQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& cdsIndexName,
-                         Period term, Real detachmentPoint)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
-          term_(term), detachmentPoint_(detachmentPoint) {}
+                         Period term, Real attachmentPoint, Real detachmentPoint)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::INDEX_CDS_TRANCHE), cdsIndexName_(cdsIndexName),
+          term_(term), attachmentPoint_(attachmentPoint), detachmentPoint_(detachmentPoint) {}
 
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<BaseCorrelationQuote>(quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, detachmentPoint_);
+        return QuantLib::ext::make_shared<BaseCorrelationQuote>(
+            quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, attachmentPoint_, detachmentPoint_);
     }
 
     //! \name Inspectors
     //@{
     const string& cdsIndexName() const { return cdsIndexName_; }
     Real detachmentPoint() const { return detachmentPoint_; }
+    Real attachmentPoint() const { return attachmentPoint_; }
     Period term() const { return term_; }
     //@}
 private:
     string cdsIndexName_;
     Period term_;
+    Real attachmentPoint_;
     Real detachmentPoint_;
     //! Serialization
     friend class boost::serialization::access;
@@ -1772,7 +1779,9 @@ public:
         - overnight forward: \c startTenor will be <code>0 * Days</code> and \c tenor will be <code>1 * Days</code>
         - tom-next forward: \c startTenor will be <code>1 * Days</code> and \c tenor will be <code>1 * Days</code>
     */
-    const boost::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
+    const boost::optional<QuantLib::Period>& startTenor() const {
+        return startTenor_;
+    }
 
     //! Returns \c true if the forward is tenor based and \c false if forward is date based
     bool tenorBased() const { return tenorBased_; }
@@ -1783,6 +1792,8 @@ private:
     std::string quoteCurrency_;
     QuantLib::Date expiryDate_;
     QuantLib::Period tenor_;
+    // boost optional is required as long we support boost < 1.84, where std::optional serialization is not
+    // supported
     boost::optional<QuantLib::Period> startTenor_;
     bool tenorBased_;
     //! Serialization
@@ -1835,6 +1846,39 @@ private:
     QuantLib::ext::shared_ptr<Expiry> expiry_;
     QuantLib::ext::shared_ptr<BaseStrike> strike_;
     QuantLib::Option::Type optionType_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+//! Commodity option shift data class
+/*! This class holds single market points of shift of the commodity option vols in the shifted lognormal model
+    \ingroup marketdata
+*/
+class CommodityOptionShiftQuote : public MarketDatum {
+public:
+    CommodityOptionShiftQuote() {}
+
+    CommodityOptionShiftQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
+                            const std::string& commodityName)
+    : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION),
+      commodityName_(commodityName) {
+        QL_REQUIRE(quoteType == QuoteType::SHIFT, "Commodity option shift quote must be of type 'SHIFT'");
+    }
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<CommodityOptionShiftQuote>(quote_->value(),
+            asofDate_, name_, quoteType_, commodityName_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    //@}
+    
+    private:
+    std::string commodityName_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -1942,30 +1986,63 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
-//! Bond Future ConversionFactor
+//! Bond Future Price Quote
 /*!
-This class holds single market points of type CONVERSION_FACTOR for a single Bond future
+This class holds single market points of type
+- Price
 \ingroup marketdata
+*/
+class BondFuturePriceQuote : public MarketDatum {
+public:
+    BondFuturePriceQuote() {}
+    //! Constructor
+    BondFuturePriceQuote(Real value, Date asofDate, const string& name, const string& futureContract)
+        : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND_FUTURE), futureContract_(futureContract) {}
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<BondFuturePriceQuote>(quote_->value(), asofDate_, name_, futureContract_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& futureContract() const { return futureContract_; }
+    //@}
+private:
+    string futureContract_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+//! Bond Future ConversionFactor
+/*! This class holds single market points of type CONVERSION_FACTOR for a deliverable bond
+    of a bond future contract
+    \ingroup marketdata
 */
 class BondFutureConversionFactor : public MarketDatum {
 public:
     BondFutureConversionFactor() {}
     //! Constructor
-    BondFutureConversionFactor(Real value, Date asofDate, const string& name, const string& securityId)
-        : MarketDatum(value, asofDate, name, QuoteType::CONVERSION_FACTOR, InstrumentType::BOND),
-          securityID_(securityId) {}
+    BondFutureConversionFactor(Real value, Date asofDate, const string& name, const string& securityId,
+                               const string& futureContract)
+        : MarketDatum(value, asofDate, name, QuoteType::CONVERSION_FACTOR, InstrumentType::BOND_FUTURE),
+          securityID_(securityId), futureContract_(futureContract) {}
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
-        return QuantLib::ext::make_shared<BondFutureConversionFactor>(quote_->value(), asofDate_, name_, securityID_);
+        return QuantLib::ext::make_shared<BondFutureConversionFactor>(quote_->value(), asofDate_, name_, securityID_,
+                                                                      futureContract_);
     }
 
     //! \name Inspectors
     //@{
     const string& securityID() const { return securityID_; }
+    const string& futureContract() const { return futureContract_; }
     //@}
 private:
     string securityID_;
+    string futureContract_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -2041,5 +2118,6 @@ BOOST_CLASS_EXPORT_KEY(ore::data::CommodityOptionQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CPRQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondFuturePriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);

@@ -45,17 +45,24 @@ Array datesToTimes(const std::vector<Date>& dates, const Handle<YieldTermStructu
 } // anonymous namespace
 
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array& t,
-    const QuantLib::ext::shared_ptr<Constraint>& constraint)
-    : t_(t), y_(QuantLib::ext::make_shared<PseudoParameter>(t.size() + 1, *constraint)) {
+    const QuantLib::ext::shared_ptr<Constraint>& constraint, const bool rcll)
+    : t_(t), rcll_(rcll) {
+    Size ySize = t_.size() + 1;
+    if (!rcll_)
+        ySize = t_.size() ;
+     y_ = QuantLib::ext::make_shared<PseudoParameter>(ySize, *constraint);
     checkTimes(t_);
 }
 
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const std::vector<Date>& dates,
     const Handle<YieldTermStructure>& yts,
-    const QuantLib::ext::shared_ptr<Constraint>& constraint)
-    : t_(datesToTimes(dates, yts)),
-      y_(QuantLib::ext::make_shared<PseudoParameter>(dates.size() + 1, *constraint)) {
-    checkTimes(t_);
+    const QuantLib::ext::shared_ptr<Constraint>& constraint, const bool rcll)
+    : t_(datesToTimes(dates, yts)), rcll_(rcll) {
+    Size ySize = t_.size() + 1;
+    if (!rcll_)
+        ySize = t_.size() ;
+     y_ = QuantLib::ext::make_shared<PseudoParameter>(ySize, *constraint);
+     checkTimes(t_);
 }
 
 PiecewiseConstantHelper11::PiecewiseConstantHelper11(const Array& t1, const Array& t2,
@@ -110,6 +117,20 @@ PiecewiseConstantHelper3::PiecewiseConstantHelper3(const std::vector<Date>& date
       y2_(QuantLib::ext::make_shared<PseudoParameter>(dates2.size() + 1, *constraint2)) {
     checkTimes(t1_);
     checkTimes(t2_);
+}
+
+PiecewiseConstantHelper4::PiecewiseConstantHelper4(const Array& t,
+    const QuantLib::ext::shared_ptr<Constraint>& constraint)
+    : t_(t), y_(QuantLib::ext::make_shared<PseudoParameter>(t.size(), *constraint)) {
+    checkTimes(t_);
+}
+
+PiecewiseConstantHelper4::PiecewiseConstantHelper4(const std::vector<Date>& dates,
+    const Handle<YieldTermStructure>& yts,
+    const QuantLib::ext::shared_ptr<Constraint>& constraint)
+    : t_(datesToTimes(dates, yts)),
+      y_(QuantLib::ext::make_shared<PseudoParameter>(dates.size(), *constraint)) {
+    checkTimes(t_);
 }
 
 } // namespace QuantExt

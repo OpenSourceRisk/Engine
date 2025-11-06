@@ -1,0 +1,300 @@
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsubsection{Bermudan/American Swaption and non-standard European Swaption}
+\label{pricing:ir_bermswaption}
+
+Bermudan/American Swaptions and non-standard European Swaptions (see \ref{pricing:ir_euroswaption} for the criteria to
+distinguish standard from non-standard swaptions) are priced using a one-factor Linear Gauss Markov (LGM) model, which
+is closely related to the Hull-White one-factor model, see section \ref{models:LGM} for details.
+
+\underline{General Model Parametrization}
+
+The reversion and volatility type is specified in the pricing engine configuration, as shown in listing
+\ref{lst:ir_bermswaption_pricing_config}. The allowed values are ``HullWhite'' and ``Hagan'' for both parameters
+``ReversionType'' and ``VolatilityType'', and all combinations except ReversionType = Hagan, VolatilityType = HullWhite
+are allowed.
+
+Listing \ref{lst:ir_bermswaption_pricing_config_fd} shows an alterative configuration using a finite-difference pricer
+instead of numerical integration, see below in the section on rollback implementation for details.
+
+Listing \ref{lst:ir_amswaption_pricing_config_fd} shows a configuration for American swaptions. The configuration has
+the same parameters as the one for Bermudan swaptions except for the additional parameter ExerciseTimeStepsPerYear which
+controls how many exercise dates are effective generated for pricing purposes. Usually this parameter is set to the same
+value as the TimeStepsPerYear parameter that controls the FD Grid, i.e. on each finite-difference time step an exercise
+is implemented (if it falls into the exercise period specified in the trade). Note: It is possible to use engine type
+Grid for American swaptions, but this is known to be slow in comparison because of the many time steps to process in the
+rollback.
+
+
+\begin{listing}[h]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.10</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">5.0</Parameter>
+      <Parameter name="ny">30</Parameter>
+      <Parameter name="sx">5.0</Parameter>
+      <Parameter name="nx">30</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Bermudan Swaption pricing configuration Grid Engine}
+\label{lst:ir_bermswaption_pricing_config}
+\end{listing}
+
+\begin{listing}[h]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.10</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="StateGridPoints">64</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="MesherEpsilon">1E-4</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Bermudan Swaption pricing configuration FD Engine}
+\label{lst:ir_bermswaption_pricing_config_fd}
+\end{listing}
+
+\begin{listing}[h]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="AmericanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="Reversion">0.0</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.10</Parameter>
+      <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
+    </ModelParameters>
+    <Engine>FD</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="StateGridPoints">64</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="MesherEpsilon">1E-4</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{American Swaption pricing configuration FD Engine}
+\label{lst:ir_amswaption_pricing_config_fd}
+\end{listing}
+
+If ReversionType is set to HullWhite, the model parameter $H$ is derived from a piecewise constant mean reversion
+function $\kappa(t)$ via
+
+\begin{equation}\label{ir_bermswaption_hw_hw_H1}
+  H(t) = A \int_0^t e^{-\int_0^s \kappa(u) du} ds + B
+\end{equation}
+
+see \cite{Hagan_LGM}, formula (4.10a). Here $A$ is a scaling factor and $B$ is a shift parameter. If ReversionType is set
+to Hagan on the other hand, the model parameter $H$ is derived from a piecewise constant function $h>0$ via
+
+\begin{equation}\label{ir_bermswaption_hw_hw_H2}
+  H(t) = A \int_0^t h(s)\,ds + B
+\end{equation}
+
+which results in a piecewise linear $H$. If the VolatilityType is set to HullWhite, the model parameter $\alpha$ is
+derived from a piecewise constant volatility function $\sigma(t)$ via
+
+\begin{equation}\label{ir_bermswaption_hw_hw_alpha}
+  \alpha(t) = \frac{\sigma(t)}{H'(t)}
+\end{equation}
+
+see \cite{Hagan_LGM}, formula (4.9b). The function $\sigma(t)$ is the volatility of the Hull White model in its classic
+form, i.e. this variant exactly replicates a Hull White model with piecewise constant volatility. If the VolatilityType
+is set to Hagan, the model parameter $\alpha$ is assumed to be piecewise constant.
+
+We note that the formulas \ref{ir_bermswaption_hw_hw_H1}, \ref{ir_bermswaption_hw_hw_H2} and
+\ref{ir_bermswaption_hw_hw_alpha} can be implemented using closed-form expressions thanks to the piecewise constant
+nature of the input functions, i.e. no numerical integration is required.
+
+
+
+\underline{Model Parametrization for Bermudan/American Swaptions}
+
+For Bermudan/American swaption pricing the reversion parameter $\kappa(t)$ (ReversionType = HullWhite) resp. $h(t)$
+(ReversionType = Hagan) is restricted to a constant value, which is assumed to be given as an external parameter
+``Reversion'', see listing \ref{lst:ir_bermswaption_pricing_config}.
+
+The parameter ``Calibration'' can be set to one of the values ``None'', ``Bootstrap'', ``BestFit''.
+
+In case of ``None'' the model will not be calibrated before pricing, instead the volatility will be set to the value
+specified as ``Volatility''. The volatility function can be made time dependent by specifying a comma separated list of
+$n$ volatilities along with a list of $n-1$ times as an additional parameter ``VolatilityTimes''. This setting is useful
+when an external model parameterization should be used.
+
+In case of ``Bootstrap'' the model volatility function will be calibrated to a set of coterminal swaptions. The
+(constant) value given as the paramter ``Volatility'' will be used as the initial guess for the calibration in this
+case. ``VolatilityTimes'' will be ignored and instead overwritten by a time grid corresponding to the option expiries of
+the coterminal swaption calibration instruments. See below how the coterminal swaptions are constructed.
+
+In case of ``BestFit'' a constant model volatility will be calibrated to a set of coterminal swaptions that is
+constructed in the same way as in the case of ``Bootstrap''.
+
+The scaling parameter $A$ is set to $1$ and the shift parameter $B$ is set to $-H(T)$ with $T$ denoting $0.5$ times the
+remaining time to maturity of the trade to price.
+
+
+
+\underline{Construction of coterminal calibration swaptions for Bootstrap}
+
+The set of calibration instruments is determined as follows:
+
+The swaption expiries are chosen as the exercise dates of the trade to price. If a parameter
+``ReferenceCalibrationGrid'' is given, at most one calibration instrument is kept per grid interval, in the example
+given in listing \ref{lst:ir_bermswaption_pricing_config} this means that at most one swaption per 3M interval is kept. This can
+be both useful to stabilize the calibrated model volatility function (avoid osciallations if calibration instrument
+expiries lie too close to each other) and to speed up the calibration step.
+
+For American swaptions the ``ReferenceCalibrationGrid'' parameter is mandatory and effectively one instrument per period
+is generated if the expiry falls into the exercise range of the trade.
+
+The underlying maturity of the calibration swaptions is chosen to be identical to the trade maturity.
+
+The strikes of the calibration swaptions are chosen dependent on the parameter ``CalibrationStrategy'' (see listing
+\ref{lst:ir_bermswaption_pricing_config}). This parameter can be set to ``None'' (if ``Calibration'' is set to ``None'',
+too) or to ``CoterminalATM'' or to ``CoterminalDealStrike''.
+
+In case of ``CoterminalATM'' the calibration swaption strikes are set to their fair forward swap level.
+
+In case of ``CoterminalDealStrike'' the calibration swaption strikes are set to the trade strike. More precisely, the
+strike $K$ of the calibration swaption corresponding to an exercise date $d$ of the trade to price is set to
+
+\begin{equation}
+K = r - s
+\end{equation}
+
+where $r$ is the rate of the first fixed rate coupon with accrual start date greater or equal to $d$ and $s$ is the
+first floating rate coupon spread with accrual start date greater or equal to $d$.
+
+The calibration swaptions are always constructed following the conventions of the relevant swaption surface / cube. In
+particular, the index tenor of these swaptions is set to the market swaptions tenor.
+
+
+
+\underline{Numerical implementation of calibration}
+
+Both the bootstrap and best fit calibrations are implemented using a Levenberg-Marquardt optimizer. The target function
+is defined as the RMSE of errors of calibration swaptions and the single swaption error is taken to be the relative
+price error $e$
+
+\begin{equation}
+e = \frac{p-m}{m}
+\end{equation}
+
+where $p$ is the model price of the swaption and $m$ is the market price of the swaption.
+
+If the market value of a calibration swaption is below $10^{-20}$ we replace the strike of the calibration swaption with
+the forward ATM level of that swaption to stabilize the calibration. Furthermore, if the market value of the calibration
+swaption (possibly after the strike amendment just mentioned) is below $10^{-8}$ we use an absolute price error
+
+\begin{equation}
+e = {p-m}
+\end{equation}
+
+in the target function for this swaption instead of a relative one. Again, this is done to stabilize the calibration.
+
+In the case of a best fit calibration we optimize the model parameters simultaneously. In case of a bootstrap
+calibration we perform a series of one dimensional optimizations for each calibration swaption in ascending order of
+their option expiry times.
+
+The calibration is executed in terms of transformed parameters always, so that restrictions on positivity of parameters
+are ensured by the transformation, yet the optimization itself is run in terms of variables for which all real values
+are admissable.
+
+After the optimizer has finished the value of the target function is compared against the parameter ``Tolerance'' in
+listing \ref{lst:ir_bermswaption_pricing_config} and either the pricing is aborted or continued with an alert issued to the log
+depending on the global pricing parameter ``ContinueOnCalibrationError''.
+
+We note that the discount curve used in the calibration step to price the calibrations swaption is the curve specified
+by the ``IrLgmCalibration'' configuration, usually the in-ccy OIS curve since the swaptions are collateralized in their
+trade currency.
+
+
+\underline{Implementation of Roll Back}
+
+To compute conditional expectation $E_t$ at time $t$
+
+\begin{equation}
+  E_t \left( \frac{V(T)}{N(T)} \right)
+\end{equation}
+
+of a deflated value $V(T) / N(T)$ with $T>t$, we use either numerical integration or a finite difference solver:
+
+\begin{itemize}
+\item For numerical integration we use the numerical integration scheme proposed in \cite{Hagan_Bermudan},
+section 4.1. The numerical parameters for this scheme is read from the parameters ``sx'', ``sy'', ``nx'', ``ny'', see
+listing \ref{lst:ir_bermswaption_pricing_config}.
+\item For the finite difference solver we use ``StateGridPoints'' points covering states that are attained
+with a probability of at least ``MesherEpsilon'' times $2$. We use ``TimeStepsPerYear'' equidistant steps per year for
+the rollback in time direction. See
+listing \ref{lst:ir_bermswaption_pricing_config_fd}, \ref{lst:ir_amswaption_pricing_config_fd}.
+\end{itemize}
+
+For each cashflow of the underlying of the swaption we associate the latest exercise date for which the cashflow is
+relevant. Here, relevant means that the cashflow is part of the exercise-into right at the exercise date. We then
+estimate an amount for the cashflow so that it is available on this latest relevant exercise date. The exact date on
+which the coupon amount is estimated is determined as follows:
+
+\begin{itemize}
+  \item for FixedRate, Ibor, ON compounded, ON averaged, BMA coupons, the greater of the latest relevant exercise date
+    and the evaluation date is taken
+  \item for CappedFloored Ibor coupons the greater of the latest relevant exercise date, the evaluation date and the coupon fixing date is taken
+  \item for CappedFloored ON compunded and ON averaged the greater of the latest relevant exercise date, the evaluatino
+    date and the first of the relevant ON fixing dates of the coupon is taken
+\end{itemize}
+
+The coupon amount estimation is done using the LGM discount bond formula
+
+\begin{equation}
+P(t,T,x) = \frac{P(0,T)}{P(0,t)} e^{ -(H(T)-H(t))x - 0.5 ( H(T)^2 - H(t)^2 ) \zeta(t)}
+\end{equation}
+
+where $x$ is the LGM model state, see \cite{Hagan_LGM}, section 4.1, and $P(0,t)$ is the market zerxo bond with maturity
+$t$ computed on the relevant forwarding curve of the coupon.
+
+The amount of a coupon is estimated once during a rollback and then rolled back to prior exercise dates. The total set of dates used in the rollback comprises
+
+\begin{itemize}
+\item the simulation dates for all coupons as determined above
+\item the exercise dates of the swaption to price
+\item the valuation date itself
+\end{itemize}
+
+Since the computation of conditional expectations is exact up to numerical errors, no further intermediate time steps
+need to be added as it would for example be the case for a finite difference solver.
+
+The numeraire to deflate the values during the rollback is calculated using the ``Pricing'' configuration discount
+curve, usually the cross-OIS curve associated to the VM colalteral currency of the trade to price.
+

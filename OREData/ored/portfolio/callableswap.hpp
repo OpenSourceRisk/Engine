@@ -56,7 +56,7 @@ public:
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 private:
     ore::data::Swap swap_;

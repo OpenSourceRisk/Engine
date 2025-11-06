@@ -1095,11 +1095,11 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
 BOOST_AUTO_TEST_CASE(testParseBoostAny) {
 
-    BOOST_TEST_MESSAGE("Testing parsing of Boost::Any...");
+    BOOST_TEST_MESSAGE("Testing parsing of QuantLib::ext::any...");
 
     // For QuantLib::Array
     Array arr(5, 3);
-    boost::any any_array = boost::any_cast<Array>(arr);
+    QuantLib::ext::any any_array = QuantLib::ext::any_cast<Array>(arr);
     std::pair<std::string, std::string> result;
     BOOST_REQUIRE_NO_THROW(result = ore::data::parseBoostAny(any_array, 0));
     BOOST_CHECK_EQUAL(result.first, "array");
@@ -1108,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(testParseBoostAny) {
 
 BOOST_AUTO_TEST_CASE(testParseBoostAnyWithCurrency) {
 
-    BOOST_TEST_MESSAGE("Testing parsing of Boost::Any...");
+    BOOST_TEST_MESSAGE("Testing parsing of QuantLib::ext::any...");
 
     Currency usd = USDCurrency();
     std::pair<std::string, std::string> result;

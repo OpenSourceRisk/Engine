@@ -43,7 +43,7 @@ map<Size, string> SaCvaSensitivityLoader::expectedHeaders = {{0, "NettingSet"},
                                                 };
 
 CvaRiskFactorKey mapRiskFactorKeyToCvaRiskFactorKey(string s) {
-    pair<RiskFactorKey, string> keyDesc = deconstructFactor(s);
+    pair<RiskFactorKey, string> keyDesc = QuantExt::deconstructFactor(s);
     RiskFactorKey rfk = keyDesc.first;
     string desc = keyDesc.second;
 
@@ -324,7 +324,7 @@ void SaCvaSensitivityLoader::loadFromRawSensis(
     while (SensitivityRecord sr = parSensiStream->next()) {
         CvaSensitivityRecord r;
         r.nettingSetId = sr.tradeId;
-        string rf = prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1));
+        string rf = prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1));
 	LOG("SaCvaSensitivityLoader: sr.key_1=" << sr.key_1 << " sr.desc_1=" << sr.desc_1 << " keytype=" << sr.key_1.keytype << " name=" << sr.key_1.name << " index=" << sr.key_1.index);
         r.key = mapRiskFactorKeyToCvaRiskFactorKey(rf);
 	// Shift type and size from the sensitivity config is needed here

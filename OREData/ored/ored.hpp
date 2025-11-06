@@ -6,6 +6,7 @@
 #endif
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
+#include <ored/configuration/baseltrafficlightconfig.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
@@ -106,6 +107,7 @@
 #include <ored/model/inflation/inflationmodeldata.hpp>
 #include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/irlgmdata.hpp>
+#include <ored/model/irmodelbuilder.hpp>
 #include <ored/model/irmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
@@ -116,6 +118,7 @@
 #include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/accumulator.hpp>
+#include <ored/portfolio/additionalfieldgetter.hpp>
 #include <ored/portfolio/ascot.hpp>
 #include <ored/portfolio/asianoption.hpp>
 #include <ored/portfolio/autocallable_01.hpp>
@@ -129,6 +132,7 @@
 #include <ored/portfolio/bestentryoption.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondbasket.hpp>
+#include <ored/portfolio/bondfuture.hpp>
 #include <ored/portfolio/bondoption.hpp>
 #include <ored/portfolio/bondposition.hpp>
 #include <ored/portfolio/bondrepo.hpp>
@@ -138,10 +142,12 @@
 #include <ored/portfolio/builders/asianoption.hpp>
 #include <ored/portfolio/builders/balanceguaranteedswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/bondfuture.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
 #include <ored/portfolio/builders/bondrepo.hpp>
 #include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/callablebond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredaveragebmacouponleg.hpp>
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
@@ -207,6 +213,8 @@
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
+#include <ored/portfolio/callablebond.hpp>
+#include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/cashposition.hpp>
@@ -231,6 +239,9 @@
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/convertiblebonddata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
+#include <ored/portfolio/counterpartycorrelationmatrix.hpp>
+#include <ored/portfolio/counterpartyinformation.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
@@ -312,6 +323,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <ored/portfolio/simmcreditqualifiermapping.hpp>
+#include <ored/portfolio/strikeresettableoption.hpp>
 #include <ored/portfolio/structuredconfigurationerror.hpp>
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -324,6 +336,7 @@
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradebarrier.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/tradegenerator.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
 #include <ored/portfolio/tranche.hpp>
@@ -347,6 +360,10 @@
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
 #include <ored/scripting/engines/amccgbaseengine.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
+#include <ored/scripting/engines/amccgfxforwardengine.hpp>
+#include <ored/scripting/engines/amccgfxoptionengine.hpp>
+#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
 #include <ored/scripting/engines/amccgpricingengine.hpp>
 #include <ored/scripting/engines/amccgswapengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
@@ -361,16 +378,12 @@
 #include <ored/scripting/grammar.hpp>
 #include <ored/scripting/models/amcmodel.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
-#include <ored/scripting/models/blackscholesbase.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
-#include <ored/scripting/models/blackscholescgbase.hpp>
 #include <ored/scripting/models/dummymodel.hpp>
-#include <ored/scripting/models/fdblackscholesbase.hpp>
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/scripting/models/lgmcg.hpp>
-#include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/models/model.hpp>
 #include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/models/modelcgimpl.hpp>
@@ -389,11 +402,13 @@
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
+#include <ored/utilities/credit.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/databuilders.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/dependencies.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/formulaparser.hpp>

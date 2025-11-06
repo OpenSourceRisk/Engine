@@ -43,6 +43,7 @@ void VolatilityConfig::fromXMLNode(XMLNode* node) {
 
     calendarStr_ = XMLUtils::getChildValue(node, "Calendar", false);
     calendar_ = calendarStr_.empty() ? Calendar() : parseCalendar(calendarStr_);
+    
 }
 
 void VolatilityConfig::toXMLNode(XMLDocument& doc, XMLNode* node) const {
@@ -99,17 +100,26 @@ const std::string& CDSProxyVolatilityConfig::cdsVolatilityCurve() const { return
 
 void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
     VolatilityConfig::fromXMLNode(node);
+    volTypeStr_ = XMLUtils::getChildValue(node, "VolatilityType", false, "Lognormal");
+    if (volTypeStr_ == "Lognormal") {
+        volType_ = VolatilityType::Lognormal;
+    } else if (volTypeStr_ == "Normal") {
+        volType_ = VolatilityType::Normal;
+    } else if (volTypeStr_ == "ShiftedLognormal") {
+        volType_ = VolatilityType::ShiftedLognormal;
+    } else {
+        QL_FAIL("Volatility type " << volTypeStr_ << " is not supported;");
+    }
     string qType = XMLUtils::getChildValue(node, "QuoteType", false);
     if (qType == "ImpliedVolatility" || qType == "") {
-        string volType = XMLUtils::getChildValue(node, "VolatilityType", false);
-        if (volType == "Lognormal" || qType == "") {
+        if (volType_ == VolatilityType::Lognormal) {
             quoteType_ = MarketDatum::QuoteType::RATE_LNVOL;
-        } else if (volType == "ShiftedLognormal") {
+        } else if (volType_ == VolatilityType::ShiftedLognormal) {
             quoteType_ = MarketDatum::QuoteType::RATE_SLNVOL;
-        } else if (volType == "Normal") {
+        } else if (volType_ == VolatilityType::Normal) {
             quoteType_ = MarketDatum::QuoteType::RATE_NVOL;
         } else {
-            QL_FAIL("Volatility type " << volType << " is not supported;");
+            QL_FAIL("Volatility type " << volTypeStr_ << " is not supported;");
         }
     } else if (qType == "Premium") {
         quoteType_ = MarketDatum::QuoteType::PRICE;
@@ -122,24 +132,13 @@ void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
 
 void QuoteBasedVolatilityConfig::toBaseNode(XMLDocument& doc, XMLNode* node) const {
     VolatilityConfig::toXMLNode(doc, node);
-
+    if (!volTypeStr_.empty())
+        XMLUtils::addChild(doc, node, "VolatilityType", volTypeStr_);
     // Check first for premium
     if (quoteType_ == MarketDatum::QuoteType::PRICE) {
         XMLUtils::addChild(doc, node, "QuoteType", "Premium");
         XMLUtils::addChild(doc, node, "ExerciseType", ore::data::to_string(exerciseType_));
         return;
-    }
-
-    // Must be a volatility (or possibly fail)
-    XMLUtils::addChild(doc, node, "QuoteType", "ImpliedVolatility");
-    if (quoteType_ == MarketDatum::QuoteType::RATE_LNVOL) {
-        XMLUtils::addChild(doc, node, "VolatilityType", "Lognormal");
-    } else if (quoteType_ == MarketDatum::QuoteType::RATE_SLNVOL) {
-        XMLUtils::addChild(doc, node, "VolatilityType", "ShiftedLognormal");
-    } else if (quoteType_ == MarketDatum::QuoteType::RATE_NVOL) {
-        XMLUtils::addChild(doc, node, "VolatilityType", "Normal");
-    } else {
-        QL_FAIL("Invalid quote type");
     }
 }
 
@@ -157,32 +156,37 @@ void ConstantVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Constant");
     QuoteBasedVolatilityConfig::fromBaseNode(node);
     quote_ = XMLUtils::getChildValue(node, "Quote", true);
+    shiftQuote_ = XMLUtils::getChildValue(node, "ShiftQuote", false);
 }
 
 XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Constant");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "Quote", quote_);
+    if (!shiftQuote_.empty())
+        XMLUtils::addChild(doc, node, "ShiftQuote", shiftQuote_);
     return node;
 }
 
 VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType, Exercise::Type exerciseType,
-    bool enforceMontoneVariance, string calendarStr, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), 
+    bool enforceMontoneVariance, const string& calendarStr, Natural priority, const string& shiftQuote)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), shiftQuote_(shiftQuote),
     enforceMontoneVariance_(enforceMontoneVariance) {}
 
 VolatilityCurveConfig::VolatilityCurveConfig(const vector<string>& quotes, const string& interpolation,
-    const string& extrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, 
-    bool enforceMontoneVariance, string calendarStr, Natural priority)
+    const string& extrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType,
+    bool enforceMontoneVariance, const string& calendarStr, Natural priority, const std::string& shiftQuote)
     : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), quotes_(quotes),
       interpolation_(interpolation),
-      extrapolation_(extrapolation), enforceMontoneVariance_(enforceMontoneVariance) {}
+      extrapolation_(extrapolation), shiftQuote_(shiftQuote), enforceMontoneVariance_(enforceMontoneVariance) {}
 
 const vector<string>& VolatilityCurveConfig::quotes() const { return quotes_; }
 
 const string& VolatilityCurveConfig::interpolation() const { return interpolation_; }
 
 const string& VolatilityCurveConfig::extrapolation() const { return extrapolation_; }
+
+const string& VolatilityCurveConfig::shiftQuote() const { return shiftQuote_; }
 
 bool VolatilityCurveConfig::enforceMontoneVariance() const { return enforceMontoneVariance_; }
 
@@ -192,6 +196,7 @@ void VolatilityCurveConfig::fromXML(XMLNode* node) {
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
     extrapolation_ = XMLUtils::getChildValue(node, "Extrapolation", true);
+    shiftQuote_ = XMLUtils::getChildValue(node, "ShiftQuote", false);
 
     enforceMontoneVariance_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "EnforceMontoneVariance"))
@@ -205,20 +210,22 @@ XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
     XMLUtils::addChild(doc, node, "EnforceMontoneVariance", enforceMontoneVariance_);
+    if (!shiftQuote_.empty())
+        XMLUtils::addChild(doc, node, "ShiftQuote", shiftQuote_);
     return node;
 }
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(MarketDatum::QuoteType quoteType, 
     Exercise::Type exerciseType, string calendarStr, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority) {}
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), timeExtrapolationInVariance_(true) {}
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(const string& timeInterpolation, const string& strikeInterpolation,
     bool extrapolation, const string& timeExtrapolation,
     const string& strikeExtrapolation, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    Exercise::Type exerciseType, string calendarStr, Natural priority, bool timeExtrapolationInVariance)
     : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), timeInterpolation_(timeInterpolation),
       strikeInterpolation_(strikeInterpolation), extrapolation_(extrapolation), timeExtrapolation_(timeExtrapolation),
-      strikeExtrapolation_(strikeExtrapolation) {}
+      strikeExtrapolation_(strikeExtrapolation), timeExtrapolationInVariance_(timeExtrapolationInVariance) {}
 
 const string& VolatilitySurfaceConfig::timeInterpolation() const { return timeInterpolation_; }
 
@@ -230,12 +237,15 @@ const string& VolatilitySurfaceConfig::timeExtrapolation() const { return timeEx
 
 const string& VolatilitySurfaceConfig::strikeExtrapolation() const { return strikeExtrapolation_; }
 
+bool VolatilitySurfaceConfig::timeExtrapolationVariance() const { return timeExtrapolationInVariance_;  }
+
 void VolatilitySurfaceConfig::fromNode(XMLNode* node) {
     timeInterpolation_ = XMLUtils::getChildValue(node, "TimeInterpolation", true);
     strikeInterpolation_ = XMLUtils::getChildValue(node, "StrikeInterpolation", true);
     extrapolation_ = parseBool(XMLUtils::getChildValue(node, "Extrapolation", true));
     timeExtrapolation_ = XMLUtils::getChildValue(node, "TimeExtrapolation", true);
     strikeExtrapolation_ = XMLUtils::getChildValue(node, "StrikeExtrapolation", true);
+    timeExtrapolationInVariance_ = parseBool(XMLUtils::getChildValue(node, "TimeExtrapolationVariance", false, "true"));
 }
 
 void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
@@ -244,6 +254,7 @@ void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
     XMLUtils::addChild(doc, node, "TimeExtrapolation", timeExtrapolation_);
     XMLUtils::addChild(doc, node, "StrikeExtrapolation", strikeExtrapolation_);
+    XMLUtils::addChild(doc, node, "TimeExtrapolationVariance", timeExtrapolationInVariance_);
 }
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(MarketDatum::QuoteType quoteType,
@@ -254,9 +265,10 @@ VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(
     const vector<string>& strikes, const vector<string>& expiries, const string& timeInterpolation,
     const string& strikeInterpolation, bool extrapolation, const string& timeExtrapolation,
     const string& strikeExtrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, 
-    string calendarStr, Natural priority)
+    string calendarStr, Natural priority, bool timeExtrapolationInVariance)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority, 
+                              timeExtrapolationInVariance),
       strikes_(strikes), expiries_(expiries) {}
 
 const vector<string>& VolatilityStrikeSurfaceConfig::strikes() const { return strikes_; }
@@ -302,9 +314,10 @@ VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
     const vector<string>& expiries, const string& timeInterpolation, const string& strikeInterpolation,
     bool extrapolation, const string& timeExtrapolation, const string& strikeExtrapolation,
     const std::string& atmDeltaType, bool futurePriceCorrection, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    Exercise::Type exerciseType, string calendarStr, Natural priority, bool timeExtrapolationInVariance)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority,
+                              timeExtrapolationInVariance),
       deltaType_(deltaType), atmType_(atmType), putDeltas_(putDeltas), callDeltas_(callDeltas), expiries_(expiries),
       atmDeltaType_(atmDeltaType), futurePriceCorrection_(futurePriceCorrection) {}
 
@@ -386,9 +399,11 @@ VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(
     const string& moneynessType, const vector<string>& moneynessLevels, const vector<string>& expiries,
     const string& timeInterpolation, const string& strikeInterpolation, bool extrapolation,
     const string& timeExtrapolation, const string& strikeExtrapolation, bool futurePriceCorrection,
-    MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, string calendarStr, Natural priority)
+    MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, string calendarStr, Natural priority,
+    bool timeExtrapolationInVariance)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority,
+                              timeExtrapolationInVariance),
       moneynessType_(moneynessType), moneynessLevels_(moneynessLevels), expiries_(expiries),
       futurePriceCorrection_(futurePriceCorrection) {}
 
@@ -449,9 +464,10 @@ VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(
     const std::string& basePriceCurveId, const std::string& baseConventionsId, const std::string& timeInterpolation,
     const std::string& strikeInterpolation, bool extrapolation, const std::string& timeExtrapolation,
     const std::string& strikeExtrapolation, Real beta, const std::string& maxTenor, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    Exercise::Type exerciseType, string calendarStr, Natural priority, bool timeExtrapolationInVariance)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority, 
+                              timeExtrapolationInVariance),
       moneynessLevels_(moneynessLevels), baseVolatilityId_(baseVolatilityId), basePriceCurveId_(basePriceCurveId),
       baseConventionsId_(baseConventionsId), beta_(beta), maxTenor_(maxTenor) {}
 

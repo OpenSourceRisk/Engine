@@ -60,9 +60,9 @@ private:
 class ScenarioAnalytic : public Analytic {
 public:
     ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                     const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-                     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs, true, false, false, false) {}
+                     const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs, analyticsManager, true, false,
+                   false, false) {}
 };
 
 } // namespace analytics

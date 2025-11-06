@@ -1,0 +1,12 @@
+\subsubsection{Balance Guaranteed Swap}
+\label{pricing:cr_bgs}
+
+BGS are priced using an auxiliary Flexi Swap as a proxy. The amortization schedule 
+of the Flexi Swap is set up as the notional schedule of the BGS assuming a zero 
+CPR (Conditional Prepayment Rate). The lower notional bound of the Flexi Swap is 
+constructed assuming a MaxCPR (Maximum Conditional Prepayment Rate) which is 
+dependent on the Reference Security. The MaxCPR is estimated on the basis of 
+the current CPR, historical CPRs and / or expert judgement as to provide a 
+(hypothetical) sufficiently realistic hedge for the BGS. The option holder in 
+the Flexi Swap is the payer of the structured leg (i.e. the leg replicating the 
+payments of the reference security) in the BGS.

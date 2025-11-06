@@ -19,6 +19,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -38,17 +39,13 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
       fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
-      smileInterpolation_(interp), smileExtrapolation_(smileExtrapolation) {
-    populateRequiredCurveIds();
-}
+      smileInterpolation_(interp), smileExtrapolation_(smileExtrapolation) {}
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const string& baseVolatility1,
                                                  const string& baseVolatility2, const string& fxIndexTag)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), baseVolatility1_(baseVolatility1),
-      baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag) {
-    populateRequiredCurveIds();
-}
+      baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag) {}
 
 const vector<string>& FXVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -202,8 +199,6 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
-
-    populateRequiredCurveIds();
 }
 
 XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
@@ -291,7 +286,8 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     return node;
 }
 
-void FXVolatilityCurveConfig::populateRequiredCurveIds() {
+void FXVolatilityCurveConfig::populateRequiredIds() const {
+
     if (!fxDomesticYieldCurveID_.empty()) {
         std::vector<string> tokens;
         split(tokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
@@ -320,11 +316,9 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility1_);
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility2_);
 
-        vector<string> tokens;
-        boost::split(tokens, fxSpotID_, boost::is_any_of("/"));
-        QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << fxSpotID_);
-        auto forTarget = tokens[1];
-        auto domTarget = tokens[2];
+        auto spec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(fxSpotID_));
+        auto forTarget = spec->unitCcy();
+        auto domTarget = spec->ccy();
 
         // we need to include inverse ccy pairs as well
         QL_REQUIRE(baseVolatility1_.size() == 6, "invalid ccy pair length");

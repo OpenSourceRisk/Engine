@@ -45,7 +45,13 @@ public:
                     const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
                     const Real regressionVarianceCutoff = Null<Real>(),
                     const bool recalibrateOnStickyCloseOutDates = false,
-                    const bool reevaluateExerciseInStickyRun = false)
+                    const bool reevaluateExerciseInStickyRun = false,
+                    const Size cfOnCpnMaxSimTimes = 1,
+                    const Period& cfOnCpnAddSimTimesCutoff = Period(),
+                    const Size regressionMaxSimTimesIr = 0,
+                    const Size regressionMaxSimTimesFx = 0,
+                    const Size regressionMaxSimTimesEq = 0,
+                    const VarGroupMode regressionVarGroupMode = VarGroupMode::Global)
         : McLgmSwapEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                               std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
                               std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
@@ -53,7 +59,9 @@ public:
                           calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
                           {discountCurve}, simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
                           regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
-                          reevaluateExerciseInStickyRun) {}
+                          reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff,
+                          regressionMaxSimTimesIr, regressionMaxSimTimesFx, regressionMaxSimTimesEq,
+                          regressionVarGroupMode) {}
 
     McLgmSwapEngine(const QuantLib::Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
                     const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
@@ -68,13 +76,21 @@ public:
                     const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
                     const Real regressionVarianceCutoff = Null<Real>(),
                     const bool recalibrateOnStickyCloseOutDates = false,
-                    const bool reevaluateExerciseInStickyRun = false)
+                    const bool reevaluateExerciseInStickyRun = false,
+                    const Size cfOnCpnMaxSimTimes = 1,
+                    const Period& cfOnCpnAddSimTimesCutoff = Period(),
+                    const Size regressionMaxSimTimesIr = 0,
+                    const Size regressionMaxSimTimesFx = 0,
+                    const Size regressionMaxSimTimesEq = 0,
+                    const VarGroupMode regressionVarGroupMode = VarGroupMode::Global)
         : GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
           McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples,
                                pricingSamples, calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering,
                                directionIntegers, {discountCurve}, simulationDates, stickyCloseOutDates,
                                externalModelIndices, minimalObsDate, regressorModel, regressionVarianceCutoff,
-                               recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun) {
+                               recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun,
+                               cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff, regressionMaxSimTimesIr,
+                               regressionMaxSimTimesFx, regressionMaxSimTimesEq, regressionVarGroupMode) {
         registerWith(model);
     }
 

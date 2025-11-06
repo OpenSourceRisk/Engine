@@ -50,7 +50,7 @@ void CSVScenarioGenerator::readKeys() {
     QL_REQUIRE(tokens.size() > 3, "No RiskFactorKeys found in " << filename_);
     keys_.resize(tokens.size() - 3);
     for (Size i = 3; i < tokens.size(); i++) {
-        keys_[i - 3] = parseRiskFactorKey(tokens[i]);
+        keys_[i - 3] = QuantExt::parseRiskFactorKey(tokens[i]);
     }
 }
 QuantLib::ext::shared_ptr<Scenario> CSVScenarioGenerator::next(const Date& d) {

@@ -28,6 +28,7 @@
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
@@ -51,11 +52,13 @@
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
+#include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
@@ -81,7 +84,8 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
     const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
     const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
-    const std::string& referenceCalibrationGrid, const std::string& id)
+    const std::string& referenceCalibrationGrid, const std::string& id, const bool allowChangingFallbacksUnderScenarios,
+    const bool allowModelFallbacks)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -89,25 +93,33 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
       configurationComCalibration_(Market::defaultConfiguration), configurationFinalModel_(configurationFinalModel),
       dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid), id_(id),
+      allowChangingFallbacksUnderScenarios_(allowChangingFallbacksUnderScenarios),
+      allowModelFallbacks_(allowModelFallbacks),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
+
     buildModel();
+
     // register with sub builders
     for (auto okv : subBuilders_) {
         for (auto ikv : okv.second) {
             registerWith(ikv.second);
         }
     }
+
     // register with market handle (will be notified when handle is relinked)
     marketHandleObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     marketHandleObserver_->addObservable(market_);
     registerWith(marketHandleObserver_);
+
     // register market observer with correlations
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     for (auto const& c : config->correlations())
         marketObserver_->addObservable(c.second);
+
     // reset market observer's updated flag
     marketObserver_->hasUpdated(true);
+
     // register with market observer
     registerWith(marketObserver_);
 }
@@ -206,10 +218,31 @@ void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0
     }
 }
 
+void CrossAssetModelBuilder::relinkIrDiscountCurves(const std::vector<QuantLib::ext::shared_ptr<QuantExt::Parametrization>>& irParametrizations,
+                                                    const std::string& context,
+                                                    const std::string& configuration,
+                                                    std::vector<RelinkableHandle<YieldTermStructure>>& irDiscountCurves) const {
+    for (Size i = 0; i < irParametrizations.size(); i++) {
+        auto p = irParametrizations[i];
+        Handle<YieldTermStructure> yts;
+        try {
+            yts = market_.value()->discountCurve(p->currency().code(), configuration);
+        } catch (const std::exception& e) {
+            StructuredModelErrorMessage("Error while relinking '" + p->currency().code() + "' discount curve, context '" +
+                context + "'. Using a fallback, results depending on this object will be invalid.",
+                e.what(), id_);
+            yts = Handle<YieldTermStructure>(
+                QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+        }
+        irDiscountCurves[i].linkTo(*yts);
+        DLOG("Relinked discounting curve for " << p->currency().code() << " for " << context);
+    }
+}
+
 void CrossAssetModelBuilder::buildModel() const {
 
     LOG("Start building CrossAssetModel");
-
+    
     QL_REQUIRE(market_.value() != NULL, "CrossAssetModelBuilder: no market given");
 
     DLOG("configurations: LgmCalibration "
@@ -285,14 +318,12 @@ void CrossAssetModelBuilder::buildModel() const {
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
                     market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
-                    referenceCalibrationGrid_, false, id_);
+                    referenceCalibrationGrid_, false, id_, BlackCalibrationHelper::RelativePriceError,
+                    allowChangingFallbacksUnderScenarios_, allowModelFallbacks_, dontCalibrate_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             lgmBuilder.push_back(builder);
-            if (dontCalibrate_) {
-                builder->freeze();
-            }
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
             auto parametrization = builder->parametrization();
@@ -307,22 +338,19 @@ void CrossAssetModelBuilder::buildModel() const {
             irDiscountCurves.push_back(builder->discountCurve());
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
         } else if (auto ir = QuantLib::ext::dynamic_pointer_cast<HwModelData>(irConfig)) {
-            bool evaluateBankAccount = true; // updated in cross asset model for non-base ccys
-            bool setCalibrationInfo = false;
-            HwModel::Discretization discr = HwModel::Discretization::Euler;
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<HwBuilder>(
-                    market_.value(), ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
-                    config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
+                    market_.value(), ir, measure, HwModel::Discretization::Euler, true, configurationLgmCalibration_,
+                    config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, false, id_,
+                    BlackCalibrationHelper::RelativePriceError, allowChangingFallbacksUnderScenarios_,
+                    allowModelFallbacks_, dontCalibrate_);
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             hwBuilder.push_back(builder);
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
-            auto parametrization = builder->parametrization();
-            if (dontCalibrate_)
-                builder->freeze();
+            auto parametrization = QuantLib::ext::dynamic_pointer_cast<IrHwParametrization>(builder->parametrization());
             swaptionBaskets_[i] = builder->swaptionBasket();
             QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
                            currencies.end(),
@@ -359,7 +387,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::FX][i] = QuantLib::ext::make_shared<FxBsBuilder>(
-                market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_);
+                market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_, id_);
         }
         auto builder =
             QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
@@ -385,7 +413,7 @@ void CrossAssetModelBuilder::buildModel() const {
                    "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::EQ][i] = QuantLib::ext::make_shared<EqBsBuilder>(
-                market_.value(), eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_);
+                market_.value(), eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_, id_);
         }
         QuantLib::ext::shared_ptr<EqBsBuilder> builder =
             QuantLib::ext::dynamic_pointer_cast<EqBsBuilder>(subBuilders_[CrossAssetModel::AssetType::EQ][i]);
@@ -558,8 +586,8 @@ void CrossAssetModelBuilder::buildModel() const {
 
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
 
-    TLOG("CAM correlation matrix:");
-    TLOGGERSTREAM(corrMatrix);
+    DLOG("CAM correlation matrix:");
+    DLOGGERSTREAM(corrMatrix);
 
     /*****************************
      * Build the cross asset model
@@ -592,14 +620,9 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     /*************************
-     * Relink LGM discount curves to curves used for FX calibration
+     * Relink IR discount curves to curves used for FX calibration
      */
-
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationFxCalibration_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " for FX calibration");
-    }
+    relinkIrDiscountCurves(irParametrizations, "FX calibration", configurationFxCalibration_, irDiscountCurves);
 
     /*************************
      * Calibrate FX components
@@ -648,10 +671,10 @@ void CrossAssetModelBuilder::buildModel() const {
             fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    TLOGGERSTREAM("Calibration details:");
-                    TLOGGERSTREAM(
+                    DLOGGERSTREAM("Calibration details:");
+                    DLOGGERSTREAM(
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
-                    TLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
+                    DLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "FX BS " + fx->foreignCcy() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
@@ -671,14 +694,9 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     /*************************
-     * Relink LGM discount curves to curves used for EQ calibration
+     * Relink IR discount curves to curves used for EQ calibration
      */
-
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationEqCalibration_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " for EQ calibration");
-    }
+    relinkIrDiscountCurves(irParametrizations, "EQ calibration", configurationEqCalibration_, irDiscountCurves);
 
     /*************************
      * Calibrate EQ components
@@ -708,7 +726,6 @@ void CrossAssetModelBuilder::buildModel() const {
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
         if (!dontCalibrate_) {
-
             // reset to initial params to ensure identical calibration outcomes for identical baskets
             resetModelParams(CrossAssetModel::AssetType::EQ, 0, i, Null<Size>());
 
@@ -722,10 +739,10 @@ void CrossAssetModelBuilder::buildModel() const {
             eqOptionCalibrationErrors_[i] = getCalibrationError(eqOptionBaskets_[i]);
             if (eq->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    TLOGGERSTREAM("Calibration details:");
-                    TLOGGERSTREAM(
+                    DLOGGERSTREAM("Calibration details:");
+                    DLOGGERSTREAM(
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
-                    TLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
+                    DLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "EQ BS " + eq->eqName() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
@@ -748,20 +765,98 @@ void CrossAssetModelBuilder::buildModel() const {
      * Calibrate COM components
      */
 
-    for (Size i = 0; i < csBuilder.size(); i++) {
+    for (Size i = 0; i < comParametrizations.size(); i++) {
+        QuantLib::ext::shared_ptr<CommoditySchwartzData> comData = config_->comConfigs()[i];
+        QuantLib::ext::shared_ptr<CommoditySchwartzModel> comModel = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
+
+        if (comData->calibrationType() == CalibrationType::None ||
+            (comData->calibrateSigma() == false && comData->calibrateKappa() == false && comData->calibrateSeasonality() == false)) {
+            LOG("COM calibration is deactivated in the CommoditySchwartzModelData for name " << comData->name());
+            continue;
+        }
+
         DLOG("COM Calibration " << i);
-        comOptionCalibrationErrors_[i] = csBuilder[i]->error();
+        // attach pricing engines to helpers
+        QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzFutureOptionEngine> engine =
+            QuantLib::ext::make_shared<QuantExt::CommoditySchwartzFutureOptionEngine>(comModel);
+        for (Size j = 0; j < comOptionBaskets_[i].size(); j++)
+            comOptionBaskets_[i][j]->setPricingEngine(engine);
+
+        if (!dontCalibrate_) {
+            if (comData->calibrationType() == CalibrationType::BestFit) {
+                map<Size, bool> toCalibrate;
+                toCalibrate[0] = comData->calibrateSigma();
+                toCalibrate[1] = comData->calibrateKappa();
+                toCalibrate[2] = comData->calibrateSeasonality();
+                // reset to initial params to ensure identical calibration outcomes for identical baskets
+                resetModelParams(CrossAssetModel::AssetType::COM, 0, i, Null<Size>());
+                resetModelParams(CrossAssetModel::AssetType::COM, 1, i, Null<Size>());
+                resetModelParams(CrossAssetModel::AssetType::COM, 2, i, Null<Size>());
+                // calibrate the model.
+                model_->calibrateComSchwartz1fGlobal(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i], *optimizationMethod_, endCriteria_, toCalibrate);
+            } else if (comData->calibrationType() == CalibrationType::Bootstrap){
+                if (comData->calibrateKappa())
+                    WLOG("CommoditySchwartzModel: skip kappa calibration for name " << comData->name() << " in BOOTSTRAP mode");
+                if (comData->calibrateSigma())
+                    WLOG("CommoditySchwartzModel: skip sigma calibration for name " << comData->name() << " in BOOTSTRAP mode");    
+                QL_REQUIRE( comData->seasonalityParamType() == ParamType::Piecewise,
+                           "CommoditySchwartzModel: Bootstrap calibration implemented only for time dependent seasonaltiy");
+                // reset to initial params to ensure identical calibration outcomes for identical baskets
+                resetModelParams(CrossAssetModel::AssetType::COM, 2, i, Null<Size>());
+                // calibrate the model.
+                model_->calibrateComSchwartz1fSeasonalityIterative(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i],
+                                                                   *optimizationMethod_, endCriteria_);
+            }
+            else {
+                //1. Bestfit
+                WLOG("CommoditySchwartzModel: First, BESTFIT calibration for name " << comData->name());
+                map<Size, bool> toCalibrate;
+                toCalibrate[0] = comData->calibrateSigma();
+                toCalibrate[1] = comData->calibrateKappa();
+                if (toCalibrate[0] || toCalibrate[1]){
+                // reset to initial params to ensure identical calibration outcomes for identical baskets
+                    resetModelParams(CrossAssetModel::AssetType::COM, 0, i, Null<Size>());
+                    resetModelParams(CrossAssetModel::AssetType::COM, 1, i, Null<Size>());
+                    // calibrate the model.
+                    model_->calibrateComSchwartz1fGlobal(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i], *optimizationMethod_, endCriteria_, toCalibrate);
+                } else {
+                    WLOG("CommoditySchwartzModel: skip sigma and kappa calibration for name " << comData->name() << " in BESTFIT mode");
+                }
+                //2. Bootstrap
+                resetModelParams(CrossAssetModel::AssetType::COM, 2, i, Null<Size>());
+                model_->calibrateComSchwartz1fSeasonalityIterative(CrossAssetModel::AssetType::COM, i, comOptionBaskets_[i],
+                                                                   *optimizationMethod_, endCriteria_);
+            }
+             
+            DLOG("COM " << comData->name() << " calibration errors:");
+            comOptionCalibrationErrors_[i] = getCalibrationError(comOptionBaskets_[i]);
+            if (fabs(comOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                TLOGGERSTREAM("Calibration details:");
+                TLOGGERSTREAM(
+                    getCalibrationDetails(comOptionBaskets_[i], comParametrizations[i]));
+                TLOGGERSTREAM("rmse = " << comOptionCalibrationErrors_[i]);
+            } else {
+                std::string exceptionMessage = "COM " + comData->name() + " index " + std::to_string(i) + " calibration error " +
+                                                std::to_string(comOptionCalibrationErrors_[i]) +
+                                                " exceeds tolerance " +
+                                                std::to_string(config_->bootstrapTolerance());
+                StructuredModelWarningMessage("Failed to calibrate COM Model", exceptionMessage, id_).log();
+                WLOGGERSTREAM("Calibration details:");
+                WLOGGERSTREAM(
+                    getCalibrationDetails(comOptionBaskets_[i], comParametrizations[i]));
+                WLOGGERSTREAM("rmse = " << comOptionCalibrationErrors_[i]);
+                if (!continueOnError_)
+                    QL_FAIL(exceptionMessage);
+            }
+
+        }
+        csBuilder[i]->setCalibrationDone();
     }
 
     /*************************
-     * Relink LGM discount curves to curves used for INF calibration
+     * Relink IR discount curves to curves used for INF calibration
      */
-
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationInfCalibration_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " for INF calibration");
-    }
+    relinkIrDiscountCurves(irParametrizations, "INF calibration", configurationInfCalibration_, irDiscountCurves);
 
     // Calibrate INF components
     for (Size i = 0; i < infParameterizations.size(); i++) {
@@ -800,14 +895,10 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     /*************************
-     * Relink LGM discount curves to final model curves
+     * Relink IR discount curves to final model curves
      */
+    relinkIrDiscountCurves(irParametrizations, "final model curves assignment", configurationFinalModel_, irDiscountCurves);
 
-    for (Size i = 0; i < irParametrizations.size(); i++) {
-        auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationFinalModel_));
-        DLOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
-    }
 
     DLOG("Building CrossAssetModel done");
 }
@@ -864,9 +955,9 @@ void CrossAssetModelBuilder::calibrateInflation(
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(cb);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
-            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
+            DLOGGERSTREAM("Calibration details:");
+            DLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
+            DLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + data.index() + " index " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
@@ -1033,20 +1124,20 @@ void CrossAssetModelBuilder::calibrateInflation(
     }
 
     // Log the calibration details.
-    TLOG("INF (JY) " << data.index() << " model parameters after calibration:");
-    TLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
-    TLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
-    TLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
-    TLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
-    TLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
-    TLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
+    DLOG("INF (JY) " << data.index() << " model parameters after calibration:");
+    DLOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
+    DLOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
+    DLOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
+    DLOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
+    DLOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
+    DLOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
-            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
+            DLOGGERSTREAM("Calibration details:");
+            DLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
+            DLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
             ss << "INF (JY) " << data.index() << " index " << modelIdx << " calibration error " << std::scientific

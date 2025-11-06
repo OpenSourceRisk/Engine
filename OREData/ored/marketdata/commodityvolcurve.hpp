@@ -47,14 +47,16 @@ public:
     CommodityVolCurve() {}
 
     //! Detailed constructor
-    CommodityVolCurve(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
-                      const CurveConfigurations& curveConfigs,
-                      const std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves = {},
-                      const std::map<std::string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves = {},
-                      const std::map<std::string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
-                      const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves = {},
-                      const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves = {},
-                      const Market* fxIndices = nullptr, const bool buildCalibrationInfo = true);
+    CommodityVolCurve(
+        const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
+        const CurveConfigurations& curveConfigs,
+        const std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves = {},
+        const std::map<std::string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves = {},
+        const std::map<std::string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
+        const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves = {},
+        const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves = {},
+        const Market* fxIndices = nullptr, const std::string& configuration = Market::defaultConfiguration,
+        const bool buildCalibrationInfo = true);
     //@}
 
     //! \name Inspectors
@@ -100,7 +102,8 @@ private:
     */
     void buildVolatilityExplicit(const QuantLib::Date& asof, CommodityVolatilityConfig& vc,
                                  const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                 const std::vector<QuantLib::Real>& configuredStrikes);
+                                 const std::vector<QuantLib::Real>& configuredStrikes,
+                                 const Real displacement = 0.0);
 
     /*! Build a volatility surface from a collection of expiry and strike pairs where the strikes are defined in
         terms of option delta and ATM values.
@@ -129,7 +132,8 @@ private:
                          const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& volCurves,
                          const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
                          const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
-                         const Market* fxIndices = nullptr);
+                         const Market* fxIndices = nullptr,
+                         const std::string& configuration = Market::defaultConfiguration);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at

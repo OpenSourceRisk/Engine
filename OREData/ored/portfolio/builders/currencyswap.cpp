@@ -23,6 +23,7 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
 
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
@@ -98,9 +99,24 @@ CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, c
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 
     return engine;
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                           bool useXccyYieldCurves, const std::set<std::string>& eqNames) {
+    QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
+    std::vector<std::string> ccysStr;
+    std::transform(ccys.begin(), ccys.end(), std::back_inserter(ccysStr), [](const Currency& c) { return c.code(); });
+    return QuantLib::ext::make_shared<AmcCgCurrencySwapEngine>(ccysStr, modelCg_, simulationDates_);
 }
 
 } // namespace data

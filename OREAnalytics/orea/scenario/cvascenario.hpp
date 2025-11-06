@@ -19,6 +19,7 @@
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
 #include <ql/time/period.hpp>
+#include <ql/index.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <map>
 #include <set>
@@ -67,6 +68,7 @@ public:
     MarginType margintype;
     std::string name;
     //! Index
+    QuantLib::ext::shared_ptr<QuantLib::Index> index;
     QuantLib::Period period;
 
 private:

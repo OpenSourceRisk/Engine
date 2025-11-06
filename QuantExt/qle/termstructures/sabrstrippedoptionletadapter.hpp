@@ -50,7 +50,7 @@ public:
         const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
         const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
         const TimeInterpolator& ti = TimeInterpolator(),
-        const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
+        const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType = QuantLib::ext::nullopt,
         const QuantLib::Real outputDisplacement = Null<Real>(), const QuantLib::Real modelDisplacement = Null<Real>(),
         const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
             initialModelParameters = {},
@@ -63,7 +63,7 @@ public:
         const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
         const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
         const TimeInterpolator& ti = TimeInterpolator(),
-        const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
+        const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType = QuantLib::ext::nullopt,
         const QuantLib::Real outputDisplacement = Null<Real>(), const QuantLib::Real modelDisplacement = Null<Real>(),
         const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
             initialModelParameters = {},
@@ -123,7 +123,7 @@ private:
 
     //! SABR specific inputs
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
-    boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
+    QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType_;
     QuantLib::Real outputDisplacement_;
     QuantLib::Real modelDisplacement_;
     std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>> initialModelParameters_;
@@ -141,7 +141,7 @@ template <class TimeInterpolator>
 SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
-    const boost::optional<QuantLib::VolatilityType> outputVolatilityType, const QuantLib::Real outputDisplacement,
+    const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType, const QuantLib::Real outputDisplacement,
     const QuantLib::Real modelDisplacement,
     const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>& initialModelParameters,
     const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
@@ -159,7 +159,7 @@ template <class TimeInterpolator>
 SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
-    const boost::optional<QuantLib::VolatilityType> outputVolatilityType, const QuantLib::Real outputDisplacement,
+    const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType, const QuantLib::Real outputDisplacement,
     const QuantLib::Real modelDiscplacement,
     const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>& initialModelParameters,
     const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,

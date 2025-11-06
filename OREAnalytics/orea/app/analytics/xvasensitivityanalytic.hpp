@@ -27,6 +27,7 @@
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
+#include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/engine/zerotoparcube.hpp>
 namespace ore {
@@ -81,6 +82,13 @@ public:
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
+    void setParCvaSensiCubeStream(const QuantLib::ext::shared_ptr<ParSensitivityCubeStream>& parCvaSensiCubeStream) {
+        parCvaSensiCubeStream_ = parCvaSensiCubeStream;
+    }
+    const QuantLib::ext::shared_ptr<ParSensitivityCubeStream>& parCvaSensiCubeStream() const {
+        return parCvaSensiCubeStream_;
+    }
+
 private:
     QuantLib::ext::shared_ptr<ScenarioSimMarket> buildSimMarket(bool overrideTenors);
     
@@ -90,7 +98,8 @@ private:
     // level and build sensicubes for each value adjustment.
     ZeroSensiResults computeZeroXvaSensitivity(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
     
-    void computeXvaUnderScenarios(std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator);
+    void computeXvaUnderScenarios(std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
+        const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator);
 
     ZeroSensiResults
     convertXvaResultsToSensiCubes(const std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults,
@@ -107,17 +116,16 @@ private:
     void createDetailReport(
     const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
     const std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>>& xvaReports);
+
+    QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parCvaSensiCubeStream_;
 };
 
 class XvaSensitivityAnalytic : public Analytic {
 public:
-    explicit XvaSensitivityAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
-        : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, true, false,
-                   false, false) {
-        // impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
+    explicit XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                    const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager)
+        : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, analyticsManager,
+                   true, true, false, false) {
     }
 };
 

@@ -89,6 +89,8 @@ std::ostream& operator<<(std::ostream& os, const CurveSpec::CurveType& t) {
         return os << "CommodityVolatility";
     case CurveSpec::CurveType::Correlation:
         return os << "Correlation";
+    case CurveSpec::CurveType::SwapIndex:
+        return os << "SwapIndex";
     default:
         return os << "N/A";
     }

@@ -295,10 +295,13 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
+    data->engineParameters("Swap")["SensitivityTemplate"] = "IR_Analytical";
     data->model("CrossCurrencySwap") = "DiscountedCashflows";
     data->engine("CrossCurrencySwap") = "DiscountingCrossCurrencySwapEngine";
+    data->engineParameters("CrossCurrencySwap")["SensitivityTemplate"] = "FX_Analytical";
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
+    data->engineParameters("FxOption")["SensitivityTemplate"] = "FX_Analytical";
 
     // QuantLib::ext::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());

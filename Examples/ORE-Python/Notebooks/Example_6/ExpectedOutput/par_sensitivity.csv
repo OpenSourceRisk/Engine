@@ -1,0 +1,18 @@
+#TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base NPV,Delta,Gamma
+Swap,true,DiscountCurve/EUR/0/2W,0.000100,,0.000000,EUR,1335.27,0.00,#N/A
+Swap,true,DiscountCurve/EUR/1/1M,0.000100,,0.000000,EUR,1335.27,0.00,#N/A
+Swap,true,DiscountCurve/EUR/2/3M,0.000100,,0.000000,EUR,1335.27,0.00,#N/A
+Swap,true,DiscountCurve/EUR/3/6M,0.000100,,0.000000,EUR,1335.27,0.00,#N/A
+Swap,true,DiscountCurve/EUR/4/9M,0.000100,,0.000000,EUR,1335.27,0.00,#N/A
+Swap,true,DiscountCurve/EUR/5/1Y,0.000100,,0.000000,EUR,1335.27,-0.01,#N/A
+Swap,true,DiscountCurve/EUR/6/2Y,0.000100,,0.000000,EUR,1335.27,-0.01,#N/A
+Swap,true,DiscountCurve/EUR/7/3Y,0.000100,,0.000000,EUR,1335.27,-0.02,#N/A
+Swap,true,DiscountCurve/EUR/8/4Y,0.000100,,0.000000,EUR,1335.27,-0.02,#N/A
+Swap,true,DiscountCurve/EUR/9/5Y,0.000100,,0.000000,EUR,1335.27,-0.04,#N/A
+Swap,true,DiscountCurve/EUR/10/7Y,0.000100,,0.000000,EUR,1335.27,-0.10,#N/A
+Swap,true,DiscountCurve/EUR/11/10Y,0.000100,,0.000000,EUR,1335.27,-0.24,#N/A
+Swap,true,DiscountCurve/EUR/12/15Y,0.000100,,0.000000,EUR,1335.27,-0.47,#N/A
+Swap,true,DiscountCurve/EUR/13/20Y,0.000100,,0.000000,EUR,1335.27,-0.37,#N/A
+Swap,true,DiscountCurve/EUR/14/25Y,0.000100,,0.000000,EUR,1335.27,0.00,#N/A
+Swap,true,DiscountCurve/EUR/15/30Y,0.000100,,0.000000,EUR,1335.27,0.00,#N/A
+Swap,true,IndexCurve/EUR-EURIBOR-6M/13/20Y,0.000100,,0.000000,EUR,1335.27,-16317.08,#N/A

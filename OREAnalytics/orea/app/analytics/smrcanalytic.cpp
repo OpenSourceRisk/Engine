@@ -29,16 +29,10 @@ void SmrcAnalyticImpl::setUpConfigurations() {
 
 void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("SmrcAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);
     analytic()->buildPortfolio();
-
-    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     auto detailReport = QuantLib::ext::make_shared<InMemoryReport>();
     auto summaryReport = QuantLib::ext::make_shared<InMemoryReport>();
@@ -66,8 +60,8 @@ void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
                            marketConfig);
     }
 
-    analytic()->reports()[label()]["smrc"] = summaryReport;
-    analytic()->reports()[label()]["smrcdetail"] = detailReport;
+    analytic()->addReport(label(), "smrc", summaryReport);
+    analytic()->addReport(label(), "smrcdetail", detailReport);
 }
 
 } // namespace analytics

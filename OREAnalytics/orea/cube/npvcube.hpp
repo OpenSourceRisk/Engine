@@ -115,6 +115,9 @@ public:
     virtual void remove(Size id, Size sample, bool setToT0Value);
 
     Size getTradeIndex(const std::string& id) const { return index(id); }
+    Size getDateIndex(const QuantLib::Date& date) const { return index(date); }
+
+    virtual bool usesDoublePrecision() const = 0;
 
 protected:
     virtual Size index(const std::string& id) const {

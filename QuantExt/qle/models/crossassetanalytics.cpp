@@ -198,6 +198,15 @@ Real eq_expectation_2(const CrossAssetModel& x, const Size k, const Time t0, con
     return res;
 }
 
+Real com_expectation_1(const CrossAssetModel& x, const Size k, const Time t0, const Real dt) {
+    Size i = x.ccyIndex(x.comModel(k)->currency());
+    Real res = integral(x, P(rzc(0, k), Hz(0), az(0), comDiffusionIntegrand(t0 + dt, k)), t0, t0 + dt);
+    if (i > 0) {
+        res -= integral(x, P(rxc(i - 1, k), sx(i - 1), comDiffusionIntegrand(t0 + dt, k)), t0, t0 + dt);
+    }
+    return res;
+}
+
 Real ir_ir_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {
     Real rzzij = x.correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::IR, j, 0, 0);
     const auto lgmi = x.irlgm1f(i);
@@ -687,74 +696,68 @@ Real aux_fx_covariance(const CrossAssetModel& x, const Size j, const Time t0, co
 }
 
 Real com_com_covariance(const CrossAssetModel& x, const Size k, const Size l, const Time t0, const Time dt) {
-    Real res = integral(x, P(rcc(k, l), coms(k), coms(l)), t0, t0 + dt);
-    // FIXME: cover the Ornsrein-Uhlenbeck case in the integral framework
-    auto cmk = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(x.comModel(k));
-    auto cml = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(x.comModel(l));
-    QL_REQUIRE(cmk && cml, "CommoditySchwartzModel expected in com-com covariance calculation");
-    QL_REQUIRE(cmk->parametrization()->driftFreeState() == cml->parametrization()->driftFreeState(),
-               "commodity state types do not match");
-    if (!cmk->parametrization()->driftFreeState()) {
-        Real kk = cmk->parametrization()->kappaParameter();
-        Real kl = cml->parametrization()->kappaParameter();
-        Real sk = cmk->parametrization()->sigmaParameter();
-        Real sl = cml->parametrization()->sigmaParameter();
-        Real rho = x.correlation(CrossAssetModel::AssetType::COM, k, CrossAssetModel::AssetType::COM, l, 0, 0);
-        if (fabs((kk + kl) * dt) < QL_EPSILON)
-            res = rho * sk * sl * dt;
-        else
-            res = rho * sk * sl / (kk + kl) * (1.0 - std::exp(-(kk + kl) * dt));
-    }
+    Real res = integral(x, P(rcc(k, l), comDiffusionIntegrand(t0 + dt, k), comDiffusionIntegrand(t0 + dt, l)), t0, t0 + dt);
     return res;
 }
 
 Real ir_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt) {
-    Real corr = model.correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
-    // FIXME
-    QL_REQUIRE(close_enough(corr, 0.0), "non-zero IR-COM correlation not implemented yet");
-    return 0.0;
+    Real res = integral(model, P(rzc(i,j), az(i), comDiffusionIntegrand(t0 + dt, j)), t0, t0 + dt);
+    return res;
 }
 
-Real fx_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt) {
-    Real corr = model.correlation(CrossAssetModel::AssetType::FX, i, CrossAssetModel::AssetType::COM, j, 0, 0);
-    // FIXME
-    QL_REQUIRE(close_enough(corr, 0.0), "non-zero FX-COM correlation not implemented yet");
-    return 0.0;
+Real fx_com_covariance(const CrossAssetModel& x, const Size j, const Size k, const Time t0, const Time dt) {
+    Real Hj_b = Hz(j + 1).eval(x, t0 + dt);
+    Real H0_b = Hz(0).eval(x, t0 + dt);
+    Real res = H0_b * integral(x, P(rzc(0, k), az(0), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
+    res -= integral(x, P(Hz(0), rzc(0, k), az(0), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
+    res -= Hj_b * integral(x, P(rzc(j + 1, k), az(j + 1), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
+    res += integral(x, P(Hz(j + 1), rzc(j + 1, k), az(j + 1), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
+    res += integral(x, P(rxc(j, k), sx(j), comDiffusionIntegrand(t0 + dt,k)), t0, t0 + dt);
+    return res; 
 }
 
 Real infz_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt) {
-    Real corr = model.correlation(CrossAssetModel::AssetType::INF, i, CrossAssetModel::AssetType::COM, j, 0, 0);
-    // FIXME
-    QL_REQUIRE(close_enough(corr, 0.0), "non-zero INF-COM correlation not implemented yet");
-    return 0.0;
+    Real res = integral(model, P(ryc(i, j), ay(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    return res;
 }
 
-Real infy_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt) {
-    Real corr = model.correlation(CrossAssetModel::AssetType::INF, i, CrossAssetModel::AssetType::COM, j, 0, 0);
-    // FIXME
-    QL_REQUIRE(close_enough(corr, 0.0), "non-zero INF-COM correlation not implemented yet");
-    return 0.0;
+Real infy_com_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {
+    Real res = 0.0;
+    if (x.modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::DK) {
+        res = integral(x, P(ryc(i, j), Hy(i), ay(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    } else {
+        // i_i - index of i-th inflation component's currency.
+        Size i_i = x.ccyIndex(x.infjy(i)->currency());
+        // H_{i_i}^{z}(t_0 + dt)
+        Real Hi_i = Hz(i_i).eval(x, t0 + dt);
+        // H_{i}^{y}(t_0 + dt)
+        Real Hi = Hy(i).eval(x, t0 + dt);
+        res += Hi_i*integral(x, P(rzc(i_i, i), az(i_i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+        res -= integral(x, P(rzc(i_i, i), Hz(i_i), az(i_i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+        res -= Hi*integral(x, P(ryc(i, j, 0), ay(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+        res += integral(x, P(ryc(i, j, 0), Hy(i), ay(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+        res += integral(x, P(ryc(i, j, 1), sy(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    }
+    return res;
 }
 
 Real cry_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt) {
-    Real corr = model.correlation(CrossAssetModel::AssetType::CR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
-    // FIXME
-    QL_REQUIRE(close_enough(corr, 0.0), "non-zero CR-COM correlation not implemented yet");
-    return 0.0;
+    Real res = integral(model, P(rlc(i, j), Hl(i), al(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    return res;
 }
 
 Real crz_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt) {
-    Real corr = model.correlation(CrossAssetModel::AssetType::CR, i, CrossAssetModel::AssetType::COM, j, 0, 0);
-    // FIXME
-    QL_REQUIRE(close_enough(corr, 0.0), "non-zero CR-COM correlation not implemented yet");
-    return 0.0;
+    Real res = integral(model, P(rlc(i, j), al(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    return res;
 }
 
-Real eq_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt) {
-    Real corr = model.correlation(CrossAssetModel::AssetType::EQ, i, CrossAssetModel::AssetType::COM, j, 0, 0);
-    // FIXME
-    QL_REQUIRE(close_enough(corr, 0.0), "non-zero EQ-COM correlation not implemented yet");
-    return 0.0;
+Real eq_com_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {
+    Size k = x.ccyIndex(x.comModel(j)->currency());
+    Real Hk = Hz(k).eval(x, t0 + dt);
+    Real res = Hk*integral(x, P(rzc(k, j),  az(k), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    res -= integral(x, P(rzc(k, j), Hz(k), az(k), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    res += integral(x, P(rsc(i, j), ss(i), comDiffusionIntegrand(t0 + dt,j)), t0, t0 + dt);
+    return res;
 }
 
 Real ir_crstate_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {

@@ -44,7 +44,7 @@ public:
          handling!)
        - simulationDates are the dates on which indices can be observed
        - regressionOrder is the regression order used to compute conditional expectations in npv()
-       - timeStepsPerYear time steps used for discretisation (overwritten by 1 if exact discretisation is used
+       - timeStepsPerYear time steps used for discretisation
        - disc: choose exact or Euler discretisation of state process
      */
     GaussianCam(const Handle<CrossAssetModel>& cam, const Size paths, const std::vector<std::string>& currencies,
@@ -52,17 +52,18 @@ public:
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                 const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
                 const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-                const std::set<Date>& simulationDates, const McParams& mcParams, const Size timeStepsPerYear = 1,
-                const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                const std::set<Date>& simulationDates,
+                const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                    QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                 const std::vector<Size>& projectedStateProcessIndices = {},
-                const std::vector<std::string>& conditionalExpectationModelStates = {});
+                const std::vector<std::string>& conditionalExpectationModelStates = {}, const Params& params = {},
+                const Size timeStepsPerYear = 1);
 
     // Model interface implementation
-    Type type() const override { return Type::MC; }
     const Date& referenceDate() const override;
     Size size() const override;
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                       const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                        const RandomVariable& addRegressor2) const override;
     RandomVariable fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,
                               const Date& end, const Real spread, const Real gearing, const Integer lookback,
@@ -106,7 +107,6 @@ private:
     const Handle<CrossAssetModel> cam_;
     const std::vector<Handle<YieldTermStructure>> curves_;
     const std::vector<Handle<Quote>> fxSpots_;
-    const McParams mcParams_;
     const Size timeStepsPerYear_;
     const std::vector<Size> projectedStateProcessIndices_; // if data is injected via the AMCModel interface
     const Real regressionVarianceCutoff_ = Null<Real>();

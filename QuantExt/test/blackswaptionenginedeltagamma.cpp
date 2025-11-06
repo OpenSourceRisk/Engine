@@ -19,8 +19,11 @@
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 
+#include <qle/instruments/multilegoption.hpp>
+#include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/blackswaptionenginedeltagamma.hpp>
 
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
@@ -64,19 +67,21 @@ struct TestData {
             tmpFwdSpr.push_back(Handle<Quote>(qf));
             pillarTimes.push_back(baseDiscount->timeFromReference(pillarDates[i]));
         }
-        discountCurve =
-            Handle<YieldTermStructure>(QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
-                baseDiscount, tmpDiscSpr, pillarDates));
-        forwardCurve =
-            Handle<YieldTermStructure>(QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(
-                baseForward, tmpFwdSpr, pillarDates));
+        discountCurve = Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(baseDiscount, tmpDiscSpr,
+                                                                                               pillarDates));
+        forwardCurve = Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<InterpolatedPiecewiseZeroSpreadedTermStructure<Linear>>(baseForward, tmpFwdSpr,
+                                                                                               pillarDates));
         discountCurve->enableExtrapolation();
         forwardCurve->enableExtrapolation();
         forwardIndex = QuantLib::ext::make_shared<Euribor>(6 * Months, forwardCurve);
-        lnVol = QuantLib::ext::make_shared<SimpleQuote>(0.20);
-        slnVol = QuantLib::ext::make_shared<SimpleQuote>(0.10);
-        nVol = QuantLib::ext::make_shared<SimpleQuote>(0.0075);
-        slnShift = 0.03;
+        lnVol = Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<ConstantSwaptionVolatility>(
+            0, NullCalendar(), Unadjusted, 0.20, Actual365Fixed(), ShiftedLognormal, 0.0));
+        slnVol = Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<ConstantSwaptionVolatility>(
+            0, NullCalendar(), Unadjusted, 0.10, Actual365Fixed(), ShiftedLognormal, 0.03));
+        nVol = Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<ConstantSwaptionVolatility>(
+            0, NullCalendar(), Unadjusted, 0.0075, Actual365Fixed(), Normal, 0.0));
     }
     Date refDate;
     Handle<YieldTermStructure> baseDiscount, baseForward, discountCurve, forwardCurve;
@@ -84,8 +89,7 @@ struct TestData {
     std::vector<Date> pillarDates;
     std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> discountSpreads, forwardSpreads;
     std::vector<Real> pillarTimes;
-    QuantLib::ext::shared_ptr<SimpleQuote> lnVol, slnVol, nVol;
-    Real slnShift;
+    Handle<SwaptionVolatilityStructure> lnVol, slnVol, nVol;
 }; // TestData
 
 bool check(const Real reference, const Real value) {
@@ -117,12 +121,14 @@ void performTest(const TestData& d, const QuantLib::ext::shared_ptr<PricingEngin
     Size n = d.pillarTimes.size();
 
     QuantLib::ext::shared_ptr<VanillaSwap> swap = MakeVanillaSwap(11 * Years, d.forwardIndex, 0.04, 8 * Years)
-                                              .receiveFixed(receiveFixed)
-                                              .withNominal(10.0)
-                                              .withFloatingLegSpread(spread);
+                                                      .receiveFixed(receiveFixed)
+                                                      .withNominal(10.0)
+                                                      .withFloatingLegSpread(spread);
     Date exerciseDate = d.refDate + 8 * Years;
-    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
-    QuantLib::ext::shared_ptr<Swaption> swaption = QuantLib::ext::make_shared<Swaption>(swap, exercise);
+    auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
+    auto swaption = QuantLib::ext::make_shared<MultiLegOption>(
+        std::vector<Leg>{swap->leg(0), swap->leg(1)}, std::vector<bool>{!receiveFixed, receiveFixed},
+        std::vector<Currency>{USDCurrency(), USDCurrency()}, exercise);
 
     swaption->setPricingEngine(engine0);
     Real atm0 = swaption->result<Real>("atmForward");
@@ -344,21 +350,18 @@ BOOST_AUTO_TEST_CASE(testNpvDeltasGammaVegas) {
     TestData d;
 
     QuantLib::ext::shared_ptr<PricingEngine> engineLn0 =
-        QuantLib::ext::make_shared<BlackSwaptionEngine>(d.discountCurve, Handle<Quote>(d.lnVol));
+        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.lnVol);
     QuantLib::ext::shared_ptr<PricingEngine> engineSln0 =
-        QuantLib::ext::make_shared<BlackSwaptionEngine>(d.discountCurve, Handle<Quote>(d.slnVol), Actual365Fixed(), d.slnShift);
+        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.slnVol);
     QuantLib::ext::shared_ptr<PricingEngine> engineN0 =
-        QuantLib::ext::make_shared<BachelierSwaptionEngine>(d.discountCurve, Handle<Quote>(d.nVol));
+        QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(d.discountCurve, d.nVol);
 
-    QuantLib::ext::shared_ptr<PricingEngine> engineLn =
-        QuantLib::ext::make_shared<BlackSwaptionEngineDeltaGamma>(d.discountCurve, Handle<Quote>(d.lnVol), Actual365Fixed(),
-                                                          0.0, d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);
+    QuantLib::ext::shared_ptr<PricingEngine> engineLn = QuantLib::ext::make_shared<BlackSwaptionEngineDeltaGamma>(
+        d.discountCurve, d.lnVol, d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);
     QuantLib::ext::shared_ptr<PricingEngine> engineSln = QuantLib::ext::make_shared<BlackSwaptionEngineDeltaGamma>(
-        d.discountCurve, Handle<Quote>(d.slnVol), Actual365Fixed(), d.slnShift, d.pillarTimes, d.pillarTimes,
-        d.pillarTimes, true, true);
-    QuantLib::ext::shared_ptr<PricingEngine> engineN =
-        QuantLib::ext::make_shared<BachelierSwaptionEngineDeltaGamma>(d.discountCurve, Handle<Quote>(d.nVol), Actual365Fixed(),
-                                                              d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);
+        d.discountCurve, d.slnVol, d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);
+    QuantLib::ext::shared_ptr<PricingEngine> engineN = QuantLib::ext::make_shared<BachelierSwaptionEngineDeltaGamma>(
+        d.discountCurve, d.nVol, d.pillarTimes, d.pillarTimes, d.pillarTimes, true, true);
 
     performTest(d, engineLn0, engineLn, false, 0.0, "lognormal model, payer");
     performTest(d, engineSln0, engineSln, false, 0.0, "shifted lognormal model, payer");
@@ -368,7 +371,7 @@ BOOST_AUTO_TEST_CASE(testNpvDeltasGammaVegas) {
     performTest(d, engineSln0, engineSln, true, 0.0, "shifted lognormal model, receiver");
     performTest(d, engineN0, engineN, true, 0.0, "normal model, receiver");
 
-    // the tests with non-zero spread fail, fix it later in the engine, for now we check for zero spreads there
+    // the tests with non-zero spread fail, fix it later in the engine
 
     // performTest(d, engineLn0, engineLn, false, 0.01, "lognormal model, payer, spread");
     // performTest(d, engineSln0, engineSln, false, 0.01, "shifted lognormal model, payer, spread");

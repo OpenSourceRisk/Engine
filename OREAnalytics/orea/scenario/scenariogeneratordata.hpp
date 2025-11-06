@@ -54,15 +54,17 @@ public:
     ScenarioGeneratorData()
         : grid_(QuantLib::ext::make_shared<DateGrid>()), sequenceType_(SobolBrownianBridge), seed_(0), samples_(0),
           ordering_(SobolBrownianGenerator::Steps), directionIntegers_(SobolRsg::JoeKuoD7), withCloseOutLag_(false),
-          withMporStickyDate_(false) {}
+          withMporStickyDate_(false), timeStepsPerYear_(Null<Size>()) {}
 
     //! Constructor
-    ScenarioGeneratorData(QuantLib::ext::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed, Size samples,
-                          SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+    ScenarioGeneratorData(QuantLib::ext::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed,
+                          Size samples, SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
-                          bool withCloseOutLag = false, bool withMporStickyDate = false)
+                          bool withCloseOutLag = false, bool withMporStickyDate = false,
+                          Size timeStepsPerYear = Null<Size>())
         : sequenceType_(sequenceType), seed_(seed), samples_(samples), ordering_(ordering),
-          directionIntegers_(directionIntegers), withCloseOutLag_(false), withMporStickyDate_(false) {
+          directionIntegers_(directionIntegers), withCloseOutLag_(false), withMporStickyDate_(false),
+          timeStepsPerYear_(timeStepsPerYear) {
         setGrid(dateGrid);
     }
 
@@ -82,10 +84,10 @@ public:
     Size samples() const { return samples_; }
     SobolBrownianGenerator::Ordering ordering() const { return ordering_; }
     SobolRsg::DirectionIntegers directionIntegers() const { return directionIntegers_; }
-    QuantLib::ext::shared_ptr<DateGrid> closeOutDateGrid() const { return closeOutDateGrid_; }
     bool withCloseOutLag() const { return withCloseOutLag_; }
     bool withMporStickyDate() const { return withMporStickyDate_; }
     Period closeOutLag() const { return closeOutLag_; }
+    Size timeStepsPerYear() const { return timeStepsPerYear_; }
     //@}
 
     //! \name Setters
@@ -99,6 +101,7 @@ public:
     bool& withCloseOutLag() { return withCloseOutLag_; }
     bool& withMporStickyDate() { return withMporStickyDate_; }
     Period& closeOutLag() { return closeOutLag_; }
+    Size& timeStepsPerYear() { return timeStepsPerYear_; }
     //@}
 private:
     QuantLib::ext::shared_ptr<DateGrid> grid_;
@@ -107,9 +110,9 @@ private:
     Size samples_;
     SobolBrownianGenerator::Ordering ordering_;
     SobolRsg::DirectionIntegers directionIntegers_;
-    QuantLib::ext::shared_ptr<DateGrid> closeOutDateGrid_;
     bool withCloseOutLag_;
     bool withMporStickyDate_;
+    Size timeStepsPerYear_;
     Period closeOutLag_;
     MporCashFlowMode mporCashFlowMode_;
     string gridString_;

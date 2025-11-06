@@ -1,0 +1,14 @@
+<Conventions>
+  <OIS>
+    <Id>GBP-OIS</Id>
+    <SpotLag>0</SpotLag>
+    <Index>GBP-SONIA</Index>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <PaymentLag>0</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+</Conventions>

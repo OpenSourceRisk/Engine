@@ -31,67 +31,73 @@ void ReportConfig::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "ReportOnDeltaGrid")) {
         reportOnDeltaGrid_ = parseBool(XMLUtils::getNodeValue(tmp));
     } else {
-        reportOnDeltaGrid_ = boost::none;
+        reportOnDeltaGrid_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "ReportOnMoneynessGrid")) {
         reportOnMoneynessGrid_ = parseBool(XMLUtils::getNodeValue(tmp));
     } else {
-        reportOnMoneynessGrid_ = boost::none;
+        reportOnMoneynessGrid_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "ReportOnStrikeGrid")) {
         reportOnStrikeGrid_ = parseBool(XMLUtils::getNodeValue(tmp));
     } else {
-        reportOnStrikeGrid_ = boost::none;
+        reportOnStrikeGrid_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "ReportOnStrikeSpreadGrid")) {
         reportOnStrikeSpreadGrid_ = parseBool(XMLUtils::getNodeValue(tmp));
     } else {
-        reportOnStrikeGrid_ = boost::none;
+        reportOnStrikeGrid_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Deltas")) {
         deltas_ = parseListOfValues(XMLUtils::getNodeValue(tmp));
     } else {
-        deltas_ = boost::none;
+        deltas_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Moneyness")) {
         moneyness_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp), &parseReal);
     } else {
-        moneyness_ = boost::none;
+        moneyness_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Strikes")) {
         strikes_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp), &parseReal);
     } else {
-        strikes_ = boost::none;
+        strikes_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "StrikeSpreads")) {
         strikeSpreads_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp), &parseReal);
     } else {
-        strikeSpreads_ = boost::none;
+        strikeSpreads_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Expiries")) {
         expiries_ = parseListOfValues<Period>(XMLUtils::getNodeValue(tmp), &parsePeriod);
     } else {
-        expiries_ = boost::none;
+        expiries_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "PillarDates")) {
         pillarDates_ = parseListOfValues<Date>(XMLUtils::getNodeValue(tmp), &parseDate);
     } else {
-        pillarDates_ = boost::none;
+        pillarDates_ = ext::nullopt;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "UnderlyingTenors")) {
         underlyingTenors_ = parseListOfValues<Period>(XMLUtils::getNodeValue(tmp), &parsePeriod);
     } else {
-        underlyingTenors_ = boost::none;
+        underlyingTenors_ = ext::nullopt;
+    }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "ContinuationExpiry")) {
+        continuationExpiries_ = parseListOfValues<QuantLib::ext::shared_ptr<Expiry>>(XMLUtils::getNodeValue(tmp), &parseExpiry);
+    } else {
+        continuationExpiries_ = ext::nullopt;
     }
 }
 
@@ -119,6 +125,8 @@ XMLNode* ReportConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addGenericChildAsList(doc, node, "Pillar Dates", *pillarDates_);
     if (underlyingTenors_)
         XMLUtils::addGenericChildAsList(doc, node, "UnderlyingTenors", *underlyingTenors_);
+    if (continuationExpiries_)
+        XMLUtils::addGenericChildAsList(doc, node, "ContinuationExpiry", *continuationExpiries_);
     return node;
 }
 
@@ -134,6 +142,7 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     std::vector<Period> expiries;
     std::vector<Date> pillarDates;
     std::vector<Period> underlyingTenors;
+    std::vector<QuantLib::ext::shared_ptr<Expiry>> continuationExpiries;
 
     if (localConfig.reportOnDeltaGrid())
         reportOnDeltaGrid = *localConfig.reportOnDeltaGrid();
@@ -180,6 +189,11 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     else if (globalConfig.expiries())
         expiries = *globalConfig.expiries();
 
+    if (localConfig.continuationExpiries())
+        continuationExpiries = *localConfig.continuationExpiries();
+    else if (globalConfig.continuationExpiries())
+        continuationExpiries = *globalConfig.continuationExpiries();
+
     if (localConfig.pillarDates())
         pillarDates = *localConfig.pillarDates();
     else if (globalConfig.pillarDates())
@@ -191,7 +205,7 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
         underlyingTenors = *globalConfig.underlyingTenors();
 
     return ReportConfig(reportOnDeltaGrid, reportOnMoneynessGrid, reportOnStrikeGrid, reportOnStrikeSpreadGrid, deltas,
-                        moneyness, strikes, strikeSpreads, expiries, pillarDates, underlyingTenors);
+                        moneyness, strikes, strikeSpreads, expiries, pillarDates, underlyingTenors, continuationExpiries);
 }
 
 } // namespace data

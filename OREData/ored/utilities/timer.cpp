@@ -42,8 +42,8 @@ void Timer::start(const string& key) {
     runningTimers_[key] = boost::timer::cpu_timer();
 }
 
-boost::optional<cpu_timer> Timer::stop(const string& key, bool returnTimer) {
-    boost::optional<cpu_timer> timer = boost::none;
+QuantLib::ext::optional<cpu_timer> Timer::stop(const string& key, bool returnTimer) {
+    QuantLib::ext::optional<cpu_timer> timer = QuantLib::ext::nullopt;
     if (runningTimers_.find(key) == runningTimers_.end()) {
         StructuredLoggingErrorMessage("Cannot stop timer '" + key + "', it does not exist.").log();
         return timer;

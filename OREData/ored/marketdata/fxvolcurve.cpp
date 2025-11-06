@@ -51,7 +51,7 @@ namespace {
 template <class T, class K> Handle<T> getHandle(const string& spec, const map<string, QuantLib::ext::shared_ptr<K>>& m) {
     auto it = m.find(spec);
     QL_REQUIRE(it != m.end(), "FXVolCurve: Can't find spec " << spec);
-    return it->second->handle();
+    return it->second->handle(spec);
 }
 
 } // namespace
@@ -262,7 +262,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp,
+        deltaType_, atmType_, QuantLib::ext::nullopt, switchTenor_, longTermDeltaType_, longTermAtmType_, QuantLib::ext::nullopt, interp,
         flatExtrapolation);
 
     vol_->enableExtrapolation();

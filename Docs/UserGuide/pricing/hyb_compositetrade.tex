@@ -1,0 +1,13 @@
+\subsubsection{Composite Trade}
+\label{pricing:composite_trade}
+
+Composite Trades are priced as the sum of their component trades. As such, the pricing model of the composite trade is a combination of the pricing models of each trade:
+
+$$
+\NPV=\sum_i \NPV_i
+$$
+
+where:
+\begin{itemize}
+\item $\NPV_i$: is the NPV of each component trade, $i$.
+\end{itemize}

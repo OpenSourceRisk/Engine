@@ -1,0 +1,25 @@
+\subsubsection{Bond Future}
+\label{pricing::bondfuture}
+
+The present value $v$ of a long bond future contract is given by
+
+$$
+v = N P(0,T) ( F - K ) C
+$$
+
+with
+
+\begin{itemize}
+\item $N$: Future contract notional
+\item $T$: Future settlement date
+\item $P(0,T)$: Discount factor for $T$ on the relevant collateral curve
+\item $F$: The estimated future price at the future expiry date
+\item $K$: The strike, which is the current traded future price
+\item $C$: The conversion factor for the CTD bond
+\end{itemize}
+
+Note that the strike $K$ is technically the historical fixing value of the future at the valuation date and the
+estimated future price $F$ is calculated as the forward price of the current CTD bond divided by the conversion
+factor $C$. Since the security spread of the CTD bond is calibrated to the quoted future price the present value $v$ will be
+$0$ if the historical fixing on the valuation date is equal to quoted future price. This reflects the situation after
+daily margining when the future contract indeed has zero value.

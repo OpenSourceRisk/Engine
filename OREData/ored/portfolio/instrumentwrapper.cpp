@@ -96,8 +96,8 @@ QuantLib::Real VanillaInstrument::NPV() const {
     return getTimedNPV(instrument_) * multiplier_ + additionalInstrumentsNPV();
 }
 
-const std::map<std::string, boost::any>& VanillaInstrument::additionalResults() const {
-    static std::map<std::string, boost::any> empty;
+const std::map<std::string, QuantLib::ext::any>& VanillaInstrument::additionalResults() const {
+    static std::map<std::string, QuantLib::ext::any> empty;
     if (instrument_ == nullptr)
         return empty;
     getTimedNPV(instrument_);

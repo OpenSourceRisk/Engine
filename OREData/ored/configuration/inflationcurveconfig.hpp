@@ -42,26 +42,58 @@ using QuantLib::Period;
 using std::string;
 using std::vector;
 
+class InflationCurveSegment : public XMLSerializable {
+public:
+    InflationCurveSegment() {}
+    InflationCurveSegment(const std::string& convention,
+                          const std::vector<std::string>& quotes);
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+
+    const std::string& convention() const { return convention_; }
+    const std::vector<std::string>& quotes() const { return quotes_; }
+
+private:
+    std::string convention_;
+    std::vector<std::string> quotes_;
+};
+
 class InflationCurveConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
+
+    enum class InterpolationVariable { ZeroRate, PriceIndex };
 
     InflationCurveConfig() {}
     InflationCurveConfig(const string& curveID, const string& curveDescription, const string& nominalTermStructure,
                          const Type type, const vector<string>& quotes, const string& conventions,
                          const bool extrapolate, const Calendar& calendar, const DayCounter& dayCounter,
-                         const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance, 
-                         const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate, 
+                         const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance,
+                         const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
                          const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
-                         const vector<double>& overrideSeasonalityFactors = std::vector<double>());
+                         const vector<double>& overrideSeasonalityFactors = std::vector<double>(),
+                         const InterpolationVariable& interpolationVariable = InterpolationVariable::ZeroRate);
+
+    InflationCurveConfig(const string& curveID, const string& curveDescription, const string& nominalTermStructure,
+                         const Type type, const std::vector<InflationCurveSegment>& segments, bool extrapolate,
+                         const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
+                         const Frequency& frequency, const Real baseRate, const Real tolerance,
+                         const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
+                         const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
+                         const vector<double>& overrideSeasonalityFactors = std::vector<double>(),
+                         const InterpolationVariable& interpolationVariable = InterpolationVariable::ZeroRate);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 
     // Inspectors
     const string& nominalTermStructure() const { return nominalTermStructure_; }
-    const Type& type() const { return type_; }
-    const string& conventions() const { return conventions_; }
+    
+    const std::vector<InflationCurveSegment>& segments() const { return segments_; }
+
+    InflationCurveConfig::Type type() const { return type_;}
+
     const bool& extrapolate() const { return extrapolate_; }
     const Calendar& calendar() const { return calendar_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
@@ -70,16 +102,15 @@ public:
     const Real& baseRate() const { return baseRate_; }
     const Real& tolerance() const { return tolerance_; }
     const bool& useLastAvailableFixingAsBaseDate() const { return useLastAvailableFixingAsBaseDate_; }
+    const InterpolationVariable& interpolationVariable() const { return interpolationVariable_; }
+    const std::string InterpolationMethod() const { return interpolationMethod_; }
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
     const vector<double>& overrideSeasonalityFactors() const { return overrideSeasonalityFactors_; }
-    const vector<string>& swapQuotes() { return swapQuotes_; }
 
     // Setters
     string& nominalTermStructure() { return nominalTermStructure_; }
-    Type& type() { return type_; }
-    string& conventions() { return conventions_; }
     bool& extrapolate() { return extrapolate_; }
     Calendar& calendar() { return calendar_; }
     DayCounter& dayCounter() { return dayCounter_; }
@@ -88,18 +119,20 @@ public:
     Real& baseRate() { return baseRate_; }
     Real& tolerance() { return tolerance_; }
     bool& useLastAvailableFixingAsBaseDate() { return useLastAvailableFixingAsBaseDate_; }
+    std::string& interpolationMethod() { return interpolationMethod_; }
+    InterpolationVariable& interpolationVariable() { return interpolationVariable_; }
     Date& seasonalityBaseDate() { return seasonalityBaseDate_; }
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
     vector<double>& overrideSeasonalityFactors() { return overrideSeasonalityFactors_; }
 
 private:
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
+    void initQuotes();
 
-    vector<string> swapQuotes_;
     string nominalTermStructure_;
     Type type_;
-    string conventions_;
+    vector<InflationCurveSegment> segments_;
     string interpolationMethod_;
     bool extrapolate_;
     Calendar calendar_;
@@ -113,6 +146,10 @@ private:
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;
     vector<double> overrideSeasonalityFactors_;
+    InterpolationVariable interpolationVariable_ = InterpolationVariable::ZeroRate;
 };
+
+std::ostream& operator<<(std::ostream& out, InflationCurveConfig::Type t);
+
 } // namespace data
 } // namespace ore

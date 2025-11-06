@@ -18,6 +18,7 @@
 
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/processes/irhwstateprocess.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
@@ -87,6 +88,10 @@ void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
     cache_d_.clear();
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
         tmp->resetCache(timeSteps);
+    for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::IR); ++i) {
+        if (auto p = QuantLib::ext::dynamic_pointer_cast<IrHwStateProcess>(model_->irModel(i)->stateProcess()))
+            p->resetCache(timeSteps);
+    }
     updateSqrtCorrelation();
 }
 
@@ -132,6 +137,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Array res(model_->dimension(), 0.0);
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size n_eq = model_->components(CrossAssetModel::AssetType::EQ);
+    Size n_com = model_->components(CrossAssetModel::AssetType::COM);
     Real H0 = model_->irlgm1f(0)->H(t);
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
@@ -199,6 +205,26 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                                                                       (eps_ccy * rhoxsik * sigmaxi * sigmask) -
                                                                       (0.5 * sigmask * sigmask);
         }
+        /* com drifts (the cache-able parts) */
+        for (Size k = 0; k < n_com; ++k) {
+            auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
+            Size i = model_->ccyIndex(model_->comModel(k)->currency());
+            // ir-com corr
+            Real rhozc0k =
+                model_->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::COM, k); // base cur
+            // fx-com corr
+            Real rhoxcik = (i == 0) ? 0.0 : // no fx process for base-ccy
+                model_->correlation(CrossAssetModel::AssetType::FX, i - 1, CrossAssetModel::AssetType::COM, k);
+            // com vol
+            Real sigmack = cm->parametrization()->sigma(t);
+            // fx vol (eq ccy / base ccy)
+            Real sigmaxi = (i == 0) ? 0.0 : model_->fxbs(i - 1)->sigma(t);
+
+            Real eps_ccy = (i == 0) ? 0.0 : 1.0;
+            res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] = 
+                (rhozc0k * H0 * alpha0 * sigmack)
+                -(eps_ccy * rhoxcik * sigmaxi * sigmack);
+            }
 
         // State independent pieces of JY inflation model, if there is a CAM JY component.
         for (Size j = 0; j < model_->components(CrossAssetModel::AssetType::INF); ++j) {
@@ -319,7 +345,6 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     }
 
     // COM drift
-    Size n_com = model_->components(CrossAssetModel::AssetType::COM);
     for (Size k = 0; k < n_com; ++k) {
         auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
         QL_REQUIRE(cm, "CommoditySchwartzModel not set");
@@ -332,7 +357,6 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
             // zero drift
         }
     }
-
     /* no drift for infdk, crlgm1f, crstate components */
     return res;
 }
@@ -646,6 +670,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
     Size e = model_->components(CrossAssetModel::AssetType::EQ);
+    Size c = model_->components(CrossAssetModel::AssetType::COM);
     Array res(model_->dimension(), 0.0);
     for (Size i = 0; i < n; ++i) {
         res[model_->pIdx(CrossAssetModel::AssetType::IR, i, 0)] = ir_expectation_1(*model_, i, t0, dt);
@@ -655,6 +680,9 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
     }
     for (Size k = 0; k < e; ++k) {
         res[model_->pIdx(CrossAssetModel::AssetType::EQ, k, 0)] = eq_expectation_1(*model_, k, t0, dt);
+    }
+    for (Size k = 0; k < c; ++k) {
+        res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] = com_expectation_1(*model_, k, t0, dt);
     }
 
     // If inflation is JY, need to take account of the drift.
@@ -666,8 +694,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
         }
     }
 
-    /* no COM driftImpl1 contribution for one-factor non mean-reverting commodity case,
-       no crstate contribution */
+    /* no crstate contribution */
 
     return res;
 }

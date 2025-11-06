@@ -61,6 +61,9 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
    \item LongInForward: A flag that determines whether the forward contract is entered in long (\emph{true}) or short
      (\emph{false}) position. \\
        Allowable values: \emph{true}, \emph{false}
+   \item KnockOut [Optional]: If true the contract terminates without payout if the underlying bond defaults before the forward maturity date.
+   If not given, defaults to false for a vanilla payoff and true for a lock rate payoff. \\
+       Allowable values: \emph{true}, \emph{false}
  \end{itemize}
 
 \begin{listing}[H]

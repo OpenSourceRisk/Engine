@@ -74,7 +74,9 @@ public:
                const std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndexAsset,
                const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexReturn,
                const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexAdditionalCashflows,
-               const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxindices);
+               const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxindices,
+               const QuantLib::ext::optional<TRS::FXConversion>& fxConversion);
+
 
     //! \name Instrument interface
     //@{
@@ -106,6 +108,7 @@ private:
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+    QuantLib::ext::optional<TRS::FXConversion> fxConversion_;
 
     Date lastDate_;
 };
@@ -120,7 +123,7 @@ public:
     QuantLib::Real initialPrice_;
     QuantLib::Real portfolioInitialPrice_;
     std::string portfolioId_;
-    QuantLib::Currency initialPriceCurrency_; 
+    QuantLib::Currency initialPriceCurrency_;
     std::vector<QuantLib::Currency> assetCurrency_;
     QuantLib::Currency returnCurrency_;
     std::vector<QuantLib::Date> valuationSchedule_, paymentSchedule_;
@@ -135,7 +138,7 @@ public:
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
-
+    QuantLib::ext::optional<TRS::FXConversion> fxConversion_;
     void validate() const override;
 };
 
@@ -174,6 +177,9 @@ private:
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
+
+    // return underlying #i npv on today
+    Real getUnderlyingNPV(const Size i) const;
 
     // additional inspectors
     QuantLib::Real currentNotional() const;

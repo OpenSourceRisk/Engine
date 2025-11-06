@@ -1,0 +1,14 @@
+#TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base NPV,Delta,Gamma
+CMS_Spread_Swap,false,DiscountCurve/EUR/1/1Y,0.000000,,0.000000,EUR,252360.68,-3.35,0.00
+CMS_Spread_Swap,false,DiscountCurve/EUR/2/2Y,0.000000,,0.000000,EUR,252360.68,-38.61,0.00
+CMS_Spread_Swap,false,DiscountCurve/EUR/3/3Y,0.000000,,0.000000,EUR,252360.68,-74.61,0.01
+CMS_Spread_Swap,false,DiscountCurve/EUR/4/5Y,0.000000,,0.000000,EUR,252360.68,-65.36,0.02
+CMS_Spread_Swap,false,DiscountCurve/EUR/6/10Y,0.000000,,0.000000,EUR,252360.68,112.49,-0.07
+CMS_Spread_Swap,false,DiscountCurve/EUR/7/15Y,0.000000,,0.000000,EUR,252360.68,316.44,-0.32
+CMS_Spread_Swap,false,DiscountCurve/EUR/8/20Y,0.000000,,0.000000,EUR,252360.68,59.32,-0.01
+CMS_Spread_Swap,false,Correlation/EUR-CMS-10Y:EUR-CMS-2Y/0/1Y/ATM,0.010000,,0.000000,EUR,252360.68,-78.60,1.38
+CMS_Spread_Swap,false,Correlation/EUR-CMS-10Y:EUR-CMS-2Y/1/2Y/ATM,0.010000,,0.000000,EUR,252360.68,-30477.71,-1724.24
+Digital_CMS_Spread,false,DiscountCurve/EUR/2/2Y,0.000000,,0.000000,EUR,242787.05,-7.67,0.00
+Digital_CMS_Spread,false,DiscountCurve/EUR/3/3Y,0.000000,,0.000000,EUR,242787.05,-50.93,0.01
+Digital_CMS_Spread,false,DiscountCurve/EUR/4/5Y,0.000000,,0.000000,EUR,242787.05,-17.45,0.00
+Digital_CMS_Spread,false,Correlation/EUR-CMS-10Y:EUR-CMS-2Y/1/2Y/ATM,0.010000,,0.000000,EUR,242787.05,-94.25,-4.40

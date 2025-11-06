@@ -55,12 +55,7 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
-    //! \name Trade
-    //@{
-    bool hasCashflows() const override { return true; }
-    //@}
-
-    const std::map<std::string, boost::any>& additionalData() const override;
+    const std::map<std::string, QuantLib::ext::any>& additionalData() const override;
 
 private:
     string longShort_;

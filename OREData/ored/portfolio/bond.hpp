@@ -101,6 +101,7 @@ public:
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& subType() const { return subType_; }
+    const std::optional<QuantLib::Bond::Price::Type>& quotedDirtyPrices() const { return quotedDirtyPrices_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
@@ -144,6 +145,7 @@ private:
     bool isPayer_;
     bool isInflationLinked_;
     string subType_;
+    std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices_ = std::nullopt;
 };
 
 //! Serializable Bond
@@ -183,7 +185,8 @@ struct BondBuilder {
     struct Result {
         std::string builderLabel;
         QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
-        QuantLib::ext::shared_ptr<ore::data::Bond> bondTrade;
+        QuantLib::ext::shared_ptr<ore::data::Trade> trade;
+        BondData bondData;
         QuantLib::ext::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
         bool isInflationLinked = false;
         bool hasCreditRisk = true;
@@ -193,6 +196,7 @@ struct BondBuilder {
         std::string creditGroup;
         QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod = QuantExt::BondIndex::PriceQuoteMethod::PercentageOfPar;
         double priceQuoteBaseValue = 1.0;
+        std::optional<QuantLib::Bond::Price::Type> quotedDirtyPrices;
 
         double inflationFactor() const;
     };
@@ -200,12 +204,6 @@ struct BondBuilder {
     virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const = 0;
-    virtual void modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
-                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                                     const std::string& securityId) const = 0;
-    // function returns empty Date and String, if the securityId is not a forward bond
-    static std::pair<Date, std::string> checkForwardBond(const std::string& securityId);
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory, std::integral_constant<bool, true>> {
@@ -224,11 +222,6 @@ struct VanillaBondBuilder : public BondBuilder {
     virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const override;
-
-    void modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
-                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                             const std::string& securityId) const override;
 };
 
 } // namespace data

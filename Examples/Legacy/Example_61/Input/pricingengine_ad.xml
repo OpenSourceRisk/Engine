@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+    
+  <Product type="EquityBarrierOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters />
+    <Engine>AnalyticBarrierEngine</Engine>
+    <EngineParameters />
+  </Product>
+
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <Parameter name="Model">BlackScholes</Parameter>
+      <Parameter name="BaseCcy">EUR</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="FullDynamicFx">false</Parameter>
+      <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="SequenceType">MersenneTwister</Parameter>
+      <Parameter name="Seed">42</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="StateGridPoints">100</Parameter>
+      <Parameter name="RegressionOrder">6</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="UseAD">true</Parameter> <!-- AD -->
+      <Parameter name="Interactive">false</Parameter>
+    </EngineParameters>
+  </Product>
+
+</PricingEngines>

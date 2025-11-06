@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="EquityCFD">
+        <TradeType>ContractForDifference</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <ContractForDifferenceData>
+            <UnderlyingData>
+                <Trade>
+                    <TradeType>EquityPosition</TradeType>
+                    <EquityPositionData>
+                        <Quantity>1000</Quantity>
+                        <Underlying>
+                            <Type>Equity</Type>
+                            <Name>.STOXX50E</Name>
+                            <Weight>1.0</Weight>
+                            <IdentifierType>RIC</IdentifierType>
+                        </Underlying>
+                    </EquityPositionData>
+                </Trade>
+            </UnderlyingData>
+            <ReturnData>
+                <Payer>false</Payer>
+                <Currency>EUR</Currency>
+                <ScheduleData>
+                    <Dates>
+                        <Dates>
+                            <!-- the start date of the CFD on which the initial price was set -->
+                            <Date>2021-05-29</Date>
+                            <!-- fictitious closing date, e.g. set to "tomorrow" -->
+                            <Date>2025-02-11</Date>
+                        </Dates>
+                    </Dates>
+                </ScheduleData>
+                <InitialPrice>3399.20</InitialPrice>
+                <InitialPriceCurrency>EUR</InitialPriceCurrency>
+            </ReturnData>
+        </ContractForDifferenceData>
+    </Trade>
+</Portfolio>

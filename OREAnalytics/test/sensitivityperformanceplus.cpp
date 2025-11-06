@@ -842,7 +842,7 @@ void BT_Benchmark(bool crossGammas, ObservationMode::Mode om) {
     CSVFileReport cgReport("crossgammReport");
     auto baseCurrency = sa->simMarketData()->baseCcy();
     auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sa->sensiCube(), baseCurrency);
-    ReportWriter().writeSensitivityReport(cgReport, ss, 0.000001);
+    ReportWriter().writeSensitivityReport(cgReport, ss, 0.000001, initMarket, Market::defaultConfiguration);
     timer.stop();
 
     Real elapsed = timer.elapsed().wall * 1e-9;

@@ -57,7 +57,7 @@ public:
                is set to the evaluation date
     */
     DiscountingEquityForwardEngine(const Handle<EquityIndex2>& equityIndex, const Handle<YieldTermStructure>& discountCurve,
-                                   boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                   QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                    const Date& settlementDate = Date(), const Date& npvDate = Date());
 
     void calculate() const override;
@@ -68,7 +68,7 @@ public:
 private:
     Handle<EquityIndex2> equityIndex_;
     Handle<YieldTermStructure> discountCurve_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;
     Date npvDate_;
 };

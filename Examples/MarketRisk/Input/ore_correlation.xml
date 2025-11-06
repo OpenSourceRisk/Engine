@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<ORE>
+  <Setup>
+    <Parameter name="asofDate">2019-12-30</Parameter>
+    <Parameter name="inputPath">Input/Correlation</Parameter>
+    <Parameter name="outputPath">Output/Correlation</Parameter>
+    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">255</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="nThreads">1</Parameter>
+  </Setup>
+  <Markets>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
+  </Markets>
+  <Analytics>
+    <Analytic type="correlation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="correlation_method">Pearson</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="historicalPeriod">2016-12-30,2019-12-30</Parameter>
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">USD</Parameter>
+      <Parameter name="outputFile">correlation.csv</Parameter>
+    </Analytic>
+  </Analytics>
+</ORE>

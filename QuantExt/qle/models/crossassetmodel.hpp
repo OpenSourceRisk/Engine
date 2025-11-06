@@ -48,6 +48,7 @@
 #include <ql/models/model.hpp>
 
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/unordered_map.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -140,7 +141,7 @@ public:
     /*! return index for credit (0 = first credit name) */
     Size crName(const std::string& name) const;
 
-    /*! return index for commodity (0 = first equity) */
+    /*! return index for commodity (0 = first comm name) */
     Size comIndex(const std::string& comName) const;
 
     /*! observer and linked calibrated model interface */
@@ -274,6 +275,7 @@ public:
 
     /*! the integrator used to calculate moments */
     const QuantLib::ext::shared_ptr<Integrator> integrator() const { return integrator_; }
+    const QuantLib::ext::shared_ptr<Integrator> underlyingIntegrator() const { return underlyingIntegrator_; }
     bool piecewiseIntegrationWrapper() const { return piecewiseIntegrationWrapper_; }
 
     /*! return (V(t), V^tilde(t,T)) in the notation of the book */
@@ -325,6 +327,14 @@ public:
                                 const Constraint& constraint = Constraint(),
                                 const std::vector<Real>& weights = std::vector<Real>());
 
+    /*! calibrate irhw volatilities to a sequence of ir options with
+        expiry times equal to step times in the parametrization
+        and following the procedure in HwPiecewiseStatisticalParametrization */
+    void calibrateIrHwVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
+        const Size ccy, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+        OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint = Constraint(),
+        const std::vector<Real>& weights = std::vector<Real>());
+
     /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
     void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,
@@ -339,6 +349,20 @@ public:
                                        OptimizationMethod& method, const EndCriteria& endCriteria,
                                        const Constraint& constraint = Constraint(),
                                        const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate com sesonalitites to a sequence of options with expiry times equal to step times in the parametrization */
+    void calibrateComSchwartz1fSeasonalityIterative(const AssetType& assetType, const Size aIdx,
+                                          const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+                                          OptimizationMethod& method, const EndCriteria& endCriteria,
+                                          const Constraint& constraint = Constraint(),
+                                          const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate com parameters globally to a set of com options */
+    void calibrateComSchwartz1fGlobal(const AssetType& assetType, const Size adx,
+                            const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
+                            OptimizationMethod& method, const EndCriteria& endCriteria, const std::map<Size, bool>& toCalibrate,
+                            const Constraint& constraint = Constraint(),
+                            const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate infdk volatilities to a sequence of cpi options with
         expiry times equal to step times in the parametrization */
@@ -501,7 +525,7 @@ protected:
     SalvagingAlgorithm::Type salvaging_ = SalvagingAlgorithm::None;
     IrModel::Measure measure_ = IrModel::Measure::LGM;
     Discretization discretization_ = Discretization::Exact;
-    QuantLib::ext::shared_ptr<Integrator> integrator_;
+    QuantLib::ext::shared_ptr<Integrator> integrator_, underlyingIntegrator_;
     bool piecewiseIntegrationWrapper_ = true;
     mutable QuantLib::ext::shared_ptr<CrossAssetStateProcess> stateProcess_;
 

@@ -1,0 +1,434 @@
+<Portfolio>
+
+  <Trade id="1:EquityOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>EuropeanOption</ScriptName>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-11-07</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-11-07</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="2:EquityBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>SingleBarrierOption</ScriptName>
+      <Data>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Event>
+          <Name>StartDate</Name>
+          <Value>2023-08-07</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value> 
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value> 
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-11-07</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-11-07</Value>
+        </Event>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        
+        <Number>
+          <Name>PayoffType</Name>
+          <Value>0</Value>
+        </Number>
+        <Number>
+          <Name>Amount</Name>
+          <Value>0</Value>
+        </Number>
+        <Number>
+          <Name>BarrierLevel</Name>
+          <Value>50000</Value><!-- lower this to 5000 -->
+        </Number>
+        <Number>
+          <Name>BarrierType</Name>
+          <Value>4</Value>
+        </Number>
+        <Number>
+          <Name>BarrierRebate</Name>
+          <Value>0</Value>
+        </Number>
+        <Currency>
+          <Name>BarrierRebateCurrency</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Number>
+          <Name>BarrierRebatePayTime</Name>
+          <Value>1</Value>
+        </Number>
+        <Event>
+          <Name>BarrierMonitoringDates</Name>
+          <ScheduleData>
+            <Rules>
+              <StartDate>2023-08-07</StartDate>
+              <EndDate>2023-11-07</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth/>
+              <FirstDate/>
+              <LastDate/>
+            </Rules>
+          </ScheduleData>
+        </Event>       
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+  
+  <Trade id="3:EquityAccumulator">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>Accumulator</ScriptName>
+      <Data>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4200</Value>
+        </Number>
+        <Number>
+          <Name>FixingAmount</Name>
+          <Value>100</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>StartDate</Name>
+          <Value>2023-08-09</Value>
+        </Event>
+        <Event>
+          <Name>FixingDates</Name>
+          <ScheduleData>
+            <Dates>
+              <Dates>
+                <Date>2024-08-09</Date>
+                <Date>2025-08-09</Date>
+                <Date>2026-08-09</Date>
+                <Date>2027-08-09</Date>
+                <Date>2028-08-09</Date>
+              </Dates>
+            </Dates>
+          </ScheduleData>
+        </Event>
+        <Event>
+          <Name>SettlementDates</Name>
+          <DerivedSchedule>
+            <BaseSchedule>FixingDates</BaseSchedule>
+            <Shift>0D</Shift>
+            <Calendar>NullCalendar</Calendar>
+            <Convention>U</Convention>
+          </DerivedSchedule>
+        </Event>
+        <Number>
+          <Name>RangeLowerBounds</Name>
+          <Values>
+            <Value>0</Value>
+            <Value>4000</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>RangeUpperBounds</Name>
+          <Values>
+            <Value>4000</Value>
+            <Value>10000</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>RangeLeverages</Name>
+          <Values>
+            <Value>1</Value>
+            <Value>2</Value>
+          </Values>
+        </Number>
+        <Number>
+          <Name>KnockOutLevel</Name>
+          <Value>50000</Value><!-- lower this closer to ATM -->
+        </Number>
+        <Number>
+          <Name>KnockOutType</Name>
+          <Value>4</Value>
+        </Number>
+        <Number>
+          <Name>AmericanKO</Name>
+          <Value>-1</Value>
+        </Number>
+        <Number>
+          <Name>GuaranteedFixings</Name>
+          <Value>2</Value>
+        </Number>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="4:AsianBasketOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <AsianBasketOptionData>
+      <Expiry type="event">2024-10-15</Expiry>
+      <Settlement type="event">2024-10-20</Settlement>
+      <ObservationDates type="event">
+	<ScheduleData>
+          <Rules>
+            <StartDate>2023-10-15</StartDate>
+            <EndDate>2024-10-15</EndDate>
+            <Tenor>1D</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+          </Rules>
+	</ScheduleData>
+      </ObservationDates>
+      <PutCall type="optionType">Call</PutCall>
+      <LongShort type="longShort">Long</LongShort>
+      <Notional type="number">10000</Notional>
+      <Strike type="number">4500</Strike>
+      <Underlyings type="index">
+	<Value>EQ-RIC:.SPX</Value>
+	<Value>EQ-RIC:.STOXX50E</Value>
+      </Underlyings>
+      <Weights type="number">
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+      </Weights>
+      <PayCcy type="currency">EUR</PayCcy>
+    </AsianBasketOptionData>
+  </Trade>
+  
+  <Trade id="5:TaRF">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <TaRFData>
+      <FixingAmount type="number">100000.00</FixingAmount>
+      <LongShort type="longShort">Long</LongShort>
+      <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+      <PayCcy type="currency">EUR</PayCcy>
+      <FixingDates type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2024-01-22</StartDate>
+            <EndDate>2025-01-22</EndDate>
+            <Tenor>1W</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </FixingDates>
+      <SettlementDates type="event">
+	<DerivedSchedule>
+          <BaseSchedule>FixingDates</BaseSchedule>
+          <Shift>0D</Shift>
+          <Calendar>NullCalendar</Calendar>
+          <Convention>U</Convention>
+	</DerivedSchedule>
+      </SettlementDates>
+      <RangeLowerBounds type="number">
+        <Value>0</Value>
+        <Value>1.0</Value>
+        <Value>1.2</Value>
+      </RangeLowerBounds>
+      <RangeUpperBounds type="number">
+        <Value>1.0</Value>
+        <Value>1.2</Value>
+        <Value>1000</Value>
+      </RangeUpperBounds>
+      <RangeLeverages type="number">
+	<!--
+        <Value>2</Value>
+        <Value>1</Value>
+        <Value>-1</Value>
+	-->
+        <Value>1</Value>
+        <Value>1</Value>
+        <Value>1</Value>
+      </RangeLeverages>
+      <RangeStrikes type="number">
+	<!--
+	<Value>0.5</Value>
+	<Value>1.0</Value>
+	<Value>1.2</Value>
+	-->
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+      </RangeStrikes>
+      <!--
+      <KnockOutProfitAmount type="number">2500000</KnockOutProfitAmount>
+      -->
+      <KnockOutProfitAmount type="number">5000000</KnockOutProfitAmount>
+      <KnockOutProfitEvents type="number">0</KnockOutProfitEvents>
+      <TargetAmount type="number">0</TargetAmount>
+      <TargetType type="number">1</TargetType>
+    </TaRFData>
+  </Trade>
+
+  <Trade id="6:TaRF_2">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <TaRFData>
+      <FixingAmount type="number">100000.00</FixingAmount>
+      <LongShort type="longShort">Long</LongShort>
+      <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+      <PayCcy type="currency">EUR</PayCcy>
+      <FixingDates type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2024-01-22</StartDate>
+            <EndDate>2025-01-22</EndDate>
+            <Tenor>1W</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </FixingDates>
+      <SettlementDates type="event">
+	<DerivedSchedule>
+          <BaseSchedule>FixingDates</BaseSchedule>
+          <Shift>0D</Shift>
+          <Calendar>NullCalendar</Calendar>
+          <Convention>U</Convention>
+	</DerivedSchedule>
+      </SettlementDates>
+      <RangeLowerBounds type="number">
+        <Value>0</Value>
+        <Value>1.0</Value>
+        <Value>1.2</Value>
+      </RangeLowerBounds>
+      <RangeUpperBounds type="number">
+        <Value>1.0</Value>
+        <Value>1.2</Value>
+        <Value>1000</Value>
+      </RangeUpperBounds>
+      <RangeLeverages type="number">
+	<!--
+        <Value>2</Value>
+        <Value>1</Value>
+        <Value>-1</Value>
+	-->
+        <Value>1</Value>
+        <Value>1</Value>
+        <Value>1</Value>
+      </RangeLeverages>
+      <RangeStrikes type="number">
+	<!--
+	<Value>0.5</Value>
+	<Value>1.0</Value>
+	<Value>1.2</Value>
+	-->
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+	<Value>0.5</Value>
+      </RangeStrikes>
+      <KnockOutProfitAmount type="number">2500000</KnockOutProfitAmount>
+      <!--
+	  <KnockOutProfitAmount type="number">5000000</KnockOutProfitAmount>
+      -->
+      <KnockOutProfitEvents type="number">0</KnockOutProfitEvents>
+      <TargetAmount type="number">0</TargetAmount>
+      <TargetType type="number">1</TargetType>
+    </TaRFData>
+  </Trade>
+
+</Portfolio>

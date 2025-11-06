@@ -3,9 +3,11 @@
 set(QuantExt-Test_SRC ad.cpp
 analyticcashsettledeuropeanengine.cpp
 analyticeuropeanenginedeltagamma.cpp
+analytichwswaptionengine.cpp
 analyticlgmswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
+blackmultilegoptionengine.cpp
 blackswaptionenginedeltagamma.cpp
 blacktriangulation.cpp
 blackvariancecurve.cpp
@@ -31,6 +33,8 @@ crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
+crossassetmodelpricing.cpp
+crossassetmodelvega.cpp
 crossccybasismtmresetswap.cpp
 crossccybasismtmresetswaphelper.cpp
 crossccyfixfloatswap.cpp
@@ -57,17 +61,21 @@ forwardbond.cpp
 fxvolsmile.cpp
 fxvoltimeweighting.cpp
 hullwhitebucketing.cpp
+hwpiecewiseparametrization.cpp
 index.cpp
 inflationcurve.cpp
 inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 lgmbgsflexiswapengine.cpp
 lgmflexiswapengine.cpp
+lgmpricing.cpp
+lgmpricingedgecases.cpp
 logquote.cpp
 mclgmswaptionengine.cpp
 multilegoption.cpp
 normalfreeboundarysabr.cpp
 optionletstripper.cpp
+overnightindexedcoupon.cpp
 payment.cpp
 piecewiseatmoptionletcurve.cpp
 piecewiseoptionletcurve.cpp

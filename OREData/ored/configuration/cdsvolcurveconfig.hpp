@@ -79,7 +79,7 @@ private:
     void populateQuotes();
 
     //! Populate required curve ids
-    void populateRequiredCurveIds();
+    void populateRequiredIds() const override;
 
     //! Give back the quote stem used in construction of the quote strings
     std::string quoteStem() const;

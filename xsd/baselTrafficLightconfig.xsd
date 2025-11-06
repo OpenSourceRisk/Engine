@@ -1,0 +1,24 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="BaselTrafficLightConfig">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Configuration" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="mporDays" maxOccurs="1"/>
+                            <xs:element name="ObservationThresholds">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:string" name="ObservationCount" maxOccurs="1"/>
+                                        <xs:element type="xs:string" name="AmberLimit" maxOccurs="1"/>
+                                        <xs:element type="xs:string" name="RedLimit" maxOccurs="1"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

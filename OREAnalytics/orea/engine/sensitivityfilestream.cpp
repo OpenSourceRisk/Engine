@@ -24,7 +24,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-using ore::analytics::deconstructFactor;
 using ore::data::parseBool;
 using ore::data::parseReal;
 using std::getline;
@@ -73,18 +72,19 @@ void SensitivityInputStream::reset() {
 
 SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& entries) const {
 
-    QL_REQUIRE(entries.size() == 10, "On line number " << lineNo_ << ": A sensitivity record needs 10 entries");
+    QL_REQUIRE(entries.size() == 10 || entries.size() == 14,
+               "On line number " << lineNo_ << ": A sensitivity record needs 10 or 14 entries");
 
     SensitivityRecord sr;
     sr.tradeId = entries[0];
     sr.isPar = parseBool(entries[1]);
 
-    auto p = deconstructFactor(entries[2]);
+    auto p = QuantExt::deconstructFactor(entries[2]);
     sr.key_1 = p.first;
     sr.desc_1 = p.second;
     tryParseReal(entries[3], sr.shift_1);
 
-    p = deconstructFactor(entries[4]);
+    p = QuantExt::deconstructFactor(entries[4]);
     sr.key_2 = p.first;
     sr.desc_2 = p.second;
     tryParseReal(entries[5], sr.shift_2);

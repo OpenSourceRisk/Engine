@@ -24,22 +24,8 @@ namespace QuantExt {
 CommoditySchwartzParametrization::CommoditySchwartzParametrization(const Currency& currency, const std::string& name,
                                                                    const Handle<QuantExt::PriceTermStructure>& priceCurve,
                                                                    const Handle<Quote>& fxSpotToday,
-                                                                   const Real sigma, const Real kappa,
                                                                    bool driftFreeState)
-    : Parametrization(currency, name), priceCurve_(priceCurve), fxSpotToday_(fxSpotToday),
-      sigma_(QuantLib::ext::make_shared<PseudoParameter>(1)), kappa_(QuantLib::ext::make_shared<PseudoParameter>(1)),
-      driftFreeState_(driftFreeState) {
-    sigma_->setParam(0, inverse(0, sigma));
-    kappa_->setParam(0, inverse(0, kappa));
-}
+    : Parametrization(currency, name), priceCurve_(priceCurve), fxSpotToday_(fxSpotToday), driftFreeState_(driftFreeState) {}
 
-Real CommoditySchwartzParametrization::VtT(Real t, Real T) {
-    Real sig = sigmaParameter();
-    Real kap = kappaParameter();
-    if (fabs(kap) < QL_EPSILON)
-        return sig * sig * (T-t);
-    else
-        return sig * sig * (1.0 - std::exp(-2.0 * kap * (T-t))) / (2.0 * kap);    
-}
 
 } // namespace QuantExt

@@ -93,6 +93,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
                                                   strikePrice, CreditVolCurve::Type::Price);
+        Real atmVolatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
+                                                     Null<Real>(), CreditVolCurve::Type::Price);
         Real stdDev = volatility * std::sqrt(exerciseTime);
 
         // calculate the default-adjusted forward price
@@ -118,6 +120,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             results_.additionalResults["strikePrice"] = arguments_.strike;
             results_.additionalResults["strikePriceDefaultAdjusted"] = strikePrice;
             results_.additionalResults["volatility"] = volatility;
+            results_.additionalResults["atmVolatility"] = atmVolatility;
             results_.additionalResults["standardDeviation"] = stdDev;
             results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
             results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
@@ -177,13 +180,15 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
                                                   strikeSpread, CreditVolCurve::Type::Spread);
+        Real atmVolatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm),
+                                                     Null<Real>(), CreditVolCurve::Type::Spread);
         Real stdDev = volatility * std::sqrt(exerciseTime);
 
         // calculate the default-adjusted forward price
 
         Real forwardPriceExclFep = 1.0 - underlyingNpv / arguments_.swap->notional() /
                                              (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
-        Real forwardPrice = forwardPriceExclFep - fep() / arguments_.swap->notional() / discTradeCollToExercise;
+        Real forwardPrice = forwardPriceExclFep - unrealizedFep() / arguments_.swap->notional() / discTradeCollToExercise;
 
         // the default-adjusted index value Vc using a continuous annuity
 
@@ -200,7 +205,7 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         // calibrate the default-adjusted forward spread m to the forward price
 
-        SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 100);
+        SimpsonIntegral simpson = SimpsonIntegral(1.0E-7, 16);
 
         auto target = [this, &Vc, &simpson, exerciseTime, maturityTime, averageInterestRate, stdDev,
                        forwardPrice](Real m) {
@@ -280,10 +285,11 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             results_.additionalResults["strikeAdjustment"] = strikeAdjustment;
             results_.additionalResults["strikeSpread"] = strikeSpread;
             results_.additionalResults["volatility"] = volatility;
+            results_.additionalResults["atmVolatility"] = atmVolatility;
             results_.additionalResults["standardDeviation"] = stdDev;
-            results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
+            results_.additionalResults["unrealizedFepAdjustedForwardPrice"] = forwardPrice;
             results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
-            results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
+            results_.additionalResults["unrealizedFepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
             results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
             results_.additionalResults["avgRate_te_tm"] = averageInterestRate;
             results_.additionalResults["exerciseBoundary"] =

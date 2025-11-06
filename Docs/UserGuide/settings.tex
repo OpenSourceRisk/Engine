@@ -1,0 +1,165 @@
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+% Avoid useless warnings about included images
+% Reference: https://tex.stackexchange.com/a/78020
+%\pdfsuppresswarningpagegroup=1
+
+% Use \hypersetup here to get rid of the ugly boxes around links
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% Avoid warning about missing font for \textbackslash character.
+\usepackage[T1]{fontenc}
+
+% For nicer paragraph spacing
+\usepackage{parskip}
+
+\usepackage[disable]{todonotes}
+%\usepackage{todonotes}
+
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{mleftright}
+\usepackage{graphicx}
+%\usepackage[miktex]{gnuplottex}
+%\ShellEscapetrue
+\usepackage{epstopdf}
+\usepackage{longtable}
+\usepackage{floatrow}
+\usepackage{makecell}
+
+% Use \setminted here to get horizontal line above and below listings
+\usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
+\usepackage{textcomp}
+\usepackage{color,soul}
+\usepackage[font={small,it}]{caption}
+\floatsetup[listing]{style=Plaintop}    
+\floatsetup[longlisting]{style=Plaintop}    
+
+% Turn off indentation but allow \indent command to still work.
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usepackage{longtable,supertabular}
+\usepackage{listings}
+\lstset{
+  frame=top,frame=bottom,
+  basicstyle=\ttfamily,
+  language=XML,
+  tabsize=2,
+  belowskip=2\medskipamount
+}
+
+% All listings have a left aligned caption. This looks better as the listings themselves are left aligned.
+\captionsetup[listing]{justification=justified,singlelinecheck=false}
+
+\usepackage{tabu}
+\tabulinesep=1.0mm
+\restylefloat{table}
+
+\usepackage{siunitx}
+\usepackage{tablefootnote}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{footmisc}
+\newenvironment{longlisting}{\captionsetup{type=listing}}{}
+%\usepackage[colorlinks=true]{hyperref}
+
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
+
+\newcommand{\UserGuide}{}
+
+% Unconditional expectation operator
+\DeclareMathOperator{\E}{\mathbb{E}}
+\newcommand\Ex[1]{\E\mleft[\,#1\,\mright]}
+
+% Conditional expectation operator
+\newcommand\CEx[2]{\E\mleft[\,#1\;\middle|\;#2\,\mright]}
+
+% Unconditional variance operator
+\DeclareMathOperator{\V}{\mathbb{V}}
+\newcommand\Var[1]{\V\mleft[\,#1\,\mright]}
+
+\renewcommand\P{\ensuremath{\mathbb{P}}}
+%\newcommand\E{\ensuremath{\mathbb{E}}}
+\newcommand\Q{\ensuremath{\mathbb{Q}}}
+\newcommand\I{\mathds{1}}
+\newcommand\F{\ensuremath{\mathcal F}}
+%\newcommand\V{\ensuremath{\mathbb{V}}}
+\newcommand\YOY{{\rm YOY}}
+\newcommand\Prob{\ensuremath{\mathbb{P}}}
+\newcommand{\D}[1]{\mbox{d}#1}
+\newcommand{\NPV}{\mathit{NPV}}
+\newcommand{\CMS}{\mathit{CMS}}
+\newcommand{\CDS}{\mathit{CDS}}
+\newcommand{\CVA}{\mathit{CVA}}
+\newcommand{\DVA}{\mathit{DVA}}
+\newcommand{\FVA}{\mathit{FVA}}
+\newcommand{\COLVA}{\mathit{COLVA}}
+\newcommand{\FCA}{\mathit{FCA}}
+\newcommand{\FBA}{\mathit{FBA}}
+\newcommand{\KVA}{\mathit{KVA}}
+\newcommand{\MVA}{\mathit{MVA}}
+\newcommand{\PFE}{\mathit{PFE}}
+\newcommand{\EE}{\mathit{EE}}
+\newcommand{\EPE}{\mathit{EPE}}
+\newcommand{\ENE}{\mathit{ENE}}
+\newcommand{\EEPE}{\mathit{EEPE}}
+\newcommand{\EEE}{\mathit{EEE}}
+\newcommand{\EAD}{\mathit{EAD}}
+\newcommand{\PE}{\mathit{PE}}
+\newcommand{\NE}{\mathit{NE}}
+\newcommand{\RC}{\mathit{RC}}
+\newcommand{\RW}{\mathit{RW}}
+\newcommand{\NS}{\mathit{NS}}
+\newcommand{\PD}{\mathit{PD}}
+\newcommand{\LGD}{\mathit{LGD}}
+\newcommand{\DIM}{\mathit{DIM}}
+\newcommand{\IM}{\mathit{DIM}}
+\newcommand{\DF}{\mathit{DF}}
+\newcommand{\MA}{\mathit{MA}}
+\newcommand{\SCVA}{\mathit{SCVA}}
+\newcommand{\bs}{\textbackslash}
+\newcommand{\REDY}{\color{red}Y}
+\newcommand{\IA}{\mathit{IA}}
+\newcommand{\Th}{\mathit{TH}}
+\newcommand{\CSA}{\mathit{CSA}}
+\newcommand{\BACVA}{\mathit{BA-CVA}}
+\newcommand{\MPR}{\mathit{MPR}}
+\newcommand{\MF}{\mathit{MF}}
+\newcommand{\RWA}{\mathit{RWA}}
+\newcommand{\SNH}{\mathit{SNH}}
+\newcommand{\HMA}{\mathit{HMA}}
+\newcommand{\IH}{\mathit{IH}}
+\newcommand{\Hdg}{\mathit{Hdg}}
+\newcommand{\WS}{\mathit{WS}}
+\newcommand{\FP}{\mathit{FP}}
+\newcommand{\flt}{\mathit{flt}}
+\newcommand{\fix}{\mathit{fix}}
+\newcommand{\form}{\mathit{form}}
+\newcommand{\OIS}{\mathit{OIS}}
+\newcommand{\ON}{\mathit{ON}}
+\newcommand{\AVG}{\mathit{AVG}}
+\newcommand{\MAX}{\mathit{MAX}}
+\newcommand{\MIN}{\mathit{MIN}}
+

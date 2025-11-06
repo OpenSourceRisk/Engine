@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="CPI_Floor">
+        <TradeType>CapFloor</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <valuation_date>2025-02-10</valuation_date>
+                <party_id>party</party_id>
+            </AdditionalFields>
+        </Envelope>
+        <CapFloorData>
+            <LongShort>Short</LongShort>
+            <LegData>
+                <LegType>CPI</LegType>
+                <Payer>false</Payer>
+                <Currency>EUR</Currency>
+                <Notionals>
+                    <Notional>10000000</Notional>
+                    <Exchanges>
+                        <NotionalFinalExchange>true</NotionalFinalExchange>
+                    </Exchanges>
+                </Notionals>
+                <DayCounter>ACT/ACT</DayCounter>
+                <PaymentConvention>Following</PaymentConvention>
+                <ScheduleData>
+                    <Dates>
+                        <Calendar>EUR</Calendar>
+                        <Dates>
+                            <Date>2043-02-03</Date>
+                        </Dates>
+                    </Dates>
+                </ScheduleData>
+                <CPILegData>
+                    <Index>EUHICPXT</Index>
+                    <Rates>
+                        <Rate>1</Rate>
+                    </Rates>
+                    <BaseCPI>100</BaseCPI>
+                    <StartDate>2023-02-03</StartDate>
+                    <ObservationLag>3M</ObservationLag>
+                    <Interpolation>AsIndex</Interpolation>
+                    <SubtractInflationNotional>true</SubtractInflationNotional>
+                </CPILegData>
+            </LegData>
+            <Floors>
+                <Floor>0.00</Floor>
+            </Floors>
+        </CapFloorData>
+    </Trade>
+</Portfolio>

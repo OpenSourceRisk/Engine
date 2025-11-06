@@ -123,16 +123,6 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
     BOOST_CHECK_EQUAL(commodityForward->position(), Position::Type::Short);
     BOOST_CHECK_CLOSE(commodityForward->NPV(), -800.0, testTolerance);
 
-    // Check that negative quantity throws an error
-    forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, -quantity,
-                                                              maturity, strike);
-    BOOST_CHECK_THROW(forward->build(engineFactory), Error);
-
-    // Check that negative strike throws an error
-    forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, quantity,
-                                                              maturity, -strike);
-    BOOST_CHECK_THROW(forward->build(engineFactory), Error);
-
     // Check that build fails when commodity name does not match that in the market
     forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(envelope, position, "GOLD", currency, quantity, maturity,
                                                               strike);

@@ -496,10 +496,10 @@ std::ostream& operator<<(std::ostream& o, const IndexInfo& i) {
     return o;
 }
 
-QuantLib::ext::shared_ptr<FallbackIborIndex> IndexInfo::irIborFallback(const IborFallbackConfig& iborFallbackConfig,
+QuantLib::ext::shared_ptr<FallbackIborIndex> IndexInfo::irIborFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                                                const Date& asof) const {
-    if (isIrIbor_ && iborFallbackConfig.isIndexReplaced(name_, asof)) {
-        auto data = iborFallbackConfig.fallbackData(name_);
+    if (isIrIbor_ && iborFallbackConfig->isIndexReplaced(name_, asof)) {
+        auto data = iborFallbackConfig->fallbackData(name_);
         // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
         auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(data.rfrIndex));
         QL_REQUIRE(on, "IndexInfo::irIborFallback(): could not cast rfr index '"
@@ -509,10 +509,11 @@ QuantLib::ext::shared_ptr<FallbackIborIndex> IndexInfo::irIborFallback(const Ibo
     return nullptr;
 }
 
-QuantLib::ext::shared_ptr<FallbackOvernightIndex> IndexInfo::irOvernightFallback(const IborFallbackConfig& iborFallbackConfig,
+QuantLib::ext::shared_ptr<FallbackOvernightIndex>
+IndexInfo::irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 									 const Date& asof) const {
-    if (isIrIbor_ && iborFallbackConfig.isIndexReplaced(name_, asof)) {
-        auto data = iborFallbackConfig.fallbackData(name_);
+    if (isIrIbor_ && iborFallbackConfig->isIndexReplaced(name_, asof)) {
+        auto data = iborFallbackConfig->fallbackData(name_);
         // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
         auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(data.rfrIndex));
         QL_REQUIRE(on, "IndexInfo::irIborFallback(): could not cast rfr index '"
@@ -587,7 +588,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
 
 
 // Remove in the next release, interpolation has to happen in the coupon (script) and not in the index
-QuantExt::ext::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
+std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName) {
     QL_REQUIRE(!indexName.empty(), "parseScriptedInflationIndex(): empty index name");
     std::vector<std::string> tokens;

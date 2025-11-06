@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <orea/scenario/scenariogenerator.hpp>
 
 namespace ore {
@@ -37,7 +36,7 @@ QuantLib::ext::shared_ptr<Scenario> ScenarioPathGenerator::next(const Date& d) {
     }
 }
 
-std::vector<QuantLib::ext::shared_ptr<Scenario>> ScenarioLoaderGenerator::nextPath() {
+std::vector<QuantLib::ext::shared_ptr<Scenario>> ScenarioLoaderPathGenerator::nextPath() {
     auto scenarios = scenarioLoader_->getScenarios(i_);
     std::vector<QuantLib::ext::shared_ptr<Scenario>> vs;
     for (const auto& s : scenarios)

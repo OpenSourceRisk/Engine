@@ -1,0 +1,23 @@
+\subsubsection{FX KIKO Barrier Option}
+\label{pricing:fx_kikobarrieroption}
+
+FX KIKO Barrier Options are priced by replication, this replication strategy is briefly described in \cite{Clark_2011} and \cite{Wystup_2006}
+The strategy makes use of FX Barrier Options and FX Double Barrier Options.
+There are three replications cases:
+\begin{enumerate}
+\item \textbf{The Knock-In barrier has been triggered before the evaluation date}: A knock-Out option with the knock-out barrier level is priced.
+\item \textbf{The knock-In barrier is untriggered, the FX spot is between the two barriers}: This is replicated as follow
+$$
+\NPV(barrier_{knockOut}, barrier_{knockIn}) = NPV_{KO}(barrier_{knockOut}) - NPV_{DKO}(barrier_{knockOut}, barrier_{knockIn})
+$$
+
+where $NPV_{KO}$ is the NPV for a knock-out single barrier option, and $NPV_{DKO}$ is the NPV for a double barrier knock-out option.
+
+\item \textbf{The knock-In barrier is untriggered, the FX spot is above or below the two barriers}: This is replicated as follows:
+$$
+\NPV(barrier_{knockOut}, barrier_{knockIn}) = NPV_{KO}(barrier_{knockOut}) - NPV_{KO}(barrier_{knockIn})
+$$
+
+
+
+\end{enumerate}

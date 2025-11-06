@@ -125,7 +125,8 @@ void EquityOptionPosition::build(const QuantLib::ext::shared_ptr<ore::data::Engi
             QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> builder =
                 QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(engineFactory->builder(tradeTypeBuilder));
             QL_REQUIRE(builder, "EquityOptionPosition::build(): no engine builder for '" << tradeTypeBuilder << "'");
-            options_.back()->setPricingEngine(builder->engine(u.underlying().name(), eq->currency(), optionExpiry));
+            options_.back()->setPricingEngine(builder->engine(u.underlying().name(), eq->currency(),
+                envelope().additionalField("discount_curve", false, std::string()), optionExpiry));
             setSensitivityTemplate(*builder);
             addProductModelEngine(*builder);
         }

@@ -70,6 +70,27 @@ InputParameters::InputParameters() {
     loadParameters();
 }
 
+bool checkString(const std::string& obj) { return true; }
+
+std::string InputParameters::loadParameterString(const std::string& analytic, const std::string& param,
+                                                         bool mandatory) {
+    if (parameters_.has(analytic, param))
+        return parameters_.get(analytic, param, mandatory);
+    else
+        return std::string();
+}
+
+std::string InputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
+                                                    bool mandatory) {
+    return loadParameterString(analytic, param, mandatory);
+}
+
+
+const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>&
+InputParameters::curveConfig(const std::string& s) const {
+    return curveConfigs_.get(s);
+}
+
 void InputParameters::setAsOfDate(const std::string& s) {
     asof_ = parseDate(s);
     Settings::instance().evaluationDate() = asof_;
@@ -91,6 +112,15 @@ void InputParameters::setRefDataManagerFromFile(const std::string& fileName) {
     refDataManager_ = QuantLib::ext::make_shared<BasicReferenceDataManager>(fileName);
 }
 
+void InputParameters::setBaselTrafficLightConfig(const std::string& xml) {
+    baselTrafficLightConfig_ = QuantLib::ext::make_shared<BaselTrafficLightData>();
+    baselTrafficLightConfig_->fromXMLString(xml);
+}
+
+void InputParameters::setBaselTrafficLightFromFile(const std::string& fileName) {
+    baselTrafficLightConfig_ = QuantLib::ext::make_shared<BaselTrafficLightData>(fileName);
+}
+
 void InputParameters::setScriptLibrary(const std::string& xml) {
     ScriptLibraryData data;
     data.fromXMLString(xml);
@@ -108,6 +138,11 @@ void InputParameters::setConventions(const std::string& xml) {
     conventions_->fromXMLString(xml);
     InstrumentConventions::instance().setConventions(conventions_);
 }
+
+void InputParameters::setConventions(const QuantLib::ext::shared_ptr<Conventions>& convs) {
+    conventions_ = convs;
+    InstrumentConventions::instance().setConventions(conventions_);
+}
     
 void InputParameters::setConventionsFromFile(const std::string& fileName) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
@@ -115,10 +150,14 @@ void InputParameters::setConventionsFromFile(const std::string& fileName) {
     InstrumentConventions::instance().setConventions(conventions_);
 }
 
-void InputParameters::setCurveConfigs(const std::string& xml) {
+void InputParameters::setCurveConfigs(const std::string& xml, std::string id) {
     auto curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfig->fromXMLString(xml);
-    curveConfigs_.add(curveConfig);
+    curveConfigs_.add(curveConfig, id);
+}
+
+void InputParameters::setCurveConfigs(const QuantLib::ext::shared_ptr<CurveConfigurations>& cc, std::string id) {
+    curveConfigs_.add(cc, id);
 }
 
 void InputParameters::setCurveConfigsFromFile(const std::string& fileName, std::string id) {
@@ -170,6 +209,10 @@ void InputParameters::setIborFallbackConfigFromFile(const std::string& fileName)
 void InputParameters::setPricingEngine(const std::string& xml) {
     pricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     pricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& ed) {
+    pricingEngine_ = ed;
 }
 
 void InputParameters::setPricingEngineFromFile(const std::string& fileName) {
@@ -302,6 +345,11 @@ void InputParameters::setStressScenarioDataFromFile(const std::string& fileName)
     stressScenarioData_->fromFile(fileName);
 }
 
+void InputParameters::setStressScenarioData(
+    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& stressScenarioData) {
+    stressScenarioData_ = stressScenarioData;
+}
+
 void InputParameters::setStressSensitivityScenarioData(const std::string& xml) {
     stressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     stressSensitivityScenarioData_->fromXMLString(xml);
@@ -412,6 +460,36 @@ void InputParameters::setXvaStressSensitivityScenarioDataFromFile(const std::str
     xvaStressSensitivityScenarioData_->fromFile(fileName);
 }
 
+void InputParameters::setSensitivityStressSimMarketParams(const std::string& xml) {
+    sensitivityStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    sensitivityStressSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setSensitivityStressSimMarketParamsFromFile(const std::string& fileName) {
+    sensitivityStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    sensitivityStressSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setSensitivityStressScenarioData(const std::string& xml) {
+    sensitivityStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    sensitivityStressScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setSensitivityStressScenarioDataFromFile(const std::string& fileName) {
+    sensitivityStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    sensitivityStressScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setSensitivityStressSensitivityScenarioData(const std::string& xml) {
+    sensitivityStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    sensitivityStressSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setSensitivityStressSensitivityScenarioDataFromFile(const std::string& fileName) {
+    sensitivityStressSensitivityScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    sensitivityStressSensitivityScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setXvaSensiSimMarketParams(const std::string& xml) {
     xvaSensiSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     xvaSensiSimMarketParams_->fromXMLString(xml);
@@ -459,8 +537,12 @@ void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
     cvaSensitivities_.clear();
 
     std::ifstream iss(fileName);
-    std::string line;
+    if (!iss.is_open()) {
+        ALOG("Error opening cva sensitivity file " << fileName);
+	return;
+    }
 
+    std::string line;
     while (std::getline(iss, line)) {
         vector<string> tokens;
         boost::trim(line);
@@ -497,6 +579,10 @@ void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
     SaCvaSensitivityLoader cvaLoader;
     cvaLoader.loadFromRawSensis(cvaSensitivities_, baseCurrency_, counterpartyManager_);
     saCvaNetSensitivities_ = cvaLoader.netRecords();
+
+    if (saCvaNetSensitivities().size() == 0) {
+        ALOG("Loaded " << saCvaNetSensitivities().size() << " sacva net sensitivities");
+    }
 }
 
 // XVA Explain
@@ -609,6 +695,32 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
     setCovarianceData(reader);
 }
 
+void InputParameters::setCorrelationDataFromFile(const std::string& fileName) {
+    ore::data::CSVFileReader reader(fileName, true);
+    std::vector<std::string> dummy;
+    while (reader.next()) {
+        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << correlationData_.size() << " valid correlation data lines from " << fileName);
+}
+
+void InputParameters::setCorrelationData(ore::data::CSVReader& reader) {
+    std::vector<std::string> dummy;
+    while (reader.next()) {
+        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
+                                       *parseRiskFactorKey(reader.get(1), dummy))] =
+            ore::data::parseReal(reader.get(2));
+    }
+    LOG("Read " << correlationData_.size() << " valid covariance data lines");
+}
+
+void InputParameters::setCorrelationDataFromBuffer(const std::string& xml) {
+    ore::data::CSVBufferReader reader(xml, false);
+    setCorrelationData(reader);
+}
+
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
     sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(
         fileName, csvSeparator_, csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
@@ -624,12 +736,18 @@ void InputParameters::setBenchmarkVarPeriod(const std::string& period) {
 }
 
 void InputParameters::setScenarioReader(const std::string& fileName) {
-    boost::filesystem::path baseScenarioPath(fileName);
-    QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
-    QL_REQUIRE(is_regular_file(baseScenarioPath),
-               "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
-        fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
+    boost::filesystem::path baseScenarioPath;
+    try {
+        boost::filesystem::path baseScenarioPath(fileName);
+        if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
+            scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
+                fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
+        }
+    } catch (const std::exception& e) {
+        // If the file does not exist or fails, assume it is a scenario string
+        scenarioReader_ = QuantLib::ext::make_shared<ScenarioBufferReader>(
+            fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(true));
+    }
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {
@@ -771,6 +889,14 @@ void InputParameters::insertAnalytic(const std::string& s) {
 
 void InputParameters::removeAnalytic(const std::string& s) { analytics_.erase(s); }
 
+void InputParameters::setPnlDateAdjustedRiskFactors(const std::string& s) {
+    pnlDateAdjustedRiskFactors_ = parseListOfValues<RiskFactorKey::KeyType>(s, &parseRiskFactorKeyType);
+}
+
+void InputParameters::setRiskFactorLevel(bool b) {
+    riskFactorLevel_ = b;
+}
+
 OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);
@@ -779,7 +905,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     scenarioDumpFileName_ = params->get("simulation", "scenariodump", false);
     scenarioOutputName_ = params->get("scenario", "scenarioOutputFile", false);
     if (scenarioOutputName_.empty())
-        scenarioOutputName_ = params->get("scenarioStatistics", "scenarioOutputFile", false);
+        scenarioOutputName_ = params->get("scenarioGeneration", "scenarioOutputFile", false);
     cubeFileName_ = params->get("simulation", "cubeFile", false);
     mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);
@@ -798,6 +924,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     stressTestCashflowFileName_ = params->get("stress", "scenarioCashflowOutputFile", false);
     stressZeroScenarioDataFileName_ = params->get("stress", "stressZeroScenarioDataFile", false);
     xvaStressTestFileName_ = params->get("xvaStress", "scenarioOutputFile", false);
+    sensitivityStressTestFileName_ = params->get("sensitivityStress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
     if (varFileName_.empty())
         varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
@@ -806,6 +933,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
+    correlationOutputFileName_ = params->get("correlation", "outputFileName", false);
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
@@ -834,6 +962,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["stress_cashflows"] = stressTestCashflowFileName_;
     fileNameMap_["stress_ZeroStressData"] = stressZeroScenarioDataFileName_;
     fileNameMap_["xva_stress"] = xvaStressTestFileName_;
+    fileNameMap_["sensitivity_stress"] = sensitivityStressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
     fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;
@@ -841,6 +970,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
+    fileNameMap_["correlation"] = correlationOutputFileName_;
     fileNameMap_["risk_factors"] = riskFactorsOutputFileName_;
     fileNameMap_["market_objects"] = marketObjectsOutputFileName_;
     fileNameMap_["calibration"] = calibrationOutputFileName_;

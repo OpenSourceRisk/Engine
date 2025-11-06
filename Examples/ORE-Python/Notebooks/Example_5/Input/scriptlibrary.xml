@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<ScriptLibrary>
+  <Script>
+    <Name>FxTaRF</Name>
+    <!-- default script -->
+    <Script purpose="">
+        <Code><![CDATA[
+        NUMBER PnL, AccProfit, Payoff, isTriggered;
+        NUMBER Fixing, Triggered, d, r;
+        FOR d IN (1, SIZE(FixingDates), 1) DO
+            Fixing = Underlying(FixingDates[d]);
+            PnL = 0;
+            FOR r IN (1, SIZE(RangeLowerBounds), 1) DO
+            IF Fixing > RangeLowerBounds[r] AND Fixing <= RangeUpperBounds[r] THEN
+                PnL = PnL + RangeLeverages[r] * FixingAmount * (Fixing - RangeStrikes[r]);
+            END;
+            END;
+            IF isTriggered != 1 THEN
+            AccProfit = AccProfit + max(PnL, 0.0);
+            IF AccProfit >= KnockOutProfitAmount THEN
+                isTriggered = 1;
+                Payoff = Payoff + LOGPAY(TargetAmount - (AccProfit - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            ELSE
+                Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            END;
+            END;
+        END;
+        value = LongShort * Payoff;
+        ]]></Code>
+        <NPV>value</NPV>
+    <Results>
+        <Result>isTriggered</Result>
+    </Results>
+    </Script>
+    <!-- script that will be preferred in an AMC context -->
+    <Script purpose="AMC">
+        <Code><![CDATA[
+        NUMBER PnL, AccProfit[SIZE(FixingDates)], Payoff, isTriggered;
+        NUMBER Fixing, Triggered, d, r;
+        NUMBER a, s, NthPayoff[SIZE(FixingDates)], BwdPayoff, _AMC_NPV[SIZE(_AMC_SimDates)];
+        FOR d IN (1, SIZE(FixingDates), 1) DO
+          Fixing = Underlying(FixingDates[d]);
+          PnL = 0;
+          FOR r IN (1, SIZE(RangeLowerBounds), 1) DO
+            IF Fixing > RangeLowerBounds[r] AND Fixing <= RangeUpperBounds[r] THEN
+              PnL = PnL + RangeLeverages[r] * FixingAmount * (Fixing - RangeStrikes[r]);
+            END;
+          END;
+          IF isTriggered != 1 THEN
+            AccProfit[d] = AccProfit[d] + max(PnL, 0.0);
+            IF AccProfit[d] >= KnockOutProfitAmount THEN
+              isTriggered = 1;
+              Payoff = Payoff + LOGPAY(TargetAmount - (AccProfit[d] - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+              NthPayoff[d] = LOGPAY(TargetAmount - (AccProfit[d] - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            ELSE
+              Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+              NthPayoff[d] = LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+            END;
+          END;
+          IF d < SIZE(FixingDates) THEN
+            AccProfit[d + 1] = AccProfit[d];
+          END;
+        END;
+        value = LongShort * Payoff;
+        FOR a IN (SIZE(FixingAndSimDates), 1, -1) DO
+          s = DATEINDEX(FixingAndSimDates[a], _AMC_SimDates, EQ);
+          d = DATEINDEX(FixingAndSimDates[a], FixingDates, GT);
+          IF s > 0 THEN
+            IF d > 1 THEN
+              _AMC_NPV[s] = LongShort * NPVMEM( BwdPayoff, _AMC_SimDates[s], a, 1 == 1, AccProfit[d-1]);
+            ELSE
+              _AMC_NPV[s] = LongShort * NPVMEM( BwdPayoff, _AMC_SimDates[s], a);
+            END;
+          END;
+          d = DATEINDEX(FixingAndSimDates[a], FixingDates, EQ);
+          IF d > 0 THEN
+            BwdPayoff = BwdPayoff + NthPayoff[d];
+          END;
+        END;
+        ]]></Code>
+      <NPV>value</NPV>
+      <Results>
+         <Result>isTriggered</Result>
+      </Results>
+        <NewSchedules>
+          <NewSchedule>
+            <Name>FixingAndSimDates</Name>
+            <Operation>Join</Operation>
+            <Schedules>
+              <Schedule>_AMC_SimDates</Schedule>
+              <Schedule>FixingDates</Schedule>
+            </Schedules>
+          </NewSchedule>
+        </NewSchedules>
+        <ConditionalExpectation>
+          <ModelStates>
+            <ModelState>Asset</ModelState>
+          </ModelStates>
+        </ConditionalExpectation>
+    </Script>
+  </Script>
+</ScriptLibrary>

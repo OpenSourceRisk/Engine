@@ -39,6 +39,7 @@ public:
                                        const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& variateGenerator);
     const Sample<MultiPath>& next() const override;
     void reset() override;
+    const TimeGrid& timeGrid() const override { return timeGrid_; }
 
 private:
     const QuantLib::ext::shared_ptr<StochasticProcess> process_;

@@ -147,6 +147,10 @@ public:
 
     //! write out parameters
     virtual void writeOutParameters() override{};
+          
+    std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) override;
+    std::string loadParameterXMLString(const std::string& analytic, const std::string& param,
+                                               bool mandatory) override;
 
 protected:
     QuantLib::ext::shared_ptr<Parameters> params_;

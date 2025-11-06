@@ -28,7 +28,7 @@
 #include <ored/utilities/indexparser.hpp>
 
 namespace ore {
-namespace analytics {
+namespace data {
 using namespace std;
 using namespace QuantLib;
 using namespace ore::data;
@@ -82,8 +82,6 @@ public:
     }
     Handle<Quote> recoveryRate(const string&, const string&) const override { return Handle<Quote>(); }
 
-    Handle<Quote> conversionFactor(const string&, const string&) const override { return Handle<Quote>(); }
-
     Handle<QuantExt::CreditVolCurve> cdsVol(const string&, const string&) const override {
         return Handle<QuantExt::CreditVolCurve>();
     }
@@ -133,6 +131,10 @@ public:
 
     Handle<Quote> securitySpread(const string&, const string&) const override { return Handle<Quote>(); }
 
+    Handle<Quote> conversionFactor(const string&, const string&) const override { return Handle<Quote>(); }
+
+    Handle<Quote> securityPrice(const string&, const string&) const override { return Handle<Quote>(); }
+
     QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const std::string&,
                                                                        const std::string&) const override {
         return QuantLib::Handle<QuantExt::PriceTermStructure>();
@@ -157,5 +159,5 @@ public:
     }
 };
 
-} // namespace analytics
+} // namespace data
 } // namespace ore

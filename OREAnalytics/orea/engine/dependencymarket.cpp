@@ -212,15 +212,15 @@ Handle<IborIndex> DependencyMarket::iborIndex(const string& name, const string& 
     // for our main use case of the configuration builder using the dependency market via the portfolio
     // analyser.
 
-    if (iborFallbackConfig_.isIndexReplaced(name, asofDate())) {
-        auto rfrName = iborFallbackConfig_.fallbackData(name).rfrIndex;
+    if (iborFallbackConfig_->isIndexReplaced(name, asofDate())) {
+        auto rfrName = iborFallbackConfig_->fallbackData(name).rfrIndex;
         addRiskFactor(RiskFactorKey::KeyType::IndexCurve, rfrName);
         addMarketObject(MarketObject::IndexCurve, rfrName, config);
         // we don't support convention based indices here, this might change with ore ticket 1758
         auto oi = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(rfrName, yts));
         QL_REQUIRE(oi != nullptr, "DependencyMarket::iborIndex(): could not cast rfr index '"
                                       << rfrName << "' to OvernightIndex, this is unexpected.");
-        auto fallbackData = iborFallbackConfig_.fallbackData(name);
+        auto fallbackData = iborFallbackConfig_->fallbackData(name);
 	if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
 	    ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(original, oi, fallbackData.spread,
                                                                                fallbackData.switchDate, false));
@@ -370,7 +370,11 @@ Handle<Quote> DependencyMarket::recoveryRate(const string& name, const string&) 
 }
 
 Handle<Quote> DependencyMarket::conversionFactor(const string& name, const string& config) const {
-    addRiskFactor(RiskFactorKey::KeyType::ConversionFactor, name);
+    addMarketObject(MarketObject::Security, name, config);
+    return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+}
+
+Handle<Quote> DependencyMarket::securityPrice(const string& name, const string& config) const {
     addMarketObject(MarketObject::Security, name, config);
     return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 }
@@ -697,19 +701,6 @@ set<ore::data::MarketObject> DependencyMarket::marketObjectTypes() const {
 
 void DependencyMarket::addMarketObject(ore::data::MarketObject type, const string& name, const string& config) const {
     marketObjects_[config][type].insert(name);
-}
-
-std::map<ore::data::MarketObject, std::set<std::string>>
-DependencyMarket::marketObjects(const boost::optional<string> config) const {
-    if (config)
-        return marketObjects_[*config];
-    std::map<ore::data::MarketObject, std::set<std::string>> result;
-    for (auto const& m : marketObjects_) {
-        for (auto const& e : m.second) {
-            result[e.first].insert(e.second.begin(), e.second.end());
-        }
-    }
-    return result;
 }
 
 } // namespace analytics

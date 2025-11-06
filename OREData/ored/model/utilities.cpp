@@ -167,6 +167,46 @@ std::string getCalibrationDetails(LgmCalibrationInfo& info,
     return log.str();
 }
 
+std::string getCalibrationDetails(HwCalibrationInfo& info,
+                                  const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization) {
+    std::ostringstream log;
+    Real t = 0.0;
+    Matrix modelSigma;
+    Array modelKappa;
+    info.hwCalibrationData.clear();
+    for (Size j = 0; j < basket.size(); j++) {
+        Real modelValue = basket[j]->modelValue();
+        Real marketValue = basket[j]->marketValue();
+        Real valueDiff = modelValue - marketValue;
+        Volatility modelVol = 0, marketVol = 0, volDiff = 0;
+        QuantLib::ext::shared_ptr<SwaptionHelper> swaption =
+            QuantLib::ext::dynamic_pointer_cast<SwaptionHelper>(basket[j]);
+        if (swaption != nullptr && parametrization != nullptr) {
+            // report alpha, kappa at t_expiry^-
+            t = parametrization->termStructure()->timeFromReference(swaption->swaption()->exercise()->date(0));
+            modelSigma = parametrization->sigma_x(t - 1E-4);
+            modelKappa = parametrization->kappa(t - 1E-4);
+        }
+        marketVol = basket[j]->volatility()->value();
+        modelVol = impliedVolatility(basket[j]);
+        volDiff = modelVol - marketVol;
+        log << "#" << j << ", t=" << std::setprecision(6) << t << ", modelVol = " << modelVol
+            << ", marketVol = " << marketVol << ", volDiff = " << volDiff << "\n";
+        log << "      modelValue = " << modelValue << ", marketValue = " << marketValue << ", valueDiff = " << valueDiff << "\n";
+        log << "modelkappa = " << modelKappa << "\nmodelSigma =\n" << modelSigma << "\n";
+        info.hwCalibrationData.push_back(
+            HwCalibrationData{t, modelVol, marketVol, modelValue, marketValue, modelSigma, modelKappa});
+    }
+    if (parametrization != nullptr) {
+        // report alpha, kappa at t_expiry^+ for last expiry
+        modelSigma = parametrization->sigma_x(t + 1E-4);
+        modelKappa = parametrization->kappa(t + 1E-4);
+    }
+    log << "t >= " << t << ": kappa = " << modelKappa << "\nsigma = \n" << modelSigma << "\n";
+    return log.str();
+}
+
 std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization,
                                   const QuantLib::ext::shared_ptr<Parametrization>& domesticIrModel) {
@@ -260,10 +300,11 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
-        << std::setw(14) << "(diff)" << std::setw(14) << "Sigma" << setw(14) << "Kappa\n";
+        << std::setw(14) << "(diff)" << std::setw(14) << "Sigma" << setw(14) << "Kappa" << setw(14) << "Seasonality" << setw(14) << "a\n";
     Real t = 0.0;
     Real modelSigma = parametrization->sigmaParameter();
     Real modelKappa = parametrization->kappaParameter();
+    Real modelSeasonality, a;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
         Real marketValue = basket[j]->marketValue();
@@ -277,9 +318,12 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
         marketVol = basket[j]->volatility()->value();
         modelVol = impliedVolatility(basket[j]);
         volDiff = modelVol - marketVol;
+        modelSeasonality = parametrization->m(t);
+        a = parametrization->a(t);
         log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelVol
             << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
-            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelSigma << " " << modelKappa << "\n";
+            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelSigma << std::setw(14) 
+            << modelKappa << std::setw(14) << modelSeasonality << std::setw(14) << a <<"\n";
     }
     if (parametrization != nullptr) {
         modelSigma = parametrization->sigma(t + 1E-4);

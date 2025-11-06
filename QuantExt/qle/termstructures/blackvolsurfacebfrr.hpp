@@ -24,7 +24,7 @@
 
 #include <qle/termstructures/fxvoltimeweighting.hpp>
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/option.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>

@@ -1,0 +1,19 @@
+\subsubsection{Precious Metal Forward}
+\label{pricing:com_pm_forward}
+
+The precious metal forwarding curve is used for respective underlying precious metals.
+The net present value of a precious metal forward can be priced discounting the 
+cashflows at maturity as per:
+$$
+\NPV = \mbox{Quantity}\cdot \omega\cdot (F(0,T) - K) \cdot P(T)
+$$
+where:
+\begin{itemize}
+\item Quantity: number of units of the underlying precious metal
+\item $K$: strike price
+\item $F(0,T)$: the forward precious metal price for maturity $T$ at time 0 (valuation date)
+\item $P(T)$: the discount factor for maturity time $T$
+\item $\omega$: 1 for a forward to buy precious metal, -1 for a forward to sell precious metal
+\end{itemize}
+
+Note that this is the same approach and definition as commodity forward and indeed uses the same framework, however precious metal forwarding curves are typically (but not always) bootstrapped using FX style quotes (i.e. a Spot rate and then forward points).

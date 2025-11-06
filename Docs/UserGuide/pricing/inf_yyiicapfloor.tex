@@ -1,0 +1,40 @@
+\subsubsection{Year-on-Year Cap/Floor}
+\label{pricing:inf_yyiicapfloor}
+
+The Year-on-Year Inflation Indexed Swap exchanges a series of ``Swaplet'' payoffs 
+$$
+\Pi_{YYIIS}(T) = y(T) = \frac{I(T)}{I(S)} - 1
+$$
+for fixed payments, each paid at respective period end $T$. \\
+
+A related Caplet/Floorlet payoff, fixed at period end $T$, is:
+$$
+\Pi_{YYIICF}(T) = \left(\omega(y(T) - K)\right)^+ 
+$$
+
+\medskip
+The time $t$ price of the Caplet/Floorlet (in the T-Forward measure) is then
+$$
+\NPV_{YYIICF}(t) = P(t,T)\,\E^T_t\left[ \left(\omega(y(T) -K)\right)^+\right] 
+$$
+
+Consider the {\em Forward Year-on-Year Rate} as seen at time $t$
+$$
+Y(t) = \frac{\Pi_{YYIIS}(t)}{P(t,T)} = \E^T_t\left[y(T)\right], \qquad Y(T)= y(T),
+$$
+a ratio of tradable assets and a Martingale in the T-Forward measure. 
+
+\medskip
+Assuming e.g. $dY(t) = \sigma\,dW(t)$ then leads to a Bachelier formula for the 
+year-on-year caplet/floorlet price as of today
+$$
+\NPV(0) %= P(t,T)\:\E^T_t\left[ \left(\omega(y(T) - K)\right)^+\right] 
+= P(t,T)\: \mbox{Bachelier}(K, Y(t),\sigma\sqrt{T}, \omega)
+$$
+
+\medskip
+Caps/Floors are composed of a series of YYII Caplets/Floorlets.
+YYII Caps/Floors are quoted in terms of prices by maturity and strike in a range 
+from negative to positive, e.g. -1\% to 6\%. We convert them to equivalent 
+normal volatilities $\sigma_{r,T}$.
+

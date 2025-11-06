@@ -36,9 +36,11 @@ using std::string;
 namespace ore {
 namespace data {
 
-Leg EquityMarginLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                     RequiredFixings& requiredFixings, const string& configuration,
-                                     const QuantLib::Date& openEndDateReplacement, const bool useXbsCurves) const {
+Leg EquityMarginLegBuilder::buildLeg(
+    const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+    RequiredFixings& requiredFixings, const string& configuration, const QuantLib::Date& openEndDateReplacement,
+    const bool useXbsCurves, const bool attachPricer,
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngine) const {
     auto eqMarginData = QuantLib::ext::dynamic_pointer_cast<EquityMarginLegData>(data.concreteLegData());
     QL_REQUIRE(eqMarginData, "Wrong LegType, expected EquityMargin");
      

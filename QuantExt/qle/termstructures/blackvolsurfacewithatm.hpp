@@ -34,8 +34,9 @@ using namespace QuantLib;
 
 //! Wrapper class for a BlackVolTermStructure that easily exposes ATM vols.
 /*! This class implements BlackVolatilityTermStructure and takes a surface (well, any BlackVolTermStructure) as an
-    input. If asked for a volatility with strike=Null<Real>() or 0 it will calculate the forward value and use this as
-    the strike, this makes it easy to access ATMF values.
+    input. If asked for a volatility with strike=Null<Real>() it will calculate the forward value and use this as
+    the strike, this makes it easy to access ATMF values. Only Null<Real>() triggers ATM forward calculation; 
+    numeric strike values (including 0) are passed through unchanged to the underlying surface.
 
     The forward value is calculated using the input spot and yield curves, so can be used for both FX and Equity vols.
 

@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<Simulation>
+  <Parameters>
+    <Grid>528,2W</Grid>
+    <Calendar>EUR,USD,GBP,CHF</Calendar>
+    <Sequence>MersenneTwister</Sequence>
+    <Scenario>Simple</Scenario>
+    <Seed>42</Seed>
+    <Samples>8192</Samples>
+    <DayCounter>A365F</DayCounter>
+  </Parameters>
+  <CrossAssetModel>
+    <Discretization>Euler</Discretization>
+    <DomesticCcy>EUR</DomesticCcy>
+    <Currencies>
+      <Currency>EUR</Currency>
+    </Currencies>
+    <BootstrapTolerance>0.0001</BootstrapTolerance>
+    <InterestRateModels>
+      <LGM ccy="default">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.0</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries> 1Y,  2Y,  3Y, 4Y,  5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 11Y, 12Y, 13Y, 14Y, 15Y, 16Y, 17Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 17Y, 16Y, 15Y, 14Y, 13Y, 12Y, 11y, 10Y, 9Y, 8Y, 7Y, 6Y, 5Y, 4Y, 3Y, 2Y, 1Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>20.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </InterestRateModels>
+    <ForeignExchangeModels>
+      <CrossCcyLGM foreignCcy="default">
+        <DomesticCcy>EUR</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+        </CalibrationOptions>
+      </CrossCcyLGM>
+    </ForeignExchangeModels>
+    <InstantaneousCorrelations/>
+  </CrossAssetModel>
+  <Market>
+    <BaseCurrency>EUR</BaseCurrency>
+    <Currencies>
+      <Currency>EUR</Currency>
+    </Currencies>
+    <YieldCurves>
+      <Configuration>
+        <Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+    <DefaultCurves>
+      <Names>
+        <Name>BANK</Name>
+      </Names>
+      <Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+    </DefaultCurves>
+    <Indices>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+    </Indices>
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+    <SwaptionVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Currencies>
+        <Currency>EUR</Currency>
+      </Currencies>
+      <Expiries>1Y,  2Y,  3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 30Y</Expiries>
+      <Terms>1Y,  2Y,  3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 30Y</Terms>
+      <SimulateATMOnly>true</SimulateATMOnly>
+      <SmileDynamics key="">StickyStrike</SmileDynamics>
+    </SwaptionVolatilities>
+    <AggregationScenarioDataCurrencies>
+      <Currency>EUR</Currency>
+    </AggregationScenarioDataCurrencies>
+    <AggregationScenarioDataIndices>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+    </AggregationScenarioDataIndices>
+  </Market>
+</Simulation>

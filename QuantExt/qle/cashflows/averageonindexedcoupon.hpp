@@ -200,7 +200,7 @@ public:
     AverageONLeg& withNakedOption(const bool nakedOption);
     AverageONLeg& withLocalCapFloor(const bool localCapFloor);
     AverageONLeg& withInArrears(const bool inArrears);
-    AverageONLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
+    AverageONLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
     AverageONLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
     AverageONLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     AverageONLeg& withAverageONIndexedCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
@@ -227,7 +227,7 @@ private:
     bool nakedOption_;
     bool localCapFloor_;
     bool inArrears_;
-    boost::optional<Period> lastRecentPeriod_;
+    QuantLib::ext::optional<Period> lastRecentPeriod_;
     Calendar lastRecentPeriodCalendar_;
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;

@@ -152,7 +152,7 @@
          OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
 			       premiumData,
                                vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
-                               "", "Asian", "Arithmetic", boost::none, boost::none, boost::none);
+                               "", "Asian", "Arithmetic", QuantLib::ext::nullopt, QuantLib::ext::nullopt, QuantLib::ext::nullopt);
 
          QuantLib::ext::shared_ptr<FxAsianOption> asianOption = QuantLib::ext::make_shared<FxAsianOption>(
              env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,

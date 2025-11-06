@@ -28,8 +28,6 @@
 namespace ore {
 namespace data {
 
-void AmcCgSwapEngine::buildComputationGraph() const { AmcCgBaseEngine::buildComputationGraph(); }
-
 void AmcCgSwapEngine::calculate() const {
     leg_ = arguments_.legs;
     currency_ = std::vector<std::string>(leg_.size(), ccy_);

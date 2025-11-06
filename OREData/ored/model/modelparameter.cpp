@@ -95,7 +95,7 @@ VolatilityParameter::VolatilityParameter(bool calibrate, ParamType type, vector<
 VolatilityParameter::VolatilityParameter(bool calibrate, QuantLib::Real value)
     : ModelParameter(calibrate, ParamType::Constant, {}, {value}) {}
 
-const boost::optional<LgmData::VolatilityType>& VolatilityParameter::volatilityType() const { return volatilityType_; }
+const QuantLib::ext::optional<LgmData::VolatilityType>& VolatilityParameter::volatilityType() const { return volatilityType_; }
 
 void VolatilityParameter::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Volatility");

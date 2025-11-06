@@ -19,6 +19,7 @@
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -64,7 +65,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
     const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term,
                              Real& strike)>& matchSmileQuote,
     const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
-    const bool buildCalibrationInfo) {
+    const bool buildCalibrationInfo, const std::string& name) {
 
     try {
         QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase;
@@ -186,7 +187,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 }
             }
 
-            LOG("GenericYieldVolCurve: read " << quotesRead << " vols and " << shiftQuotesRead << " shift quotes");
+            DLOG("GenericYieldVolCurve: read " << quotesRead << " vols and " << shiftQuotesRead << " shift quotes");
 
             // check we have found all requires values
             bool haveAllAtmValues = true;
@@ -283,10 +284,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
             if (config->dimension() == GenericYieldVolatilityCurveConfig::Dimension::ATM) {
                 // Nothing more to do
-                LOG("Returning ATM surface for config " << config->curveID());
+                DLOG("Returning ATM surface for config " << config->curveID());
                 vol_ = atm;
             } else {
-                LOG("Building Cube for config " << config->curveID());
+                DLOG("Building Cube for config " << config->curveID());
                 vector<Period> smileOptionTenors =
                     parseVectorOfValues<Period>(config->smileOptionTenors(), &parsePeriod);
                 vector<Period> smileUnderlyingTenors =
@@ -314,9 +315,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     for (auto& j : i)
                         j = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 
-                LOG("vol cube smile option tenors " << smileOptionTenors.size());
-                LOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
-                LOG("vol cube strike spreads " << spreads.size());
+                DLOG("vol cube smile option tenors " << smileOptionTenors.size());
+                DLOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
+                DLOG("vol cube strike spreads " << spreads.size());
 
                 Size spreadQuotesRead = 0;
                 for (auto& p : config->quotes()) {
@@ -392,13 +393,14 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                 vol - atm->volatility(smileOptionTenors[i], smileUnderlyingTenors[j], 0.0)));
                     }
                 }
-                LOG("Read " << spreadQuotesRead << " quotes for VolCube.");
+                DLOG("Read " << spreadQuotesRead << " quotes for VolCube.");
 
                 // post processing: extrapolate leftmost non-zero value flat to the left and overwrite
                 // zero values
                 for (Size i = 0; i < smileOptionTenors.size(); ++i) {
                     for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
                         Real lastNonZeroValue = 0.0;
+                        bool foundAtLeastOneValue = false;
                         for (Size k = 0; k < spreads.size(); ++k) {
                             QuantLib::ext::shared_ptr<SimpleQuote> q = QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(
                                 *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
@@ -415,7 +417,17 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                             // update last non-zero value
                             if (!zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
                                 lastNonZeroValue = q->value();
+                                foundAtLeastOneValue = true;
                             }
+                        }
+                        if (!foundAtLeastOneValue) {
+                            StructuredCurveWarningMessage(
+                                name, "Volatility curve building partially fails due to missing data.",
+                                "No data for entire smile " + ore::data::to_string(smileOptionTenors[i]) + "/" +
+                                    ore::data::to_string(smileUnderlyingTenors[j]) +
+                                    ". Should the list of SmileOptionTenors resp. "
+                                    "SmileSwapTenors be updated in the curve configuration?")
+                                .log();
                         }
                     }
                 }

@@ -43,8 +43,8 @@ CapFloorHelper::CapFloorHelper(Type type, const Period& tenor, Rate strike, cons
                                QuantLib::VolatilityType quoteVolatilityType, QuantLib::Real quoteDisplacement,
                                bool endOfMonth, bool firstCapletExcluded)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
-          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<QuantLib::ext::function<Real(Real)> > >(
-              quote, QuantLib::ext::bind(&CapFloorHelper::npv, this, QuantLib::ext::placeholders::_1)))),
+          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<std::function<Real(Real)> > >(
+              quote, std::bind(&CapFloorHelper::npv, this, std::placeholders::_1)))),
       type_(type), tenor_(tenor), strike_(strike), iborIndex_(iborIndex), discountHandle_(discountingCurve),
       moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType), quoteVolatilityType_(quoteVolatilityType),
       quoteDisplacement_(quoteDisplacement), endOfMonth_(endOfMonth), firstCapletExcluded_(firstCapletExcluded),

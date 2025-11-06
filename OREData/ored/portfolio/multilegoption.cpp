@@ -134,9 +134,10 @@ void MultiLegOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier,
                                        optionData_.premiumData(), -multiplier, parseCurrency(legCurrencies_.front()),
-                                       engineFactory, builder->configuration(MarketContext::pricing));
+                                       discountCurve, engineFactory, builder->configuration(MarketContext::pricing));
 
     // get engine and assign it
 

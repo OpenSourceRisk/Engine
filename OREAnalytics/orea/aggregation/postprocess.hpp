@@ -130,7 +130,8 @@ public:
         const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator =
             QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>(),
         //! Interpreter for cube storage (where to find which data items)
-        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation = QuantLib::ext::shared_ptr<CubeInterpretation>(),
+        const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation =
+            QuantLib::ext::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
         //! CVA spread sensitivity grid
@@ -174,7 +175,11 @@ public:
         //! Treatment of the initial difference between vm collateral balance and mtm
         //! if true, it keeps an under-collateralisation for in case of a negative mtm constant
         //! and vice-versa for over-collateralisation in case of positive mtm
-        const bool firstMporCollateralAdjustment = false);
+        const bool firstMporCollateralAdjustment = false,
+        //! Continue with the calculation if possible when there is an error
+        bool continueOnError = false,
+        //! use double precision cubes
+        bool useDoublePrecisionCubes = false);
 
     void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -183,11 +188,12 @@ public:
     const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
     const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
     
-    //! Return list of Trade IDs in the portfolio
+    //! Return map of Trade IDs to cube trade indices
     const std::map<string, Size> tradeIds() {
         return cube()->idsAndIndexes();
     }
-    //! Return list of netting set IDs in the portfolio
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
+    //! Return map netting set IDs to (net-)cube netting set indices
     const std::map<string, Size> nettingSetIds() {
         return netCube()->idsAndIndexes();
     }
@@ -318,6 +324,11 @@ public:
 
     //! Return the dynamic initial margin cube (regression approach)
     //const QuantLib::ext::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
+    //! Write DIM distributions through time for all netting sets
+    void exportDimDistribution(ore::data::Report& dimDistributionReport, const Size gridSize = 50,
+                               const Real coveredStdDevs = Null<Real>());
+    //! Write DIM cube for all netting sets
+    void exportDimCube(ore::data::Report& dimCubeReport);
     //! Write average (over samples) DIM evolution through time for all netting sets
     void exportDimEvolution(ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step
@@ -399,6 +410,8 @@ protected:
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
     bool firstMporCollateralAdjustment_;
+    bool continueOnError_;
+    bool useDoublePrecisionCubes_;
 };
 
 } // namespace analytics

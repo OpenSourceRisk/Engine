@@ -1,0 +1,101 @@
+<SensitivityAnalysis>
+	<DiscountCurves>
+		<DiscountCurve ccy="EUR">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">EUR-ON-DEPOSIT</Convention>
+					<Convention id="OIS">EUR-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</DiscountCurve>
+		<DiscountCurve ccy="USD">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-DEPOSIT</Convention>
+					<Convention id="OIS">USD-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</DiscountCurve>
+	</DiscountCurves>
+	<IndexCurves>
+		<IndexCurve index="EUR-ESTER">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">EUR-ON-DEPOSIT</Convention>
+					<Convention id="OIS">EUR-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</IndexCurve>
+		<IndexCurve index="USD-FedFunds">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-DEPOSIT</Convention>
+					<Convention id="OIS">USD-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</IndexCurve>
+		<IndexCurve index="USD-SOFR">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-DEPOSIT</Convention>
+					<Convention id="OIS">USD-OIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</IndexCurve>
+	</IndexCurves>
+	<YieldCurves>
+		<YieldCurve name="__XCCY__-USD">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>XBS, XBS, XBS, XBS, XBS, XBS, XBS, XBS, XBS, XBS, XBS, XBS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="XBS">EUR-USD-XCCY-BASIS</Convention>
+				</Conventions>
+			</ParConversion>
+		</YieldCurve>
+	</YieldCurves>
+	<FxSpots>
+		<FxSpot ccypair="USDEUR">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.001</ShiftSize>
+			<ShiftScheme>Central</ShiftScheme>
+		</FxSpot>
+	</FxSpots>
+	<ComputeGamma>true</ComputeGamma>
+	<UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+</SensitivityAnalysis>
+

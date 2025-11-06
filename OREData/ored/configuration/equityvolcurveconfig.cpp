@@ -31,19 +31,18 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
     const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& equityId, 
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig, 
-    const boost::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       equityId_(equityId), dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
       preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const string& currency,
     const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig, const string& equityId,
     const string& dayCounter, const string& calendar, const OneDimSolverConfig& solverConfig,
-    const boost::optional<bool>& preferOutOfTheMoney)
+    const QuantLib::ext::optional<bool>& preferOutOfTheMoney)
     : EquityVolatilityCurveConfig(curveID, curveDescription, currency,
         std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>{volatilityConfig}, equityId, dayCounter, 
         calendar, solverConfig, preferOutOfTheMoney) {}
@@ -79,7 +78,9 @@ void EquityVolatilityCurveConfig::populateQuotes() {
     }
 }
 
-void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
+void EquityVolatilityCurveConfig::populateRequiredIds() const {
+    requiredCurveIds_[CurveSpec::CurveType::Equity].insert(curveID_);
+    requiredNames_[std::make_pair(MarketObject::DiscountCurve, std::string())].insert(ccy_);
     for (auto vc : volatilityConfig_) {
         if (auto p = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
             requiredCurveIds_[CurveSpec::CurveType::Equity].insert(p->proxyVolatilityCurve());
@@ -112,7 +113,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         solverConfig_.fromXML(n);
     }
 
-    preferOutOfTheMoney_ = boost::none;
+    preferOutOfTheMoney_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
     }
@@ -170,7 +171,6 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 
     populateQuotes();
-    populateRequiredCurveIds();
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) const {

@@ -1,6 +1,75 @@
 \subsubsection{Collateral Bond Obligation CBO}
 \label{ss:CBOData} 
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+This section sets out the termsheet details for a Collateral Bond Obligaton (or Cashflow CDO).
+In the context of ORE the name CBO is in use. 
+
+\medskip
+
+We consider an $n$ tranche CBO. 
+The underlying assets consist of a portfolio of corporate bonds or loans with either amortising or bullet structures. 
+The portfolio can contain fixed or floating rate obligations. 
+Maturities cover a range and do need not coincide. 
+We assume that hazard rate data is available and provided externally.
+There are $n$ tranches in the deal, notes with attachment point $A_k $ and detachment point $D_k$.
+
+The deal is assumed to be structured as a cashflow securitisation. 
+Interest and Notional repayments are directed in an order of priority first to the note holder. 
+We assume the  available pool for Notional repayments consists of scheduled bond notional repayments and recovery amounts. 
+The pool available for interest payments consists of coupons received on the portfolio during the payment period in question.
+
+Class N notes or equity receive the excess pool coupon available after other items in the interest waterfall are discharged.
+
+A typical Interest and Notional waterfall is given in the following.
+
+\bigskip
+{\bf Interest Waterfall:}
+
+\begin{enumerate}
+\item Taxes
+\item Trustee fees and expenses subject to cap
+\item  Administration fees and expenses subject to cap
+\item Payments for hedge transactions  other than early termination
+\item Interest and fees under the liquidity facility
+\item Senior servicing fee
+\item Interest due on Senior notes
+\item Redemption of Senior notes if over-collateralisation or interest coverage tests not met (sufficient to ensure tests are met)
+\item Interest due on next most Senior notes
+\item Redemption of next most Senior notes if over-collateralisation or interest coverage tests not met (sufficient to ensure tests are met)
+\item $\vdots$
+\item Interest Deflection test
+\item Ratings Based Deflection test
+\item Trustee fees in excess of the cap
+\item Administration Fees
+\item Payments of hedge termination fees for early termination
+\item Subordinated servicing fee
+\item Excess to Equity notes up to an IRR Hurdle
+\item Management incentive Fee
+\item Excess to the Equity notes.
+\end{enumerate}
+
+\medskip
+{\bf Principal Waterfall:}
+
+\begin{enumerate}
+\item Unpaid items in the first six items of the Interest Waterfall
+\item Unpaid Interest on the Senior notes
+\item Redemption of the Senior notes if OC and IC tests not met (sufficient to ensure tests are met)
+\item Purchase of additional securities during the re-investment period
+\item Redemption of the Senior notes
+\item Redemption of the next most Senior notes
+\item $\vdots$
+\item Unpaid Subordinated Portfolio servicing fees
+\item Redemption of the Equity notes
+\end{enumerate}
+
+In summary, Interest after tax and expenses goes first to the Senior note holders and then on down the order of priority and finally 
+to the equity noteholder after ensuring that any  tests are satisfied. Notional repayments after expenses go to redemption of the senior notes and finally to the equity note holder.
+
+{\bf Input}}\fi
+
 A Cashflow CDO or Collateral Bond Obligation CBO (trade type \emph{CBO}) can be set up in a short version 
 referencing the underlying CBO structure in a static CBO reference datum or a long version, where the CBO structure is specified explicitly.
 

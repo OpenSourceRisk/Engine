@@ -17,21 +17,24 @@
 */
 
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
-
+#include <ql/termstructures/volatility/equityfx/blackvariancetimeextrapolation.hpp>
 using namespace std;
 using namespace QuantLib;
 
 namespace QuantExt {
 
-BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate, const Calendar& cal,
+template <class StrikeInterpolation, class TimeInterpolation>
+BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::BlackVarianceSurfaceSparse(const Date& referenceDate, const Calendar& cal,
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter, bool lowerStrikeConstExtrap,
-                                                       bool upperStrikeConstExtrap, bool timeFlatExtrapolation)
-    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter,
-                                                                                           lowerStrikeConstExtrap,
-                                                                                           upperStrikeConstExtrap),
-      timeFlatExtrapolation_(timeFlatExtrapolation) {
+                                                       bool upperStrikeConstExtrap,
+                                                       QuantLib::BlackVolTimeExtrapolation timeExtrapolation,
+                                                       const VolatilityType volType,
+                                                       const Real shift)
+    : BlackVarianceTermStructure(referenceDate, cal, Following, dayCounter, volType, shift),
+      OptionInterpolator2d<StrikeInterpolation, TimeInterpolation>(referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap),
+      timeExtrapolation_(timeExtrapolation) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
                "dates, strikes and volatilities vectors not of equal size.");
@@ -55,16 +58,28 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
         variances.push_back(0.0);
     }
 
-    initialise(modDates, modStrikes, variances);
+    this->initialise(modDates, modStrikes, variances);
 }
 
-QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
-
-    QuantLib::Time tb = times().back();
-    if (timeFlatExtrapolation_ && t > tb) {
-        return getValue(tb, strike) * t / tb;
+template <class StrikeInterpolation, class TimeInterpolation>
+QuantLib::Real BlackVarianceSurfaceSparse<StrikeInterpolation, TimeInterpolation>::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
+    QuantLib::Time tb = this->times().back();
+    if (t <= tb || timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVariance) {
+        return this->getValue(t, strike);
+    }
+    if (timeExtrapolation_ == BlackVolTimeExtrapolation::FlatVolatility) { 
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return this->getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceFlat(t, strike, this->times_, varianceSurface);
+    } else if (timeExtrapolation_ == BlackVolTimeExtrapolation::UseInterpolatorVolatility) {
+        auto varianceSurface = [this](double t, double strike, bool extrapolate) -> double { return this->getValue(t, strike); };
+        return timeExtrapolatationBlackVarianceInVolatility(t, strike, this->times_, varianceSurface);
     } else {
-        return getValue(t, strike);
+        QL_FAIL("Unknown time extrapolation method");
     }
 };
+
+template class BlackVarianceSurfaceSparse<QuantLib::Linear, QuantLib::Linear>;
+template class BlackVarianceSurfaceSparse<QuantLib::Linear, CubicSpline>;
+template class BlackVarianceSurfaceSparse<CubicSpline, QuantLib::Linear>;
+template class BlackVarianceSurfaceSparse<CubicSpline, CubicSpline>;
 } // namespace QuantExt

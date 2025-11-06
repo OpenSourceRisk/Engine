@@ -238,6 +238,8 @@ public:
         return tb.set(value, j, k, d);
     }
 
+    bool usesDoublePrecision() const override;
+
 protected:
     void check(Size i, Size j, Size k, Size d) const {
         QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ")");

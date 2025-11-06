@@ -57,7 +57,8 @@ public:
                                const Extrapolation extrapolation = Extrapolation::flatFwd);
     //@}
 
-    void makeThisCurveSpreaded(const Handle<YieldTermStructure>& base);
+    void makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
+                               const std::vector<double>& multiplier);
 
     Date maxDate() const override { return Date::maxDate(); }
     void update() override;
@@ -79,8 +80,9 @@ private:
     mutable std::vector<Real> data_;
     mutable Date today_;
     QuantLib::ext::shared_ptr<QuantLib::Interpolation> dataInterpolation_;
-    Handle<YieldTermStructure> base_;
-    std::vector<Real> baseOffset_;
+    std::vector<Handle<YieldTermStructure>> bases_;
+    std::vector<double> multiplier_;
+    std::vector<std::vector<Real>> basesOffset_;
 };
 
 } // namespace QuantExt

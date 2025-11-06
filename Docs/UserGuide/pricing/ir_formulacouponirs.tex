@@ -1,0 +1,105 @@
+\subsubsection{Interest Rate Swap with Formula Based Coupon}
+\label{pricing:ir_formulacouponirs}
+
+The present value of an Interest rate Swap leg with formula-based
+coupons can be written as follows
+$$
+\NPV_{\form} = \sum_{i=1}^{n} N_i \, c_i^{\form} \,\delta_i\, P(t_i)
+$$
+where each formula based coupon is evaluated as an expectation in the
+T-forward measure associated with the payment time $T=t_i$
+$$
+c_i^{\form} = \E^{t_i}\left[ f_i(R_1, \dots, R_m)\right]
+$$
+and $f_i(\cdot)$ is a function of IBOR and/or CMS rates as described in
+section \ref{ss:formulalegdata}.
+ 
+
+\subsubsection*{Pricing Model}
+
+For non-callable structured coupons, we generalise the model in
+\cite{Brigo_Mercurio_2006}, 13.16.2. We assume the rates
+to evolve with a shifted lognormal dynamics under the $T$-forward
+measure in the respective currency of $R_i$ as
+
+\begin{equation}\label{lndyn} dR_i = \mu_i (R_i + d_i) dt + \sigma_i
+(R_i + d_i) dZ_i
+\end{equation}
+
+with displacements $d_i>0$, drifts $\mu_i$ and volatilities $\sigma_i$
+or alternatively with normal dynamics
+
+\begin{equation}\label{ndyn} dR_i = \mu_i dt + \sigma_i dZ_i
+\end{equation}
+
+for $i=1,\ldots,m$ where in both cases $Z_i$ are correlated Brownian
+motions
+
+\begin{equation*} 
+dZ_i dZ_j = \rho_{i,j} dt
+\end{equation*}
+
+with a positive semi-definite correlation matrix $( \rho_{i,j})$. The
+drifts $\mu_i$ are determined using given convexity adjustments
+
+\begin{equation*} 
+c_i = E^T(R_i(t)) - R_i(0)
+\end{equation*}
+
+where the expectation is taken in the $T$-forward measure in the
+currency of the respective rate $R_i$. Slightly abusing notation $c_i$
+can be computed both using a model consistent with \ref{lndyn}
+resp. \ref{ndyn} (i.e. a Black76 style model) or also a different
+model like e.g. a full smile TSR model to compute CMS
+adjustments. While the latter choice formally introduces a model
+inconsistency it might still produce more market consistent prices at
+the end of the day, since it centers the distributions of the $R_i$
+around a mean that better captures the market implied convexity
+adjustments of the rates $R_i$ entering the structured coupon payoff.
+
+Under shifted lognormal dynamics the average drift is then given by
+
+\begin{equation*} 
+\mu_i = \frac{\log( (R_i(0)+d_i+c_i) / (R_i(0)+d_i))}{t}
+\end{equation*}
+
+and under normal dynamics
+
+\begin{equation*} 
+\mu_i = c_i / t
+\end{equation*}
+
+The NPV $\nu$ of the coupon is now given by
+
+\begin{equation}\label{struccpnnpv} 
+\nu = P(0,T) \tau E^T ( f(R_1(t),\ldots, R_n(t)) )
+\end{equation}
+
+where $P(0,T)$ is the applicable discount factor for the payment time
+in the domestic currency and the expectation is taken in the
+$T$-forward measure in the domestic currency. To adjust \ref{lndyn}
+resp. \ref{ndyn} for the measure change between the currency of $R_i$
+and the domestic currency (if applicable), we apply the usual Black
+quanto adjustment
+
+\begin{equation*}
+  \mu_i \rightarrow \mu_i + \sigma_i \sigma_{i,X} \rho_{i,X}
+\end{equation*}
+
+where $\sigma_{i,X}$ is the volatility of the applicable FX rate and
+$\rho_{i,X}$ is the correlation between the Brownian motion driving
+the FX process and $Z_i$.
+
+\subsubsection*{Evaluation}
+
+To evaluate the expectation in \ref{struccpnnpv} we use Monte Carlo
+simulation to generate samples of the distribution of
+$(R_1, \ldots, R_n)$, evaluate $f$ on these samples and average the
+results.
+
+Using Monte Carlo simulation for each coupon has an impact on 
+pricing performance (speed). The formula based coupon should therefore
+only be used in situations where explicit analytical or
+semi-analytical formulas are not available.
+
+

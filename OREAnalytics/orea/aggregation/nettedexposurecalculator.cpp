@@ -47,7 +47,7 @@ NettedExposureCalculator::NettedExposureCalculator(
     const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex,
     const Size allocatedEneIndex, const bool flipViewXVA, const bool withMporStickyDate,
     const MporCashFlowMode mporCashFlowMode, const bool firstMporCollateralAdjustment,
-    const bool exposureProfilesUseCloseOutValues)
+    const bool exposureProfilesUseCloseOutValues, const bool useDoublePrecisionCubes)
     : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
       collateralBalances_(collateralBalances), nettingSetDefaultValue_(nettingSetDefaultValue),
@@ -71,18 +71,20 @@ NettedExposureCalculator::NettedExposureCalculator(
         }
     }
 
-    nettedCube_= QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(
-            market_->asofDate(), nettingSetIds, cube->dates(),
-            cube->samples()); // Exposure after collateral
-    if (multiPath) {
-        exposureCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(
-            market_->asofDate(), nettingSetIds, cube->dates(),
-            cube->samples(), EXPOSURE_CUBE_DEPTH); // EPE, ENE
+    if(useDoublePrecisionCubes) {
+        // Exposure after collateral
+        nettedCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(market_->asofDate(), nettingSetIds,
+                                                                          cube->dates(), cube->samples());
+        // EPE, ENE
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+            market_->asofDate(), nettingSetIds, cube->dates(), multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     } else {
-        exposureCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(
-            market_->asofDate(), nettingSetIds, cube->dates(),
-            1, EXPOSURE_CUBE_DEPTH); // EPE, ENE
+        nettedCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(market_->asofDate(), nettingSetIds,
+                                                                         cube->dates(), cube->samples());
+        exposureCube_ = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(
+            market_->asofDate(), nettingSetIds, cube->dates(), multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);
     }
+
 };
 
 void NettedExposureCalculator::build() {
@@ -101,10 +103,8 @@ void NettedExposureCalculator::build() {
     map<string, Real> nettingSetValueToday;
     map<string, Date> nettingSetMaturity;
     map<string, Size> nettingSetSize;
-    Size cubeIndex = 0;
-    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++cubeIndex) {
-        const auto& trade = tradeIt->second;
-        string tradeId = tradeIt->first;
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+        std::size_t cubeIndex = cube_->getTradeIndex(tradeId);
         string nettingSetId = trade->envelope().nettingSetId();
         string cp = trade->envelope().counterparty();
         if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
@@ -160,14 +160,11 @@ void NettedExposureCalculator::build() {
 
         LOG("Aggregate exposure for netting set " << nettingSetId);
         // Get the collateral account balance paths for the netting set.
-        // The pointer may remain empty if there is no CSA or if it is inactive.
-        QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> collateral =
-            collateralPaths(nettingSetId,
-                            nettingSetValueToday[nettingSetId],
-                            nettingSetDefaultValue_[nettingSetId],
-                            nettingSetMaturity[nettingSetId]);
+        // The vector may remain empty if there is no CSA or if it is inactive.
+        auto collateral = collateralPaths(nettingSetId, nettingSetValueToday[nettingSetId],
+                                          nettingSetDefaultValue_[nettingSetId], nettingSetMaturity[nettingSetId]);
 
-	// Get the CSA index for Eonia Floor calculation below
+        // Get the CSA index for Eonia Floor calculation below
         colva_[nettingSetId] = 0.0;
         collateralFloor_[nettingSetId] = 0.0;
         string csaIndexName;
@@ -200,7 +197,6 @@ void NettedExposureCalculator::build() {
         // See below for the conversion to base currency.
         Real initialVM = 0, initialVMbase = 0;
         Real initialIM = 0, initialIMbase = 0;
-        string csaCurrency = "";
         if (netting->activeCsaFlag() && balance) {
             initialVM = balance->variationMargin();
             initialIM = balance->initialMargin();
@@ -259,6 +255,8 @@ void NettedExposureCalculator::build() {
         exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
 
+        std::string csaCurrency = netting->activeCsaFlag() ? netting->csaDetails()->csaCurrency() : std::string();
+
         for (Size j = 0; j < cube_->dates().size(); ++j) {
 
             Date date = cube_->dates()[j];
@@ -267,12 +265,11 @@ void NettedExposureCalculator::build() {
             vector<Real> distribution(cube_->samples(), 0.0);
             for (Size k = 0; k < cube_->samples(); ++k) {
                 Real balance = 0.0;
-                if (collateral) {
-                    balance = collateral->at(k)->accountBalance(date);
-                    if (netting->csaDetails()->csaCurrency() != baseCurrency_) {
+                if (!collateral.empty()) {
+                    balance = collateral[k]->accountBalance(date);
+                    if (csaCurrency != baseCurrency_) {
                         // Convert from CSACurrency to baseCurrency
-                        double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot,
-                                                           netting->csaDetails()->csaCurrency());
+                        double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, csaCurrency);
                         balance *= fxRate;
                     }
                 }
@@ -310,7 +307,8 @@ void NettedExposureCalculator::build() {
 
                 Real exposure = data[j][k] - balance + mporCashFlow;
                 Real dim = 0.0;
-                if (applyInitialMargin && collateral) { // don't apply initial margin without VM, i.e. inactive CSA
+                // don't apply initial margin without VM, i.e. inactive CSA
+                if (applyInitialMargin && !collateral.empty()) { 
                     // Initial Margin
                     // Use IM to reduce exposure
                     // Size dimIndex = j == 0 ? 0 : j - 1;
@@ -371,14 +369,12 @@ void NettedExposureCalculator::build() {
                 }
 
                 if (marginalAllocation_) {
-                    Size i = 0;
-                    for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end();
-                         ++tradeIt, ++i) {
-                        const auto& trade = tradeIt->second;
-                        string nid = trade->envelope().nettingSetId();
+                    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+                        const string& nid = trade->envelope().nettingSetId();
                         if (nid != nettingSetId)
                             continue;
-                        
+                        std::size_t i = cube_->getTradeIndex(tradeId);
+                        std::size_t i2 = tradeExposureCube_->getTradeIndex(tradeId);
                         Real allocation = 0.0;
                         if (balance == 0.0)
                             allocation = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
@@ -390,14 +386,14 @@ void NettedExposureCalculator::build() {
 
                         if (multiPath_) {
                             if (exposure > 0.0)
-                                tradeExposureCube_->set(allocation, i, j, k, allocatedEpeIndex_);
+                                tradeExposureCube_->set(allocation, i2, j, k, allocatedEpeIndex_);
                             else
-                                tradeExposureCube_->set(-allocation, i, j, k, allocatedEneIndex_);
+                                tradeExposureCube_->set(-allocation, i2, j, k, allocatedEneIndex_);
                         } else {
                             if (exposure > 0.0)
-                                averagePositiveAllocation[i][j] += allocation / cube_->samples();
+                                averagePositiveAllocation[i2][j] += allocation / cube_->samples();
                             else
-                                averageNegativeAllocation[i][j] -= allocation / cube_->samples();
+                                averageNegativeAllocation[i2][j] -= allocation / cube_->samples();
                         }
                     }
                 }
@@ -455,7 +451,8 @@ void NettedExposureCalculator::build() {
     }
 
     if (marginalAllocation_ && !multiPath_) {
-        for (Size i = 0; i < portfolio_->trades().size(); ++i) {
+        for (auto const& [tradeId, trade] : portfolio_->trades()) {
+            std::size_t i = tradeExposureCube_->getTradeIndex(tradeId);
             for (Size j = 0; j < cube_->dates().size(); ++j) {
                 tradeExposureCube_->set(averagePositiveAllocation[i][j], i, j, 0, allocatedEpeIndex_);
                 tradeExposureCube_->set(averageNegativeAllocation[i][j], i, j, 0, allocatedEneIndex_);
@@ -464,14 +461,11 @@ void NettedExposureCalculator::build() {
     }
 }
 
-QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>>
-NettedExposureCalculator::collateralPaths(
-    const string& nettingSetId,
-    const Real& nettingSetValueToday,
-    const vector<vector<Real>>& nettingSetValue,
-    const Date& nettingSetMaturity) {
+vector<QuantLib::ext::shared_ptr<CollateralAccount>>
+NettedExposureCalculator::collateralPaths(const string& nettingSetId, const Real& nettingSetValueToday,
+                                          const vector<vector<Real>>& nettingSetValue, const Date& nettingSetMaturity) {
 
-    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> collateral;
+    vector<QuantLib::ext::shared_ptr<CollateralAccount>> collateral;
 
     if (!nettingSetManager_->has(nettingSetId) || !nettingSetManager_->get(nettingSetId)->activeCsaFlag()) {
         LOG("CSA missing or inactive for netting set " << nettingSetId);
@@ -518,12 +512,12 @@ NettedExposureCalculator::collateralPaths(
         for (Size k = 0; k < cube_->samples(); ++k) {
 	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)
               csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
-                  AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
+                  scenarioData_, AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
             if (csaIndexName != "") {
                 csaScenRates[j][k] = cubeInterpretation_->getDefaultAggregationScenarioData(
-                    AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
+                    scenarioData_, AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
             }
         }
     }
@@ -547,17 +541,18 @@ NettedExposureCalculator::collateralPaths(
 }
 
 vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
+    std::size_t tidx = exposureCube_->getTradeIndex(tid);
     vector<Real> exp(cube_->dates().size() + 1, 0.0);
     exp[0] = exposureCube_->getT0(tid, index);
     for (Size i = 0; i < cube_->dates().size(); i++) {
         if (multiPath_) {
 	        for (Size k = 0; k < exposureCube_->samples(); k++) {
-	            exp[i + 1] += exposureCube_->get(tid, cube_->dates()[i], k, index);
+	            exp[i + 1] += exposureCube_->get(tidx, i, k, index);
 	        }
 	        exp[i + 1] /= exposureCube_->samples();
 	    }
 	    else {
-	        exp[i + 1] = exposureCube_->get(tid, cube_->dates()[i], 0, index);
+	        exp[i + 1] = exposureCube_->get(tidx, i, 0, index);
 	    }
     }
     return exp;

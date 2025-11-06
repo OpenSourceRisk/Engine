@@ -44,38 +44,45 @@ public:
                                     const std::vector<std::vector<Real>>& recoveryProbabilities,
                                     const std::vector<std::vector<Real>>& recoveryRates,
                                     LatentModelIntegrationType::LatentModelIntegrationType integralType,
-                                    const initTraits& ini = initTraits())
+                                    const initTraits& ini = initTraits(), bool enforceExpectedRecoveryEqualsMarketRecovery = true)
         : DefaultLatentModel<copulaPolicy>(factorWeights, integralType, ini), recoveries_(recoveries),
           recoveryProbabilities_(recoveryProbabilities), recoveryRates_(recoveryRates) {
         QL_REQUIRE(recoveries.size() == factorWeights.size(), "Incompatible factors and recovery sizes.");
-        checkStochasticRecoveries();
+        checkStochasticRecoveries(enforceExpectedRecoveryEqualsMarketRecovery);
     }
 
     ExtendedConstantLossLatentModel(const Handle<Quote>& mktCorrel, const std::vector<Real>& recoveries,
                                     const std::vector<std::vector<Real>>& recoveryProbabilities,
                                     const std::vector<std::vector<Real>>& recoveryRates,
                                     LatentModelIntegrationType::LatentModelIntegrationType integralType, Size nVariables,
-                                    const initTraits& ini = initTraits())
+                                    const initTraits& ini = initTraits(), bool enforceExpectedRecoveryEqualsMarketRecovery = true)
         : DefaultLatentModel<copulaPolicy>(mktCorrel, nVariables, integralType, ini), recoveries_(recoveries),
           recoveryProbabilities_(recoveryProbabilities), recoveryRates_(recoveryRates) {
         // actually one could define the other and get rid of the variable
         // here and in other similar models
         QL_REQUIRE(recoveries.size() == nVariables, "Incompatible model and recovery sizes.");
-        checkStochasticRecoveries(); 
+        checkStochasticRecoveries(enforceExpectedRecoveryEqualsMarketRecovery); 
     }
 
     // Check vector sizes and that expected recovery matches market quoted recovery for each obligor
-    void checkStochasticRecoveries() {
-        QL_REQUIRE(recoveryProbabilities_.size() == recoveryRates_.size(), "number of recovery probability vectors and market recovery rates differ");
+    void checkStochasticRecoveries(bool enforceExpectedRecoveryEqualsMarketRecovery) {
+        QL_REQUIRE(recoveryProbabilities_.size() == recoveryRates_.size(),
+                   "number of recovery probability vectors and market recovery rates differ");
         if (recoveryProbabilities_.size() == 0)
             return;
-        QL_REQUIRE(recoveryProbabilities_.size() == recoveries_.size(), "number of recovery rates and recovery probablity vectors differ");
+        QL_REQUIRE(recoveryProbabilities_.size() == recoveries_.size(),
+                   "number of recovery rates and recovery probablity vectors differ");
+
         for (Size i = 0; i < recoveries_.size(); ++i) {
-            QL_REQUIRE(recoveryProbabilities_[i].size() == recoveryRates_[i].size(), "recovery and probability vector size mismatch for obligor " << i);
+            QL_REQUIRE(recoveryProbabilities_[i].size() == recoveryRates_[i].size(),
+                       "recovery and probability vector size mismatch for obligor " << i);
             Real expectedRecovery = 0.0;
-            for (Size j = 0; j < recoveryProbabilities_[i].size(); ++j)
-                expectedRecovery += recoveryProbabilities_[i][j] * recoveryRates_[i][j];
-            QL_REQUIRE(QuantLib::close_enough(expectedRecovery, recoveries_[i]), "expected recovery does not match market recovery rate for obligor " << i);
+            if (enforceExpectedRecoveryEqualsMarketRecovery) {
+                for (Size j = 0; j < recoveryProbabilities_[i].size(); ++j)
+                    expectedRecovery += recoveryProbabilities_[i][j] * recoveryRates_[i][j];
+                QL_REQUIRE(QuantLib::close_enough(expectedRecovery, recoveries_[i]),
+                           "expected recovery does not match market recovery rate for obligor " << i);
+            }
         }
     }
 
@@ -110,6 +117,7 @@ private:
 
 typedef ExtendedConstantLossLatentModel<GaussianCopulaPolicy> ExtendedGaussianConstantLossLM;
 
+typedef ExtendedConstantLossLatentModel<TCopulaPolicy> ExtendedTCopulaConstantLossLM;
 /*! ExtendedConstantLossLatentModel interface for loss models.
   While it does not provide distribution type losses (e.g. expected tranche
   losses) because it lacks an integration algorithm it serves to allow

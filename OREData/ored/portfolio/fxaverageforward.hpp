@@ -68,7 +68,7 @@
      virtual XMLNode* toXML(XMLDocument& doc) const override;
      //@}
 
-     const std::map<std::string,boost::any>& additionalData() const override;
+     const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
  private:
      ScheduleData observationDates_;

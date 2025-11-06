@@ -73,6 +73,7 @@ QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolati
             } else {
                 QL_FAIL("unknown volatility type: " << type);
             }
+            QL_DEPRECATED_DISABLE_WARNING
             // calculate the cap price
             YoYInflationCapFloor cap = YoYInflationCapFloor(
                 MakeYoYInflationCapFloor(YoYInflationCapFloor::Cap, index, optionletTerms[i].length(), cal, obsLag)
@@ -86,6 +87,7 @@ QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolati
                     .withStrike(strikes[j])
                     .withPricingEngine(pe)
                     .withNominal(10000));
+            QL_DEPRECATED_ENABLE_WARNING
             fPrice[j][i] = floor.NPV();
         }
     }
@@ -115,10 +117,11 @@ QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolati
     }
 
     Rate baseRate = index->yoyInflationTermStructure()->baseRate();
-
+    QL_DEPRECATED_DISABLE_WARNING
     auto yoySurface = QuantLib::ext::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear>>(
         settDays, obsLag, index, baseRate, nominalTs, dc, cal, bdc, cStrikes, fStrikes, optionletTerms, cPriceFinal,
         fPriceFinal);
+    QL_DEPRECATED_ENABLE_WARNING
     yoySurface->enableExtrapolation();
     return yoySurface;
 }

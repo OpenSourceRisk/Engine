@@ -31,7 +31,7 @@ DiscountingRiskyBondEngineMultiState::DiscountingRiskyBondEngineMultiState(
     const Handle<YieldTermStructure>& discountCurve,
     const std::vector<Handle<DefaultProbabilityTermStructure>>& defaultCurves,
     const std::vector<Handle<Quote>>& recoveryRates, const Size mainResultState, const Handle<Quote>& securitySpread,
-    Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows)
+    Period timestepPeriod, QuantLib::ext::optional<bool> includeSettlementDateFlows)
     : DiscountingRiskyBondEngine(discountCurve, Handle<DefaultProbabilityTermStructure>(), Handle<Quote>(),
                                  securitySpread, timestepPeriod, includeSettlementDateFlows),
       defaultCurves_(defaultCurves), recoveryRates_(recoveryRates), mainResultState_(mainResultState) {

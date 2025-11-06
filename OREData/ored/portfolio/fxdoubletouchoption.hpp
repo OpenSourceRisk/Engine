@@ -57,6 +57,7 @@ public:
     const string& startDate() const { return startDate_; }
     const string& calendar() const { return calendar_; }
     const string& fxIndex() const { return fxIndex_; }
+    Real strike() const;
     //@}
 
     //! \name Serialisation
@@ -65,8 +66,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
-    bool checkBarrier(Real spot, Barrier::Type type, Real level);
-
     OptionData option_;
     BarrierData barrier_;
     string startDate_;

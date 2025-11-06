@@ -1,5 +1,14 @@
 \subsubsection{Equity Forward}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An Equity Forward contract is an agreement between two counterparties to buy/sell 
+a set number of shares of a single name equity or an equity index, at a 
+predetermined strike price, at the end of the contract. An equity forward does 
+not involve any upfront payment, does not pay dividends, and settlement is cash.
+
+{\bf Input}}\fi
+
 The \lstinline!EquityForwardData!  node is the trade data container for the \emph{EquityForward} trade type.  Vanilla equity 
 forwards are supported. The structure of an example \lstinline!EquityForwardData! node for an equity forward is shown in 
 Listing \ref{lst:eqfwd_data}.

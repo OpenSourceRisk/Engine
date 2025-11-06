@@ -1,0 +1,9 @@
+\subsubsection{Bond}
+
+A vanilla bond is priced by discounting its future coupon and notional payments. The discounting is done on a reference
+curve (typically a Libor curve in the bond currency) plus possibly a security specific spread. In addition default risk
+can be taken into account by weighting the payments with their respective survival probability and adding a recovery
+value reflecting the value of a recovery payment in case of the default of the issuer.
+
+If there are liquid price quotes available for a bond, the security spread can be implied to match this price given a
+reference curve and (possibly) a default curve.

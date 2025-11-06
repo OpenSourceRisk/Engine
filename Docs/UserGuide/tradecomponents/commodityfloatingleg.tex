@@ -242,6 +242,9 @@ the \textit{Pricing Date}. In this case, the \lstinline!DailyExpiryOffset! would
 \item \lstinline!FXIndex! [Optional]: If \lstinline!IsAveraged! is \emph{true} this node allows the fx conversion to be applied daily in the computation of averaged cash flows. It cannot be used with the \lstinline!Indexing! node.
 
 Allowable values:  See Table \ref{tab:fxindex_data} for supported fx indices.
+
+\item \lstinline|AvgPricePrecision| [Optional]: This is only applicable when averaging is enabled. Allowed values: non-negative integer. Specifies the number of decimal places to which the average price should be rounded.
+
 \end{itemize}
 
 \begin{listing}[h!]

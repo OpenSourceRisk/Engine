@@ -31,10 +31,6 @@ void ScenarioAnalyticImpl::setUpConfigurations() {
 
 void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("ScenarioAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);
@@ -44,7 +40,7 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
     auto ssm = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true,
-        useSpreadedTermStructures_, false, false, *inputs_->iborFallbackConfig());
+        useSpreadedTermStructures_, false, false, inputs_->iborFallbackConfig());
 
     setScenarioSimMarket(ssm);
     auto scenario = ssm->baseScenario();
@@ -53,7 +49,7 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
     QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     auto sw = ScenarioWriter(nullptr, report);
     sw.writeScenario(scenario, true);
-    analytic()->reports()[label()]["scenario"] = report;
+    analytic()->addReport(label(), "scenario", report);
 }
 
 } // namespace analytics

@@ -1,0 +1,84 @@
+<TodaysMarket>
+  <Configuration id="inccy">
+    <YieldCurvesId>default</YieldCurvesId>
+    <DiscountingCurvesId>inccy</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+    <SwapIndexCurvesId>default</SwapIndexCurvesId>
+    <ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+    <YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+    <FxSpotsId>default</FxSpotsId>
+    <FxVolatilitiesId>default</FxVolatilitiesId>
+    <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+    <YieldVolatilitiesId>default</YieldVolatilitiesId>
+    <CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+    <CDSVolatilitiesId>default</CDSVolatilitiesId>
+    <DefaultCurvesId>default</DefaultCurvesId>
+    <YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+    <ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+    <EquityCurvesId>default</EquityCurvesId>
+    <EquityVolatilitiesId>default</EquityVolatilitiesId>
+    <SecuritiesId>default</SecuritiesId>
+    <BaseCorrelationsId>default</BaseCorrelationsId>
+    <CommodityCurvesId>default</CommodityCurvesId>
+    <CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+    <CorrelationsId>default</CorrelationsId>
+  </Configuration>
+  <Configuration id="default">
+    <YieldCurvesId>default</YieldCurvesId>
+    <DiscountingCurvesId>default</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+    <SwapIndexCurvesId>default</SwapIndexCurvesId>
+    <ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+    <YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+    <FxSpotsId>default</FxSpotsId>
+    <FxVolatilitiesId>default</FxVolatilitiesId>
+    <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+    <YieldVolatilitiesId>default</YieldVolatilitiesId>
+    <CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+    <CDSVolatilitiesId>default</CDSVolatilitiesId>
+    <DefaultCurvesId>default</DefaultCurvesId>
+    <YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+    <ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+    <EquityCurvesId>default</EquityCurvesId>
+    <EquityVolatilitiesId>default</EquityVolatilitiesId>
+    <SecuritiesId>default</SecuritiesId>
+    <BaseCorrelationsId>default</BaseCorrelationsId>
+    <CommodityCurvesId>default</CommodityCurvesId>
+    <CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+    <CorrelationsId>default</CorrelationsId>
+  </Configuration>
+  <YieldCurves id="default">
+    <YieldCurve name="EUR-IN-USD">Yield/EUR/EUR-IN-USD</YieldCurve>
+  </YieldCurves>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-EONIA</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
+  </DiscountingCurves>
+  <DiscountingCurves id="inccy">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-EONIA</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="EUR-EONIA">Yield/EUR/EUR-EONIA</Index>
+    <Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
+    <Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
+  </IndexForwardingCurves>
+  <FxSpots id="default">
+    <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+  </FxSpots>
+  <FxVolatilities id="default">
+    <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+  </FxVolatilities>
+  <EquityCurves id="default">
+    <EquityCurve name="RIC:.SPX">Equity/USD/RIC:.SPX</EquityCurve>
+    <EquityCurve name="RIC:.STOXX50E">Equity/EUR/RIC:.STOXX50E</EquityCurve>
+  </EquityCurves>
+  <EquityVolatilities id="default">
+    <EquityVolatility name="RIC:.SPX">EquityVolatility/USD/RIC:.SPX</EquityVolatility>
+    <EquityVolatility name="RIC:.STOXX50E">EquityVolatility/EUR/RIC:.STOXX50E</EquityVolatility>
+  </EquityVolatilities>
+  <Correlations id="default">
+    <Correlation name="EQ-RIC:.STOXX50E&amp;EQ-RIC:.SPX">Correlation/EQ-RIC:.STOXX50E&amp;EQ-RIC:.SPX</Correlation>
+  </Correlations>
+</TodaysMarket>
+

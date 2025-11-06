@@ -96,5 +96,34 @@ private:
     const std::vector<Date> stickyCloseOutDates_;
 };
 
+//! Multileg option engine builder (AMC-CG)
+class AmcCgMultiLegOptionEngineBuilder : public MultiLegOptionEngineBuilderBase {
+public:
+    AmcCgMultiLegOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                                     const std::vector<Date>& simulationDates)
+        : MultiLegOptionEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg),
+          simulationDates_(simulationDates) {}
+
+protected:
+    string keyImpl(const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
+                   const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
+                   const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override {
+        std::string res;
+        for (auto const& c : currencies) {
+            res += c.code() + "_";
+        }
+        return res;
+    }
+
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
+               const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
+               const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override;
+
+private:
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
+    const std::vector<Date> simulationDates_;
+};
+
 } // namespace data
 } // namespace ore

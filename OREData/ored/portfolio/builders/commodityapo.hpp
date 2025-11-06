@@ -27,6 +27,7 @@
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/pricingengines/commodityapoengine.hpp>
 
@@ -41,7 +42,7 @@ namespace data {
 \ingroup builders
 */
 class CommodityApoBaseEngineBuilder
-    : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
+    : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&,
                                          const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>&> {
 public:
     CommodityApoBaseEngineBuilder(const std::string& model, const std::string& engine,
@@ -49,9 +50,9 @@ public:
         : CachingEngineBuilder(model, engine, tradeTypes) {}
 
 protected:
-    std::string keyImpl(const Currency& ccy, const string& name, const string& id,
+    std::string keyImpl(const Currency& ccy, const std::string& discountCurveName, const string& name, const string& id,
                         const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>&) override {
-        return id;
+        return id + "/" + name + "/" + ccy.code() + "/" + discountCurveName;
     }
 };
 
@@ -67,21 +68,32 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    engineImpl(const Currency& ccy, const string& name, const string& id,
+    engineImpl(const Currency& ccy, const std::string& discountCurveName, const string& name, const string& id,
                const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
 
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        Handle<YieldTermStructure> yts = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
-        Real beta = 0;
-        auto param = engineParameters_.find("beta");
-        if (param != engineParameters_.end())
-            beta = parseReal(param->second);
-        else {
-            ALOG("Missing engine parameter 'beta' for " << model() << " " << EngineBuilder::engine()
-                                                        << ", using default value " << beta);
-        }
+        Real beta = parseReal(engineParameter("beta", {name}, false, "0.0"));
+
+        QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+        Real displacement = 0.0;
+        auto volTypeStr = this->modelParameter("Volatility", {name}, false, "AsInputVolatilityType");
+        boost::to_lower(volTypeStr);
+        auto displacementStr = this->modelParameter("Displacement", {name}, false, "0.0");
+        if (volTypeStr == "lognormal") {
+            modelType = QuantLib::DiffusionModelType::Black;
+        } else if (volTypeStr == "shiftedlognormal") {
+            modelType = QuantLib::DiffusionModelType::Black;
+            displacement = parseReal(displacementStr);
+        } else if (volTypeStr == "normal")
+            modelType = QuantLib::DiffusionModelType::Bachelier;
+        else
+            modelType = QuantLib::DiffusionModelType::AsInputVolatilityType;
+
 
         bool dontCalibrate = false;
         if (auto g = globalParameters_.find("Calibrate"); g != globalParameters_.end()) {
@@ -89,10 +101,10 @@ protected:
         }
 
         auto modelBuilder = QuantLib::ext::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
-        modelBuilders_.insert(std::make_pair(id, modelBuilder));
+        engineFactory()->modelBuilders().insert(std::make_pair(id, modelBuilder));
 
-        return QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOptionAnalyticalEngine>(yts, modelBuilder->model(),
-                                                                                         beta);
+        return QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOptionAnalyticalEngine>(
+            yts, modelBuilder->model(), beta, modelType, displacement);
     };
 };
 
@@ -109,12 +121,19 @@ public:
 
 protected:
     QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    engineImpl(const Currency& ccy, const string& name, const string& id,
+    engineImpl(const Currency& ccy, const std::string& discountCurveName, const string& name, const string& id,
                const QuantLib::ext::shared_ptr<QuantExt::CommodityAveragePriceOption>& apo) override {
 
         Handle<QuantLib::BlackVolTermStructure> vol =
             market_->commodityVolatility(name, configuration(MarketContext::pricing));
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+
+        QL_REQUIRE(vol->volType() == QuantLib::VolatilityType::ShiftedLognormal &&
+                       QuantLib::close_enough(vol->shift(), 0.0),
+                   "CommodityApoMonteCarloEngineBuilder: currently only lognormal vols are supported");
+
+        Handle<YieldTermStructure> yts = discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
         Size samples = 10000;
         auto param = engineParameters_.find("samples");
@@ -140,7 +159,7 @@ protected:
         }
 
         auto modelBuilder = QuantLib::ext::make_shared<CommodityApoModelBuilder>(yts, vol, apo, dontCalibrate);
-        modelBuilders_.insert(std::make_pair(id, modelBuilder));
+        engineFactory()->modelBuilders().insert(std::make_pair(id, modelBuilder));
 
         return QuantLib::ext::make_shared<QuantExt::CommodityAveragePriceOptionMonteCarloEngine>(yts, modelBuilder->model(),
                                                                                          samples, beta);

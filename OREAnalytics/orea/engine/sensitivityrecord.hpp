@@ -46,6 +46,7 @@ struct SensitivityRecord {
     std::string desc_2;
     QuantLib::Real shift_2;
     std::string currency;
+    std::string tradeCurrency;
     mutable QuantLib::Real baseNpv;
     mutable QuantLib::Real delta;
     mutable QuantLib::Real gamma;

@@ -25,7 +25,6 @@
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/parsers.hpp>
 
-#include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/currencyswap.hpp>
 
 using namespace QuantLib;
@@ -34,10 +33,6 @@ using namespace ore::data;
 
 namespace ore {
 namespace analytics {
-
-typedef std::map<Currency, Matrix, CurrencyComparator> result_type_matrix;
-typedef std::map<Currency, std::vector<Real>, CurrencyComparator> result_type_vector;
-typedef std::map<Currency, Real, CurrencyComparator> result_type_scalar;
 
 CamSensitivityStorageManager::CamSensitivityStorageManager(
     const std::vector<std::string>& camCurrencies, const Size nCurveSensitivities, const Size nVegaOptSensitivities,
@@ -150,11 +145,11 @@ void CamSensitivityStorageManager::addSensitivities(QuantLib::ext::shared_ptr<or
             .log();
     }
 
-    LOG("CamSensitivityStorageManager: Added sensitivities to cube for trade="
+    TLOG("CamSensitivityStorageManager: Added sensitivities to cube for trade="
 	<< trade->id() << " sample=" << sampleIndex << " date=" << dateIndex);
 }
 
-boost::any CamSensitivityStorageManager::getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
+QuantLib::ext::any CamSensitivityStorageManager::getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
                                                           const std::string& nettingSetId, const Size dateIndex,
                                                           const Size sampleIndex) const {
 
@@ -250,9 +245,15 @@ CamSensitivityStorageManager::processSwapSwaption(QuantLib::ext::shared_ptr<ore:
             QuantLib::ext::shared_ptr<OptionWrapper> wrapper = QuantLib::ext::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
             if (wrapper) { // option wrapper (i.e. we have a swaption)
                 if (wrapper->isExercised()) {
-                    qlInstr = wrapper->activeUnderlyingInstrument();
-                    tradeMultiplier = wrapper->underlyingMultiplier() * (wrapper->isLong() ? 1.0 : -1.0);
-                    hasThetaVega = false;
+                    if (wrapper->isPhysicalDelivery()) {
+                        qlInstr = wrapper->activeUnderlyingInstrument();
+                        tradeMultiplier = wrapper->underlyingMultiplier() * (wrapper->isLong() ? 1.0 : -1.0);
+                        hasThetaVega = false;
+                    } else {
+                        qlInstr = wrapper->qlInstrument();
+                        tradeMultiplier = wrapper->multiplier() * (wrapper->isLong() ? 1.0 : -1.0);
+                        hasThetaVega = false;
+                    }
                 } else {
                     qlInstr = wrapper->qlInstrument();
                     tradeMultiplier = wrapper->multiplier() * (wrapper->isLong() ? 1.0 : -1.0);

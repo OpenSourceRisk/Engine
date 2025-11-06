@@ -48,13 +48,15 @@ public:
     //! Default constructor
     EquityVolCurve() {}
     //! Detailed constructor
-    EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                   const CurveConfigurations& curveConfigs, const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex,
-                   const std::map<std::string, QuantLib::ext::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
-                   const std::map<std::string, QuantLib::ext::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {},
-                   const std::map<std::string, QuantLib::ext::shared_ptr<FXVolCurve>>& requiredFxVolCurves = {},
-                   const std::map<std::string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves = {},
-                   const Market* market = nullptr, const bool buildCalibrationInfo = true);
+    EquityVolCurve(
+        Date asof, EquityVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
+        const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex,
+        const std::map<std::string, QuantLib::ext::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
+        const std::map<std::string, QuantLib::ext::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {},
+        const std::map<std::string, QuantLib::ext::shared_ptr<FXVolCurve>>& requiredFxVolCurves = {},
+        const std::map<std::string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves = {},
+        const Market* market = nullptr, const std::string& configuration = Market::defaultConfiguration,
+        const bool buildCalibrationInfo = true);
     //@}
 
     //! \name Inspectors
@@ -91,7 +93,7 @@ public:
                          const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& eqVolCurves,
                          const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
                          const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                         const Market* fxIndices = nullptr);
+                         const Market* fxIndices = nullptr, const std::string& configuration = std::string());
 
     //! Build the calibration info
     void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,

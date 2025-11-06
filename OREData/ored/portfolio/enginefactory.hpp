@@ -52,6 +52,7 @@ using std::tuple;
 class Trade;
 class LegBuilder;
 class ReferenceDataManager;
+class EngineFactory;
 
 /*! Market configuration contexts. Note that there is only one pricing context.
   If several are needed (for different trade types, different collateral
@@ -113,9 +114,9 @@ public:
     const set<string>& tradeTypes() const { return tradeTypes_; }
 
     //! Return a configuration (or the default one if key not found)
-    const string& configuration(const MarketContext& key) {
-        if (configurations_.count(key) > 0) {
-            return configurations_.at(key);
+    const string& configuration(const MarketContext& key) const {
+        if (auto c = configurations_.find(key); c != configurations_.end()) {
+            return c->second;
         } else {
             return Market::defaultConfiguration;
         }
@@ -128,18 +129,17 @@ public:
     /*! This method should not be called directly, it is called by the EngineFactory
      *  before it is returned.
      */
-    void init(const QuantLib::ext::shared_ptr<Market> market, const map<MarketContext, string>& configurations,
-              const map<string, string>& modelParameters, const map<string, string>& engineParameters,
+    void init(EngineFactory* const engineFactory, const QuantLib::ext::shared_ptr<Market> market,
+              const map<MarketContext, string>& configurations, const map<string, string>& modelParameters,
+              const map<string, string>& engineParameters,
               const std::map<std::string, std::string>& globalParameters = {}) {
+        engineFactory_ = engineFactory;
         market_ = market;
         configurations_ = configurations;
         modelParameters_ = modelParameters;
         engineParameters_ = engineParameters;
         globalParameters_ = globalParameters;
     }
-
-    //! return model builders
-    const set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
     virtual std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
@@ -148,6 +148,12 @@ public:
     virtual std::string modelParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
                                        const bool mandatory = true, const std::string& defaultValue = "") const;
 
+    /*! return global parameters */
+    const std::map<std::string, std::string> globalParameters() const { return globalParameters_; }
+
+    //! return model builders
+    EngineFactory* engineFactory() const;
+
 protected:
     std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
                              const std::vector<std::string>& qs, const bool mandatory,
@@ -155,12 +161,12 @@ protected:
     string model_;
     string engine_;
     set<string> tradeTypes_;
+    EngineFactory* engineFactory_;
     QuantLib::ext::shared_ptr<Market> market_;
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
     std::map<std::string, std::string> globalParameters_;
-    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 
 //! Delegating Engine Builder
@@ -181,8 +187,7 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
         const std::vector<Date>& stickyCloseOutDates)>>
         amcEngineBuilderBuilders_;
     std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& grid,
-        const std::vector<Date>& stickyCloseOutDates)>>
+        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& grid)>>
         amcCgEngineBuilderBuilders_;
     std::vector<std::function<QuantLib::ext::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
     mutable boost::shared_mutex mutex_;
@@ -197,8 +202,7 @@ public:
                         const bool allowOverwrite = false);
     void addAmcCgEngineBuilder(
         const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-            const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates,
-            const std::vector<Date>& stickyCloseOutDates)>& builder,
+            const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates)>& builder,
         const bool allowOverwrite = false);
     void addLegBuilder(const std::function<QuantLib::ext::shared_ptr<LegBuilder>()>& builder,
                        const bool allowOverwrite = false);
@@ -209,7 +213,7 @@ public:
                               const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) const;
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
     generateAmcCgEngineBuilders(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) const;
+                                const std::vector<Date>& simDates) const;
     std::vector<QuantLib::ext::shared_ptr<LegBuilder>> generateLegBuilders() const;
 };
 
@@ -240,18 +244,17 @@ public:
         //! reference data
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+            QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
         //! additional engine builders
-        const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
-        //! additional engine builders may overwrite existing builders with same key
-        const bool allowOverwrite = false);
+        const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {});
 
     //! Return the market used by this EngineFactory
     const QuantLib::ext::shared_ptr<Market>& market() const { return market_; };
     //! Return the market configurations used by this EngineFactory
     const map<MarketContext, string>& configurations() const { return configurations_; };
     //! Return a configuration (or the default one if key not found)
-    const string& configuration(const MarketContext& key) {
+    const string& configuration(const MarketContext& key) const {
         if (configurations_.count(key) > 0) {
             return configurations_.at(key);
         } else {
@@ -260,12 +263,10 @@ public:
     }
     //! Return the EngineData parameters
     const QuantLib::ext::shared_ptr<EngineData> engineData() const { return engineData_; };
-    //! Register a builder with the factory
-    void registerBuilder(const QuantLib::ext::shared_ptr<EngineBuilder>& builder, const bool allowOverwrite = false);
     //! Return the reference data used by this EngineFactory
     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
     //! Return the ibor fallback config
-    const IborFallbackConfig& iborFallbackConfig() const { return iborFallbackConfig_; }
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
 
     //! Get a builder by trade type
     /*! This will look up configured model/engine for that trade type
@@ -275,51 +276,54 @@ public:
      */
     QuantLib::ext::shared_ptr<EngineBuilder> builder(const string& tradeType);
 
-    //! Register a leg builder with the factory
-    void registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite = false);
-
     //! Get a leg builder by leg type
-    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const string& legType);
-
-    //! Add a set of default engine and leg builders
-    void addDefaultBuilders();
-    //! Add a set of default engine and leg builders, overwrite existing builders with same key if specified
-    void addExtraBuilders(const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders,
-                          const std::vector<QuantLib::ext::shared_ptr<LegBuilder>> extraLegBuilders,
-                          const bool allowOverwrite = false);
-
-    //! Clear all builders
-    void clear() {
-        builders_.clear();
-        legBuilders_.clear();
-    }
+    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const LegType& legType);
 
     //! return model builders
-    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders() const;
+    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders();
+
+    struct ParameterOverride {
+        std::string source;
+        std::function<bool(string)> applies;
+        std::map<string, string> overrides;
+    };
+
+    void setModelParameterOverrides(const std::vector<ParameterOverride>& overrides);
+    void setEngineParameterOverrides(const std::vector<ParameterOverride>& overrides);
 
 private:
+    void resetBuilders();
+
+    bool buildersDirty_ = true;
+
     QuantLib::ext::shared_ptr<Market> market_;
     QuantLib::ext::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> builders_;
-    map<string, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
+    map<LegType, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
-    IborFallbackConfig iborFallbackConfig_;
+    std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders_;
+    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+    std::vector<ParameterOverride> modelParameterOverrides_;
+    std::vector<ParameterOverride> engineParameterOverrides_;
+    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 
 //! Leg builder
 class RequiredFixings;
 class LegBuilder {
 public:
-    LegBuilder(const string& legType) : legType_(legType) {}
+    LegBuilder(const LegType& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
-                         const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-                         const bool useXbsCurves = false) const = 0;
-    const string& legType() const { return legType_; }
+    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                         RequiredFixings& requiredFixings, const string& configuration,
+                         const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool useXbsCurves = false,
+                         const bool attachPricer = true,
+                         std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr) const = 0;
+    const LegType& legType() const { return legType_; }
 
 private:
-    const string legType_;
+    LegType legType_;
 };
 
 } // namespace data

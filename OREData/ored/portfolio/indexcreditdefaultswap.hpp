@@ -48,7 +48,7 @@ public:
     
     const std::map<std::string, QuantLib::Real>& constituents() const { return constituents_; };
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 
 private:
     IndexCreditDefaultSwapData swap_;

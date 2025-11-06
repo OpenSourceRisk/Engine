@@ -24,6 +24,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -69,7 +70,7 @@ CreditDefaultSwapOption::CreditDefaultSwapOption(const Envelope& env,
     const string& strikeType,
     bool knockOut,
     const string& term,
-    const boost::optional<AuctionSettlementInformation>& asi)
+    const QuantLib::ext::optional<AuctionSettlementInformation>& asi)
     : Trade("CreditDefaultSwapOption", env), option_(option), swap_(swap), strike_(strike),
       strikeType_(strikeType), knockOut_(knockOut), term_(term), asi_(asi) {}
 
@@ -139,7 +140,7 @@ const string& CreditDefaultSwapOption::term() const {
 }
 
 using ASI = CreditDefaultSwapOption::AuctionSettlementInformation;
-const boost::optional<ASI>& CreditDefaultSwapOption::auctionSettlementInformation() const {
+const QuantLib::ext::optional<ASI>& CreditDefaultSwapOption::auctionSettlementInformation() const {
     return asi_;
 }
 
@@ -205,7 +206,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     // the strike spread. It may matter for the resulting valuation depending on the engine that is used - see 
     // "A CDS Option Miscellany, Richard J. Martin, 2019, Section 2.4".
     const auto& legData = swap_.leg();
-    QL_REQUIRE(legData.legType() == "Fixed", "CDS option " << id() << " requires fixed leg.");
+    QL_REQUIRE(legData.legType() == LegType::Fixed, "CDS option " << id() << " requires fixed leg.");
     auto fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
     auto runningCoupon = fixedLegData->rates().front();
@@ -308,6 +309,11 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
         instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate, exerciseDate, 
             isPhysical, cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
     }
+
+    additionalData_["exerciseDate"] = to_string(exerciseDate);
+    Date today = Settings::instance().evaluationDate();
+    DayCounter actact = ActualActual(ActualActual::ISMA);
+    additionalData_["exerciseTime"] = actact.yearFraction(today, exerciseDate);
 }
 
 void CreditDefaultSwapOption::buildDefaulted(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
@@ -335,9 +341,10 @@ void CreditDefaultSwapOption::buildDefaulted(const QuantLib::ext::shared_ptr<Eng
     auto ccy = parseCurrency(notionalCurrency_);
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
     Date premiumPayDate =
         addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
-                    PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, engineFactory, marketConfig);
+                    PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, discountCurve, engineFactory, marketConfig);
     DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
 
     // Use the instrument added as the main instrument and clear the vectors
@@ -365,8 +372,9 @@ Date CreditDefaultSwapOption::addPremium(const QuantLib::ext::shared_ptr<EngineF
         // pay the premium if long the option and receive the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+        string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         return addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort, option_.premiumData(),
-                           indicatorLongShort, tradeCurrency, ef, marketConfig);
+                           indicatorLongShort, tradeCurrency, discountCurve, ef, marketConfig);
 }
 
 }

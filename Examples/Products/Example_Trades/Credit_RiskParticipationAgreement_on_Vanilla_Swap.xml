@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="RPA_VANILLA">
+        <TradeType>RiskParticipationAgreement</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <RiskParticipationAgreementData>
+            <!-- RPA mandatory data -->
+            <ParticipationRate>0.9</ParticipationRate>
+            <ProtectionStart>2025-02-10</ProtectionStart>
+            <ProtectionEnd>2037-12-16</ProtectionEnd>
+            <CreditCurveId>RED:027A8A|SNRFOR|USD|XR14</CreditCurveId>
+            <!-- optional data -->
+            <IssuerId>CompanyXZY</IssuerId>
+            <SettlesAccrual>false</SettlesAccrual>
+            <FixedRecoveryRate>0.15</FixedRecoveryRate>
+            <!-- protection fee, if Payer = true protection is bought, otherwise sold -->
+            <ProtectionFee>
+                <LegData>
+                    <LegType>Cashflow</LegType>
+                    <Payer>true</Payer>
+                    <Currency>USD</Currency>
+                    <CashflowData>
+                        <Cashflow>
+                            <Amount date="2025-04-19">121171.72</Amount>
+                        </Cashflow>
+                    </CashflowData>
+                </LegData>
+            </ProtectionFee>
+            <!-- the underlying vanilla swap -->
+            <Underlying>
+                <LegData>
+                    <LegType>Floating</LegType>
+                    <Payer>true</Payer>
+                    <Currency>USD</Currency>
+                    <Notionals>
+                        <Notional>100000000</Notional>
+                        <Notional startDate="2026-04-17">90000000</Notional>
+                        <Notional startDate="2028-04-16">80000000</Notional>
+                        <Notional startDate="2030-04-17">70000000</Notional>
+                        <Notional startDate="2032-04-16">60000000</Notional>
+                        <Notional startDate="2034-04-17">50000000</Notional>
+                        <Notional startDate="2036-04-16">40000000</Notional>
+                        <Notional startDate="2038-04-17">30000000</Notional>
+                        <Notional startDate="2040-04-16">20000000</Notional>
+                        <Notional startDate="2042-04-17">10000000</Notional>
+                    </Notionals>
+                    <DayCounter>A360</DayCounter>
+                    <PaymentConvention>ModifiedFollowing</PaymentConvention>
+                    <FloatingLegData>
+                        <Index>USD-LIBOR-3M</Index>
+                        <Spreads>
+                            <Spread>0.0050</Spread>
+                        </Spreads>
+                    </FloatingLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2024-04-16</StartDate>
+                            <EndDate>2044-04-16</EndDate>
+                            <Tenor>3M</Tenor>
+                            <Calendar>US</Calendar>
+                            <Convention>ModifiedFollowing</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+                <LegData>
+                    <LegType>Fixed</LegType>
+                    <Payer>false</Payer>
+                    <Currency>USD</Currency>
+                    <Notionals>
+                        <Notional>100000000</Notional>
+                        <Notional startDate="2026-04-17">90000000</Notional>
+                        <Notional startDate="2028-04-16">80000000</Notional>
+                        <Notional startDate="2030-04-17">70000000</Notional>
+                        <Notional startDate="2032-04-16">60000000</Notional>
+                        <Notional startDate="2034-04-17">50000000</Notional>
+                        <Notional startDate="2036-04-16">40000000</Notional>
+                        <Notional startDate="2038-04-17">30000000</Notional>
+                        <Notional startDate="2040-04-16">20000000</Notional>
+                        <Notional startDate="2042-04-17">10000000</Notional>
+                    </Notionals>
+                    <DayCounter>ACT/ACT</DayCounter>
+                    <PaymentConvention>Following</PaymentConvention>
+                    <FixedLegData>
+                        <Rates>
+                            <Rate>0.04</Rate>
+                        </Rates>
+                    </FixedLegData>
+                    <ScheduleData>
+                        <Rules>
+                            <StartDate>2024-04-16</StartDate>
+                            <EndDate>2044-04-16</EndDate>
+                            <Tenor>1Y</Tenor>
+                            <Calendar>US</Calendar>
+                            <Convention>Following</Convention>
+                            <Rule>Forward</Rule>
+                        </Rules>
+                    </ScheduleData>
+                </LegData>
+            </Underlying>
+        </RiskParticipationAgreementData>
+    </Trade>
+</Portfolio>

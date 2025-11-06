@@ -31,7 +31,7 @@ void VolatilityFromVarianceSwapEngine::calculate() const {
 
     const DiscountFactor df = discountingTS_->discount(arguments_.maturityDate);
     const Real multiplier = arguments_.position == Position::Long ? 1.0 : -1.0;
-    const Real volatility = sqrt(boost::any_cast<Real>(results_.additionalResults.at("totalVariance")));
+    const Real volatility = sqrt(QuantLib::ext::any_cast<Real>(results_.additionalResults.at("totalVariance")));
     const Real volatilityStrike = sqrt(arguments_.strike);
 
     results_.value = multiplier * df * arguments_.notional * 100.0 * (volatility - volatilityStrike);

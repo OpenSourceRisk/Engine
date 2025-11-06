@@ -33,17 +33,23 @@ namespace QuantExt {
 template <class TS> class HwConstantParametrization : public HwParametrization<TS> {
 public:
     HwConstantParametrization(const QuantLib::Currency& currency, const QuantLib::Handle<TS>& termStructure,
-                              QuantLib::Matrix sigma, QuantLib::Array kappa, const std::string& name = std::string());
+                              const QuantLib::Matrix& sigma, const QuantLib::Array& kappa,
+                              const std::string& name = std::string());
 
-    QuantLib::Matrix sigma_x(const QuantLib::Time t) const override { return sigma_; }
-    QuantLib::Array kappa(const QuantLib::Time t) const override { return kappa_; };
+    const QuantLib::ext::shared_ptr<Parameter> parameter(const Size) const override;
+    QuantLib::Matrix sigma_x(const QuantLib::Time t) const override;
+    QuantLib::Array kappa(const QuantLib::Time t) const override;
     QuantLib::Matrix y(const QuantLib::Time t) const override;
     QuantLib::Array g(const QuantLib::Time t, const QuantLib::Time T) const override;
 
 private:
     static constexpr QuantLib::Real zeroKappaCutoff_ = 1.0E-6;
-    QuantLib::Matrix sigma_;
-    QuantLib::Array kappa_;
+
+    QuantLib::Size sigmaIndex(const QuantLib::Size i, const QuantLib::Size j) const;
+    double sigmaComp(const QuantLib::Size i, const QuantLib::Size j) const;
+    double kappaComp(const QuantLib::Size i) const;
+
+    QuantLib::ext::shared_ptr<PseudoParameter> sigma_, kappa_;
 };
 
 // implementation
@@ -51,13 +57,51 @@ private:
 template <class TS>
 HwConstantParametrization<TS>::HwConstantParametrization(const QuantLib::Currency& currency,
                                                          const QuantLib::Handle<TS>& termStructure,
-                                                         QuantLib::Matrix sigma, QuantLib::Array kappa,
+                                                         const QuantLib::Matrix& sigma, const QuantLib::Array& kappa,
                                                          const std::string& name)
     : HwParametrization<TS>(kappa.size(), sigma.rows(), currency, termStructure, name.empty() ? currency.code() : name),
-      sigma_(std::move(sigma)), kappa_(std::move(kappa)) {
-    QL_REQUIRE(sigma_.columns() == kappa_.size(), "HwConstantParametrization: sigma ("
-                                                      << sigma_.rows() << "x" << sigma_.columns()
-                                                      << ") not consistent with kappa (" << kappa_.size() << ")");
+      sigma_(QuantLib::ext::make_shared<PseudoParameter>(this->n_ * this->m_)),
+      kappa_(QuantLib::ext::make_shared<PseudoParameter>(this->n_)) {
+
+    QL_REQUIRE(sigma.columns() == kappa.size(), "HwConstantParametrization: sigma ("
+                                                    << sigma.rows() << "x" << sigma.columns()
+                                                    << ") not consistent with kappa (" << kappa.size() << ")");
+
+    for (Size i = 0; i < sigma.rows(); ++i)
+        for (Size j = 0; j < sigma.columns(); ++j)
+            sigma_->setParam(sigmaIndex(i, j), sigma(i, j));
+
+    for (Size i = 0; i < kappa.size(); ++i)
+        kappa_->setParam(i, kappa[i]);
+}
+
+template <class TS>
+QuantLib::Size HwConstantParametrization<TS>::sigmaIndex(const QuantLib::Size i, const QuantLib::Size j) const {
+    return i * this->n_ + j;
+}
+
+template <class TS>
+double HwConstantParametrization<TS>::sigmaComp(const QuantLib::Size i, const QuantLib::Size j) const {
+    return sigma_->params()[sigmaIndex(i, j)];
+}
+
+template <class TS> double HwConstantParametrization<TS>::kappaComp(const QuantLib::Size i) const {
+    return kappa_->params()[i];
+}
+
+template <class TS> QuantLib::Matrix HwConstantParametrization<TS>::sigma_x(const QuantLib::Time t) const {
+    Matrix res(this->m_, this->n_);
+    for (Size i = 0; i < this->m_; ++i)
+        for (Size j = 0; j < this->n_; ++j)
+            res(i, j) = sigmaComp(i, j);
+    return res;
+}
+
+template <class TS> QuantLib::Array HwConstantParametrization<TS>::kappa(const QuantLib::Time t) const {
+    Array res(this->n_);
+    for (Size i = 0; i < this->n_; ++i)
+        res[i] = kappaComp(i);
+    return res;
 }
 
 template <class TS> QuantLib::Matrix HwConstantParametrization<TS>::y(const QuantLib::Time t) const {
@@ -65,13 +109,13 @@ template <class TS> QuantLib::Matrix HwConstantParametrization<TS>::y(const Quan
     for (Size i = 0; i < this->n_; ++i) {
         for (Size j = 0; j <= i; ++j) {
             QuantLib::Real tmp;
-            if (std::abs(kappa_[i] + kappa_[j]) < zeroKappaCutoff_) {
+            if (std::abs(kappaComp(i) + kappaComp(j)) < zeroKappaCutoff_) {
                 tmp = t;
             } else {
-                tmp = (1.0 - std::exp(-(kappa_[i] + kappa_[j]) * t)) / (kappa_[i] + kappa_[j]);
+                tmp = (1.0 - std::exp(-(kappaComp(i) + kappaComp(j)) * t)) / (kappaComp(i) + kappaComp(j));
             }
             for (Size k = 0; k < this->m_; ++k) {
-                y(i, j) += sigma_x(t)(k, i) * sigma_x(t)(k, j) * tmp;
+                y(i, j) += sigmaComp(k, i) * sigmaComp(k, j) * tmp;
             }
         }
     }
@@ -88,13 +132,21 @@ QuantLib::Array HwConstantParametrization<TS>::g(const QuantLib::Time t, const Q
     QL_REQUIRE(t <= T, "HwConstantParametrization::g(" << t << "," << T << ") invalid, expected t < T");
     QuantLib::Array g(this->n_, 0.0);
     for (Size i = 0; i < this->n_; ++i) {
-        if (std::abs(kappa_[i]) < zeroKappaCutoff_) {
+        if (std::abs(kappaComp(i)) < zeroKappaCutoff_) {
             g[i] = T - t;
         } else {
-            g[i] = (1.0 - std::exp(-kappa_[i] * (T - t))) / kappa_[i];
+            g[i] = (1.0 - std::exp(-kappaComp(i) * (T - t))) / kappaComp(i);
         }
     }
     return g;
+}
+
+template <class TS>
+const QuantLib::ext::shared_ptr<Parameter> HwConstantParametrization<TS>::parameter(const Size i) const {
+    if (i == 0)
+        return sigma_;
+    else
+        return kappa_;
 }
 
 // typedef

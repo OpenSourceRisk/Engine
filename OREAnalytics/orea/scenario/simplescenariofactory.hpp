@@ -43,9 +43,9 @@ public:
         : useCommonSharedDataBlock_(useCommonSharedDataBlock) {}
     explicit SimpleScenarioFactory(const QuantLib::ext::shared_ptr<SimpleScenario::SharedData>& sharedData)
         : useCommonSharedDataBlock_(true), sharedData_(sharedData) {}
-    const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, bool isAbsolute, bool isPar = false,
+    const QuantLib::ext::shared_ptr<Scenario> buildScenario(QuantLib::Date asof, bool isAbsolute, bool isPar = false,
                                                             const std::string& label = "",
-                                                            Real numeraire = 0.0) const override {
+                                                            QuantLib::Real numeraire = 0.0) const override {
         auto tmp = QuantLib::ext::make_shared<SimpleScenario>(asof, label, numeraire,
                                                               useCommonSharedDataBlock_ ? sharedData_ : nullptr);
         tmp->setAbsolute(isAbsolute);

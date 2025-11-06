@@ -122,7 +122,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSecuritySpreadsSimulate(false);
     setSimulateFxSpots(true);
     setSimulateCorrelations(false);
-    setSimulateConversionFactors(false);
 
     // set default smile dynamics
     setSwapVolSmileDynamics("", "StickyStrike");
@@ -147,6 +146,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Defaults for simulate atm only
     setSimulateFxVolATMOnly(false);
     setSimulateEquityVolATMOnly(false);
+    setSimulateCommodityVolATMOnly(false);
     setSimulateSwapVolATMOnly(false);
     setSimulateCdsVolsATMOnly(false);
     // Default interpolation for yield curves
@@ -530,10 +530,6 @@ void ScenarioSimMarketParameters::setCprs(const vector<string>& names) {
     addParamsName(RiskFactorKey::KeyType::CPR, names);
 }
 
-void ScenarioSimMarketParameters::setConversionFactors(const vector<string>& names) {
-    addParamsName(RiskFactorKey::KeyType::ConversionFactor, names);
-}
-
 void ScenarioSimMarketParameters::setSimulateDividendYield(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::DividendYield, simulate);
 }
@@ -614,10 +610,6 @@ void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
 }
 
-void ScenarioSimMarketParameters::setSimulateConversionFactors(bool simulate) {
-    setParamsSimulate(RiskFactorKey::KeyType::ConversionFactor, simulate);
-}
-
 void ScenarioSimMarketParameters::setEquityVolIsSurface(const string& name, bool isSurface) {
     equityVolIsSurface_[name] = isSurface;
 }
@@ -690,6 +682,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         zeroInflationTenors_ != rhs.zeroInflationTenors_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ||
         commodityCurveTenors_ != rhs.commodityCurveTenors_ || commodityVolDecayMode_ != rhs.commodityVolDecayMode_ ||
         commodityVolExpiries_ != rhs.commodityVolExpiries_ || commodityVolMoneyness_ != rhs.commodityVolMoneyness_ ||
+        commodityVolSimulateATMOnly_ != rhs.commodityVolSimulateATMOnly_ ||
         correlationIsSurface_ != rhs.correlationIsSurface_ || correlationExpiries_ != rhs.correlationExpiries_ ||
         correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || conversionFactors_ != rhs.conversionFactors_ ||
         yieldVolTerms_ != rhs.yieldVolTerms_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
@@ -1441,10 +1434,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setSecuritySpreadsSimulate(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false));
         vector<string> securities = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
         setSecurities(securities);
-
-        // conversion factors can be treated separately, for now they are driven by the security list
-        setSimulateConversionFactors(false); // stays on default
-        setConversionFactors(securities);
     }
 
     DLOG("Loading CPRs");
@@ -1533,6 +1522,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         for (XMLNode* smileDynamicsNode : smileDynamicsNodes) {
             string key = XMLUtils::getAttribute(smileDynamicsNode, "key");
             commodityVolSmileDynamics_.insert(make_pair(key, XMLUtils::getNodeValue(smileDynamicsNode)));
+        }
+        XMLNode* atmOnlyNode = XMLUtils::getChildNode(nodeChild, "SimulateATMOnly");
+        if (atmOnlyNode) {
+            commodityVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(nodeChild, "SimulateATMOnly", true);
         }
     }
 
@@ -1950,6 +1943,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
         }
         for (auto it = commodityVolSmileDynamics_.begin(); it != commodityVolSmileDynamics_.end(); it++) {
             XMLUtils::addChild(doc, commodityVolatilitiesNode, "SmileDynamics", it->second, "key", it->first);
+        }
+        if (commodityVolSimulateATMOnly_) {
+            XMLUtils::addChild(doc, commodityVolatilitiesNode, "SimulateATMOnly", commodityVolSimulateATMOnly_);
         }
     }
 

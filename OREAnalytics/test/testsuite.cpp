@@ -50,8 +50,6 @@ using ore::test::setupTestLogging;
 #include <qle/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
 #include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_regex
-#include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_timer
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_chrono
@@ -84,7 +82,7 @@ public:
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
         seconds -= minutes * 60;
-        std::cout << std::endl << "OREData tests completed in ";
+        std::cout << std::endl << "OREAnalytics tests completed in ";
         if (hours > 0)
             std::cout << hours << " h ";
         if (hours > 0 || minutes > 0)

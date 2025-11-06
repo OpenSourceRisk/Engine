@@ -41,9 +41,10 @@ public:
     //! Default constructor
     FxTouchOption() : ore::data::Trade("FxTouchOption"), FxSingleAssetDerivative("") {}
     //! Constructor
-    FxTouchOption(Envelope& env, OptionData option, BarrierData barrier, string foreignCurrency,
-                  string domesticCurrency, string payoffCurrency, double payoffAmount, string startDate = "",
-                  string calendar = "", string fxIndex = "");
+    FxTouchOption(Envelope& env, OptionData option, BarrierData barrier, const string& foreignCurrency,
+                  const string& domesticCurrency, const string& payoffCurrency, double payoffAmount, const string& startDate = "",
+                  const string& calendar = "", const string& fxIndex = "", const string& fxIndexDailyLows = "",
+                  const string& fxIndexDailyHighs = "");
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
@@ -58,6 +59,7 @@ public:
     const string& startDate() const { return startDate_; }
     const string& calendar() const { return calendar_; }
     const string& fxIndex() const { return fxIndex_; }
+    Real strike() const;
     //@}
 
     //! \name Serialisation
@@ -66,8 +68,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
-    bool checkBarrier(Real spot, Barrier::Type type, Real level);
-
     OptionData option_;
     BarrierData barrier_;
     string startDate_;
@@ -76,6 +76,8 @@ private:
     Real payoffAmount_;
     string type_;
     string payoffCurrency_;
+    std::string fxIndexDailyLowsStr_;
+    std::string fxIndexDailyHighsStr_;
 };
 } // namespace data
 } // namespace oreplus

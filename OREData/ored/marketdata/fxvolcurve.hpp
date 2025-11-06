@@ -75,7 +75,7 @@ private:
     string sourceCcy_, targetCcy_;
     std::vector<string> expiriesNoDuplicates_;
     std::vector<Period> expiries_;
-    boost::optional<Wildcard> expiriesWildcard_;
+    QuantLib::ext::optional<Wildcard> expiriesWildcard_;
     Size spotDays_;
     Calendar spotCalendar_;
     QuantLib::Period switchTenor_;

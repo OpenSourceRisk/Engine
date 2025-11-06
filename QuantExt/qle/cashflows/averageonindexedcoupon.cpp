@@ -61,14 +61,23 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
         tmpEndDate = std::min(tmpEndDate, valueEnd);
     }
 
-    Schedule sch = MakeSchedule()
-                       .from(valueStart)
-                       .to(tmpEndDate)
-                       .withTenor(1 * Days)
-                       .withCalendar(overnightIndex->fixingCalendar())
-                       .withConvention(overnightIndex->businessDayConvention())
-                       .backwards();
-    valueDates_ = sch.dates();
+    QL_REQUIRE(valueStart < tmpEndDate, "OvernightIndexedCoupon: valueStart ("
+                                            << valueStart << ") must be earlier than valueEnd (" << tmpEndDate << ")");
+
+    try {
+        Schedule sch = MakeSchedule()
+                           .from(valueStart)
+                           // .to(valueEnd)
+                           .to(tmpEndDate)
+                           .withTenor(1 * Days)
+                           .withCalendar(overnightIndex->fixingCalendar())
+                           .withConvention(overnightIndex->businessDayConvention())
+                           .backwards();
+        valueDates_ = sch.dates();
+    } catch (...) {
+        // handle degenerate schedules
+        valueDates_ = {valueStart, tmpEndDate};
+    }
 
     if (telescopicValueDates) {
         // build optimised value dates schedule: back stub
@@ -103,10 +112,12 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
         fixingDates_[i] = overnightIndex->fixingCalendar().advance(
             valueDates_[i], -static_cast<Integer>(FloatingRateCoupon::fixingDays()), Days, Preceding);
 
+    setPricer(ext::shared_ptr<FloatingRateCouponPricer>(new AverageONIndexedCouponPricer));
     // Populate the accrual periods.
     dt_.resize(numPeriods_);
+    const DayCounter& dc = overnightIndex->dayCounter();
     for (Size i = 0; i < numPeriods_; ++i)
-        dt_[i] = dayCounter.yearFraction(valueDates_[i], valueDates_[i + 1]);
+        dt_[i] = dc.yearFraction(valueDates_[i], valueDates_[i + 1]);
 
     // check that rate cutoff is < number of fixing dates
     QL_REQUIRE(rateCutoff_ < numPeriods_, "rate cutoff (" << rateCutoff_
@@ -402,7 +413,7 @@ AverageONLeg& AverageONLeg::withInArrears(const bool inArrears) {
     return *this;
 }
 
-AverageONLeg& AverageONLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+AverageONLeg& AverageONLeg::withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod) {
     lastRecentPeriod_ = lastRecentPeriod;
     return *this;
 }

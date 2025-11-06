@@ -41,9 +41,9 @@ void AnalyticDigitalAmericanEngine::calculate() const {
         auto discTouchProbIt = results_.additionalResults.find("discountedTouchProbability");
         if (discTouchProbIt != results_.additionalResults.end()) {
             if (knock_in())
-                discTouchProbIt->second = boost::any_cast<Real>(discTouchProbIt->second) * factor;
+                discTouchProbIt->second = QuantLib::ext::any_cast<Real>(discTouchProbIt->second) * factor;
             else
-                discTouchProbIt->second = 1.0 - (factor * (1.0 - boost::any_cast<Real>(discTouchProbIt->second)));
+                discTouchProbIt->second = 1.0 - (factor * (1.0 - QuantLib::ext::any_cast<Real>(discTouchProbIt->second)));
         }
     }
 
@@ -55,7 +55,7 @@ void AnalyticDigitalAmericanEngine::calculate() const {
             string resPricing = res + "_pricing";
             results_.additionalResults[resPricing] = it->second;
             if (it != results_.additionalResults.end())
-                it->second = 1. / boost::any_cast<Real>(it->second);
+                it->second = 1. / QuantLib::ext::any_cast<Real>(it->second);
         }
 
         // Swap riskFreeDiscount and dividendDiscount, discount factor stays what it is
@@ -63,9 +63,9 @@ void AnalyticDigitalAmericanEngine::calculate() const {
         Real divDiscount = Null<Real>();
 
         if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
-            rfDiscount = boost::any_cast<Real>(tmp->second);
+            rfDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
         if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
-            divDiscount = boost::any_cast<Real>(tmp->second);
+            divDiscount = QuantLib::ext::any_cast<Real>(tmp->second);
 
         results_.additionalResults["riskFreeDiscount"] = divDiscount;
         results_.additionalResults["divDiscount"] = rfDiscount;

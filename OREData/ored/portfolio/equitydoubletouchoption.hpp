@@ -47,6 +47,10 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices(
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
     //! \name Inspectors
     //@{
     const OptionData& option() const { return option_; }
@@ -64,8 +68,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
-    bool checkBarrier(Real spot, Barrier::Type type, Real level);
-
     OptionData option_;
     BarrierData barrier_;
     string startDate_;

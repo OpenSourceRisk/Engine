@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="collar_01">
+        <TradeType>CapFloor</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <CapFloorData>
+            <LongShort>Long</LongShort>
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>true</Payer>
+                <Currency>EUR</Currency>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <Notionals>
+                    <Notional>1000000.00</Notional>
+                </Notionals>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2022-10-19</StartDate>
+                        <EndDate>2042-10-19</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>TARGET</Calendar>
+                        <Convention>MF</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <FloatingLegData>
+                    <Index>EUR-EURIBOR-6M</Index>
+                    <Spreads>
+                        <Spread>0.00</Spread>
+                    </Spreads>
+                    <IsInArrears>false</IsInArrears>
+                    <FixingDays>2</FixingDays>
+                </FloatingLegData>
+            </LegData>
+            <Caps>
+                <Cap>0.04</Cap>
+            </Caps>
+            <Floors>
+                <Floor>0.01</Floor>
+            </Floors>
+        </CapFloorData>
+    </Trade>
+</Portfolio>

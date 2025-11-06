@@ -59,7 +59,7 @@ public:
         const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
             matchSmileQuote,
         const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
-        const bool buildCalibrationInfo);
+        const bool buildCalibrationInfo, const std::string& name);
     //@}
 
     //! \name Inspectors

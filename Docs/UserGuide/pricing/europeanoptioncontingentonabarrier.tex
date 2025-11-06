@@ -1,0 +1,10 @@
+\subsubsection{Vanilla European Option Contingent on a Barrier}
+\label{pricing::europeanoptionbarrier}
+
+A European option with a barrier in another underlying is priced using correlated Black-Scholes processes for the two underlyings
+(option underlying and barrier underlying), unless the option underlying is an IR asset class, in which case we use Gaussian-Cam
+for the IR underlying. Each process is calibrated to its quoted market ATM volatility. The correlation is an externally given parameter.
+The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is MultiAssetOption if both underlyings
+are Equity, FX or COMM. If the option underlying is IR, then the product classification is IrHybrid.

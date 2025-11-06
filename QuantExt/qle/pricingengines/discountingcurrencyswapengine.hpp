@@ -51,7 +51,7 @@ public:
     DiscountingCurrencySwapEngine(const std::vector<Handle<YieldTermStructure> >& discountCurves,
                                   const std::vector<Handle<Quote> >& fxQuotes, const std::vector<Currency>& currencies,
                                   const Currency& npvCurrency,
-                                  boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                  QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                   Date settlementDate = Date(), Date npvDate = Date(),
                                   const std::vector<Date>& spotFXSettleDateVec = std::vector<Date>());
     void calculate() const override;
@@ -67,7 +67,7 @@ private:
     std::vector<Handle<Quote> > fxQuotes_;
     std::vector<Currency> currencies_;
     Currency npvCurrency_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;
     Date npvDate_;
     std::vector<Date> spotFXSettleDateVec_;

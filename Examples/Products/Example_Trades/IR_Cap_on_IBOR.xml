@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Cap_Euribor">
+        <TradeType>CapFloor</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <CapFloorData>
+            <LongShort>Short</LongShort>
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>true</Payer>
+                <Currency>EUR</Currency>
+                <DayCounter>ACT/365</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <Notionals>
+                    <Notional>3000000</Notional>
+                </Notionals>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2023-10-11</StartDate>
+                        <EndDate>2038-10-10</EndDate>
+                        <Tenor>6M</Tenor>
+                        <Calendar>EUR</Calendar>
+                        <Convention>MF</Convention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+                </ScheduleData>
+                <FloatingLegData>
+                    <Index>EUR-EURIBOR-6M</Index>
+                    <Spreads>
+                        <Spread>0.00</Spread>
+                    </Spreads>
+                </FloatingLegData>
+            </LegData>
+            <Caps>
+                <Cap>0.025</Cap>
+            </Caps>
+        </CapFloorData>
+    </Trade>
+</Portfolio>

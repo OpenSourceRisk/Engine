@@ -1,0 +1,84 @@
+<Simulation>
+  <Market>
+    <BaseCurrency>EUR</BaseCurrency>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+    <YieldCurves>
+      <Configuration curve="">
+	<Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+	<Interpolation>LogLinear</Interpolation>
+	<Extrapolation>FlatZero</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+    <FxRates>
+      <CurrencyPairs>
+	<CurrencyPair>USDEUR</CurrencyPair>
+      </CurrencyPairs>
+    </FxRates>
+    <Indices>
+      <Index>EUR-EONIA</Index>
+      <Index>EUR-ESTER</Index>
+      <Index>USD-SOFR</Index>
+    </Indices>
+    <Equities>
+      <SimulateDividendYield>false</SimulateDividendYield>
+      <Names>
+	<Name>RIC:.SPX</Name>
+	<Name>RIC:.STOXX50E</Name>
+      </Names>
+      <DividendTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</DividendTenors>
+    </Equities>
+    <FxVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <CurrencyPairs>
+	<CurrencyPair>EURUSD</CurrencyPair>
+      </CurrencyPairs>
+      <Expiries ccyPair="EURUSD">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+      <Surface>
+	<StandardDeviations ccyPair="EURUSD">-7, -6, -5, -4, -3, -2, -1, -0.5, -0.25, -0.1, -0.05, 0, 0.05, 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7</StandardDeviations>
+      </Surface>
+      <SmileDynamics key="">StickyStrike</SmileDynamics>
+      <SmileDynamics key="EURUSD">StickyStrike</SmileDynamics>
+    </FxVolatilities>
+    <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Names>
+	<Name>RIC:.SPX</Name>
+	<Name>RIC:.STOXX50E</Name>
+      </Names>
+      <Expiries name="RIC:.SPX">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+      <Expiries name="RIC:.STOXX50E">2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Expiries>
+      <Surface>
+	<StandardDeviations name="RIC:.SPX">-3, -2, -1, -0.5, -0.25, -0.1, -0.05, 0, 0.05, 0.1, 0.25, 0.5, 1, 2, 3</StandardDeviations>
+	<StandardDeviations name="RIC:.STOXX50E">-3, -2, -1, -0.5, -0.25, -0.1, -0.05, 0, 0.05, 0.1, 0.25, 0.5, 1, 2, 3</StandardDeviations>
+      </Surface>
+      <SmileDynamics key="">StickyStrike</SmileDynamics>
+      <SmileDynamics key="RIC:.SPX">StickyStrike</SmileDynamics>
+      <SmileDynamics key="RIC:.STOXX50E">StickyStrike</SmileDynamics>
+    </EquityVolatilities>
+    <BenchmarkCurves>
+      <BenchmarkCurve>
+	<Currency>EUR</Currency>
+	<Name>EUR-IN-USD</Name>
+      </BenchmarkCurve>
+    </BenchmarkCurves>
+    <CreditStates>
+      <NumberOfFactors>0</NumberOfFactors>
+    </CreditStates>
+    <AggregationScenarioDataCreditStates>
+      <NumberOfFactors>0</NumberOfFactors>
+    </AggregationScenarioDataCreditStates>
+    <Correlations>
+      <Simulate>true</Simulate>
+      <Pairs>
+	<Pair>EQ-RIC:.STOXX50E&amp;EQ-RIC:.SPX</Pair>
+      </Pairs>
+      <Expiries>1Y</Expiries>
+    </Correlations>
+  </Market>
+</Simulation>
+

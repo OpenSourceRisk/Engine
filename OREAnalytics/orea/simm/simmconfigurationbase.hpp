@@ -80,8 +80,8 @@ public:
         -# there is a qualifier-dependent and label1-dependent risk weight for the risk
            factor's RiskType so need all three parameters
     */
-    QuantLib::Real weight(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
-                          boost::optional<std::string> label_1 = boost::none,
+    QuantLib::Real weight(const CrifRecord::RiskType& rt, QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                          QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
                           const std::string& calculationCurrency = "") const override;
 
     /*! Gives back the value of the scaling function used in the calculation of curvature risk
@@ -111,8 +111,8 @@ public:
 
         \remark For convenience, returns 1.0 if not applicable for risk type \p rt
     */
-    QuantLib::Real sigma(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
-                         boost::optional<std::string> label_1 = boost::none,
+    QuantLib::Real sigma(const CrifRecord::RiskType& rt, QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                         QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
                          const std::string& calculationCurrency = "") const override;
 
     /*! Give back the scaling factor for the Interest Rate curvature margin

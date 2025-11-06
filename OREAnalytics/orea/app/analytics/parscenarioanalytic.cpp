@@ -20,6 +20,8 @@
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
 
+#include <ored/utilities/parsers.hpp>
+
 using namespace ore::analytics;
 
 namespace ore {
@@ -33,10 +35,6 @@ void ParScenarioAnalyticImpl::setUpConfigurations() {
 
 void ParScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
-
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("ParScenarioAnalytic::runAnalytic called");
 
     analytic()->buildMarket(loader);

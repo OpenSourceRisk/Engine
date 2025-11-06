@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="OIS">
+        <TradeType>Swap</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <SwapData>
+            <LegData>
+                <Payer>false</Payer>
+                <Currency>EUR</Currency>
+                <Notionals>
+                    <Notional>100000000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <LegType>Floating</LegType>
+                <FloatingLegData>
+                    <Index>EUR-EONIA</Index>
+                    <Spreads>
+                        <Spread>0.000122</Spread>
+                    </Spreads>
+                    <IsInArrears>false</IsInArrears>
+                    <FixingDays>2</FixingDays>
+                </FloatingLegData>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2023-01-31</StartDate>
+                        <EndDate>2028-02-01</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>US</Calendar>
+                        <Convention>MF</Convention>
+                        <Rule>Backward</Rule>
+                    </Rules>
+                </ScheduleData>
+            </LegData>
+        </SwapData>
+    </Trade>
+</Portfolio>

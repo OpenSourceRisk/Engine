@@ -73,7 +73,7 @@ public:
 
     //! Check if the given \p riskType and \p qualifier has a valid mapping
     bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier,
-             boost::optional<bool> fallback = boost::none) const override;
+             QuantLib::ext::optional<bool> fallback = QuantLib::ext::nullopt) const override;
 
     //! \name Serialisation
     //@{

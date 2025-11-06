@@ -79,9 +79,15 @@ public:
     //! Remove matured trades from portfolio for a given date, each removal is logged with an Alert
     void removeMatured(const QuantLib::Date& asof);
 
+    //! set if trades should build as a FailedTrade if they fail
+    void setBuildFailedTrades(const bool buildFailed) { buildFailedTrades_ = buildFailed; }
+
     //! Call build on all trades in the portfolio, the context is included in error messages
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&, const std::string& context = "unspecified",
                const bool emitStructuredError = true);
+
+    //! if the portfolio has been built
+    bool isBuilt() const;
 
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;

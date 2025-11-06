@@ -29,6 +29,7 @@
 #include <qle/termstructures/dynamicstype.hpp>
 
 #include <set>
+#include <optional>
 
 namespace ore {
 namespace analytics {
@@ -53,12 +54,12 @@ public:
 
         // default shift size, type (Absolute, Relative) and scheme (Forward, Backward, Central)
         ShiftType shiftType = ShiftType::Absolute;
-        Real shiftSize = 0.0;
+        QuantLib::Real shiftSize = 0.0;
         ShiftScheme shiftScheme = ShiftScheme::Forward;
 
         // product specific shift size, type, scheme
         map<string, ShiftType> keyedShiftType;
-        map<string, Real> keyedShiftSize;
+        map<string, QuantLib::Real> keyedShiftSize;
         map<string, ShiftScheme> keyedShiftScheme;
     };
 
@@ -82,7 +83,7 @@ public:
         BaseCorrelationShiftData() : ShiftData() {}
         BaseCorrelationShiftData(const ShiftData& d) : ShiftData(d) {}
         vector<Period> shiftTerms;
-        vector<Real> shiftLossLevels;
+        vector<QuantLib::Real> shiftLossLevels;
         string indexName;
     };
 
@@ -90,7 +91,7 @@ public:
         VolShiftData() : shiftStrikes({0.0}), isRelative(false) {}
         VolShiftData(const ShiftData& d) : ShiftData(d), shiftStrikes({0.0}), isRelative(false) {}
         vector<Period> shiftExpiries;
-        vector<Real> shiftStrikes;
+        vector<QuantLib::Real> shiftStrikes;
         bool isRelative;
     };
 
@@ -135,13 +136,15 @@ public:
         // If not given, we default to old behaviour of using the market's discount curve for
         // that currency. This string will be an index name that is searched for in the market.
         std::string discountCurve;
-
+        std::optional<Period> rateComputationPeriod;
         map<string, string> parInstrumentConventions;
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true)
-        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion) {};
+    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*", 
+                            ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation = ore::data::ParConversionMatrixRegularisation::Silent)
+        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion), 
+          parConversionExcludeFixings_(parConversionExcludeFixings), parConversionMatrixRegularisation_(parConversionMatrixRegularisation){};
 
     //! \name Inspectors
     //@{
@@ -198,6 +201,8 @@ public:
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
 
     const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() const { return parConversionExcludes_; }
+    const std::string& parConversionExcludeFixings() const { return parConversionExcludeFixings_; }
+    ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation() const { return parConversionMatrixRegularisation_; }
     //@}
 
     //! \name Setters
@@ -242,6 +247,7 @@ public:
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
 
     void setParConversion(const bool b) { parConversion_ = b; }
+    void setParConversionMatrixRegularisation(const ore::data::ParConversionMatrixRegularisation& r) { parConversionMatrixRegularisation_ = r; }
 
     void addDiscountCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
         discountCurveShiftData_[s] = d;
@@ -297,6 +303,7 @@ public:
     void setCrossGammaFilter(const vector<pair<string, string>>& d) { crossGammaFilter_ = d; }
     void setComputeGamma(const bool b) { computeGamma_ = b; }
     void setUseSpreadedTermStructures(const bool b) { useSpreadedTermStructures_ = b; }
+    void setParConversionExcludeFixings(const std::string b) { parConversionExcludeFixings_ = b; }
 
     //@}
 
@@ -360,6 +367,8 @@ protected:
     bool useSpreadedTermStructures_;
     bool parConversion_;
     set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;
+    std::string parConversionExcludeFixings_;
+    ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation_;
 
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);

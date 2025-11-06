@@ -67,6 +67,7 @@ Real SpreadedZeroInflationCurve::zeroRateImpl(Time t) const {
     return referenceCurve_->zeroRate(t) + (*interpolation_)(t);
 }
 
+QL_DEPRECATED_DISABLE_WARNING
 SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTermStructure>& referenceCurve,
                                                      const std::vector<Time>& times,
                                                      const std::vector<Handle<Quote>>& quotes)
@@ -86,6 +87,7 @@ SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTe
     interpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }
+QL_DEPRECATED_ENABLE_WARNING
 
 Date SpreadedYoYInflationCurve::baseDate() const { return referenceCurve_->baseDate(); }
 

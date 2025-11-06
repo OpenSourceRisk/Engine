@@ -151,5 +151,10 @@ void JointNPVSensiCube::remove(Size id, Size sample, bool useT0) {
     c.first->remove(c.second, sample, useT0);
 }
 
+bool JointNPVSensiCube::usesDoublePrecision() const {
+    return std::all_of(cubes_.begin(), cubes_.end(),
+                       [](const QuantLib::ext::shared_ptr<NPVCube>& c) { return c->usesDoublePrecision(); });
+}
+
 } // namespace analytics
 } // namespace ore

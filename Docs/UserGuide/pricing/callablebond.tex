@@ -1,0 +1,53 @@
+\subsubsection{Callable Bond}
+\label{pricing::callable_bond}
+
+A callable bond is priced in the LGM model, see sections \ref{models:LGM} and the section on pricing engine
+configuration using a finite difference or a numerical integration approach to roll back conditional pvs. The solvers
+and coupon handling are the same as those used for American swaption pricing, see \ref{pricing:ir_bermswaption}. In
+particular, we support the same coupon types as for swaptions.
+
+Let $P_R(t,T)$, $P_I(t,T)$, $S(t,T)$, $s$, $R$, denote the bond reference curve, the bond income curve, the survival
+probability curve (credit curve),the security spread and the recovery rate, respectively. We define the effective (or
+``all-in'') discounting curve $P_e(t,T)$ to be
+
+\begin{equation}
+P_e(t,T) := P_R(t,T) \cdot S(t,T)^{1-R} \cdot e^{-s\cdot(T-t)}
+\end{equation}
+
+We set up a time grid $t_0, \cdot, t_n$ that contains all events, i.e.
+
+\begin{itemize}
+\item required simulation times of bond cashflows
+\item payment times of bond cashflows\footnote{these are not strictly required, but useful when e.g. expected flows have to be calculated or for the reporting of the event schedule including bond payments in the additional results}
+\end{itemize}
+
+and in addition contains a given minimum number of grid points per year.
+
+The pricing proceeds with a backward loop over the time grid. At each event time the deflated underlying npv $p_u$ as
+seen from the current time is updated if new cashflows are to be considered as part of the underlying.
+
+For a call event, the deflated option npv $p_o$ is updated as follows
+
+\begin{equation}\label{pricing::callable_bond_call_update}
+p_o := min( p_o , c / N(t) - p_u )
+\end{equation}
+
+where $c$ is the call price (including accruals if applicable) to be paid by the issuer if the call is exercised and
+ $N(t)$ is the numeraire at the current time $t$ using the effective discounting curve $P_e(t,T)$. Note: $p_o$ is the
+ option npv as seen from the investor perspective, i.e. negative or zero for a call option that is held by the
+ issuer. $p_o$ is initialized to zero before the backward loop.
+
+For a put event, the option npv is updated as follows:
+
+\begin{equation}\label{pricing::callable_bond_put_update}
+p_o := max( p_o , p / N(t) - p_u )
+\end{equation}
+
+where $p$ is the put price (inlcuding accruals if applicable) that the investor receives if the put is exercised. If
+both a call and a put are present at the same event time, the call update \ref{pricing::callable_bond_call_update} is
+executed before the put update \ref{pricing::callable_bond_put_update}, i.e. the put overrides the call in this case.
+
+Finally, the option npv $p_o$ and the underlying npv $p_u$ are rolled back in the LGM pricing PDE from the current time
+to the previous time, until time zero corresponding to the valuation date.
+
+

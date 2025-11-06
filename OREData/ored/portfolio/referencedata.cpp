@@ -63,6 +63,7 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
     calendar = XMLUtils::getChildValue(node, "Calendar", true);
     issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
+    quotedDirtyPrices = parseBondPriceType(XMLUtils::getChildValue(node, "PriceType", false, "Clean"));
     priceQuoteMethod = XMLUtils::getChildValue(node, "PriceQuoteMethod", false);
     priceQuoteBaseValue = XMLUtils::getChildValue(node, "PriceQuoteBaseValue", false);
     subType = XMLUtils::getChildValue(node, "SubType", false);
@@ -90,9 +91,12 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "IssueDate", issueDate);
     XMLUtils::addChild(doc, node, "PriceQuoteMethod", priceQuoteMethod);
     XMLUtils::addChild(doc, node, "PriceQuoteBaseValue", priceQuoteBaseValue);
-    XMLUtils::addChild(doc, node, "SubType", subType);
     for (auto& bd : legData)
         XMLUtils::appendNode(node, bd.toXML(doc));
+    XMLUtils::addChild(doc, node, "SubType", subType);
+    if (quotedDirtyPrices)
+        XMLUtils::addChild(doc, node, "PriceType",
+                           *quotedDirtyPrices == QuantLib::Bond::Price::Type::Clean ? "Clean" : "Dirty");
     return node;
 }
 
@@ -105,6 +109,54 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) const {
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* dataNode = bondData_.toXML(doc);
     XMLUtils::setNodeName(doc, dataNode, "BondReferenceData");
+    XMLUtils::appendNode(node, dataNode);
+    return node;
+}
+
+void BondFutureReferenceDatum::BondFutureData::fromXML(XMLNode* node) {
+    QL_REQUIRE(node, "BondFutureReferenceDatum::BondFutureData::fromXML(): no node given");
+    currency = XMLUtils::getChildValue(node, "Currency", false);
+    deliveryBasket = XMLUtils::getChildrenValues(node, "DeliveryBasket", "Id", false);
+    deliverableGrade = XMLUtils::getChildValue(node, "DeliverableGrade", false);
+    lastTrading = XMLUtils::getChildValue(node, "LastTradingDate", false);
+    lastDelivery = XMLUtils::getChildValue(node, "LastDeliveryDate", false);
+    settlement = XMLUtils::getChildValue(node, "Settlement", false);
+    dirtyQuotation = XMLUtils::getChildValue(node, "DirtyQuotation", false);
+    contractMonth = XMLUtils::getChildValue(node, "ContractMonth", false);
+    rootDate = XMLUtils::getChildValue(node, "RootDate", false);
+    expiryBasis = XMLUtils::getChildValue(node, "ExpiryBasis", false);
+    settlementBasis = XMLUtils::getChildValue(node, "SettlementBasis", false);
+    expiryLag = XMLUtils::getChildValue(node, "ExpiryLag", false);
+    settlementLag = XMLUtils::getChildValue(node, "SettlementLag", false);
+}
+
+XMLNode* BondFutureReferenceDatum::BondFutureData::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode("BondFutureReferenceData");
+    XMLUtils::addChild(doc, node, "Currency", currency);
+    XMLUtils::addChildren(doc, node, "DeliveryBasket", "Id", deliveryBasket);
+    XMLUtils::addChild(doc, node, "DeliverableGrade", deliverableGrade);
+    XMLUtils::addChild(doc, node, "LastTradingDate", lastTrading);
+    XMLUtils::addChild(doc, node, "LastDeliveryDate", lastDelivery);
+    XMLUtils::addChild(doc, node, "Settlement", settlement);
+    XMLUtils::addChild(doc, node, "DirtyQuotation", dirtyQuotation);
+    XMLUtils::addChild(doc, node, "ContractMonth", contractMonth);
+    XMLUtils::addChild(doc, node, "RootDate", rootDate);
+    XMLUtils::addChild(doc, node, "ExpiryBasis", expiryBasis);
+    XMLUtils::addChild(doc, node, "SettlementBasis", settlementBasis);
+    XMLUtils::addChild(doc, node, "ExpiryLag", expiryLag);
+    XMLUtils::addChild(doc, node, "SettlementLag", settlementLag);
+    return node;
+}
+
+void BondFutureReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    bondFutureData_.fromXML(XMLUtils::getChildNode(node, "BondFutureReferenceData"));
+}
+
+XMLNode* BondFutureReferenceDatum::toXML(XMLDocument& doc) const {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* dataNode = bondFutureData_.toXML(doc);
+    XMLUtils::setNodeName(doc, dataNode, "BondFutureReferenceData");
     XMLUtils::appendNode(node, dataNode);
     return node;
 }
@@ -214,6 +266,7 @@ void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
     QL_REQUIRE(cird, "Expected a CreditIndexReferenceData node.");
 
     indexFamily_ = XMLUtils::getChildValue(cird, "IndexFamily", false);
+    indexSubFamily_ = XMLUtils::getChildValue(cird, "IndexSubFamily", false);
 
     constituents_.clear();
 
@@ -231,6 +284,7 @@ XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* cird = XMLUtils::addChild(doc, node, "CreditIndexReferenceData");
 
     XMLUtils::addChild(doc, cird, "IndexFamily", indexFamily_);
+    XMLUtils::addChild(doc, cird, "IndexSubFamily", indexSubFamily_);
 
     for (auto c : constituents_) {
         auto cNode = c.toXML(doc);
@@ -519,7 +573,6 @@ vector<QuantLib::ext::shared_ptr<Trade>> PortfolioBasketReferenceDatum::getTrade
 XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
         XMLNode* node = ReferenceDatum::toXML(doc);
         XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
-        XMLUtils::appendNode(node, rdNode);
         XMLNode* cNode = XMLUtils::addChild(doc, rdNode, "Components");
         for (auto& u : getTrades()) {
             XMLUtils::appendNode(cNode, u->toXML(doc));

@@ -209,7 +209,7 @@ VanillaCrossCurrencySwap::VanillaCrossCurrencySwap(bool payFixed, Currency fixed
                                                    const DayCounter& fixedDayCount, Currency floatCcy,
                                                    Real floatNominal, const Schedule& floatSchedule,
                                                    const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, Rate floatSpread,
-                                                   boost::optional<BusinessDayConvention> paymentConvention,
+                                                   QuantLib::ext::optional<BusinessDayConvention> paymentConvention,
                                                    const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
 
@@ -264,7 +264,7 @@ CrossCurrencySwap::CrossCurrencySwap(bool payFixed, Currency fixedCcy, std::vect
                                      const DayCounter& fixedDayCount, Currency floatCcy,
                                      std::vector<Real> floatNominals, const Schedule& floatSchedule,
                                      const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, std::vector<Rate> floatSpreads,
-                                     boost::optional<BusinessDayConvention> paymentConvention,
+                                     QuantLib::ext::optional<BusinessDayConvention> paymentConvention,
                                      const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
 
@@ -332,7 +332,7 @@ CrossCurrencySwap::CrossCurrencySwap(bool pay1, Currency ccy1, std::vector<Real>
                                      std::vector<Rate> rates1, const DayCounter& dayCount1, Currency ccy2,
                                      std::vector<Real> nominals2, const Schedule& schedule2, std::vector<Rate> rates2,
                                      const DayCounter& dayCount2,
-                                     boost::optional<BusinessDayConvention> paymentConvention,
+                                     QuantLib::ext::optional<BusinessDayConvention> paymentConvention,
                                      const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
 
@@ -397,7 +397,7 @@ CrossCurrencySwap::CrossCurrencySwap(bool pay1, Currency ccy1, std::vector<Real>
                                      const QuantLib::ext::shared_ptr<IborIndex>& iborIndex1, std::vector<Rate> spreads1,
                                      Currency ccy2, std::vector<Real> nominals2, const Schedule& schedule2,
                                      const QuantLib::ext::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
-                                     boost::optional<BusinessDayConvention> paymentConvention,
+                                     QuantLib::ext::optional<BusinessDayConvention> paymentConvention,
                                      const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
 

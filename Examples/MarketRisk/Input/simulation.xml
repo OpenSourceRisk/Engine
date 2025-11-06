@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<Simulation>
+
+  <Market>
+
+    <BaseCurrency>EUR</BaseCurrency>
+
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+      <Currency>GBP</Currency>
+    </Currencies>
+
+    <YieldCurves>
+      <Configuration>
+        <Tenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <!-- Alternative: LinearZero -->
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+    
+    <Indices>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EURIBOR-1M</Index>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-LIBOR-3M</Index>
+      <Index>USD-LIBOR-6M</Index>
+      <Index>USD-FedFunds</Index>
+      <Index>GBP-LIBOR-6M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>GBP-SONIA</Index>
+    </Indices>
+		
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+
+    <DefaultCurves>
+      <Names>
+        <Name>CPTY_A</Name>
+        <Name>CPTY_B</Name>
+        <Name>CPTY_C</Name>
+        <Name>CPTY_D</Name>
+        <Name>CDXIG</Name>
+        <Name>CPTY_1</Name>
+        <Name>CPTY_2</Name>
+        <Name>CPTY_3</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+    </DefaultCurves>
+
+    <Equities>
+      <Names>
+        <Name>FTSE</Name>
+        <Name>SPX</Name>
+        <Name>SPXE</Name>
+        <Name>Lufthansa</Name>
+        <Name>SP5E</Name>
+      </Names>
+      <DividendTenors>6M,1Y,2Y</DividendTenors>
+    </Equities>
+
+    <SwaptionVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Currencies>
+        <Currency>EUR</Currency>
+        <Currency>USD</Currency>
+        <Currency>GBP</Currency>
+      </Currencies>
+      <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
+      <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    </SwaptionVolatilities>
+    
+    <CapFloorVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Currencies>
+        <Currency>EUR</Currency>
+        <Currency>USD</Currency>
+      </Currencies>
+      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
+      <Strikes>0.00,0.01,0.02,0.03,0.04,0.05,0.06</Strikes>
+    </CapFloorVolatilities>
+
+    <CDSVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Names>
+        <Name>CDXIG</Name>
+      </Names>
+      <Expiries>3M,6M,1Y</Expiries>
+    </CDSVolatilities>
+
+    <FxVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <CurrencyPairs>
+        <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>GBPEUR</CurrencyPair>
+      </CurrencyPairs>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Surface>
+          <Moneyness>0.5,0.6,0.7,0.8,0.9,0.95,1.0,1.05,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.5,3.0</Moneyness>
+      </Surface>
+    </FxVolatilities>
+ 	
+    <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Names>
+        <Name>FTSE</Name>
+        <Name>SPX</Name>
+      </Names>
+      <Expiries>2W,1M,3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Expiries>
+      <SimulateATMOnly>true</SimulateATMOnly>
+    </EquityVolatilities>     
+	
+    <BenchmarkCurves/>
+
+    <Securities>
+      <Simulate>true</Simulate>
+      <Names>
+        <Name>SECURITY_1</Name>
+        <Name>SECURITY_2</Name>
+        <Name>SECURITY_3</Name>
+      </Names>
+    </Securities>
+
+    <ZeroInflationIndexCurves>
+      <Names>
+        <Name>EUHICPXT</Name>
+        <Name>UKRPI</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Tenors>
+    </ZeroInflationIndexCurves>
+
+    <YYInflationIndexCurves>
+      <Names>
+        <Name>EUHICPXT</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Tenors>
+    </YYInflationIndexCurves>
+
+    <BaseCorrelations>
+      <Simulate>true</Simulate>
+      <IndexNames>
+	<IndexName>CDXIG</IndexName>
+      </IndexNames>
+      <Terms>1D</Terms>
+      <DetachmentPoints>0.03, 0.06, 0.10, 0.20, 1.0</DetachmentPoints>
+    </BaseCorrelations>
+
+    <AggregationScenarioDataCurrencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </AggregationScenarioDataCurrencies>
+
+    <AggregationScenarioDataIndices>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+      <Index>USD-LIBOR-3M</Index>
+    </AggregationScenarioDataIndices>
+    
+  </Market>
+
+</Simulation>

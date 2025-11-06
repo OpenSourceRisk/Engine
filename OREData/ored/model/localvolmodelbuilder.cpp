@@ -20,6 +20,7 @@
 
 #include <ored/model/localvolmodelbuilder.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/dategrid.hpp>
 
 #include <qle/models/carrmadanarbitragecheck.hpp>
 
@@ -41,10 +42,11 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
-    const Type lvType, const std::vector<Real>& calibrationMoneyness, const bool dontCalibrate,
-    const Handle<YieldTermStructure>& baseCurve)
+    const Type lvType, const std::vector<Real>& calibrationMoneyness, const std::string& referenceCalibrationGrid,
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
     : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
-      lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), dontCalibrate_(dontCalibrate) {
+      lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
+      dontCalibrate_(dontCalibrate) {
     // we have to observe the whole vol surface for the Dupire implementation unfortunately; we can specify the time
     // steps that are relevant, but not a set of discrete strikes
     if (lvType == Type::Dupire) {
@@ -59,7 +61,12 @@ std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolM
     QL_REQUIRE(lvType_ != Type::AndreasenHuge || !calibrationMoneyness_.empty(), "no calibration moneyness provided");
 
     calculate();
-    
+
+    std::vector<Date> referenceCalibrationDates;
+    if (!referenceCalibrationGrid_.empty())
+        referenceCalibrationDates = ore::data::DateGrid(referenceCalibrationGrid_).dates();
+    Date lastRefCalDate = Date::minDate();
+
     std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes;
 
     for (Size l = 0; l < processes_.size(); ++l) {
@@ -82,27 +89,33 @@ std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolM
             for (auto const& d : effectiveSimulationDates_) {
                 if (d <= curves_.front()->referenceDate())
                     continue;
-                Real t = processes_.front()->riskFreeRate()->timeFromReference(d);
-                checkMaturities.push_back(t);
-                Real atmLevel =
-                    atmForward(processes_[l]->x0(), processes_[l]->riskFreeRate(), processes_[l]->dividendYield(), t);
-                Real atmMarketVol = std::max(1e-4, processes_[l]->blackVolatility()->blackVol(t, atmLevel));
-                callPrices.push_back(std::vector<Real>());
-                atmForwards.push_back(atmLevel);
-                for (Size i = 0; i < calibrationMoneyness_.size(); ++i) {
-                    Real strike = atmLevel * std::exp(calibrationMoneyness_[i] * atmMarketVol * std::sqrt(t));
-                    Real marketVol = processes_[l]->blackVolatility()->blackVol(t, strike);
-                    // skip option with effective moneyness < 0.0001 or > 0.9999 (TODO, hardcoded limits here?)
-                    if (std::fabs(calibrationMoneyness_[i]) > 3.72)
-                        continue;
-                    auto option =
-                        QuantLib::ext::make_shared<VanillaOption>(QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, strike),
-                                                          QuantLib::ext::make_shared<EuropeanExercise>(d));
-                    calSet.push_back(std::make_pair(option, QuantLib::ext::make_shared<SimpleQuote>(marketVol)));
-                    option->setPricingEngine(QuantLib::ext::make_shared<AnalyticEuropeanEngine>(processes_[l]));
-                    callPrices.back().push_back(option->NPV());
-                    if (d == *effectiveSimulationDates_.rbegin()) {
+                auto refCalDate =
+                    std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), d);
+                if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
+                    Real t = processes_.front()->riskFreeRate()->timeFromReference(d);
+                    checkMaturities.push_back(t);
+                    Real atmLevel = atmForward(processes_[l]->x0(), processes_[l]->riskFreeRate(),
+                                               processes_[l]->dividendYield(), t);
+                    Real atmMarketVol = std::max(1e-4, processes_[l]->blackVolatility()->blackVol(t, atmLevel));
+                    callPrices.push_back(std::vector<Real>());
+                    atmForwards.push_back(atmLevel);
+                    checkMoneynesses.clear();
+                    for (Size i = 0; i < calibrationMoneyness_.size(); ++i) {
+                        Real strike = atmLevel * std::exp(calibrationMoneyness_[i] * atmMarketVol * std::sqrt(t));
+                        Real marketVol = processes_[l]->blackVolatility()->blackVol(t, strike);
+                        // skip option with effective moneyness < 0.0001 or > 0.9999 (TODO, hardcoded limits here?)
+                        if (std::fabs(calibrationMoneyness_[i]) > 3.72)
+                            continue;
+                        auto option = QuantLib::ext::make_shared<VanillaOption>(
+                            QuantLib::ext::make_shared<PlainVanillaPayoff>(Option::Call, strike),
+                            QuantLib::ext::make_shared<EuropeanExercise>(d));
+                        calSet.push_back(std::make_pair(option, QuantLib::ext::make_shared<SimpleQuote>(marketVol)));
+                        option->setPricingEngine(QuantLib::ext::make_shared<AnalyticEuropeanEngine>(processes_[l]));
+                        callPrices.back().push_back(option->NPV());
                         checkMoneynesses.push_back(strike / atmLevel);
+                    }
+                    if (refCalDate != referenceCalibrationDates.end()) {
+                        lastRefCalDate = *refCalDate;
                     }
                 }
             }
@@ -111,8 +124,7 @@ std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolM
             QuantExt::CarrMadanSurface cmCheck(checkMaturities, checkMoneynesses, processes_[l]->x0(), atmForwards,
                                                callPrices);
             if (!cmCheck.arbitrageFree()) {
-                WLOG("Andreasen-Huge local vol calibration for process #" << l
-                                                                          << ":, input vol is not arbitrage free:");
+                WLOG("Andreasen-Huge local vol calibration for process #" << l << ": input vol is not arbitrage free.");
                 DLOG("time,moneyness,callSpread,butterfly,calendar");
                 for (Size i = 0; i < checkMaturities.size(); ++i)
                     for (Size j = 0; j < checkMoneynesses.size(); ++j)

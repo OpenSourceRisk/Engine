@@ -17,15 +17,15 @@
  */
 
 #pragma once
+#include <orea/engine/saccrcalculator.hpp>
+#include <orea/engine/saccrtradedata.hpp>
 #include <ored/utilities/timer.hpp>
-#include <orea/engine/cvacalculator.hpp>
-#include <orea/engine/saccr.hpp>
 
 namespace ore {
 namespace analytics {
 
 //! Class for calculating Basic Approach CVA capital charge
-class BaCvaCalculator : public CvaCalculator {
+class BaCvaCalculator {
 public:
     BaCvaCalculator(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager,
                     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager,
@@ -37,23 +37,32 @@ public:
                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
         QuantLib::Real rho = 0.5, QuantLib::Real alpha = 1.4, QuantLib::Real discount = 0.65);
 
-    BaCvaCalculator(const QuantLib::ext::shared_ptr<SACCR>& saccr, const std::string& calculationCcy, QuantLib::Real rho = 0.5, QuantLib::Real alpha = 1.4);
+    BaCvaCalculator(const QuantLib::ext::shared_ptr<SaccrCalculator>& saccrCalculator,
+                    const QuantLib::ext::shared_ptr<SaccrTradeData>& saccrTradeData, const std::string& calculationCcy,
+                    QuantLib::Real rho = 0.5, QuantLib::Real alpha = 1.4);
 
-    virtual void calculate() override;
+    void calculate();
 
     QuantLib::Real effectiveMaturity(std::string nettingSet);
     QuantLib::Real discountFactor(std::string nettingSet);
     QuantLib::Real counterpartySCVA(std::string counterparty);
-    QuantLib::Real EAD(std::string nettingSet) { return saccr_->EAD(nettingSet); }
+    QuantLib::Real EAD(std::string nettingSet) { return saccrCalculator_->EAD(nettingSet); }
     map<string, set<string>> counterpartyNettingSets() { return counterpartyNettingSets_; }
     QuantLib::Real riskWeight(std::string counterparty);
     const ore::data::Timer& timer() const { return timer_; }
+
+    //! Give back the CVA results container for the given \p portfolioId
+    QuantLib::Real cvaResult() const { return cvaResult_; }
+
+    //! Return the calculator's calculation currency
+    const std::string& calculationCurrency() const { return calculationCcy_; }
 
 protected:
     void calculateEffectiveMaturity();
 
 private:
-    QuantLib::ext::shared_ptr<SACCR> saccr_;
+    QuantLib::ext::shared_ptr<SaccrCalculator> saccrCalculator_;
+    QuantLib::ext::shared_ptr<SaccrTradeData> saccrTradeData_;
     
     QuantLib::Real rho_ = 0.5;
     QuantLib::Real alpha_ = 1.4;
@@ -67,6 +76,12 @@ private:
     std::map<std::string, QuantLib::Real> discountFactor_;
 
     ore::data::Timer timer_;
+
+    //! The SIMM calculation currency i.e. the currency of the SIMM results
+    std::string calculationCcy_;
+
+    //! Container with a CvaResults object for each portfolio ID
+    QuantLib::Real cvaResult_;
 };
 } // analytics
 } // ore

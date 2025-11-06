@@ -1,5 +1,21 @@
 \subsubsection{Year on Year Inflation Swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A YoYIIS is a swap contract where one leg has annual inflation linked coupon 
+payments that are exchanged for fixed payments on the other leg. \\
+
+Inflation-linked payment:
+$$
+N\cdot \left(\frac{I(T_i)}{I(T_{i-1})}-1\right)\cdot \delta(T_{i-1},T_i)
+$$
+where $T_{i-1}$ and $T_i$ are spaced one year apart. 
+
+\medskip
+Year-on-year inflation linked coupons can be capped/floored. 
+
+{\bf Input}}\fi
+
 A Year on Year inflation swap can be set up with trade type \emph{Swap}, with one leg of type {\tt YY}. Listing \ref{lst:yyswap} shows an
 example. The YY leg contains an additional {\tt YYLegData} block. See \ref{ss:yylegdata} for details on the YY leg
 specification.

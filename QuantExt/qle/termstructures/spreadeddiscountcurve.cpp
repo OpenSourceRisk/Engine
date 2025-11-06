@@ -59,8 +59,8 @@ void SpreadedDiscountCurve::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!quotes_[i].empty(), "SpreadedDiscountCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
-        if (!base_.empty()) {
-            data_[i] *= base_->discount(times_[i]) / baseOffset_[i];
+        for (Size j = 0; j < bases_.size(); ++j) {
+            data_[i] *= std::pow(bases_[j]->discount(times_[i]) / basesOffset_[j][i], multiplier_[j]);
         }
         QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve: invalid value " << data_[i] << " at index " << i);
     }
@@ -92,17 +92,29 @@ DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
     }
 }
 
-void SpreadedDiscountCurve::makeThisCurveSpreaded(const Handle<YieldTermStructure>& base) {
-    base_ = base;
-    baseOffset_.resize(times_.size());
-    if (base_.empty()) {
-        std::fill(baseOffset_.begin(), baseOffset_.end(), 1.0);
-    } else {
-        registerWith(base_);
-        for (Size i = 0; i < times_.size(); ++i) {
-            baseOffset_[i] = base_->discount(times_[i]);
+void SpreadedDiscountCurve::makeThisCurveSpreaded(const std::vector<Handle<YieldTermStructure>>& bases,
+                                                  const std::vector<double>& multiplier) {
+
+    for (auto const& b : bases_)
+        unregisterWith(b);
+
+    bases_ = bases;
+    multiplier_ = multiplier;
+    QL_REQUIRE(bases_.size() == multiplier_.size(), "SpreadedDiscountCurve::makeThisCurveSpreaded(): bases size ("
+                                                        << bases_.size() << ") does not match multiplier size ("
+                                                        << multiplier_.size() << ")");
+
+    for (auto const& b : bases_)
+        registerWith(b);
+
+    basesOffset_.resize(bases.size());
+    for (Size i = 0; i < bases_.size(); ++i) {
+        basesOffset_[i].resize(times_.size());
+        for (Size j = 0; j < times_.size(); ++j) {
+            basesOffset_[i][j] = bases_[i].empty() ? 1.0 : bases_[i]->discount(times_[j]);
         }
     }
+
     update();
 }
 

@@ -38,10 +38,11 @@ InMemoryReport::~InMemoryReport() {
         std::remove(f.c_str());
 }
 
-Report& InMemoryReport::addColumn(const string& name, const ReportType& rt, Size precision) {
+Report& InMemoryReport::addColumn(const string& name, const ReportType& rt, Size precision, bool scientific) {
     headers_.push_back(name);
     columnTypes_.push_back(rt);
     columnPrecision_.push_back(precision);
+    columnScientific_.push_back(scientific);
     data_.push_back(vector<ReportType>()); // Initialise vector for column
     headersMap_[name] = i_;
     i_++;
@@ -103,7 +104,6 @@ Report& InMemoryReport::add(const InMemoryReport& report) {
 
     if (i_ == headers_.size())
         next();
-        
     for (Size rowIdx = 0; rowIdx < report.rows(); rowIdx++) {
         for (Size columnIdx = 0; columnIdx < report.columns(); columnIdx++) {
             add(report.data(columnIdx, rowIdx));
@@ -168,7 +168,7 @@ void InMemoryReport::toFile(const string& filename, const char sep, const bool c
     CSVFileReport cReport(filename, sep, commentCharacter, quoteChar, nullString, lowerHeader);
 
     for (Size i = 0; i < headers_.size(); i++) {
-        cReport.addColumn(headers_[i], columnTypes_[i], columnPrecision_[i]);
+        cReport.addColumn(headers_[i], columnTypes_[i], columnPrecision_[i], columnScientific_[i]);
     }
 
     auto numColumns = columns();

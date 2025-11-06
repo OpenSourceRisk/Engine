@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+FwdBond,ForwardBond,2033-02-03,11.008219,6673778.833154,EUR,6673778.833154,EUR,10000000.00,EUR,10000000.00,CPTY_A,CPTY_A
+NoFwdContract,Bond,2033-02-03,11.008219,6960892.028182,EUR,6960892.028182,EUR,8000000.00,EUR,8000000.00,CPTY_A,CPTY_A

@@ -77,7 +77,8 @@ public:
                            const std::string& configuration,
                            const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                            const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                           const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                           const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
+                               QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                            bool dryRun = false, const std::string& context = "historical pnl generation");
 
     /*! Generate a "cube" of P&L values for the trades in the portfolio on each of
@@ -165,7 +166,7 @@ private:
     std::string configuration_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
-    ore::data::IborFallbackConfig iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
 
     bool dryRun_;
     std::string context_;

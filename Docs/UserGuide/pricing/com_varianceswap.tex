@@ -1,0 +1,28 @@
+\subsubsection{Commodity Variance and Volatility Swap}
+\label{pricing:com_varianceswap}
+
+Commodity Variance Swaps and volatility swaps are priced using a replicating portfolio method
+\cite{Variance_Swaps_JP_Morgan}.  See section \ref{pricing:eq_varianceswap} for the equivalent pricing of an Equity
+Variance Swap.
+
+The pricing engine set up is, in analogy to Equity Variance Swaps:
+
+\begin{listing}[h]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="CommodityVarianceSwap">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>ReplicatingVarianceSwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Segment</Parameter>
+      <Parameter name="Bounds">PriceThreshold</Parameter>
+      <Parameter name="Steps">1000</Parameter>
+      <Parameter name="PriceThreshold">1E-10</Parameter>
+      <Parameter name="MaxPriceThresholdSteps">500</Parameter>
+      <Parameter name="PriceThresholdStep">0.1</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{``Robust'' Commodity Variance Swap pricing engine configuration.}
+\end{listing}
+

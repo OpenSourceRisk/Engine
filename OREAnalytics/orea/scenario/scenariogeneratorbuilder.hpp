@@ -57,7 +57,7 @@ public:
     ScenarioGeneratorBuilder() {}
 
     //! Constructor
-    ScenarioGeneratorBuilder(QuantLib::ext::shared_ptr<ScenarioGeneratorData> data) : data_(data) {}
+    explicit ScenarioGeneratorBuilder(const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& data) : data_(data) {}
 
     //! Build function
     QuantLib::ext::shared_ptr<ScenarioGenerator>
@@ -71,7 +71,7 @@ public:
 
 private:
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> data_;
-    boost::optional<std::set<std::string>> currencies_;
+    QuantLib::ext::optional<std::set<std::string>> currencies_;
 };
 } // namespace analytics
 } // namespace ore

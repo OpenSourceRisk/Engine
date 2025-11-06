@@ -1,0 +1,1292 @@
+<SIMMCalibrationData>
+	<SIMMCalibration id="2.5A official">
+		<VersionNames>
+			<Name>2.5A</Name>
+			<Name>2.5.a</Name>
+		</VersionNames>
+		<AdditionalFields>
+			<SIMM_EffectiveDate>2023-07-15</SIMM_EffectiveDate>
+			<AdditionalStressPeriod_StartDate>2008-09-13</AdditionalStressPeriod_StartDate>
+			<AdditionalStressPeriod_EndDate>2009-06-12</AdditionalStressPeriod_EndDate>
+			<RecentStressQuarters_Count>1</RecentStressQuarters_Count>
+		</AdditionalFields>
+		<InterestRate>
+			<RiskWeights>
+				<Delta mporDays="1">
+					<Weight bucket="1" label1="10y">18</Weight>
+					<Weight bucket="1" label1="15y">18</Weight>
+					<Weight bucket="1" label1="1m">15</Weight>
+					<Weight bucket="1" label1="1y">15</Weight>
+					<Weight bucket="1" label1="20y">17</Weight>
+					<Weight bucket="1" label1="2w">19</Weight>
+					<Weight bucket="1" label1="2y">18</Weight>
+					<Weight bucket="1" label1="30y">18</Weight>
+					<Weight bucket="1" label1="3m">12</Weight>
+					<Weight bucket="1" label1="3y">18</Weight>
+					<Weight bucket="1" label1="5y">18</Weight>
+					<Weight bucket="1" label1="6m">13</Weight>
+					<Weight bucket="2" label1="10y">7.8</Weight>
+					<Weight bucket="2" label1="15y">7.5</Weight>
+					<Weight bucket="2" label1="1m">2.9</Weight>
+					<Weight bucket="2" label1="1y">3.4</Weight>
+					<Weight bucket="2" label1="20y">8.0</Weight>
+					<Weight bucket="2" label1="2w">1.7</Weight>
+					<Weight bucket="2" label1="2y">4.8</Weight>
+					<Weight bucket="2" label1="30y">9.0</Weight>
+					<Weight bucket="2" label1="3m">1.7</Weight>
+					<Weight bucket="2" label1="3y">5.8</Weight>
+					<Weight bucket="2" label1="5y">7.3</Weight>
+					<Weight bucket="2" label1="6m">2.0</Weight>
+					<Weight bucket="3" label1="10y">34</Weight>
+					<Weight bucket="3" label1="15y">31</Weight>
+					<Weight bucket="3" label1="1m">29</Weight>
+					<Weight bucket="3" label1="1y">26</Weight>
+					<Weight bucket="3" label1="20y">34</Weight>
+					<Weight bucket="3" label1="2w">55</Weight>
+					<Weight bucket="3" label1="2y">25</Weight>
+					<Weight bucket="3" label1="30y">28</Weight>
+					<Weight bucket="3" label1="3m">18</Weight>
+					<Weight bucket="3" label1="3y">34</Weight>
+					<Weight bucket="3" label1="5y">33</Weight>
+					<Weight bucket="3" label1="6m">21</Weight>
+				</Delta>
+				<Delta mporDays="10">
+					<Weight bucket="1" label1="10y">60</Weight>
+					<Weight bucket="1" label1="15y">61</Weight>
+					<Weight bucket="1" label1="1m">105</Weight>
+					<Weight bucket="1" label1="1y">66</Weight>
+					<Weight bucket="1" label1="20y">61</Weight>
+					<Weight bucket="1" label1="2w">109</Weight>
+					<Weight bucket="1" label1="2y">66</Weight>
+					<Weight bucket="1" label1="30y">67</Weight>
+					<Weight bucket="1" label1="3m">90</Weight>
+					<Weight bucket="1" label1="3y">64</Weight>
+					<Weight bucket="1" label1="5y">60</Weight>
+					<Weight bucket="1" label1="6m">71</Weight>
+					<Weight bucket="2" label1="10y">23</Weight>
+					<Weight bucket="2" label1="15y">22</Weight>
+					<Weight bucket="2" label1="1m">18</Weight>
+					<Weight bucket="2" label1="1y">13</Weight>
+					<Weight bucket="2" label1="20y">22</Weight>
+					<Weight bucket="2" label1="2w">15</Weight>
+					<Weight bucket="2" label1="2y">15</Weight>
+					<Weight bucket="2" label1="30y">23</Weight>
+					<Weight bucket="2" label1="3m">9.0</Weight>
+					<Weight bucket="2" label1="3y">19</Weight>
+					<Weight bucket="2" label1="5y">23</Weight>
+					<Weight bucket="2" label1="6m">11</Weight>
+					<Weight bucket="3" label1="10y">97</Weight>
+					<Weight bucket="3" label1="15y">102</Weight>
+					<Weight bucket="3" label1="1m">109</Weight>
+					<Weight bucket="3" label1="1y">102</Weight>
+					<Weight bucket="3" label1="20y">106</Weight>
+					<Weight bucket="3" label1="2w">163</Weight>
+					<Weight bucket="3" label1="2y">96</Weight>
+					<Weight bucket="3" label1="30y">101</Weight>
+					<Weight bucket="3" label1="3m">87</Weight>
+					<Weight bucket="3" label1="3y">101</Weight>
+					<Weight bucket="3" label1="5y">97</Weight>
+					<Weight bucket="3" label1="6m">89</Weight>
+				</Delta>
+				<Vega mporDays="1">
+					<Weight>0.047</Weight>
+				</Vega>
+				<Vega mporDays="10">
+					<Weight>0.18</Weight>
+				</Vega>
+				<HistoricalVolatilityRatio mporDays="1">0.51</HistoricalVolatilityRatio>
+				<HistoricalVolatilityRatio mporDays="10">0.44</HistoricalVolatilityRatio>
+				<Inflation mporDays="1">15</Inflation>
+				<Inflation mporDays="10">63</Inflation>
+				<XCcyBasis mporDays="1">5.9</XCcyBasis>
+				<XCcyBasis mporDays="10">21</XCcyBasis>
+				<CurrencyLists>
+					<Currency bucket="1">AUD</Currency>
+					<Currency bucket="1">CAD</Currency>
+					<Currency bucket="1">CHF</Currency>
+					<Currency bucket="1">DKK</Currency>
+					<Currency bucket="1">EUR</Currency>
+					<Currency bucket="1">GBP</Currency>
+					<Currency bucket="1">HKD</Currency>
+					<Currency bucket="1">KRW</Currency>
+					<Currency bucket="1">NOK</Currency>
+					<Currency bucket="1">NZD</Currency>
+					<Currency bucket="1">SEK</Currency>
+					<Currency bucket="1">SGD</Currency>
+					<Currency bucket="1">TWD</Currency>
+					<Currency bucket="1">USD</Currency>
+					<Currency bucket="2">JPY</Currency>
+					<Currency bucket="3">Other</Currency>
+				</CurrencyLists>
+			</RiskWeights>
+			<Correlations>
+				<IntraBucket>
+					<Correlation label1="10y" label2="15y">0.97</Correlation>
+					<Correlation label1="10y" label2="1m">0.24</Correlation>
+					<Correlation label1="10y" label2="1y">0.65</Correlation>
+					<Correlation label1="10y" label2="20y">0.95</Correlation>
+					<Correlation label1="10y" label2="2w">0.23</Correlation>
+					<Correlation label1="10y" label2="2y">0.78</Correlation>
+					<Correlation label1="10y" label2="30y">0.94</Correlation>
+					<Correlation label1="10y" label2="3m">0.32</Correlation>
+					<Correlation label1="10y" label2="3y">0.87</Correlation>
+					<Correlation label1="10y" label2="5y">0.94</Correlation>
+					<Correlation label1="10y" label2="6m">0.45</Correlation>
+					<Correlation label1="15y" label2="10y">0.97</Correlation>
+					<Correlation label1="15y" label2="1m">0.18</Correlation>
+					<Correlation label1="15y" label2="1y">0.58</Correlation>
+					<Correlation label1="15y" label2="20y">0.98</Correlation>
+					<Correlation label1="15y" label2="2w">0.2</Correlation>
+					<Correlation label1="15y" label2="2y">0.72</Correlation>
+					<Correlation label1="15y" label2="30y">0.98</Correlation>
+					<Correlation label1="15y" label2="3m">0.24</Correlation>
+					<Correlation label1="15y" label2="3y">0.8</Correlation>
+					<Correlation label1="15y" label2="5y">0.89</Correlation>
+					<Correlation label1="15y" label2="6m">0.36</Correlation>
+					<Correlation label1="1m" label2="10y">0.24</Correlation>
+					<Correlation label1="1m" label2="15y">0.18</Correlation>
+					<Correlation label1="1m" label2="1y">0.52</Correlation>
+					<Correlation label1="1m" label2="20y">0.17</Correlation>
+					<Correlation label1="1m" label2="2w">0.74</Correlation>
+					<Correlation label1="1m" label2="2y">0.41</Correlation>
+					<Correlation label1="1m" label2="30y">0.16</Correlation>
+					<Correlation label1="1m" label2="3m">0.8</Correlation>
+					<Correlation label1="1m" label2="3y">0.35</Correlation>
+					<Correlation label1="1m" label2="5y">0.29</Correlation>
+					<Correlation label1="1m" label2="6m">0.69</Correlation>
+					<Correlation label1="1y" label2="10y">0.65</Correlation>
+					<Correlation label1="1y" label2="15y">0.58</Correlation>
+					<Correlation label1="1y" label2="1m">0.52</Correlation>
+					<Correlation label1="1y" label2="20y">0.55</Correlation>
+					<Correlation label1="1y" label2="2w">0.45</Correlation>
+					<Correlation label1="1y" label2="2y">0.94</Correlation>
+					<Correlation label1="1y" label2="30y">0.53</Correlation>
+					<Correlation label1="1y" label2="3m">0.67</Correlation>
+					<Correlation label1="1y" label2="3y">0.86</Correlation>
+					<Correlation label1="1y" label2="5y">0.78</Correlation>
+					<Correlation label1="1y" label2="6m">0.83</Correlation>
+					<Correlation label1="20y" label2="10y">0.95</Correlation>
+					<Correlation label1="20y" label2="15y">0.98</Correlation>
+					<Correlation label1="20y" label2="1m">0.17</Correlation>
+					<Correlation label1="20y" label2="1y">0.55</Correlation>
+					<Correlation label1="20y" label2="2w">0.18</Correlation>
+					<Correlation label1="20y" label2="2y">0.68</Correlation>
+					<Correlation label1="20y" label2="30y">0.99</Correlation>
+					<Correlation label1="20y" label2="3m">0.22</Correlation>
+					<Correlation label1="20y" label2="3y">0.77</Correlation>
+					<Correlation label1="20y" label2="5y">0.86</Correlation>
+					<Correlation label1="20y" label2="6m">0.35</Correlation>
+					<Correlation label1="2w" label2="10y">0.23</Correlation>
+					<Correlation label1="2w" label2="15y">0.2</Correlation>
+					<Correlation label1="2w" label2="1m">0.74</Correlation>
+					<Correlation label1="2w" label2="1y">0.45</Correlation>
+					<Correlation label1="2w" label2="20y">0.18</Correlation>
+					<Correlation label1="2w" label2="2y">0.36</Correlation>
+					<Correlation label1="2w" label2="30y">0.16</Correlation>
+					<Correlation label1="2w" label2="3m">0.63</Correlation>
+					<Correlation label1="2w" label2="3y">0.32</Correlation>
+					<Correlation label1="2w" label2="5y">0.28</Correlation>
+					<Correlation label1="2w" label2="6m">0.55</Correlation>
+					<Correlation label1="2y" label2="10y">0.78</Correlation>
+					<Correlation label1="2y" label2="15y">0.72</Correlation>
+					<Correlation label1="2y" label2="1m">0.41</Correlation>
+					<Correlation label1="2y" label2="1y">0.94</Correlation>
+					<Correlation label1="2y" label2="20y">0.68</Correlation>
+					<Correlation label1="2y" label2="2w">0.36</Correlation>
+					<Correlation label1="2y" label2="30y">0.67</Correlation>
+					<Correlation label1="2y" label2="3m">0.53</Correlation>
+					<Correlation label1="2y" label2="3y">0.95</Correlation>
+					<Correlation label1="2y" label2="5y">0.89</Correlation>
+					<Correlation label1="2y" label2="6m">0.71</Correlation>
+					<Correlation label1="30y" label2="10y">0.94</Correlation>
+					<Correlation label1="30y" label2="15y">0.98</Correlation>
+					<Correlation label1="30y" label2="1m">0.16</Correlation>
+					<Correlation label1="30y" label2="1y">0.53</Correlation>
+					<Correlation label1="30y" label2="20y">0.99</Correlation>
+					<Correlation label1="30y" label2="2w">0.16</Correlation>
+					<Correlation label1="30y" label2="2y">0.67</Correlation>
+					<Correlation label1="30y" label2="3m">0.22</Correlation>
+					<Correlation label1="30y" label2="3y">0.74</Correlation>
+					<Correlation label1="30y" label2="5y">0.84</Correlation>
+					<Correlation label1="30y" label2="6m">0.33</Correlation>
+					<Correlation label1="3m" label2="10y">0.32</Correlation>
+					<Correlation label1="3m" label2="15y">0.24</Correlation>
+					<Correlation label1="3m" label2="1m">0.8</Correlation>
+					<Correlation label1="3m" label2="1y">0.67</Correlation>
+					<Correlation label1="3m" label2="20y">0.22</Correlation>
+					<Correlation label1="3m" label2="2w">0.63</Correlation>
+					<Correlation label1="3m" label2="2y">0.53</Correlation>
+					<Correlation label1="3m" label2="30y">0.22</Correlation>
+					<Correlation label1="3m" label2="3y">0.45</Correlation>
+					<Correlation label1="3m" label2="5y">0.39</Correlation>
+					<Correlation label1="3m" label2="6m">0.85</Correlation>
+					<Correlation label1="3y" label2="10y">0.87</Correlation>
+					<Correlation label1="3y" label2="15y">0.8</Correlation>
+					<Correlation label1="3y" label2="1m">0.35</Correlation>
+					<Correlation label1="3y" label2="1y">0.86</Correlation>
+					<Correlation label1="3y" label2="20y">0.77</Correlation>
+					<Correlation label1="3y" label2="2w">0.32</Correlation>
+					<Correlation label1="3y" label2="2y">0.95</Correlation>
+					<Correlation label1="3y" label2="30y">0.74</Correlation>
+					<Correlation label1="3y" label2="3m">0.45</Correlation>
+					<Correlation label1="3y" label2="5y">0.96</Correlation>
+					<Correlation label1="3y" label2="6m">0.62</Correlation>
+					<Correlation label1="5y" label2="10y">0.94</Correlation>
+					<Correlation label1="5y" label2="15y">0.89</Correlation>
+					<Correlation label1="5y" label2="1m">0.29</Correlation>
+					<Correlation label1="5y" label2="1y">0.78</Correlation>
+					<Correlation label1="5y" label2="20y">0.86</Correlation>
+					<Correlation label1="5y" label2="2w">0.28</Correlation>
+					<Correlation label1="5y" label2="2y">0.89</Correlation>
+					<Correlation label1="5y" label2="30y">0.84</Correlation>
+					<Correlation label1="5y" label2="3m">0.39</Correlation>
+					<Correlation label1="5y" label2="3y">0.96</Correlation>
+					<Correlation label1="5y" label2="6m">0.54</Correlation>
+					<Correlation label1="6m" label2="10y">0.45</Correlation>
+					<Correlation label1="6m" label2="15y">0.36</Correlation>
+					<Correlation label1="6m" label2="1m">0.69</Correlation>
+					<Correlation label1="6m" label2="1y">0.83</Correlation>
+					<Correlation label1="6m" label2="20y">0.35</Correlation>
+					<Correlation label1="6m" label2="2w">0.55</Correlation>
+					<Correlation label1="6m" label2="2y">0.71</Correlation>
+					<Correlation label1="6m" label2="30y">0.33</Correlation>
+					<Correlation label1="6m" label2="3m">0.85</Correlation>
+					<Correlation label1="6m" label2="3y">0.62</Correlation>
+					<Correlation label1="6m" label2="5y">0.54</Correlation>
+				</IntraBucket>
+				<Inflation>0.37</Inflation>
+				<Outer>0.24</Outer>
+				<SubCurves>0.99</SubCurves>
+				<XCcyBasis>0.01</XCcyBasis>
+			</Correlations>
+			<ConcentrationThresholds>
+				<Delta>
+					<Threshold bucket="1">33</Threshold>
+					<Threshold bucket="2">230</Threshold>
+					<Threshold bucket="3">44</Threshold>
+					<Threshold bucket="4">70</Threshold>
+				</Delta>
+				<Vega>
+					<Threshold bucket="1">120</Threshold>
+					<Threshold bucket="2">3300</Threshold>
+					<Threshold bucket="3">470</Threshold>
+					<Threshold bucket="4">570</Threshold>
+				</Vega>
+				<CurrencyLists>
+					<Currency bucket="1">Other</Currency>
+					<Currency bucket="2">EUR</Currency>
+					<Currency bucket="2">GBP</Currency>
+					<Currency bucket="2">USD</Currency>
+					<Currency bucket="3">AUD</Currency>
+					<Currency bucket="3">CAD</Currency>
+					<Currency bucket="3">CHF</Currency>
+					<Currency bucket="3">DKK</Currency>
+					<Currency bucket="3">HKD</Currency>
+					<Currency bucket="3">KRW</Currency>
+					<Currency bucket="3">NOK</Currency>
+					<Currency bucket="3">NZD</Currency>
+					<Currency bucket="3">SEK</Currency>
+					<Currency bucket="3">SGD</Currency>
+					<Currency bucket="3">TWD</Currency>
+					<Currency bucket="4">JPY</Currency>
+				</CurrencyLists>
+			</ConcentrationThresholds>
+		</InterestRate>
+		<CreditQualifying>
+			<RiskWeights>
+				<Delta mporDays="1">
+					<Weight bucket="1">21</Weight>
+					<Weight bucket="10">53</Weight>
+					<Weight bucket="11">38</Weight>
+					<Weight bucket="12">57</Weight>
+					<Weight bucket="2">27</Weight>
+					<Weight bucket="3">16</Weight>
+					<Weight bucket="4">12</Weight>
+					<Weight bucket="5">14</Weight>
+					<Weight bucket="6">12</Weight>
+					<Weight bucket="7">48</Weight>
+					<Weight bucket="8">144</Weight>
+					<Weight bucket="9">51</Weight>
+					<Weight bucket="Residual">144</Weight>
+				</Delta>
+				<Delta mporDays="10">
+					<Weight bucket="1">75</Weight>
+					<Weight bucket="10">251</Weight>
+					<Weight bucket="11">172</Weight>
+					<Weight bucket="12">247</Weight>
+					<Weight bucket="2">91</Weight>
+					<Weight bucket="3">78</Weight>
+					<Weight bucket="4">55</Weight>
+					<Weight bucket="5">67</Weight>
+					<Weight bucket="6">47</Weight>
+					<Weight bucket="7">187</Weight>
+					<Weight bucket="8">665</Weight>
+					<Weight bucket="9">262</Weight>
+					<Weight bucket="Residual">665</Weight>
+				</Delta>
+				<Vega mporDays="1">
+					<Weight>0.085</Weight>
+				</Vega>
+				<Vega mporDays="10">
+					<Weight>0.74</Weight>
+				</Vega>
+				<BaseCorrelation mporDays="1">2.5</BaseCorrelation>
+				<BaseCorrelation mporDays="10">10</BaseCorrelation>
+			</RiskWeights>
+			<Correlations>
+				<IntraBucket>
+					<Correlation label1="aggregate" label2="different">0.42</Correlation>
+					<Correlation label1="aggregate" label2="same">0.93</Correlation>
+					<Correlation label1="residual" label2="different">0.5</Correlation>
+					<Correlation label1="residual" label2="same">0.5</Correlation>
+				</IntraBucket>
+				<InterBucket>
+					<Correlation label1="1" label2="10">0.33</Correlation>
+					<Correlation label1="1" label2="11">0.32</Correlation>
+					<Correlation label1="1" label2="12">0.3</Correlation>
+					<Correlation label1="1" label2="2">0.36</Correlation>
+					<Correlation label1="1" label2="3">0.38</Correlation>
+					<Correlation label1="1" label2="4">0.35</Correlation>
+					<Correlation label1="1" label2="5">0.37</Correlation>
+					<Correlation label1="1" label2="6">0.33</Correlation>
+					<Correlation label1="1" label2="7">0.36</Correlation>
+					<Correlation label1="1" label2="8">0.31</Correlation>
+					<Correlation label1="1" label2="9">0.32</Correlation>
+					<Correlation label1="10" label2="1">0.33</Correlation>
+					<Correlation label1="10" label2="11">0.38</Correlation>
+					<Correlation label1="10" label2="12">0.36</Correlation>
+					<Correlation label1="10" label2="2">0.39</Correlation>
+					<Correlation label1="10" label2="3">0.42</Correlation>
+					<Correlation label1="10" label2="4">0.42</Correlation>
+					<Correlation label1="10" label2="5">0.42</Correlation>
+					<Correlation label1="10" label2="6">0.39</Correlation>
+					<Correlation label1="10" label2="7">0.31</Correlation>
+					<Correlation label1="10" label2="8">0.34</Correlation>
+					<Correlation label1="10" label2="9">0.38</Correlation>
+					<Correlation label1="11" label2="1">0.32</Correlation>
+					<Correlation label1="11" label2="10">0.38</Correlation>
+					<Correlation label1="11" label2="12">0.35</Correlation>
+					<Correlation label1="11" label2="2">0.4</Correlation>
+					<Correlation label1="11" label2="3">0.43</Correlation>
+					<Correlation label1="11" label2="4">0.41</Correlation>
+					<Correlation label1="11" label2="5">0.43</Correlation>
+					<Correlation label1="11" label2="6">0.4</Correlation>
+					<Correlation label1="11" label2="7">0.3</Correlation>
+					<Correlation label1="11" label2="8">0.33</Correlation>
+					<Correlation label1="11" label2="9">0.36</Correlation>
+					<Correlation label1="12" label2="1">0.3</Correlation>
+					<Correlation label1="12" label2="10">0.36</Correlation>
+					<Correlation label1="12" label2="11">0.35</Correlation>
+					<Correlation label1="12" label2="2">0.36</Correlation>
+					<Correlation label1="12" label2="3">0.39</Correlation>
+					<Correlation label1="12" label2="4">0.37</Correlation>
+					<Correlation label1="12" label2="5">0.38</Correlation>
+					<Correlation label1="12" label2="6">0.35</Correlation>
+					<Correlation label1="12" label2="7">0.28</Correlation>
+					<Correlation label1="12" label2="8">0.3</Correlation>
+					<Correlation label1="12" label2="9">0.34</Correlation>
+					<Correlation label1="2" label2="1">0.36</Correlation>
+					<Correlation label1="2" label2="10">0.39</Correlation>
+					<Correlation label1="2" label2="11">0.4</Correlation>
+					<Correlation label1="2" label2="12">0.36</Correlation>
+					<Correlation label1="2" label2="3">0.46</Correlation>
+					<Correlation label1="2" label2="4">0.44</Correlation>
+					<Correlation label1="2" label2="5">0.45</Correlation>
+					<Correlation label1="2" label2="6">0.43</Correlation>
+					<Correlation label1="2" label2="7">0.33</Correlation>
+					<Correlation label1="2" label2="8">0.36</Correlation>
+					<Correlation label1="2" label2="9">0.38</Correlation>
+					<Correlation label1="3" label2="1">0.38</Correlation>
+					<Correlation label1="3" label2="10">0.42</Correlation>
+					<Correlation label1="3" label2="11">0.43</Correlation>
+					<Correlation label1="3" label2="12">0.39</Correlation>
+					<Correlation label1="3" label2="2">0.46</Correlation>
+					<Correlation label1="3" label2="4">0.49</Correlation>
+					<Correlation label1="3" label2="5">0.49</Correlation>
+					<Correlation label1="3" label2="6">0.47</Correlation>
+					<Correlation label1="3" label2="7">0.34</Correlation>
+					<Correlation label1="3" label2="8">0.36</Correlation>
+					<Correlation label1="3" label2="9">0.41</Correlation>
+					<Correlation label1="4" label2="1">0.35</Correlation>
+					<Correlation label1="4" label2="10">0.42</Correlation>
+					<Correlation label1="4" label2="11">0.41</Correlation>
+					<Correlation label1="4" label2="12">0.37</Correlation>
+					<Correlation label1="4" label2="2">0.44</Correlation>
+					<Correlation label1="4" label2="3">0.49</Correlation>
+					<Correlation label1="4" label2="5">0.48</Correlation>
+					<Correlation label1="4" label2="6">0.48</Correlation>
+					<Correlation label1="4" label2="7">0.31</Correlation>
+					<Correlation label1="4" label2="8">0.34</Correlation>
+					<Correlation label1="4" label2="9">0.38</Correlation>
+					<Correlation label1="5" label2="1">0.37</Correlation>
+					<Correlation label1="5" label2="10">0.42</Correlation>
+					<Correlation label1="5" label2="11">0.43</Correlation>
+					<Correlation label1="5" label2="12">0.38</Correlation>
+					<Correlation label1="5" label2="2">0.45</Correlation>
+					<Correlation label1="5" label2="3">0.49</Correlation>
+					<Correlation label1="5" label2="4">0.48</Correlation>
+					<Correlation label1="5" label2="6">0.48</Correlation>
+					<Correlation label1="5" label2="7">0.33</Correlation>
+					<Correlation label1="5" label2="8">0.35</Correlation>
+					<Correlation label1="5" label2="9">0.39</Correlation>
+					<Correlation label1="6" label2="1">0.33</Correlation>
+					<Correlation label1="6" label2="10">0.39</Correlation>
+					<Correlation label1="6" label2="11">0.4</Correlation>
+					<Correlation label1="6" label2="12">0.35</Correlation>
+					<Correlation label1="6" label2="2">0.43</Correlation>
+					<Correlation label1="6" label2="3">0.47</Correlation>
+					<Correlation label1="6" label2="4">0.48</Correlation>
+					<Correlation label1="6" label2="5">0.48</Correlation>
+					<Correlation label1="6" label2="7">0.29</Correlation>
+					<Correlation label1="6" label2="8">0.32</Correlation>
+					<Correlation label1="6" label2="9">0.36</Correlation>
+					<Correlation label1="7" label2="1">0.36</Correlation>
+					<Correlation label1="7" label2="10">0.31</Correlation>
+					<Correlation label1="7" label2="11">0.3</Correlation>
+					<Correlation label1="7" label2="12">0.28</Correlation>
+					<Correlation label1="7" label2="2">0.33</Correlation>
+					<Correlation label1="7" label2="3">0.34</Correlation>
+					<Correlation label1="7" label2="4">0.31</Correlation>
+					<Correlation label1="7" label2="5">0.33</Correlation>
+					<Correlation label1="7" label2="6">0.29</Correlation>
+					<Correlation label1="7" label2="8">0.28</Correlation>
+					<Correlation label1="7" label2="9">0.32</Correlation>
+					<Correlation label1="8" label2="1">0.31</Correlation>
+					<Correlation label1="8" label2="10">0.34</Correlation>
+					<Correlation label1="8" label2="11">0.33</Correlation>
+					<Correlation label1="8" label2="12">0.3</Correlation>
+					<Correlation label1="8" label2="2">0.36</Correlation>
+					<Correlation label1="8" label2="3">0.36</Correlation>
+					<Correlation label1="8" label2="4">0.34</Correlation>
+					<Correlation label1="8" label2="5">0.35</Correlation>
+					<Correlation label1="8" label2="6">0.32</Correlation>
+					<Correlation label1="8" label2="7">0.28</Correlation>
+					<Correlation label1="8" label2="9">0.33</Correlation>
+					<Correlation label1="9" label2="1">0.32</Correlation>
+					<Correlation label1="9" label2="10">0.38</Correlation>
+					<Correlation label1="9" label2="11">0.36</Correlation>
+					<Correlation label1="9" label2="12">0.34</Correlation>
+					<Correlation label1="9" label2="2">0.38</Correlation>
+					<Correlation label1="9" label2="3">0.41</Correlation>
+					<Correlation label1="9" label2="4">0.38</Correlation>
+					<Correlation label1="9" label2="5">0.39</Correlation>
+					<Correlation label1="9" label2="6">0.36</Correlation>
+					<Correlation label1="9" label2="7">0.32</Correlation>
+					<Correlation label1="9" label2="8">0.33</Correlation>
+				</InterBucket>
+				<BaseCorrelation>0.24</BaseCorrelation>
+			</Correlations>
+			<ConcentrationThresholds>
+				<Delta>
+					<Threshold bucket="1">0.91</Threshold>
+					<Threshold bucket="10">0.19</Threshold>
+					<Threshold bucket="11">0.19</Threshold>
+					<Threshold bucket="12">0.19</Threshold>
+					<Threshold bucket="2">0.19</Threshold>
+					<Threshold bucket="3">0.19</Threshold>
+					<Threshold bucket="4">0.19</Threshold>
+					<Threshold bucket="5">0.19</Threshold>
+					<Threshold bucket="6">0.19</Threshold>
+					<Threshold bucket="7">0.91</Threshold>
+					<Threshold bucket="8">0.19</Threshold>
+					<Threshold bucket="9">0.19</Threshold>
+					<Threshold bucket="Residual">0.19</Threshold>
+				</Delta>
+				<Vega>
+					<Threshold>260</Threshold>
+				</Vega>
+			</ConcentrationThresholds>
+		</CreditQualifying>
+		<CreditNonQualifying>
+			<RiskWeights>
+				<Delta mporDays="1">
+					<Weight bucket="1">66</Weight>
+					<Weight bucket="2">250</Weight>
+					<Weight bucket="Residual">250</Weight>
+				</Delta>
+				<Delta mporDays="10">
+					<Weight bucket="1">280</Weight>
+					<Weight bucket="2">1300</Weight>
+					<Weight bucket="Residual">1300</Weight>
+				</Delta>
+				<Vega mporDays="1">
+					<Weight>0.085</Weight>
+				</Vega>
+				<Vega mporDays="10">
+					<Weight>0.74</Weight>
+				</Vega>
+			</RiskWeights>
+			<Correlations>
+				<IntraBucket>
+					<Correlation label1="aggregate" label2="different">0.27</Correlation>
+					<Correlation label1="aggregate" label2="same">0.82</Correlation>
+					<Correlation label1="residual" label2="different">0.5</Correlation>
+					<Correlation label1="residual" label2="same">0.5</Correlation>
+				</IntraBucket>
+				<InterBucket>
+					<Correlation label1="1" label2="2">0.4</Correlation>
+					<Correlation label1="2" label2="1">0.4</Correlation>
+				</InterBucket>
+			</Correlations>
+			<ConcentrationThresholds>
+				<Delta>
+					<Threshold bucket="1">9.5</Threshold>
+					<Threshold bucket="2">0.5</Threshold>
+					<Threshold bucket="Residual">0.5</Threshold>
+				</Delta>
+				<Vega>
+					<Threshold>145</Threshold>
+				</Vega>
+			</ConcentrationThresholds>
+		</CreditNonQualifying>
+		<Equity>
+			<RiskWeights>
+				<Delta mporDays="1">
+					<Weight bucket="1">9.3</Weight>
+					<Weight bucket="10">10</Weight>
+					<Weight bucket="11">5.9</Weight>
+					<Weight bucket="12">5.9</Weight>
+					<Weight bucket="2">9.7</Weight>
+					<Weight bucket="3">10.0</Weight>
+					<Weight bucket="4">9.2</Weight>
+					<Weight bucket="5">7.7</Weight>
+					<Weight bucket="6">8.5</Weight>
+					<Weight bucket="7">9.5</Weight>
+					<Weight bucket="8">9.6</Weight>
+					<Weight bucket="9">10.0</Weight>
+					<Weight bucket="Residual">10.0</Weight>
+				</Delta>
+				<Delta mporDays="10">
+					<Weight bucket="1">26</Weight>
+					<Weight bucket="10">32</Weight>
+					<Weight bucket="11">18</Weight>
+					<Weight bucket="12">18</Weight>
+					<Weight bucket="2">28</Weight>
+					<Weight bucket="3">34</Weight>
+					<Weight bucket="4">28</Weight>
+					<Weight bucket="5">23</Weight>
+					<Weight bucket="6">25</Weight>
+					<Weight bucket="7">29</Weight>
+					<Weight bucket="8">27</Weight>
+					<Weight bucket="9">32</Weight>
+					<Weight bucket="Residual">34</Weight>
+				</Delta>
+				<Vega mporDays="1">
+					<Weight bucket="1">0.093</Weight>
+					<Weight bucket="10">0.093</Weight>
+					<Weight bucket="11">0.093</Weight>
+					<Weight bucket="12">0.25</Weight>
+					<Weight bucket="2">0.093</Weight>
+					<Weight bucket="3">0.093</Weight>
+					<Weight bucket="4">0.093</Weight>
+					<Weight bucket="5">0.093</Weight>
+					<Weight bucket="6">0.093</Weight>
+					<Weight bucket="7">0.093</Weight>
+					<Weight bucket="8">0.093</Weight>
+					<Weight bucket="9">0.093</Weight>
+					<Weight bucket="Residual">0.093</Weight>
+				</Vega>
+				<Vega mporDays="10">
+					<Weight bucket="1">0.45</Weight>
+					<Weight bucket="10">0.45</Weight>
+					<Weight bucket="11">0.45</Weight>
+					<Weight bucket="12">0.96</Weight>
+					<Weight bucket="2">0.45</Weight>
+					<Weight bucket="3">0.45</Weight>
+					<Weight bucket="4">0.45</Weight>
+					<Weight bucket="5">0.45</Weight>
+					<Weight bucket="6">0.45</Weight>
+					<Weight bucket="7">0.45</Weight>
+					<Weight bucket="8">0.45</Weight>
+					<Weight bucket="9">0.45</Weight>
+					<Weight bucket="Residual">0.45</Weight>
+				</Vega>
+				<HistoricalVolatilityRatio mporDays="1">0.54</HistoricalVolatilityRatio>
+				<HistoricalVolatilityRatio mporDays="10">0.58</HistoricalVolatilityRatio>
+			</RiskWeights>
+			<Correlations>
+				<IntraBucket>
+					<Correlation bucket="1">0.18</Correlation>
+					<Correlation bucket="10">0.2</Correlation>
+					<Correlation bucket="11">0.45</Correlation>
+					<Correlation bucket="12">0.45</Correlation>
+					<Correlation bucket="2">0.23</Correlation>
+					<Correlation bucket="3">0.3</Correlation>
+					<Correlation bucket="4">0.26</Correlation>
+					<Correlation bucket="5">0.23</Correlation>
+					<Correlation bucket="6">0.35</Correlation>
+					<Correlation bucket="7">0.36</Correlation>
+					<Correlation bucket="8">0.33</Correlation>
+					<Correlation bucket="9">0.19</Correlation>
+					<Correlation bucket="Residual">0</Correlation>
+				</IntraBucket>
+				<InterBucket>
+					<Correlation label1="1" label2="10">0.12</Correlation>
+					<Correlation label1="1" label2="11">0.18</Correlation>
+					<Correlation label1="1" label2="12">0.18</Correlation>
+					<Correlation label1="1" label2="2">0.2</Correlation>
+					<Correlation label1="1" label2="3">0.2</Correlation>
+					<Correlation label1="1" label2="4">0.2</Correlation>
+					<Correlation label1="1" label2="5">0.13</Correlation>
+					<Correlation label1="1" label2="6">0.16</Correlation>
+					<Correlation label1="1" label2="7">0.16</Correlation>
+					<Correlation label1="1" label2="8">0.16</Correlation>
+					<Correlation label1="1" label2="9">0.17</Correlation>
+					<Correlation label1="10" label2="1">0.12</Correlation>
+					<Correlation label1="10" label2="11">0.25</Correlation>
+					<Correlation label1="10" label2="12">0.25</Correlation>
+					<Correlation label1="10" label2="2">0.13</Correlation>
+					<Correlation label1="10" label2="3">0.13</Correlation>
+					<Correlation label1="10" label2="4">0.16</Correlation>
+					<Correlation label1="10" label2="5">0.2</Correlation>
+					<Correlation label1="10" label2="6">0.24</Correlation>
+					<Correlation label1="10" label2="7">0.24</Correlation>
+					<Correlation label1="10" label2="8">0.23</Correlation>
+					<Correlation label1="10" label2="9">0.14</Correlation>
+					<Correlation label1="11" label2="1">0.18</Correlation>
+					<Correlation label1="11" label2="10">0.25</Correlation>
+					<Correlation label1="11" label2="12">0.45</Correlation>
+					<Correlation label1="11" label2="2">0.19</Correlation>
+					<Correlation label1="11" label2="3">0.18</Correlation>
+					<Correlation label1="11" label2="4">0.24</Correlation>
+					<Correlation label1="11" label2="5">0.3</Correlation>
+					<Correlation label1="11" label2="6">0.38</Correlation>
+					<Correlation label1="11" label2="7">0.37</Correlation>
+					<Correlation label1="11" label2="8">0.37</Correlation>
+					<Correlation label1="11" label2="9">0.2</Correlation>
+					<Correlation label1="12" label2="1">0.18</Correlation>
+					<Correlation label1="12" label2="10">0.25</Correlation>
+					<Correlation label1="12" label2="11">0.45</Correlation>
+					<Correlation label1="12" label2="2">0.19</Correlation>
+					<Correlation label1="12" label2="3">0.18</Correlation>
+					<Correlation label1="12" label2="4">0.24</Correlation>
+					<Correlation label1="12" label2="5">0.3</Correlation>
+					<Correlation label1="12" label2="6">0.38</Correlation>
+					<Correlation label1="12" label2="7">0.37</Correlation>
+					<Correlation label1="12" label2="8">0.37</Correlation>
+					<Correlation label1="12" label2="9">0.2</Correlation>
+					<Correlation label1="2" label2="1">0.2</Correlation>
+					<Correlation label1="2" label2="10">0.13</Correlation>
+					<Correlation label1="2" label2="11">0.19</Correlation>
+					<Correlation label1="2" label2="12">0.19</Correlation>
+					<Correlation label1="2" label2="3">0.25</Correlation>
+					<Correlation label1="2" label2="4">0.23</Correlation>
+					<Correlation label1="2" label2="5">0.14</Correlation>
+					<Correlation label1="2" label2="6">0.17</Correlation>
+					<Correlation label1="2" label2="7">0.18</Correlation>
+					<Correlation label1="2" label2="8">0.17</Correlation>
+					<Correlation label1="2" label2="9">0.19</Correlation>
+					<Correlation label1="3" label2="1">0.2</Correlation>
+					<Correlation label1="3" label2="10">0.13</Correlation>
+					<Correlation label1="3" label2="11">0.18</Correlation>
+					<Correlation label1="3" label2="12">0.18</Correlation>
+					<Correlation label1="3" label2="2">0.25</Correlation>
+					<Correlation label1="3" label2="4">0.24</Correlation>
+					<Correlation label1="3" label2="5">0.13</Correlation>
+					<Correlation label1="3" label2="6">0.17</Correlation>
+					<Correlation label1="3" label2="7">0.18</Correlation>
+					<Correlation label1="3" label2="8">0.16</Correlation>
+					<Correlation label1="3" label2="9">0.2</Correlation>
+					<Correlation label1="4" label2="1">0.2</Correlation>
+					<Correlation label1="4" label2="10">0.16</Correlation>
+					<Correlation label1="4" label2="11">0.24</Correlation>
+					<Correlation label1="4" label2="12">0.24</Correlation>
+					<Correlation label1="4" label2="2">0.23</Correlation>
+					<Correlation label1="4" label2="3">0.24</Correlation>
+					<Correlation label1="4" label2="5">0.17</Correlation>
+					<Correlation label1="4" label2="6">0.22</Correlation>
+					<Correlation label1="4" label2="7">0.22</Correlation>
+					<Correlation label1="4" label2="8">0.22</Correlation>
+					<Correlation label1="4" label2="9">0.21</Correlation>
+					<Correlation label1="5" label2="1">0.13</Correlation>
+					<Correlation label1="5" label2="10">0.2</Correlation>
+					<Correlation label1="5" label2="11">0.3</Correlation>
+					<Correlation label1="5" label2="12">0.3</Correlation>
+					<Correlation label1="5" label2="2">0.14</Correlation>
+					<Correlation label1="5" label2="3">0.13</Correlation>
+					<Correlation label1="5" label2="4">0.17</Correlation>
+					<Correlation label1="5" label2="6">0.27</Correlation>
+					<Correlation label1="5" label2="7">0.26</Correlation>
+					<Correlation label1="5" label2="8">0.27</Correlation>
+					<Correlation label1="5" label2="9">0.15</Correlation>
+					<Correlation label1="6" label2="1">0.16</Correlation>
+					<Correlation label1="6" label2="10">0.24</Correlation>
+					<Correlation label1="6" label2="11">0.38</Correlation>
+					<Correlation label1="6" label2="12">0.38</Correlation>
+					<Correlation label1="6" label2="2">0.17</Correlation>
+					<Correlation label1="6" label2="3">0.17</Correlation>
+					<Correlation label1="6" label2="4">0.22</Correlation>
+					<Correlation label1="6" label2="5">0.27</Correlation>
+					<Correlation label1="6" label2="7">0.34</Correlation>
+					<Correlation label1="6" label2="8">0.33</Correlation>
+					<Correlation label1="6" label2="9">0.18</Correlation>
+					<Correlation label1="7" label2="1">0.16</Correlation>
+					<Correlation label1="7" label2="10">0.24</Correlation>
+					<Correlation label1="7" label2="11">0.37</Correlation>
+					<Correlation label1="7" label2="12">0.37</Correlation>
+					<Correlation label1="7" label2="2">0.18</Correlation>
+					<Correlation label1="7" label2="3">0.18</Correlation>
+					<Correlation label1="7" label2="4">0.22</Correlation>
+					<Correlation label1="7" label2="5">0.26</Correlation>
+					<Correlation label1="7" label2="6">0.34</Correlation>
+					<Correlation label1="7" label2="8">0.32</Correlation>
+					<Correlation label1="7" label2="9">0.18</Correlation>
+					<Correlation label1="8" label2="1">0.16</Correlation>
+					<Correlation label1="8" label2="10">0.23</Correlation>
+					<Correlation label1="8" label2="11">0.37</Correlation>
+					<Correlation label1="8" label2="12">0.37</Correlation>
+					<Correlation label1="8" label2="2">0.17</Correlation>
+					<Correlation label1="8" label2="3">0.16</Correlation>
+					<Correlation label1="8" label2="4">0.22</Correlation>
+					<Correlation label1="8" label2="5">0.27</Correlation>
+					<Correlation label1="8" label2="6">0.33</Correlation>
+					<Correlation label1="8" label2="7">0.32</Correlation>
+					<Correlation label1="8" label2="9">0.18</Correlation>
+					<Correlation label1="9" label2="1">0.17</Correlation>
+					<Correlation label1="9" label2="10">0.14</Correlation>
+					<Correlation label1="9" label2="11">0.2</Correlation>
+					<Correlation label1="9" label2="12">0.2</Correlation>
+					<Correlation label1="9" label2="2">0.19</Correlation>
+					<Correlation label1="9" label2="3">0.2</Correlation>
+					<Correlation label1="9" label2="4">0.21</Correlation>
+					<Correlation label1="9" label2="5">0.15</Correlation>
+					<Correlation label1="9" label2="6">0.18</Correlation>
+					<Correlation label1="9" label2="7">0.18</Correlation>
+					<Correlation label1="9" label2="8">0.18</Correlation>
+				</InterBucket>
+			</Correlations>
+			<ConcentrationThresholds>
+				<Delta>
+					<Threshold bucket="1">10</Threshold>
+					<Threshold bucket="10">0.6</Threshold>
+					<Threshold bucket="11">2100</Threshold>
+					<Threshold bucket="12">2100</Threshold>
+					<Threshold bucket="2">10</Threshold>
+					<Threshold bucket="3">10</Threshold>
+					<Threshold bucket="4">10</Threshold>
+					<Threshold bucket="5">21</Threshold>
+					<Threshold bucket="6">21</Threshold>
+					<Threshold bucket="7">21</Threshold>
+					<Threshold bucket="8">21</Threshold>
+					<Threshold bucket="9">1.4</Threshold>
+					<Threshold bucket="Residual">0.6</Threshold>
+				</Delta>
+				<Vega>
+					<Threshold bucket="1">210</Threshold>
+					<Threshold bucket="10">200</Threshold>
+					<Threshold bucket="11">5900</Threshold>
+					<Threshold bucket="12">5900</Threshold>
+					<Threshold bucket="2">210</Threshold>
+					<Threshold bucket="3">210</Threshold>
+					<Threshold bucket="4">210</Threshold>
+					<Threshold bucket="5">1300</Threshold>
+					<Threshold bucket="6">1300</Threshold>
+					<Threshold bucket="7">1300</Threshold>
+					<Threshold bucket="8">1300</Threshold>
+					<Threshold bucket="9">40</Threshold>
+					<Threshold bucket="Residual">40</Threshold>
+				</Vega>
+			</ConcentrationThresholds>
+		</Equity>
+		<Commodity>
+			<RiskWeights>
+				<Delta mporDays="1">
+					<Weight bucket="1">9.0</Weight>
+					<Weight bucket="10">16</Weight>
+					<Weight bucket="11">6.2</Weight>
+					<Weight bucket="12">6.5</Weight>
+					<Weight bucket="13">4.6</Weight>
+					<Weight bucket="14">4.6</Weight>
+					<Weight bucket="15">4.0</Weight>
+					<Weight bucket="16">16</Weight>
+					<Weight bucket="17">5.1</Weight>
+					<Weight bucket="2">9.1</Weight>
+					<Weight bucket="3">8.1</Weight>
+					<Weight bucket="4">7.2</Weight>
+					<Weight bucket="5">10</Weight>
+					<Weight bucket="6">8.2</Weight>
+					<Weight bucket="7">9.7</Weight>
+					<Weight bucket="8">10</Weight>
+					<Weight bucket="9">10</Weight>
+				</Delta>
+				<Delta mporDays="10">
+					<Weight bucket="1">27</Weight>
+					<Weight bucket="10">58</Weight>
+					<Weight bucket="11">20</Weight>
+					<Weight bucket="12">21</Weight>
+					<Weight bucket="13">13</Weight>
+					<Weight bucket="14">16</Weight>
+					<Weight bucket="15">13</Weight>
+					<Weight bucket="16">58</Weight>
+					<Weight bucket="17">17</Weight>
+					<Weight bucket="2">29</Weight>
+					<Weight bucket="3">33</Weight>
+					<Weight bucket="4">25</Weight>
+					<Weight bucket="5">35</Weight>
+					<Weight bucket="6">24</Weight>
+					<Weight bucket="7">40</Weight>
+					<Weight bucket="8">53</Weight>
+					<Weight bucket="9">44</Weight>
+				</Delta>
+				<Vega mporDays="1">
+					<Weight>0.16</Weight>
+				</Vega>
+				<Vega mporDays="10">
+					<Weight>0.6</Weight>
+				</Vega>
+				<HistoricalVolatilityRatio mporDays="1">0.69</HistoricalVolatilityRatio>
+				<HistoricalVolatilityRatio mporDays="10">0.69</HistoricalVolatilityRatio>
+			</RiskWeights>
+			<Correlations>
+				<IntraBucket>
+					<Correlation bucket="1">0.84</Correlation>
+					<Correlation bucket="10">0.46</Correlation>
+					<Correlation bucket="11">0.55</Correlation>
+					<Correlation bucket="12">0.46</Correlation>
+					<Correlation bucket="13">0.66</Correlation>
+					<Correlation bucket="14">0.18</Correlation>
+					<Correlation bucket="15">0.21</Correlation>
+					<Correlation bucket="16">0</Correlation>
+					<Correlation bucket="17">0.36</Correlation>
+					<Correlation bucket="2">0.98</Correlation>
+					<Correlation bucket="3">0.96</Correlation>
+					<Correlation bucket="4">0.97</Correlation>
+					<Correlation bucket="5">0.98</Correlation>
+					<Correlation bucket="6">0.88</Correlation>
+					<Correlation bucket="7">0.98</Correlation>
+					<Correlation bucket="8">0.49</Correlation>
+					<Correlation bucket="9">0.8</Correlation>
+				</IntraBucket>
+				<InterBucket>
+					<Correlation label1="1" label2="10">0.23</Correlation>
+					<Correlation label1="1" label2="11">0.18</Correlation>
+					<Correlation label1="1" label2="12">0.02</Correlation>
+					<Correlation label1="1" label2="13">0.21</Correlation>
+					<Correlation label1="1" label2="14">0.19</Correlation>
+					<Correlation label1="1" label2="15">0.15</Correlation>
+					<Correlation label1="1" label2="16">0</Correlation>
+					<Correlation label1="1" label2="17">0.24</Correlation>
+					<Correlation label1="1" label2="2">0.33</Correlation>
+					<Correlation label1="1" label2="3">0.21</Correlation>
+					<Correlation label1="1" label2="4">0.27</Correlation>
+					<Correlation label1="1" label2="5">0.29</Correlation>
+					<Correlation label1="1" label2="6">0.21</Correlation>
+					<Correlation label1="1" label2="7">0.48</Correlation>
+					<Correlation label1="1" label2="8">0.16</Correlation>
+					<Correlation label1="1" label2="9">0.41</Correlation>
+					<Correlation label1="10" label2="1">0.23</Correlation>
+					<Correlation label1="10" label2="11">0.14</Correlation>
+					<Correlation label1="10" label2="12">0.11</Correlation>
+					<Correlation label1="10" label2="13">0.11</Correlation>
+					<Correlation label1="10" label2="14">0.1</Correlation>
+					<Correlation label1="10" label2="15">0.07</Correlation>
+					<Correlation label1="10" label2="16">0</Correlation>
+					<Correlation label1="10" label2="17">0.14</Correlation>
+					<Correlation label1="10" label2="2">0.21</Correlation>
+					<Correlation label1="10" label2="3">0.2</Correlation>
+					<Correlation label1="10" label2="4">0.19</Correlation>
+					<Correlation label1="10" label2="5">0.21</Correlation>
+					<Correlation label1="10" label2="6">0.09</Correlation>
+					<Correlation label1="10" label2="7">0.24</Correlation>
+					<Correlation label1="10" label2="8">0.04</Correlation>
+					<Correlation label1="10" label2="9">0.21</Correlation>
+					<Correlation label1="11" label2="1">0.18</Correlation>
+					<Correlation label1="11" label2="10">0.14</Correlation>
+					<Correlation label1="11" label2="12">0.28</Correlation>
+					<Correlation label1="11" label2="13">0.3</Correlation>
+					<Correlation label1="11" label2="14">0.25</Correlation>
+					<Correlation label1="11" label2="15">0.18</Correlation>
+					<Correlation label1="11" label2="16">0</Correlation>
+					<Correlation label1="11" label2="17">0.38</Correlation>
+					<Correlation label1="11" label2="2">0.41</Correlation>
+					<Correlation label1="11" label2="3">0.36</Correlation>
+					<Correlation label1="11" label2="4">0.39</Correlation>
+					<Correlation label1="11" label2="5">0.38</Correlation>
+					<Correlation label1="11" label2="6">0.21</Correlation>
+					<Correlation label1="11" label2="7">0.14</Correlation>
+					<Correlation label1="11" label2="8">0.13</Correlation>
+					<Correlation label1="11" label2="9">0.18</Correlation>
+					<Correlation label1="12" label2="1">0.02</Correlation>
+					<Correlation label1="12" label2="10">0.11</Correlation>
+					<Correlation label1="12" label2="11">0.28</Correlation>
+					<Correlation label1="12" label2="13">0.18</Correlation>
+					<Correlation label1="12" label2="14">0.18</Correlation>
+					<Correlation label1="12" label2="15">0.08</Correlation>
+					<Correlation label1="12" label2="16">0</Correlation>
+					<Correlation label1="12" label2="17">0.21</Correlation>
+					<Correlation label1="12" label2="2">0.27</Correlation>
+					<Correlation label1="12" label2="3">0.18</Correlation>
+					<Correlation label1="12" label2="4">0.25</Correlation>
+					<Correlation label1="12" label2="5">0.28</Correlation>
+					<Correlation label1="12" label2="6">0.04</Correlation>
+					<Correlation label1="12" label2="7">-0.12</Correlation>
+					<Correlation label1="12" label2="8">-0.07</Correlation>
+					<Correlation label1="12" label2="9">-0.07</Correlation>
+					<Correlation label1="13" label2="1">0.21</Correlation>
+					<Correlation label1="13" label2="10">0.11</Correlation>
+					<Correlation label1="13" label2="11">0.3</Correlation>
+					<Correlation label1="13" label2="12">0.18</Correlation>
+					<Correlation label1="13" label2="14">0.34</Correlation>
+					<Correlation label1="13" label2="15">0.16</Correlation>
+					<Correlation label1="13" label2="16">0</Correlation>
+					<Correlation label1="13" label2="17">0.34</Correlation>
+					<Correlation label1="13" label2="2">0.31</Correlation>
+					<Correlation label1="13" label2="3">0.22</Correlation>
+					<Correlation label1="13" label2="4">0.23</Correlation>
+					<Correlation label1="13" label2="5">0.28</Correlation>
+					<Correlation label1="13" label2="6">0.11</Correlation>
+					<Correlation label1="13" label2="7">0.19</Correlation>
+					<Correlation label1="13" label2="8">0.04</Correlation>
+					<Correlation label1="13" label2="9">0.12</Correlation>
+					<Correlation label1="14" label2="1">0.19</Correlation>
+					<Correlation label1="14" label2="10">0.1</Correlation>
+					<Correlation label1="14" label2="11">0.25</Correlation>
+					<Correlation label1="14" label2="12">0.18</Correlation>
+					<Correlation label1="14" label2="13">0.34</Correlation>
+					<Correlation label1="14" label2="15">0.13</Correlation>
+					<Correlation label1="14" label2="16">0</Correlation>
+					<Correlation label1="14" label2="17">0.26</Correlation>
+					<Correlation label1="14" label2="2">0.29</Correlation>
+					<Correlation label1="14" label2="3">0.23</Correlation>
+					<Correlation label1="14" label2="4">0.27</Correlation>
+					<Correlation label1="14" label2="5">0.27</Correlation>
+					<Correlation label1="14" label2="6">0.1</Correlation>
+					<Correlation label1="14" label2="7">0.14</Correlation>
+					<Correlation label1="14" label2="8">0.06</Correlation>
+					<Correlation label1="14" label2="9">0.12</Correlation>
+					<Correlation label1="15" label2="1">0.15</Correlation>
+					<Correlation label1="15" label2="10">0.07</Correlation>
+					<Correlation label1="15" label2="11">0.18</Correlation>
+					<Correlation label1="15" label2="12">0.08</Correlation>
+					<Correlation label1="15" label2="13">0.16</Correlation>
+					<Correlation label1="15" label2="14">0.13</Correlation>
+					<Correlation label1="15" label2="16">0</Correlation>
+					<Correlation label1="15" label2="17">0.21</Correlation>
+					<Correlation label1="15" label2="2">0.21</Correlation>
+					<Correlation label1="15" label2="3">0.23</Correlation>
+					<Correlation label1="15" label2="4">0.18</Correlation>
+					<Correlation label1="15" label2="5">0.18</Correlation>
+					<Correlation label1="15" label2="6">0.09</Correlation>
+					<Correlation label1="15" label2="7">0.08</Correlation>
+					<Correlation label1="15" label2="8">0.01</Correlation>
+					<Correlation label1="15" label2="9">0.1</Correlation>
+					<Correlation label1="16" label2="1">0</Correlation>
+					<Correlation label1="16" label2="10">0</Correlation>
+					<Correlation label1="16" label2="11">0</Correlation>
+					<Correlation label1="16" label2="12">0</Correlation>
+					<Correlation label1="16" label2="13">0</Correlation>
+					<Correlation label1="16" label2="14">0</Correlation>
+					<Correlation label1="16" label2="15">0</Correlation>
+					<Correlation label1="16" label2="17">0</Correlation>
+					<Correlation label1="16" label2="2">0</Correlation>
+					<Correlation label1="16" label2="3">0</Correlation>
+					<Correlation label1="16" label2="4">0</Correlation>
+					<Correlation label1="16" label2="5">0</Correlation>
+					<Correlation label1="16" label2="6">0</Correlation>
+					<Correlation label1="16" label2="7">0</Correlation>
+					<Correlation label1="16" label2="8">0</Correlation>
+					<Correlation label1="16" label2="9">0</Correlation>
+					<Correlation label1="17" label2="1">0.24</Correlation>
+					<Correlation label1="17" label2="10">0.14</Correlation>
+					<Correlation label1="17" label2="11">0.38</Correlation>
+					<Correlation label1="17" label2="12">0.21</Correlation>
+					<Correlation label1="17" label2="13">0.34</Correlation>
+					<Correlation label1="17" label2="14">0.26</Correlation>
+					<Correlation label1="17" label2="15">0.21</Correlation>
+					<Correlation label1="17" label2="16">0</Correlation>
+					<Correlation label1="17" label2="2">0.6</Correlation>
+					<Correlation label1="17" label2="3">0.54</Correlation>
+					<Correlation label1="17" label2="4">0.59</Correlation>
+					<Correlation label1="17" label2="5">0.55</Correlation>
+					<Correlation label1="17" label2="6">0.24</Correlation>
+					<Correlation label1="17" label2="7">0.24</Correlation>
+					<Correlation label1="17" label2="8">0.16</Correlation>
+					<Correlation label1="17" label2="9">0.21</Correlation>
+					<Correlation label1="2" label2="1">0.33</Correlation>
+					<Correlation label1="2" label2="10">0.21</Correlation>
+					<Correlation label1="2" label2="11">0.41</Correlation>
+					<Correlation label1="2" label2="12">0.27</Correlation>
+					<Correlation label1="2" label2="13">0.31</Correlation>
+					<Correlation label1="2" label2="14">0.29</Correlation>
+					<Correlation label1="2" label2="15">0.21</Correlation>
+					<Correlation label1="2" label2="16">0</Correlation>
+					<Correlation label1="2" label2="17">0.6</Correlation>
+					<Correlation label1="2" label2="3">0.94</Correlation>
+					<Correlation label1="2" label2="4">0.94</Correlation>
+					<Correlation label1="2" label2="5">0.89</Correlation>
+					<Correlation label1="2" label2="6">0.21</Correlation>
+					<Correlation label1="2" label2="7">0.19</Correlation>
+					<Correlation label1="2" label2="8">0.13</Correlation>
+					<Correlation label1="2" label2="9">0.21</Correlation>
+					<Correlation label1="3" label2="1">0.21</Correlation>
+					<Correlation label1="3" label2="10">0.2</Correlation>
+					<Correlation label1="3" label2="11">0.36</Correlation>
+					<Correlation label1="3" label2="12">0.18</Correlation>
+					<Correlation label1="3" label2="13">0.22</Correlation>
+					<Correlation label1="3" label2="14">0.23</Correlation>
+					<Correlation label1="3" label2="15">0.23</Correlation>
+					<Correlation label1="3" label2="16">0</Correlation>
+					<Correlation label1="3" label2="17">0.54</Correlation>
+					<Correlation label1="3" label2="2">0.94</Correlation>
+					<Correlation label1="3" label2="4">0.91</Correlation>
+					<Correlation label1="3" label2="5">0.85</Correlation>
+					<Correlation label1="3" label2="6">0.12</Correlation>
+					<Correlation label1="3" label2="7">0.2</Correlation>
+					<Correlation label1="3" label2="8">0.09</Correlation>
+					<Correlation label1="3" label2="9">0.19</Correlation>
+					<Correlation label1="4" label2="1">0.27</Correlation>
+					<Correlation label1="4" label2="10">0.19</Correlation>
+					<Correlation label1="4" label2="11">0.39</Correlation>
+					<Correlation label1="4" label2="12">0.25</Correlation>
+					<Correlation label1="4" label2="13">0.23</Correlation>
+					<Correlation label1="4" label2="14">0.27</Correlation>
+					<Correlation label1="4" label2="15">0.18</Correlation>
+					<Correlation label1="4" label2="16">0</Correlation>
+					<Correlation label1="4" label2="17">0.59</Correlation>
+					<Correlation label1="4" label2="2">0.94</Correlation>
+					<Correlation label1="4" label2="3">0.91</Correlation>
+					<Correlation label1="4" label2="5">0.84</Correlation>
+					<Correlation label1="4" label2="6">0.14</Correlation>
+					<Correlation label1="4" label2="7">0.24</Correlation>
+					<Correlation label1="4" label2="8">0.13</Correlation>
+					<Correlation label1="4" label2="9">0.21</Correlation>
+					<Correlation label1="5" label2="1">0.29</Correlation>
+					<Correlation label1="5" label2="10">0.21</Correlation>
+					<Correlation label1="5" label2="11">0.38</Correlation>
+					<Correlation label1="5" label2="12">0.28</Correlation>
+					<Correlation label1="5" label2="13">0.28</Correlation>
+					<Correlation label1="5" label2="14">0.27</Correlation>
+					<Correlation label1="5" label2="15">0.18</Correlation>
+					<Correlation label1="5" label2="16">0</Correlation>
+					<Correlation label1="5" label2="17">0.55</Correlation>
+					<Correlation label1="5" label2="2">0.89</Correlation>
+					<Correlation label1="5" label2="3">0.85</Correlation>
+					<Correlation label1="5" label2="4">0.84</Correlation>
+					<Correlation label1="5" label2="6">0.15</Correlation>
+					<Correlation label1="5" label2="7">0.17</Correlation>
+					<Correlation label1="5" label2="8">0.09</Correlation>
+					<Correlation label1="5" label2="9">0.16</Correlation>
+					<Correlation label1="6" label2="1">0.21</Correlation>
+					<Correlation label1="6" label2="10">0.09</Correlation>
+					<Correlation label1="6" label2="11">0.21</Correlation>
+					<Correlation label1="6" label2="12">0.04</Correlation>
+					<Correlation label1="6" label2="13">0.11</Correlation>
+					<Correlation label1="6" label2="14">0.1</Correlation>
+					<Correlation label1="6" label2="15">0.09</Correlation>
+					<Correlation label1="6" label2="16">0</Correlation>
+					<Correlation label1="6" label2="17">0.24</Correlation>
+					<Correlation label1="6" label2="2">0.21</Correlation>
+					<Correlation label1="6" label2="3">0.12</Correlation>
+					<Correlation label1="6" label2="4">0.14</Correlation>
+					<Correlation label1="6" label2="5">0.15</Correlation>
+					<Correlation label1="6" label2="7">0.33</Correlation>
+					<Correlation label1="6" label2="8">0.53</Correlation>
+					<Correlation label1="6" label2="9">0.26</Correlation>
+					<Correlation label1="7" label2="1">0.48</Correlation>
+					<Correlation label1="7" label2="10">0.24</Correlation>
+					<Correlation label1="7" label2="11">0.14</Correlation>
+					<Correlation label1="7" label2="12">-0.12</Correlation>
+					<Correlation label1="7" label2="13">0.19</Correlation>
+					<Correlation label1="7" label2="14">0.14</Correlation>
+					<Correlation label1="7" label2="15">0.08</Correlation>
+					<Correlation label1="7" label2="16">0</Correlation>
+					<Correlation label1="7" label2="17">0.24</Correlation>
+					<Correlation label1="7" label2="2">0.19</Correlation>
+					<Correlation label1="7" label2="3">0.2</Correlation>
+					<Correlation label1="7" label2="4">0.24</Correlation>
+					<Correlation label1="7" label2="5">0.17</Correlation>
+					<Correlation label1="7" label2="6">0.33</Correlation>
+					<Correlation label1="7" label2="8">0.31</Correlation>
+					<Correlation label1="7" label2="9">0.72</Correlation>
+					<Correlation label1="8" label2="1">0.16</Correlation>
+					<Correlation label1="8" label2="10">0.04</Correlation>
+					<Correlation label1="8" label2="11">0.13</Correlation>
+					<Correlation label1="8" label2="12">-0.07</Correlation>
+					<Correlation label1="8" label2="13">0.04</Correlation>
+					<Correlation label1="8" label2="14">0.06</Correlation>
+					<Correlation label1="8" label2="15">0.01</Correlation>
+					<Correlation label1="8" label2="16">0</Correlation>
+					<Correlation label1="8" label2="17">0.16</Correlation>
+					<Correlation label1="8" label2="2">0.13</Correlation>
+					<Correlation label1="8" label2="3">0.09</Correlation>
+					<Correlation label1="8" label2="4">0.13</Correlation>
+					<Correlation label1="8" label2="5">0.09</Correlation>
+					<Correlation label1="8" label2="6">0.53</Correlation>
+					<Correlation label1="8" label2="7">0.31</Correlation>
+					<Correlation label1="8" label2="9">0.24</Correlation>
+					<Correlation label1="9" label2="1">0.41</Correlation>
+					<Correlation label1="9" label2="10">0.21</Correlation>
+					<Correlation label1="9" label2="11">0.18</Correlation>
+					<Correlation label1="9" label2="12">-0.07</Correlation>
+					<Correlation label1="9" label2="13">0.12</Correlation>
+					<Correlation label1="9" label2="14">0.12</Correlation>
+					<Correlation label1="9" label2="15">0.1</Correlation>
+					<Correlation label1="9" label2="16">0</Correlation>
+					<Correlation label1="9" label2="17">0.21</Correlation>
+					<Correlation label1="9" label2="2">0.21</Correlation>
+					<Correlation label1="9" label2="3">0.19</Correlation>
+					<Correlation label1="9" label2="4">0.21</Correlation>
+					<Correlation label1="9" label2="5">0.16</Correlation>
+					<Correlation label1="9" label2="6">0.26</Correlation>
+					<Correlation label1="9" label2="7">0.72</Correlation>
+					<Correlation label1="9" label2="8">0.24</Correlation>
+				</InterBucket>
+			</Correlations>
+			<ConcentrationThresholds>
+				<Delta>
+					<Threshold bucket="1">310</Threshold>
+					<Threshold bucket="10">52</Threshold>
+					<Threshold bucket="11">530</Threshold>
+					<Threshold bucket="12">1600</Threshold>
+					<Threshold bucket="13">100</Threshold>
+					<Threshold bucket="14">100</Threshold>
+					<Threshold bucket="15">100</Threshold>
+					<Threshold bucket="16">52</Threshold>
+					<Threshold bucket="17">4000</Threshold>
+					<Threshold bucket="2">2100</Threshold>
+					<Threshold bucket="3">1700</Threshold>
+					<Threshold bucket="4">1700</Threshold>
+					<Threshold bucket="5">1700</Threshold>
+					<Threshold bucket="6">3200</Threshold>
+					<Threshold bucket="7">3200</Threshold>
+					<Threshold bucket="8">2700</Threshold>
+					<Threshold bucket="9">2700</Threshold>
+				</Delta>
+				<Vega>
+					<Threshold bucket="1">210</Threshold>
+					<Threshold bucket="10">100</Threshold>
+					<Threshold bucket="11">350</Threshold>
+					<Threshold bucket="12">720</Threshold>
+					<Threshold bucket="13">500</Threshold>
+					<Threshold bucket="14">500</Threshold>
+					<Threshold bucket="15">500</Threshold>
+					<Threshold bucket="16">65</Threshold>
+					<Threshold bucket="17">65</Threshold>
+					<Threshold bucket="2">2700</Threshold>
+					<Threshold bucket="3">290</Threshold>
+					<Threshold bucket="4">290</Threshold>
+					<Threshold bucket="5">290</Threshold>
+					<Threshold bucket="6">5000</Threshold>
+					<Threshold bucket="7">5000</Threshold>
+					<Threshold bucket="8">920</Threshold>
+					<Threshold bucket="9">920</Threshold>
+				</Vega>
+			</ConcentrationThresholds>
+		</Commodity>
+		<FX>
+			<RiskWeights>
+				<Delta mporDays="1">
+					<Weight label1="1" label2="1">3.4</Weight>
+					<Weight label1="1" label2="2">3.2</Weight>
+					<Weight label1="2" label2="1">3.2</Weight>
+					<Weight label1="2" label2="2">1.8</Weight>
+				</Delta>
+				<Delta mporDays="10">
+					<Weight label1="1" label2="1">14.6</Weight>
+					<Weight label1="1" label2="2">13.6</Weight>
+					<Weight label1="2" label2="1">13.6</Weight>
+					<Weight label1="2" label2="2">7.4</Weight>
+				</Delta>
+				<Vega mporDays="1">
+					<Weight>0.096</Weight>
+				</Vega>
+				<Vega mporDays="10">
+					<Weight>0.47</Weight>
+				</Vega>
+				<HistoricalVolatilityRatio mporDays="1">0.7</HistoricalVolatilityRatio>
+				<HistoricalVolatilityRatio mporDays="10">0.52</HistoricalVolatilityRatio>
+				<CurrencyLists>
+					<Currency bucket="1">BRL</Currency>
+					<Currency bucket="1">RUB</Currency>
+					<Currency bucket="1">TRY</Currency>
+					<Currency bucket="1">ZAR</Currency>
+					<Currency bucket="2">Other</Currency>
+				</CurrencyLists>
+			</RiskWeights>
+			<Correlations>
+				<IntraBucket>
+					<Correlation bucket="1" label1="1" label2="1">0.5</Correlation>
+					<Correlation bucket="1" label1="1" label2="2">0.54</Correlation>
+					<Correlation bucket="1" label1="2" label2="1">0.54</Correlation>
+					<Correlation bucket="1" label1="2" label2="2">0.85</Correlation>
+					<Correlation bucket="2" label1="1" label2="1">0.42</Correlation>
+					<Correlation bucket="2" label1="1" label2="2">0.27</Correlation>
+					<Correlation bucket="2" label1="2" label2="1">0.27</Correlation>
+					<Correlation bucket="2" label1="2" label2="2">0.5</Correlation>
+				</IntraBucket>
+				<Volatility>0.5</Volatility>
+			</Correlations>
+			<ConcentrationThresholds>
+				<Delta>
+					<Threshold bucket="1">5100</Threshold>
+					<Threshold bucket="2">1200</Threshold>
+					<Threshold bucket="3">190</Threshold>
+				</Delta>
+				<Vega>
+					<Threshold bucket="1">2800</Threshold>
+					<Threshold bucket="2">1300</Threshold>
+					<Threshold bucket="3">550</Threshold>
+					<Threshold bucket="4">490</Threshold>
+					<Threshold bucket="5">310</Threshold>
+					<Threshold bucket="6">200</Threshold>
+				</Vega>
+				<CurrencyLists>
+					<Currency bucket="1">AUD</Currency>
+					<Currency bucket="1">CAD</Currency>
+					<Currency bucket="1">CHF</Currency>
+					<Currency bucket="1">EUR</Currency>
+					<Currency bucket="1">GBP</Currency>
+					<Currency bucket="1">JPY</Currency>
+					<Currency bucket="1">USD</Currency>
+					<Currency bucket="2">BRL</Currency>
+					<Currency bucket="2">CNY</Currency>
+					<Currency bucket="2">HKD</Currency>
+					<Currency bucket="2">INR</Currency>
+					<Currency bucket="2">KRW</Currency>
+					<Currency bucket="2">MXN</Currency>
+					<Currency bucket="2">NOK</Currency>
+					<Currency bucket="2">NZD</Currency>
+					<Currency bucket="2">RUB</Currency>
+					<Currency bucket="2">SEK</Currency>
+					<Currency bucket="2">SGD</Currency>
+					<Currency bucket="2">TRY</Currency>
+					<Currency bucket="2">ZAR</Currency>
+					<Currency bucket="3">Other</Currency>
+				</CurrencyLists>
+			</ConcentrationThresholds>
+		</FX>
+		<RiskClassCorrelations>
+			<Correlation label1="Commodity" label2="CreditNonQualifying">0.41</Correlation>
+			<Correlation label1="Commodity" label2="CreditQualifying">0.52</Correlation>
+			<Correlation label1="Commodity" label2="Equity">0.49</Correlation>
+			<Correlation label1="Commodity" label2="FX">0.41</Correlation>
+			<Correlation label1="Commodity" label2="InterestRate">0.46</Correlation>
+			<Correlation label1="CreditNonQualifying" label2="Commodity">0.41</Correlation>
+			<Correlation label1="CreditNonQualifying" label2="CreditQualifying">0.54</Correlation>
+			<Correlation label1="CreditNonQualifying" label2="Equity">0.46</Correlation>
+			<Correlation label1="CreditNonQualifying" label2="FX">0.12</Correlation>
+			<Correlation label1="CreditNonQualifying" label2="InterestRate">0.13</Correlation>
+			<Correlation label1="CreditQualifying" label2="Commodity">0.52</Correlation>
+			<Correlation label1="CreditQualifying" label2="CreditNonQualifying">0.54</Correlation>
+			<Correlation label1="CreditQualifying" label2="Equity">0.71</Correlation>
+			<Correlation label1="CreditQualifying" label2="FX">0.38</Correlation>
+			<Correlation label1="CreditQualifying" label2="InterestRate">0.29</Correlation>
+			<Correlation label1="Equity" label2="Commodity">0.49</Correlation>
+			<Correlation label1="Equity" label2="CreditNonQualifying">0.46</Correlation>
+			<Correlation label1="Equity" label2="CreditQualifying">0.71</Correlation>
+			<Correlation label1="Equity" label2="FX">0.35</Correlation>
+			<Correlation label1="Equity" label2="InterestRate">0.28</Correlation>
+			<Correlation label1="FX" label2="Commodity">0.41</Correlation>
+			<Correlation label1="FX" label2="CreditNonQualifying">0.12</Correlation>
+			<Correlation label1="FX" label2="CreditQualifying">0.38</Correlation>
+			<Correlation label1="FX" label2="Equity">0.35</Correlation>
+			<Correlation label1="FX" label2="InterestRate">0.32</Correlation>
+			<Correlation label1="InterestRate" label2="Commodity">0.46</Correlation>
+			<Correlation label1="InterestRate" label2="CreditNonQualifying">0.13</Correlation>
+			<Correlation label1="InterestRate" label2="CreditQualifying">0.29</Correlation>
+			<Correlation label1="InterestRate" label2="Equity">0.28</Correlation>
+			<Correlation label1="InterestRate" label2="FX">0.32</Correlation>
+		</RiskClassCorrelations>
+	</SIMMCalibration>
+</SIMMCalibrationData>
+

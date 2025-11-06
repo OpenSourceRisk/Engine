@@ -92,6 +92,13 @@ public:
         vector<Period> shiftTerms;
         map<pair<Period, Period>, Real> shifts;
     };
+    struct CommodityVolShiftData {
+        ShiftType shiftType;
+        vector<Period> shiftExpiries;
+        vector<Real> shiftMoneyness;
+        vector<Real> shifts; 
+    };
+
 
     struct StressTestData {
         string label;
@@ -102,6 +109,8 @@ public:
         map<string, QuantLib::ext::shared_ptr<FXVolShiftData>> fxVolShifts;               // by currency pair
         map<string, QuantLib::ext::shared_ptr<SpotShiftData>> equityShifts;         // by equity
         map<string, QuantLib::ext::shared_ptr<VolShiftData>> equityVolShifts;             // by equity
+        map<string, QuantLib::ext::shared_ptr<CurveShiftData>> commodityCurveShifts;       // by commodity
+        map<string, QuantLib::ext::shared_ptr<CommodityVolShiftData>> commodityVolShifts;  // by commodity
         map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>> capVolShifts; // by currency
         map<string, QuantLib::ext::shared_ptr<SwaptionVolShiftData>> swaptionVolShifts;  // by currency
         map<string, QuantLib::ext::shared_ptr<SpotShiftData>> securitySpreadShifts;     // by bond/security
@@ -135,6 +144,13 @@ public:
         void setEquityVolShift(std::string s,
                                const QuantLib::ext::shared_ptr<StressTestScenarioData::VolShiftData>& csd) { 
             equityVolShifts[s] = csd;
+        }
+        void setCommodityCurveShift(std::string s, const QuantLib::ext::shared_ptr<CurveShiftData>& ccsd) {
+            commodityCurveShifts[s] = ccsd;
+        }
+        void setCommodityVolShift(std::string s,
+                               const QuantLib::ext::shared_ptr<StressTestScenarioData::CommodityVolShiftData>& csd) { 
+            commodityVolShifts[s] = csd;
         }
         void setCapVolShift(std::string s,
                             const QuantLib::ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData>& csd) {
@@ -203,6 +219,20 @@ public:
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<VolShiftData>>> getEquityVolShifts() const {
             std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<VolShiftData>>> vsd;
             for (const auto& [k, v] : equityVolShifts) {
+                vsd.push_back(std::make_pair(k, v));
+            }
+            return vsd;
+        };
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<CurveShiftData>>> getCommodityCurveShifts() const {
+            std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<CurveShiftData>>> csd;
+            for (const auto& [k, v] : commodityCurveShifts) {
+                csd.push_back(std::make_pair(k, v));
+            }
+            return csd;
+        };
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<CommodityVolShiftData>>> getCommodityVolShifts() const {
+            std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<CommodityVolShiftData>>> vsd;
+            for (const auto& [k, v] : commodityVolShifts) {
                 vsd.push_back(std::make_pair(k, v));
             }
             return vsd;

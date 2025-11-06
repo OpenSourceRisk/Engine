@@ -22,7 +22,7 @@
 */
 
 #pragma once
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <boost/timer/timer.hpp>
 #include <iostream>
 #include <limits>
@@ -59,7 +59,7 @@ public:
     // Start a timer for the given key
     void start(const std::string& key);
     // Stop the timer for the given key
-    boost::optional<boost::timer::cpu_timer> stop(const std::string& key, bool returnTimer = false);
+    QuantLib::ext::optional<boost::timer::cpu_timer> stop(const std::string& key, bool returnTimer = false);
     // Either save the time stats from another timer, or (in the case of repeated calls/loops) if the key already exists, add the time stats
     void addTime(const Timer& timer);
     // Store a timer under a given key

@@ -74,7 +74,7 @@ template <class T> T parseFormula(const std::string& text, const std::function<T
     using qi::double_;
     using qi::lexeme;
     using qi::lit;
-    using namespace qi::labels;
+    using namespace boost::spirit::qi::labels;
 
     qi::rule<Iterator, std::string(), ascii::space_type> variable;
     qi::rule<Iterator, ascii::space_type> factor;

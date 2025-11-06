@@ -37,8 +37,7 @@ namespace ore {
 namespace analytics {
 
 void ScenarioGeneratorData::clear() {
-    if (grid_)
-        grid_->truncate(0);
+    grid_ = QuantLib::ext::make_shared<DateGrid>();
 }
 
 void ScenarioGeneratorData::setGrid(QuantLib::ext::shared_ptr<DateGrid> grid) { 
@@ -131,6 +130,8 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
         }
     }
 
+    timeStepsPerYear_ = XMLUtils::getChildValueAsInt(node, "TimeStepsPerYear", false, Null<Size>());
+
     LOG("ScenarioGeneratorData done.");
 }
 
@@ -163,6 +164,9 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) const {
     } else {
         XMLUtils::addChild(doc, pNode, "MporMode", "ActualDate");
     }
+
+    if(timeStepsPerYear_ != Null<Size>())
+        XMLUtils::addChild(doc, pNode, "TimeStepsPerYear", to_string(timeStepsPerYear_));
 
     return node;
 }

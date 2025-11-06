@@ -44,6 +44,7 @@ public:
     RandomVariable rollback(const RandomVariable& v, const Real t1, const Real t0,
                             Size steps = Null<Size>()) const override;
     const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model() const override { return model_; }
+    Size timeStepsPerYear() const override { return 0; }
 
 private:
     QuantLib::ext::shared_ptr<LinearGaussMarkovModel> model_;

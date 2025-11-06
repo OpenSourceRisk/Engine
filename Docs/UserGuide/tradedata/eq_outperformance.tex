@@ -1,7 +1,27 @@
 \subsubsection{Equity Outperformance Option}
 
-The \lstinline!EquityOutperformanceOptionData! node is the trade data container for the \emph{EquityOutperformanceOption} trade type. The \lstinline!EquityOutperformanceOptionData!  node includes one  \lstinline!OptionData! trade component sub-node plus elements
-specific to the Equity Outperformance Option. 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An Equity Outperformance option has a payoff that depends on the `outperformance' of two equity indices (i.e. the difference between 
+their returns) against a strike return.
+The buyer has the right but not the obligation to receive the outperformance in 
+exchange for the strike rate at a predetermined time in the future.	
+
+Payoff:
+$$
+N\cdot \max(0,R_1-R_2 - K)
+$$
+where $N$ is the notional amount, $R$ is the return of an index,
+and $K$ is the strike.
+
+A knockIn and knockOut price may be provided. 
+The payoff is then only paid if on the exercise date the price of Index2 is above the knockIn price and below the knockOut price.
+
+The pricing methodology was generalized from \cite{Brigo_Mercurio_2006}, 13.16.2.
+
+{\bf Input}}
+
+\else
 
 An Equity Outperformance option has a payoff that depends on the `outperformance' of two equity indices (i.e. the difference between 
 their returns) against a strike return. The buyer has the right but not the obligation to receive the outperformance in 
@@ -9,6 +29,11 @@ exchange for the strike rate at a predetermined time in the future.
 
 The trade may optionally have a knockIn or knockOut price (or both). 
 Only if the price of Underlying2 is above the knockIn value or below the knockOut value is the payoff paid.
+
+\fi
+
+The \lstinline!EquityOutperformanceOptionData! node is the trade data container for the \emph{EquityOutperformanceOption} trade type. The \lstinline!EquityOutperformanceOptionData!  node includes one  \lstinline!OptionData! trade component sub-node plus elements
+specific to the Equity Outperformance Option. 
 
 The structure of an example \lstinline!EquityOutperformanceOptionData! node for an Equity Outperformace Option is shown in Listing
 \ref{lst:eqoutperformaceoption_data}.

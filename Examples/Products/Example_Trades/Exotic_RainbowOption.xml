@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="BestOfAssetOrCashRainbowOption#1">
+        <TradeType>ScriptedTrade</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <BestOfAssetOrCashRainbowOptionData>
+            <Expiry type="event">2025-08-31</Expiry>
+            <Settlement type="event">2025-09-05</Settlement>
+            <LongShort type="longShort">Long</LongShort>
+            <Notional type="number">1</Notional>
+            <Strike type="number">2000</Strike>
+            <Underlyings type="index">
+                <Value>EQ-RIC:.SPX</Value>
+                <Value>EQ-RIC:.STOXX50E</Value>
+            </Underlyings>
+            <Weights type="number">
+                <Value>1.0</Value>
+                <Value>1.0</Value>
+            </Weights>
+            <PayCcy type="currency">USD</PayCcy>
+        </BestOfAssetOrCashRainbowOptionData>
+        <!--
+  <ScriptedTradeData>
+    <ScriptName>BestOfAssetOrCashRainbowOption</ScriptName>
+    <Data>
+      <Event>
+        <Name>Expiry</Name>
+        <Value>2020-02-15</Value>
+      </Event>
+      <Event>
+        <Name>Settlement</Name>
+        <Value>2020-02-20</Value>
+      </Event>
+      <Number>
+	<Name>LongShort</Name>
+	<Value>1</Value>
+      </Number>
+      <Number>
+        <Name>Notional</Name>
+        <Value>1</Value>
+      </Number>
+      <Number>
+        <Name>Strike</Name>
+        <Value>2000</Value>
+      </Number>
+      <Index>
+        <Name>Underlyings</Name>
+        <Values>
+                <Value>EQ-RIC:.SPX</Value>
+                <Value>EQ-RIC:.STOXX50E</Value>
+        </Values>
+      </Index>
+      <Number>
+        <Name>Weights</Name>
+        <Values>
+          <Value>1.0</Value>
+          <Value>1.0</Value>
+        </Values>
+      </Number>
+      <Currency>
+        <Name>PayCcy</Name>
+        <Value>USD</Value>
+      </Currency>
+    </Data>
+  </ScriptedTradeData>
+  -->
+    </Trade>
+</Portfolio>

@@ -152,7 +152,6 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         forwardDate_ = paymentDate;
         paymentDate_ = paymentDate;
-
         if (expiryDate_ <= today) {
 
             // option is expired, build an fx forward representing the physical underlying if exercised or null if not
@@ -182,7 +181,8 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             qlinstr->setPricingEngine(fxBuilder->engine(boughtCcy,soldCcy));
             auto configuration = fxBuilder->configuration(MarketContext::pricing);
 
-            maturity_ = paymentDate;
+            maturity_ = expiryDate_;
+            lastRelevantDate_ = today<paymentDate_? paymentDate_ : expiryDate_;
             maturityType_ = "Payment Date";
             Position::Type positionType = parsePositionType(option_.longShort());
             Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -190,9 +190,10 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
             std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
             std::vector<Real> additionalMultipliers;
+            string discountCurve = envelope().additionalField("discount_curve", false, std::string());
             maturity_ =
                 std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult,
-                                                option_.premiumData(), -bsInd, soldCcy, engineFactory, configuration));
+                                                option_.premiumData(), -bsInd, soldCcy, discountCurve, engineFactory, configuration));
             instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlinstr, mult, additionalInstruments,
                                                                         additionalMultipliers);
             notionalCurrency_ = npvCurrency_ = soldCcy.code();

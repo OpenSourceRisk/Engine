@@ -47,7 +47,7 @@ public:
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
                      const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
                      QuantLib::Real strike, const QuantLib::Date& futureExpiryDate,
-                     const boost::optional<bool>& physicallySettled = true,
+                     const QuantLib::ext::optional<bool>& physicallySettled = true,
                      const Date& paymentDate = Date());
 
     //! Detailed constructor with explicit future expiry offset and calendar.
@@ -55,7 +55,7 @@ public:
                      const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
                      QuantLib::Real strike, const QuantLib::Period& futureExpiryOffset,
                      const QuantLib::Calendar& offsetCalendar,
-                     const boost::optional<bool>& physicallySettled = true,
+                     const QuantLib::ext::optional<bool>& physicallySettled = true,
                      const Date& paymentDate = Date());
     //@}
 
@@ -67,11 +67,11 @@ public:
     QuantLib::Real quantity() { return quantity_; }
     std::string maturityDate() { return maturityDate_; }
     QuantLib::Real strike() { return strike_; }
-    const boost::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
+    const QuantLib::ext::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
     const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
     const QuantLib::Period& futureExpiryOffset() const { return futureExpiryOffset_; }
     const QuantLib::Calendar& offsetCalendar() const { return offsetCalendar_; }
-    const boost::optional<bool>& physicallySettled() const { return physicallySettled_; }
+    const QuantLib::ext::optional<bool>& physicallySettled() const { return physicallySettled_; }
     const QuantLib::Date& paymentDate() const { return paymentDate_; }
     //@}
 
@@ -102,7 +102,7 @@ private:
     /*! Indicates if the forward underlying is a commodity future settlement price, \c true, or a spot price \c false.
         If not explicitly set, it is assumed to be \c false.
     */
-    boost::optional<bool> isFuturePrice_;
+    QuantLib::ext::optional<bool> isFuturePrice_;
 
     /*! An explicit expiry date for the underlying future contract. This can be used if the trade references a
         future contract settlement price and the forward's maturity date does not match the future contract expiry 
@@ -114,7 +114,7 @@ private:
     QuantLib::Period futureExpiryOffset_;
     QuantLib::Calendar offsetCalendar_;
 
-    boost::optional<bool> physicallySettled_;
+    QuantLib::ext::optional<bool> physicallySettled_;
     QuantLib::Date paymentDate_;
 
     //! NDF currency, index and fixing date

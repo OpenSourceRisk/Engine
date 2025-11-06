@@ -41,11 +41,13 @@ public:
     //! Constructor
     FxDigitalBarrierOption(Envelope& env, OptionData option, BarrierData barrier, double strike, double payoffAmount,
                            const string& foreignCurrency, const string& domesticCurrency, const string& startDate = "",
-                           const string& calendar = "", const string& fxIndex = "", const string& payoffCurrency = "")
+                           const string& calendar = "", const string& fxIndex = "", const string& payoffCurrency = "",
+                           const string& fxIndexDailyLows = "", const string& fxIndexDailyHighs = "")
         : ore::data::Trade("FxDigitalBarrierOption", env),
           FxSingleAssetDerivative("", env, foreignCurrency, domesticCurrency), option_(option),
           barrier_(barrier), startDate_(startDate), calendar_(calendar), fxIndex_(fxIndex), strike_(strike),
-          payoffAmount_(payoffAmount), payoffCurrency_(payoffCurrency) {}
+          payoffAmount_(payoffAmount), payoffCurrency_(payoffCurrency), fxIndexDailyLowsStr_(fxIndexDailyLows),
+          fxIndexDailyHighsStr_(fxIndexDailyHighs) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
@@ -76,6 +78,8 @@ private:
     Real strike_;
     Real payoffAmount_;
     string payoffCurrency_;
+    std::string fxIndexDailyLowsStr_;
+    std::string fxIndexDailyHighsStr_;
 };
 } // namespace data
 } // namespace oreplus

@@ -1,0 +1,167 @@
+<CurveConfiguration>
+  <FXVolatilities>    
+    <FXVolatility>
+      <CurveId>EURGBP</CurveId>
+      <CurveDescription/>
+      <Dimension>ATM</Dimension>
+      <Expiries>
+        1Y
+      </Expiries>
+      <FXSpotID>FX/EUR/GBP</FXSpotID>
+    </FXVolatility>
+  </FXVolatilities>
+  <SwaptionVolatilities>
+    <SwaptionVolatility>
+      <CurveId>EUR_SWPTN</CurveId>
+      <CurveDescription>EUR lognormal swaption volatilities</CurveDescription>
+      <!-- ATM (Smile not yet supported) -->
+      <Dimension>ATM</Dimension>
+      <!-- Normal or Lognormal or ShiftedLognormal -->
+      <VolatilityType>Lognormal</VolatilityType>
+      <!-- Flat or Linear -->
+      <Extrapolation>Flat</Extrapolation>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Ccalendar and Business day convention for option tenor to date conversion -->
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>
+	1Y
+      </OptionTenors>
+      <SwapTenors>
+	1Y
+      </SwapTenors>
+      <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+    </SwaptionVolatility>
+    <SwaptionVolatility>
+      <CurveId>GBP_SWPTN</CurveId>
+      <CurveDescription>GBP normal swaption volatilities</CurveDescription>
+      <!-- ATM (Smile not yet supported) -->
+      <Dimension>ATM</Dimension>
+      <!-- Normal or Lognormal or ShiftedLognormal -->
+      <VolatilityType>Normal</VolatilityType>
+      <!-- Flat or Linear -->
+      <Extrapolation>Flat</Extrapolation>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Calendar and Business day convention for option tenor to date conversion -->
+      <Calendar>UK</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>
+	1Y
+      </OptionTenors>
+      <SwapTenors>
+	1Y
+      </SwapTenors>
+      <ShortSwapIndexBase>GBP-CMS-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>GBP-CMS-30Y</SwapIndexBase>
+    </SwaptionVolatility>
+
+  </SwaptionVolatilities>
+  <DefaultCurves>
+    <DefaultCurve>
+      <CurveId>BANK_SR_EUR</CurveId>
+      <CurveDescription>BANK SR CDS EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <!-- SpreadCDS, HazardRate -->
+      <Type>SpreadCDS</Type>
+      <!-- discount curve (only needed for CDS bootstrapping) -->
+      <DiscountCurve>Yield/EUR/EUR6M</DiscountCurve>
+      <DayCounter>A365</DayCounter>
+      <!-- although only needed for CDS curve, we require
+           this for HR curves too, because it's needed
+           for the XVA calculations, so we put it here -->
+      <RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+      <!-- interpolation is hard coded backward flat in hazard rate -->
+    </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>CPTY_A_SR_EUR</CurveId>
+      <CurveDescription>CPTY_A SR HR EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve/>
+      <DayCounter>A365</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
+  </DefaultCurves>
+  <YieldCurves>
+    <YieldCurve>
+      <CurveId>EUR1D</CurveId>
+      <CurveDescription>EUR discount curve bootstrapped from EONIA swap rates</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR1D/A360/1Y</Quote>
+            <!-- <Quote>ZERO/RATE/EUR/EUR1D/A360/10Y</Quote> -->
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A360</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>EUR6M</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR6M/A360/1Y</Quote>
+            <!-- <Quote>ZERO/RATE/EUR/EUR6M/A360/10Y</Quote> -->
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A360</YieldCurveDayCounter>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>GBP1D</CurveId>
+      <CurveDescription/>
+      <Currency>GBP</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/GBP/GBP1D/A365F/1Y</Quote>
+          </Quotes>
+          <Conventions>GBP-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>GBP6M</CurveId>
+      <CurveDescription/>
+      <Currency>GBP</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/GBP/GBP6M/A365F/1Y</Quote>
+          </Quotes>
+          <Conventions>GBP-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
+  </YieldCurves>
+</CurveConfiguration>

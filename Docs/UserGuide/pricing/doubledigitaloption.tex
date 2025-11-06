@@ -1,0 +1,8 @@
+\subsubsection{Double Digital Option}
+\label{pricing::doubledigitaloption}
+
+The double digital option is priced using correlated Black-Scholes processes for the two underlyings. Each process is
+calibrated to its quoted market ATM volatility. The correlation is an externally given parameter. The valuation is done
+using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is MultiAssetOption.

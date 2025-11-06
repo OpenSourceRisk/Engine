@@ -210,13 +210,19 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
     // Build the portfolio and retrieve the fixings
     p.build(engineFactory);
     m = p.fixings(today);
-
     // Check the retrieved fixings against the expected results
     auto exp = tradeTypeExpected();
     auto key = make_tuple(tradeType, tradeCase, includeSettlementDateFlows, enforcesTodaysHistoricFixings);
     if (exp.count(key) == 0) {
+        size_t mandatoryFixings = 0;
+        for (const auto& [index, requiredFixingDates] : m) {
+            for (const auto& [date, mandatoryFixing] : requiredFixingDates) {
+                if (mandatoryFixing.first)
+                    ++mandatoryFixings;
+            }
+        }
         // Expected result is no required fixings
-        BOOST_CHECK_MESSAGE(m.empty(), "Expected no required fixings for ["
+        BOOST_CHECK_MESSAGE(mandatoryFixings == 0, "Expected no required fixings for ["
                                            << tradeType << ", " << tradeCase << ", "
                                            << ore::data::to_string(includeSettlementDateFlows) << ", "
                                            << ore::data::to_string(enforcesTodaysHistoricFixings)
@@ -325,14 +331,13 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
                                 Date(1, Oct, 2018), Date(1, Sep, 2018), Date(1, Aug, 2018), Date(1, Jul, 2018),
                                 Date(1, Jun, 2018), Date(1, May, 2018), Date(1, Apr, 2018), Date(1, Mar, 2018),
                                 Date(1, Feb, 2018)};
-    set<Date> iborDates = {Date(21, Feb, 2019), Date(20, Feb, 2019), Date(19, Feb, 2019),
-                           Date(18, Feb, 2019), Date(15, Feb, 2019), Date(14, Feb, 2019)};
+    set<Date> iborDates = {Date(21, Feb, 2019), Date(20, Feb, 2019), Date(19, Feb, 2019), Date(18, Feb, 2019),
+                           Date(17, Feb, 2019), Date(16, Feb, 2019), Date(15, Feb, 2019), Date(14, Feb, 2019)};
 
     // Default for OIS dates is a lookback of 4 months on weekend only calendar => 21 Feb 2019 -> 21 Oct 2018.
-    // 21 Oct 2018 is a Sunday => 22 Oct 2018 is the start of the lookback.
     set<Date> oisDates;
-    Date oisDate(22, Oct, 2018);
-    WeekendsOnly cal;
+    Date oisDate(21, Oct, 2018);
+    NullCalendar cal;
     while (oisDate <= asof) {
         oisDates.insert(oisDate);
         oisDate = cal.advance(oisDate, 1 * Days);

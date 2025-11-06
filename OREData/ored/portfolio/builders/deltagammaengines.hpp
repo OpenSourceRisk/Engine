@@ -33,6 +33,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/utilities/log.hpp>
@@ -122,8 +123,9 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const std::string& discountCurveName,
                                                         const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const bool useFxSpot) override {
+                                                        const Date& expiryDate, const bool useFxSpot, const std::optional<Currency>&) override {
         std::vector<Time> bucketTimesDeltaGamma =
             parseListOfValues<Time>(engineParameter("BucketTimesDeltaGamma"), &parseReal);
         std::vector<Time> bucketTimesVega = parseListOfValues<Time>(engineParameter("BucketTimesVega"), &parseReal);
@@ -185,9 +187,25 @@ protected:
 
         return QuantLib::ext::make_shared<DiscountingFxForwardEngineDeltaGamma>(
             domCcy, domCcyCurve, forCcy, forCcyCurve, fx, bucketTimes, computeDelta, computeGamma, linearInZero,
-            boost::none, Date(), Date(), applySimmExemptions);
+            QuantLib::ext::nullopt, Date(), Date(), applySimmExemptions);
     }
 };
 
+//! European Swaption Engine Builder
+/*! This builder uses QuantExt::BlackStyleSwaptionEngineDeltaGamma
+    \ingroup portfolio
+ */
+class EuropeanSwaptionEngineBuilderDeltaGamma : public SwaptionEngineBuilder {
+public:
+    EuropeanSwaptionEngineBuilderDeltaGamma()
+        : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngineDeltaGamma", {"EuropeanSwaption"}) {}
+
+protected:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
+                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
+                                                const bool isAmerican, const std::string& discountCurve,
+                                                const std::string& securitySpread) override;
+};
+  
 } // namespace data
 } // namespace ore

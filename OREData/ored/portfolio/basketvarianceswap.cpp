@@ -149,7 +149,7 @@ void BasketVarianceSwap::setIsdaTaxonomyFields() {
 
     // ISDA taxonomy
     // asset class set in the base class already
-    std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
+    std::string assetClass = QuantLib::ext::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Swap");
         additionalData_["isdaSubProduct"] = string("Parameter Return Variance");

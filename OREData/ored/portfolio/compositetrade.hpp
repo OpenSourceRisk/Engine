@@ -60,9 +60,9 @@ public:
     //! Fully-specified Constructor
     CompositeTrade(const string currency, const vector<QuantLib::ext::shared_ptr<Trade>>& trades,
                    const string notionalCalculation = "", const Real notionalOverride = 0.0,
-                   const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
+                   const Envelope& env = Envelope(), const TradeActions& ta = TradeActions(), const double indexQuantity=Null<Real>())
         : Trade("CompositeTrade", env, ta), currency_(currency), notionalOverride_(notionalOverride),
-          notionalCalculation_(notionalCalculation), trades_(trades) {}
+          notionalCalculation_(notionalCalculation), trades_(trades), indexQuantity_(indexQuantity) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
@@ -96,22 +96,26 @@ public:
     //@{
     std::map<std::string, RequiredFixings::FixingDates> fixings(const QuantLib::Date& settlementDate) const override;
     std::map<AssetClass, std::set<std::string>> underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
     bool isExpired(const Date& d) const override;
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
+    virtual std::vector<TradeCashflowReportData> cashflows(const std::string& baseCurrency,
+                                                           const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                                           const std::string& configuration,
+                                                           const bool includePastCashflows) const override;
     //@}
 
 private:
 
-    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
-    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
-
     string currency_;
     Real notionalOverride_;
     string notionalCalculation_;
-    vector<QuantLib::ext::shared_ptr<Trade>> trades_;
+    mutable vector<QuantLib::ext::shared_ptr<Trade>> trades_;
     vector<Handle<Quote>> fxRates_, fxRatesNotional_;
     string portfolioId_;
     bool portfolioBasket_;
+    double indexQuantity_;
 };
 
 } // namespace data

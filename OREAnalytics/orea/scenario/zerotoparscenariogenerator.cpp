@@ -30,8 +30,8 @@ ZeroToParScenarioGenerator::ZeroToParScenarioGenerator(
     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hsg,
     const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
     const ParSensitivityInstrumentBuilder::Instruments& parInstruments)
-    : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->adjFactors(),
-                                  hsg->returnConfiguration(), hsg->labelPrefix(), hsg->generateDifferenceScenarios()) {
+    : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->returnConfiguration(),
+                                  hsg->adjFactors(), hsg->labelPrefix(), hsg->generateDifferenceScenarios()) {
 
     baseScenario_ = hsg->baseScenario();
     shiftConverter_ = QuantLib::ext::make_shared<ZeroToParShiftConverter>(parInstruments, simMarket);
@@ -49,7 +49,7 @@ QuantLib::ext::shared_ptr<Scenario> ZeroToParScenarioGenerator::next(const Date&
 
     // create a par scenario to hold the par shifts
     QuantLib::ext::shared_ptr<Scenario> parScenario =
-        addDifferenceToScenario(baseScenario_, zeroScenario, baseScenario_->asof(), baseScenario_->getNumeraire());
+        addDifferenceToScenario(baseScenario_, zeroScenario, d, baseScenario_->getNumeraire());
     parScenario->setPar(true);
 
     // get the par shifts and update the par scenario

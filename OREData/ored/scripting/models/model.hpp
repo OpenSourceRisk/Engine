@@ -29,12 +29,13 @@
 #include <qle/models/modelbuilder.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
-#include <boost/any.hpp>
+#include <ql/any.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 namespace ore {
@@ -46,8 +47,15 @@ class Model : public LazyObject {
 public:
     enum class Type { MC, FD };
 
-    struct McParams {
-        McParams() = default;
+    struct Params {
+        Params() = default;
+
+        // Shared parameters
+
+        QuantLib::SalvagingAlgorithm::Type salvagingAlgorithm = SalvagingAlgorithm::None;
+
+        // MC - related parameters
+
         Size seed = 42;
         Size trainingSeed = 43;
         Size trainingSamples = Null<Size>();
@@ -59,6 +67,14 @@ public:
         QuantLib::SobolBrownianGenerator::Ordering sobolOrdering = QuantLib::SobolBrownianGenerator::Steps;
         QuantLib::SobolRsg::DirectionIntegers sobolDirectionIntegers = QuantLib::SobolRsg::DirectionIntegers::JoeKuoD7;
         QuantLib::Real regressionVarianceCutoff = Null<QuantLib::Real>();
+
+        // FD - related parameters
+
+        Real mesherEpsilon = 1E-4;
+        Real mesherScaling = 1.5;
+        Real mesherConcentration = 0.1;
+        Size mesherMaxConcentratingPoints = 9999;
+        bool staticMesher = false;
     };
 
     explicit Model(const Size n) : n_(n) {}
@@ -66,6 +82,9 @@ public:
 
     // model type
     virtual Type type() const = 0;
+
+    // model params
+    virtual const Params& params() const = 0;
 
     // number of paths
     virtual Size size() const { return n_; }
@@ -100,7 +119,7 @@ public:
 
     // refdate <= obsdate required
     virtual RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                               const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                               const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                                const RandomVariable& addRegressor2) const = 0;
 
     /* eval index at (past or future) obsdate:
@@ -143,14 +162,14 @@ public:
     virtual void resetNPVMem() {}
 
     // additional results provided by the model
-    const std::map<std::string, boost::any>& additionalResults() const { return additionalResults_; }
+    const std::map<std::string, QuantLib::ext::any>& additionalResults() const { return additionalResults_; }
 
 protected:
     // default implementation lazy object interface
     void performCalculations() const override {}
 
     // map with additional results provided by this model instance
-    mutable std::map<std::string, boost::any> additionalResults_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
 
 private:
     // size of random variables within model

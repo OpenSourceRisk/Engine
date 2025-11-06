@@ -1,8 +1,7 @@
 \subsubsection{Ascot}
 \label{ss:ascot}
 
-An Ascot is set up using an {\tt AscotData} block as shown in listing
-\ref{lst:ascotdata}. The bond details are read from reference data in this case.
+{\bf Payoff}
 
 An Ascot or a Convertible Bond Option is an American style  option to buy back a convertible bond. The buyer of a Call Ascot can exercise the deal and get the underlying bond in
 exchange for paying the strike.
@@ -24,6 +23,10 @@ $$
 Strike = bondQuantity \cdot (upfrontPayment + assetLeg - redemptionLeg) - fundingLeg
 $$
 
+{\bf Input}
+
+An Ascot is set up using an {\tt AscotData} block as shown in listing
+\ref{lst:ascotdata}. The bond details are read from reference data in this case.
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}

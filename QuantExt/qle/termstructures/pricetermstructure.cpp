@@ -54,13 +54,14 @@ void PriceTermStructure::checkRange(Time t, bool extrapolate) const {
     TermStructure::checkRange(t, extrapolate);
 }
 
-DerivedPriceQuote::DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs) : priceTs_(priceTs) {
+DerivedPriceQuote::DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs, const QuantLib::Date& date) : priceTs_(priceTs), date_(date) {
     registerWith(priceTs_);
 }
 
 Real DerivedPriceQuote::value() const {
     QL_REQUIRE(isValid(), "Invalid DerivedPriceQuote");
-    return priceTs_->price(0, true);
+    Real result = (date_ != QuantLib::Date() ?  priceTs_->price(date_, true) :  priceTs_->price(0, true));
+    return result;
 }
 
 bool DerivedPriceQuote::isValid() const { return !priceTs_.empty(); }

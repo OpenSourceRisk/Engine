@@ -54,7 +54,7 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
     const string& swapIndexBase, const vector<string>& smileOptionTenors, const vector<string>& smileUnderlyingTenors,
     const vector<string>& smileSpreads,
-    const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
+    const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel), allowSmile_(true),
       requireSwapIndexBases_(false), qualifier_(qualifier), dimension_(dimension), volatilityType_(volatilityType),
@@ -93,11 +93,21 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     if (qualifier_.empty()) {
         qualifier_ = ccyFromSwapIndexBase(proxyTargetSwapIndexBase_);
     }
-
-    populateRequiredCurveIds();
 }
 
-void GenericYieldVolatilityCurveConfig::populateRequiredCurveIds() {
+void GenericYieldVolatilityCurveConfig::populateRequiredIds() const {
+    if (!shortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(shortSwapIndexBase_);
+    if (!swapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(swapIndexBase_);
+    if (!proxySourceShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceShortSwapIndexBase_);
+    if (!proxySourceSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxySourceSwapIndexBase_);
+    if (!proxyTargetShortSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetShortSwapIndexBase_);
+    if (!proxyTargetSwapIndexBase_.empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwapIndex].insert(proxyTargetSwapIndexBase_);
     if (!proxySourceCurveId_.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(
             parseCurveSpec(proxySourceCurveId_)->curveConfigID());
@@ -177,8 +187,6 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
                    "GenericYieldVolatilityCurveConfig::fromXML(): ProxyConfig requires child node 'Target'");
         proxyTargetShortSwapIndexBase_ = XMLUtils::getChildValue(target, "ShortSwapIndexBase");
         proxyTargetSwapIndexBase_ = XMLUtils::getChildValue(target, "SwapIndexBase");
-
-        populateRequiredCurveIds();
 
     } else {
         // read in quote-based config

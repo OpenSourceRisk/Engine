@@ -51,13 +51,15 @@ public:
     BlackVarianceSurfaceMoneyness(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false);
+                                  const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false, 
+                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
 
     //! Moneyness variance surface with a fixed reference date.
     BlackVarianceSurfaceMoneyness(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
                                   const std::vector<Time>& times, const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false);
+                                  const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false, 
+                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
 
     //! \name TermStructure interface
     //@{
@@ -83,7 +85,7 @@ public:
 
     //! \name Inspectors
     //@{
-    std::vector<QuantLib::Real> moneyness() const { return moneyness_; }
+    std::vector<Real> moneyness() const { return moneyness_; }
     //@}
 
 protected:
@@ -93,6 +95,7 @@ protected:
     std::vector<Time> times_;
     std::vector<Real> moneyness_;
     bool flatExtrapMoneyness_;
+    BlackVolTimeExtrapolation timeExtrapolation_;
 
 private:
     // Shared initialisation
@@ -125,14 +128,16 @@ public:
                                       const std::vector<Real>& moneyness,
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                       const DayCounter& dayCounter, bool stickyStrike = false,
-                                      bool flatExtrapMoneyness = false);
+                                      bool flatExtrapMoneyness = false, 
+                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
 
     //! Spot moneyness variance surface with a fixed reference date.
     BlackVarianceSurfaceMoneynessSpot(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
                                       const std::vector<Time>& times, const std::vector<Real>& moneyness,
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                       const DayCounter& dayCounter, bool stickyStrike = false,
-                                      bool flatExtrapMoneyness = false);
+                                      bool flatExtrapMoneyness = false, 
+                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
 
 private:
     virtual Real moneyness(Time t, Real strike) const override;
@@ -148,7 +153,8 @@ public:
                                          const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
                                          const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
-                                         bool flatExtrapMoneyness = false);
+                                         bool flatExtrapMoneyness = false, 
+                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
 
     //! Forward moneyness variance surface with a fixed reference date.
     BlackVarianceSurfaceMoneynessForward(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
@@ -156,7 +162,8 @@ public:
                                          const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
                                          const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
-                                         bool flatExtrapMoneyness = false);
+                                         bool flatExtrapMoneyness = false, 
+                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
 
 private:
     // Shared initialisation

@@ -170,13 +170,14 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     // check YoY cap NPV against pure QL pricing
     Schedule schedule(startDate, endDate, 1 * Years, TARGET(), Following, Following, DateGeneration::Forward, false);
     Handle<YieldTermStructure> nominalTs = market->discountCurve("EUR");
+    QL_DEPRECATED_DISABLE_WARNING
     Leg yyLeg =
         yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months))
             .withNotionals(10000000)
             .withPaymentDayCounter(ActualActual(ActualActual::ISDA))
             .withPaymentAdjustment(Following)
             .withRateCurve(nominalTs);
-
+    QL_DEPRECATED_ENABLE_WARNING
     QuantLib::ext::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs = market->yoyCapFloorVol("EUHICPXT");

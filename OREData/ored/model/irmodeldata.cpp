@@ -49,6 +49,10 @@ CalibrationType parseCalibrationType(const string& s) {
         return CalibrationType::Bootstrap;
     else if (boost::algorithm::to_upper_copy(s) == "BESTFIT")
         return CalibrationType::BestFit;
+    else if (boost::algorithm::to_upper_copy(s) == "FIRSTBESTFITTHENBOOTSTRAP")
+        return CalibrationType::FirstBestFitThenBootstrap;
+    else if (boost::algorithm::to_upper_copy(s) == "STATISTICALWITHRISKNEUTRALVOLATILITY")
+        return CalibrationType::StatisticalWithRiskNeutralVolatility;
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationType::None;
     else
@@ -60,6 +64,8 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationType& type) {
         oss << "Bootstrap";
     else if (type == CalibrationType::BestFit)
         oss << "BestFit";
+    else if (type == CalibrationType::FirstBestFitThenBootstrap)
+        oss << "FirstBestFitThenBootsrap";
     else if (type == CalibrationType::None)
         oss << "None";
     else
@@ -72,6 +78,8 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
         return CalibrationStrategy::CoterminalATM;
     else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
         return CalibrationStrategy::CoterminalDealStrike;
+    else if (boost::algorithm::to_upper_copy(s) == "DELTAGAMMAADJUSTED")
+        return CalibrationStrategy::DeltaGammaAdjusted;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGATM")
         return CalibrationStrategy::UnderlyingATM;
     else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
@@ -79,7 +87,7 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationStrategy::None;
     else
-        QL_FAIL("Calibration strategy " << s << " not recognized");
+        QL_FAIL("calibration strategy '" << s << "' not recognized.");
 }
 
 std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
@@ -87,6 +95,8 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
         oss << "CoterminalAtm";
     else if (type == CalibrationStrategy::CoterminalDealStrike)
         oss << "CoterminalDealStrike";
+    else if (type == CalibrationStrategy::DeltaGammaAdjusted)
+        oss << "DeltaGammaAdjusted";
     else if (type == CalibrationStrategy::UnderlyingATM)
         oss << "UnderlyingAtm";
     else if (type == CalibrationStrategy::UnderlyingDealStrike)

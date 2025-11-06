@@ -60,9 +60,9 @@ as 'Optional', then it may be excluded or included and left blank.
 \item Quotes: forward price quotes. These can be a futures price or forward points.
 \item DayCounter: The day count basis used internally by the curve to calculate the time between dates.
 \item InterpolationMethod [Optional]: The variable on which the interpolation is performed. The allowable values are
-Linear, LogLinear, Cubic, Hermite, LinearFlat, LogLinearFlat, CubicFlat, HermiteFlat, BackwardFlat. This is different to yield curves above in that Flat versions
+Linear, LogLinear, Cubic, Hermite, LinearFlat, LogLinearFlat, CubicFlat, HermiteFlat, BackwardFlat, ForwardFlat. This is different to yield curves above in that Flat versions
 of the standard methods are defined, with each of these if there is no Spot price than any extrapolation between $T_0$ and the
-first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$). 
+first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$).
 If the element is omitted or left blank, then it defaults to \emph{Linear}.
 \item Conventions [Optional]: The conventions to use, if omited it is assumed that these quotes are Outright prices.
 \item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
@@ -89,7 +89,7 @@ Alternatively commodity curves can be set up as a commodity curve times the rati
 \label{lst:commodity_curve_configuration_3}
 \end{longlisting}
 
-Commodity curves may also be set up using a base future price curve and a set of future basis quotes to give an outright price curve. There are a number of options here depending on whether the base future and basis future are averaging or not averaging. Whether or not the base future and basis future is averaging is determined from the conventions supplied in the \lstinline!BasePriceConventions! and \lstinline!BasisConventions! fields. 
+Commodity curves may also be set up using a base future price curve and a set of future basis quotes to give an outright price curve. There are a number of options here depending on whether the base future and basis future are averaging or not averaging. Whether or not the base future and basis future is averaging is determined from the conventions supplied in the \lstinline!BasePriceConventions! and \lstinline!BasisConventions! fields.
 \begin{itemize}
 \item
 The base future is not averaging and the basis future is not averaging. The commodity curve that is built gives the outright price of the non-averaging future. An example of this is the CME Henry Hub future contract, symbol NG, and the various locational gas basis future contracts, e.g.\ ICE Waha Basis Future, symbol WAH. Listing \ref{lst:commodity_crv_config_ice_waha} demonstrates an example set-up for this curve. The curve that is built will give the ICE Waha outright price on the basis contract's expiry dates.

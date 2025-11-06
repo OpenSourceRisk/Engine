@@ -1,0 +1,23 @@
+\subsubsection{Forward Rate Agreement}
+\label{pricing:ir_fra}
+
+The NPV of a Forward Rate Agreement, from the point of view of the party 
+receiving the fixed predetermined rate, assuming payments are made at time $t_2$:
+$$
+\NPV= N\cdot (c - f(t_1,t_2))\cdot \delta (t_1, t_2) \cdot P(t_2)         
+$$
+where:
+\begin{itemize}
+\item $c$: the predetermined fixed forward interest rate, set in the terms 
+of the FRA (at $t_0$) to be received at time $t_2$
+\item $f(t_1,t_2)$: the forward projected IBOR rate for the period from $t_1$ 
+to $t_2$, to be paid at $t_2$
+\item $\delta(t_1, t_2)$: the daycount fraction in years for the period from $t_1$ 
+to $t_2$
+\item $P(t_2)$: the discount factor for time $t_2$
+\end{itemize}
+
+Note that market practice dictates the payments are made in $t_1$ by 
+computing the cash flow in $t_2$ and discounting it to $t_1$. For pricing 
+purposes, this has practically no impact - see 
+(Lichters, Stamm, \& Gallagher, 2015) Ch. 11.1.

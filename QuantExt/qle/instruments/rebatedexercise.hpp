@@ -26,7 +26,7 @@
 #include <ql/exercise.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 
 namespace QuantExt {
 

@@ -42,14 +42,14 @@ CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { trade
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
                                  const string& currency, Real quantity, TradeStrike strike,
-                                 const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
+                                 const QuantLib::ext::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
     : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, quantity, strike),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityOption";
 }
 
 void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
-
+    
     // ISDA taxonomy, assuming Commodity follows the Equity template
     additionalData_["isdaAssetClass"] = std::string("Commodity");
     additionalData_["isdaBaseProduct"] = std::string("Option");
@@ -61,12 +61,7 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = currency_;    
 
-    // Checks
-    QL_REQUIRE((strike_.value() > 0) || close_enough(strike_.value(),0.0), "Commodity option requires a non-negative strike");
-    if (close_enough(strike_.value(), 0.0)) {
-        strike_.setValue(0.0);
-    }
-
+    
     // This is called in VanillaOptionTrade::build(), but we want to call it first here,
     // in case the build fails before it reaches VanillaOptionTrade::build()
     VanillaOptionTrade::setNotionalAndCurrencies();
@@ -99,13 +94,24 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
         // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
         // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
         auto et = parseExerciseType(option_.style());
-        if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
-            forwardDate_ = expiryDate;
+        if (QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+            if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+                forwardDate_ = expiryDate;
+            } else if (et == Exercise::American && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+                forwardDate_ = expiryDate;
+                assetName_ += "#" + ore::data::to_string(forwardDate_);
+            }
         }
-
     }
 
     VanillaOptionTrade::build(engineFactory);
+
+    if (assetName_.find("#") != std::string::npos){
+        std::string forwardDateString = splitByLastDelimiter(assetName_, "#");
+        bool validDate = tryParse<Date>(forwardDateString, forwardDate_, parseDate);
+        if (validDate)
+        assetName_= removeAfterLastDelimiter(assetName_, "#");
+    }
 
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
@@ -113,6 +119,7 @@ void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
                                 << " and strike " << strike_.value() << " is "
                                 << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_.value()));
     }
+    
 }
 
 std::map<AssetClass, std::set<std::string>>
@@ -134,7 +141,7 @@ void CommodityOption::fromXML(XMLNode* node) {
     strike_.fromXML(commodityNode);
     quantity_ = XMLUtils::getChildValueAsDouble(commodityNode, "Quantity", true);
 
-    isFuturePrice_ = boost::none;
+    isFuturePrice_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(commodityNode, "IsFuturePrice"))
         isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
 

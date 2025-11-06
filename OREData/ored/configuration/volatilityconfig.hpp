@@ -26,7 +26,6 @@
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/exercise.hpp>
-
 namespace ore {
 namespace data {
 
@@ -35,6 +34,8 @@ namespace data {
 */
 class VolatilityConfig : public ore::data::XMLSerializable {
 public:
+    enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
+
     VolatilityConfig(std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
 
     void fromXMLNode(ore::data::XMLNode* node);
@@ -47,6 +48,7 @@ private:
     Calendar calendar_;
     string calendarStr_;
     QuantLib::Natural priority_;
+    
 };
 
 bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2);
@@ -113,6 +115,7 @@ public:
     //@{
     const MarketDatum::QuoteType& quoteType() const { return quoteType_; }
     const QuantLib::Exercise::Type& exerciseType() const { return exerciseType_; }
+    VolatilityType volType() const { return volType_; };
     //@}
 
     //! \name Serialisation
@@ -124,6 +127,8 @@ public:
 private:
     MarketDatum::QuoteType quoteType_;
     QuantLib::Exercise::Type exerciseType_;
+    string volTypeStr_;
+    VolatilityType volType_ = VolatilityType::Lognormal;
 };
 
 /*! Volatility configuration for a single constant volatility
@@ -145,6 +150,7 @@ public:
     //! \name Inspectors
     //@{
     const std::string& quote() const;
+    const std::string& shiftQuote() const { return shiftQuote_; }
     //@}
 
     //! \name Serialisation
@@ -155,6 +161,7 @@ public:
 
 private:
     std::string quote_;
+    std::string shiftQuote_;
 };
 
 /*! Volatility configuration for a 1-D volatility curve
@@ -165,22 +172,23 @@ public:
     //! Default constructor
     VolatilityCurveConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        bool enforceMontoneVariance = true, std::string calendarStr = std::string(),
-        QuantLib::Natural priority = 0);
+        bool enforceMontoneVariance = true, const std::string& calendarStr = std::string(),
+        QuantLib::Natural priority = 0, const std::string& shiftQuote = std::string());
 
     //! Explicit constructor
     VolatilityCurveConfig(const std::vector<std::string>& quotes, const std::string& interpolation,
         const std::string& extrapolation,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        bool enforceMontoneVariance = true, std::string calendarStr = std::string(),
-        QuantLib::Natural priority = 0);
+        bool enforceMontoneVariance = true, const std::string& calendarStr = std::string(),
+        QuantLib::Natural priority = 0, const std::string& shiftQuote = std::string());
 
     //! \name Inspectors
     //@{
     const std::vector<std::string>& quotes() const;
     const std::string& interpolation() const;
     const std::string& extrapolation() const;
+    const std::string& shiftQuote() const;
     bool enforceMontoneVariance() const;
     //@}
 
@@ -194,6 +202,7 @@ private:
     std::vector<std::string> quotes_;
     std::string interpolation_;
     std::string extrapolation_;
+    std::string shiftQuote_;
     bool enforceMontoneVariance_;
 };
 
@@ -213,7 +222,8 @@ public:
         const std::string& strikeExtrapolation,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
+        std::string calendarStr = std::string(), QuantLib::Natural priority = 0, 
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -221,6 +231,7 @@ public:
     const std::string& strikeInterpolation() const;
     bool extrapolation() const;
     const std::string& timeExtrapolation() const;
+    bool timeExtrapolationVariance() const;
     const std::string& strikeExtrapolation() const;
     //@}
 
@@ -245,6 +256,7 @@ private:
     bool extrapolation_;
     std::string timeExtrapolation_;
     std::string strikeExtrapolation_;
+    bool timeExtrapolationInVariance_;
 };
 
 /*! Volatility configuration for a 2-D absolute strike volatility surface
@@ -259,12 +271,13 @@ public:
 
     //! Explicit constructor
     VolatilityStrikeSurfaceConfig(const std::vector<std::string>& strikes, const std::vector<std::string>& expiries,
-        const std::string& timeInterpolation, const std::string& strikeInterpolation,
-        bool extrapolation, const std::string& timeExtrapolation,
-        const std::string& strikeExtrapolation,
-        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
-        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
+                                  const std::string& timeInterpolation, const std::string& strikeInterpolation,
+                                  bool extrapolation, const std::string& timeExtrapolation,
+                                  const std::string& strikeExtrapolation,
+                                  MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+                                  QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+                                  std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
+                                  bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -307,7 +320,8 @@ public:
         const std::string& atmDeltaType = "", bool futurePriceCorrection = true,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
+        std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -359,7 +373,8 @@ public:
         bool futurePriceCorrection = true,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
+        std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{
@@ -406,7 +421,8 @@ public:
         QuantLib::Real beta = 0.0, const std::string& maxTenor = "",
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        std::string calendarStr = std::string(), QuantLib::Natural priority = 0);
+        std::string calendarStr = std::string(), QuantLib::Natural priority = 0,
+        bool timeExtrapolationInVariance = true);
 
     //! \name Inspectors
     //@{

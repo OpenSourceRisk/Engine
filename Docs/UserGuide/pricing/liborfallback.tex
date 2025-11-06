@@ -1,0 +1,66 @@
+This section describes the handling of coupons referencing a Libor rate after its cessation date.
+
+\subsection{Base Line}
+
+The publication of fixings for a number of Libor indices will cease at certain dates. In addition we expect that market
+quotes that we use to build forward curves for these indices will loose liquidity and eventually no longer provided as
+well. The system contains fallbacks addressing both points to enable seamless processing of coupons without the
+nececssity to change the trade representation from ``Ibor'' to the correpsonding ``OIS'' legs encoding the fallback
+conventions.
+
+References: \cite{isda_entrypoint}, \cite{isda_user_guide}, \cite{isda_product_table}, \cite{bbg_1}, \cite{isda_1},
+\cite{fca_1}, \cite{isda_2}, \cite{isda_3}.
+
+\subsection{Standard Libor Coupon Pricing}
+
+As long as the sytem's evaluation date lies strictly before an Libor index cessation date, nothing changes, i.e. we use
+the historical fixings from the usual data feeds and forward curve built from the usual market quotes. As soon as the
+system's evaluation date lies on or after an Libor index cessation date, the following fallback handling kicks in.
+
+\begin{itemize}
+\item If the coupon fixing date lies earlier than the index cessation date, the usual ``old'' published Libor fixing is
+  used.
+\item If the coupon fixing date lies on or after the index cessation date, a fallback fixing is computed over the
+  relevant interest rate period of the original Libor index with a lookback of 2 business days. The fallback fixing is
+  derived from daily fixings of the fallback overnight index (e.g. SOFR for USD Libor, SONIA for GBP Libor etc.) and a
+  defined fallback spread specific to the index.
+\end{itemize}
+
+Notice that due to the nature of the fallback rate calculation the value is only known for sure at the end of the
+interest rate period. This is opposed to the old Libor fixing which is known in advance of the interest rate period of
+the coupon on the fixing date.
+
+Before the fallback rate is fully determined at the end of the interest rate period it comprises both known, historical
+overnight fixings and projected overnight fixings. Since the projections are computed on the associated index forward
+curve they will change every day and therefore the estimation of the fallback fixing will change as well from day to
+day, even if the original Libor index fixing date lies in the past.
+
+\subsection{Non-Standard Instrument Pricing}
+
+For all non-standard instruments referencing Libor, e.g. swaps referencing Libor in-arrears, caps / floors on Libor,
+swaptions on Libor, exotics like RPAs on Libor swaps we recommend to change the trade representation so that it
+references the fallback overnight index directly and includes the fallback spread. This ensures that all features of the
+trade are accurately taken into account in the pricers.
+
+If the trade representation is not amended, the instrument pricing will still work, but an approximation error will be
+introduced. As an example consider a cap / floor:
+
+\begin{itemize}
+\item Without amending the trade representation: The cap payoff is known at the Libor fixing date, before that the
+  projected Libor rate based on the overnight curve and the spread together with the ``classic'' Black pricer is used to
+  price the cap, the variance is measured from eval date to Libor fixing date.
+\item With amended trade representation: The cap payoff is known at the end of the Libor interest rate period. The
+  pricing is done as it is implemented for OIS coupons with global cap within the specialized pricer for that.
+\end{itemize}
+
+\subsection{Sensitivity Analysis}
+
+Trades referencing a Libor rate will show sensitivities either on the Libor tenor or the underlying overnight fallback
+index depending on the system configuration. The default configuration is the former, i.e. sensitivities stay on the
+original Libor tenor although the rate estimation is done on the fallback overnight index forward curve.
+
+Trades that are amended, i.e. referencing the fallback overnight index directly will show sensitivities on the overnight
+index in any case, just as any other ``usual'' trade referencing overnight indices.
+
+
+

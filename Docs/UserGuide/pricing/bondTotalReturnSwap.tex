@@ -1,0 +1,124 @@
+\subsubsection{Bond Total Return Swap}
+
+
+A total return swap is a derivative contract entered at time $t$ in
+which one counterparty pays out the total returns of an underlying
+asset and receives a regular fixed or floating cash flow from the
+other counterparty. In this section total return swaps with underlying
+bond are described. The total return of the bond is comprised of
+%
+\begin{itemize}
+\item coupon, redemption and amortization payments of the bond,
+  including  recovery payments in case of default
+\item compensation payments that reflect changes of the clean bond
+  value along the TRS schedule.
+\end{itemize}
+Let $T$ denote the maturity of the underlying bond. $P(t_1,t_2)$,
+$t_1\leq t_2$ is a discount factor from $t_2$ to $t_1$. To highlight
+that $P$ belongs to a certain curve a subscript with the curve's name
+will be added, e.g.$P_{BRY}$ is the discount factor corresponding to
+the Bond Reference Yield curve. For the purpose of this description
+notional is assumed to be $1$. Furthermore for the sake of simplicity
+of this description we assume that the swap is not composite, i.e. the
+return is paid in the bond currency.
+
+Hence the value of the ordinary bond (with payment schedule
+$\{t_i\}_i$, coupons $c_{t_i}$ and assuming notional-recovery) in Bond
+currency is given by
+\begin{equation}
+V(t)=\sum_{t_i>t}c_{t_i}{\bar P}(t,t_i)+{\bar P}(t,T)+R(t,T)
+\label{bondprice}
+\end{equation}
+where 
+\begin{itemize}
+\item $\bar{P}(t,t_i)=P_Y(t,t_i)\cdot S(t,t_i)$ is
+  the combined discount factor that accounts for reference yield,
+  bond specific liquidity and  potential default, with
+  $P_Y(t,t_i)=P_{BRY}(t,t_i)\cdot P_L(t,t_i)$ 
+\item $P_{BRY}(t,t_i)$ is the discount factor of the chosen bond reference
+  yield curve 
+\item $P_L(t,t_i)$ is the discount factor reflecting a
+  bond-specific liquidity spread adjustment $z_i$ to the reference
+  yield curve  above, i.e.~$P_L(t,t_i)=\exp(-z_i(t-t_i))$ where $z_i$
+  may also be constant/flat
+\item $S(t_1,t_2)$ is the survival
+  probability between $t_1$ and $t_2$.
+\item $R(t,T)$ reflects face-value recovery between $t$ and
+  $T$: 
+  $$R(t,T)=R\int_{t}^T\rho(s)\,P_{Y}(t,s) \,ds$$ 
+  where $\rho$ is the time-density of default and  
+  $P_Y(t,t_i)=P_{BRY}(t,t_i)\cdot P_L(t,t_i)$.
+\end{itemize}
+Note that the liquidity spread adjustment factor $P_L(t,t_i)$  above
+is used to match quoted prices of liquid bonds, given the bond
+reference yield curve $P_{BRY}(t,t_i)$ and the bond survival
+probability curve $S(t,t_i)$. 
+
+%
+\medskip
+In the pricing of the TRS we will also encounter the valuation of a
+\emph{restricted bond}, i.e.~a bond whose cashflows are restricted to
+occur after a certain time $T_f$.
+Today's price of the restricted default-able bond is
+$$
+V_{T_f}(t)=\sum_{T_f<t_i<T} c_{t_i}
+\bar P(t,t_i)+\bar P(t,T)+R(T_f,T).
+$$
+where $R(T_f,T)$ reflects face-value recovery between $T_f$ and
+$T$: 
+$$
+R(T_f,T)=R\int_{T_f}^T\rho(s)\,P_{Y}(T_f,s)\,ds
+$$
+%
+To compute the change of bond value between $t$ and $T_f$ we must
+forecast the value of the bond at the future time $T_f$,  
+this is similar to the valuation of forward bonds,
+section~\ref{forwardBond}.
+
+In the multicurve framework the following discount curves will be relevant:
+\begin{itemize}
+\item  $P_{Y}$: curve for discounting the bond cashflows, typically
+  a Repo curve
+\item $P_{D}$: the curve used for discounting derivative cash flows
+  taking the CSA currency into account, see section \ref{sec:curves}
+\end{itemize}
+
+The discounted compensation payment for the time interval $[t_n,t_{n+1}]$
+is given by
+\begin{align*}
+  C(t_n,t_{n+1})&=\left(\frac{V_{t_{n+1}}(t)}{P_{Y}(t,t_{n+1})} -AccruedAmount(t_{n+1})\right) \times P_{D}(t,t_{n+1}) \\
+                &-\left(\frac{V_{t_{n}}(t)}{P_{Y}(t,t_{n})} -AccruedAmount(t_{n})\right) \times P_{D}(t,t_{n+1})
+\end{align*}
+This means we compute clean Bond prices as of both observation
+dates at period start and end (this is achieved by compouding the
+time-t prices to the respective period dates using the Bond yield
+curve);  the cash flow at period end is then given by the clean price 
+difference, and the cash flow is finally discounted to time $t$ using 
+the derivative discount curve.
+
+In case dirty instead of clean prices are usd to compute the compensation payments the above formula is amended in the
+obvious way, in this case we do not subtract the accrued amount as of $t_{n+1}$ resp. $t_{n}$.
+
+\medskip
+The NPV of the long derivative contract is then given by
+%
+\begin{align*}
+NPV(t)&=\sum_{n}C(t_n,t_{n+1})+V'(t)-NPV_{FundingLeg}(t).
+\end{align*}
+where 
+\begin{itemize}
+\item $\{t_n\}_n$ is the schedule of the compensation
+payments;
+\item $V'(t)$ is the value of the bond cash flows as in
+\eqref{bondprice} but replacing $P_Y(t,t_i)\rightarrow
+P_D(t,t_i)$ in the dicount factors $\bar{P}(t,t_i)$
+ since we are valuing the bond cash flows
+now in a derivative context, i.e. $\bar{P}(t,t_i) \rightarrow
+P_D(t,t_i)\,S(t,t_i)$ still taking potential default into account; if the bond maturity is later than the swap maturity,
+cashflows after the swap maturity are excluded from the valuation and the recovery value is only computed until the swap
+maturity in this context.
+\item $NPV_{FundingLeg}(t)$ is the value of the TRS pay leg which is
+ assumed here to be  a vanilla fixed or floating leg. 
+\end{itemize}
+
+

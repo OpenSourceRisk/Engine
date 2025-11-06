@@ -41,8 +41,11 @@ public:
         std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::Instrument>> parHelpers_;
         //! par helpers: IR cap / floors
         std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::CapFloor>> parCaps_;
+        std::map<ore::analytics::RiskFactorKey, QuantLib::ext::shared_ptr<QuantLib::Swap>> oisParCaps_;
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YieldTermStructure>> parCapsYts_;
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::OptionletVolatilityStructure>> parCapsVts_;
+
+        
         //! par helpers: YoY cap / floors
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YieldTermStructure>> parYoYCapsYts_;
         std::map<ore::analytics::RiskFactorKey, QuantLib::Handle<QuantLib::YoYInflationIndex>> parYoYCapsIndex_;
@@ -104,7 +107,7 @@ private:
             std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve = "",
             const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
-    //! Create Basis Swap for implying par rate sensitivity from zero rate sensitivity
+    //! Create in-ccy Tenor Basis Swap for implying par rate sensitivity from zero rate sensitivity
     std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
     makeTenorBasisSwap(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy,
                        std::string receiveIndexName, std::string payIndexName, std::string yieldCurveName,
@@ -113,11 +116,27 @@ private:
                        std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve = "",
                        const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
+    //! Create BMA Basis Swap for implying par rate sensitivity from zero rate sensitivity
+    std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
+    makeBMABasisSwap(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                     std::string ccy, std::string indexName, std::string bmaIndexName, std::string yieldCurveName,
+                     std::string equityForecastCurveName, QuantLib::Period term,
+                     const QuantLib::ext::shared_ptr<ore::data::Convention>& conventions, const bool singleCurve,
+                     std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
+                     std::set<std::string>& removeTodaysFixingIndices, const std::string& expDiscountCurve = "",
+                     const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
+
     //! Create Cap/Floor QuantLib::Instrument for implying flat vol sensitivity from optionlet vol sensitivity
     QuantLib::ext::shared_ptr<QuantLib::CapFloor> makeCapFloor(
         const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy, std::string indexName, QuantLib::Period term, double strike,
         bool generatePillar, // isAtm ?
         std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "",
+        const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
+
+    //! Create Cap/Floor QuantLib::Instrument for implying flat vol sensitivity from optionlet vol sensitivity
+    QuantLib::ext::shared_ptr<QuantLib::Swap> makeOisCapFloor(
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& ccy, const std::string& indexName, const QuantLib::Period&  term,  const double strike,
+        const Period& rateCompPeriod,  const bool isAtm, std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, const std::string& expDiscountCurve = "",
         const std::string& marketConfiguration = ore::data::Market::defaultConfiguration) const;
 
     //! Create Cross Ccy Basis Swap for implying par rate sensitivity from zero rate sensitivity

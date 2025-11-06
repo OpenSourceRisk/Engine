@@ -1,0 +1,17 @@
+\subsubsection{American FX Option}
+\label{pricing:fx_americanoption}
+
+Vanilla American FX Options can be either priced
+\begin{itemize}
+\item approximately using the Barone-Adesi and Whaley model with
+time-independent deal strike volatility. See Section \ref{models:barone-adesi}, or
+\item numerically using Finite Difference Methods with the Black-Scholes
+framework and time-dependent deal strike volatility. Parameters are for setting
+the grid size and damping steps to limit the expansion of the grid.
+For discretization in time, number of grid points is scaled by bucketed expiry of the deal.
+For discretization in FX spot, there is no scaling.
+Damping steps, where Implicit Euler Scheme is used, are added to the beginning
+of discretization in time when the model rolls back from option maturity.
+
+Note that the current implementation assumes payoff at exercise.
+\end{itemize}

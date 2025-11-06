@@ -48,7 +48,7 @@ public:
                                const Date& protectionStart, const Date& protectionEnd, const std::string& creditCurveId,
                                const std::string& issuerId = "", const bool settlesAccrual = true,
                                const Real fixedRecoveryRate = Null<Real>(),
-                               const boost::optional<ore::data::OptionData>& optionData = boost::none)
+                               const QuantLib::ext::optional<ore::data::OptionData>& optionData = QuantLib::ext::nullopt)
         : Trade("RiskParticipationAgreement", env), underlying_(underlying), tlockData_(ore::data::TreasuryLockData()),
           protectionFee_(protectionFee), participationRate_(participationRate), protectionStart_(protectionStart),
           protectionEnd_(protectionEnd), creditCurveId_(creditCurveId), issuerId_(issuerId),
@@ -67,7 +67,7 @@ public:
     //! \name Inspectors
     //@{
     const std::vector<ore::data::LegData>& underlying() const { return underlying_; }
-    const boost::optional<ore::data::OptionData>& optionData() const { return optionData_; }
+    const QuantLib::ext::optional<ore::data::OptionData>& optionData() const { return optionData_; }
     const ore::data::TreasuryLockData& tlockData() const { return tlockData_; }
     const std::vector<ore::data::LegData>& protectionFee() const { return protectionFee_; }
     Real participationRate() const { return participationRate_; }
@@ -95,7 +95,7 @@ private:
     std::string creditCurveId_, issuerId_;
     bool settlesAccrual_;
     Real fixedRecoveryRate_;
-    boost::optional<ore::data::OptionData> optionData_;
+    QuantLib::ext::optional<ore::data::OptionData> optionData_;
     bool nakedOption_;
 };
 

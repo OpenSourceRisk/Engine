@@ -34,12 +34,10 @@ CommodityForward::CommodityForward(const QuantLib::ext::shared_ptr<CommodityInde
       strike_(strike), physicallySettled_(physicallySettled), paymentDate_(paymentDate), payCcy_(payCcy),
       fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
-    QL_REQUIRE(quantity_ > 0, "Commodity forward quantity should be positive: " << quantity);
-    QL_REQUIRE(strike_ > 0 || close_enough(strike_, 0.0), "Commodity forward strike should be greater than or equal to 0: " << strike);
-
     if (physicallySettled_) {
         QL_REQUIRE(paymentDate_ == Date(), "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
                                                                               ") should not be provided for physically settled commodity forwards.");
+        QL_REQUIRE(fxIndex_ == nullptr, "CommodityForward: settlement data should not be provided for physically settled commodity forwards.");
     }
 
     if (!physicallySettled_ && paymentDate_ != Date()) {
@@ -56,6 +54,7 @@ CommodityForward::CommodityForward(const QuantLib::ext::shared_ptr<CommodityInde
     }
 
     registerWith(index_);
+    registerWith(fxIndex_);
 }
 
 bool CommodityForward::isExpired() const {
@@ -83,9 +82,6 @@ void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->fxIndex = fxIndex_;
 }
 
-void CommodityForward::arguments::validate() const {
-    QL_REQUIRE(quantity > 0, "quantity should be positive: " << quantity);
-    QL_REQUIRE(strike > 0 || close_enough(strike, 0.0), "strike should be greater than or equal to 0: " << strike);
-}
+void CommodityForward::arguments::validate() const {}
 
 } // namespace QuantExt

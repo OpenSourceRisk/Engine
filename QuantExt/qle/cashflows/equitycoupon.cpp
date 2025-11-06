@@ -253,6 +253,12 @@ EquityLeg& EquityLeg::withQuantity(Real quantity) {
     return *this;
 }
 
+
+EquityLeg& EquityLeg::withPaymentDates(const std::vector<Date>& paymentDates) {
+    paymentDates_ = paymentDates;
+    return *this;
+}
+
 EquityLeg::operator Leg() const {
 
     Leg cashflows;
@@ -268,6 +274,14 @@ EquityLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
+
+    // Initial consistency checks
+    if (!paymentDates_.empty()) {
+        QL_REQUIRE(paymentDates_.size() == numPeriods, "Expected the number of explicit payment dates ("
+                                                           << paymentDates_.size()
+                                                           << ") to equal the number of calculation periods ("
+                                                           << numPeriods << ")");
+    }
 
     if (valuationSchedule_.size() > 0) {
         QL_REQUIRE(valuationSchedule_.size() == schedule_.size(),
@@ -320,7 +334,12 @@ EquityLeg::operator Leg() const {
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
-        paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
+        if (!paymentDates_.empty()) {
+            paymentDate = paymentDates_[i];
+        } else {
+            paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
+        }
+        
 
         Date fixingStartDate = Date();
         Date fixingEndDate = Date();

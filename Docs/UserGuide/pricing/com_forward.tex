@@ -1,0 +1,17 @@
+\subsubsection{Commodity Forward}
+\label{pricing:com_forward}
+
+The commodity forwarding curve is used for respective underlying commodity. 
+The net present value of a commodity forward can be priced discounting the 
+cashflows at maturity as per:
+$$
+\NPV = \mbox{Quantity}\cdot \omega\cdot (F(0,T) - K) \cdot P(T)
+$$
+where:
+\begin{itemize}
+\item Quantity: number of units of the underlying commodity
+\item $K$: strike price
+\item $F(0,T)$: the forward commodity price for maturity $T$ at time 0 (valuation date)
+\item $P(T)$: the discount factor for maturity time $T$
+\item $\omega$: 1 for a forward to buy commodity, -1 for a forward to sell a commodity 
+\end{itemize}

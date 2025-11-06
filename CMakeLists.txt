@@ -4,13 +4,6 @@ cmake_policy(SET CMP0091 NEW)
 
 project(ORE CXX)
 
-option(ORE_BUILD_DOC "Build documentation" ON)
-option(ORE_BUILD_EXAMPLES "Build examples" ON)
-option(ORE_BUILD_TESTS "Build test suite" ON)
-option(ORE_BUILD_APP "Build app" ON)
-option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
-option(ORE_MULTITHREADING_CPU_AFFINITY "Set cpu affinitity in multithreaded calculations" OFF)
-
 include(CTest)
 
 # Path for local cmake modules
@@ -29,8 +22,11 @@ add_subdirectory("OREAnalytics")
 if (ORE_BUILD_APP)
     add_subdirectory("App")
 endif()
+if (ORE_BUILD_SWIG)
+    add_subdirectory("ORE-SWIG")
+endif()
 
 # add examples testsuite
 if (ORE_BUILD_EXAMPLES AND ORE_BUILD_TESTS)
-add_test(NAME examples WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Examples COMMAND nosetests run_examples_testsuite.py)
+add_test(NAME examples WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Examples COMMAND pytest run_examples_testsuite.py)
 endif()

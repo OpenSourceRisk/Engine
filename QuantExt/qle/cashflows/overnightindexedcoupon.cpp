@@ -90,15 +90,31 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
         tmpEndDate = overnightIndex->fixingCalendar().advance(std::max(valueStart, evalDate), 7, Days, Following);
         tmpEndDate = std::min(tmpEndDate, valueEnd);
     }
-    Schedule sch = MakeSchedule()
-                       .from(valueStart)
-                       // .to(valueEnd)
-                       .to(tmpEndDate)
-                       .withTenor(1 * Days)
-                       .withCalendar(overnightIndex->fixingCalendar())
-                       .withConvention(overnightIndex->businessDayConvention())
-                       .backwards();
-    valueDates_ = sch.dates();
+
+    QL_REQUIRE(valueStart < tmpEndDate, "OvernightIndexedCoupon: valueStart ("
+                                            << valueStart << ") must be earlier than valueEnd (" << tmpEndDate << ")");
+
+    try {
+        Schedule sch = MakeSchedule()
+                           .from(valueStart)
+                           // .to(valueEnd)
+                           .to(tmpEndDate)
+                           .withTenor(1 * Days)
+                           .withCalendar(overnightIndex->fixingCalendar())
+                           .withConvention(overnightIndex->businessDayConvention())
+                           .backwards();
+        valueDates_ = sch.dates();
+    } catch (...) {
+        // handle degenerate schedules
+        valueDates_ = {valueStart, tmpEndDate};
+    }
+
+    // Legs with LastRecentPeriod can generate coupons with start date which is a holiday
+    // in the index fixing calendar
+    // Previous fixing date will be used in calculation of compoundFactor
+    if (valueDates_.front() != valueStart) {
+        valueDates_.insert(valueDates_.begin(), valueStart);
+    }
 
     if (telescopicValueDates) {
         // build optimised value dates schedule: back stub
@@ -581,7 +597,7 @@ OvernightLeg& OvernightLeg::withInArrears(const bool inArrears) {
     return *this;
 }
 
-OvernightLeg& OvernightLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+OvernightLeg& OvernightLeg::withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod) {
     lastRecentPeriod_ = lastRecentPeriod;
     return *this;
 }

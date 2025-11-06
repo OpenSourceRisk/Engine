@@ -1,5 +1,17 @@
 \subsubsection{Equity Digital Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An Equity Digital Option is an option whose payout is either zero or a fixed 
+predetermined amount (Cash-or-Nothing). Payout depends on whether the underlying 
+Equity spot rate expires in-the-money at the expiration date. 
+\begin{itemize}
+\item Equity Digital Options have European exercise with payout at expiry.
+\item The buyer of a Equity Digital Option pays a premium to the seller.
+\end{itemize}
+
+{\bf Input}}\fi
+
 The \lstinline!EquityDigitalOptionData!  node is the trade data container for the \emph{EquityDigitalOption} trade type. The \lstinline!EquityDigitalOptionData!  node includes one  \lstinline!OptionData! trade component sub-node  plus elements
 specific to the Equity Digital  Option. The structure of an example \lstinline!EquityDigitalOptionData! node for an Equity Digital Option is shown in Listing
 \ref{lst:eqdigitaloption_data}.

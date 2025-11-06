@@ -50,6 +50,8 @@ public:
     Real get(Size i, Size j, Size k, Size d) const override;
     void set(Real value, Size i, Size j, Size k, Size d) override;
 
+    bool usesDoublePrecision() const override;
+
 private:
     void check(Size i, Size j, Size k, Size d) const;
     Size pos(Size i, Size j, Size d) const;

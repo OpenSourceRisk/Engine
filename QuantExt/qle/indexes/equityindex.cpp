@@ -39,7 +39,9 @@ EquityIndex2::EquityIndex2(const std::string& familyName, const Calendar& fixing
     registerWith(dividend_);
     registerWith(announcedDividend_);
     registerWith(Settings::instance().evaluationDate());
+    QL_DEPRECATED_DISABLE_WARNING
     registerWith(IndexManager::instance().notifier(name()));
+    QL_DEPRECATED_ENABLE_WARNING
 }
 
 Real EquityIndex2::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {

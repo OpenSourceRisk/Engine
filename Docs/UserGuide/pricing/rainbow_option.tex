@@ -1,0 +1,14 @@
+\subsubsection{Rainbow Option}
+\label{pricing::rainbowoption}
+
+Rainbow options are Euopean calls or puts on the maximum or mimimum
+of a range of assets. 
+
+We price Rainbow options using correlated Black-Scholes processes for
+the underlyings calibrated to their quoted market ATM
+volatility. The valuation is done using a Monte Carlo simulation.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is MultiAssetOption.
+
+\todo[inline]{Margrabe for spread options? Semi-analytic solutions for
+  two asset options?}

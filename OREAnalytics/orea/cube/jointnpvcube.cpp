@@ -147,5 +147,10 @@ void JointNPVCube::set(Real value, Size id, Size date, Size sample, Size depth) 
     (*c.begin()).first->set(value, (*c.begin()).second, date, sample, depth);
 }
 
+bool JointNPVCube::usesDoublePrecision() const {
+    return std::all_of(cubes_.begin(), cubes_.end(),
+                       [](const QuantLib::ext::shared_ptr<NPVCube>& c) { return c->usesDoublePrecision(); });
+}
+
 } // namespace analytics
 } // namespace ore

@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="FX_UPIN_DIGITAL_BARRIER_CALL_OPTION_EURUSD_10Y">
+        <TradeType>FxDigitalBarrierOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <FxDigitalBarrierOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <Settlement>Cash</Settlement>
+                <PayOffAtExpiry>false</PayOffAtExpiry>
+                <ExerciseDates>
+                    <ExerciseDate>2033-02-20</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <BarrierData>
+                <Type>UpAndIn</Type>
+                <Levels>
+                    <Level>1.2</Level>
+                </Levels>
+            </BarrierData>
+            <Strike>1.1</Strike>
+            <PayoffAmount>100</PayoffAmount>
+            <PayoffCurrency>USD</PayoffCurrency>
+            <ForeignCurrency>EUR</ForeignCurrency>
+            <DomesticCurrency>USD</DomesticCurrency>
+        </FxDigitalBarrierOptionData>
+    </Trade>
+</Portfolio>

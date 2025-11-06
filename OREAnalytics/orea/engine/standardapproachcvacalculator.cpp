@@ -60,8 +60,6 @@ StandardApproachCvaCalculator::StandardApproachCvaCalculator(const std::string& 
     const std::map<ReportType, QuantLib::ext::shared_ptr<ore::data::Report>>& outReports, bool unhedgedSensitivity, const vector<std::string>& perfectHedges) : 
     cvaNetSensitivities_(cvaNetSensitivities), counterpartyManager_(counterpartyManager), reports_(outReports), unhedged_(unhedgedSensitivity) {
 
-    calculationCcy_ = calculationCcy;
-    
     for (auto p : perfectHedges) {
         vector<string> tokens;
         boost::split(tokens, p, boost::is_any_of("|"));
@@ -344,7 +342,6 @@ void StandardApproachCvaCalculator::calculate() {
         }
         cvaNettingSetResults_[n] = cva;
     }
-    cvaResult_ = cvaNettingSetResults_[""];
 
     writeSummaryReport();
     closeReports();

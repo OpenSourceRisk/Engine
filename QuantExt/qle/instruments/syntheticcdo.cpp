@@ -41,10 +41,10 @@ SyntheticCDO::SyntheticCDO(const QuantLib::ext::shared_ptr<QuantExt::Basket>& ba
                            const Schedule& schedule, Rate upfrontRate, Rate runningRate, const DayCounter& dayCounter,
                            BusinessDayConvention paymentConvention, bool settlesAccrual,
                            CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime, Date protectionStart,
-                           Date upfrontDate, boost::optional<Real> notional, Real recoveryRate,
+                           Date upfrontDate, QuantLib::ext::optional<Real> notional, Real recoveryRate,
                            const DayCounter& lastPeriodDayCounter)
     : basket_(basket), side_(side), upfrontRate_(upfrontRate), runningRate_(runningRate),
-      leverageFactor_(notional ? notional.get() / basket->trancheNotional() : 1.), dayCounter_(dayCounter),
+      leverageFactor_(notional ? notional.value() / basket->trancheNotional() : 1.), dayCounter_(dayCounter),
       paymentConvention_(paymentConvention), settlesAccrual_(settlesAccrual),
       protectionPaymentTime_(protectionPaymentTime),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
@@ -136,7 +136,7 @@ Real SyntheticCDO::protectionLegNPV() const {
     calculate();
     if (side_ == Protection::Buyer)
         return -protectionValue_;
-    return premiumValue_;
+    return protectionValue_;
 }
 
 Rate SyntheticCDO::fairPremium() const {
@@ -168,6 +168,24 @@ bool SyntheticCDO::isExpired() const {
 Real SyntheticCDO::remainingNotional() const {
     calculate();
     return remainingNotional_;
+}
+
+Real SyntheticCDO::accrualRebateNPV() const {
+    calculate();
+    return accrualRebateNPV_;
+}
+Real SyntheticCDO::accrualRebateNPVCurrent() const {
+    calculate();
+    return accrualRebateNPVCurrent_;
+}
+Real SyntheticCDO::cleanNPV() const {
+    calculate();
+    return cleanNPV_;
+}
+
+Real SyntheticCDO::upfrontPremiumValue() const {
+    calculate();
+    return upfrontPremiumValue_;
 }
 
 void SyntheticCDO::setupArguments(PricingEngine::arguments* args) const {
@@ -204,6 +222,9 @@ void SyntheticCDO::fetchResults(const PricingEngine::results* r) const {
     remainingNotional_ = results->remainingNotional;
     error_ = results->error;
     expectedTrancheLoss_ = results->expectedTrancheLoss;
+    accrualRebateNPV_ = results->accrualRebateValue;
+    accrualRebateNPVCurrent_ = results->accrualRebateCurrentValue;
+    cleanNPV_ = results->cleanNPV;
 }
 
 void SyntheticCDO::setupExpired() const {

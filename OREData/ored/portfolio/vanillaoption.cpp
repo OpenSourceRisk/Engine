@@ -59,7 +59,9 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     maturity_ = expiryDate_;
     maturityType_ = "Expiry Date";
     if (paymentDate_ != Null<Date>()) {
-        maturity_ = paymentDate_;
+        if(tradeType_!="FxOption"){
+            maturity_ = paymentDate_;
+        }
         maturityType_ = "Payment Date";
     }
     // Exercise
@@ -81,20 +83,25 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     string tradeTypeBuilder = tradeType_;
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
 
-    // For Quanto, check for European and Cash, except for an FX underlying
+    // For Quanto, check for Cash, except for an FX underlying
     if (!sameCcy) {
-        QL_REQUIRE(exerciseType == Exercise::Type::European, "Option exercise must be European for a Quanto payoff.");
         if (settlementType == Settlement::Type::Physical) {
             QL_REQUIRE(assetClassUnderlying_ == AssetClass::FX,
                        "Physically settled Quanto options are allowed only for an FX underlying.");
         }
     }
 
+   
+    string configuration = Market::defaultConfiguration;
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+
+    Currency npvCurrency = parseCurrencyWithMinors(npvCurrency_);
+    std::optional<Currency> cashSettlementCurrency;
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
         // We have a European cash settled option.
 
         // Get the payment date.
-        const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+        const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
         Date paymentDate = expiryDate_;
         if (opd) {
             if (opd->rulesBased()) {
@@ -109,13 +116,43 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
         }
 
-        if (paymentDate > expiryDate_) {
+        QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
+        std::optional<Date> cashSettlementFixingDate;
+        
+        if (npvCurrency != ccy) {
+            // If the cash settlement currency is different from the option currency, we need to build a cash settlement
+            // FX index.
+            auto fxIndexStr = option_.cashSettlementFxIndex();
+            QL_REQUIRE(!fxIndexStr.empty(), "Cash settlement FX index must be provided when cash settlement currency is "
+                                               "different from the option currency. Trade: " << id() << ".");
+            fxIndex = parseFxIndex(fxIndexStr);
+            fxIndex =
+                buildFxIndex(option_.cashSettlementFxIndex(), npvCurrency_, ccy.code(),
+                             engineFactory->market(), configuration);
+            
+            if (!option_.cashSettlementFixingDate().empty()) {
+                cashSettlementFixingDate = parseDate(option_.cashSettlementFixingDate());
+            }
+            Date fixingDate = cashSettlementFixingDate.has_value() ? cashSettlementFixingDate.value()
+                                                                   : fxIndex->fixingDate(paymentDate);
+
+            Date adjustedFixingDate = fxIndex->fixingCalendar().adjust(fixingDate, Preceding);
+            requiredFixings_.addFixingDate(adjustedFixingDate, fxIndexStr);
+
+            DLOG("FX index fixing for cash settlement in " << fxIndex->name() << " with fixing date "
+                 << io::iso_date(fixingDate) << " added to required fixings for trade " << id());
+            // if no specific discount curve is provided, use the default discount curve for the cash settlement currency
+
+            cashSettlementCurrency = npvCurrency;
+        }
+        // Use cash settlement option if the payment date is after the expiry date or if the cash settlement 
+        if (paymentDate > expiryDate_ || ((npvCurrency != ccy) && sameCcy)) {
             QL_REQUIRE(sameCcy, "Payment date must equal expiry date for a Quanto payoff. Trade: " << id() << ".");
 
             // Build a QuantExt::CashSettledEuropeanOption if payment date is strictly greater than expiry.
 
             // Has the option been marked as exercised
-            const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+            const QuantLib::ext::optional<OptionExerciseData>& oed = option_.exerciseData();
             bool exercised = false;
             Real exercisePrice = Null<Real>();
             if (oed) {
@@ -143,7 +180,8 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             // Build the instrument
             LOG("Build CashSettledEuropeanOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<CashSettledEuropeanOption>(
-                type, strike_.value(), expiryDate_, paymentDate, option_.isAutomaticExercise(), index_, exercised, exercisePrice);
+                type, strike_.value(), expiryDate_, paymentDate, option_.isAutomaticExercise(), index_, exercised,
+                exercisePrice, fxIndex, cashSettlementFixingDate);
 
             // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by
             // appending 'EuropeanCS' to the trade type.
@@ -177,23 +215,69 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                     tradeTypeBuilder = tradeType_ + "Forward";
             }
         }
+    } else if (exerciseType == Exercise::American && settlementType == Settlement::Cash && !sameCcy) {
+        // We have an American quanto cash settled option.
 
+        // Get the payment date.
+        const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
+        Date paymentDate = expiryDate_;
+        if (opd) {
+            if (opd->rulesBased()) {
+                const Calendar& cal = opd->calendar();
+                QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+                paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
+            } else {
+                const vector<Date>& dates = opd->dates();
+                QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
+                paymentDate = dates[0];
+            }
+            QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
+        }
+
+        if (paymentDate > expiryDate_) {
+            QL_REQUIRE(sameCcy, "Payment date must equal expiry date for a Quanto payoff. Trade: " << id() << ".");
+        } else {
+            if (forwardDate_ == QuantLib::Date()) {
+                LOG("Build VanillaOption for trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::European)
+                    tradeTypeBuilder = "QuantoEquityOption";
+                else if (assetClassUnderlying_ == AssetClass::EQ && exerciseType == Exercise::American)
+                    tradeTypeBuilder = "QuantoEquityOptionAmerican";
+                else if (assetClassUnderlying_ == AssetClass::COM)
+                    tradeTypeBuilder = "QuantoCommodityOption";
+                else
+                    QL_FAIL("Option Quanto payoff not supported for " << assetClassUnderlying_ << " class.");
+            } else {
+                LOG("Build VanillaForwardOption for trade " << id());
+                QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
+                vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
+                if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
+                    tradeTypeBuilder = tradeType_ + "Forward";
+            }
+        }
     } else {
         if (forwardDate_ == QuantLib::Date()) {
             // If not European or not cash settled, build QuantLib::VanillaOption.
             if (sameCcy) {
-                LOG("Build VanillaOption for trade " << id());
+                DLOG("Build VanillaOption for trade " << id());
                 vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
             } else {
-                LOG("Build QuantoVanillaOption for trade " << id());
+                DLOG("Build QuantoVanillaOption for trade " << id());
                 vanilla = QuantLib::ext::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
+                tradeTypeBuilder = tradeType_ + "American";
             }
         } else {
-            QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
-            LOG("Built VanillaForwardOption for trade " << id());
+            DLOG("Built VanillaForwardOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_, paymentDate_);
-            if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
-                tradeTypeBuilder = tradeType_ + "Forward";
+            if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX) {
+                if (exerciseType == QuantLib::Exercise::Type::European) {
+                    tradeTypeBuilder = tradeType_ + "Forward";
+                } else if (exerciseType == QuantLib::Exercise::Type::American) {
+                    vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                    tradeTypeBuilder = tradeType_ + "American";
+                }
+            }
         }
 
         // If the tradeTypeBuilder has not been modified yet..
@@ -208,9 +292,24 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
     // Generally we need to set the pricing engine here even if the option is expired at build time, since the valuation date
     // might change after build, and we get errors for the edge case valuation date = expiry date for European options.
-    string configuration = Market::defaultConfiguration;
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
+
+    // Use delegating engine
+    if (auto db = QuantLib::ext::dynamic_pointer_cast<DelegatingEngineBuilder>(builder)) {
+        delegatingBuilderTrade_ = db->build(this, engineFactory);
+        QL_REQUIRE(delegatingBuilderTrade_, "DelegatingEngineBuilder failed for trade type" << tradeTypeBuilder);
+
+        instrument_ = delegatingBuilderTrade_->instrument();
+        maturity_ = delegatingBuilderTrade_->maturity();
+        npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
+        additionalData_ = delegatingBuilderTrade_->additionalData();
+        requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
+
+        return;
+    }
 
     if (sameCcy) {
         QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
@@ -218,9 +317,9 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
         QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
         if (forwardDate_ != Date()) {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, false));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, false, cashSettlementCurrency));
         } else {
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, discountCurve, expiryDate_, true, cashSettlementCurrency));
         }
         setSensitivityTemplate(*vanillaOptionBuilder);
         addProductModelEngine(*vanillaOptionBuilder);
@@ -246,7 +345,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                         -bsInd, ccy, engineFactory, configuration);
+                                         -bsInd, npvCurrency, discountCurve, engineFactory, configuration);
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
@@ -258,12 +357,25 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 void VanillaOptionTrade::setNotionalAndCurrencies() {
     Currency ccy = parseCurrencyWithMinors(currency_);
     npvCurrency_ = ccy.code();
-
+    // Cash settled option with settlementdata
+    Settlement::Type settlementType = parseSettlementType(option_.settlement());
+    if (settlementType == Settlement::Cash && !option_.cashSettlementCurrency().empty()) {
+        npvCurrency_ = option_.cashSettlementCurrency();
+    }
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_.value() * quantity_;
     // the following is correct for vanilla (sameCcy = true) and quanto (sameCcy = false)
     notionalCurrency_ = ccy.code();
 }
+
+QuantLib::Real VanillaOptionTrade::notional() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
+}
+
+string VanillaOptionTrade::notionalCurrency() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
+}
+
 } // namespace data
 } // namespace ore

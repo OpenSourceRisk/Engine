@@ -25,7 +25,7 @@ BufferedSensitivityStream::BufferedSensitivityStream(const QuantLib::ext::shared
     : stream_(stream) {}
 
 SensitivityRecord BufferedSensitivityStream::next() {
-    if (index_ == QuantLib::Null<Size>()) {
+    if (index_ == QuantLib::Null<QuantLib::Size>()) {
         buffer_.push_back(stream_->next());
         return buffer_.back();
     }

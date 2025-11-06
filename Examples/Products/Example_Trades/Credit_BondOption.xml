@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Portfolio>
+    <Trade id="Bond_Call_Option">
+        <TradeType>BondOption</TradeType>
+        <Envelope>
+            <CounterParty>CPTY</CounterParty>
+            <NettingSetId>NS</NettingSetId>
+            <AdditionalFields>
+                <party_id>party</party_id>
+                <valuation_date>2025-02-10</valuation_date>
+            </AdditionalFields>
+        </Envelope>
+        <BondOptionData>
+            <OptionData>
+                <LongShort>Long</LongShort>
+                <OptionType>Call</OptionType>
+                <Style>European</Style>
+                <ExerciseDates>
+                    <ExerciseDate>2025-04-16</ExerciseDate>
+                </ExerciseDates>
+            </OptionData>
+            <Strike>1.000000</Strike>
+            <Redemption>100.00</Redemption>
+            <PriceType>Dirty</PriceType>
+            <KnocksOut>false</KnocksOut>
+            <BondData>
+                <SecurityId>ISIN:IE00BH3SQ895</SecurityId>
+                <BondNotional>10000000</BondNotional>
+            </BondData>
+        </BondOptionData>
+    </Trade>
+</Portfolio>
