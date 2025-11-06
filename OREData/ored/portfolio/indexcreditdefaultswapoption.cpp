@@ -275,7 +275,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     auto ccy = parseCurrency(npvCurrency_);
     std::string overrideCurve = iCdsOptionEngineBuilder->engineParameter("Curve", {}, false, "Underlying");
     bool overrideCurveCalibration =
-        parseBool(iCdsOptionEngineBuilder->engineParameter("CalibrateConstituentCurves", {}, false, "false"));
+        parseBool(iCdsOptionEngineBuilder->engineParameter("CalibrateConstituentsToIndexLevel", {}, false, "false"));
     auto creditCurveId = this->creditCurveId();
     // warn if that is not possible, except for trades on custom baskets
     if (swap_.basket().constituents().empty() && splitCurveIdWithTenor(creditCurveId).second == 0 * Days) {
