@@ -87,6 +87,8 @@ public:
     virtual void writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                      const std::string& tradeId);
 
+    virtual void writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess);
+
     virtual void writeNettingSetExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                           const std::string& nettingSetId);
 
@@ -94,9 +96,14 @@ public:
     
     virtual void writeNettingSetCvaSensitivities(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                           const std::string& nettingSetId);
+    
+    virtual void writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                 QuantLib::ext::shared_ptr<PostProcess> postProcess);
 
     virtual void writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                       const std::string& nettingSetId);
+    
+    virtual void writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess);
 
     virtual void writeXVA(ore::data::Report& report, const string& allocationMethod,
                           QuantLib::ext::shared_ptr<Portfolio> portfolio, QuantLib::ext::shared_ptr<PostProcess> postProcess);
