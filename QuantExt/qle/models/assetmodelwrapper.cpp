@@ -59,9 +59,9 @@ const TimeGrid& AssetModelWrapper::discretisationTimeGrid() const { return discr
 
 const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>&
 AssetModelWrapper::generalizedBlackScholesProcesses() const {
-    QL_REQUIRE(processType_ == ProcessType::BlackScholes,
-               "BlackScholesModelWrapper::generalizedBlackScholesProcesses(): process type ("
-                   << static_cast<int>(processType_) << ") is not BlackScholes");
+    QL_REQUIRE(processType_ == ProcessType::BlackScholes || processType_ == ProcessType::LocalVol,
+               "AssetModelWrapper::generalizedBlackScholesProcesses(): process type ("
+                   << static_cast<int>(processType_) << ") is not BlackScholes or LocalVol");
     return generalizedBlackScholesProcesses_;
 }
 
