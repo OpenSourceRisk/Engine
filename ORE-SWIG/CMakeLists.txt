@@ -33,13 +33,15 @@ set_ql_library_name()
 
 # To build the module, we moreover need Boost, Swig, Python
 set(BOOST_COMPONENT_LIST serialization date_time filesystem timer thread log)
+
+
 if(ORE_USE_ZLIB)
     list(APPEND BOOST_COMPONENT_LIST iostreams)
     if(MSVC)
         list(APPEND BOOST_COMPONENT_LIST zlib)
     endif()
 endif()
-find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
+find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST} OPTIONAL_COMPONENTS system)
 find_package(SWIG REQUIRED)
 find_package(Python REQUIRED COMPONENTS Development)
 if(ORE_USE_ZLIB)
