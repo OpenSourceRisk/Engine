@@ -19,7 +19,6 @@
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
 #include <qle/instruments/indexcreditdefaultswap.hpp>
-#include <qle/utilities/time.hpp>
 
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
