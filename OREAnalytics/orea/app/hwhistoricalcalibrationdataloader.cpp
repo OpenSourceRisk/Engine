@@ -251,22 +251,39 @@ void HwHistoricalCalibrationDataLoader::cleanData() {
         for (auto const& inner : outer.second)
             masterDates.insert(inner.first);
 
-    // Forward-fill missing scalar (FX) and vector (IR) series
+    // Forward-fill FX and IR data
     for (auto& outer : fxSpots_) {
-        //fillScalar(kv.second);
         if (outer.second.empty())
             continue;
         Real first = outer.second.begin()->second;
         Real last = first;
-        for (auto d : masterDates) {
-            auto it = outer.second.find(d);
-            if (it == outer.second.end()) {
-                outer.second[d] = (d < outer.second.begin()->first ? first : last);
-                LOG("Add missing fx spot rate on date " << d << ", Currency: " << outer.first
-                    << ", Value: " << outer.second[d]);
-            } else {
-                last = it->second;
+
+        // Collect missing dates first, then insert
+        std::vector<std::pair<Date, Real>> missingDates;
+        missingDates.reserve(masterDates.size());
+
+        auto masterIt = masterDates.begin();
+        auto dataIt = outer.second.begin();
+
+        while (masterIt != masterDates.end()) {
+            const Date& masterDate = *masterIt;
+            while (dataIt != outer.second.end() && dataIt->first < masterDate) {
+                last = dataIt->second;
+                ++dataIt;
             }
+            if (dataIt == outer.second.end() || dataIt->first != masterDate) {
+                Real fillValue = (masterDate < outer.second.begin()->first ? first : last);
+                missingDates.emplace_back(masterDate, fillValue);
+            } else {
+                last = dataIt->second;
+                ++dataIt;
+            }
+            ++masterIt;
+        }
+
+        for (const auto& [date, value] : missingDates) {
+            outer.second[date] = value;
+            LOG("Add missing fx spot rate on date " << date << ", Currency: " << outer.first << ", Value: " << value);
         }
     }
     for (auto& outer : irCurves_) {
@@ -274,21 +291,43 @@ void HwHistoricalCalibrationDataLoader::cleanData() {
             continue;
         std::vector<Real> first = outer.second.begin()->second;
         std::vector<Real> last = first;
-        for (auto d : masterDates) {
-            auto it = outer.second.find(d);
-            if (it == outer.second.end()) {
-                outer.second[d] = (d < outer.second.begin()->first ? first : last);
-                std::ostringstream oss;
-                for (Size k = 0; k < outer.second[d].size(); ++k) {
-                    if (k > 0)
-                        oss << ", ";
-                    oss << outer.second[d][k];
-                }
-                LOG("Add missing IR curve rate on date " << d << ", Currency: " << outer.first
-                                                         << ", Value: " << oss.str());
-            } else {
-                last = it->second;
+
+        // Collect missing dates first, then insert
+        std::vector<std::pair<Date, std::vector<Real>>> missingDates;
+        missingDates.reserve(masterDates.size());
+
+        auto masterIt = masterDates.begin();
+        auto dataIt = outer.second.begin();
+
+        while (masterIt != masterDates.end()) {
+            const Date& masterDate = *masterIt;
+
+            while (dataIt != outer.second.end() && dataIt->first < masterDate) {
+                last = dataIt->second;
+                ++dataIt;
             }
+
+            if (dataIt == outer.second.end() || dataIt->first != masterDate) {
+                std::vector<Real> fillValue = (masterDate < outer.second.begin()->first ? first : last);
+                missingDates.emplace_back(masterDate, fillValue);
+            } else {
+                last = dataIt->second;
+                ++dataIt;
+            }
+
+            ++masterIt;
+        }
+
+        for (const auto& [date, value] : missingDates) {
+            outer.second[date] = value;
+            std::ostringstream oss;
+            for (Size k = 0; k < value.size(); ++k) {
+                if (k > 0)
+                    oss << ", ";
+                oss << value[k];
+            }
+            LOG("Add missing IR curve rate on date " << date << ", Currency: " << outer.first
+                                                     << ", Value: " << oss.str());
         }
     }
 }
