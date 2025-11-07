@@ -138,12 +138,12 @@ public:
 protected:
     std::size_t precision_;
 
-private:
-    CalibrationFilters calibrationFilters_;
-
     // a map of already reported calibrations
     const bool checkCalibrations(std::string label, std::string type, std::string id) const;
     std::map<std::string, std::map<std::string, std::set<std::string>>> calibrations_;
+
+private:
+    CalibrationFilters calibrationFilters_;
 };
 
 class MarketCalibrationReport : public MarketCalibrationReportBase {
