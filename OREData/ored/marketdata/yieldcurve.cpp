@@ -612,6 +612,11 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         }
     }
 
+    // clear all references to rate helpers which can slow down xva sims via notifications
+
+    multiCurve_.reset();
+    rateHelperCashflowGenerator_.clear();
+
     // exit the curve builder
 
     DLOG("Yield curve building done for specs: " << boost::join(curveSpecNames, ","));
