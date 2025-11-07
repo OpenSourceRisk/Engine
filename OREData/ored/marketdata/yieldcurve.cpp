@@ -2487,9 +2487,11 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
                                         ? *discountCurve_[index]
                                         : *helper->averageOIS()->overnightIndex()->forwardingTermStructure();
                          return getCashflowReportData(
-                             {helper->averageOIS()->fixedLeg(), helper->averageOIS()->overnightLeg()}, {false, true},
-                             {1.0, 1.0}, currency_[index].code(), {currency_[index].code(), currency_[index].code()},
-                             asofDate_, {dsc, dsc}, {1.0, 1.0}, {}, {});
+                             {helper->averageOIS()->fixedLeg(), helper->averageOIS()->overnightLeg(),
+                              helper->spreadLeg()},
+                             {false, true, true}, {1.0, 1.0, 1.0}, currency_[index].code(),
+                             {currency_[index].code(), currency_[index].code(), currency_[index].code()}, asofDate_,
+                             {dsc, dsc, dsc}, {1.0, 1.0, 1.0}, {}, {});
                      }}});
             }
         }
