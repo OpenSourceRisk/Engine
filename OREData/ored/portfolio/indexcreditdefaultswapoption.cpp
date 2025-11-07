@@ -274,6 +274,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // Set engine on the underlying CDS.
     auto ccy = parseCurrency(npvCurrency_);
     std::string overrideCurve = iCdsOptionEngineBuilder->engineParameter("Curve", {}, false, "Underlying");
+
     auto creditCurveId = this->creditCurveId();
     // warn if that is not possible, except for trades on custom baskets
     if (swap_.basket().constituents().empty() && splitCurveIdWithTenor(creditCurveId).second == 0 * Days) {
@@ -283,25 +284,27 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
                                           swap_.creditCurveId() + "')")
             .log();
     }
-    // Strike may be in terms of spread or price
-    auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
-
-    // Determine the index term;
-    effectiveIndexTerm_ = 5 * Years;
-    Date indexStart = swap_.indexStartDateHint() == Date() ? schedule.dates().front() : swap_.indexStartDateHint();
-    if (!indexTerm_.empty()) {
-        // if the option has an explicit index term set, we use that
-        effectiveIndexTerm_ = parsePeriod(indexTerm_);
-    } else {
-        // otherwise we derive the index term from the start date (or an externally set hint for that)
-        effectiveIndexTerm_ = QuantExt::implyIndexTerm(indexStart, schedule.dates().back());
-    }
 
     // for cash settlement build the underlying swap with the inccy discount curve
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     cds->setPricingEngine(iCdsEngineBuilder->engine(
         ccy, creditCurveId, constituentIds, overrideCurve, iCdsOptionEngineBuilder->calibrateUnderlyingCurves(),
         constituentNtls, swap_.recoveryRate(), settleType == Settlement::Cash));
+
+    // Strike may be in terms of spread or price
+    auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
+
+    // Determine the index term;
+    effectiveIndexTerm_ = 5 * Years;
+    if (!indexTerm_.empty()) {
+        // if the option has an explicit index term set, we use that
+        effectiveIndexTerm_ = parsePeriod(indexTerm_);
+    } else {
+        // otherwise we derive the index term from the start date (or an externally set hint for that)
+        effectiveIndexTerm_ = QuantExt::implyIndexTerm(swap_.indexStartDateHint() == Date() ? schedule.dates().front()
+                                                                                        : swap_.indexStartDateHint(),
+                                                   schedule.dates().back());
+    }
 
     // Build the option
     auto option = QuantLib::ext::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
