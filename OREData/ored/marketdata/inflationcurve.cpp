@@ -137,6 +137,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     if (!results.mdQuoteLabels.empty() && !overwrittenPillarDates) {
                         calInfo->mdQuoteLabels.push_back(results.mdQuoteLabels[i]);
                         calInfo->mdQuoteValues.push_back(results.mdQuoteValues[i]);
+                        calInfo->rateHelperTypes.push_back(results.rateHelperTypes[i]);
+                        calInfo->rateHelperCashflows.push_back(results.cashflowGenerators[i]());
                     }
                 }
                 calibrationInfo_ = calInfo;
@@ -168,16 +170,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     if (!results.mdQuoteLabels.empty() && !overwrittenPillarDates) {
                         calInfo->mdQuoteLabels.push_back(results.mdQuoteLabels[i]);
                         calInfo->mdQuoteValues.push_back(results.mdQuoteValues[i]);
+                        calInfo->rateHelperTypes.push_back(results.rateHelperTypes[i]);
+                        calInfo->rateHelperCashflows.push_back(results.cashflowGenerators[i]());
                     }
                 }
                 calibrationInfo_ = calInfo;
-            }
-
-            // if pillar dates != instrument dates we can not populate md quote labels and values
-
-            if (overwrittenPillarDates) {
-                calibrationInfo_->mdQuoteLabels.clear();
-                calibrationInfo_->mdQuoteValues.clear();
             }
 
             // check validity of calibration info
@@ -306,16 +303,23 @@ InflationCurve::CurveBuildResults
                     results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
                 DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
                                             << " quote " << zcq->quote()->value());
-                QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
-                    QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                        zcq->quote(), convention->observationLag(), maturity, convention->fixCalendar(),
-                        convention->fixConvention(), convention->dayCounter(), index, observationInterpolation,
-                        nominalTs, swapStart);
+                auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
+                    zcq->quote(), convention->observationLag(), maturity, convention->fixCalendar(),
+                    convention->fixConvention(), convention->dayCounter(), index, observationInterpolation, nominalTs,
+                    swapStart);
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 helpers.push_back(instrument);
                 results.pillarDates.push_back(instrument->pillarDate());
                 results.mdQuoteLabels.push_back(md->name());
                 results.mdQuoteValues.push_back(md->quote()->value());
+                results.rateHelperTypes.push_back("ZeroCouponInflation");
+                results.cashflowGenerators.push_back(
+                    std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
+                        return getCashflowReportData({instrument->swap()->leg(0), instrument->swap()->leg(1)},
+                                                     {false, true}, {1.0, 1.0}, index->currency().code(),
+                                                     {index->currency().code(), index->currency().code()}, asof,
+                                                     {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {});
+                    }));
             }
         }
     auto curveObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag();
@@ -406,15 +410,22 @@ InflationCurve::CurveBuildResults
             Date maturity = swapStart + term;
             results.latestMaturity =
                 results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
-            QuantLib::ext::shared_ptr<YoYInflationTraits::helper> instrument =
-                QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
-                    quote, convention->observationLag(), maturity, convention->fixCalendar(),
-                    convention->fixConvention(), convention->dayCounter(), index, nominalTs, swapStart);
+            auto instrument = QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
+                quote, convention->observationLag(), maturity, convention->fixCalendar(), convention->fixConvention(),
+                convention->dayCounter(), index, nominalTs, swapStart);
             instrument->unregisterWith(Settings::instance().evaluationDate());
             results.pillarDates.push_back(instrument->pillarDate());
             helpers.push_back(instrument);
             results.mdQuoteLabels.push_back(md->name());
             results.mdQuoteValues.push_back(md->quote()->value());
+            results.rateHelperTypes.push_back("YYInflation");
+            results.cashflowGenerators.push_back(
+                std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
+                    return getCashflowReportData({instrument->swap()->leg(0), instrument->swap()->leg(1)},
+                                                 {false, true}, {1.0, 1.0}, index->currency().code(),
+                                                 {index->currency().code(), index->currency().code()}, asof,
+                                                 {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {});
+                }));
         }
     }
     auto curveObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag();

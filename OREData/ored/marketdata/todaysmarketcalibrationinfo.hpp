@@ -88,6 +88,8 @@ struct InflationCurveCalibrationInfo {
     std::vector<double> times;
     std::vector<std::string> mdQuoteLabels;
     std::vector<double> mdQuoteValues;
+    std::vector<std::string> rateHelperTypes;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
 };
 
 struct ZeroInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
