@@ -1029,7 +1029,6 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["xva_sensi_jacobi"] = jacobiFileName_;
     fileNameMap_["xva_sensi_jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["parshifts"] = zeroToParShiftFile_;
-    fileNameMap_["pca"] = pcaOutputFileName_;
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);
     if (tmp != "")

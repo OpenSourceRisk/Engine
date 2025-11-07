@@ -19,7 +19,6 @@
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 
-#include <iostream>
 
 using namespace QuantLib;
 
