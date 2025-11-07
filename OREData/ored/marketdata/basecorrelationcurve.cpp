@@ -509,8 +509,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 dpts.push_back(creditCurve->curve());
             }
 
-            Handle<DefaultProbabilityTermStructure> indexCurve;
-            Handle<Quote> indexRecovery;
+            
             Handle<YieldTermStructure> discountCurve;
             // check if curveID has term suffix already (e.g. "RED:ABCDEFGH_5Y"), if so use that, otherwise use term from config
             auto p = ore::data::splitCurveIdWithTenor(config.curveID());
@@ -524,7 +523,8 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
             QL_REQUIRE(indexCreditCurve != nullptr,
                        "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
-
+            discountCurve = indexCreditCurve->rateCurve();
+            
             if (config.calibrateConstituentsToIndexSpread()) {
                 auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(indexCreditCurve);
 
