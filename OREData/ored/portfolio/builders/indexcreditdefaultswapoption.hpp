@@ -45,27 +45,21 @@ class IndexCreditDefaultSwapOptionEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<std::vector<std::string>, const QuantLib::Currency&,
                                                     const std::string&, const std::string&,
                                                     const std::vector<std::string>&,
-                                                    const QuantLib::Date&, 
-                                                    const QuantLib::Period&,
-                                                    const QuantLib::Real&,
                                                     const std::vector<double>&> {
 public:
     CreditPortfolioSensitivityDecomposition sensitivityDecomposition();
 
+    bool calibrateUnderlyingCurves() const;
 protected:
     IndexCreditDefaultSwapOptionEngineBuilder(const std::string& model, const std::string& engine)
         : ore::data::CachingEngineBuilder<std::vector<std::string>, QuantLib::PricingEngine, const QuantLib::Currency&,
                                           const std::string&, const std::string&, const std::vector<std::string>&,
-                                          const QuantLib::Date&, const QuantLib::Period&, const QuantLib::Real&,
                                           const std::vector<double>&>(
               model, engine, {"IndexCreditDefaultSwapOption"}) {}
 
     std::vector<std::string> keyImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId,
                                      const std::string& volCurveId, const std::vector<std::string>& creditCurveIds,
-                                     const QuantLib::Date& indexStartDate, const QuantLib::Period& indexTenor,
-                                     const QuantLib::Real& indexCoupon, const std::vector<double>&) override;
-
-    bool calibrateUnderlyingCurves() const;
+                                     const std::vector<double>&) override;
 };
 
 //! Black CDS option engine builder for index CDS options.
@@ -81,8 +75,7 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
-               const std::vector<std::string>& creditCurveIds, const QuantLib::Date& indexStartDate,
-               const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
+               const std::vector<std::string>& creditCurveIds,
                const std::vector<double>& constituentNotionals) override;
 };
 
@@ -95,8 +88,7 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
-               const std::vector<std::string>& creditCurveIds, const QuantLib::Date& indexStartDate,
-               const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
+               const std::vector<std::string>& creditCurveIds,
                const std::vector<double>& constituentNotionals) override;
 };
 

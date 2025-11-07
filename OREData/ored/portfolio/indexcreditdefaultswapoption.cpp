@@ -274,8 +274,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // Set engine on the underlying CDS.
     auto ccy = parseCurrency(npvCurrency_);
     std::string overrideCurve = iCdsOptionEngineBuilder->engineParameter("Curve", {}, false, "Underlying");
-    bool overrideCurveCalibration =
-        parseBool(iCdsOptionEngineBuilder->engineParameter("CalibrateConstituentsToIndexLevel", {}, false, "false"));
     auto creditCurveId = this->creditCurveId();
     // warn if that is not possible, except for trades on custom baskets
     if (swap_.basket().constituents().empty() && splitCurveIdWithTenor(creditCurveId).second == 0 * Days) {
@@ -302,8 +300,8 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // for cash settlement build the underlying swap with the inccy discount curve
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     cds->setPricingEngine(iCdsEngineBuilder->engine(
-        ccy, creditCurveId, constituentIds, overrideCurve, overrideCurveCalibration, indexStart, effectiveIndexTerm_,
-        runningCoupon, constituentNtls, swap_.recoveryRate(), settleType == Settlement::Cash));
+        ccy, creditCurveId, constituentIds, overrideCurve, iCdsOptionEngineBuilder->calibrateUnderlyingCurves(),
+        constituentNtls, swap_.recoveryRate(), settleType == Settlement::Cash));
 
     // Build the option
     auto option = QuantLib::ext::make_shared<QuantExt::IndexCdsOption>(cds, exercise, effectiveStrike_, strikeType, settleType,
@@ -312,9 +310,8 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
-    option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds,
-                                                             indexStart, effectiveIndexTerm_, runningCoupon,
-                                                             constituentNtls));
+    option->setPricingEngine(
+        iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds, constituentNtls));
     setSensitivityTemplate(*iCdsOptionEngineBuilder);
     addProductModelEngine(*iCdsOptionEngineBuilder);
 

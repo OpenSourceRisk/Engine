@@ -41,7 +41,6 @@ namespace data {
 class IndexCreditDefaultSwapEngineBuilder
     : public CachingPricingEngineBuilder<vector<string>, const Currency&, const string&, const vector<string>&,
                                          const QuantLib::ext::optional<string>&, const QuantLib::ext::optional<bool>&,
-                                         const QuantLib::Date&, const QuantLib::Period&, const QuantLib::Real&,
                                          const std::vector<double>&, Real, bool> {
 
 public:
@@ -54,8 +53,7 @@ protected:
     vector<string> keyImpl(const Currency& ccy, const string& creditCurveId, const vector<string>& creditCurveIds,
                            const QuantLib::ext::optional<string>& overrideCurve,
                            const QuantLib::ext::optional<bool>& calibrateConstituentCurvesOverride,
-                           const QuantLib::Date& indexStartDate, const QuantLib::Period& indexTerm,
-                           const QuantLib::Real& indexCoupon, const std::vector<double>& constituentNotionals, 
+                           const std::vector<double>& constituentNotionals, 
                            Real recoveryRate = Null<Real>(), const bool inCcyDiscountCurve = false) override;
 };
 
@@ -74,9 +72,6 @@ protected:
                                                 const vector<string>& creditCurveIds,
                                                 const QuantLib::ext::optional<string>& overrideCurve,
                                                 const QuantLib::ext::optional<bool>& calibrateConstituentCurvesOverride,
-                                                const QuantLib::Date& indexStartDate,
-                                                const QuantLib::Period& indexTerm,
-                                                const QuantLib::Real& indexCoupon,
                                                 const std::vector<double>& constituentNotionals,
                                                 Real recoveryRate = Null<Real>(),
                                                 const bool inCcyDiscountCurve = false) override;

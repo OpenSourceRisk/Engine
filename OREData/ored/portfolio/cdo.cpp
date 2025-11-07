@@ -401,65 +401,67 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         indexCdsMaturity = cdsMaturity(indexCdsStartDate, tenor, DateGeneration::CDS2015);
     }
 
-    bool calibrateConstiuentCurves = cdoEngineBuilder->calibrateConstituentCurve() && isIndexTranche;
+    bool calibrateConstituentCurves = cdoEngineBuilder->calibrateConstituentCurve() && isIndexTranche;
 
     ext::shared_ptr<CreditIndexConstituentCurveCalibration> curveCalibration;
-    if (calibrateConstiuentCurves) {
-        // Adjustment factor is a simplified version of the O'Kane's Forward Default Probability Multiplier
-        // O'Kane 2008 - Modelling Single-name and Multi-name Credit Derivatives
-        // Chapter 10.6
-        try {
-            // const auto& [_, indexTerm] = ore::data::splitCurveIdWithTenor(creditCurveIdWithTerm());
-            const auto indexCurveName = creditCurveIdWithTerm();
 
-            Handle<YieldTermStructure> yts = market->discountCurve(ccy.code(), config);
-            const auto [name, period] = splitCurveIdWithTenor(indexCurveName);
-
-            auto calibrationCdsMaturity = cdsMaturity(indexCdsStartDate, period, DateGeneration::CDS2015);
-
-            TLOG("Build index calibration for " << creditCurveIdWithTerm());
-            TLOG("Index maturity " << calibrationCdsMaturity);
-
-            Handle<DefaultProbabilityTermStructure> indexCurve = market->defaultCurve(indexCurveName, config)->curve();
-            auto discountCurveCalibration = market->defaultCurve(indexCurveName, config)->rateCurve();
-            Handle<Quote> indexRecovery = market->recoveryRate(indexCurveName, config);
-
-            for (size_t i = 0; i < creditCurves.size(); ++i) {
-                DLOG("CreditCurve " << creditCurves[i] << " with recovery " << recoveryRates[i] << " with notional "
-                                    << basketNotionals[i]);
-            }
-            curveCalibration = ext::make_shared<CreditIndexConstituentCurveCalibration>(
-                indexCdsStartDate, period, runningRate, indexRecovery, indexCurve, discountCurveCalibration);
-
-        } catch (const std::exception& e) {
-            WLOG("Error building the calibration got " << e.what());
-        }
-
-        if (runType != "PortfolioAnalyser" && curveCalibration != nullptr) {
+    // Adjustment factor is a simplified version of the O'Kane's Forward Default Probability Multiplier
+    // O'Kane 2008 - Modelling Single-name and Multi-name Credit Derivatives
+    // Chapter 10.6
+    if (calibrateConstituentCurves) {
+        // Load the curve (also for portfolio analyser runs)
+        const auto indexCurveName = creditCurveIdWithTerm();
+        auto indexCurve = market->defaultCurve(indexCurveName, config);
+        // Perform the calibration only if not running the Portfolio Analyser (using a real market)
+        if (runType != "PortfolioAnalyser") {
             try {
-                LOG("Calibrate curve");
-                auto result = curveCalibration->calibratedCurves(creditCurves, basketNotionals, dpts, recoveryRates);
-                if (result.success) {
-                    DLOG("Credit Curve " << creditCurves.front());
-                    auto uncalibratedCurve = dpts.front();
-                    auto calibratedCurve = result.curves.front();
-
-                    DLOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
-                    DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
-                    for (size_t i = 0; i < result.cdsMaturity.size(); ++i) {
-                        DLOG(io::iso_date(result.cdsMaturity[i])
-                             << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor[i] << ";"
-                             << result.marketNpv[i] << ";" << result.impliedNpv[i] << ";"
-                             << result.marketNpv[i] - result.impliedNpv[i]);
-                    }
-                    dpts = std::move(result.curves);
-                } else {
-                    WLOG("Calibration failed for creditCurve:" << creditCurveIdWithTerm() << " got "
-                                                               << result.errorMessage
-                                                               << " continue without index curve calibration");
-                }
+                TLOG("CDO: Calibrating constituent curves to index spread for index curve "
+                     << indexCurveName << " maturity " << indexCdsMaturity);
+                QL_REQUIRE(!indexCurveName.empty(), "CDO: cannot calibrate constituent curves to index spread "
+                                                    "if index credit curve ID is not set");
+                QL_REQUIRE(
+                    indexCurve->refData().startDate != Null<Date>(),
+                    "CDO: cannot calibrate constituent curves to index spread "
+                    "if index credit curve start date is not set, please check index credit curve configuration");
+                QL_REQUIRE(
+                    indexCurve->refData().indexTerm != 0 * Days,
+                    "CDO: cannot calibrate constituent curves to index spread "
+                    "if index credit curve index term is not set, please check index credit curve configuration");
+                QL_REQUIRE(
+                    indexCurve->refData().runningSpread != Null<Real>(),
+                    "CDO: cannot calibrate constituent curves to index spread "
+                    "if index credit curve running spread is not set, please check index credit curve configuration");
+                curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(indexCurve);
             } catch (const std::exception& e) {
-                WLOG("Error during calibration, continue without index curve calibration, got " << e.what());
+                WLOG("Error building the calibration got " << e.what() << " continue without index curve calibration");
+            }
+            if (curveCalibration != nullptr) {
+                try {
+                    DLOG("CDO: Calibrate constituent curves");
+                    auto result =
+                        curveCalibration->calibratedCurves(creditCurves, basketNotionals, dpts, recoveryRates);
+                    if (result.success) {
+                        DLOG("Credit Curve " << creditCurves.front());
+                        auto uncalibratedCurve = dpts.front();
+                        auto calibratedCurve = result.curves.front();
+
+                        DLOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
+                        DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+                        for (size_t i = 0; i < result.cdsMaturity.size(); ++i) {
+                            DLOG(io::iso_date(result.cdsMaturity[i])
+                                 << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor[i] << ";"
+                                 << result.marketNpv[i] << ";" << result.impliedNpv[i] << ";"
+                                 << result.marketNpv[i] - result.impliedNpv[i]);
+                        }
+                        dpts = std::move(result.curves);
+                    } else {
+                        WLOG("Calibration failed for creditCurve:" << creditCurveIdWithTerm() << " got "
+                                                                   << result.errorMessage
+                                                                   << " continue without index curve calibration");
+                    }
+                } catch (const std::exception& e) {
+                    WLOG("Error during calibration, continue without index curve calibration, got " << e.what());
+                }
             }
         }
     }
@@ -576,7 +578,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             protectionStartDate, parseDate(upfrontDate_), QuantLib::ext::nullopt, Null<Real>(), lastPeriodDayCounter);
 
         cdoDetach->setPricingEngine(
-            cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
+            cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstituentCurves, fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
         addProductModelEngine(*cdoEngineBuilder);
         cdoD = cdoDetach;
@@ -599,11 +601,11 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                 engineFactory->builder("IndexCreditDefaultSwap"));
             QL_REQUIRE(cdsEngineBuilder, "Trade " << id() << " needs a IndexCreditDefaultSwapEngineBuilder.");
             cds->setPricingEngine(cdsEngineBuilder->engine(ccy, creditCurveIdWithTerm(), creditCurves, string("Index"),
-                                                        false, Date(), 0*Days, runningRate, basketNotionals, fixedRecovery, false));
+                                                        false, basketNotionals, fixedRecovery, false));
                                                            
         } else {
             cds->setPricingEngine(cdoEngineBuilder->engine(ccy, true, creditCurveIdWithTerm(), creditCurves, dpts,
-                                                           recoveryRates, calibrateConstiuentCurves, fixedRecovery));
+                                                           recoveryRates, calibrateConstituentCurves, fixedRecovery));
         }
 
         setSensitivityTemplate(*cdoEngineBuilder);
@@ -636,7 +638,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             protectionStartDate, parseDate(upfrontDate_), QuantLib::ext::nullopt, fixedRecovery, lastPeriodDayCounter);
 
         cdoA->setPricingEngine(
-            cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstiuentCurves, fixedRecovery));
+            cdoEngineBuilder->engine(ccy, false, "", {}, {}, {}, calibrateConstituentCurves, fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
         addProductModelEngine(*cdoEngineBuilder);
 

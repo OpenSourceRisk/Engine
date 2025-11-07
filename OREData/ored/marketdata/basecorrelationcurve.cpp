@@ -524,13 +524,9 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
             QL_REQUIRE(indexCreditCurve != nullptr,
                        "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
-            discountCurve = indexCreditCurve->rateCurve();
-            indexCurve = indexCreditCurve->curve();
-            indexRecovery = indexCreditCurve->recovery();
 
             if (config.calibrateConstituentsToIndexSpread()) {
-                auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
-                    config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
+                auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(indexCreditCurve);
 
                 auto calibrationResults = curveCalibration->calibratedCurves(
                     basketData.remainingNames, basketData.remainingWeights, dpts, recoveryRates);

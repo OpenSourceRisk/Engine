@@ -20,8 +20,8 @@
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
-
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
@@ -53,20 +53,12 @@ bool IndexCreditDefaultSwapOptionEngineBuilder::calibrateUnderlyingCurves() cons
 
 std::vector<std::string> IndexCreditDefaultSwapOptionEngineBuilder::keyImpl(
     const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
-    const std::vector<std::string>& creditCurveIds, const QuantLib::Date& indexStartDate,
-    const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
-    const std::vector<double>& constituentNotionals) {
+    const std::vector<std::string>& creditCurveIds, const std::vector<double>& constituentNotionals) {
 
     std::vector<std::string> res{ccy.code()};
     res.insert(res.end(), creditCurveIds.begin(), creditCurveIds.end());
     res.push_back(creditCurveId);
     res.push_back(volCurveId);
-    res.push_back(to_string(indexStartDate));
-    res.push_back(to_string(indexTenor));
-    res.push_back(to_string(indexCoupon));
-    for (const auto& notional : constituentNotionals) {
-        res.push_back(to_string(notional));
-    }
     return res;
 }
 
@@ -77,9 +69,7 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
                   const std::string& configurationInCcy, const std::string& configurationPricing,
                   const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
                   const std::vector<std::string>& creditCurveIds, const bool generateAdditionalResults,
-                  const bool calibrateToIndexLevel, const QuantLib::Date& indexStartDate,
-                  const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
-                  const std::vector<double>& constituentNotionals) {
+                  const bool calibrateToIndexLevel, const std::vector<double>& constituentNotionals) {
 
     QuantLib::Handle<QuantLib::YieldTermStructure> ytsInCcy = market->discountCurve(ccy.code(), configurationInCcy);
     QuantLib::Handle<QuantLib::YieldTermStructure> ytsPricing = market->discountCurve(ccy.code(), configurationPricing);
@@ -104,12 +94,22 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
             recovery.push_back(market->recoveryRate(c, configurationPricing)->value());
         }
         
-        if(calibrateToIndexLevel && !creditCurveId.empty()) {
+        if(calibrateToIndexLevel) {
             TLOG("IndexCreditDefaultSwapOption: Calibrate constituent curves to index spread");
-            auto indexCreditCurve = market->defaultCurve(creditCurveId, configurationPricing);
-            QuantLib::Handle<QuantLib::Quote> indexRecovery = market->recoveryRate(creditCurveId, configurationPricing);
-            auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
-                indexStartDate, indexTenor, indexCoupon, indexRecovery, indexCreditCurve->curve(), ytsInCcy);
+            QL_REQUIRE(!creditCurveId.empty(),
+                       "IndexCreditDefaultSwapOption: cannot calibrate constituent curves to index spread "
+                       "if index credit curve ID is not set");
+            auto indexCreditCurve = indexCdsDefaultCurve(market, creditCurveId, configurationPricing);
+            QL_REQUIRE(indexCreditCurve->refData().startDate != Null<Date>(),
+                       "IndexCreditDefaultSwapOption: cannot calibrate constituent curves to index spread "
+                       "if index credit curve start date is not set, please check index credit curve configuration");
+            QL_REQUIRE(indexCreditCurve->refData().indexTerm != 0 * Days,
+                       "IndexCreditDefaultSwapOption: cannot calibrate constituent curves to index spread "
+                       "if index credit curve index term is not set, please check index credit curve configuration");
+            QL_REQUIRE(indexCreditCurve->refData().runningSpread != Null<Real>(),
+                       "IndexCreditDefaultSwapOption: cannot calibrate constituent curves to index spread "
+                       "if index credit curve running spread is not set, please check index credit curve configuration");
+            auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(indexCreditCurve);
             auto res = curveCalibration->calibratedCurves(creditCurveIds, constituentNotionals, dpts, recovery);
             TLOG("Calibration success: " << res.success);            
             if (res.success) {
@@ -139,9 +139,6 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId,
                                              const std::string& volCurveId,
                                              const std::vector<std::string>& creditCurveIds,
-                                             const QuantLib::Date& indexStartDate,
-                                             const QuantLib::Period& indexTenor,
-                                             const QuantLib::Real& indexCoupon,
                                              const std::vector<double>& constituentNotionals) {
 
     bool generateAdditionalResults = false;
@@ -150,19 +147,16 @@ BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, cons
         generateAdditionalResults = parseBool(genAddParam->second);
     }
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
-    
+
     return genericEngineImpl<QuantExt::BlackIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults, calibrateUnderlyingCurves(), indexStartDate, indexTenor, indexCoupon,
-        constituentNotionals);
+        generateAdditionalResults, calibrateUnderlyingCurves(), constituentNotionals);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsOptionEngineBuilder::engineImpl(
     const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
-    const std::vector<std::string>& creditCurveIds, const QuantLib::Date& indexStartDate,
-    const QuantLib::Period& indexTenor, const QuantLib::Real& indexCoupon,
-    const std::vector<double>& constituentNotionals) {
+    const std::vector<std::string>& creditCurveIds, const std::vector<double>& constituentNotionals) {
 
     bool generateAdditionalResults = false;
     if (auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
@@ -175,7 +169,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsO
     return genericEngineImpl<QuantExt::NumericalIntegrationIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
         configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
-        generateAdditionalResults, calibrateUnderlyingCurves(), indexStartDate, indexTenor, indexCoupon, constituentNotionals);
+        generateAdditionalResults, calibrateUnderlyingCurves(), constituentNotionals);
 }
 
 } // namespace data
