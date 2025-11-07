@@ -373,6 +373,7 @@ public:
     void setExposureProfiles(bool b) { exposureProfiles_ = b; }
     void setExposureProfilesByTrade(bool b) { exposureProfilesByTrade_ = b; }
     void setExposureProfilesUseCloseOutValues(bool b) { exposureProfilesUseCloseOutValues_ = b; }
+    void setWriteIndividualExposureReports(bool b) { writeIndividualExposureReports_ = b; }
     void setPfeQuantile(Real r) { pfeQuantile_ = r; }
     void setCollateralCalculationType(const std::string& s) { collateralCalculationType_ = s; }
     void setExposureAllocationMethod(const std::string& s) { exposureAllocationMethod_ = s; }
@@ -818,6 +819,7 @@ public:
     bool exposureProfiles() const { return exposureProfiles_; }
     bool exposureProfilesByTrade() const { return exposureProfilesByTrade_; }
     bool exposureProfilesUseCloseOutValues() const { return exposureProfilesUseCloseOutValues_; }
+    bool writeIndividualExposureReports() const { return writeIndividualExposureReports_; };
     Real pfeQuantile() const { return pfeQuantile_; }
     const std::string&  collateralCalculationType() const { return collateralCalculationType_; }
     const std::string& exposureAllocationMethod() const { return exposureAllocationMethod_; }
@@ -1328,6 +1330,7 @@ protected:
     bool sensitivityStressCalcBaseScenario_ = false;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
+    bool writeIndividualExposureReports_ = true;
 
     /***************
      * SIMM analytic

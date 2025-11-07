@@ -4,12 +4,19 @@ FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \  
-  ca-certificates dos2unix python3 python3-pip python3-venv python3-dev libxml2-utils xsltproc \
+  ca-certificates dos2unix gnupg python3 python3-pip python3-venv python3-dev libxml2-utils xsltproc curl git \
   -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
   && update-ca-certificates \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+RUN sh -c 'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg' \
+  && sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null' \
+  && apt-get update \
+  && apt-get install -f -y docker-ce-cli \ 
+  -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # Create and activate virtual environment
 RUN python3 -m venv /venv
