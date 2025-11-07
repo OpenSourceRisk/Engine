@@ -53,6 +53,14 @@ void HwHistoricalCalibrationModelBuilder::performCalculations() {
             WLOG("Mean reversion calibration error ignored: " << e.what());
         }
     }
+    // retrieve log
+    std::string logLine;
+    std::istringstream logInput(qleLog_.str());
+    while (std::getline(logInput, logLine)) {
+        if (!logLine.empty()) {
+            LOG(logLine);
+        }
+    }
 
     extractOutputs();
     DLOG("HwHistoricalCalibrationModelBuilder: performCalculations finished");
@@ -63,11 +71,11 @@ void HwHistoricalCalibrationModelBuilder::buildModel() {
     if (runPcaCalibration_)
         model_ = std::make_unique<QuantExt::HwHistoricalCalibrationModel>(data_->asOf(), data_->curveTenors(),
                                                                           data_->lambda(), data_->useForwardRate(),
-                                                                          data_->irCurves(), data_->fxSpots());
+                                                                          data_->irCurves(), data_->fxSpots(), &qleLog_);
     else
         model_ = std::make_unique<QuantExt::HwHistoricalCalibrationModel>(
             data_->asOf(), data_->curveTenors(), data_->useForwardRate(), data_->principalComponents(),
-            data_->eigenValues(), data_->eigenVectors());
+            data_->eigenValues(), data_->eigenVectors(), &qleLog_);
     LOG("Building HwHistoricalCalibratonModel done");
 }
 

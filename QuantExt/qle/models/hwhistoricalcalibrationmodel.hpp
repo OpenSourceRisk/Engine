@@ -26,12 +26,13 @@ public:
     HwHistoricalCalibrationModel(const Date& asOfDate, const std::vector<Period>& curveTenor, const Real& lambda,
                                  const bool& useForwardRate,
                                  const std::map<std::string, std::map<Date, std::vector<Real>>>& dataIR,
-                                 const std::map<std::string, std::map<Date, Real>>& dataFX);
+                                 const std::map<std::string, std::map<Date, Real>>& dataFX,
+                                 std::ostream* logStream = nullptr);
 
     HwHistoricalCalibrationModel(const Date& asOfDate, const std::vector<Period>& curveTenor,
                                  const bool& useForwardRate, const std::map<std::string, Size>& principalComponent,
                                  const std::map<std::string, Array>& eigenValue,
-                                 const std::map<std::string, Matrix>& eigenVector);
+                                 const std::map<std::string, Matrix>& eigenVector, std::ostream* logStream = nullptr);
 
     void pcaCalibration(const Real& varianceRetained);
     void meanReversionCalibration(const Size& basisFunctionNumber, const Real& kappaUpperBound, const Size& maxGuess = 500);
@@ -50,8 +51,6 @@ public:
     std::map<std::pair<std::string, std::string>, Matrix> rho() const { return correlationMatrix_; };
 
 private:
-    //const Currency baseCurrency_;
-    //const std::vector<Currency> foreignCurrency_;
     const Date asOfDate_;
     const std::vector<Period> curveTenor_;
     const Real returnThreshold_ = 0.0050;
@@ -67,8 +66,10 @@ private:
     std::map<std::string, std::map<Date, std::vector<Real>>> dataIR_;
     std::map<std::string, std::map<Date, Real>> dataFX_;
     std::map<std::string, Matrix> irAbsoluteReturn_, irCovariance_, irAbsoluteReturnAdjusted_, sigmaFormatted_;
-    //std::map<std::string, bool> fxInverse_;
     std::map<std::pair<std::string, std::string>, Matrix> correlationMatrix_;
+
+    std::ostream* logStream_;
+
     //void initialize();
     void computeIrAbsoluteReturn();
     void computeFxLogReturn();
@@ -77,6 +78,13 @@ private:
     Real correlation(Array arr1, Array arr2);
     void formatIrKappa();
     void formatIrSigma();
+
+    // Helper for log stream
+    template <typename T> void writeLog(const T& message) {
+        if (logStream_) {
+            (*logStream_) << message << std::endl;
+        }
+    }
 };
 
 } // namespace quantext

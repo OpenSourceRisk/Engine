@@ -28,17 +28,19 @@ namespace QuantExt {
 HwHistoricalCalibrationModel::HwHistoricalCalibrationModel(
     const Date& asOfDate, const std::vector<Period>& curveTenor, const Real& lambda, const bool& useForwardRate,
     const std::map<std::string, std::map<Date, std::vector<Real>>>& dataIR,
-    const std::map<std::string, std::map<Date, Real>>& dataFX)
+    const std::map<std::string, std::map<Date, Real>>& dataFX, std::ostream* logStream)
     : asOfDate_(asOfDate), curveTenor_(curveTenor), lambda_(lambda), useForwardRate_(useForwardRate), dataIR_(dataIR),
-      dataFX_(dataFX) {}
+      dataFX_(dataFX), logStream_(logStream) {}
 
 HwHistoricalCalibrationModel::HwHistoricalCalibrationModel(const Date& asOfDate, const std::vector<Period>& curveTenor,
                                                            const bool& useForwardRate,
                                                            const std::map<std::string, Size>& principalComponent,
                                                            const std::map<std::string, Array>& eigenValue,
-                                                           const std::map<std::string, Matrix>& eigenVector)
+                                                           const std::map<std::string, Matrix>& eigenVector,
+                                                           std::ostream* logStream)
     : asOfDate_(asOfDate), curveTenor_(curveTenor), useForwardRate_(useForwardRate),
-      principalComponent_(principalComponent), eigenValue_(eigenValue), eigenVector_(eigenVector) {}
+      principalComponent_(principalComponent), eigenValue_(eigenValue), eigenVector_(eigenVector),
+      logStream_(logStream) {}
 
 void HwHistoricalCalibrationModel::pcaCalibration(const Real& varianceRetained) {
     computeFxLogReturn();
@@ -128,10 +130,11 @@ void HwHistoricalCalibrationModel::computeIrAbsoluteReturn() {
                 next = v;
                 std::transform(next.begin(), next.end(), prev.begin(), next.begin(), std::minus<Real>());
                 for (Size j = 0; j < next.size(); ++j) {
-                    /*if (std::abs(next[j]) > returnThreshold_) {
-                        WLOG("Absolute return " << next[j] << " at date " << outer.first << " tenor " << curveTenor_[j]
-                                                << " above threshold.")
-                    }*/
+                    if (std::abs(next[j]) > returnThreshold_) {
+                        std::ostringstream oss;
+                        oss << "Absolute return " << next[j] << " at date " << outer.first << " tenor " << curveTenor_[j] << " above threshold.";
+                        writeLog(oss.str());
+                    }
                     irAbsoluteReturn[i][j] = next[j];
                 }
                 i++;
@@ -146,9 +149,11 @@ void HwHistoricalCalibrationModel::computeIrAbsoluteReturn() {
                 avg += irAbsoluteReturn[i][j];
             }
             avg /= static_cast<double>(irAbsoluteReturn.rows());
-            /*if (std::abs(avg) > averageThreshold_) {
-                ALOG("Average " << avg << " for tenor " << curveTenor_[j] << " above threshold");
-            }*/
+            if (std::abs(avg) > averageThreshold_) {
+                std::ostringstream oss;
+                oss << "Average " << avg << " for tenor " << curveTenor_[j] << " above threshold";
+                writeLog(oss.str());
+            }
             for (Size i = 0; i < irAbsoluteReturn.rows(); ++i) {
                 irAbsoluteReturn[i][j] -= avg;
             }
@@ -173,7 +178,7 @@ void HwHistoricalCalibrationModel::computeIrAbsoluteReturn() {
 
 void HwHistoricalCalibrationModel::pca(const Real& varianceRetained) {
     for (auto const& ccyMatrix : irCovariance_) {
-        //LOG("Perform PCA for currency: " << ccyMatrix.first);
+        writeLog("PCA Calibration for currency: " + ccyMatrix.first);
         SymmetricSchurDecomposition decomp(ccyMatrix.second);
         eigenValue_[ccyMatrix.first] = decomp.eigenvalues();
         eigenVector_[ccyMatrix.first] = decomp.eigenvectors();
@@ -181,7 +186,9 @@ void HwHistoricalCalibrationModel::pca(const Real& varianceRetained) {
         Size pc = 0;
         Real variance = 0;
         for (Size i = 0; i < decomp.eigenvalues().size(); ++i) {
-            //LOG("EigenValues[" << i << "] = " << std::scientific << decomp.eigenvalues()[i]);
+            std::ostringstream oss;
+            oss << "EigenValue[" << i << "] = " << std::scientific << decomp.eigenvalues()[i];
+            writeLog(oss.str());
             sum += decomp.eigenvalues()[i];
         }
         while (variance / sum < varianceRetained) {
@@ -189,8 +196,8 @@ void HwHistoricalCalibrationModel::pca(const Real& varianceRetained) {
             ++pc;
         }
         principalComponent_[ccyMatrix.first] = pc;
-        //LOG("PrincipalComponent: " << principalComponent_.find(ccyMatrix.first)->second);
-        //LOG("Variance Retained: " << std::fixed << variance / sum);
+        writeLog("Principal Component: " + std::to_string(principalComponent_.find(ccyMatrix.first)->second));
+        writeLog("Variance Retained: " + std::to_string(variance / sum));
 
         // transfrom absolute return matrix into pca eigenvector adjusted
         Matrix adjMatrix(decomp.eigenvalues().size(), pc);
@@ -248,7 +255,7 @@ void HwHistoricalCalibrationModel::meanReversionCalibration(const Size& basisFun
         curveTenorReal_.push_back(Actual365Fixed().yearFraction(asOfDate_, asOfDate_ + curveTenor_[i]));
     }
     for (auto const& ccyMatrix : eigenVector_) {
-        //LOG("Perform mean reversion calibration for currency " << ccyMatrix.first);
+        writeLog("Mean Reversion Calibration for currency: " + ccyMatrix.first);
         Size principalComponent = principalComponent_.find(ccyMatrix.first)->second;
         Matrix v(principalComponent, basisFunctionNumber_);
         Matrix kappa(principalComponent, basisFunctionNumber_);
@@ -279,8 +286,9 @@ void HwHistoricalCalibrationModel::meanReversionCalibration(const Size& basisFun
                 if (problem.functionValue() < bestFunctionValue) {
                     solution = problem.currentValue();
                     bestFunctionValue = problem.functionValue();
-                    //LOG("Current best solution is " << problem.currentValue() << ", cost function = "
-                    //                                << bestFunctionValue << " at trial " << nGuess);
+                    std::ostringstream oss;
+                    oss << "New best solution for Principal Component " << i << " with cost function = " << bestFunctionValue << " at trial " << nGuess;
+                    writeLog(oss.str());
                 }
             }
             for (Size j = 0; j < basisFunctionNumber_; ++j) {
@@ -290,9 +298,10 @@ void HwHistoricalCalibrationModel::meanReversionCalibration(const Size& basisFun
                 else
                     kappa[i][j] = kappaUpperBound / (std::acos(-1) / 2) * std::atan(solution[basisFunctionNumber_ + j]);
             }
-
-            //LOG("Solution for Principal Component " << i << " is " << solution);
-            //LOG("time,pc,model,diff");
+            std::ostringstream oss;
+            oss << "Solution for Principal Component " << i << " is " << solution;
+            writeLog(oss.str());
+            writeLog("time,pc,model,diff");
             for (Size k = 0; k < curveTenorReal_.size(); ++k) {
                 Real t = curveTenorReal_[k];
                 Real sum = 0.0;
@@ -310,7 +319,8 @@ void HwHistoricalCalibrationModel::meanReversionCalibration(const Size& basisFun
                         sum += vVal / (t - t0) / kappaVal * (std::exp(-kappaVal * t0) - std::exp(-kappaVal * t));
                     }
                 }
-                //LOG(curveTenorReal_[k] << "," << eigenVector[k] << "," << sum << "," << sum - eigenVector[k]);
+                writeLog(std::to_string(curveTenorReal_[k]) + "," + std::to_string(i) + "," + std::to_string(sum) +
+                         "," + std::to_string(sum - eigenVector[k]));
             }
         }
         v_[ccyMatrix.first] = v;

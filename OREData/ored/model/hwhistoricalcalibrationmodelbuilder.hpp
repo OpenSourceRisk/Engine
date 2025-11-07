@@ -34,6 +34,8 @@ private:
     bool runPcaCalibration_;
     bool runMeanReversionCalibration_;
     bool continueOnError_;
+
+    std::ostringstream qleLog_;
 };
 
 } // namespace data
