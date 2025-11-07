@@ -19,6 +19,8 @@
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 
+#include <iostream>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -32,10 +34,11 @@ HwHistoricalCalibrationModel::HwHistoricalCalibrationModel(
 
 HwHistoricalCalibrationModel::HwHistoricalCalibrationModel(const Date& asOfDate, const std::vector<Period>& curveTenor,
                                                            const bool& useForwardRate,
+                                                           const std::map<std::string, Size>& principalComponent,
                                                            const std::map<std::string, Array>& eigenValue,
                                                            const std::map<std::string, Matrix>& eigenVector)
-    : asOfDate_(asOfDate), curveTenor_(curveTenor), useForwardRate_(useForwardRate), eigenValue_(eigenValue),
-      eigenVector_(eigenVector) {}
+    : asOfDate_(asOfDate), curveTenor_(curveTenor), useForwardRate_(useForwardRate),
+      principalComponent_(principalComponent), eigenValue_(eigenValue), eigenVector_(eigenVector) {}
 
 void HwHistoricalCalibrationModel::pcaCalibration(const Real& varianceRetained) {
     computeFxLogReturn();
@@ -287,32 +290,32 @@ void HwHistoricalCalibrationModel::meanReversionCalibration(const Size& basisFun
                 else
                     kappa[i][j] = kappaUpperBound / (std::acos(-1) / 2) * std::atan(solution[basisFunctionNumber_ + j]);
             }
-            v_[ccyMatrix.first] = v;
-            kappa_[ccyMatrix.first] = kappa;
+
             //LOG("Solution for Principal Component " << i << " is " << solution);
             //LOG("time,pc,model,diff");
             for (Size k = 0; k < curveTenorReal_.size(); ++k) {
                 Real t = curveTenorReal_[k];
                 Real sum = 0.0;
                 for (Size j = 0; j < basisFunctionNumber_; ++j) {
-                    Real v = solution[j];
-                    Real kappa;
+                    Real vVal = solution[j];
+                    Real kappaVal;
                     if (close_enough(kappaUpperBound, 0.0))
-                        kappa = solution[basisFunctionNumber_ + j];
+                        kappaVal = solution[basisFunctionNumber_ + j];
                     else
-                        kappa = kappaUpperBound / (std::acos(-1) / 2) * std::atan(solution[basisFunctionNumber_ + j]);
+                        kappaVal = kappaUpperBound / (std::acos(-1) / 2) * std::atan(solution[basisFunctionNumber_ + j]);
                     Real t0 = k == 0 || !useForwardRate_ ? 0.0 : curveTenorReal_[k - 1];
-                    if (std::abs(kappa) < 1E-6) {
-                        sum += v;
+                    if (std::abs(kappaVal) < 1E-6) {
+                        sum += vVal;
                     } else {
-                        sum += v / (t - t0) / kappa * (std::exp(-kappa * t0) - std::exp(-kappa * t));
+                        sum += vVal / (t - t0) / kappaVal * (std::exp(-kappaVal * t0) - std::exp(-kappaVal * t));
                     }
                 }
                 //LOG(curveTenorReal_[k] << "," << eigenVector[k] << "," << sum << "," << sum - eigenVector[k]);
             }
         }
+        v_[ccyMatrix.first] = v;
+        kappa_[ccyMatrix.first] = kappa;
     }
-
     // Format Output
     formatIrKappa();
     formatIrSigma();

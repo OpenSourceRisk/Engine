@@ -935,7 +935,9 @@ void InputParameters::setLambda(Real r) { lambda_ = r; }
 
 void InputParameters::setVarianceRetained(Real r) { varianceRetained_ = r; }
 
-void InputParameters::setPcaInputFiles(const std::string& s) { pcaInputFiles_ = parseListOfValues(s); }
+void InputParameters::setPcaInputFiles(const std::string& fileString, const std::filesystem::path& inputPath) {
+    pcaInputFiles_ = getFileNames(fileString, inputPath);
+}
 
 void InputParameters::setBasisFunctionNumber(Size s) { basisFunctionNumber_ = s; }
 

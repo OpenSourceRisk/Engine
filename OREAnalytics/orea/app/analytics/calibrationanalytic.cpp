@@ -108,7 +108,7 @@ void CalibrationAnalyticImpl::buildHwHistoricalCalibrationModelData() {
         hwHistoricalModelData_->setPcaCalibration(true);
     } else {
         loader.loadPCAFromCsv(inputs_->pcaInputFiles());
-        hwHistoricalModelData_->setPcaFromInput(loader.moveEigenValue(), loader.moveEigenVector());
+        hwHistoricalModelData_->setPcaFromInput(loader.movePrincipalComponent(), loader.moveEigenValue(), loader.moveEigenVector());
         hwHistoricalModelData_->setPcaCalibration(false);
     }
 
@@ -414,7 +414,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
         analytic()->addReport("CALIBRATION", "calibration", report);
     } else if (inputs_->calibrationModel() == "HW") {
         if (inputs_->hwCalibrationMode() == "Historical") {
-            msg = "Calibration: Read historical market data";
+            msg = "Calibration: Read data";
             LOG(msg);
             CONSOLEW(msg);
             buildHwHistoricalCalibrationModelData();

@@ -1757,8 +1757,9 @@ void OREAppInputParameters::loadParameters() {
                     setMeanReversionCalibration(true);
 
                     tmp = params_->get("calibration", "pcaInputFileName", false);
+                    //filesystem::path inputPath = inputPath_;
                     if (!tmp.empty()) {
-                        setPcaInputFiles((inputPath_ / tmp).generic_string());
+                        setPcaInputFiles(tmp, inputPath_);
                     }
                     tmp = params_->get("calibration", "basisFunctionNumber", false);
                     Size tmpInt = parseInteger(tmp);

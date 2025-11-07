@@ -29,7 +29,8 @@ public:
                                  const std::map<std::string, std::map<Date, Real>>& dataFX);
 
     HwHistoricalCalibrationModel(const Date& asOfDate, const std::vector<Period>& curveTenor,
-                                 const bool& useForwardRate, const std::map<std::string, Array>& eigenValue,
+                                 const bool& useForwardRate, const std::map<std::string, Size>& principalComponent,
+                                 const std::map<std::string, Array>& eigenValue,
                                  const std::map<std::string, Matrix>& eigenVector);
 
     void pcaCalibration(const Real& varianceRetained);

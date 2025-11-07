@@ -63,7 +63,8 @@ public:
     void setIrCurves(std::map<std::string, std::map<Date, std::vector<Real>>>&& v) { irCurves_ = std::move(v); }
     void setFxSpots(std::map<std::string, std::map<Date, Real>>&& v) { fxSpots_ = std::move(v); }
 
-    void setPcaFromInput(std::map<std::string, Array>&& eigenValues, std::map<std::string, Matrix>&& eigenVectors) {
+    void setPcaFromInput(std::map<std::string, Size>&& principalComponents, std::map<std::string, Array>&& eigenValues, std::map<std::string, Matrix>&& eigenVectors) {
+        principalComponents_ = std::move(principalComponents);
         eigenValues_ = std::move(eigenValues);
         eigenVectors_ = std::move(eigenVectors);
     }

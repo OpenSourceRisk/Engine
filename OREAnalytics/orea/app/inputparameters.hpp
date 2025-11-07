@@ -364,7 +364,7 @@ public:
     void setUseForwardOrZeroRate(const std::string& s);
     void setLambda(Real r);
     void setVarianceRetained(Real r);
-    void setPcaInputFiles(const std::string& fileName);
+    void setPcaInputFiles(const std::string& fileName, const std::filesystem::path& inputPath);
     void setBasisFunctionNumber(Size s);
     void setKappaUpperBound(Real r);
     void setHaltonMaxGuess(Size s);

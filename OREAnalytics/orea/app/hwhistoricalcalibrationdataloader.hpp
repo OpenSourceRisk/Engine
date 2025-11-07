@@ -55,6 +55,7 @@ public:
     // Move
     std::map<std::string, std::map<Date, std::vector<Real>>> moveIrCurves() { return std::move(irCurves_); }
     std::map<std::string, std::map<Date, Real>> moveFxSpots() { return std::move(fxSpots_); }
+    std::map<std::string, Size> movePrincipalComponent() { return std::move(principalComponent_); }
     std::map<std::string, Array> moveEigenValue() { return std::move(eigenValue_); }
     std::map<std::string, Matrix> moveEigenVector() { return std::move(eigenVector_); }
 

@@ -66,7 +66,8 @@ void HwHistoricalCalibrationModelBuilder::buildModel() {
                                                                           data_->irCurves(), data_->fxSpots());
     else
         model_ = std::make_unique<QuantExt::HwHistoricalCalibrationModel>(
-            data_->asOf(), data_->curveTenors(), data_->useForwardRate(), data_->eigenValues(), data_->eigenVectors());
+            data_->asOf(), data_->curveTenors(), data_->useForwardRate(), data_->principalComponents(),
+            data_->eigenValues(), data_->eigenVectors());
     LOG("Building HwHistoricalCalibratonModel done");
 }
 
