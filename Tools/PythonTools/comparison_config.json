@@ -1384,21 +1384,6 @@
           }
         ]
       },
-      ".*npv.*\\.json": {
-        "keys": [
-          "tradeId"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "npv",
-              "npvBase"
-            ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
-          }
-        ]
-      },
       ".*additional_results.*\\.csv": {
         "keys": [
           "tradeId",
@@ -2105,6 +2090,21 @@
   },
   "json_settings": {
     "files": {
+      ".*npv.*\\.json": {
+        "keys": [
+          "tradeId"
+        ],
+        "settings": [
+          {
+            "names": [
+              "npv",
+              "npvBase"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "log_progress.*\\.json": {
         "ignore_keys": [
           "@timestamp"
