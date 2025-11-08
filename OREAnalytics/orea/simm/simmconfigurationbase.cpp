@@ -227,8 +227,8 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
                "The risk type " << secondRt << " is not valid for SIMM configuration with name" << name());
 
     // Deal with trivial case of everything equal
-    if (firstRt == secondRt && firstQualifier == secondQualifier && firstLabel_1 == secondLabel_1 &&
-        firstLabel_2 == secondLabel_2) {
+    if (firstRt == secondRt && firstQualifier == secondQualifier && firstBucket == secondBucket &&
+        firstLabel_1 == secondLabel_1 && firstLabel_2 == secondLabel_2) {
         return 1.0;
     }
 
