@@ -1274,14 +1274,6 @@ void XvaEngineCG::calculateDynamicIM() {
             model_->currencies().size() - 1,
             std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
-        // additional IM calculator results
-        auto deltaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto vegaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto curvatureMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto deltaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto vegaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto curvatureMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-
         for (auto const& [parameterGroup, exposureNode] : dynamicImInfo_[i].plainTradeSumGrouped) {
 
             // init derivatives container
@@ -1497,16 +1489,15 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // set results for this valuation date
 
+        RandomVariable deltaMarginIr, vegaMarginIr, curvatureMarginIr, deltaMarginFx, vegaMarginFx, curvatureMarginFx;
+
         for (auto const& n : nettingSetIds) {
             dynamicIM_[n][i] = imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta,
-                                                  conditionalFxVega, deltaMarginIr, vegaMarginIr, curvatureMarginIr,
-                                                  deltaMarginFx, vegaMarginFx, curvatureMarginFx);
-            if (deltaMarginIr && deltaMarginFx)
-                dynamicDeltaIM_[n][i] = *deltaMarginIr + *deltaMarginFx;
-            if (vegaMarginIr && vegaMarginFx)
-                dynamicVegaIM_[n][i] = *vegaMarginIr + *vegaMarginFx;
-            if (curvatureMarginIr && curvatureMarginFx)
-                dynamicCurvatureIM_[n][i] = *curvatureMarginIr + *curvatureMarginFx;
+                                                  conditionalFxVega, &deltaMarginIr, &vegaMarginIr, &curvatureMarginIr,
+                                                  &deltaMarginFx, &vegaMarginFx, &curvatureMarginFx);
+            dynamicDeltaIM_[n][i] = deltaMarginIr + deltaMarginFx;
+            dynamicVegaIM_[n][i] = vegaMarginIr + vegaMarginFx;
+            dynamicCurvatureIM_[n][i] = curvatureMarginIr + curvatureMarginFx;
 
             for (Size j = i + 1; j < std::min(i + dynamicIMStepSize_, valuationDates_.size() + 1); ++j) {
                 dynamicIM_[n][j] = dynamicIM_[n][i];
