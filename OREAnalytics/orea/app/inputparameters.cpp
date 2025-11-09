@@ -913,11 +913,9 @@ void InputParameters::setForeignCurrencies(const std::string& s) { foreignCurren
 
 void InputParameters::setCurveTenors(const std::string& s) { curveTenors_ = parseListOfValues<Period>(s, &parsePeriod); }
 
-void InputParameters::setCurveInputFile(const std::string& s) { 
-    curveInputFile_ = s;
+void InputParameters::setScenarioInputFile(const std::string& s) { 
+    scenarioInputFile_ = s;
 }
-
-void InputParameters::setFixingDataFile(const std::string& s) { fixingDataFile_ = s; }
 
 void InputParameters::setStartDate(const Date& d) { startDate_ = d; }
 

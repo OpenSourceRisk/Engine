@@ -357,8 +357,7 @@ public:
     void setMeanReversionCalibration(bool b);
     void setForeignCurrencies(const std::string& s);
     void setCurveTenors(const std::string& s);
-    void setCurveInputFile(const std::string& fileName);
-    void setFixingDataFile(const std::string& fileName);
+    void setScenarioInputFile(const std::string& fileName);
     void setStartDate(const Date& d);
     void setEndDate(const Date& d);
     void setUseForwardOrZeroRate(const std::string& s);
@@ -831,8 +830,7 @@ public:
     bool meanReversionCalibration() const { return meanReversionCalibration_; }
     const std::vector<std::string>& foreignCurrencies() const { return foreignCurrencies_; }
     const std::vector<Period>& curveTenors() const { return curveTenors_; }
-    const std::string& curveInputFile() const { return curveInputFile_; }
-    const std::string& fixingDataFile() const { return fixingDataFile_; }
+    const std::string& scenarioInputFile() const { return scenarioInputFile_; }
     const Date& startDate() const { return startDate_; }
     const Date& endDate() const { return endDate_; }
     const std::vector<std::string>& pcaInputFiles() const { return pcaInputFiles_; }
@@ -1247,8 +1245,7 @@ protected:
     std::vector<Period> curveTenors_;
     Date startDate_;
     Date endDate_;
-    std::string curveInputFile_;
-    std::string fixingDataFile_;
+    std::string scenarioInputFile_;
     bool useForwardRate_;
     Real lambda_;
     std::vector<std::string> pcaInputFiles_;

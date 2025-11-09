@@ -40,11 +40,8 @@ public:
                                       const QuantLib::Date& startDate = QuantLib::Date(),
                                       const QuantLib::Date& endDate = QuantLib::Date());
 
-
-    void loadHistoricalCurveDataFromCsv(const std::string& fileName);
+    void loadFromScenarioFile(const std::string& fileName);
     void loadPCAFromCsv(const std::vector<std::string>& fileNames);
-    void loadFixings(const std::string& fileName);
-    void cleanData();
 
     // Getters
     const std::map<std::string, std::map<Date, std::vector<Real>>>& getIrCurves() const { return irCurves_; }
@@ -60,10 +57,14 @@ public:
     std::map<std::string, Matrix> moveEigenVector() { return std::move(eigenVector_); }
 
 private:
-    void loadIr(const std::string& curveId, const Date& d, const std::vector<Real>& df);
+    void loadIr(const std::string& curveId, const Size& index, const Date& d, const Real& df);
     void loadFx(const std::string& curveId, const Date& d, const Real& fxSpot);
     void loadEigenValue(const std::string& ccy, const Array& eigenValue);
     void loadEigenVector(const std::string& ccy, const Matrix& eigenVector);
+    void cleanData();
+
+    // Helper
+    std::string parseCurrency(const std::string& curveId);
 
     std::string baseCurrency_;
     std::vector<std::string> foreignCurrency_;

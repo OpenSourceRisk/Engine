@@ -1718,13 +1718,9 @@ void OREAppInputParameters::loadParameters() {
                 if (!tmp.empty() && parseBool(tmp)) {
                     setPcaCalibration(true);
 
-                    tmp = params_->get("calibration", "curveInputFile", false);
-                    QL_REQUIRE(!tmp.empty(), "Curve input files must be provided for Calibration Analytics");
-                    setCurveInputFile((inputPath_ / tmp).generic_string());
-
-                    tmp = params_->get("calibration", "fixingDataFile", false); // Switch to general fixings later
-                    QL_REQUIRE(!tmp.empty(), "Fx spot historical fixings must be provided for Calibration Analytics");
-                    setFixingDataFile((inputPath_ / tmp).generic_string());
+                    tmp = params_->get("calibration", "scenarioInputFile", false);
+                    QL_REQUIRE(!tmp.empty(), "Scenario input files must be provided for Calibration Analytics");
+                    setScenarioInputFile((inputPath_ / tmp).generic_string());
 
                     tmp = params_->get("calibration", "startDate", false);
                     QL_REQUIRE(!tmp.empty(), "Start date must be provided for Calibration Analytics");

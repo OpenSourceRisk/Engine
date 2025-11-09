@@ -98,9 +98,7 @@ void CalibrationAnalyticImpl::buildHwHistoricalCalibrationModelData() {
     hwHistoricalModelData_->setUseForwardRate(inputs_->useForwardRate());
 
     if (inputs_->pcaCalibration()) {
-        loader.loadHistoricalCurveDataFromCsv(inputs_->curveInputFile());
-        loader.loadFixings(inputs_->fixingDataFile());
-        loader.cleanData();
+        loader.loadFromScenarioFile(inputs_->scenarioInputFile());
         hwHistoricalModelData_->setLambda(inputs_->lambda());
         hwHistoricalModelData_->setVarianceRetained(inputs_->varianceRetained());
         hwHistoricalModelData_->setIrCurves(loader.moveIrCurves());

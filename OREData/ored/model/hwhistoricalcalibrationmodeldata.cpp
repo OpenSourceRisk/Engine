@@ -28,7 +28,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
         XMLNode* irModel = XMLUtils::addChild(doc, crossAssetModel, "InterestRateModels");
         for (auto const& ccyMatrix : irKappa_) {
             XMLNode* irHwNf = XMLUtils::addChild(doc, irModel, "HWModel");
-            XMLUtils::addAttribute(doc, irHwNf, "ccy", ccyMatrix.first);
+            XMLUtils::addAttribute(doc, irHwNf, "key", ccyMatrix.first);
             XMLUtils::addChild(doc, irHwNf, "CalibrationType", "None");
             vector<vector<Real>> sigma_vec;
             vector<Real> kappa_vec;
@@ -117,7 +117,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
         XMLNode* irModel = XMLUtils::addChild(doc, crossAssetModel, "InterestRateModels");
         for (auto const& ccyMatrix : irKappa_) {
             XMLNode* irHwNf = XMLUtils::addChild(doc, irModel, "HWModel");
-            XMLUtils::addAttribute(doc, irHwNf, "ccy", ccyMatrix.first);
+            XMLUtils::addAttribute(doc, irHwNf, "key", ccyMatrix.first);
             XMLUtils::addChild(doc, irHwNf, "CalibrationType", "StatisticalWithRiskNeutralVolatility");
             vector<Real> kappa_vec;
             for (Size i = 0; i < ccyMatrix.second.size(); i++) {

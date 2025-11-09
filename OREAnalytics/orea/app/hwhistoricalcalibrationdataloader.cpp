@@ -17,9 +17,13 @@
 */
 
 #include <orea/app/hwhistoricalcalibrationdataloader.hpp>
+#include <orea/scenario/scenariofilereader.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/scenarioloader.hpp>
 
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <sstream>
@@ -41,35 +45,46 @@ HwHistoricalCalibrationDataLoader::HwHistoricalCalibrationDataLoader(const std::
     : baseCurrency_(baseCurrency), foreignCurrency_(foreignCurrency), tenors_(curveTenors), startDate_(startDate),
       endDate_(endDate) {}
 
-void HwHistoricalCalibrationDataLoader::loadHistoricalCurveDataFromCsv(const std::string& fileName) {
-    LOG("Load Historical time series data from file " << fileName);
-    CSVFileReader dataReader(fileName, true);
-    QL_REQUIRE(dataReader.hasField("date"), "Date column is not found in the time series data file.");
-    QL_REQUIRE(dataReader.hasField("curve"), "Curve column is not found in the time series data file.");
-    QL_REQUIRE(dataReader.hasField("data"), "Data column is not found in the time series data file.");
-    Size lines = 0;
-    std::vector<std::string> remove_chars = {"\"", "[", "]", " "};
-    while (dataReader.next()) {
-        ++lines;
-        Date d = parseDate(dataReader.get("date"));
-        string curveId = dataReader.get("curve");
-        string dataStr = dataReader.get("data");
-        // Remove all irrelavent chars in the data string
-        for (Size i = 0; i < remove_chars.size(); i++) {
-            boost::erase_all(dataStr, remove_chars[i]);
+void HwHistoricalCalibrationDataLoader::loadFromScenarioFile(const std::string& fileName) {
+    LOG("Load Historical time series data from scenario file " << fileName);
+
+    ext::shared_ptr<SimpleScenarioFactory> scenarioFactory = ext::make_shared<SimpleScenarioFactory>(false);
+    ext::shared_ptr<ScenarioFileReader> scenarioReader =
+        ext::make_shared<ScenarioFileReader>(fileName, scenarioFactory);
+    ext::shared_ptr<HistoricalScenarioLoader> historicalScenarioLoader =
+        ext::make_shared<HistoricalScenarioLoader>(scenarioReader, startDate_, endDate_, NullCalendar());
+
+    QL_REQUIRE(historicalScenarioLoader->scenarios().size() == 1,
+               "Only one scenario allowed for HW historical calibration.");
+    std::map<Date, ext::shared_ptr<Scenario>> scenarioMap = historicalScenarioLoader->scenarios()[0];
+    QL_REQUIRE(scenarioMap.size() > 0, "Scenario file is empty.");
+    const auto& keys = scenarioMap.begin()->second->keys();
+    for (const auto& [date, scenario] : scenarioMap) {
+        for (const auto& key : keys) {
+            if (key.keytype == RiskFactorKey::KeyType::IndexCurve) {
+                std::string ccy = parseCurrency(key.name);
+                if (ccy == baseCurrency_ ||
+                    std::find(foreignCurrency_.begin(), foreignCurrency_.end(), ccy) != foreignCurrency_.end()) {
+                    loadIr(key.name, key.index, date, scenario->get(key));
+                }
+            } else if (key.keytype == RiskFactorKey::KeyType::FXSpot) {
+                for (const auto& foreignCcy : foreignCurrency_) {
+                    std::string pair1 = foreignCcy + baseCurrency_;
+                    std::string pair2 = baseCurrency_ + foreignCcy;
+                    Real fxRate;
+                    if (key.name == pair1)
+                        fxRate = scenario->get(key);
+                    else if (key.name == pair2)
+                        fxRate = 1.0 / scenario->get(key);
+                    else
+                        continue;
+                    loadFx(pair1, date, fxRate);
+                    break;
+                }
+            }
         }
-        std::vector<std::string> tokens;
-        boost::split(tokens, dataStr, boost::is_any_of(",;\t"), boost::token_compress_off);
-        if (tokens.size() != tenors_.size()) {
-            ALOG("Number of discount rates in line " << lines << " is not the same as tenors given.");
-            continue;
-        }
-        std::vector<Real> discountFactor;
-        for (Size i = 0; i < tenors_.size(); i++) {
-            discountFactor.push_back(parseReal(tokens[i]));
-        }
-        loadIr(curveId, d, discountFactor);
     }
+    cleanData();
 }
 
 void HwHistoricalCalibrationDataLoader::loadPCAFromCsv(const std::vector<std::string>& fileNames) {
@@ -109,44 +124,20 @@ void HwHistoricalCalibrationDataLoader::loadPCAFromCsv(const std::vector<std::st
     }
 }
 
-void HwHistoricalCalibrationDataLoader::loadFixings(const std::string& fileName) {
-    LOG("Load fixings from file " << fileName);
-    CSVFileReader dataReader(fileName, false);
-    dataReader.next();
-    QL_REQUIRE(dataReader.numberOfColumns() == 3, "Number of columns in fixings file must be 3.");
-    Size lines = 0;
-    // std::vector<std::string> remove_chars = { "\"", "[", "]", " " };
-    while (dataReader.next()) {
-        ++lines;
-        Date d = parseDate(dataReader.get(0));
-        string curveId = dataReader.get(1);
-        Real dataReal = parseReal(dataReader.get(2));
-        std::vector<std::string> tokens;
-        boost::split(tokens, curveId, boost::is_any_of("-"), boost::token_compress_off);
-        if (tokens[0] == "FX")
-            loadFx(curveId, d, dataReal);
+void HwHistoricalCalibrationDataLoader::loadIr(const std::string& curveId, const Size& index, const Date& d,
+                                                      const Real& df) {
+    std::map<Date, std::vector<Real>>& dateMap = irCurves_[curveId];
+    std::vector<Real>& discountFactors = dateMap[d];
+    if (discountFactors.empty()) {
+        discountFactors.resize(tenors_.size(), 0.0);
     }
-}
-
-void HwHistoricalCalibrationDataLoader::loadIr(const std::string& curveId, const Date& d, const std::vector<Real>& df) {
-    // Check if the date is within the start and end date specified in ore.xml
-    if (!(d >= startDate_ && d <= endDate_)) {
-        return;
-    }
-    if (irCurves_.find(curveId) != irCurves_.end()) {
-        if (irCurves_[curveId].find(d) != irCurves_[curveId].end()) {
-            ALOG("Encounter duplicated records for curveId " << curveId << ", date " << d << " in the input file.");
-            return;
-        }
-    }
-    irCurves_[curveId][d] = df;
+    QL_REQUIRE(index < tenors_.size(), "Tenor index " << index << " out of range for curve " << curveId << " on date "
+                                                      << d << " (max: " << tenors_.size() << ")");
+    discountFactors[index] = df;
 }
 
 void HwHistoricalCalibrationDataLoader::loadFx(const std::string& curveId, const Date& d, const Real& fxSpot) {
     // Check if the date is within the start and end date specified in ore.xml
-    if (!(d >= startDate_ && d <= endDate_)) {
-        return;
-    }
     if (fxSpots_.find(curveId) != fxSpots_.end()) {
         if (fxSpots_[curveId].find(d) != fxSpots_[curveId].end()) {
             ALOG("Encounter duplicated records for curveId " << curveId << ", date " << d << " in the input file.");
@@ -169,167 +160,40 @@ void HwHistoricalCalibrationDataLoader::cleanData() {
     // Check if all required currency exist in irCurves_
     std::vector<std::string> requiredCcy = foreignCurrency_;
     requiredCcy.push_back(baseCurrency_);
-    std::vector<string> erase_list;
-    for (auto const& outer : irCurves_) {
-        std::vector<std::string> tokens;
-        boost::split(tokens, outer.first, boost::is_any_of("/-"), boost::token_compress_off);
-        QL_REQUIRE(tokens.size() >= 2, "Curve should be in the format of IndexCurve/CCY-NAME-TENOR or IndexCurve/CCY");
-        auto position = std::find(requiredCcy.begin(), requiredCcy.end(), tokens[1]);
-        if (position == requiredCcy.end()) {
-            erase_list.push_back(outer.first);
-        } else {
+
+    for (const auto& [curveId, dataMap] : irCurves_) {
+        auto position = std::find(requiredCcy.begin(), requiredCcy.end(), parseCurrency(curveId));
+        if (position != requiredCcy.end()) {
             requiredCcy.erase(position);
-            // Change map key to currency code
-            auto handler = irCurves_.extract(outer.first);
-            handler.key() = tokens[1];
-            irCurves_.insert(std::move(handler));
         }
     }
-    // Remove all the currencies that are not needed
-    for (auto const& index : erase_list) {
-        irCurves_.erase(index);
-    }
+
     std::string missingCcy;
     for (auto& c : requiredCcy)
         missingCcy += c + " ";
     QL_REQUIRE(requiredCcy.size() == 0, "Discount factor for " << missingCcy << "are not found in input file.");
 
     // Check if all required fx spot exist in fxSpots
-    requiredCcy = foreignCurrency_;
-    erase_list.clear();
-    for (auto const& outer : fxSpots_) {
-        // Extract currency pair name
-        std::vector<std::string> tokens;
-        boost::split(tokens, outer.first, boost::is_any_of("/-"), boost::token_compress_off);
-        QL_REQUIRE(tokens.size() >= 4, "Curve should be in the format of FX-NAME-CCY1-CCY2");
-        string ccyPair;
-        if (tokens[2] == baseCurrency_) {
-            auto position = std::find(requiredCcy.begin(), requiredCcy.end(), tokens[3]);
-            if (position != requiredCcy.end()) {
-                ccyPair = tokens[3] + tokens[2];
-                // Inverse the fx spot rates
-                for (const auto& inner : outer.second)
-                    fxSpots_[outer.first][inner.first] = 1.0 / inner.second;
-                requiredCcy.erase(position);
-            } else {
-                erase_list.push_back(outer.first);
-                continue;
-            }
-        } else if (tokens[3] == baseCurrency_) {
-            auto position = std::find(requiredCcy.begin(), requiredCcy.end(), tokens[2]);
-            if (position != requiredCcy.end()) {
-                ccyPair = tokens[2] + tokens[3];
-                requiredCcy.erase(position);
-            } else {
-                erase_list.push_back(outer.first);
-                continue;
-            }
-        } else {
-            erase_list.push_back(outer.first);
-            continue;
+    std::vector<std::string> missingFxPairs;
+    for (const auto& foreignCcy : foreignCurrency_) {
+        std::string expectedPair = foreignCcy + baseCurrency_;
+
+        if (fxSpots_.find(expectedPair) == fxSpots_.end()) {
+            missingFxPairs.push_back(expectedPair);
         }
-        // Change map key to currency pair code
-        auto handler = fxSpots_.extract(outer.first);
-        handler.key() = ccyPair;
-        fxSpots_.insert(std::move(handler));
-    }
-    // Remove all the currencies that are not needed
-    for (auto const& index : erase_list) {
-        fxSpots_.erase(index);
     }
     missingCcy = "";
-    for (auto& c : requiredCcy)
-        missingCcy += c + "-" + baseCurrency_ + " ";
-    QL_REQUIRE(requiredCcy.size() == 0, "FX spot for " << missingCcy << "are not found in input file.");
+    for (auto& c : missingFxPairs)
+        missingCcy += c + " ";
+    QL_REQUIRE(missingFxPairs.size() == 0, "FX spot for " << missingCcy << "are not found in input file.");
+}
 
-    // Master date set
-    std::set<Date> masterDates;
-    for (auto const& outer : fxSpots_)
-        for (auto const& inner : outer.second)
-            masterDates.insert(inner.first);
-    for (auto const& outer : irCurves_)
-        for (auto const& inner : outer.second)
-            masterDates.insert(inner.first);
-
-    // Forward-fill FX and IR data
-    for (auto& outer : fxSpots_) {
-        if (outer.second.empty())
-            continue;
-        Real first = outer.second.begin()->second;
-        Real last = first;
-
-        // Collect missing dates first, then insert
-        std::vector<std::pair<Date, Real>> missingDates;
-        missingDates.reserve(masterDates.size());
-
-        auto masterIt = masterDates.begin();
-        auto dataIt = outer.second.begin();
-
-        while (masterIt != masterDates.end()) {
-            const Date& masterDate = *masterIt;
-            while (dataIt != outer.second.end() && dataIt->first < masterDate) {
-                last = dataIt->second;
-                ++dataIt;
-            }
-            if (dataIt == outer.second.end() || dataIt->first != masterDate) {
-                Real fillValue = (masterDate < outer.second.begin()->first ? first : last);
-                missingDates.emplace_back(masterDate, fillValue);
-            } else {
-                last = dataIt->second;
-                ++dataIt;
-            }
-            ++masterIt;
-        }
-
-        for (const auto& [date, value] : missingDates) {
-            outer.second[date] = value;
-            LOG("Add missing fx spot rate on date " << date << ", Currency: " << outer.first << ", Value: " << value);
-        }
-    }
-    for (auto& outer : irCurves_) {
-        if (outer.second.empty())
-            continue;
-        std::vector<Real> first = outer.second.begin()->second;
-        std::vector<Real> last = first;
-
-        // Collect missing dates first, then insert
-        std::vector<std::pair<Date, std::vector<Real>>> missingDates;
-        missingDates.reserve(masterDates.size());
-
-        auto masterIt = masterDates.begin();
-        auto dataIt = outer.second.begin();
-
-        while (masterIt != masterDates.end()) {
-            const Date& masterDate = *masterIt;
-
-            while (dataIt != outer.second.end() && dataIt->first < masterDate) {
-                last = dataIt->second;
-                ++dataIt;
-            }
-
-            if (dataIt == outer.second.end() || dataIt->first != masterDate) {
-                std::vector<Real> fillValue = (masterDate < outer.second.begin()->first ? first : last);
-                missingDates.emplace_back(masterDate, fillValue);
-            } else {
-                last = dataIt->second;
-                ++dataIt;
-            }
-
-            ++masterIt;
-        }
-
-        for (const auto& [date, value] : missingDates) {
-            outer.second[date] = value;
-            std::ostringstream oss;
-            for (Size k = 0; k < value.size(); ++k) {
-                if (k > 0)
-                    oss << ", ";
-                oss << value[k];
-            }
-            LOG("Add missing IR curve rate on date " << date << ", Currency: " << outer.first
-                                                     << ", Value: " << oss.str());
-        }
-    }
+std::string HwHistoricalCalibrationDataLoader::parseCurrency(const std::string& curveId) {
+    vector<string> tokens;
+    split(tokens, curveId, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
+               "Two or three tokens required in " << curveId << ": CCY-INDEX or CCY-INDEX-TERM");
+    return tokens[0];
 }
 
 } // namespace analytics
