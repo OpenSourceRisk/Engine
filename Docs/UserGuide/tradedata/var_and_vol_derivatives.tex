@@ -423,7 +423,7 @@ realisedVolatility = 100 * sqrt((252/expectedN)) * sqrt(realisedVariance);
 
 IF Alive == 1 THEN
     FOR d IN (2, SIZE(ValuationSchedule), 1) DO
-      IF {{VolBarrierDate == ValuationSchedule[d]} AND {realisedVolatility < VolBarrierLevel}} THEN
+      IF {{VolBarrierDate == ValuationSchedule[d]} AND {realisedVolatility <= VolBarrierLevel}} THEN
         Alive = 0;
       END;
     END;
