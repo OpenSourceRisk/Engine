@@ -104,6 +104,7 @@
       <xs:element type="gammaSwapData" name="GammaSwapData"/>
       <xs:element type="bestEntryOptionData" name="BestEntryOptionData"/>
       <xs:element type="dualEuroBinaryOptionData" name="DualEuroBinaryOptionData"/>
+      <xs:element type="dualEuroBinaryOptionDoubleKOData" name="DualEuroBinaryOptionDoubleKOData"/>
       <xs:element type="volBarrierOptionData" name="VolatilityBarrierOptionData"/>
       <xs:element type="tarfData2" name="FxTaRFData"/>
       <xs:element type="tarfData2" name="EquityTaRFData"/>
@@ -3097,6 +3098,23 @@
       <xs:element type="stFreeStyleNumber" name="BarrierLevel"/>
       <xs:element type="stFreeStyleBarrierType" name="BarrierType"/>
       <xs:element type="stFreeStyleEvent" name="BarrierDate"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleNumber" name="SettlementAmount"/>
+      <xs:element type="stFreeStyleEvent" name="Expiry"/>
+      <xs:element type="stFreeStyleNumber" name="Premium"/>
+      <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="dualEuroBinaryOptionDoubleKOData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ValuationSchedule"/>
+      <xs:element type="stFreeStyleNumber" name="VolBarrierLevel"/>
+      <xs:element type="stFreeStyleBarrierType" name="VolBarrierDate"/>
+      <xs:element type="stFreeStyleNumber" name="SpotBarrierLevel"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
       <xs:element type="stFreeStyleNumber" name="SettlementAmount"/>
       <xs:element type="stFreeStyleEvent" name="Expiry"/>
