@@ -164,7 +164,7 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
     registerWith(overnightIndex_);
     registerWith(discountHandle_);
 
-    swap_ = MakeOIS(Period(), overnightIndex_, 0.0)
+    swap_ = MakeOIS(Period(), overnightIndex_, quote().empty() ? 0.0 : quote()->value())
                 .withEffectiveDate(startDate)
                 .withTerminationDate(endDate)
                 .withFixedLegDayCount(fixedDayCounter_)
