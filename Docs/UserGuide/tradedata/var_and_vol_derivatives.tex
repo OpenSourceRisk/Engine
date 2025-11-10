@@ -34,6 +34,8 @@ Pairwise Variance Swap & \lstinline!PairwiseVarianceSwap! \\
 \hline
 Variance Dispersion Swap & \lstinline!VarianceDispersionSwap! \\
 \hline
+Dual European Binary Option with Volatility and Spot KO Barrier & \lstinline!DualEuroBinaryOptionDoubleKO! \\
+\hline
 Corridor Variance Dispersion Swap & \lstinline!CorridorVarianceDispersionSwap! \\
 \hline
 Corridor Variance Dispersion Swap with KO Barrier & \lstinline!KOCorridorVarianceDispersionSwap! \\
@@ -355,6 +357,120 @@ The meanings and allowable values for the \lstinline!KIKOVarianceSwapData! node 
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
       COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Dual European Binary Option with Volatility and Spot KO Barrier}
+
+The traditional trade representation is as follows, using an EQ underlying in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="DualEuroBinaryOptionDoubleKO">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+  ....
+  </Envelope>
+  <DualEuroBinaryOptionDoubleKOData>
+    <LongShort type="longShort">Long</LongShort>
+    <SettlementDate type="event">2020-07-20</SettlementDate>
+    <SettlementAmount type="number">100000000</SettlementAmount>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-01-15</StartDate>
+          <EndDate>2020-07-10</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>US</Calendar>
+          <Convention>Following</Convention>
+          <TermConvention>Following</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <SpotBarrierLevel type="number">0.05</SpotBarrierLevel>
+    <VolBarrierLevel type="number">6.75</VolBarrierLevel>
+    <VolBarrierDate type="event">2020-07-18</VolBarrierDate>
+    <Underlying type="index">FX-ECB-JPY-USD</Underlying>
+    <PayCcy type="currency">USD</PayCcy>
+    <Expiry type="event">2020-07-15</Expiry>
+    <Premium type="number">0</Premium>
+    <PremiumDate type="event">2020-07-18</PremiumDate>
+  </DualEuroBinaryOptionDoubleKOData>
+</Trade>
+\end{minted}
+
+The DualEuroBinaryOptionDoubleKO script referenced in the trade above is shown in listing
+\ref{lst:DualEuroBinaryOptionDoubleKO}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+NUMBER d, realisedVariance, realisedVolatility, currPrice, pay;
+NUMBER prevPrice, payoff, strike, TriggerProbability, premium, expectedN, Alive;
+
+Alive = 1;
+
+FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+  currPrice = Underlying(ValuationSchedule[d]);
+  prevPrice = Underlying(ValuationSchedule[d-1]);
+  IF currPrice >= SpotBarrierLevel  THEN
+    Alive = 0;
+  END;
+  realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+END;
+
+expectedN = SIZE(ValuationSchedule) - 1;
+realisedVolatility = 100 * sqrt((252/expectedN)) * sqrt(realisedVariance);
+
+IF Alive == 1 THEN
+    FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+      IF {{VolBarrierDate == ValuationSchedule[d]} AND {realisedVolatility < VolBarrierLevel}} THEN
+        Alive = 0;
+      END;
+    END;
+END;
+
+IF Alive == 1 THEN
+  TriggerProbability = 1;
+  payoff = SettlementAmount;
+  premium = PAY(Premium, Expiry, PremiumDate, PayCcy);
+
+  pay = PAY(payoff, Expiry, SettlementDate, PayCcy);
+
+  Option = pay - premium;
+
+END;
+\end{minted}
+\caption{Payoff script for a DualEuroBinaryOptionDoubleKO.}
+\label{lst:DualEuroBinaryOptionDoubleKO}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!DualEuroBinaryOptionDoubleKO! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to receiving the settlement amount at expiry. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[number] \lstinline!SpotBarrierLevel!: The agreed Spot barrier level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[event] \lstinline!VolBarrierDate!: The date on which the realised volatility event is determined. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!SettlementAmount!: The settlement amount. \\
+  Allowable values: Any non-negative real number.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!PremiumDate!: The date on which the option premium is paid. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!Premium!: The option premium. \\
+  Allowable values: Any non-negative real number.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
