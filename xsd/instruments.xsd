@@ -3119,6 +3119,7 @@
       <xs:element type="stFreeStyleNumber" name="Notional"/>
       <xs:element type="stFreeStyleEvent" name="Expiry"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
     </xs:all>
   </xs:complexType>
 
