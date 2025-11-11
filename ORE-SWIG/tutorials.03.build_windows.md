@@ -39,71 +39,73 @@ You need to grab the source code for ORE and ORESWIG, e.g:
 
 # Environment Variables
 
-For purposes of this tutorial, we are going to create a series of environment
-variables, prefixed with `DEMO_`, pointing to the locations of the
-prerequisites.  Once you have installed all of the prerequisites listed above,
-set the following environment variables pointing to the relevant directories,
-e.g:
+For purposes of this tutorial, create environment variables pointing to ORE and
+its prerequisites, e.g:
 
-    SET DEMO_BOOST=C:\repos\boost\boost_1_86_0
-    SET DEMO_BOOST_LIB64=C:\repos\boost\boost_1_86_0\lib64-msvc-14.2
-    SET DEMO_SWIG_DIR=C:\repos\swigwin\swigwin-4.3.0
-    SET DEMO_ORE_DIR=C:\repos\Engine
-    SET DEMO_ZLIB_ROOT=C:\repos\vcpkg\packages\zlib_x64-windows (optional)
+    SET BOOST_INCLUDEDIR=C:\repos\boost\boost_1_72_0
+    SET BOOST_LIBRARYDIR=C:\repos\boost\boost_1_72_0\lib64-msvc-14.2
+    SET SWIG_ROOT=C:\repos\swigwin\swigwin-4.3.0
+    SET ZLIB_ROOT=C:\repos\vcpkg\packages\zlib_x64-windows (optional)
+    SET ORE_DIR=C:\repos\ore
 
 # Build ORE and ORE-SWIG
+
 There are two ways to build ORESWIG: using **cmake**, or using **setup.py**.
 With cmake, you can generate the wrapper.  With setup.py you can generate both
 the wrapper and the wheel. Regardless, ORE libraries must be built first.
 
 ## Build ORE/ORESWIG via CMake
 
-Below are the commands to configure the ORE and ORE-SWIG build using cmake. If you do not
-require compression, then you can omit the `ZLIB_ROOT` environment variable,
-and, when running cmake, you can omit flag `-DORE_USE_ZLIB=ON`. 
+Below are the commands to configure and build ORE and ORE-SWIG using cmake. If
+you do not require compression, then you can omit the `ZLIB_ROOT` environment
+variable, and, when running cmake, you can omit flag `-DORE_USE_ZLIB=ON`.
 
-To build ORE and ORE-SWIG simulataneously With cmake, you can generate the wrapper by 
-simply including `-DORE_BUILD-SWIG=ON` when configuring your ORE. 
-
-    cd %DEMO_ORE_DIR%
+    cd %ORE_DIR%
     mkdir build
-    cd %DEMO_ORE_DIR%\build
-    SET BOOST_INCLUDEDIR=%DEMO_BOOST_ROOT%
-    SET BOOST_LIB64=%DEMO_BOOST_LIB%
-    SET ZLIB_ROOT=%DEMO_ZLIB_ROOT%
-    SET SWIG_ROOT=%DEMO_SWIG_DIR%
-    cmake -G "Visual Studio 17 2022" -A x64 .. -DBOOST_INCLUDEDIR=%BOOST% -DBOOST_LIBRARYDIR=%BOOST_LIB64% -DMSVC_LINK_DYNAMIC_RUNTIME=OFF -DORE-BUILD-SWIG=ON -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=OFF -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DCMAKE_BUILD_TYPE=Release -DORE_USE_ZLIB=ON -DQL_ENABLE_SESSIONS=ON -DBoost_NO_SYSTEM_PATHS=ON
+    cd %ORE_DIR%\build
+    cmake .. -DMSVC_LINK_DYNAMIC_RUNTIME=OFF -DORE_USE_ZLIB=ON -DQL_ENABLE_SESSIONS=ON -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_TESTS=OFF -DORE_BUILD_APP=OFF -DQL_BUILD_BENCHMARK=OFF -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF
     cmake --build . --config Release
 
-Make sure to add the location of the ORE-SWIG package to your PYTHONPATH, e.g.
+Make sure to add the location of the ORE-SWIG package to your PYTHONPATH, e.g:
 
-    SET PYTHONPATH=%DEMO_ORE_DIR%\build;%DEMO_ORE_DIR%\build\ORE-SWIG\Release
+    SET PYTHONPATH=%ORE_DIR%\build\ORE-SWIG;%ORE_DIR%\build\ORE-SWIG\Release
 
 ## Build ORE/ORESWIG via setup.py
 
-If using the setup.py method, you would have to build ORE with cmake as demonstrated 
-above, but, when configuring cmake, disable the flag `-DORE_BUILD-SWIG=OFF`. Once 
-ORE libraries have been built, below are the commands to build the ORESWIG Python
-wrapper and wheel using setup.py.  If you do not require compression, then you can
-omit the `ORE_USE_ZLIB` environment variable.
+If using the setup.py method, you would have to build ORE with cmake as
+demonstrated above, but, when configuring cmake, disable the SWIG build with:
+`-DORE_BUILD-SWIG=OFF`. Once ORE libraries have been built, below are the
+commands to build the ORESWIG Python wrapper using setup.py.  If you
+do not require compression, then you can omit the `ORE_USE_ZLIB` environment
+variable.
 
-    cd Engine\ORE-SWIG\
+In the commands below, to avoid polluting your primary installation of python,
+we create a virtual environment into which we install the packages required by
+setup.py.
+
+    cd %ORE_DIR%\ORE-SWIG
     SET ORE_STATIC_RUNTIME=1
     SET ORE_USE_ZLIB=1
+    SET PATH=%PATH%;C:\path\to\swig
+    python -m venv env1
+    .\env1\Scripts\activate.bat
+    python -m pip install --upgrade pip
+    python -m pip install build pynose pytest setuptools
     python setup.py wrap
     python setup.py build
     python setup.py test
     python setup.py install
     python -m build --wheel
+    deactivate
 
 The `python setup.py install` should take care of installing ORE as a package
 to be universally used in Python, without needing to set PYTHONPATH. Otherwise,
 
-    SET PYTHONPATH=%DEMO_ORE_DIR%\ORE-SWIG\build\lib.win-amd64-cpython-310
+    SET PYTHONPATH=%ORE_DIR%\ORE-SWIG\build\lib.win-amd64-cpython-312
 
 ### Use the wrapper
 
-    cd %DEMO_ORE_DIR%\Examples\ORE-Python\ExampleScripts
+    cd %ORE_DIR%\Examples\ORE-Python\ExampleScripts
     python swap.py
 
 When you run example script `ore.py`, it writes to directory `Output` a number
@@ -111,15 +113,29 @@ of output files, including `cube.dat`.  If you have compression enabled, as
 described above, then `cube.dat` is generated in compressed format (zip).  If
 not then `cube.dat` is generated as a flat (plain text) file.
 
+## Build the wheel with setup.py
+
+Whether you used cmake or setup.py above to build the wrapper, you can use
+setup.py to build the wheel.  If you used setup.py then you already have the
+python virtual environment, and you can reuse it, otherwise you can create a
+new one as shown below.
+
+    cd %ORE_DIR%\ORE-SWIG
+    SET BOOST=C:\repos\boost\boost_1_72_0
+    SET BOOST_LIB64=C:\repos\boost\boost_1_72_0\lib64-msvc-14.2
+    python -m venv env1
+    .\env1\Scripts\activate.bat
+    python -m pip install --upgrade pip
+    python -m pip install build
+    python -m build --wheel
+    deactivate
 
 ### Use the wheel
 
-    cd %DEMO_ORE_DIR%\ORE-SWIG\ORE-Python\Examples
+    cd %ORE_DIR%\Examples\ORE-Python\ExampleScripts
     python -m venv env1
     .\env1\Scripts\activate.bat
-    pip install %DEMO_ORE_DIR%\ORE-SWIG\dist\open_source_risk_engine_-1.8.13-cp310-cp310-win_amd64.whl
+    pip install %ORE_DIR%\ORE-SWIG\dist\open_source_risk_engine-1.8.13.1-cp312-cp312-win_amd64.whl
     python swap.py
     deactivate
-    rmdir /s /q env1
-
 

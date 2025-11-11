@@ -300,6 +300,8 @@ void Trade::reset() {
         savedNumberOfPricings_ += instrument_->getNumberOfPricings();
         savedCumulativePricingTime_ += instrument_->getCumulativePricingTime();
     }
+    // reset build status
+    setBuilt(false);
     // reset members
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>();
     legs_.clear();

@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<PricingEngines>
+  <Product type="CommoditySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters />
+    <Engine>CommoditySwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters>
+      <Parameter name="Volatility_NaturalGasBasis">normal</Parameter>
+    </ModelParameters>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters />
+  </Product>
+  <Product type="CommodityOptionForward">
+    <Model>BlackScholes</Model>
+    <ModelParameters>
+      <Parameter name="Volatility_NaturalGasBasis">normal</Parameter>
+    </ModelParameters>
+    <Engine>AnalyticEuropeanForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+  </GlobalParameters>
+</PricingEngines>
