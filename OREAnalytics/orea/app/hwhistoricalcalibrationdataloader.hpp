@@ -21,7 +21,10 @@
     \ingroup app
 */
 
-#include <ql/quantlib.hpp>
+#include <ql/time/date.hpp>
+#include <ql/types.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/math/array.hpp>
 
 #include <string>
 #include <vector>
@@ -52,12 +55,12 @@ public:
     // Move
     std::map<std::string, std::map<QuantLib::Date, std::vector<QuantLib::Real>>> moveIrCurves() { return std::move(irCurves_); }
     std::map<std::string, std::map<QuantLib::Date, QuantLib::Real>> moveFxSpots() { return std::move(fxSpots_); }
-    std::map<std::string, Size> movePrincipalComponent() { return std::move(principalComponent_); }
+    std::map<std::string, QuantLib::Size> movePrincipalComponent() { return std::move(principalComponent_); }
     std::map<std::string, QuantLib::Array> moveEigenValue() { return std::move(eigenValue_); }
     std::map<std::string, QuantLib::Matrix> moveEigenVector() { return std::move(eigenVector_); }
 
 private:
-    void loadIr(const std::string& curveId, const Size& index, const QuantLib::Date& d, const QuantLib::Real& df);
+    void loadIr(const std::string& curveId, const QuantLib::Size& index, const QuantLib::Date& d, const QuantLib::Real& df);
     void loadFx(const std::string& curveId, const QuantLib::Date& d, const QuantLib::Real& fxSpot);
     void loadEigenValue(const std::string& ccy, const QuantLib::Array& eigenValue);
     void loadEigenVector(const std::string& ccy, const QuantLib::Matrix& eigenVector);
@@ -70,9 +73,9 @@ private:
     std::vector<std::string> foreignCurrency_;
     std::vector<QuantLib::Period> tenors_;
     QuantLib::Date startDate_, endDate_;
-    std::map<std::string, std::map<Date, std::vector<QuantLib::Real>>> irCurves_;
-    std::map<std::string, std::map<Date, QuantLib::Real>> fxSpots_;
-    std::map<std::string, Size> principalComponent_;
+    std::map<std::string, std::map<QuantLib::Date, std::vector<QuantLib::Real>>> irCurves_;
+    std::map<std::string, std::map<QuantLib::Date, QuantLib::Real>> fxSpots_;
+    std::map<std::string, QuantLib::Size> principalComponent_;
     std::map<std::string, QuantLib::Array> eigenValue_;
     std::map<std::string, QuantLib::Matrix> eigenVector_;
 };
