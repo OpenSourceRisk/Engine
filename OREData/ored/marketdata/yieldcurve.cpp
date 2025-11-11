@@ -2969,8 +2969,7 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                 {fxForwardHelper, "FX Forward", marketQuote->name(), marketQuote->quote()->value(),
                  std::function<std::vector<TradeCashflowReportData>()>{[fxForwardHelper, knownCurrency,
                                                                         knownDiscountCurve, fxSpotSourceCcy,
-                                                                        fxSpotTargetCcy, fxSpotQuote, snEarliestDate,
-                                                                        this]() {
+                                                                        fxSpotTargetCcy, spotFx, this]() {
                      auto forCurve = knownCurrency == fxSpotSourceCcy
                                          ? *knownDiscountCurve
                                          : QuantLib::ext::shared_ptr<YieldTermStructure>(
@@ -2980,15 +2979,15 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                                          : QuantLib::ext::shared_ptr<YieldTermStructure>(
                                                fxForwardHelper->termStructure(), null_deleter());
                      Leg forCf = {QuantLib::ext::make_shared<SimpleCashFlow>(1.0, fxForwardHelper->latestDate())};
-                     Leg domCf = {QuantLib::ext::make_shared<SimpleCashFlow>(fxForwardHelper->impliedQuote(),
-                                                                             fxForwardHelper->latestDate())};
-                     return getCashflowReportData({forCf, domCf}, {false, true}, {1.0, 1.0}, fxSpotTargetCcy.code(),
-                                                  {fxSpotSourceCcy.code(), fxSpotTargetCcy.code()}, asofDate_,
-                                                  {forCurve, domCurve},
-                                                  {fxSpotQuote->quote()->value() * forCurve->discount(snEarliestDate) /
-                                                       domCurve->discount(snEarliestDate),
-                                                   1.0},
-                                                  {}, {});
+                     Leg domCf = {QuantLib::ext::make_shared<SimpleCashFlow>(
+                         fxForwardHelper->impliedQuote() + spotFx->value(), fxForwardHelper->latestDate())};
+                     return getCashflowReportData(
+                         {forCf, domCf}, {false, true}, {1.0, 1.0}, fxSpotTargetCcy.code(),
+                         {fxSpotSourceCcy.code(), fxSpotTargetCcy.code()}, asofDate_, {forCurve, domCurve},
+                         {spotFx->value() * domCurve->discount(fxForwardHelper->earliestDate()) /
+                              forCurve->discount(fxForwardHelper->earliestDate()),
+                          1.0},
+                         {}, {});
                  }}});
         }
     }
