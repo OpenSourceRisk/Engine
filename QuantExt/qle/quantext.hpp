@@ -437,6 +437,7 @@
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/intrinsicascotengine.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
+#include <qle/pricingengines/mccamcallablebondengine.hpp>
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
@@ -624,6 +625,7 @@
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/barrier.hpp>
+#include <qle/utilities/callablebond.hpp>
 #include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/commodity.hpp>
 #include <qle/utilities/creditcurves.hpp>
