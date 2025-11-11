@@ -98,7 +98,6 @@ void AnalyticsManager::runAnalytics(
         return;
 
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
-
     // load the market data if at least one analytic requires that and we have non-empty tmps
     if (std::any_of(analytics_.begin(), analytics_.end(),
                     [](const std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>& a) {

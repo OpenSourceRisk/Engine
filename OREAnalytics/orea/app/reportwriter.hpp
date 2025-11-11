@@ -87,6 +87,8 @@ public:
     virtual void writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                      const std::string& tradeId);
 
+    virtual void writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess);
+
     virtual void writeNettingSetExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                           const std::string& nettingSetId);
 
@@ -94,9 +96,14 @@ public:
     
     virtual void writeNettingSetCvaSensitivities(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                           const std::string& nettingSetId);
+    
+    virtual void writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                 QuantLib::ext::shared_ptr<PostProcess> postProcess);
 
     virtual void writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                       const std::string& nettingSetId);
+    
+    virtual void writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess);
 
     virtual void writeXVA(ore::data::Report& report, const string& allocationMethod,
                           QuantLib::ext::shared_ptr<Portfolio> portfolio, QuantLib::ext::shared_ptr<PostProcess> postProcess);
@@ -251,6 +258,11 @@ public:
 
     void writeCapitalCrifReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
                                 const std::string& baseCurrency, const char& csvQuoteChar = '\0') const;
+
+    virtual void writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
+                                 const Size& principalComponent, ore::data::Report& reportOut);
+
+    virtual void writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut);
 
 protected:
     std::string nullString_;

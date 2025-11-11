@@ -22,6 +22,8 @@
 #include <ored/scripting/engines/scriptedinstrumentpricingengine.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
+#include <ored/scripting/models/localvol.hpp>
+#include <ored/scripting/models/heston.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
@@ -33,6 +35,7 @@
 #include <ored/marketdata/strike.hpp>
 #include <ored/model/blackscholesmodelbuilder.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
+#include <ored/model/hestonmodelbuilder.hpp>
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/localvolmodelbuilder.hpp>
 #include <ored/portfolio/referencedata.hpp>
@@ -276,6 +279,10 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         buildLocalVol(id, iborFallbackConfig);
     } else if ((modelParam_ == "LocalVolDupire" || modelParam_ == "LocalVolAndreasenHuge") && engineParam_ == "FD") {
         buildFdLocalVol(id, iborFallbackConfig);
+    } else if (modelParam_ == "Heston" && engineParam_ == "MC") {
+        buildHeston(id, iborFallbackConfig);
+    } else if (modelParam_ == "Heston" && engineParam_ == "FD") {
+        buildFdHeston(id, iborFallbackConfig);
     } else if (modelParam_ == "GaussianCam" && engineParam_ == "MC") {
         if (amcCam_) {
             buildGaussianCamAMC(id, iborFallbackConfig, script.conditionalExpectationModelStates());
@@ -638,8 +645,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     sensitivityTemplate_ = engineParameter("SensitivityTemplate", getModelEngineQualifiers(), false, std::string());
 }
 
-void ScriptedTradeEngineBuilder::populateFixingsMap(const QuantLib::ext::shared_ptr<IborFallbackConfig>&
-                                                    iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::populateFixingsMap(
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     DLOG("Populate fixing map");
 
     // this might be a superset of the actually required fixings, since index evaluations with fwd date are also
@@ -1269,7 +1276,8 @@ std::vector<std::vector<Real>> getCalibrationStrikesVector(const std::map<std::s
 
 } // namespace
 
-void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::buildBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
@@ -1290,7 +1298,8 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id, const 
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
-void ScriptedTradeEngineBuilder::buildFdBlackScholes(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::buildFdBlackScholes(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
@@ -1319,10 +1328,10 @@ void ScriptedTradeEngineBuilder::buildLocalVol(
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
         referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<BlackScholes>(
+    model_ = QuantLib::ext::make_shared<LocalVol>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "LocalVol", filteredStrikes, params_);
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
@@ -1342,10 +1351,38 @@ void ScriptedTradeEngineBuilder::buildFdLocalVol(
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
         referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
-    model_ = QuantLib::ext::make_shared<BlackScholes>(
+    model_ = QuantLib::ext::make_shared<LocalVol>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "LocalVol", filteredStrikes, params_);
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
+                                             const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+    model_ = QuantLib::ext::make_shared<Heston>(
+        Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
+    engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
+}
+
+void ScriptedTradeEngineBuilder::buildFdHeston(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+    Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
+    auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationMoneyness_,
+        referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
+    model_ = QuantLib::ext::make_shared<Heston>(
+        Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
+        modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
+        iborFallbackConfig, "Smile", filteredStrikes, params_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
 }
 
@@ -1362,8 +1399,9 @@ std::string getFirstIrIndexOrCcy(const std::string& ccy, const std::set<IndexInf
 }
 } // namespace
 
-void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-                                                  const std::vector<std::string>& conditionalExpectationModelStates) {
+void ScriptedTradeEngineBuilder::buildGaussianCam(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const std::vector<std::string>& conditionalExpectationModelStates) {
     // compile cam correlation matrix
     // - we want to use the maximum tenor of an ir index in a correlation pair if several are given (to have
     //   a well defined rule how to derive the LGM IR correlations); to get there we store the correlations
@@ -1771,7 +1809,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const Q
     engineFactory()->modelBuilders().insert(std::make_pair(id, camBuilder));
 }
 
-void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
+void ScriptedTradeEngineBuilder::buildFdGaussianCam(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
 
     Date referenceDate = modelCurves_.front()->referenceDate();
     std::vector<Date> calibrationDates;
@@ -1873,8 +1912,9 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id, const
     engineFactory()->modelBuilders().insert(std::make_pair(id, camBuilder));
 }
 
-void ScriptedTradeEngineBuilder::buildAMCCGModel(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-                                                 const std::vector<std::string>& conditionalExpectationModelStates) {
+void ScriptedTradeEngineBuilder::buildAMCCGModel(
+    const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const std::vector<std::string>& conditionalExpectationModelStates) {
     // nothing to build really, the resulting model is exactly the input model
     QL_REQUIRE(useCg_, "building gaussian cam from external amc cg model, useCg must be set to true in this case.");
     modelCG_ = amcCgModel_;
