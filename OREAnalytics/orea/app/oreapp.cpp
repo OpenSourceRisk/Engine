@@ -1684,13 +1684,101 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("calibration", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("CALIBRATION");
-        tmp = params_->get("calibration", "configFile", false);
-        if (tmp != "") {
-            string configFile = (inputPath_ / tmp).generic_string();
-            LOG("Loading model config from file" << configFile);
-            setCrossAssetModelDataFromFile(configFile);
-        } else {
-            ALOG("Simulation model data not loaded");
+        tmp = params_->get("calibration", "model", false);
+        if (tmp.empty() || tmp == "CAM") {
+            setCalibrationModel("CAM");
+            tmp = params_->get("calibration", "configFile", false);
+            if (tmp != "") {
+                string configFile = (inputPath_ / tmp).generic_string();
+                LOG("Loading model config from file" << configFile);
+                setCrossAssetModelDataFromFile(configFile);
+            } else {
+                ALOG("Simulation model data not loaded");
+            }
+        } else if (tmp == "HW") {
+            setCalibrationModel("HW");
+            tmp = params_->get("calibration", "mode", false);
+            if (tmp == "historical") {
+                setHwCalibrationMode("Historical");
+
+                tmp = params_->get("calibration", "foreignCurrencies", false);
+                setForeignCurrencies(tmp);
+
+                tmp = params_->get("calibration", "curveTenors", false);
+                QL_REQUIRE(!tmp.empty(), "Curve tenor must be provided for Calibration Analytics");
+                setCurveTenors(tmp);
+
+                tmp = params_->get("calibration", "useForwardOrZeroRate", false);
+                QL_REQUIRE(tmp == "forward" || tmp == "zero",
+                           "useForwardOrZeroRate must be either forward or zero for Calibration Analytics");
+                setUseForwardOrZeroRate(tmp);
+
+                // pca calibration
+                tmp = params_->get("calibration", "pcaCalibration", false);
+                if (!tmp.empty() && parseBool(tmp)) {
+                    setPcaCalibration(true);
+
+                    tmp = params_->get("calibration", "scenarioInputFile", false);
+                    QL_REQUIRE(!tmp.empty(), "Scenario input files must be provided for Calibration Analytics");
+                    setScenarioInputFile((inputPath_ / tmp).generic_string());
+
+                    tmp = params_->get("calibration", "startDate", false);
+                    QL_REQUIRE(!tmp.empty(), "Start date must be provided for Calibration Analytics");
+                    setStartDate(parseDate(tmp));
+
+                    tmp = params_->get("calibration", "endDate", false);
+                    QL_REQUIRE(!tmp.empty(), "End date must be provided for Calibration Analytics");
+                    setEndDate(parseDate(tmp));
+
+                    tmp = params_->get("calibration", "lambda", false);
+                    if (tmp.empty())
+                        tmp = "1.0";
+                    Real tmpReal = parseReal(tmp);
+                    QL_REQUIRE(tmpReal > 0.0 && tmpReal <= 1.0, "Lambda must be 0 < lambda <= 1");
+                    setLambda(tmpReal);
+
+                    tmp = params_->get("calibration", "varianceRetained", false);
+                    QL_REQUIRE(!tmp.empty(), "Variance retained must be provided for Calibration Analytics");
+                    tmpReal = parseReal(tmp);
+                    QL_REQUIRE(tmpReal > 0.0 && tmpReal <= 1.0, "Variance retained must be 0 < lambda <= 1");
+                    setVarianceRetained(tmpReal);
+
+                    tmp = params_->get("calibration", "pcaOutputFileName", false);
+                    setPcaOutputFileName((resultsPath_ / tmp).generic_string());
+                } else {
+                    setPcaCalibration(false);
+                }
+                tmp = params_->get("calibration", "meanReversionCalibration", false);
+                if (!tmp.empty() && parseBool(tmp)) {
+                    setMeanReversionCalibration(true);
+
+                    tmp = params_->get("calibration", "pcaInputFileName", false);
+                    //filesystem::path inputPath = inputPath_;
+                    if (!tmp.empty()) {
+                        setPcaInputFiles(tmp, inputPath_);
+                    }
+                    tmp = params_->get("calibration", "basisFunctionNumber", false);
+                    Size tmpInt = parseInteger(tmp);
+                    QL_REQUIRE(tmpInt > 0, "Basis function number must be > 0 for Calibration Analytics");
+                    setBasisFunctionNumber(tmpInt);
+
+                    tmp = params_->get("calibration", "kappaUpperBound", false);
+                    setKappaUpperBound(parseReal(tmp));
+
+                    tmp = params_->get("calibration", "haltonMaxGuess", false);
+                    setHaltonMaxGuess(parseInteger(tmp));
+
+                    tmp = params_->get("calibration", "meanReversionOutputFileName", false);
+                    setMeanReversionOutputFileName((resultsPath_ / tmp).generic_string());
+                } else {
+                    setMeanReversionCalibration(false);
+                }
+            } else if (tmp == "riskNeutral") {
+                // TODO
+            } else {
+                ALOG("In Calibration Analytics, only historical or riskNeutral mode are supported for HW model, got "
+                     << tmp);
+            }
         }
     }
 
@@ -3140,7 +3228,7 @@ void OREAppInputParameters::loadParameters() {
             WLOG("Sensitivity scenario data not loaded");
         }
 
-	tmp = params_->get("crif", "simmVersion", false);
+	    tmp = params_->get("crif", "simmVersion", false);
         if (tmp != "") {
             setSimmVersion(tmp);
         } else {
@@ -3148,23 +3236,23 @@ void OREAppInputParameters::loadParameters() {
             setSimmVersion("2.6");
         }
 
-	auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
-	tmp = params_->get("crif", "nameMappingInputFile", false);
-	if (tmp != "") {
-	   string fileName = (inputPath_ / tmp).generic_string();
-	   LOG("simmNameMapper file name: " << fileName);
-	   nameMapper->fromFile(fileName);
-	}
-	simmNameMapper_ = nameMapper;
+	    auto nameMapper = QuantLib::ext::make_shared<SimmBasicNameMapper>();
+	    tmp = params_->get("crif", "nameMappingInputFile", false);
+	    if (tmp != "") {
+	       string fileName = (inputPath_ / tmp).generic_string();
+	       LOG("simmNameMapper file name: " << fileName);
+	       nameMapper->fromFile(fileName);
+	    }
+	    simmNameMapper_ = nameMapper;
 
-	auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-	tmp = params_->get("crif", "bucketMappingInputFile", false);
-	if (tmp != "") {
-	   string fileName = (inputPath_ / tmp).generic_string();
-	   LOG("simmBucketMapper file name: " << fileName);
-	   bucketMapper->fromFile(fileName);
-	}
-	simmBucketMapper_ = bucketMapper;
+	    auto bucketMapper = QuantLib::ext::make_shared<SimmBucketMapperBase>();
+	    tmp = params_->get("crif", "bucketMappingInputFile", false);
+	    if (tmp != "") {
+	       string fileName = (inputPath_ / tmp).generic_string();
+	       LOG("simmBucketMapper file name: " << fileName);
+	       bucketMapper->fromFile(fileName);
+	    }
+	    simmBucketMapper_ = bucketMapper;
     }
 
     if (analytics().size() == 0) {

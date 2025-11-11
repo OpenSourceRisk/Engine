@@ -89,6 +89,8 @@ model/fxbsbuilder.cpp
 model/fxbsdata.cpp
 model/hestonmodelbuilder.cpp
 model/hwbuilder.cpp
+model/hwhistoricalcalibrationmodelbuilder.cpp
+model/hwhistoricalcalibrationmodeldata.cpp
 model/inflation/infdkbuilder.cpp
 model/inflation/infdkdata.cpp
 model/inflation/infjybuilder.cpp
@@ -499,6 +501,8 @@ model/fxbsbuilder.hpp
 model/fxbsdata.hpp
 model/hestonmodelbuilder.hpp
 model/hwbuilder.hpp
+model/hwhistoricalcalibrationmodelbuilder.hpp
+model/hwhistoricalcalibrationmodeldata.hpp
 model/inflation/infdkbuilder.hpp
 model/inflation/infdkdata.hpp
 model/inflation/infjybuilder.hpp

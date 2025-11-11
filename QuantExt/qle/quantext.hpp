@@ -327,6 +327,7 @@
 #include <qle/models/homogeneouspooldef.hpp>
 #include <qle/models/hullwhitebucketing.hpp>
 #include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/hwhistoricalcalibrationmodel.hpp>
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/hwpiecewiseparametrization.hpp>
