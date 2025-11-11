@@ -31,12 +31,11 @@
 #include <map>
 #include <string>
 
+namespace ore {
+namespace analytics {
 
 using namespace QuantLib;
 using namespace ore::data;
-
-namespace ore {
-namespace analytics {
 
 HwHistoricalCalibrationDataLoader::HwHistoricalCalibrationDataLoader(const std::string& baseCurrency,
                                                                      const std::vector<std::string>& foreignCurrency,

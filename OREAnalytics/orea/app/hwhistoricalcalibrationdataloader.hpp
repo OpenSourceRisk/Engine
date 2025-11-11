@@ -44,23 +44,23 @@ public:
     void loadPCAFromCsv(const std::vector<std::string>& fileNames);
 
     // Getters
-    const std::map<std::string, std::map<Date, std::vector<Real>>>& getIrCurves() const { return irCurves_; }
-    const std::map<std::string, std::map<Date, Real>>& getFxSpots() const { return fxSpots_; }
-    const std::map<std::string, Array>& getEigenValue() const { return eigenValue_; }
-    const std::map<std::string, Matrix>& getEigenVector() const { return eigenVector_; }
+    const std::map<std::string, std::map<QuantLib::Date, std::vector<QuantLib::Real>>>& getIrCurves() const { return irCurves_; }
+    const std::map<std::string, std::map<QuantLib::Date, QuantLib::Real>>& getFxSpots() const { return fxSpots_; }
+    const std::map<std::string, QuantLib::Array>& getEigenValue() const { return eigenValue_; }
+    const std::map<std::string, QuantLib::Matrix>& getEigenVector() const { return eigenVector_; }
 
     // Move
-    std::map<std::string, std::map<Date, std::vector<Real>>> moveIrCurves() { return std::move(irCurves_); }
-    std::map<std::string, std::map<Date, Real>> moveFxSpots() { return std::move(fxSpots_); }
+    std::map<std::string, std::map<QuantLib::Date, std::vector<QuantLib::Real>>> moveIrCurves() { return std::move(irCurves_); }
+    std::map<std::string, std::map<QuantLib::Date, QuantLib::Real>> moveFxSpots() { return std::move(fxSpots_); }
     std::map<std::string, Size> movePrincipalComponent() { return std::move(principalComponent_); }
-    std::map<std::string, Array> moveEigenValue() { return std::move(eigenValue_); }
-    std::map<std::string, Matrix> moveEigenVector() { return std::move(eigenVector_); }
+    std::map<std::string, QuantLib::Array> moveEigenValue() { return std::move(eigenValue_); }
+    std::map<std::string, QuantLib::Matrix> moveEigenVector() { return std::move(eigenVector_); }
 
 private:
-    void loadIr(const std::string& curveId, const Size& index, const Date& d, const Real& df);
-    void loadFx(const std::string& curveId, const Date& d, const Real& fxSpot);
-    void loadEigenValue(const std::string& ccy, const Array& eigenValue);
-    void loadEigenVector(const std::string& ccy, const Matrix& eigenVector);
+    void loadIr(const std::string& curveId, const Size& index, const QuantLib::Date& d, const QuantLib::Real& df);
+    void loadFx(const std::string& curveId, const QuantLib::Date& d, const QuantLib::Real& fxSpot);
+    void loadEigenValue(const std::string& ccy, const QuantLib::Array& eigenValue);
+    void loadEigenVector(const std::string& ccy, const QuantLib::Matrix& eigenVector);
     void cleanData();
 
     // Helper
@@ -69,12 +69,12 @@ private:
     std::string baseCurrency_;
     std::vector<std::string> foreignCurrency_;
     std::vector<QuantLib::Period> tenors_;
-    Date startDate_, endDate_;
-    std::map<std::string, std::map<Date, std::vector<Real>>> irCurves_;
-    std::map<std::string, std::map<Date, Real>> fxSpots_;
+    QuantLib::Date startDate_, endDate_;
+    std::map<std::string, std::map<Date, std::vector<QuantLib::Real>>> irCurves_;
+    std::map<std::string, std::map<Date, QuantLib::Real>> fxSpots_;
     std::map<std::string, Size> principalComponent_;
-    std::map<std::string, Array> eigenValue_;
-    std::map<std::string, Matrix> eigenVector_;
+    std::map<std::string, QuantLib::Array> eigenValue_;
+    std::map<std::string, QuantLib::Matrix> eigenVector_;
 };
 
 } // namespace analytics
