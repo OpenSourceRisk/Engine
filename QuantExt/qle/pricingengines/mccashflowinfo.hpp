@@ -39,7 +39,7 @@ struct CashflowInfo {
     std::function<RandomVariable(const Size n, const std::vector<std::vector<const RandomVariable*>>&)>
         amountCalculator;
 
-    CashflowInfo(QuantLib::ext::shared_ptr<CashFlow>& flow, const Currency& payCcy, const bool payer, const Size legNo,
+    CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, const bool payer, const Size legNo,
                  const Size cfNo, const Handle<CrossAssetModel>& model, const std::vector<LgmVectorised>& lgmVectorized,
                  const bool exerciseIntoIncludeSameDayFlows = true, const double tinyTime = 1e-10,
                  const Size cfOnCpnMaxSimTimes = 1, const Period cfOnCpnAddSimTimesCutoff = Period());

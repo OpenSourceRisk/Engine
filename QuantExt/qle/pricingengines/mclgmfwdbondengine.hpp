@@ -45,7 +45,7 @@ public:
                        const std::vector<Date> simulationDates = std::vector<Date>(),
                        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
                        const std::vector<Size> externalModelIndices = std::vector<Size>(),
-                       const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
+                       const bool minimalObsDate = true, const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
                        const Real regressionVarianceCutoff = Null<Real>(),
                        const bool recalibrateOnStickyCloseOutDates = false,
                        const bool reevaluateExerciseInStickyRun = false,
@@ -54,7 +54,7 @@ public:
                        const Size regressionMaxSimTimesIr = 0,
                        const Size regressionMaxSimTimesFx = 0,
                        const Size regressionMaxSimTimesEq = 0,
-                       const VarGroupMode regressionVarGroupMode = VarGroupMode::Global)
+                       const RegressionModel::VarGroupMode regressionVarGroupMode = RegressionModel::VarGroupMode::Global)
         : GenericEngine<QuantExt::ForwardBond::arguments, QuantExt::ForwardBond::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                                    std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),

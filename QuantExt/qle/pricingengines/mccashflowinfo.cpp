@@ -16,8 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/cashflows/all.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
+#include <ql/cashflows/cmscoupon.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/equitycashflow.hpp>
@@ -40,7 +47,7 @@ Real time(const Handle<CrossAssetModel>& model, const Date& d) {
     return model->irlgm1f(0)->termStructure()->timeFromReference(d);
 }
 
-CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow>& flow, const Currency& payCcy, const bool payer,
+CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, const bool payer,
                  const Size legNo, const Size cfNo, const Handle<CrossAssetModel>& model,
                  const std::vector<LgmVectorised>& lgmVectorised, const bool exerciseIntoIncludeSameDayFlows,
                  const double tinyTime, const Size cfOnCpnMaxSimTimes, const Period cfOnCpnAddSimTimesCutoff) {
