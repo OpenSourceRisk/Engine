@@ -21,14 +21,14 @@
     \ingroup app
 */
 
+#include <ql/quantlib.hpp>
+
 #include <string>
 #include <vector>
 #include <map>
-#include <ql/quantlib.hpp>
-
-using namespace QuantLib;
 
 #pragma once
+
 namespace ore {
 namespace analytics {
 

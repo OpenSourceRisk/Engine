@@ -26,8 +26,6 @@
 
 #include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 
-using namespace ore::data;
-
 namespace ore {
 namespace analytics {
 

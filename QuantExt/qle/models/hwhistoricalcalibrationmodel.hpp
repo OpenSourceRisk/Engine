@@ -17,9 +17,9 @@
 #include <map>
 #include <vector>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+
+using namespace QuantLib;
 
 class HwHistoricalCalibrationModel {
 public:
