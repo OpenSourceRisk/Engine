@@ -85,5 +85,17 @@ protected:
                const QuantLib::Date& maturityDate) override;
 };
 
+class CallableBondLgmMcEngineBuilder : public CallableBondLgmEngineBuilder {
+public:
+    CallableBondLgmMcEngineBuilder() : CallableBondLgmEngineBuilder("MC") {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
+    engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate) override;
+};
+
+
 } // namespace data
 } // namespace ore
