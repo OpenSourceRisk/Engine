@@ -101,6 +101,8 @@
 #include <ored/model/fxbsdata.hpp>
 #include <ored/model/hestonmodelbuilder.hpp>
 #include <ored/model/hwbuilder.hpp>
+#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
+#include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
 #include <ored/model/inflation/infjybuilder.hpp>

@@ -351,6 +351,24 @@ public:
     void setReportBufferSize(Size s) { reportBufferSize_ = s; }
     void setCounterpartyManager(const std::string& xml);
     void setCounterpartyManagerFromFile(const std::string& fileName);
+    void setCalibrationModel(const std::string& s);
+    void setHwCalibrationMode(const std::string& s);
+    void setPcaCalibration(bool b);
+    void setMeanReversionCalibration(bool b);
+    void setForeignCurrencies(const std::string& s);
+    void setCurveTenors(const std::string& s);
+    void setScenarioInputFile(const std::string& fileName);
+    void setStartDate(const Date& d);
+    void setEndDate(const Date& d);
+    void setUseForwardOrZeroRate(const std::string& s);
+    void setLambda(Real r);
+    void setVarianceRetained(Real r);
+    void setPcaInputFiles(const std::string& fileName, const std::filesystem::path& inputPath);
+    void setBasisFunctionNumber(Size s);
+    void setKappaUpperBound(Real r);
+    void setHaltonMaxGuess(Size s);
+    void setPcaOutputFileName(const std::string& fileName);
+    void setMeanReversionOutputFileName(const std::string& fileName);
 
     // Setters for xva
     void setXvaUseDoublePrecisionCubes(const bool b) { xvaUseDoublePrecisionCubes_ = b; }
@@ -802,7 +820,29 @@ public:
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     const QuantLib::Size& maxScenario() const { return maxScenario_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-  
+
+    /*********************************
+     * Getters for calibration
+     *********************************/
+    const std::string& calibrationModel() const { return calibrationModel_; }
+    const std::string& hwCalibrationMode() const { return hwCalibrationMode_; }
+    bool pcaCalibration() const { return pcaCalibration_; }
+    bool meanReversionCalibration() const { return meanReversionCalibration_; }
+    const std::vector<std::string>& foreignCurrencies() const { return foreignCurrencies_; }
+    const std::vector<Period>& curveTenors() const { return curveTenors_; }
+    const std::string& scenarioInputFile() const { return scenarioInputFile_; }
+    const Date& startDate() const { return startDate_; }
+    const Date& endDate() const { return endDate_; }
+    const std::vector<std::string>& pcaInputFiles() const { return pcaInputFiles_; }
+    bool useForwardRate() const { return useForwardRate_; }
+    Real lambda() const { return lambda_; }
+    Real varianceRetained() const { return varianceRetained_; }
+    Size basisFunctionNumber() const { return basisFunctionNumber_; }
+    Real kappaUpperBound() const { return kappaUpperBound_; }
+    Size haltonMaxGuess() const { return haltonMaxGuess_; }
+    const std::string& pcaOutputFileName() const { return pcaOutputFileName_; }
+    const std::string& meanReversionOutputFileName() const { return meanReversionOutputFileName_; }
+
     /*****************
      * Getters for xva
      *****************/
@@ -1194,6 +1234,28 @@ protected:
     // Pearson, Kendall-Rank
     std::string correlationMethod_ = "Pearson";
 
+    /*************
+     * Calibration analytics
+     *************/
+    std::string calibrationModel_;
+    std::string hwCalibrationMode_;
+    bool pcaCalibration_;
+    bool meanReversionCalibration_;
+    std::vector<std::string> foreignCurrencies_;
+    std::vector<Period> curveTenors_;
+    Date startDate_;
+    Date endDate_;
+    std::string scenarioInputFile_;
+    bool useForwardRate_;
+    Real lambda_;
+    std::vector<std::string> pcaInputFiles_;
+    Real varianceRetained_;
+    Size basisFunctionNumber_;
+    Real kappaUpperBound_;
+    Size haltonMaxGuess_;
+    std::string pcaOutputFileName_;
+    std::string meanReversionOutputFileName_;
+
     /*******************
      * EXPOSURE analytic
      *******************/
@@ -1480,6 +1542,8 @@ private:
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
     std::string calibrationOutputFileName_;
+    std::string pcaOutputFileName_;
+    std::string meanReversionOutputFileName_;
     std::string xvaSensiJacobiFileName_;
     std::string xvaSensiJacobiInverseFileName_;
     std::string timeAveragedNettedExposureFileName_;

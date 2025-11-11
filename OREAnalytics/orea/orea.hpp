@@ -57,6 +57,7 @@
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/dummymarketdataloader.hpp>
+#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
 #include <orea/app/initbuilders.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
