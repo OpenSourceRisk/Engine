@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2025 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,36 +16,37 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/scripting/models/blackscholes.hpp
-    \brief black scholes model class for n underlyings (fx, equity or commodity)
-    \ingroup utilities
+/*! \file ored/scripting/models/heston.hpp
+    \brief Heston model class for n underlyings (fx, equity or commodity)
 */
 
 #pragma once
 
-#include <ored/scripting/models/blackscholeslocalvolbase.hpp>
+#include <ored/scripting/models/assetmodel.hpp>
 
 namespace ore {
 namespace data {
 
-class BlackScholes final : public BlackScholesLocalVolBase {
+class Heston final : public AssetModel {
 public:
-    using BlackScholesLocalVolBase::BlackScholesLocalVolBase;
+    using AssetModel::AssetModel;
 
 private:
     void performModelCalculations() const override;
-
-    RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                        const RandomVariable& barrier, const bool above) const override;
+    Real initialValue(const Size indexNo) const override;
+    Real atmForward(const Size indexNo, const Real t) const override;
+    Real compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const override;
 
     void performCalculationsMc() const;
+    void performCalculationsFd() const;
     void generatePaths() const;
     void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                             const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                            const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
-
-    // only used for MC
-    mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
+                            const Matrix& correlation, const Matrix& sqrtCorr,
+                            const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                            const std::vector<Real>& t, const std::vector<Real>& dt,
+                            const std::vector<Real>& sqrtdt) const;
+    void setAdditionalResults() const;
 };
 
 } // namespace data
