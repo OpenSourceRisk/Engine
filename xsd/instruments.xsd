@@ -10,6 +10,7 @@
       <xs:element type="swapData" name="SwapData"/>
       <xs:element type="swapData" name="EquitySwapData"/>
       <xs:element type="callableSwapData" name="CallableSwapData"/>
+      <xs:element type="arcOptionData" name="ArcOptionData"/>
       <xs:element type="swaptionData" name="SwaptionData"/>
       <xs:element type="varianceSwapData" name="VarianceSwapData"/>
       <xs:element type="varianceSwapData" name="EquityVarianceSwapData"/>
@@ -3121,6 +3122,22 @@
       <xs:element type="stFreeStyleNumber" name="Premium"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="arcOptionData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ValuationSchedule"/>
+      <xs:element type="stFreeStyleNumber" name="StrikeFactor"/>
+      <xs:element type="stFreeStyleNumber" name="BarrierFactor"/>
+      <xs:element type="stFreeStyleNumber" name="CapRate"/>
+      <xs:element type="stFreeStyleNumber" name="Offset"/>
+      <xs:element type="stFreeStyleNumber" name="Notional"/>
+      <xs:element type="stFreeStyleEvent" name="Expiry"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
     </xs:all>
   </xs:complexType>
 

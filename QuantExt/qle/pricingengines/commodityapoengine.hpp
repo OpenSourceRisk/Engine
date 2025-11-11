@@ -29,7 +29,7 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/blackscholesmodelwrapper.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 
 namespace QuantExt {
 
@@ -78,11 +78,11 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
  */
 class CommodityAveragePriceOptionBaseEngine : public CommodityAveragePriceOption::engine {
 public:
-    CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                          const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
-                                          QuantLib::Real beta = 0.0,
-                                          QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
-                                          QuantLib::Real displacement = 0.0);
+    CommodityAveragePriceOptionBaseEngine(
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+        const QuantLib::Handle<QuantExt::AssetModelWrapper>& model, QuantLib::Real beta = 0.0,
+        QuantLib::DiffusionModelType modelType = QuantLib::DiffusionModelType::AsInputVolatilityType,
+        QuantLib::Real displacement = 0.0);
 
     // if you want speed-optimized observability, use the other constructor
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
@@ -134,7 +134,7 @@ public:
 class CommodityAveragePriceOptionMonteCarloEngine : public CommodityAveragePriceOptionBaseEngine {
 public:
     CommodityAveragePriceOptionMonteCarloEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                                const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
+                                                const QuantLib::Handle<QuantExt::AssetModelWrapper>& model,
                                                 QuantLib::Size samples, QuantLib::Real beta = 0.0,
                                                 const QuantLib::Size seed = 42)
         : CommodityAveragePriceOptionBaseEngine(discountCurve, model, beta), samples_(samples), seed_(seed) {}
