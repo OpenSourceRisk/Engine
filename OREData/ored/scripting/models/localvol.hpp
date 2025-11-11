@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/scripting/models/blackscholes.hpp
-    \brief black scholes model class for n underlyings (fx, equity or commodity)
+    \brief black scholes / local vol model class for n underlyings (fx, equity or commodity)
     \ingroup utilities
 */
 
@@ -28,24 +28,21 @@
 namespace ore {
 namespace data {
 
-class BlackScholes final : public BlackScholesLocalVolBase {
+class LocalVol final : public BlackScholesLocalVolBase {
 public:
     using BlackScholesLocalVolBase::BlackScholesLocalVolBase;
 
 private:
     void performModelCalculations() const override;
 
-    RandomVariable getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
-                                        const RandomVariable& barrier, const bool above) const override;
-
     void performCalculationsMc() const;
     void generatePaths() const;
-    void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                            const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                            const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const;
-
-    // only used for MC
-    mutable std::vector<Matrix> covariance_; // covariance per effective simulation date
+    void populatePathValuesLv(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                              const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                              const Matrix& correlation, const Matrix& sqrtCorr,
+                              const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
+                              const std::vector<Real>& t, const std::vector<Real>& dt,
+                              const std::vector<Real>& sqrtdt) const;
 };
 
 } // namespace data

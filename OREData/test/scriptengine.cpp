@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(testFwdCompFunction) {
         std::vector<Handle<Quote>>(), irIndices,
         std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>(),
         std::vector<std::string>(), std::vector<std::string>(), std::set<std::string>{"EUR"},
-        Handle<BlackScholesModelWrapper>(QuantLib::ext::make_shared<BlackScholesModelWrapper>()),
+        Handle<AssetModelWrapper>(QuantLib::ext::make_shared<AssetModelWrapper>()),
         std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>(), std::set<Date>{},
         QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "ATM",
         std::map<std::string, std::vector<Real>>(), params);
