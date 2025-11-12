@@ -154,11 +154,12 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
                                     spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_);
 
     swap_ = QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwap>(
-        foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0, domesticCurrency_,
-        domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx, true, foreignPaymentLag_, domesticPaymentLag_,
-        foreignIncludeSpread_, foreignLookback_, foreignFixingDays_, foreignRateCutoff_, foreignIsAveraged_,
-        domesticIncludeSpread_, domesticLookback_, domesticFixingDays_, domesticRateCutoff_, domesticIsAveraged_,
-        telescopicValueDates_);
+        foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_,
+        !spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), domesticCurrency_, domesticLegSchedule,
+        domesticCcyIndex_, !spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), fxIdx, true,
+        foreignPaymentLag_, domesticPaymentLag_, foreignIncludeSpread_, foreignLookback_, foreignFixingDays_,
+        foreignRateCutoff_, foreignIsAveraged_, domesticIncludeSpread_, domesticLookback_, domesticFixingDays_,
+        domesticRateCutoff_, domesticIsAveraged_, telescopicValueDates_);
 
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_, QuantLib::ext::nullopt,
