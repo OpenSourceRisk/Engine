@@ -3178,10 +3178,11 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                                  forLegIndex = 1;
                              }
                              return getCashflowReportData(
-                                 {helper->swap()->leg(forLegIndex),helper->swap()->leg(domLegIndex)}, {false, true}, {1.0, 1.0}, fxSpotTargetCcy.code(),
-                                 {fxSpotSourceCcy.code(), fxSpotTargetCcy.code()}, asofDate_, {forCurve, domCurve},
-                                 {fxSpotQuote->quote()->value() * forCurve->discount(fxSpotSettlementDate) /
-                                      domCurve->discount(fxSpotSettlementDate),
+                                 {helper->swap()->leg(forLegIndex), helper->swap()->leg(domLegIndex)}, {false, true},
+                                 {1.0, 1.0}, fxSpotTargetCcy.code(), {fxSpotSourceCcy.code(), fxSpotTargetCcy.code()},
+                                 asofDate_, {forCurve, domCurve},
+                                 {fxSpotQuote->quote()->value() * domCurve->discount(fxSpotSettlementDate) /
+                                      forCurve->discount(fxSpotSettlementDate),
                                   1.0},
                                  {}, {});
                          }}});
@@ -3239,8 +3240,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                                  domesticIndex->currency().code(),
                                  {foreignIndex->currency().code(), domesticIndex->currency().code()}, asofDate_,
                                  {forCurve, domCurve},
-                                 {fxSpotQuote->quote()->value() * forCurve->discount(fxSpotSettlementDate) /
-                                      domCurve->discount(fxSpotSettlementDate),
+                                 {fxSpotQuote->quote()->value() * domCurve->discount(fxSpotSettlementDate) /
+                                      forCurve->discount(fxSpotSettlementDate),
                                   1.0},
                                  {}, {});
                          }}});
@@ -3372,8 +3373,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                                  {helper->swap()->leg(0), helper->swap()->leg(1)}, {true, false}, {1.0, 1.0},
                                  fxSpotTargetCcy.code(), {fxSpotTargetCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
                                  {forCurve, domCurve},
-                                 {fxSpotQuote->value() * forCurve->discount(fxSpotSettlementDate) /
-                                      domCurve->discount(fxSpotSettlementDate),
+                                 {fxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
+                                      forCurve->discount(fxSpotSettlementDate),
                                   1.0},
                                  {}, {});
                          }}});
