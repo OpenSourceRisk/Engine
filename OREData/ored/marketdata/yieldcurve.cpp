@@ -3145,7 +3145,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     flatIndex, spreadIndex, flatDiscountCurve, spreadDiscountCurve, true, true, flatDiscountCurveGiven,
                     spreadDiscountCurveGiven, basisSwapConvention->eom(),
                     flatIndex->currency().code() != fxSpotQuote->unitCcy(), flatTenor, spreadTenor, 0.0, 1.0, 1.0,
-                    Calendar(), Calendar(), std::vector<Natural>(), std::vector<Calendar>(),
+                    Calendar(), Calendar(), std::vector<Natural>{fxSettlDays}, std::vector<Calendar>{fxCal},
                     basisSwapConvention->paymentLag(), basisSwapConvention->flatPaymentLag(),
                     basisSwapConvention->includeSpread(), basisSwapConvention->lookback(),
                     basisSwapConvention->fixingDays(), basisSwapConvention->rateCutoff(),
@@ -3216,6 +3216,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     domesticCurveGiven, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
                     basisSwapConvention->eom(), spreadOnForeignCcy, foreignTenor, domesticTenor,
                     basisSwapConvention->paymentLag(), basisSwapConvention->flatPaymentLag(),
+                    std::vector<Natural>{fxSettlDays}, std::vector<Calendar>{fxCal},
                     basisSwapConvention->includeSpread(), basisSwapConvention->lookback(),
                     basisSwapConvention->fixingDays(), basisSwapConvention->rateCutoff(),
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
@@ -3354,8 +3355,9 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    true, segment->pillarChoice(), swapConvention->includeSpread(), swapConvention->lookback(),
-                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
+                    true, segment->pillarChoice(), std::vector<Natural>{fxSettlDays}, std::vector<Calendar>{fxCal},
+                    swapConvention->includeSpread(), swapConvention->lookback(), swapConvention->fixingDays(),
+                    swapConvention->rateCutoff(), swapConvention->isAveraged());
                 instruments.push_back(
                     {helper, "XCCY Fix-Float Swap", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{
@@ -3382,9 +3384,9 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    true, resetsOnFloatLeg, segment->pillarChoice(), swapConvention->includeSpread(),
-                    swapConvention->lookback(), swapConvention->fixingDays(), swapConvention->rateCutoff(),
-                    swapConvention->isAveraged());
+                    true, resetsOnFloatLeg, segment->pillarChoice(), std::vector<Natural>{fxSettlDays},
+                    std::vector<Calendar>{fxCal}, swapConvention->includeSpread(), swapConvention->lookback(),
+                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
                 instruments.push_back(
                     {helper, "XCCY Fix-Float Resettable Swap", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{
