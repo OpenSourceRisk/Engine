@@ -1914,7 +1914,7 @@ void YieldCurve::buildBondYieldShiftedCurve(const std::size_t index) {
         QuantLib::ext::shared_ptr<BondPriceQuote> bondQuote =
             QuantLib::ext::dynamic_pointer_cast<BondPriceQuote>(marketQuote);
         QL_REQUIRE(bondQuote, "market quote has type bond quote, but can not be casted, this is unexpected.");
-        auto m = [bondQuote](Real x) { return x * 100.0; };
+        auto m = [](Real x) { return x * 100.0; };
         Handle<Quote> rescaledBondQuote(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(bondQuote->quote(), m));
 
         securityID = bondQuote->securityID();
