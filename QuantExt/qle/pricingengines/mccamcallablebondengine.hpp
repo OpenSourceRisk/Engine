@@ -96,7 +96,7 @@ public:
     mutable std::vector<Real> notionals_;
     bool exerciseIntoIncludeSameDayFlows_ = true;
     mutable Currency currency_;
-
+    mutable Date settlementDate_;
     // data members
     Handle<CrossAssetModel> model_;
     SequenceType calibrationPathGenerator_, pricingPathGenerator_;
@@ -139,7 +139,7 @@ public:
 
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
-
+    mutable Real resultUnderlyingSettlementValue_, resultSettlementValue_;
     static constexpr Real tinyTime = 1E-10;
     // generate the mc path values of the model process
     void generatePathValues(const std::vector<Real>& simulationTimes,
@@ -226,7 +226,13 @@ private:
         callData_ = arguments_.callData;
         putData_ = arguments_.putData;
         McCamCallableBondBaseEngine::calculate();
-        results_.value = resultValue_;
+        results_.value = resultUnderlyingNpv_ -  resultValue_;
+        results_.settlementValue = resultUnderlyingSettlementValue_ -  resultSettlementValue_;
+
+
+
+       
+
     }
 };
 
