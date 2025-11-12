@@ -3229,20 +3229,21 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     {helper, "XCCY Resettable Swap", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{
                          [helper, foreignCurveGiven, domesticCurveGiven, foreignDiscount, domesticDiscount,
-                          foreignIndex, domesticIndex, fxSpotQuote, fxSpotSettlementDate, this]() {
+                          foreignIndex, domesticIndex, finalFxSpotQuote, fxSpotSettlementDate, this]() {
                              QuantLib::ext::shared_ptr<YieldTermStructure> forCurve, domCurve;
                              auto bootstrappedCurve = QuantLib::ext::shared_ptr<YieldTermStructure>(
                                                        helper->termStructure(), null_deleter());
                              forCurve = foreignCurveGiven ? *foreignDiscount : bootstrappedCurve;
                              domCurve = domesticCurveGiven ? *domesticDiscount : bootstrappedCurve;
                              return getCashflowReportData(
-                                 {helper->swap()->leg(0), helper->swap()->leg(1)}, {false, true}, {1.0, 1.0},
-                                 domesticIndex->currency().code(),
-                                 {foreignIndex->currency().code(), domesticIndex->currency().code()}, asofDate_,
-                                 {forCurve, domCurve},
-                                 {fxSpotQuote->quote()->value() * domCurve->discount(fxSpotSettlementDate) /
+                                 {helper->swap()->leg(0), helper->swap()->leg(1), helper->swap()->leg(2)},
+                                 {false, true, true}, {1.0, 1.0, 1.0}, domesticIndex->currency().code(),
+                                 {foreignIndex->currency().code(), domesticIndex->currency().code(),
+                                  domesticIndex->currency().code()},
+                                 asofDate_, {forCurve, domCurve, domCurve},
+                                 {finalFxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
                                       forCurve->discount(fxSpotSettlementDate),
-                                  1.0},
+                                  1.0, 1.0},
                                  {}, {});
                          }}});
             }
@@ -3399,12 +3400,13 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                              forCurve = *floatLegDisc;
                              domCurve = bootstrappedCurve;
                              return getCashflowReportData(
-                                 {helper->swap()->leg(0), helper->swap()->leg(1)}, {true, false}, {1.0, 1.0},
-                                 fxSpotTargetCcy.code(), {fxSpotTargetCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
-                                 {forCurve, domCurve},
+                                 {helper->swap()->leg(0), helper->swap()->leg(1), helper->swap()->leg(2)},
+                                 {true, false, false}, {1.0, 1.0, 1.0}, fxSpotTargetCcy.code(),
+                                 {fxSpotTargetCcy.code(), fxSpotSourceCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
+                                 {forCurve, domCurve, domCurve},
                                  {fxSpotQuote->value() * forCurve->discount(fxSpotSettlementDate) /
                                       domCurve->discount(fxSpotSettlementDate),
-                                  1.0},
+                                  1.0, 1.0},
                                  {}, {});
                          }}});
             }

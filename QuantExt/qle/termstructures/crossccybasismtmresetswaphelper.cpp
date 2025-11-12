@@ -156,7 +156,7 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     swap_ = QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwap>(
         foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_,
         !spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), domesticCurrency_, domesticLegSchedule,
-        domesticCcyIndex_, !spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), fxIdx, true,
+        domesticCcyIndex_, spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), fxIdx, true,
         foreignPaymentLag_, domesticPaymentLag_, foreignIncludeSpread_, foreignLookback_, foreignFixingDays_,
         foreignRateCutoff_, foreignIsAveraged_, domesticIncludeSpread_, domesticLookback_, domesticFixingDays_,
         domesticRateCutoff_, domesticIsAveraged_, telescopicValueDates_);
