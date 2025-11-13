@@ -6,8 +6,6 @@
 #include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 #include <ored/utilities/log.hpp>
 
-using namespace QuantLib;
-
 namespace ore {
 namespace data {
 

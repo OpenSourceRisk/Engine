@@ -35,7 +35,6 @@
 namespace ore {
 namespace analytics {
 
-// Loader class (curve discount factors only)
 class HwHistoricalCalibrationDataLoader {
 public:
     HwHistoricalCalibrationDataLoader(const std::string& baseCurrency, const std::vector<std::string>& foreignCurrency,

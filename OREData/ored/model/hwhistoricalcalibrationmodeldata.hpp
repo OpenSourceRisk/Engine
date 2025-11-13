@@ -24,7 +24,6 @@
 #pragma once
 
 #include <map>
-#include <ql/currency.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
@@ -32,13 +31,13 @@
 #include <string>
 #include <vector>
 
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 namespace ore {
 namespace data {
 
-// Holds configuration, historical input maps and (after calibration) output results for HW historical calibration.
+using namespace QuantLib;
+
 class HwHistoricalCalibrationModelData : public XMLSerializable {
 public:
     HwHistoricalCalibrationModelData() = default;
