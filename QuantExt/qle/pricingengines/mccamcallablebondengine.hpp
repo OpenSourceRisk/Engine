@@ -153,12 +153,14 @@ public:
     // the model training logic
     void calculateModels(Handle<YieldTermStructure> discountCurve, const std::set<Real>& simulationTimes,
                          const std::set<Real>& exerciseXvaTimes, const std::set<Real> exerciseTimes,
-                         const std::set<Real>& callTimes, const std::set<Real>& putTimes,
+                         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
+                         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes,
                          const std::set<Real>& xvaTimes, const std::vector<CashflowInfo>& cashflowInfo,
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
                          std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelContinuationValue,
+                         std::vector<RegressionModel>& regModelContinuationValueCall,
+                         std::vector<RegressionModel>& regModelContinuationValuePut,
                          std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
                          RandomVariable& pathValueOption, std::vector<RandomVariable>& pathExerciseProbsCall,
                          std::vector<RandomVariable>& pathExerciseProbsPut) const;
@@ -227,7 +229,7 @@ public:
 
 private:
     void calculate() const override {
-
+        std::cout <<"Calculate McCamCallableBondEngine" << std::endl;
         leg_ = arguments_.cashflows;
         currency_ =  model_->irlgm1f(0)->currency();
         notionals_ = arguments_.notionals;
@@ -241,6 +243,19 @@ private:
 
 
 
+
+         std::cout <<"  number of cashflows: " << leg_.size() << std::endl   ;
+        std::cout <<" number of notionals: " << notionals_.size() << std::endl;
+        std::cout <<" number of callData: " << callData_.size() << std::endl;
+        std::cout <<" number of putData: " << putData_.size() << std::endl;
+        std::cout <<"  result value: " << resultValue_ << std::endl;\
+        std::cout << "  result underlying npv: " << resultUnderlyingNpv_ << std::endl;
+        std::cout << " underlying settlement value: " << resultUnderlyingSettlementValue_ << std::endl;
+        std::cout << " final npv: " << resultUnderlyingNpv_ -  resultValue_ << std::endl;
+        std::cout << " final settlement value: " << resultUnderlyingSettlementValue_ -  resultSettlementValue_ << std::endl;
+        
+        
+        
        
 
     }
