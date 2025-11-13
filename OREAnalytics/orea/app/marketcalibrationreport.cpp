@@ -353,6 +353,40 @@ void MarketCalibrationReport::addInflationCurveImpl(
                 addRowReport(type, id, "mdQuote", key1, y->mdQuoteLabels.at(i), "", y->mdQuoteValues.at(i));
         }
     }
+
+    // cashflow results
+    if (!info->rateHelperCashflows.empty()) {
+        for (Size i = 0; i < info->pillarDates.size(); ++i) {
+            for (auto const& d : info->rateHelperCashflows[i]) {
+                report_cashflows_->next()
+                    .add(type)
+                    .add(id)
+                    .add(info->pillarDates[i])
+                    .add(info->rateHelperTypes[i])
+                    .add(info->mdQuoteLabels[i])
+                    .add(d.cashflowNo)
+                    .add(d.legNo)
+                    .add(d.payDate)
+                    .add(d.flowType)
+                    .add(d.amount)
+                    .add(d.currency)
+                    .add(d.coupon)
+                    .add(d.accrual)
+                    .add(d.accrualStartDate)
+                    .add(d.accrualEndDate)
+                    .add(d.accruedAmount)
+                    .add(d.fixingDate)
+                    .add(d.fixingValue)
+                    .add(d.notional)
+                    .add(d.discountFactor)
+                    .add(d.presentValue)
+                    .add(d.fxRateLocalBase)
+                    .add(d.presentValueBase)
+                    .add(d.baseCurrency);
+            }
+        }
+    }
+
 }
 
 // Add inflation curve data to array
