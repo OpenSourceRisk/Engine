@@ -3373,10 +3373,9 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                              return getCashflowReportData(
                                  {helper->swap()->leg(0), helper->swap()->leg(1)}, {true, false}, {1.0, 1.0},
                                  fxSpotTargetCcy.code(), {fxSpotTargetCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
-                                 {forCurve, domCurve},
-                                 {fxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
-                                      forCurve->discount(fxSpotSettlementDate),
-                                  1.0},
+                                 {domCurve, forCurve},
+                                 {1.0, fxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
+                                           forCurve->discount(fxSpotSettlementDate)},
                                  {}, {});
                          }}});
             } else {
@@ -3386,28 +3385,28 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    true, resetsOnFloatLeg, segment->pillarChoice(), std::vector<Natural>{fxSettlDays},
+                    resetsOnFloatLeg, true, segment->pillarChoice(), std::vector<Natural>{fxSettlDays},
                     std::vector<Calendar>{fxCal}, swapConvention->includeSpread(), swapConvention->lookback(),
                     swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
                 instruments.push_back(
                     {helper, "XCCY Fix-Float Resettable Swap", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{
                          [helper, floatLegDisc, fxSpotSourceCcy, fxSpotTargetCcy, fxSpotQuote, fxSpotSettlementDate,
-                          this]() {
+                          resetsOnFloatLeg, this]() {
                              QuantLib::ext::shared_ptr<YieldTermStructure> forCurve, domCurve;
                              auto bootstrappedCurve =
                                  QuantLib::ext::shared_ptr<YieldTermStructure>(helper->termStructure(), null_deleter());
                              forCurve = *floatLegDisc;
                              domCurve = bootstrappedCurve;
+                             double fxConv = fxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
+                                             forCurve->discount(fxSpotSettlementDate);
                              return getCashflowReportData(
                                  {helper->swap()->leg(0), helper->swap()->leg(1), helper->swap()->leg(2)},
-                                 {true, false, false}, {1.0, 1.0, 1.0}, fxSpotTargetCcy.code(),
-                                 {fxSpotTargetCcy.code(), fxSpotSourceCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
-                                 {forCurve, domCurve, domCurve},
-                                 {fxSpotQuote->value() * forCurve->discount(fxSpotSettlementDate) /
-                                      domCurve->discount(fxSpotSettlementDate),
-                                  1.0, 1.0},
-                                 {}, {});
+                                 {true, false, resetsOnFloatLeg}, {1.0, 1.0, 1.0}, fxSpotTargetCcy.code(),
+                                 {fxSpotSourceCcy.code(), fxSpotTargetCcy.code(),
+                                  resetsOnFloatLeg ? fxSpotSourceCcy.code() : fxSpotTargetCcy.code()},
+                                 asofDate_, {forCurve, domCurve, resetsOnFloatLeg ? forCurve : domCurve},
+                                 {fxConv, 1.0, resetsOnFloatLeg ? fxConv : 1.0}, {}, {});
                          }}});
             }
         }
