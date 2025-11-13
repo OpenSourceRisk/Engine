@@ -1552,9 +1552,7 @@
               "PresentValue",
               "DiscountFactor",
               "fxRateBase",
-              "PresentValueBase",
-              "EffectiveFloorVolatility",
-              "EffectiveCapVolatility"
+              "PresentValueBase"
             ],
             "abs_tol": 1e-08,
             "rel_tol": 1e-08
