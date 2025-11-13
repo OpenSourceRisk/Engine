@@ -86,6 +86,8 @@ public:
     // run calibration and pricing (called from derived engines)
     void calculate() const;
 
+    void setAmericanExerciseInterval(const Size obsPerYear) { americanExerciseInterval_ = obsPerYear; }
+
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
     QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
 
@@ -129,6 +131,7 @@ public:
     Size regressionMaxSimTimesFx_;
     Size regressionMaxSimTimesEq_;
     RegressionModel::VarGroupMode regressionVarGroupMode_;
+    Size americanExerciseInterval_ = 24;
 
     // set from global settings
     mutable bool includeTodaysCashflows_;
@@ -140,23 +143,25 @@ public:
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
     mutable Real resultUnderlyingSettlementValue_, resultSettlementValue_;
+    mutable std::vector<Real> callProbs_;
+    mutable std::vector<Real> putProbs_;
     static constexpr Real tinyTime = 1E-10;
     // generate the mc path values of the model process
     void generatePathValues(const std::vector<Real>& simulationTimes,
                             std::vector<std::vector<RandomVariable>>& pathValues) const;
 
     // the model training logic
-    void calculateModels(Handle<YieldTermStructure> discountCurve,
-                         const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes,
-                         const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-                         const std::vector<CashflowInfo>& cashflowInfo,
+    void calculateModels(Handle<YieldTermStructure> discountCurve, const std::set<Real>& simulationTimes,
+                         const std::set<Real>& exerciseXvaTimes, const std::set<Real> exerciseTimes,
+                         const std::set<Real>& callTimes, const std::set<Real>& putTimes,
+                         const std::set<Real>& xvaTimes, const std::vector<CashflowInfo>& cashflowInfo,
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
                          std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelUndExInto, std::vector<RegressionModel>& regModelRebate,
                          std::vector<RegressionModel>& regModelContinuationValue,
                          std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
-                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
+                         RandomVariable& pathValueOption, std::vector<RandomVariable>& pathExerciseProbsCall,
+                         std::vector<RandomVariable>& pathExerciseProbsPut) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
@@ -173,6 +178,9 @@ public:
 
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
+
+protected:
+        std::set<Time> getExerciseTimes(const std::vector<CallableBond::CallabilityData>& callData) const;
 };
 
 class McCamCallableBondEngine : public McCamCallableBondBaseEngine, public CallableBond::engine {
@@ -225,6 +233,8 @@ private:
         notionals_ = arguments_.notionals;
         callData_ = arguments_.callData;
         putData_ = arguments_.putData;
+        settlementDate_ = arguments_.settlementDate;
+        includeTodaysCashflows_ = true;
         McCamCallableBondBaseEngine::calculate();
         results_.value = resultUnderlyingNpv_ -  resultValue_;
         results_.settlementValue = resultUnderlyingSettlementValue_ -  resultSettlementValue_;
