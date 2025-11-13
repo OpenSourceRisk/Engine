@@ -457,17 +457,29 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 }
                 LOG("Mean Reversion Results Report written");
 
-                // Write simulation.xml
-                std::string fileName = inputs_->resultsPath().string() + "/simulation.xml";
+                // Write calibration.xml
+                std::string fileName = inputs_->resultsPath().string() + "/calibration.xml";
                 hwHistoricalModelData_->toFile(fileName);
 
-                // write simulation_StatisticalWithRiskNeutralVolatility.xml
+                // Write CAM data as single XML string to an in-memory report
+                string xml = hwHistoricalModelData_->toXMLStringUnformatted();
+                auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "CrossAssetModel", xml);
+                analytic()->addReport("CALIBRATION", "calibration", report);
+
+                // write calibration_StatisticalWithRiskNeutralVolatility.xml
                 fileName =
-                    inputs_->resultsPath().string() + "/simulation_StatisticalWithRiskNeutralVolatility.xml";
+                    inputs_->resultsPath().string() + "/calibration_StatisticalWithRiskNeutralVolatility.xml";
                 XMLDocument doc;
                 XMLNode* root = hwHistoricalModelData_->toXML2(doc);
                 doc.appendNode(root);
                 doc.toFile(fileName);
+
+                // Write Statistical with Risk Neutral Volatility data as single XML string to an in-memory report
+                string xml2 = doc.toStringUnformatted();
+                auto report2 = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString()).writeXmlReport(*report2, "CrossAssetModel", xml2);
+                analytic()->addReport("CALIBRATION", "calibration_StatisticalWithRiskNeutralVolatility", report2);
             }
         } else {
             QL_FAIL("CalibrationAnalytic::Unsupported HW calibration mode " << inputs_->hwCalibrationMode());
