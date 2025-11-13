@@ -17,11 +17,12 @@
 */
 
 #include <qle/utilities/ratehelpers.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/utilities/null_deleter.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
+#include <ql/quotes/derivedquote.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -86,8 +87,10 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
     QuantLib::ext::shared_ptr<FxIndex> fxIdx;
     if (resetsOnFloatLeg_) {
+        auto m = [](Real x) { return 1.0 / x; };
+        Handle<Quote> fxSpotInv(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(spotFx_, m));
         fxIdx = QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, fixedCurrency_, index_->currency(),
-                                                    paymentCalendar_, spotFx_, termStructureHandle_, floatDiscount_);
+                                                    paymentCalendar_, fxSpotInv, termStructureHandle_, floatDiscount_);
     } else {
         fxIdx = QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, index_->currency(), fixedCurrency_,
                                                     paymentCalendar_, spotFx_, floatDiscount_, termStructureHandle_);
