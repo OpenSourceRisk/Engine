@@ -153,8 +153,7 @@ public:
     // the model training logic
     void calculateModels(Handle<YieldTermStructure> discountCurve, const std::set<Real>& simulationTimes,
                          const std::set<Real>& exerciseXvaTimes, const std::set<Real> exerciseTimes,
-                         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
-                         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes,
+                         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes, const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes,
                          const std::set<Real>& xvaTimes, const std::vector<CashflowInfo>& cashflowInfo,
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
@@ -236,7 +235,7 @@ private:
         callData_ = arguments_.callData;
         putData_ = arguments_.putData;
         settlementDate_ = arguments_.settlementDate;
-        includeTodaysCashflows_ = true;
+        includeTodaysCashflows_ = false;
         McCamCallableBondBaseEngine::calculate();
         results_.value = resultUnderlyingNpv_ -  resultValue_;
         results_.settlementValue = resultUnderlyingSettlementValue_ -  resultSettlementValue_;
