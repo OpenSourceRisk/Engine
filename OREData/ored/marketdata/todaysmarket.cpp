@@ -344,7 +344,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                                    << fallbackData.rfrIndex << "' as fallback for ibor index '" << node.name
                                    << "', but this is not an overnight index. Are the fallback rules correct here?");
                     if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
-                        tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
+                        tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
                             original, oi, fallbackData.spread, fallbackData.switchDate,
                             iborFallbackConfig_->useRfrCurveInTodaysMarket());
                     else

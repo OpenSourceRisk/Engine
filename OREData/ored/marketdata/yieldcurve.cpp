@@ -1175,7 +1175,7 @@ void YieldCurve::buildIborFallbackCurve(const std::size_t index) {
     DLOG("building ibor fallback curve for '" << segment->iborIndex() << "' with rfrIndex='" << rfrIndexName
                                               << "' and spread=" << spread);
     if (auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(originalIndex)) {
-        p_[index] = QuantLib::ext::make_shared<OvernightFallbackCurve>(on, rfrIndex, spread, Date::minDate());
+        p_[index] = QuantLib::ext::make_shared<IborFallbackCurve>(on, rfrIndex, spread, Date::minDate());
     } else {
         p_[index] = QuantLib::ext::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
     }

@@ -622,7 +622,7 @@ void FixingDateGetter::visit(QuantLib::OvernightIndexedCoupon& c) {
 }
 
 void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
-    auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackOvernightIndex>(c.index());
+    auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(c.index());
     string indexName;
     if (fallback && c.fixingDate() >= fallback->switchDate())
         indexName = fallback->rfrIndex()->name();
