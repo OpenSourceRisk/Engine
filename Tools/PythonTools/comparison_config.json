@@ -2034,14 +2034,14 @@
           {
             "names": [
 		"EigenValue",
+		"EigenVector_0",
 		"EigenVector_1",
 		"EigenVector_2",
 		"EigenVector_3",
 		"EigenVector_4",
 		"EigenVector_5",
 		"EigenVector_6",
-		"EigenVector_7",
-		"EigenVector_8"
+		"EigenVector_7"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-4
@@ -2056,14 +2056,14 @@
           {
             "names": [
 		"EigenValue",
+		"EigenVector_0",
 		"EigenVector_1",
 		"EigenVector_2",
 		"EigenVector_3",
 		"EigenVector_4",
 		"EigenVector_5",
 		"EigenVector_6",
-		"EigenVector_7",
-		"EigenVector_8"
+		"EigenVector_7"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-4
@@ -2078,14 +2078,14 @@
           {
             "names": [
 		"EigenValue",
+		"EigenVector_0",
 		"EigenVector_1",
 		"EigenVector_2",
 		"EigenVector_3",
 		"EigenVector_4",
 		"EigenVector_5",
 		"EigenVector_6",
-		"EigenVector_7",
-		"EigenVector_8"
+		"EigenVector_7"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-4
@@ -2127,6 +2127,57 @@
         ]
       },
 	  "meanReversion_USD-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"v_0",
+		"v_1",
+		"kappa_0",
+		"kappa_1"
+            ],
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-4
+          }
+        ]
+      },
+	  "meanReversion_EUR.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"v_0",
+		"v_1",
+		"kappa_0",
+		"kappa_1"
+            ],
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-4
+          }
+        ]
+      },
+	  "meanReversion_GBP.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+		"v_0",
+		"v_1",
+		"kappa_0",
+		"kappa_1"
+            ],
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-4
+          }
+        ]
+      },
+	  "meanReversion_USD.csv": {
         "keys": [
           "PrincipalComponent"
         ],
