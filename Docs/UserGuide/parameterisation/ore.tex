@@ -446,12 +446,15 @@ InitialMargin, Performance), e.g. for
 i.e. to calibrate the simulation model and output the calibrated model data such that it can be used to initialize
 a subsequent simulation without recalibration.
 
+Both CAM and HW model are supported for {\tt calibration} 'analytics'. When setting model to CAM, ORE use the following inputs.
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Analytics>
     <Analytic type="calibration">
       <Parameter name="active">Y</Parameter>
+	  <Parameter name="model">CAM</Parameter>
       <Parameter name="configFile">simulation.xml</Parameter>
       <Parameter name="outputFileName">calibration.csv</Parameter>
     </Analytic>
@@ -461,15 +464,70 @@ a subsequent simulation without recalibration.
 \label{lst:ore_calibration}
 \end{listing}
 
-Output is the Cross Asset Model data written to {\tt calibration.xml} in the usual output directory, which contains the calibration
+See {\tt Example\_8} for a demonstration.
+
+When setting model to HW, ORE use the following inputs.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="calibration">
+      <Parameter name="active">Y</Parameter>
+	  <Parameter name="model">HW</Parameter>
+	  <Parameter name="mode">historical</Parameter>
+	  <Parameter name="foreignCurrencies">EUR,GBP</Parameter>
+	  <Parameter name="curveTenors">1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y</Parameter>
+	  <Parameter name="useForwardOrZeroRate">zero</Parameter>
+	  <Parameter name="pcaCalibration">Y</Parameter>
+      <Parameter name="scenarioInputFile">scenario.csv</Parameter>
+	  <Parameter name="startDate">2019-09-29</Parameter>
+	  <Parameter name="endDate">2022-09-27</Parameter>
+	  <Parameter name="lambda">1</Parameter>
+	  <Parameter name="varianceRetained">0.90</Parameter>
+	  <Parameter name="pcaOutputFileName">pca.csv</Parameter>
+	  <Parameter name="pcaInputFileName">pca_USD.csv,pca_EUR.csv,pca_GBP.csv</Parameter>
+	  <Parameter name="meanReversionCalibration">Y</Parameter>
+	  <Parameter name="basisFunctionNumber">2</Parameter>
+	  <Parameter name="kappaUpperBound">5.0</Parameter>
+	  <Parameter name="haltonMaxGuess">500</Parameter>
+	  <Parameter name="meanReversionOutputFileName">meanReversion.csv</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: HW calibration}
+\label{lst:ore_calibration_HW}
+\end{listing}				  
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt model:} The model for Calibration, can be either {\tt CAM} or {\tt HW}, default to {\tt CAM} when left blank or omitted.
+\item {\tt mode:} The calibration mode, must be {\tt historical} for now. Will be ignored if {\tt model} node set to {\tt CAM}.
+\item {\tt foreignCurrencies:} The list of foreign currencies that need the calibration. Will be ignored if {\tt model} node set to {\tt CAM}.
+\item {\tt curveTenors:} The list of tenors for each IR curve when providing historical discount factors or the tenor list of each value in eigenvectors. Will be ignored if {\tt model} node set to {\tt CAM}.
+\item {\tt useForwardOrZeroRate:} When {\tt pcaCalibration} set to {\tt true}, this means whether zero rate or forward rate will be used to calculate the covariance matrix for PCA calibration. When {\tt pcaCalibration} set to {\tt false}, this means whether zero rate or forward rate should be used to parse the provided PCA eigenvectors for mean reversion calibration.
+\item {\tt pcaCalibration:} When set to {\tt true}, ORE will read the historical discount factors and perform PCA calibration. Will be ignored if {\tt model} node set to {\tt CAM}.
+\item {\tt scenarioInputFile:} The path to the file which contains the historical discount factors and historical FX spot rates. Must be in the scenario.csv ORE format. Only needed when {\tt pcaCalibration} set to {\tt true}.
+\item {\tt startDate:} Start date of the historical data that will be used in calibration. Only needed when {\tt pcaCalibration} set to {\tt true}.
+\item {\tt endDate:} End date of the historical data that will be used in calibration. Only needed when {\tt pcaCalibration} set to {\tt true}.
+\item {\tt lambda:} The lambda used on exponentially-weighted historical rates diffs when computing the covariance matrix. The covariance matrix will be equally weighted when {\tt lambda} is set to {\tt 1}. Only needed when {\tt pcaCalibration} set to {\tt true}.
+\item {\tt varianceRetained:} The ratio between the combined variance of retained principal components and total variance. This decides how many principal components will be retained. Only needed when {\tt pcaCalibration} set to {\tt true}.
+\item {\tt pcaOutputFileName:} The output file name of eigenvalues and eigenvectors retained for each currency. 
+\item {\tt pcaInputFileName:} The list of file names where eigenvalues and eigenvectors are provided for mean reversion calibration. The files should be one curve per file. Only needed when {\tt pcaCalibration} is set to {\tt false} and {\tt meanReversionCalibration} is set to {\tt true}.
+\item {\tt meanReversionCalibration:} When set to {\tt true}, ORE will perform mean reversion calibration on principal components retained either from previous pca calibration step or from input files.
+\item {\tt basisFunctionNumber:} Number of basis functions used in mean reversion calibration.
+\item {\tt kappaUpperBound:} The upper bound of kappa during mean reversion calibration.
+\item {\tt haltonMaxGuess:} Number of max guess in optimization in mean reversion calibration.
+\item {\tt meanReversionOutputFileName:} The output file name for kappa and v for each curve.
+\end{itemize}		
+								   
+For both CAM and HW model calibration, output is the Cross Asset Model data written to {\tt calibration.xml} in the usual output directory, which contains the calibration
 results in place of the initial values for all parametrizations covered so far (IR, FX, EQ, INF, COM). In a subsequent run one could replace
 the {\tt CrossAssetModel} section in {\tt simulation.xml} with the output in {\tt calibration.xml} to re-run without re-calibration.
 Note that the {\tt Calibrate} flags in the output Cross Asset Model data are set to {\tt false}.
 
 Additionally, the Cross Asset Model XML is written as a single XML string to the calibration report {\tt calibration.csv}, also held in
 memory for further processing e.g. via ORE's Python interface.
-
-See {\tt Example\_8} for a demonstration.
 
 \subsubsection{Scenario Generation}
 
