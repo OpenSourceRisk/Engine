@@ -48,6 +48,8 @@ public:
 
     // Setters
     void setAsOf(const Date& d) { asOf_ = d; }
+    void setBaseCurrency(const std::string& ccy) { baseCurrency_ = ccy; }
+    void setForeignCurrencies(const std::vector<std::string>& ccy) { foreignCurrencies_ = ccy; }
     void setCurveTenors(const std::vector<Period>& v) { curveTenors_ = v; }
     void setLambda(Real l) { lambda_ = l; }
     void setUseForwardRate(bool b) { useForwardRate_ = b; }
@@ -114,8 +116,8 @@ public:
 private:
     QuantLib::Date asOf_;
     std::vector<QuantLib::Period> curveTenors_;
-    // QuantLib::Currency baseCurrency;
-    // std::vector<QuantLib::Currency> foreignCurrencies;
+    std::string baseCurrency_;
+    std::vector<std::string> foreignCurrencies_;
     QuantLib::Real lambda_;
     bool useForwardRate_;
     QuantLib::Real varianceRetained_;

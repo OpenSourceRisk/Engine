@@ -1,4 +1,13 @@
 <CrossAssetModel>
+	<DomesticCurrency>USD</DomesticCurrency>
+	<Currencies>
+		<Currency>USD</Currency>
+		<Currency>EUR</Currency>
+		<Currency>GBP</Currency>
+	</Currencies>
+	<BootstrapTolerance>0.0001</BootstrapTolerance>
+	<Discretization>Euler</Discretization>
+	<Measure>BA</Measure>
 	<InterestRateModels>
 		<HWModel key="EUR">
 			<CalibrationType>None</CalibrationType>

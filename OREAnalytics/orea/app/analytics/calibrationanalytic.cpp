@@ -94,6 +94,8 @@ void CalibrationAnalyticImpl::buildHwHistoricalCalibrationModelData() {
                                              inputs_->curveTenors(), inputs_->startDate(), inputs_->endDate());
 
     hwHistoricalModelData_->setAsOf(inputs_->asof());
+    hwHistoricalModelData_->setBaseCurrency(inputs_->baseCurrency());
+    hwHistoricalModelData_->setForeignCurrencies(inputs_->foreignCurrencies());
     hwHistoricalModelData_->setCurveTenors(inputs_->curveTenors());
     hwHistoricalModelData_->setUseForwardRate(inputs_->useForwardRate());
 

@@ -24,6 +24,17 @@ namespace data {
 XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
     XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
     if (meanReversionCalibration_) {
+        // Currency list
+        XMLUtils::addChild(doc, crossAssetModel, "DomesticCurrency", baseCurrency_);
+        XMLNode* currencies = XMLUtils::addChild(doc, crossAssetModel, "Currencies");
+        XMLUtils::addChild(doc, currencies, "Currency", baseCurrency_);
+        for (const auto& ccy : foreignCurrencies_) {
+            XMLUtils::addChild(doc, currencies, "Currency", ccy);
+        }
+        // General model parameters
+        XMLUtils::addChild(doc, crossAssetModel, "BootstrapTolerance", "0.0001");
+        XMLUtils::addChild(doc, crossAssetModel, "Discretization", "Euler");
+        XMLUtils::addChild(doc, crossAssetModel, "Measure", "BA");
         // Output IR parameters
         XMLNode* irModel = XMLUtils::addChild(doc, crossAssetModel, "InterestRateModels");
         for (auto const& ccyMatrix : irKappa_) {
@@ -113,6 +124,17 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
 XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
     XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
     if (meanReversionCalibration_) {
+        // Currency list
+        XMLUtils::addChild(doc, crossAssetModel, "DomesticCurrency", baseCurrency_);
+        XMLNode* currencies = XMLUtils::addChild(doc, crossAssetModel, "Currencies");
+        XMLUtils::addChild(doc, currencies, "Currency", baseCurrency_);
+        for (const auto& ccy : foreignCurrencies_) {
+            XMLUtils::addChild(doc, currencies, "Currency", ccy);
+        }
+        // General model parameters
+        XMLUtils::addChild(doc, crossAssetModel, "BootstrapTolerance", "0.0001");
+        XMLUtils::addChild(doc, crossAssetModel, "Discretization", "Euler");
+        XMLUtils::addChild(doc, crossAssetModel, "Measure", "BA");
         // Output IR parameters
         XMLNode* irModel = XMLUtils::addChild(doc, crossAssetModel, "InterestRateModels");
         for (auto const& ccyMatrix : irKappa_) {
@@ -137,7 +159,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
             }
             XMLUtils::addGenericChildAsList(doc, kappa, "Kappa", formattedKappa);
 
-            XMLNode* pcaV = XMLUtils::addChild(doc, irHwNf, "PCAV");
+            XMLNode* pcaLoadings = XMLUtils::addChild(doc, irHwNf, "PCALoadings");
             Matrix vCcy = v_.find(ccyMatrix.first)->second;
             for (Size i = 0; i < vCcy.rows(); i++) {
                 vector<string> formattedRow;
@@ -146,17 +168,17 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
                     oss << std::defaultfloat << vCcy[i][j];
                     formattedRow.push_back(oss.str());
                 }
-                XMLUtils::addGenericChildAsList(doc, pcaV, "Loadings", formattedRow);
+                XMLUtils::addGenericChildAsList(doc, pcaLoadings, "Loadings", formattedRow);
             }
 
-            XMLNode* pcaSigma = XMLUtils::addChild(doc, irHwNf, "PCASigma");
-            XMLUtils::addChild(doc, pcaSigma, "Calibrate", "Y");
-            XMLUtils::addChild(doc, pcaSigma, "ParamType", "Piecewise");
-            XMLUtils::addChild(doc, pcaSigma, "TimeGrid");
+            XMLNode* pcaSigma0 = XMLUtils::addChild(doc, irHwNf, "PCASigma0");
+            XMLUtils::addChild(doc, pcaSigma0, "Calibrate", "Y");
+            XMLUtils::addChild(doc, pcaSigma0, "ParamType", "Piecewise");
+            XMLUtils::addChild(doc, pcaSigma0, "TimeGrid");
             Real firstEigenValue = eigenValues_.find(ccyMatrix.first)->second[0];
             std::ostringstream ossFirst;
             ossFirst << std::defaultfloat << firstEigenValue;
-            XMLUtils::addChild(doc, pcaSigma, "InitialValue", ossFirst.str());
+            XMLUtils::addChild(doc, pcaSigma0, "InitialValue", ossFirst.str());
 
             XMLNode* pcaSigmaRatios = XMLUtils::addChild(doc, irHwNf, "PCASigmaRatios");
             vector<string> formattedRatios;
