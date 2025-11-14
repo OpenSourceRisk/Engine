@@ -180,7 +180,6 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
             ossFirst << std::defaultfloat << firstEigenValue;
             XMLUtils::addChild(doc, pcaSigma0, "InitialValue", ossFirst.str());
 
-            XMLNode* pcaSigmaRatios = XMLUtils::addChild(doc, irHwNf, "PCASigmaRatios");
             vector<string> formattedRatios;
             formattedRatios.push_back("1"); // First ratio is always 1
             for (Size i = 1; i < principalComponents_.find(ccyMatrix.first)->second; i++) {
@@ -188,7 +187,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
                 oss << std::defaultfloat << (eigenValues_.find(ccyMatrix.first)->second[i] / firstEigenValue);
                 formattedRatios.push_back(oss.str());
             }
-            XMLUtils::addGenericChildAsList(doc, pcaSigmaRatios, "Ratios", formattedRatios);
+            XMLUtils::addGenericChildAsList(doc, irHwNf, "PCASigmaRatios", formattedRatios);
         }
         if (pcaCalibration_) {
             // Output FX and correlation parameters only when pca calibration is set to true

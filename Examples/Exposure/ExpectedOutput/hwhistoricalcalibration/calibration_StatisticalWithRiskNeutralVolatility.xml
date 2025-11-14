@@ -30,9 +30,7 @@
 				<TimeGrid/>
 				<InitialValue>0.000260203</InitialValue>
 			</PCASigma0>
-			<PCASigmaRatios>
-				<Ratios>1, 0.178764</Ratios>
-			</PCASigmaRatios>
+			<PCASigmaRatios>1, 0.178764</PCASigmaRatios>
 		</HWModel>
 		<HWModel key="GBP-LIBOR-3M">
 			<CalibrationType>StatisticalWithRiskNeutralVolatility</CalibrationType>
@@ -55,9 +53,7 @@
 				<TimeGrid/>
 				<InitialValue>0.000460823</InitialValue>
 			</PCASigma0>
-			<PCASigmaRatios>
-				<Ratios>1, 0.146814</Ratios>
-			</PCASigmaRatios>
+			<PCASigmaRatios>1, 0.146814</PCASigmaRatios>
 		</HWModel>
 		<HWModel key="USD-LIBOR-3M">
 			<CalibrationType>StatisticalWithRiskNeutralVolatility</CalibrationType>
@@ -80,9 +76,7 @@
 				<TimeGrid/>
 				<InitialValue>0.000433025</InitialValue>
 			</PCASigma0>
-			<PCASigmaRatios>
-				<Ratios>1, 0.167388</Ratios>
-			</PCASigmaRatios>
+			<PCASigmaRatios>1, 0.167388</PCASigmaRatios>
 		</HWModel>
 	</InterestRateModels>
 	<ForeignExchangeModels>
