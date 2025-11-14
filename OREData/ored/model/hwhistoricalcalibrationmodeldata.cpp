@@ -25,7 +25,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML(XMLDocument& doc) const {
     XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
     if (meanReversionCalibration_) {
         // Currency list
-        XMLUtils::addChild(doc, crossAssetModel, "DomesticCurrency", baseCurrency_);
+        XMLUtils::addChild(doc, crossAssetModel, "DomesticCcy", baseCurrency_);
         XMLNode* currencies = XMLUtils::addChild(doc, crossAssetModel, "Currencies");
         XMLUtils::addChild(doc, currencies, "Currency", baseCurrency_);
         for (const auto& ccy : foreignCurrencies_) {
@@ -125,7 +125,7 @@ XMLNode* HwHistoricalCalibrationModelData::toXML2(XMLDocument& doc) const {
     XMLNode* crossAssetModel = doc.allocNode("CrossAssetModel");
     if (meanReversionCalibration_) {
         // Currency list
-        XMLUtils::addChild(doc, crossAssetModel, "DomesticCurrency", baseCurrency_);
+        XMLUtils::addChild(doc, crossAssetModel, "DomesticCcy", baseCurrency_);
         XMLNode* currencies = XMLUtils::addChild(doc, crossAssetModel, "Currencies");
         XMLUtils::addChild(doc, currencies, "Currency", baseCurrency_);
         for (const auto& ccy : foreignCurrencies_) {

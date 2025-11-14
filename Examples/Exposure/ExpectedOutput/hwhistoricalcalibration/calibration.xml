@@ -1,5 +1,5 @@
 <CrossAssetModel>
-	<DomesticCurrency>USD</DomesticCurrency>
+	<DomesticCcy>USD</DomesticCcy>
 	<Currencies>
 		<Currency>USD</Currency>
 		<Currency>EUR</Currency>
