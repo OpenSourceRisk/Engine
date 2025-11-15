@@ -53,7 +53,7 @@
 				<ParamType>Constant</ParamType>
 				<TimeGrid/>
 				<InitialValue>
-					<Kappa>0.00971341, 5, 0.0644724, 0.111779</Kappa>
+					<Kappa>0.00971349, 5, 0.0644724, 0.111779</Kappa>
 				</InitialValue>
 			</Reversion>
 		</HWModel>
