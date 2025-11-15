@@ -31,7 +31,6 @@
 
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/indexes/fallbackovernightindex.hpp>
 
 #pragma once
 

@@ -29,7 +29,6 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/commoditybasispricecurvewrapper.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>

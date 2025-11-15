@@ -54,7 +54,6 @@
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/compositeindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
 
