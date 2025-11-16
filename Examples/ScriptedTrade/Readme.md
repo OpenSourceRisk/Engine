@@ -13,5 +13,5 @@ The trades are represented
 
 The **ORE Scripted Trade** document and the **ORE Product Catalogue** provide the full picture.
 
-And in the **Products Examle** section provides a representative portfolio of products
+And in the **Products Example** section provides a representative portfolio of products
 across asset classes including several Scripted Trades.

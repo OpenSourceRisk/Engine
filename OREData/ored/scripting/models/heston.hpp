@@ -47,6 +47,8 @@ private:
                             const std::vector<Real>& t, const std::vector<Real>& dt,
                             const std::vector<Real>& sqrtdt) const;
     void setAdditionalResults() const;
+
+    void generateSingleAssetPaths() const; 
 };
 
 } // namespace data

@@ -88,6 +88,7 @@ model/eqbsdata.cpp
 model/fxbsbuilder.cpp
 model/fxbsdata.cpp
 model/hestonmodelbuilder.cpp
+model/hestonmodelcalibration.cpp
 model/hwbuilder.cpp
 model/inflation/infdkbuilder.cpp
 model/inflation/infdkdata.cpp
@@ -498,6 +499,7 @@ model/eqbsdata.hpp
 model/fxbsbuilder.hpp
 model/fxbsdata.hpp
 model/hestonmodelbuilder.hpp
+model/hestonmodelcalibration.hpp
 model/hwbuilder.hpp
 model/inflation/infdkbuilder.hpp
 model/inflation/infdkdata.hpp

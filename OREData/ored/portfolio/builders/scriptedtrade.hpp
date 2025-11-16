@@ -184,6 +184,14 @@ protected:
     bool includePastCashflows_;
     bool staticNpvMem_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
+    // Heston related
+    std::vector<Period> calibrationExpiries_;
+    std::vector<Period> calibrationVarianceTerms_;
+    std::vector<Real> hestonInitialValues_; // order: theta, kappa, sigma, rho, v0
+    std::vector<bool> hestonFixedValues_; // same order as above
+    Real hestonRelaxedFellerConstraint_; // in [0,1], 0 means no constraint, 1 means Feller
+    Size hestonCalibrationRestarts_; // Max. number of initial value sets
+    Real hestonTolerance_; // Implied vol RMSE below which we stop the search -->
 };
 
 } // namespace data
