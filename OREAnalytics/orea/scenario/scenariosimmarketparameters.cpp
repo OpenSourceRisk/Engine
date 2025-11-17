@@ -887,7 +887,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (atmOnlyNode)
             swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(nodeChild, "SimulateATMOnly", true);
 
-        if (!swapVolSimulateATMOnly_) {
+        if (!swapVolSimulateATMOnly_) { 
             vector<XMLNode*> spreadNodes = XMLUtils::getChildrenNodes(nodeChild, "StrikeSpreads");
             if (spreadNodes.size() > 0) {
                 keysCheck = set<string>(keys.begin(), keys.end());

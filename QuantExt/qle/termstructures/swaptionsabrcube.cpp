@@ -144,7 +144,9 @@ void SwaptionSabrCube::performCalculations() const {
                 ParametricVolatility::MarketSmile{allOptionTimes[i],
                                                   allSwapLengths[j],
                                                   forward,
-                                                  atmVol()->shift(allOptionTenors[i], allSwapTenors[j]),
+                                                  atmVol()->volatilityType() == ShiftedLognormal ?
+                                                    atmVol()->shift(allOptionTenors[i], allSwapTenors[j]) :
+                                                    0.0,
                                                   {},
                                                   strikes,
                                                   vols});

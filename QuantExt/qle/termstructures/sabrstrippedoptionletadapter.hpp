@@ -55,7 +55,10 @@ public:
         const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
             initialModelParameters = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05, bool stickySabr = false);
+        const QuantLib::Real maxAcceptableError = 0.05,
+        const std::vector<std::vector<Real>>& strikes = {},
+        const std::vector<std::vector<Handle<Quote>>>& volSpreads = {},
+        bool stickySabr = false);
 
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
      */
@@ -68,7 +71,10 @@ public:
         const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
             initialModelParameters = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-        const QuantLib::Real maxAcceptableError = 0.05);
+        const QuantLib::Real maxAcceptableError = 0.05,
+        const std::vector<std::vector<Real>>& strikes = {},
+        const std::vector<std::vector<Handle<Quote>>>& volSpreads = {},
+        bool stickySabr = false);
 
     //! \name TermStructure interface
     //@{
@@ -111,6 +117,7 @@ public:
         initialModelParameters() const { return initialModelParameters_; }
     QuantLib::Size maxCalibrationAttempts() const { return maxCalibrationAttempts_; }
     QuantLib::Real exitEarlyErrorThreshold() const { return exitEarlyErrorThreshold_; }
+    const std::vector<std::vector<Real>>& strikes() const { return strikes_; }
     QuantLib::Real maxAcceptableError() const { return maxAcceptableError_; }
     //@}
 
@@ -122,6 +129,8 @@ protected:
     //@}
 
 private:
+    void init();
+
     //! Base optionlet object that provides the stripped optionlet volatilities
     QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase_;
 
@@ -137,6 +146,8 @@ private:
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
+    std::vector<std::vector<Real>> strikes_;
+    std::vector<std::vector<Handle<Quote>>> volSpreads_;
     bool stickySabr_;
 
     //! State
@@ -146,6 +157,61 @@ private:
 };
 
 template <class TimeInterpolator>
+inline void SabrStrippedOptionletAdapter<TimeInterpolator>::init() {
+    registerWith(optionletBase_);
+    Size nFixingDates = optionletBase_->optionletFixingDates().size();
+
+    // The dimension of input StrippedOptionletBase can be either
+    //
+    // - ATM only (only 1 optionlet strike for every fixing date)
+    //   SABR cube will be calibrated to the skew defined by strikes_ and volSpreads_
+    //
+    // or,
+    //
+    // - Smile (more than 1 optionlet strike for at least 1 fixing date)
+    //   SABR cube will be calibrated to the skew defined in the input StrippedOptionletBase
+
+    bool isAtm = true;
+    for (Size i = 0; i < nFixingDates; ++i)
+        if (optionletBase_->optionletStrikes(i).size() > 1)
+            isAtm = isAtm && false;
+
+    if (!isAtm) {
+        QL_REQUIRE(strikes_.empty(), 
+                   "When StrippedOptionletBase contains smiles, strikes "
+                   "inputs to SabrStrippedOptionletAdapter must be empty");
+        strikes_.resize(nFixingDates);
+        for (Size i = 0; i < nFixingDates; ++i) {
+            strikes_[i] = optionletBase_->optionletStrikes(i);
+        }
+        if (volSpreads_.empty()) {
+            volSpreads_.resize(nFixingDates);
+            for (Size i = 0; i < nFixingDates; ++i) {
+                volSpreads_[i] = std::vector<Handle<Quote>>(
+                    strikes_[i].size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)));
+            }
+        } else { /* do nothing, volSpreads_ will be validated below */ }
+    }
+
+    QL_REQUIRE(nFixingDates == volSpreads_.size(),
+               "mismatch between number of fixing dates (" <<
+               nFixingDates << ") and number of rows (" <<
+               volSpreads_.size() << ")");
+    for (Size i = 0; i < volSpreads_.size(); i++) {
+        Size nStrikes = strikes_[i].size();
+        QL_REQUIRE(nStrikes == volSpreads_[i].size(),
+                   "mismatch between number of strikes (" << nStrikes <<
+                   ") and number of columns (" << volSpreads_[i].size() <<
+                   ") in the " << io::ordinal(i+1) << " row");
+    }
+    if (!stickySabr_) {
+        for (auto const& v : volSpreads_)
+            for (auto const& s : v)
+                registerWith(s);
+    }
+}
+
+template <class TimeInterpolator>
 SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
@@ -153,14 +219,15 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Real modelDisplacement,
     const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>& initialModelParameters,
     const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
-    const QuantLib::Real maxAcceptableError, bool stickySabr)
+    const QuantLib::Real maxAcceptableError, const std::vector<std::vector<Real>>& strikes,
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads, bool stickySabr)
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
                                    sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
       outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
-      maxAcceptableError_(maxAcceptableError), stickySabr_(stickySabr) {
-    registerWith(optionletBase_);
+      maxAcceptableError_(maxAcceptableError), strikes_(strikes), volSpreads_(volSpreads), stickySabr_(stickySabr) {
+    init();
 }
 
 template <class TimeInterpolator>
@@ -171,13 +238,14 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Real modelDiscplacement,
     const std::vector<std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>& initialModelParameters,
     const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
-    const QuantLib::Real maxAcceptableError)
+    const QuantLib::Real maxAcceptableError, const std::vector<std::vector<Real>>& strikes,
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads, bool stickySabr)
     : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
       outputDisplacement_(outputDisplacement), initialModelParameters_(initialModelParameters),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
-      maxAcceptableError_(maxAcceptableError) {
-    registerWith(optionletBase_);
+      maxAcceptableError_(maxAcceptableError), strikes_(strikes), volSpreads_(volSpreads), stickySabr_(stickySabr) {
+    init();
 }
 
 template <class TimeInterpolator>
@@ -233,13 +301,26 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
                    << this->optionletBase()->optionletFixingTimes().size() << ")");
     for (Size i = 0; i < this->optionletBase()->optionletFixingTimes().size(); ++i) {
         Real forward = atmInterpolation_->operator()(this->optionletBase()->optionletFixingTimes()[i]);
+        auto optionletStrikes = strikes_.empty() ? this->optionletBase()->optionletStrikes(i) : strikes_[i];
+        QL_REQUIRE(!optionletStrikes.empty(),
+                   "SabrStrippedOptionletAdapter: no optionlet strikes for optionlet fixing time "
+                       << this->optionletBase()->optionletFixingTimes()[i]);
+        auto optionletVolatilities = this->optionletBase()->optionletVolatilities(i);
+        QL_REQUIRE(!optionletVolatilities.empty(),
+                   "SabrStrippedOptionletAdapter: no optionlet volatilities for optionlet fixing time "
+                       << this->optionletBase()->optionletFixingTimes()[i]);
+        if (optionletVolatilities.size() == 1 && optionletStrikes.size() > 1)
+            optionletVolatilities = std::vector<Real>(optionletStrikes.size(), optionletVolatilities[0]);
+        for (Size j = 0; j < optionletVolatilities.size(); ++j) {
+            optionletVolatilities[j] += volSpreads_[i][j]->value();
+        }
         marketSmiles.push_back(ParametricVolatility::MarketSmile{this->optionletBase()->optionletFixingTimes()[i],
                                                                  Null<Real>(),
                                                                  forward,
                                                                  optionletBase_->displacement(),
                                                                  {},
-                                                                 this->optionletBase()->optionletStrikes(i),
-                                                                 this->optionletBase()->optionletVolatilities(i)});
+                                                                 optionletStrikes,
+                                                                 optionletVolatilities});
         if (!initialModelParameters_.empty()) {
             modelParameters[std::make_pair(this->optionletBase()->optionletFixingTimes()[i], Null<Real>())] =
                 initialModelParameters_.size() == 1 ? initialModelParameters_.front() : initialModelParameters_[i];
