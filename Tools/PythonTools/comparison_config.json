@@ -138,7 +138,7 @@
               "BaseValue",
               "ShiftSize"
             ],
-            "abs_tol": 1E-7,
+            "abs_tol": 1e-07,
             "rel_tol": 1e-12
           }
         ]
@@ -153,25 +153,25 @@
           "ShiftSize_2",
           "Currency"
         ],
-		"use_cols": [
+        "use_cols": [
           "Base NPV",
           "Delta",
           "Gamma"
         ],
-		"optional_cols": [
-            "Currency(Trade)",
-            "Base NPV(Trade)",
-            "Delta(Trade)",
-            "Gamma(Trade)"
+        "optional_cols": [
+          "Currency(Trade)",
+          "Base NPV(Trade)",
+          "Delta(Trade)",
+          "Gamma(Trade)"
         ],
-		"require_equal_optional_cols": false,
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-			  "Base NPV(Trade)",
-			  "Delta(Trade)"
+              "Base NPV(Trade)",
+              "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -222,20 +222,20 @@
           "Delta",
           "Gamma"
         ],
-		"optional_cols": [
-            "Currency(Trade)",
-            "Base NPV(Trade)",
-            "Delta(Trade)",
-            "Gamma(Trade)"
+        "optional_cols": [
+          "Currency(Trade)",
+          "Base NPV(Trade)",
+          "Delta(Trade)",
+          "Gamma(Trade)"
         ],
-		"require_equal_optional_cols": false,
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-			  "Base NPV(Trade)",
-			  "Delta(Trade)"
+              "Base NPV(Trade)",
+              "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -683,10 +683,10 @@
           "SIMMCalculationCurrency"
         ],
         "optional_cols": [
-            "ExceptionsDecorrelated",
-            "GreenUpToDecorrelated",
-            "AmberUpToDecorrelated",
-            "ZoneDecorrelated"
+          "ExceptionsDecorrelated",
+          "GreenUpToDecorrelated",
+          "AmberUpToDecorrelated",
+          "ZoneDecorrelated"
         ],
         "require_equal_optional_cols": false,
         "column_settings": [
@@ -1066,8 +1066,8 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1082,8 +1082,8 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1097,8 +1097,8 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1112,8 +1112,8 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1130,8 +1130,8 @@
             "names": [
               "Numeraire"
             ],
-            "abs_tol": 0.000001,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
           }
         ]
       },
@@ -1148,22 +1148,22 @@
             "names": [
               "Numeraire"
             ],
-            "abs_tol": 0.000001,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
           }
         ]
       },
       "xvacg-cva-sensi-scenario\\.csv": {
         "keys": [
-            "TradeId",
-	    "Factor",
-	    "Up/Down"
+          "TradeId",
+          "Factor",
+          "Up/Down"
         ],
         "use_cols": [
-	    "Base NPV",
-	    "ShiftSize_1",
-	    "Scenario NPV",
-            "Difference"
+          "Base NPV",
+          "ShiftSize_1",
+          "Scenario NPV",
+          "Difference"
         ],
         "drop_rows": {
           "cols": [
@@ -1174,13 +1174,13 @@
         "column_settings": [
           {
             "names": [
-		"Base NPV",
-		"ShiftSize_1",
-		"Scenario NPV",
-		"Difference"
+              "Base NPV",
+              "ShiftSize_1",
+              "Scenario NPV",
+              "Difference"
             ],
             "abs_tol": 0.05,
-            "rel_tol": 1e-4
+            "rel_tol": 0.0001
           }
         ]
       },
@@ -1210,7 +1210,7 @@
               "ShiftSize_2"
             ],
             "abs_tol": 0.03,
-            "rel_tol": 1e-9
+            "rel_tol": 1e-09
           }
         ]
       },
@@ -1232,20 +1232,20 @@
       },
       "xvacg-exposure\\.csv": {
         "keys": [
-            "Date"
+          "Date"
         ],
         "use_cols": [
-	    "EPE",
-	    "ENE"
+          "EPE",
+          "ENE"
         ],
         "column_settings": [
           {
             "names": [
-		"EPE",
-		"ENE"
+              "EPE",
+              "ENE"
             ],
             "abs_tol": 0.01,
-            "rel_tol": 1e-6
+            "rel_tol": 1e-06
           }
         ]
       },
@@ -1305,27 +1305,27 @@
           "ShiftSize_2",
           "Currency"
         ],
-		"use_cols": [
+        "use_cols": [
           "Base NPV",
           "Delta",
           "Gamma"
         ],
-		"optional_cols": [
-            "Currency(Trade)",
-            "Base NPV(Trade)",
-            "Delta(Trade)",
-            "Gamma(Trade)"
+        "optional_cols": [
+          "Currency(Trade)",
+          "Base NPV(Trade)",
+          "Delta(Trade)",
+          "Gamma(Trade)"
         ],
-		"require_equal_optional_cols": false,
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-			  "Gamma",
-			  "Base NPV(Trade)",
-			  "Delta(Trade)",
-			  "Gamma(Trade)"
+              "Gamma",
+              "Base NPV(Trade)",
+              "Delta(Trade)",
+              "Gamma(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -1944,7 +1944,7 @@
               "CleanPnL",
               "DirtyPnL"
             ],
-            "abs_tol": 1e-03,
+            "abs_tol": 0.001,
             "rel_tol": 1e-12
           }
         ]
@@ -2023,7 +2023,7 @@
         "column_settings": [
           {
             "names": [
-			  "PLAmount"
+              "PLAmount"
             ],
             "abs_tol": 1e-05,
             "rel_tol": 1e-05
@@ -2039,8 +2039,8 @@
             "names": [
               "value"
             ],
-            "abs_tol": 1e-8,
-            "rel_tol": 1e-4
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
           }
         ]
       },
@@ -2051,17 +2051,185 @@
         "column_settings": [
           {
             "names": [
-		"eigenvector_1",
-		"eigenvector_2",
-		"eigenvector_3",
-		"eigenvector_4",
-		"eigenvector_5",
-		"eigenvector_6",
-		"eigenvector_7",
-		"eigenvector_8"
+              "eigenvector_1",
+              "eigenvector_2",
+              "eigenvector_3",
+              "eigenvector_4",
+              "eigenvector_5",
+              "eigenvector_6",
+              "eigenvector_7",
+              "eigenvector_8"
             ],
-            "abs_tol": 1e-8,
-            "rel_tol": 1e-4
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "pca_EUR-EURIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EigenValue",
+              "EigenVector_0",
+              "EigenVector_1",
+              "EigenVector_2",
+              "EigenVector_3",
+              "EigenVector_4",
+              "EigenVector_5",
+              "EigenVector_6",
+              "EigenVector_7"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "pca_GBP-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EigenValue",
+              "EigenVector_0",
+              "EigenVector_1",
+              "EigenVector_2",
+              "EigenVector_3",
+              "EigenVector_4",
+              "EigenVector_5",
+              "EigenVector_6",
+              "EigenVector_7"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "pca_USD-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EigenValue",
+              "EigenVector_0",
+              "EigenVector_1",
+              "EigenVector_2",
+              "EigenVector_3",
+              "EigenVector_4",
+              "EigenVector_5",
+              "EigenVector_6",
+              "EigenVector_7"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_EUR-EURIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_GBP-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_USD-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_EUR.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_GBP.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_USD.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
           }
         ]
       },
@@ -2079,8 +2247,8 @@
             "names": [
               "Value"
             ],
-            "abs_tol": 1e-03,
-            "rel_tol": 1e-04
+            "abs_tol": 0.001,
+            "rel_tol": 0.0001
           }
         ]
       }

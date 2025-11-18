@@ -1473,6 +1473,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
         DLOG("checking overlap of segments and remove instruments");
 
         for (Size i = 0; i < curveSegments_[index].size(); ++i) {
+            Size initialSize = instrumentsPerSegment[i].size();
+
             if (i < curveSegments_[index].size() - 1 &&
                 curveSegments_[index][i]->priority() > curveSegments_[index][i + 1]->priority()) {
                 DLOG("checking overlap between segment #"
@@ -1510,6 +1512,16 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                     } else
                         ++it;
                 }
+            }
+
+            // Check if whole segment has been removed
+            if (initialSize > 0 && instrumentsPerSegment[i].empty()) {
+                std::map<std::string, std::string> subFields;
+                subFields["curveId"] = curveSpec_[index]->name();
+                subFields["segmentType"] = curveSegments_[index][i]->typeID();
+                subFields["segmentNumber"] = std::to_string(i);
+                StructuredMessage(StructuredMessage::Category::Warning, StructuredMessage::Group::Configuration,
+                                  "Entire yield curve segment has been removed", subFields).log();
             }
         }
 

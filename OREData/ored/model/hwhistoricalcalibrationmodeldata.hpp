@@ -24,7 +24,6 @@
 #pragma once
 
 #include <map>
-#include <ql/currency.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
@@ -32,13 +31,13 @@
 #include <string>
 #include <vector>
 
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 namespace ore {
 namespace data {
 
-// Holds configuration, historical input maps and (after calibration) output results for HW historical calibration.
+using namespace QuantLib;
+
 class HwHistoricalCalibrationModelData : public XMLSerializable {
 public:
     HwHistoricalCalibrationModelData() = default;
@@ -49,6 +48,8 @@ public:
 
     // Setters
     void setAsOf(const Date& d) { asOf_ = d; }
+    void setBaseCurrency(const std::string& ccy) { baseCurrency_ = ccy; }
+    void setForeignCurrencies(const std::vector<std::string>& ccy) { foreignCurrencies_ = ccy; }
     void setCurveTenors(const std::vector<Period>& v) { curveTenors_ = v; }
     void setLambda(Real l) { lambda_ = l; }
     void setUseForwardRate(bool b) { useForwardRate_ = b; }
@@ -115,8 +116,8 @@ public:
 private:
     QuantLib::Date asOf_;
     std::vector<QuantLib::Period> curveTenors_;
-    // QuantLib::Currency baseCurrency;
-    // std::vector<QuantLib::Currency> foreignCurrencies;
+    std::string baseCurrency_;
+    std::vector<std::string> foreignCurrencies_;
     QuantLib::Real lambda_;
     bool useForwardRate_;
     QuantLib::Real varianceRetained_;

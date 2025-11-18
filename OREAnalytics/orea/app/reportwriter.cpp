@@ -2901,15 +2901,13 @@ void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValu
                              const Size& principalComponent, ore::data::Report& reportOut){
     QL_REQUIRE((eigenValue.size() == eigenVector.columns() && eigenVector.rows() == eigenVector.columns()),
                 "EigenVector and EigenValue size not match.");
-    reportOut.addColumn("EigenValue", double(), 15)
-        .addColumn("EigenVector", double(), 15)
-        .addColumn("Currency", double(), 15)
-        .addColumn(ccy, double(), 15);
-    for (Size i = 3; i < eigenValue.size(); ++i) {
-        reportOut.addColumn("", double(), 15);
+    reportOut.addColumn("PrincipalComponent", Size())
+        .addColumn("EigenValue", double(), 15);
+    for (Size i = 0; i < eigenValue.size(); ++i) {
+        reportOut.addColumn("EigenVector_" + std::to_string(i), double(), 15);
     }
     for (Size i = 0; i < principalComponent; ++i) {
-        reportOut.next().add(eigenValue[i]);
+        reportOut.next().add(i).add(eigenValue[i]);
         for (Size j = 0; j < eigenValue.size(); ++j) {
             reportOut.add(eigenVector[j][i]);
         }
@@ -2919,6 +2917,7 @@ void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValu
 
 void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut) {
     QL_REQUIRE(v.rows() == kappa.rows(), "v and kappa must have same rows.");
+    reportOut.addColumn("PrincipalComponent", Size());
     for (Size i = 0; i < v.columns(); ++i) {
         reportOut.addColumn("v_" + std::to_string(i), double(), 15);
     }
@@ -2926,7 +2925,7 @@ void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa
         reportOut.addColumn("kappa_" + std::to_string(i), double(), 15);
     }
     for (Size i = 0; i < v.rows(); ++i) {
-        reportOut.next();
+        reportOut.next().add(i);
         for (Size j = 0; j < v.columns(); ++j) {
             reportOut.add(v[i][j]);
         }
