@@ -202,6 +202,7 @@ portfolio/callablebond.cpp
 portfolio/callablebondreferencedata.cpp
 portfolio/callableswap.cpp
 portfolio/capfloor.cpp
+portfolio/cashflowutils.cpp
 portfolio/cashposition.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
@@ -620,6 +621,7 @@ portfolio/callablebond.hpp
 portfolio/callablebondreferencedata.hpp
 portfolio/callableswap.hpp
 portfolio/capfloor.hpp
+portfolio/cashflowutils.hpp
 portfolio/cashposition.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
