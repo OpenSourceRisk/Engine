@@ -348,6 +348,26 @@
       <Extrapolation>true</Extrapolation>
     </EquityCurve>
 
+    <EquityCurve>
+      <CurveId>RIC:.GDAXI</CurveId>
+      <CurveDescription>DAX Price Index option implied forward curve</CurveDescription>
+      <Currency>EUR</Currency>
+      <Calendar/>
+      <ForecastingCurve>EUR-ESTER</ForecastingCurve>
+      <Type>OptionPremium</Type>
+      <ExerciseStyle>European</ExerciseStyle>
+      <SpotQuote>EQUITY/PRICE/RIC:.GDAXI/EUR</SpotQuote>
+      <Quotes>
+	<Quote>EQUITY_OPTION/PRICE/RIC:.GDAXI/EUR/*</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <DividendInterpolation>
+	<InterpolationVariable>Zero</InterpolationVariable>
+	<InterpolationMethod>Linear</InterpolationMethod>
+      </DividendInterpolation>
+      <Extrapolation>true</Extrapolation>
+    </EquityCurve>
+
   </EquityCurves>
 
   <EquityVolatilities>
@@ -400,7 +420,43 @@
         <StrikeExtrapolation>Flat</StrikeExtrapolation>
       </StrikeSurface>
     </EquityVolatility>
-    
+
+    <EquityVolatility>
+      <CurveId>RIC:.GDAXI</CurveId>
+      <CurveDescription>Lognormal option implied vols for RIC:.GDAXI</CurveDescription>
+      <Currency>EUR</Currency>
+      <DayCounter>A365</DayCounter>
+      <StrikeSurface>
+        <QuoteType>Premium</QuoteType>
+        <ExerciseType>European</ExerciseType>
+        <Strikes>*</Strikes>
+        <Expiries>*</Expiries>
+        <TimeInterpolation>Linear</TimeInterpolation>
+        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>UseInterpolator</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      </StrikeSurface>
+    </EquityVolatility>
+
   </EquityVolatilities>
 
+  <Correlations>
+    <Correlation>
+      <CurveId>EQ-RIC:.STOXX50E&amp;EQ-RIC:.GDAXI</CurveId>
+      <CurveDescription>Correlation curve for EQ-RIC:.STOXX50E&amp;EQ-RIC:.GDAXI</CurveDescription>
+      <CorrelationType>Generic</CorrelationType>
+      <Index1>EQ-RIC:.STOXX50E</Index1>
+      <Index2>EQ-RIC:.GDAXI</Index2>
+      <Conventions/>
+      <Dimension>ATM</Dimension>
+      <QuoteType>RATE</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>weekends only</Calendar>
+      <BusinessDayConvention>Modified Following</BusinessDayConvention>
+      <OptionTenors>*</OptionTenors>
+    </Correlation>
+  </Correlations>
+    
 </CurveConfiguration>

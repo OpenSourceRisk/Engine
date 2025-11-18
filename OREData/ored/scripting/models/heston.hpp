@@ -43,9 +43,7 @@ private:
     void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                             const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                             const Matrix& correlation, const Matrix& sqrtCorr,
-                            const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
-                            const std::vector<Real>& t, const std::vector<Real>& dt,
-                            const std::vector<Real>& sqrtdt) const;
+                            const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
 
     void generateSingleAssetPaths() const; 

@@ -17,6 +17,7 @@
 */
 
 #include <ored/scripting/models/heston.hpp>
+#include <iostream>
 
 namespace ore {
 namespace data {
@@ -32,28 +33,22 @@ void Heston::performModelCalculations() const {
 }
 
 Real Heston::initialValue(const Size indexNo) const {
-    // TODO, see localvol.cpp for a template
-    //return model_->generalizedBlackScholesProcesses()[indexNo]->x0();
-    // FIXME: Check correctness of indexNo, what if we have a mix of BS and Heston proceses?
     return model_->hestonProcesses()[indexNo]->s0()->value();
 }
 
 Real Heston::atmForward(const Size indexNo, const Real t) const {
-    // TODO, see localvol.cpp for a template
-    return ore::data::atmForward(model_->generalizedBlackScholesProcesses()[indexNo]->x0(),
-                                 model_->generalizedBlackScholesProcesses()[indexNo]->riskFreeRate(),
-                                 model_->generalizedBlackScholesProcesses()[indexNo]->dividendYield(), t);
+    return ore::data::atmForward(model_->hestonProcesses()[indexNo]->s0()->value(),
+                                 model_->hestonProcesses()[indexNo]->riskFreeRate(),
+                                 model_->hestonProcesses()[indexNo]->dividendYield(), t);
 }
 
 Real Heston::compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const {
-    // TODO, see localvol.cpp for a template
-    const auto& p = model_->generalizedBlackScholesProcesses().at(indexNo);
+    const auto& p = model_->hestonProcesses().at(indexNo);
     return p->dividendYield()->discount(d1) / p->dividendYield()->discount(d2) /
            (p->riskFreeRate()->discount(d1) / p->riskFreeRate()->discount(d2));
 }
 
 void Heston::performCalculationsMc() const {
-    LOG("Heston::performCalculationsMc() called");
     initUnderlyingPathsMc();
     setReferenceDateValuesMc();
     if (effectiveSimulationDates_.size() == 1)
@@ -66,30 +61,127 @@ void Heston::performCalculationsFd() const {
     QL_FAIL("Heston::performCalculationsFd() not implemented");
 }
 
-void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                                const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
-                                const Matrix& correlation, const Matrix& sqrtCorr,
-                                const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
-                                const std::vector<Real>& t, const std::vector<Real>& dt,
-                                const std::vector<Real>& sqrtdt) const {
-    // TODO, see localvol.cpp for a template
-}
-
 void Heston::generatePaths() const {
-    // TODO: multi-asset paths, expand the correlation matrix to include the variance processes
-    generateSingleAssetPaths();
-}
 
+    // single asset
+    // FIXME: no training paths, no foreign currency index drift adjustment
+    // if (indices_.size() == 1) 
+    //     return generateSingleAssetPaths();
+
+    DLOG("Heston::generatePaths() called");
+
+    Matrix C = getCorrelation();
+
+    /*
+       Expand the spot-spot correlation matrix following
+          Dimitroff, Lorenz, Szimayer: A Parsimonious Multi-Asset Heston Model,
+          https://ssrn.com/abstract=1435199, Eqn (16)
+       to twice the size, including the variance factors, i.e. including
+       - spot-variance correlation within each Heston "sub-system",
+       - spot-variance correlation across different sub-systems
+       - variance-variance correlations across different sub-systems
+       with block matrices C_i along the diagonal and C_ij off diagonal
+       
+       Eqn (16):
+       
+             (1,    r_i )                  ( 1,     r_j       )
+       C_i = (          )    C_ij = r_ij * (                  )
+             (r_i,  1   )                  ( r_i,   r_i * r_j )
+    */
+
+    Size n = indices_.size();
+    Matrix correlation(2 * n, 2 * n, 0.0);
+    for (Size i = 0; i < n; ++i) {
+        for (Size j = 0; j < n; ++j) {
+            Real ri = model_->hestonProcesses()[i]->rho();
+            if (i == j) {
+                correlation[2 * i][2 * i] = 1.0;
+                correlation[2 * i][2 * i + 1] = ri;
+                correlation[2 * i + 1][2 * i] = ri;
+                correlation[2 * i + 1][2 * i + 1] = 1.0;
+            } else {
+	        Real rij = C[i][j];
+		Real rj = model_->hestonProcesses()[j]->rho();
+                correlation[2 * i][2 * j] = rij;
+                correlation[2 * i][2 * j + 1] = rij * rj;
+                correlation[2 * i + 1][2 * j] = rij * ri;
+                correlation[2 * i + 1][2 * j + 1] = rij * ri * rj;
+            }
+	    DLOG("C("<< i << "," << j<< ") = " << C[i][j]);
+        }
+    }
+
+    for (Size i = 0; i < 2*n; ++i) {
+        for (Size j = 0; j < 2*n; ++j) {
+	    DLOG("corr("<< i << "," << j<< ") = " << correlation[i][j]);
+	}
+    }
+
+    Matrix sqrtCorr = pseudoSqrt(correlation, params_.salvagingAlgorithm);
+
+    // Matrix sqrtCorrSquared = sqrtCorr * transpose(sqrtCorr);
+    // std::cout << "C: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << C << std::endl;
+    // std::cout << "Correlation: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << correlation << std::endl;
+    // std::cout << "sqrtCorr: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << sqrtCorr << std::endl;
+    // std::cout << "sqrtCorrSquared : " << std::endl << std::showpos << std::fixed << std::setprecision(2) << sqrtCorrSquared << std::endl;
+
+    // precompute index for drift adjustment for eq / com indices that are not in base ccy
+    std::vector<Size> eqComIdx(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        Size idx = Null<Size>();
+        if (!indices_[j].isFx()) {
+            // do we have an fx index with the desired currency?
+            for (Size jj = 0; jj < indices_.size(); ++jj) {
+                if (indices_[jj].isFx()) {
+                    if (indexCurrencies_[jj] == indexCurrencies_[j])
+                        idx = jj;
+                }
+            }
+        }
+        eqComIdx[j] = idx;
+    }
+    
+    populatePathValues(size(), underlyingPaths_,
+                       makeMultiPathVariateGenerator(params_.sequenceType, 2 * n, timeGrid_.size() - 1, params_.seed,
+                                                     params_.sobolOrdering, params_.sobolDirectionIntegers),
+                       correlation, sqrtCorr, eqComIdx);
+
+    if (trainingSamples() != Null<Size>()) {
+        populatePathValues(trainingSamples(), underlyingPathsTraining_,
+                           makeMultiPathVariateGenerator(params_.trainingSequenceType, 2 * n, timeGrid_.size() - 1,
+                                                         params_.trainingSeed, params_.sobolOrdering,
+                                                         params_.sobolDirectionIntegers),
+                           correlation, sqrtCorr, eqComIdx);
+    }
+
+    setAdditionalResults();
+
+    DLOG("Heston::generatePaths() done");
+}
 
 void Heston::generateSingleAssetPaths() const {
-    // TODO: drift adjustment for indices that are not in base ccy
-
     DLOG("Heston::generateSingleAssetPaths() called");
 
     QL_REQUIRE(indices_.size() == 1, "only a single index is covered so far");
     QL_REQUIRE(model_->hestonProcesses().size() == 1, "only a single heston process is covered so far");
 
     auto process = model_->hestonProcesses().front();
+
+    // precompute index for drift adjustment for eq / com indices that are not in base ccy
+    std::vector<Size> eqComIdx(indices_.size());
+    for (Size j = 0; j < indices_.size(); ++j) {
+        Size idx = Null<Size>();
+        if (!indices_[j].isFx()) {
+            // do we have an fx index with the desired currency?
+            for (Size jj = 0; jj < indices_.size(); ++jj) {
+                if (indices_[jj].isFx()) {
+                    if (indexCurrencies_[jj] == indexCurrencies_[j])
+                        idx = jj;
+                }
+            }
+        }
+        eqComIdx[j] = idx;
+    }
     
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
                                                   std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
@@ -101,21 +193,17 @@ void Heston::generateSingleAssetPaths() const {
             rvs[j][i]->expand();
         }
     }
-    DLOG("Heston::generateSingleAssetPaths rvs connected");
 
     // single asset: dimension = 2
     auto gen = makeMultiPathVariateGenerator(params_.sequenceType, indices_.size() * 2,
 					     timeGrid_.size() - 1, params_.seed,
 					     params_.sobolOrdering, params_.sobolDirectionIntegers);
-    DLOG("Heston::generateSingleAssetPaths generator built");
 
     // single asset
     Array state(2), state0(2);
     state0[0] = model_->hestonProcesses()[0]->s0()->value();
     state0[1] = model_->hestonProcesses()[0]->v0();
-    Array dw(2);
-
-    DLOG("Heston::generateSingleAssetPaths initial state done");
+    Array dW(2);
 
     for (Size path = 0; path < size(); ++path) {
         auto p = gen->next();
@@ -130,10 +218,12 @@ void Heston::generateSingleAssetPaths() const {
             Real dt = timeGrid_[i+1] - t0;
 
 	    // 2-d array of independent Wiener increments
-            dw = p.value[i];
+            dW = p.value[i];
 
-            // Heston process turns dw into correlated increments
-            state = process->evolve(t0, state, dt, dw);
+            // Heston process in QL expects independent increments dW and them into correlated increments
+            state = process->evolve(t0, state, dt, dW);
+
+	    // TODO: drift adjustment for foreign cururrency indices
 
             // on the effective simulation dates populate the underlying paths
             if (i + 1 == *pos) {
@@ -147,10 +237,190 @@ void Heston::generateSingleAssetPaths() const {
     DLOG("Heston::generateSingleAssetPaths() done");
 }
 
+void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+                                const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                const Matrix& correlation, const Matrix& sqrtCorr,
+                                const std::vector<Size>& eqComIdx) const {
+
+    bool checkCorrelations = true;
+    
+    std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
+                                                  std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
+    auto date = effectiveSimulationDates_.begin();
+    for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
+        ++date;
+        for (Size j = 0; j < indices_.size(); ++j) {
+            rvs[j][i] = &underlyingPaths_[*date][j];
+            rvs[j][i]->expand();
+        }
+    }
+
+    // precompute initial state arrays and decorrelation matrices 
+    std::vector<Array> state(indices_.size(), Array(2));
+    std::vector<Array> state0(indices_.size(), Array(2));
+    std::vector<Matrix> Qinv(indices_.size(), Matrix(2,2));
+    Array dw(2);
+    for (Size j = 0; j < indices_.size(); ++j) {
+        state0[j][0] = model_->hestonProcesses()[j]->s0()->value();
+        state0[j][1] = model_->hestonProcesses()[j]->v0();
+
+	// QuantLib's Heston::evolve uses dW(correlated) = Q * dW(independent)
+	// with matrix Q = [ [ 1, 0 ], [ sqrt(1 - r^2), r ] ]
+	// to convert independent variates into correlated variates.
+	Real r = model_->hestonProcesses()[j]->rho();
+	Matrix Q(2, 2, 0.0);
+	Q[0][0] = 1.0; 
+	Q[0][1] = 0.0;
+	Q[1][0] = r;
+	Q[1][1] = std::sqrt(1.0 - r * r);
+
+	// Since we generate correlated variates for the multi-asset Heston model
+	// we need to decorrelate each Heston subsystem before passing variates
+	// into the Heston::evolve method, i.e. using the inverse of Q,
+	//    Qinv = [ [ 1, 0 ], [ sqrt(1 - r^2)/r,  1/r ] ]
+	//    dW(independent) = Qinv * dW(correlated)
+	// preservng the spot process variate.
+
+        // analytical inversion
+        Qinv[j][0][0] = 1.0;
+        Qinv[j][0][1] = 0.0;
+        Qinv[j][1][0] = -r / std::sqrt(1.0 - r * r);
+        Qinv[j][1][1] = 1.0 / std::sqrt(1.0 - r * r);
+
+	
+        // // double check with numerical inversion
+        // Matrix Qi = inverse(Q);
+
+        // for (Size ii = 0; ii < 2; ++ii) {
+        //     for (Size jj = 0; jj < 2; ++jj) {
+        //         QL_REQUIRE(fabs(Qi[ii][jj] - Qinv[j][ii][jj]) < 1e-6, "error inverting matrix Q");
+        //     }
+        // }
+
+        // std::cout << "Qi(" << j << "):" << std::endl << Qi << std::endl;
+        // std::cout << "Qinv(" << j << "):" << std::endl << Qinv[j] << std::endl;
+    }
+
+    // Empirical spot correlations
+    Size spotCorrelations = indices_.size() == 0 ? 0 : indices_.size() * (indices_.size() - 1) / 2;
+    DLOG("# spot correlations = " << spotCorrelations);
+    std::vector<std::vector<Real>> cov(spotCorrelations, std::vector<Real>(timeGrid_.size() - 1, 0.0));   
+
+    // Empirical Heston correlation for each index at each time grid point, before and after decorrelation
+    std::vector<std::vector<Real>> cov1(indices_.size(), std::vector<Real>(timeGrid_.size() - 1, 0.0));
+    std::vector<std::vector<Real>> cov2(indices_.size(), std::vector<Real>(timeGrid_.size() - 1, 0.0));
+    
+    for (Size path = 0; path < size(); ++path) {
+        auto p = gen->next();
+        state = state0;
+        std::size_t date = 0;
+        auto pos = positionInTimeGrid_.begin();
+        ++pos;
+
+	// Evolve the process on the refined time grid
+        for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+            Real t0 = timeGrid_[i];
+            Real dt = timeGrid_[i+1] - t0;
+
+	    // Array of independent increments, size 2*n
+
+	    Array dWind = p.value[i];
+	    
+	    // Array of correlated increments, size 2*n
+	    // This is necessary to preserve the desired spot-spot correlations, 
+	    // includes the calibrated spot-varianace correlations within each Heston sub-system,
+	    // and includes spot-variance and variance-variance correlations across sub-systems,
+	    // constructed with the partial independence assumption
+	    
+	    Array dWcor = sqrtCorr * p.value[i];
+
+            if (checkCorrelations) {
+                Size count = 0;
+                for (Size j1 = 0; j1 < indices_.size(); j1++) {
+                    for (Size j2 = 0; j2 < j1; j2++) {
+                        cov[count][i] += dWcor[2 * j1] * dWcor[2 * j2];
+                    }
+                }
+            }
+
+            // Evolve each index, pick relevant part of dWcor
+            for (Size j = 0; j < indices_.size(); ++j) {
+
+	        auto process = model_->hestonProcesses()[j];
+	      
+	        // 2-d array of correlated Wiener increments for the Heston subsystem j	      
+	        dw[0] = dWcor[2*j];
+	        dw[1] = dWcor[2*j+1];
+		if (checkCorrelations)
+		    cov1[j][i] += dw[0] * dw[1];
+		
+	        // Decorrelate the subsystem, 2-d array of independent Wiener increments
+		Array dw_decorrelated = Qinv[j] * dw;
+		if (checkCorrelations)
+		    cov2[j][i] += dw_decorrelated[0] * dw_decorrelated[1];
+		
+		// The Heston process in QL expects the latter independent increments as input
+		// in order to apply the correlated increments dw internally.
+		// Alternatively we could have modified Heston::evolve to also accept correlated
+		// input, but that works only with some of the simple Heston discretization schemes
+		// and not QE. To use the Heston implementation as is we take the simple
+		// decorrelation step.
+		state[j] = process->evolve(t0, state[j], dt, dw_decorrelated);
+
+		// TODO: foreign currency index drift adjustment
+	    }
+	    
+            // on the effective simulation dates populate the underlying paths
+            if (i + 1 == *pos) {
+	        for (Size j = 0; j < indices_.size(); ++j)
+		    rvs[j][date]->data()[path] = state[j][0];
+                ++date;
+                ++pos;
+            }
+        }
+    }
+
+    if (checkCorrelations) {
+        // The accuracy of the empirical correlation depends on number of samples and sampling method.
+        // So use a generous tolerance here, anyway just a temporary test.
+        Real tol = 0.01;
+        for (Size j = 0; j < indices_.size(); ++j) {
+            Real r = model_->hestonProcesses()[j]->rho();
+            for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+                // We assume unit variances, skip their check
+                Real r1 = cov1[j][i] / size();
+                Real r2 = cov2[j][i] / size();
+                QL_REQUIRE(fabs(r1 - r) < tol, "empirical correlation " << r1 << " does not match calibrated " << r);
+                QL_REQUIRE(fabs(r2) < tol, "correlation " << r2 << " should be zero");
+            }
+        }
+
+        std::vector<Real> expected(spotCorrelations, 0.0);
+        Size count = 0;
+        for (Size j1 = 0; j1 < indices_.size(); j1++) {
+            for (Size j2 = 0; j2 < j1; j2++) {
+                expected[count] = correlation[2*j1][2*j2];
+                count++;
+            }
+        }
+        for (Size j = 0; j < spotCorrelations; ++j) {
+            for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+                Real c = cov[j][i] / size();
+                DLOG("spotCorrelation[" << j << "][" << i << "] = " << std::setprecision(4) << std::fixed
+                                        << std::showpos << c);
+                QL_REQUIRE(fabs(c - expected[j]) < tol,
+                           "empirical spot correlation " << c << " does not match expected " << expected[j]);
+            }
+        }
+    }
+
+    DLOG("Heston::populatePathValues() done");
+}
+
 void Heston::setAdditionalResults() const {
 
     Matrix correlation = getCorrelation();
-
+    
     for (Size i = 0; i < indices_.size(); ++i) {
         for (Size j = 0; j < i; ++j) {
             additionalResults_["Heston.Correlation_" + indices_[i].name() + "_" + indices_[j].name()] =

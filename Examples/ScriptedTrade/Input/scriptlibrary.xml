@@ -359,5 +359,53 @@
       </CalibrationSpec>
     </Script>
   </Script>
+
+  <!-- Worst of Asset or Cash Rainbow EQ, FX, COM Option
+
+       Inputs:
+       Expiry                          option expiry date
+       Settlement                      option payoff settlement date
+       LongShort                       1 for a long, -1 for a short position
+       Notional                        multiplier, number of option contracts, etc.
+       Strike                          option strike
+       Underlyings                     vector of underlying indices
+       Weights                         vector of underlying weights
+       PayCcy                          payment currency
+
+       Results:
+       Option                          npv of the option
+       currentNotional                 current notional
+       notionalCurrency                notional currency
+       expectedUnderlyingValue         vector of expected values of the underlyings at expiry
+  -->
+  <Script>
+    <Name>RainbowOption</Name>
+    <ProductTag>MultiAssetOption({AssetClass})</ProductTag>
+    <Script>
+      <Code><![CDATA[
+      REQUIRE SIZE(Underlyings) == SIZE(Weights);
+      NUMBER u, thisPrice, worstPrice, Payoff, currentNotional;
+      NUMBER expUnderValue[SIZE(Underlyings)];
+      worstPrice = Strike;
+      FOR u IN (1, SIZE(Underlyings), 1) DO
+          expUnderValue[u] = Underlyings[u](Expiry);
+          thisPrice = Underlyings[u](Expiry) * Weights[u];
+          IF thisPrice < worstPrice THEN
+              worstPrice = thisPrice;
+          END;
+      END;
+      Option = LongShort * Notional * PAY(worstPrice, Expiry, Settlement, PayCcy);
+      currentNotional = Notional * Strike;
+      ]]>
+      </Code>
+      <NPV>Option</NPV>
+      <Results>
+        <Result>currentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+        <Result rename="expectedUnderlyingValue">expUnderValue</Result>
+      </Results>
+    </Script>
+  </Script>
+
   
 </ScriptLibrary>
