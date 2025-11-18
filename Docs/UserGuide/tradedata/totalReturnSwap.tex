@@ -55,11 +55,13 @@ indices.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
   \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
-    node. When using reference data, a TRS on a convertible bond can also be captured as a TRS on a bond, i.e. there is
-    no need to distinguish between a TRS on a Bond and a TRS on a convertible Bond in this case, the pricer will figure
+    node. When using reference data, a TRS on a Convertible Bond can also be captured as a TRS on a Bond, i.e. there is
+    no need to distinguish between a TRS on a Bond and a TRS on a Convertible Bond in this case, the pricer will figure
     out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the
     security id field.
-  \item CallableBond: See \ref{ss:callable_bond}, the trade data is given in a CallableBond sub node.    
+  \item CallableBond: See \ref{ss:callable_bond}, the trade data is given in a CallableBond sub node. When using reference data, 
+  a TRS on a Callable Bond can also be captured as a TRS on a bond, i.e. there is no need to distinguish between a TRS on a Bond and a TRS on a Callable Bond.  
+  The pricer will figure out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the security id field.   
   \item EquityPosition: See \ref{ss:equity_position}, the trade data is given in a EquityPositionData sub
     node. Notice that the equities given in the basket must be available as quoted market data. To represent a TRS on an Equity Futures position, one or multiple EquityPosition underlyings are used, where the equity positions cover the underlying equity of the futures position.
 
