@@ -38,11 +38,13 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
     const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, bool eom, bool spreadOnForeignCcy,
     QuantLib::ext::optional<Period> foreignTenor, QuantLib::ext::optional<Period> domesticTenor, Size foreignPaymentLag,
-    Size domesticPaymentLag, QuantLib::ext::optional<bool> foreignIncludeSpread, QuantLib::ext::optional<Period> foreignLookback,
-    QuantLib::ext::optional<Size> foreignFixingDays, QuantLib::ext::optional<Size> foreignRateCutoff,
-    QuantLib::ext::optional<bool> foreignIsAveraged, QuantLib::ext::optional<bool> domesticIncludeSpread,
-    QuantLib::ext::optional<Period> domesticLookback, QuantLib::ext::optional<Size> domesticFixingDays,
-    QuantLib::ext::optional<Size> domesticRateCutoff, QuantLib::ext::optional<bool> domesticIsAveraged, const bool telescopicValueDates,
+    Size domesticPaymentLag, const std::vector<Natural>& spotFXSettleDaysVec,
+    const std::vector<Calendar>& spotFXSettleCalendarVec, QuantLib::ext::optional<bool> foreignIncludeSpread,
+    QuantLib::ext::optional<Period> foreignLookback, QuantLib::ext::optional<Size> foreignFixingDays,
+    QuantLib::ext::optional<Size> foreignRateCutoff, QuantLib::ext::optional<bool> foreignIsAveraged,
+    QuantLib::ext::optional<bool> domesticIncludeSpread, QuantLib::ext::optional<Period> domesticLookback,
+    QuantLib::ext::optional<Size> domesticFixingDays, QuantLib::ext::optional<Size> domesticRateCutoff,
+    QuantLib::ext::optional<bool> domesticIsAveraged, const bool telescopicValueDates,
     const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
@@ -55,6 +57,7 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
       foreignTenor_(foreignTenor ? *foreignTenor : foreignCcyIndex_->tenor()),
       domesticTenor_(domesticTenor ? *domesticTenor : domesticCcyIndex_->tenor()),
       foreignPaymentLag_(foreignPaymentLag), domesticPaymentLag_(domesticPaymentLag),
+      spotFXSettleDaysVec_(spotFXSettleDaysVec), spotFXSettleCalendarVec_(spotFXSettleCalendarVec),
       foreignIncludeSpread_(foreignIncludeSpread), foreignLookback_(foreignLookback),
       foreignFixingDays_(foreignFixingDays), foreignRateCutoff_(foreignRateCutoff),
       foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
@@ -119,6 +122,14 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
 
+    // calc spotFXSettleDate
+    Date spotFXSettleDate = refDate;
+    Size numSpotFXSettleDays = spotFXSettleDaysVec_.size(); // guaranteed to be at least 1
+    for (Size i = 0; i < numSpotFXSettleDays; i++) {
+        // Guaranteed here that spotFXSettleDaysVec_ and spotFXSettleCalendarVec_ have the same size
+        spotFXSettleDate = spotFXSettleCalendarVec_[i].advance(spotFXSettleDate, spotFXSettleDaysVec_[i], Days);
+    }
+
     Schedule foreignLegSchedule = MakeSchedule()
                                       .from(settlementDate)
                                       .to(maturityDate)
@@ -143,14 +154,16 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
                                     spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_);
 
     swap_ = QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwap>(
-        foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0, domesticCurrency_,
-        domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx, true, foreignPaymentLag_, domesticPaymentLag_,
-        foreignIncludeSpread_, foreignLookback_, foreignFixingDays_, foreignRateCutoff_, foreignIsAveraged_,
-        domesticIncludeSpread_, domesticLookback_, domesticFixingDays_, domesticRateCutoff_, domesticIsAveraged_,
-        telescopicValueDates_);
+        foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_,
+        !spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), domesticCurrency_, domesticLegSchedule,
+        domesticCcyIndex_, spreadOnForeignCcy_ || quote().empty() ? 0.0 : quote()->value(), fxIdx, true,
+        foreignPaymentLag_, domesticPaymentLag_, foreignIncludeSpread_, foreignLookback_, foreignFixingDays_,
+        foreignRateCutoff_, foreignIsAveraged_, domesticIncludeSpread_, domesticLookback_, domesticFixingDays_,
+        domesticRateCutoff_, domesticIsAveraged_, telescopicValueDates_);
 
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
-        domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_);
+        domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_, QuantLib::ext::nullopt,
+        Date(), Date(), spotFXSettleDate);
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();

@@ -279,9 +279,9 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
         LOG("Market Build time " << setprecision(2) << mTimer->format(default_places, "%w") << " sec");
 }
 
-void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& mcr) {
-    if (mcr)
-        mcr->populateReport(market_, configurations().todaysMarketParams);
+void Analytic::marketCalibration(const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& mcr) {
+    for (auto r : mcr)
+        r->populateReport(market_, configurations().todaysMarketParams);
 }
 
 void Analytic::buildPortfolio(const bool emitStructuredError) {
