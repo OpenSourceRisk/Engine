@@ -241,7 +241,9 @@ void OREApp::analytics() {
 
         Settings::instance().evaluationDate() = inputs_->asof();
 
-        GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
+        if (inputs_->pricingEngine()) {
+            GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
+        }
 
         // Initialize the global conventions
         InstrumentConventions::instance().setConventions(inputs_->conventions());
@@ -524,8 +526,10 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
         Settings::instance().evaluationDate() = inputs_->asof();
 
         // FIXME
-        QL_REQUIRE(inputs_->pricingEngine(), "pricingEngine not set");
+        // QL_REQUIRE(inputs_->pricingEngine(), "pricingEngine not set");
+        if (inputs_->pricingEngine()) {
         GlobalPseudoCurrencyMarketParameters::instance().set(inputs_->pricingEngine()->globalParameters());
+        }
 
         // Initialize the global conventions
         QL_REQUIRE(inputs_->conventions(), "conventions not set");
