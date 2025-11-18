@@ -1,4 +1,4 @@
-\subsubsection{Exotic Variance and Volatility Derivatives}
+\subsubsection*{Exotic Variance and Volatility Derivatives}
 \label{SubSectionExoticVarianceSwap}
 
 These are vanilla variance/volatility swaps and options on an underlying with some additional payoff features,
@@ -54,7 +54,7 @@ Basket Variance Swap & \lstinline!BasketVarianceSwap! \\
 
 Trade input and the associated payoff script are described in the following for 12 supported variations.
 
-\subsubsection*{Variance Option}
+\subsubsection{Variance Option}
 
 The traditional trade representation is as follows, using an EQ underlying in this example:
 
@@ -191,7 +191,7 @@ The meanings and allowable values for the \lstinline!VarianceOptionData! node be
         Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Variance Swap with KI/KO Barrier}
+\subsubsection{Variance Swap with KI/KO Barrier}
 
 The traditional trade representation is as follows, using an FX underlying in this example:
 
@@ -360,7 +360,7 @@ The meanings and allowable values for the \lstinline!KIKOVarianceSwapData! node 
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Dual European Binary Option with Volatility and Spot KO Barrier}
+\subsubsection{Dual European Binary Option with Volatility and Spot KO Barrier}
 
 The traditional trade representation is as follows, using an EQ underlying in this example:
 
@@ -474,7 +474,7 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionDoubleK
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Corridor Variance Swap}
+\subsubsection{Corridor Variance Swap}
 
 The traditional trade representation is as follows, using an FX underlying in this example:
 
@@ -649,7 +649,7 @@ The meanings and allowable values for the \lstinline!CorridorVarianceSwapData! n
         Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Indexed Corridor Variance Swap}
+\subsubsection{Indexed Corridor Variance Swap}
 
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
@@ -820,7 +820,7 @@ The meanings and allowable values for the \lstinline!IndexedCorridorVarianceSwap
         Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Corridor Variance Swap with KI/KO Barrier}
+\subsubsection{Corridor Variance Swap with KI/KO Barrier}
 
 The traditional trade representation is as follows, using an EQ underlying in this example:
 
@@ -1008,7 +1008,7 @@ The meanings and allowable values for the \lstinline!KIKOCorridorVarianceSwapDat
         Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Conditional Variance Swap 01}
+\subsubsection{Conditional Variance Swap 01}
 
 The traditional trade representation is as follows, using an FX underlying in this example:
 
@@ -1187,7 +1187,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Conditional Variance Swap 02}
+\subsubsection{Conditional Variance Swap 02}
 
 The traditional trade representation is as follows, using an FX underlying in this example:
 
@@ -1372,7 +1372,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Pairwise Variance Swap}
+\subsubsection{Pairwise Variance Swap}
 
 The \lstinline!FxPairwiseVarianceSwap! and \lstinline!EquityPairwiseVarianceSwap! trade types
 have trade data containers (respectively):
@@ -1664,7 +1664,7 @@ The meanings and allowable values for the \lstinline!PairwiseVarianceSwapData! n
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Variance Dispersion Swap}
+\subsubsection{Variance Dispersion Swap}
 
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
@@ -1875,7 +1875,7 @@ The meanings and allowable values for the \lstinline!VarianceDispersionSwapData!
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Corridor Variance Dispersion Swap}
+\subsubsection{Corridor Variance Dispersion Swap}
 
 This instrument is a variance dispersion swap with a corridor feature, where variance is accrued only when the
 the price of the first underlying of each pair of underlyings (between the first and second basket) falls within
@@ -2106,7 +2106,7 @@ The meanings and allowable values for the \lstinline!CorridorVarianceDispersionS
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{KO Corridor Variance Dispersion Swap}
+\subsubsection{KO Corridor Variance Dispersion Swap}
 
 This instrument is a variance dispersion swap with a double-barrier knock-out and a corridor feature.
 
@@ -2387,7 +2387,7 @@ The meanings and allowable values for the \lstinline!KOCorridorVarianceDispersio
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Pairwise Geometric Variance Dispersion Swap}
+\subsubsection{Pairwise Geometric Variance Dispersion Swap}
 
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
@@ -2569,7 +2569,7 @@ The meanings and allowable values for the \lstinline!PairwiseGeometricVarianceDi
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Gamma Swap}
+\subsubsection{Gamma Swap}
 
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
@@ -2668,7 +2668,7 @@ The meanings and allowable values for the \lstinline!GammaSwapData! node below.
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
-\subsubsection*{Basket Variance Swap}
+\subsubsection{Basket Variance Swap}
 
 The \lstinline!FxBasketVarianceSwap! and \lstinline!EquityBasketVarianceSwap! \lstinline!CommodityBasketVarianceSwap! trade types
 have trade data containers (respectively):
