@@ -1449,6 +1449,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                 std::map<std::string, std::string> subFields;
                 subFields["curveId"] = curveSpec_[index]->name();
                 subFields["segmentType"] = curveSegments_[index][i]->typeID();
+                subFields["segmentNumber"] = std::to_string(i);
                 StructuredMessage(StructuredMessage::Category::Warning, StructuredMessage::Group::Configuration,
                                   "Entire yield curve segment has been removed", subFields).log();
             }
