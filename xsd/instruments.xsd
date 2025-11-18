@@ -3141,7 +3141,7 @@
     </xs:all>
   </xs:complexType>
 
-  <xs:complexType name="extendedFxForwardSwapData">
+  <xs:complexType name="extendedAccumulatorData">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="FixingAmount"/>
