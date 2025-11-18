@@ -5,19 +5,12 @@
 
 #include <qle/models/hwhistoricalcalibrationmodel.hpp>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-#include <math.h>
-#include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 #include <ql/math/optimization/costfunction.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
 
 
 using namespace QuantLib;

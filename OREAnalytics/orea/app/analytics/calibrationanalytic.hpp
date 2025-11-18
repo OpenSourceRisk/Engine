@@ -44,7 +44,6 @@ public:
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
     void buildCrossAssetModel(bool continueOnError, bool allowModelFallbacks);
-    //void buildHwHistoricalCalibrationModel(bool continueOnError);
     void buildHwHistoricalCalibrationModelData();
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;

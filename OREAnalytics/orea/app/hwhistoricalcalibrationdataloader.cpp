@@ -136,7 +136,7 @@ void HwHistoricalCalibrationDataLoader::loadIr(const std::string& curveId, const
 }
 
 void HwHistoricalCalibrationDataLoader::loadFx(const std::string& curveId, const Date& d, const Real& fxSpot) {
-    // Check if the date is within the start and end date specified in ore.xml
+    // Check if there are duplicated records
     if (fxSpots_.find(curveId) != fxSpots_.end()) {
         if (fxSpots_[curveId].find(d) != fxSpots_[curveId].end()) {
             ALOG("Encounter duplicated records for curveId " << curveId << ", date " << d << " in the input file.");
