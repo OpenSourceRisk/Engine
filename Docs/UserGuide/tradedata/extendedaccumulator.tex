@@ -103,7 +103,7 @@ the Extension Decision Date. If the barrier is  hit the trade terminates, otherw
 					<Value>1.19</Value>
 				</Number>
 				<Number>
-					<Name>ExtensionTrigger</Name>
+					<Name>BarrierLevel</Name>
 					<Value>1.19</Value>
 				</Number>
 				<Index>
@@ -134,7 +134,7 @@ The meanings and allowable values of the elements in the \verb+Extended Accumula
   Allowable values: Any real number. Note that a negative amount causes a Long ExtendedAccumulator to be a Short, and vice-versa
 \item PayCurrency: The payout currency. The result of the payout formula  is treated to be in this currency. Note that for (non-quanto) ExtendedAccumulators this should be the domestic (CCY2) currency.
 \item ExtensionDecisionDate: the date on which the Extension Condition is decided on
-\item ExtensionTrigger: the value of the index below which a Trigger Event occurs on any of the Strike Observation Dates
+\item BarrierLevel: the value of the index below which a Trigger Event occurs on Extension Decision Date. It is expressed in the same way as Strike outlined above. If the underlying on the extension decision date is above the barrier, it triggers the extension on conditional observation dates. Else, the trade terminate at last observation date.
 \item SettlementDate: the settlement date of the option payoff
 \item ObservationDates: the dates on which the underlying index value is observed, define the exchange of notionals
 \item ObservationSettlementDates: observation settlement dates
@@ -161,9 +161,9 @@ FOR d IN (1, SIZE(ObservationDates), 1) DO
    Value = Value + PAY(LongShort * FixingAmount * (Strike-Fixing), ObservationDates[d], ObservationSettlementDates[d], PayCurrency);
 END;
 
-IF Underlying(ExtensionDecisionDate)>ExtensionTrigger THEN
+IF Underlying(ExtensionDecisionDate)>BarrierLevel THEN
    FOR d IN (1, SIZE(ConditionalObservationDates), 1) DO
-   Fixing = Underlying(ConditionalObservationDates[d]);
+      Fixing = Underlying(ConditionalObservationDates[d]);
       Value = Value + PAY(LongShort * FixingAmount * (Strike-Fixing), ConditionalObservationDates[d], ConditionalSettlementDates[d], PayCurrency);
    END;
 END;

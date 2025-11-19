@@ -3146,7 +3146,7 @@
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="FixingAmount"/>
       <xs:element type="stFreeStyleNumber" name="Strike"/>
-      <xs:element type="stFreeStyleNumber" name="ExtensionTrigger"/>
+      <xs:element type="stFreeStyleNumber" name="BarrierLevel"/>
       <xs:element type="stFreeStyleIndex" name="Underlying"/>
       <xs:element type="stFreeStyleCurrency" name="PayCurrency"/>
       <xs:element type="stFreeStyleEventSchedule" name="ObservationDates"/>
