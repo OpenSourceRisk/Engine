@@ -113,7 +113,7 @@ public:
     virtual void buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const bool marketRequired = true);
     virtual void buildPortfolio(const bool emitStructuredError = true);
-    virtual void marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& mcr = nullptr);
+    virtual void marketCalibration(const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& mcr = {});
     virtual void modifyPortfolio() {}
     virtual void replaceTrades() {}
     virtual void enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio);

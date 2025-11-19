@@ -65,6 +65,7 @@ public:
     //@{
     void accept(AcyclicVisitor&) override;
     //@}
+    RelinkableHandle<YieldTermStructure> discountHandle() const { return discountRelinkableHandle_; }
 
 protected:
     void initializeDates() override;

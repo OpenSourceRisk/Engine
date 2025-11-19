@@ -4,8 +4,8 @@
 */
 
 /*!
-  \file orea/app/calibrateparameter.hpp
-  \calibrate parameter (sigma) for PFE model
+  \file orea/app/hwhistoricalcalibrationmodelbuilder.hpp
+  \Model builder for Hull-White historical calibration model
  */
 
 #pragma once
@@ -24,7 +24,6 @@ public:
                                         const bool runMeanReversionCalibration = false, const bool continueOnError = false);
 
 private:
-    // LazyObject interface implementation
     void performCalculations();
     void buildModel();
     void extractOutputs() const;
