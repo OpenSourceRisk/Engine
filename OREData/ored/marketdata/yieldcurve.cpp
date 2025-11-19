@@ -56,6 +56,7 @@
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
+#include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
