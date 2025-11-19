@@ -378,7 +378,8 @@ void IrModelBuilder::buildSwaptionBasket(const bool enforceFullRebuild) const {
 
     bool fullRebuild = enforceFullRebuild || swaptionBasket_.empty();
 
-    DLOG("build swaption basket (full rebuild = " << std::boolalpha << enforceFullRebuild << ")");
+    DLOG("build swaption basket (enforce full rebuild = " << std::boolalpha << enforceFullRebuild
+                                                          << ", effective full rebuild = " << fullRebuild << ")")
 
     Date lastRefCalDate = Date::minDate();
     std::vector<Date> referenceCalibrationDates;
@@ -497,6 +498,8 @@ void IrModelBuilder::buildSwaptionBasket(const bool enforceFullRebuild) const {
                 swaptionMaturities_.insert(calibrationDiscountCurve_->timeFromReference(matDate));
                 if (refCalDate != referenceCalibrationDates.end())
                     lastRefCalDate = *refCalDate;
+            } else {
+                swaptionIndexInBasket_[j] = Null<Size>();
             }
         }
     }

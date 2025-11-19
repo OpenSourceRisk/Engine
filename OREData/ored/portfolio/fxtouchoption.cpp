@@ -98,7 +98,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     BusinessDayConvention payConvention = Unadjusted;
     Calendar payCalendar = NullCalendar();
     Date payDate = expiryDate;
-    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
     if (opd) {
         if (opd->rulesBased()) {
             payLag = opd->lag();
@@ -277,6 +277,17 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     instrument_ = barrierOptionWrapper;
 
     // maturity_ is set in buildBarrierOptionWrapperInstr()
+}
+
+Real FxTouchOption::strike() const {
+    Real strike = Null<Real>();
+
+    try {
+        strike = barrier().levels().at(0).value();
+    } catch (...) {
+    }
+
+    return strike;
 }
 
 void FxTouchOption::fromXML(XMLNode* node) {

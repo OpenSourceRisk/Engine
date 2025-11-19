@@ -72,7 +72,7 @@ public:
          All entries are in base ccy (= first ccy in currencies), the fx deltas against base ccy.
     */
 
-    boost::any getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube, const std::string& nettingSetId,
+    QuantLib::ext::any getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube, const std::string& nettingSetId,
                                 const QuantLib::Size dateIndex = QuantLib::Null<QuantLib::Size>(),
                                 const QuantLib::Size sampleIndex = QuantLib::Null<QuantLib::Size>()) const override;
 

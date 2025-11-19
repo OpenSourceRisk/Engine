@@ -108,7 +108,8 @@ The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuratio
 Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
 In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input. 
 \item Interpolation: Optional. Possible values: Linear, Hagan2002Lognormal, Hagan2002Normal, Hagan2002NormalZeroBeta,
-  Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. If not given, defaults to Linear.
+  Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy\footnote{FlochKennedy shows unstable results and
+  is considered experimental. More work is needed.}. If not given, defaults to Linear.
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to
   specify initial values for calibrated parameters, to exclude single parameters from calibration and to set calibration
   parameters. See Example 59 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.

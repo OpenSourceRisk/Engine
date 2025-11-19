@@ -148,9 +148,12 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
     }
 }
 
-MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
-    const QuantLib::ext::shared_ptr<ore::data::Report>& report, std::size_t precision)
-    : ore::analytics::MarketCalibrationReportBase(calibrationFilter, precision), report_(report) {
+MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter,
+                                                 const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                                                 const QuantLib::ext::shared_ptr<ore::data::Report>& report_cashflows,
+                                                 std::size_t precision)
+    : ore::analytics::MarketCalibrationReportBase(calibrationFilter, precision), report_(report),
+      report_cashflows_(report_cashflows) {
     report_->addColumn("MarketObjectType", string())
         .addColumn("MarketObjectId", string())
         .addColumn("ResultId", string())
@@ -159,6 +162,31 @@ MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationF
         .addColumn("ResultKey3", string())
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
+    // this is report is identical to trade cf report from CashflowNo through BaseCurrency
+    report_cashflows_->addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectId", string())
+        .addColumn("PillarDate", Date())
+        .addColumn("RateHelperType", string())
+        .addColumn("MdLabel", string())
+        .addColumn("CashflowNo", Size())
+        .addColumn("LegNo", Size())
+        .addColumn("PayDate", Date())
+        .addColumn("FlowType", string())
+        .addColumn("Amount", double(), 10)
+        .addColumn("Currency", string())
+        .addColumn("Coupon", double(), 10)
+        .addColumn("Accrual", double(), 10)
+        .addColumn("AccrualStartDate", Date())
+        .addColumn("AccrualEndDate", Date())
+        .addColumn("AccruedAmount", double(), 10)
+        .addColumn("fixingDate", Date())
+        .addColumn("fixingValue", double(), 10)
+        .addColumn("Notional", double(), 4)
+        .addColumn("DiscountFactor", double(), 10)
+        .addColumn("PresentValue", double(), 10)
+        .addColumn("FXRate(Local-Base)", double(), 10)
+        .addColumn("PresentValue(Base)", double(), 10)
+        .addColumn("BaseCurrency", string());
 }
 
 QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCalibrationReport() { 
@@ -166,9 +194,14 @@ QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCalibrationRepo
     return report_;
 }
 
+QuantLib::ext::shared_ptr<Report> MarketCalibrationReport::outputCashflowReport() {
+    report_cashflows_->end();
+    return report_cashflows_;
+}
+
 void MarketCalibrationReport::addRowReport(const std::string& moType, const std::string& moId,
                         const std::string& resId, const std::string& key1, const std::string& key2,
-                        const std::string& key3, const boost::any& value) {
+                        const std::string& key3, const QuantLib::ext::any& value) {
     auto p = parseBoostAny(value, precision_);
     report_->next().add(moType).add(moId).add(resId).add(key1).add(key2).add(key3).add(p.first).add(p.second);
 }
@@ -183,7 +216,6 @@ const bool MarketCalibrationReportBase::checkCalibrations(string label, string t
     return hasCalibration;
 }
 
-
 void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
     QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
     const std::string& id, bool isDiscount, const std::string& label,
@@ -194,12 +226,17 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
 
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
         std::string key1 = to_string(info->pillarDates[i]);
-        addRowReport(type, id, "time", key1, "", "", info->times.at(i));
-        addRowReport(type, id, "zeroRate", key1, "", "", info->zeroRates.at(i));
-        addRowReport(type, id, "discountFactor", key1, "", "", info->discountFactors.at(i));
+        addRowReport(type, id, "time", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
+                     info->times.at(i));
+        addRowReport(type, id, "zeroRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
+                     info->zeroRates.at(i));
+        addRowReport(type, id, "discountFactor", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
+                     "", info->discountFactors.at(i));
         if (!iborIndex.empty())
-            addRowReport(type, id, "forwardRate", key1, "", "",
-                         iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
+            addRowReport(type, id, "forwardRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
+                         "", iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
+        if (!info->mdQuoteLabels.empty())
+            addRowReport(type, id, "mdQuote", key1, info->mdQuoteLabels.at(i), "", info->mdQuoteValues.at(i));
     }
 
     // fitted bond curve results
@@ -221,6 +258,39 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
             addRowReport(type, id, "fittedBondCurve.marketYield", y->securities.at(i), "", "",
                          y->marketYields.at(i));
             addRowReport(type, id, "fittedBondCurve.modelYield", y->securities.at(i), "", "", y->modelYields.at(i));
+        }
+    }
+
+    // cashflow results
+    if (!info->rateHelperCashflows.empty()) {
+        for (Size i = 0; i < info->pillarDates.size(); ++i) {
+            for (auto const& d : info->rateHelperCashflows[i]) {
+                report_cashflows_->next()
+                    .add(type)
+                    .add(id)
+                    .add(info->pillarDates[i])
+                    .add(info->rateHelperTypes[i])
+                    .add(info->mdQuoteLabels[i])
+                    .add(d.cashflowNo)
+                    .add(d.legNo)
+                    .add(d.payDate)
+                    .add(d.flowType)
+                    .add(d.amount)
+                    .add(d.currency)
+                    .add(d.coupon)
+                    .add(d.accrual)
+                    .add(d.accrualStartDate)
+                    .add(d.accrualEndDate)
+                    .add(d.accruedAmount)
+                    .add(d.fixingDate)
+                    .add(d.fixingValue)
+                    .add(d.notional)
+                    .add(d.discountFactor)
+                    .add(d.presentValue)
+                    .add(d.fxRateLocalBase)
+                    .add(d.presentValueBase)
+                    .add(d.baseCurrency);
+            }
         }
     }
 }
@@ -259,9 +329,14 @@ void MarketCalibrationReport::addInflationCurveImpl(
         addRowReport(type, id, "baseCpi", "", "", "", z->baseCpi);
         for (Size i = 0; i < z->pillarDates.size(); ++i) {
             std::string key1 = ore::data::to_string(z->pillarDates[i]);
-            addRowReport(type, id, "time", key1, "", "", z->times.at(i));
-            addRowReport(type, id, "zeroRate", key1, "", "", z->zeroRates.at(i));
-            addRowReport(type, id, "cpi", key1, "", "", z->forwardCpis.at(i));
+            addRowReport(type, id, "time", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->times.at(i));
+            addRowReport(type, id, "zeroRate", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->zeroRates.at(i));
+            addRowReport(type, id, "cpi", key1, !z->mdQuoteLabels.empty() ? z->mdQuoteLabels.at(i) : "", "",
+                         z->forwardCpis.at(i));
+            if (!z->mdQuoteLabels.empty())
+                addRowReport(type, id, "mdQuote", key1, z->mdQuoteLabels.at(i), "", z->mdQuoteValues.at(i));
         }
     }
 
@@ -270,10 +345,48 @@ void MarketCalibrationReport::addInflationCurveImpl(
     if (y) {
         for (Size i = 0; i < y->pillarDates.size(); ++i) {
             std::string key1 = ore::data::to_string(y->pillarDates[i]);
-            addRowReport(type, id, "time", key1, "", "", y->times.at(i));
-            addRowReport(type, id, "yoyRate", key1, "", "", y->yoyRates.at(i));
+            addRowReport(type, id, "time", key1, !y->mdQuoteLabels.empty() ? y->mdQuoteLabels.at(i) : "", "",
+                         y->times.at(i));
+            addRowReport(type, id, "yoyRate", key1, !y->mdQuoteLabels.empty() ? y->mdQuoteLabels.at(i) : "", "",
+                         y->yoyRates.at(i));
+            if (!y->mdQuoteLabels.empty())
+                addRowReport(type, id, "mdQuote", key1, y->mdQuoteLabels.at(i), "", y->mdQuoteValues.at(i));
         }
     }
+
+    // cashflow results
+    if (!info->rateHelperCashflows.empty()) {
+        for (Size i = 0; i < info->pillarDates.size(); ++i) {
+            for (auto const& d : info->rateHelperCashflows[i]) {
+                report_cashflows_->next()
+                    .add(type)
+                    .add(id)
+                    .add(info->pillarDates[i])
+                    .add(info->rateHelperTypes[i])
+                    .add(info->mdQuoteLabels[i])
+                    .add(d.cashflowNo)
+                    .add(d.legNo)
+                    .add(d.payDate)
+                    .add(d.flowType)
+                    .add(d.amount)
+                    .add(d.currency)
+                    .add(d.coupon)
+                    .add(d.accrual)
+                    .add(d.accrualStartDate)
+                    .add(d.accrualEndDate)
+                    .add(d.accruedAmount)
+                    .add(d.fixingDate)
+                    .add(d.fixingValue)
+                    .add(d.notional)
+                    .add(d.discountFactor)
+                    .add(d.presentValue)
+                    .add(d.fxRateLocalBase)
+                    .add(d.presentValueBase)
+                    .add(d.baseCurrency);
+            }
+        }
+    }
+
 }
 
 // Add inflation curve data to array

@@ -72,9 +72,8 @@ namespace data {
 void InstantaneousCorrelations::fromXML(XMLNode* node) {
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
-    XMLNode* correlationNode = XMLUtils::locateNode(node, "InstantaneousCorrelations");
     CorrelationMatrixBuilder cmb;
-    if (correlationNode) {
+    if (auto correlationNode = XMLUtils::getChildNode(node, "InstantaneousCorrelations")) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
         for (Size i = 0; i < nodes.size(); ++i) {
             CorrelationFactor factor_1 = fromNode(nodes[i], true);
@@ -82,10 +81,7 @@ void InstantaneousCorrelations::fromXML(XMLNode* node) {
             Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
             cmb.addCorrelation(factor_1, factor_2, corr);
         }
-    } else {
-        QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
     }
-
     correlations_ = cmb.correlations();
 }
 

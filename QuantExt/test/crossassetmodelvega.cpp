@@ -342,18 +342,18 @@ BOOST_AUTO_TEST_CASE(testIterativeCalibrationParameter) {
 
     //std::cout << " Kappa " << ccLgmExact1 -> lgm(0) -> parametrization() -> kappa(1.0) << std::endl;
 
-   // Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
-    std::cout << "T = 0.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(0.0)<< std::endl;
-    std::cout << "T = 0.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(0.0)<< std::endl;
+    // Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
+    //std::cout << "T = 0.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(0.0)<< std::endl;
+    //std::cout << "T = 0.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(0.0)<< std::endl;
 
-    std::cout << "T = 1.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(1.0)<< std::endl;
-    std::cout << "T = 1.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(1.0)<< std::endl;
+    //std::cout << "T = 1.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(1.0)<< std::endl;
+    //std::cout << "T = 1.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(1.0)<< std::endl;
 
-    std::cout << "T = 2.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(2.0)<< std::endl;
-    std::cout << "T = 2.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(2.0)<< std::endl;
+    //std::cout << "T = 2.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(2.0)<< std::endl;
+    //std::cout << "T = 2.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(2.0)<< std::endl;
 
-    std::cout << "T = 3.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(3.0)<< std::endl;
-    std::cout << "T = 3.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(3.0)<< std::endl;
+    //std::cout << "T = 3.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(3.0)<< std::endl;
+    //std::cout << "T = 3.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(3.0)<< std::endl;
 
     //for (Size i = 0; i < basketEur1.size(); ++i) {
     //    Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;

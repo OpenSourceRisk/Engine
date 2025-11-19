@@ -1,0 +1,86 @@
+<CrossAssetModel>
+	<DomesticCcy>USD</DomesticCcy>
+	<Currencies>
+		<Currency>USD</Currency>
+		<Currency>EUR</Currency>
+		<Currency>GBP</Currency>
+	</Currencies>
+	<BootstrapTolerance>0.0001</BootstrapTolerance>
+	<Discretization>Euler</Discretization>
+	<Measure>BA</Measure>
+	<InterestRateModels>
+		<HWModel key="EUR">
+			<CalibrationType>None</CalibrationType>
+			<Volatility>
+				<Calibrate>N</Calibrate>
+				<VolatilityType>HullWhite</VolatilityType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Sigma>
+						<Row>-0.0229152, 0.00802074, 0, 0</Row>
+						<Row>0, 0, -0.0236755, 0.0272979</Row>
+					</Sigma>
+				</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>4.99999, 0.0305188, 0.0350268, 0.0723209</Kappa>
+				</InitialValue>
+			</Reversion>
+		</HWModel>
+		<HWModel key="GBP">
+			<CalibrationType>None</CalibrationType>
+			<Volatility>
+				<Calibrate>N</Calibrate>
+				<VolatilityType>HullWhite</VolatilityType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Sigma>
+						<Row>0.00884376, -0.0149944, 0, 0</Row>
+						<Row>0, 0, -0.0319848, 0.0372505</Row>
+					</Sigma>
+				</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>0.00971349, 5, 0.0644724, 0.111779</Kappa>
+				</InitialValue>
+			</Reversion>
+		</HWModel>
+		<HWModel key="USD">
+			<CalibrationType>None</CalibrationType>
+			<Volatility>
+				<Calibrate>N</Calibrate>
+				<VolatilityType>HullWhite</VolatilityType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Sigma>
+						<Row>-0.0122469, 0.0105949, 0, 0</Row>
+						<Row>0, 0, 0.0324875, -0.027352</Row>
+					</Sigma>
+				</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>1.18575, 0.0189524, 0.0883031, 0.0448402</Kappa>
+				</InitialValue>
+			</Reversion>
+		</HWModel>
+	</InterestRateModels>
+</CrossAssetModel>
+

@@ -96,7 +96,7 @@ public:
     void initialise(const std::vector<QuantLib::Date>& dates) override {}
     void reset() override {}
     QuantLib::Real NPV() const override;
-    const std::map<std::string,boost::any>& additionalResults() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalResults() const override;
     void updateQlInstruments() override {}
 
     void setNpvCurrencyConversion(const Handle<Quote>& npvCcyConversion);

@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
+#include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 
-#include <ored/utilities/marketdata.hpp>
+#include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/make_shared.hpp>
@@ -35,8 +36,10 @@ CreditPortfolioSensitivityDecomposition IndexCreditDefaultSwapEngineBuilder::sen
 
 vector<string> IndexCreditDefaultSwapEngineBuilder::keyImpl(const Currency& ccy, const string& creditCurveId,
                                                             const vector<string>& creditCurveIds,
-                                                            const boost::optional<string>& overrideCurve,
-                                                            Real recoveryRate, const bool inCcyDiscountCurve) {
+                                                            const QuantLib::ext::optional<string>& overrideCurve,
+                                                            const QuantLib::ext::optional<bool>& calibrateConstituentCurvesOverride,
+                                                            const std::vector<double>& constituentNotional, Real recoveryRate, 
+                                                            const bool inCcyDiscountCurve) {
     vector<string> res{ccy.code()};
     res.insert(res.end(), creditCurveIds.begin(), creditCurveIds.end());
     res.push_back(creditCurveId);
@@ -44,15 +47,19 @@ vector<string> IndexCreditDefaultSwapEngineBuilder::keyImpl(const Currency& ccy,
     if (recoveryRate != Null<Real>())
         res.push_back(to_string(recoveryRate));
     res.push_back(inCcyDiscountCurve ? "1" : "0");
+    res.push_back(
+        calibrateConstituentCurvesOverride.has_value() ? (calibrateConstituentCurvesOverride.value() ? "1" : "0") : "");
     return res;
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineImpl(
     const Currency& ccy, const string& creditCurveId, const vector<string>& creditCurveIds,
-    const boost::optional<string>& overrideCurve, Real recoveryRate, const bool inCcyDiscountCurve) {
+    const QuantLib::ext::optional<string>& overrideCurve,
+    const QuantLib::ext::optional<bool>& calibrateConstituentCurvesOverride,
+    const std::vector<double>& constituentNotionals, Real recoveryRate, const bool inCcyDiscountCurve) {
 
     std::string curve = overrideCurve ? *overrideCurve : engineParameter("Curve", {}, false, "Underlying");
-
+    
     if (curve == "Index") {
         auto creditCurve = indexCdsDefaultCurve(market_, creditCurveId, configuration(MarketContext::pricing));
         Handle<Quote> mktRecovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
@@ -70,10 +77,52 @@ QuantLib::ext::shared_ptr<PricingEngine> MidPointIndexCdsEngineBuilder::engineIm
             dpts.push_back(tmp->curve());
             recovery.push_back(recoveryRate != Null<Real>() ? recoveryRate : tmp2->value());
         }
-        return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
-            dpts, recovery,
-            market_->discountCurve(
-                ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing)));
+        auto discountCurve = market_->discountCurve(
+                ccy.code(), configuration(inCcyDiscountCurve ? MarketContext::irCalibration : MarketContext::pricing));
+
+        bool calibrateConstituentCurves =
+            calibrateConstituentCurvesOverride
+                ? *calibrateConstituentCurvesOverride
+                : parseBool(engineParameter("CalibrateUnderlyingCurves", {}, false, "false"));
+        std::string runType = "";
+        auto it = globalParameters_.find("RunType");
+        if (it != globalParameters_.end()) {
+            runType = it->second;
+        }
+        calibrateConstituentCurves = calibrateConstituentCurves && runType != "PortfolioAnalyser";
+        if (calibrateConstituentCurves) {
+            TLOG("IndexCreditDefaultSwap: Calibrate constituent curves to index spread");
+            QL_REQUIRE(!creditCurveId.empty(),
+                       "IndexCreditDefaultSwap: cannot calibrate constituent curves to index spread "
+                       "if index credit curve ID is not set");
+            auto indexCreditCurve = indexCdsDefaultCurve(market_, creditCurveId, configuration(MarketContext::pricing));
+            QL_REQUIRE(indexCreditCurve->refData().startDate != Null<Date>(),
+                       "IndexCreditDefaultSwap: cannot calibrate constituent curves to index spread "
+                       "if index credit curve start date is not set, please check index credit curve configuration");
+            QL_REQUIRE(indexCreditCurve->refData().indexTerm != 0 * Days,
+                       "IndexCreditDefaultSwap: cannot calibrate constituent curves to index spread "
+                       "if index credit curve index term is not set, please check index credit curve configuration");
+            QL_REQUIRE(indexCreditCurve->refData().runningSpread != Null<Real>(),
+                       "IndexCreditDefaultSwap: cannot calibrate constituent curves to index spread "
+                       "if index credit curve running spread is not set, please check index credit curve configuration");
+            auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(indexCreditCurve);
+            auto res = curveCalibration->calibratedCurves(creditCurveIds, constituentNotionals, dpts, recovery);
+            TLOG("Calibration success: " << res.success);            
+            if (res.success) {
+                TLOG("maturity,marketNPV,impliedNPV,calibrationFactor:");
+                for (Size i = 0; i < res.marketNpv.size(); ++i) {
+                    TLOG(res.cdsMaturity[i] << res.marketNpv[i] << "," << res.impliedNpv[i] << ","
+                                            << res.calibrationFactor[i]);
+                }
+                dpts = res.curves;
+            } else {
+                ALOG("IndexCreditDefaultSwap: Calibration of constituent curves to index spread failed, "
+                     "proceeding with non-calibrated "
+                     "curves. Got "
+                     << res.errorMessage << " continue with non-calibrated curves.");
+            }
+        }
+        return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, discountCurve);
     } else {
         QL_FAIL("MidPointIndexCdsEngineBuilder: Curve Parameter value \""
                 << engineParameter("Curve") << "\" not recognised, expected Underlying or Index");

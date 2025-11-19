@@ -39,8 +39,8 @@ CrossCcyFixFloatMtMResetSwap::CrossCcyFixFloatMtMResetSwap(
     const Schedule& floatSchedule, const QuantLib::ext::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
     const BusinessDayConvention& floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
     const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg, bool receiveFixed,
-    boost::optional<bool> floatIncludeSpread, boost::optional<Period> floatLookback,
-    boost::optional<Size> floatFixingDays, boost::optional<Size> floatRateCutoff, boost::optional<bool> floatIsAveraged)
+    QuantLib::ext::optional<bool> floatIncludeSpread, QuantLib::ext::optional<Period> floatLookback,
+    QuantLib::ext::optional<Size> floatFixingDays, QuantLib::ext::optional<Size> floatRateCutoff, QuantLib::ext::optional<bool> floatIsAveraged)
     : CrossCcySwap(3), nominal_(nominal), fixedCurrency_(fixedCurrency),
     fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount), 
     fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
@@ -171,11 +171,11 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
                 -static_cast<Integer>(fxIndex_->fixingDays()), Days);
             QuantLib::ext::shared_ptr<FixedRateFXLinkedNotionalCoupon> fxLinkedCoupon = 
                 QuantLib::ext::make_shared<FixedRateFXLinkedNotionalCoupon>(fixingDate, floatNotional, fxIndex_, coupon);
-            floatLeg[j] = fxLinkedCoupon;
+            fixedLeg[j] = fxLinkedCoupon;
         }
 
         // now build a separate leg to store the resetting notionals
-        receiveFixed_ ? payer_[2] = -1.0 : payer_[2] = +1.0;
+        receiveFixed_ ? payer_[2] = 1.0 : payer_[2] = -1.0;
         currencies_[2] = fixedCurrency_;
         for (Size j = 0; j < fixedLeg.size(); j++) {
             QuantLib::ext::shared_ptr<Coupon> c = QuantLib::ext::dynamic_pointer_cast<Coupon>(fixedLeg[j]);

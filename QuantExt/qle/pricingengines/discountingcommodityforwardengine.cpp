@@ -27,7 +27,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 DiscountingCommodityForwardEngine::DiscountingCommodityForwardEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                                     boost::optional<bool> includeSettlementDateFlows,
+                                                                     QuantLib::ext::optional<bool> includeSettlementDateFlows,
                                                                      const Date& npvDate,
                                                                      const Handle<Quote>& npvFxConversion)
     : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),

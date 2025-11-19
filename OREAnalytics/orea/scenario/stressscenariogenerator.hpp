@@ -76,7 +76,7 @@ public:
                             const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
                             const QuantLib::ext::shared_ptr<ScenarioFactory>& stressScenarioFactory,
                             const QuantLib::ext::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr,
-                            boost::optional<bool> useSpreadedTermStructuresOverride = boost::none);
+                            QuantLib::ext::optional<bool> useSpreadedTermStructuresOverride = QuantLib::ext::nullopt);
     //! Default destructor
     ~StressScenarioGenerator() {}
 

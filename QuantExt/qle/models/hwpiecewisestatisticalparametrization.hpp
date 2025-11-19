@@ -33,7 +33,8 @@ namespace QuantExt {
 
     sigma_0(t)
 
-    From this we deduce the volatility of m principial components via sigma ratios
+    It is this sigma_0(t) that is stored as the sigma_ parameter in this parametrization. From sigma_0
+    we deduce the volatility of m principial components via sigma ratios
 
     sigma_i(t) = sigma_0(t) * sigmaRatio_i
 
@@ -68,9 +69,10 @@ private:
     double sigmaComp(const QuantLib::Size i, const QuantLib::Size j, const QuantLib::Size timeIndex) const override;
     double kappaComp(const QuantLib::Size i, const QuantLib::Size timeIndex) const override;
 
-    QuantLib::Array times_;
     QuantLib::Array sigmaRatios_;
     std::vector<QuantLib::Array> loadings_;
+
+    std::vector<Size> loadingIndex_;
 };
 
 // implementation
@@ -88,11 +90,11 @@ QuantLib::Size HwPiecewiseStatisticalParametrization<TS>::kappaTimeIndepIndex(co
 template <class TS>
 double HwPiecewiseStatisticalParametrization<TS>::sigmaComp(const QuantLib::Size i, const QuantLib::Size j,
                                                             const QuantLib::Size timeIndex) const {
-    Real tmp = 0.0;
-    for (Size k = 0; k < loadings_[k].size(); ++k) {
-        tmp += loadings_[i][k] * this->sigma_->params()[sigma0Index(timeIndex)] * sigmaRatios_[i];
+    if (j >= loadingIndex_[i] && j < loadingIndex_[i + 1]) {
+        return loadings_[i][j - loadingIndex_[i]] * this->sigma_->params()[sigma0Index(timeIndex)] * sigmaRatios_[i];
+    } else {
+        return 0;
     }
-    return tmp;
 }
 
 template <class TS>
@@ -110,11 +112,12 @@ HwPiecewiseStatisticalParametrization<TS>::HwPiecewiseStatisticalParametrization
                                      name.empty() ? currency.code() : name),
       sigmaRatios_(sigmaRatios), loadings_(loadings) {
 
-    this->sigma_ = QuantLib::ext::make_shared<PseudoParameter>(times.size() + 1);
+    this->sigma_ = QuantLib::ext::make_shared<PseudoParameter>(this->times_.size() + 1);
     this->kappa_ = QuantLib::ext::make_shared<PseudoParameter>(this->n_);
 
-    for (Size i = 1; i < times_.size(); ++i) {
-        QL_REQUIRE(times_[i] > times_[i - 1], "HwPiecewiseParametrization: times array must be strictly increasing");
+    for (Size i = 1; i < this->times_.size(); ++i) {
+        QL_REQUIRE(this->times_[i] > this->times_[i - 1],
+                   "HwPiecewiseParametrization: times array must be strictly increasing");
     }
 
     Size totalNumberLoadings = std::accumulate(loadings_.begin(), loadings_.end(), 0,
@@ -124,8 +127,20 @@ HwPiecewiseStatisticalParametrization<TS>::HwPiecewiseStatisticalParametrization
                                                         << totalNumberLoadings << ") inconsistent to kappa ("
                                                         << kappa.size() << ")");
 
-    for (Size k = 0; k < times_.size() + 1; ++k)
+    QL_REQUIRE(loadings_.size() == sigmaRatios_.size(), "HwPiecewiseStatisticalParametrization: loading rows ("
+                                                            << loadings_.size() << ") inconsistent to sigmaRatios ("
+                                                            << sigmaRatios_.size() << ")");
+
+    Size tmp = 0;
+    for (auto const& l : loadings_) {
+        loadingIndex_.push_back(tmp);
+        tmp += l.size();
+    }
+    loadingIndex_.push_back(tmp);
+
+    for (Size k = 0; k < this->times_.size() + 1; ++k) {
         this->sigma_->setParam(sigma0Index(k), sigma0[k]);
+    }
 
     for (Size i = 0; i < this->n_; ++i)
         this->kappa_->setParam(kappaTimeIndepIndex(i), kappa[i]);

@@ -1,0 +1,9 @@
+#TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base NPV,Delta,Gamma,Currency(Trade),Base NPV(Trade),Delta(Trade),Gamma(Trade)
+BasisSwap,false,DiscountCurve/USD/0/6M,0.000000,,0.000000,USD,-9253250.00,311.48,-0.01,USD,-9253250.00,311.48,-0.01
+BasisSwap,false,CommodityCurve/NaturalGasBasis/20/21D,1.862500,,0.000000,USD,-9253250.00,-288687.50,0.00,USD,-9253250.00,-288687.50,0.00
+BasisSwap,false,CommodityCurve/NaturalGasBasis/53/54D,1.862500,,0.000000,USD,-9253250.00,-279375.00,0.00,USD,-9253250.00,-279375.00,0.00
+BasisSwap,false,CommodityCurve/NaturalGasBasis/82/83D,1.862500,,0.000000,USD,-9253250.00,-288687.50,0.00,USD,-9253250.00,-288687.50,0.00
+BasisSwap,false,CommodityCurve/NaturalGasBasis/101/102D,1.862500,,0.000000,USD,-9253250.00,-288687.50,0.00,USD,-9253250.00,-288687.50,0.00
+Option,false,DiscountCurve/USD/0/6M,0.000000,,0.000000,USD,19972500.00,-109.44,0.00,USD,19972500.00,-109.44,0.00
+Option,false,CommodityCurve/NaturalGas/41/42D,1.862500,,0.000000,USD,19972500.00,55875.00,0.00,USD,19972500.00,55875.00,0.00
+Option,false,CommodityCurve/NaturalGasBasis/41/42D,1.862500,,0.000000,USD,19972500.00,55875.00,0.00,USD,19972500.00,55875.00,0.00

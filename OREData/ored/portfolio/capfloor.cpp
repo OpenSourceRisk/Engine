@@ -565,7 +565,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["startDate"] = to_string(startDate);
 }
 
-const std::map<std::string, boost::any>& CapFloor::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() const {
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
 

@@ -33,14 +33,14 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& spreadIndex,
     const Handle<YieldTermStructure>& flatDiscountCurve, const Handle<YieldTermStructure>& spreadDiscountCurve,
     const bool flatIndexGiven, const bool spreadIndexGiven, const bool flatDiscountCurveGiven,
-    const bool spreadDiscountCurveGiven, bool eom, bool flatIsDomestic, boost::optional<Period> flatTenor,
-    boost::optional<Period> spreadTenor, Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing,
+    const bool spreadDiscountCurveGiven, bool eom, bool flatIsDomestic, QuantLib::ext::optional<Period> flatTenor,
+    QuantLib::ext::optional<Period> spreadTenor, Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing,
     const Calendar& flatCalendar, const Calendar& spreadCalendar, const std::vector<Natural>& spotFXSettleDaysVec,
     const std::vector<Calendar>& spotFXSettleCalendarVec, Size paymentLag, Size flatPaymentLag,
-    boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
-    boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged, boost::optional<bool> flatIncludeSpread,
-    boost::optional<Period> flatLookback, boost::optional<Size> flatFixingDays, boost::optional<Size> flatRateCutoff,
-    boost::optional<bool> flatIsAveraged, const bool telescopicValueDates, const QuantLib::Pillar::Choice pillarChoice)
+    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
+    QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged, QuantLib::ext::optional<bool> flatIncludeSpread,
+    QuantLib::ext::optional<Period> flatLookback, QuantLib::ext::optional<Size> flatFixingDays, QuantLib::ext::optional<Size> flatRateCutoff,
+    QuantLib::ext::optional<bool> flatIsAveraged, const bool telescopicValueDates, const QuantLib::Pillar::Choice pillarChoice)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -147,19 +147,19 @@ void CrossCcyBasisSwapHelper::initializeDates() {
 
     /* Arbitrarily set the spread leg as the pay leg */
     swap_ = QuantLib::ext::make_shared<CrossCcyBasisSwap>(
-        spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_, flatLegNominal,
-        flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_, paymentLag_, flatPaymentLag_,
-        includeSpread_, lookback_, fixingDays_, rateCutoff_, isAveraged_, flatIncludeSpread_, flatLookback_,
-        flatFixingDays_, flatRateCutoff_, flatIsAveraged_, telescopicValueDates_);
+        spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, quote().empty() ? 0.0 : quote()->value(),
+        spreadGearing_, flatLegNominal, flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_,
+        paymentLag_, flatPaymentLag_, includeSpread_, lookback_, fixingDays_, rateCutoff_, isAveraged_,
+        flatIncludeSpread_, flatLookback_, flatFixingDays_, flatRateCutoff_, flatIsAveraged_, telescopicValueDates_);
 
     QuantLib::ext::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {
         engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(flatLegCurrency_, flatDiscountRLH_, spreadLegCurrency_,
-                                                        spreadDiscountRLH_, spotFX_, boost::none, Date(), Date(),
+                                                        spreadDiscountRLH_, spotFX_, QuantLib::ext::nullopt, Date(), Date(),
                                                         spotFXSettleDate);
     } else {
         engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(spreadLegCurrency_, spreadDiscountRLH_, flatLegCurrency_,
-                                                        flatDiscountRLH_, spotFX_, boost::none, Date(), Date(),
+                                                        flatDiscountRLH_, spotFX_, QuantLib::ext::nullopt, Date(), Date(),
                                                         spotFXSettleDate);
     }
     swap_->setPricingEngine(engine);

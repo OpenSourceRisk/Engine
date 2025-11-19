@@ -49,7 +49,7 @@ XMLNode* PriceSegment::OffPeakDaily::toXML(XMLDocument& doc) const {
 PriceSegment::PriceSegment() : empty_(true), type_(Type::Future) {}
 
 PriceSegment::PriceSegment(const string& type, const string& conventionsId, const vector<string>& quotes,
-    const boost::optional<unsigned short>& priority, const boost::optional<OffPeakDaily>& offPeakDaily,
+    const QuantLib::ext::optional<unsigned short>& priority, const QuantLib::ext::optional<OffPeakDaily>& offPeakDaily,
     const string& peakPriceCurveId, const string& peakPriceCalendar)
     : strType_(type), conventionsId_(conventionsId), quotes_(quotes), priority_(priority),
       offPeakDaily_(offPeakDaily), peakPriceCurveId_(peakPriceCurveId),
@@ -72,11 +72,11 @@ const vector<string>& PriceSegment::quotes() const {
     return quotes_;
 }
 
-const boost::optional<unsigned short>& PriceSegment::priority() const {
+const QuantLib::ext::optional<unsigned short>& PriceSegment::priority() const {
     return priority_;
 }
 
-const boost::optional<PriceSegment::OffPeakDaily>& PriceSegment::offPeakDaily() const {
+const QuantLib::ext::optional<PriceSegment::OffPeakDaily>& PriceSegment::offPeakDaily() const {
     return offPeakDaily_;
 }
 
@@ -190,7 +190,7 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
                                            const string& currency, const vector<PriceSegment>& priceSegments,
                                            const string& dayCountId, const string& interpolationMethod,
-                                           bool extrapolation, const boost::optional<BootstrapConfig>& bootstrapConfig)
+                                           bool extrapolation, const QuantLib::ext::optional<BootstrapConfig>& bootstrapConfig)
     : CurveConfig(curveId, curveDescription), type_(Type::Piecewise), currency_(currency), dayCountId_(dayCountId),
       interpolationMethod_(interpolationMethod), extrapolation_(extrapolation), addBasis_(true), monthOffset_(0),
       averageBase_(true), priceAsHistFixing_(true), bootstrapConfig_(bootstrapConfig) {

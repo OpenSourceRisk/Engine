@@ -2,6 +2,8 @@
 
 Extended Fx Forward Swap are represented as scripted trades, refer to appendix A for an introduction. Listing \ref{lst:extendedfxforwardswap} shows the structure of an example.
 
+An Extended Fx Forward Swap is like an FxAccumulator with regular and conditional observation and settlement dates. After the regular observation dates a European barrier is applied on the Extension Decision Date. If the barrier is  hit the trade terminates, otherwise the trade continues with cashflows generated on the conditional observation dates.
+
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Trade id="ExtendedForward">
@@ -63,6 +65,13 @@ Extended Fx Forward Swap are represented as scripted trades, refer to appendix A
                         <Date>2020-03-31</Date>
                         <Date>2020-04-30</Date>
                         <Date>2020-05-29</Date>
+\end{minted}
+\caption{Extended Fx Forward Swap Representation}
+\label{lst:extendedfxforwardswap}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}                        
                         <Date>2020-06-30</Date>
                         <Date>2020-07-31</Date>
                         <Date>2020-08-31</Date>
@@ -115,8 +124,8 @@ Extended Fx Forward Swap are represented as scripted trades, refer to appendix A
     </ScriptedTradeData>
 </Trade>
 \end{minted}
-\caption{Extended Fx Forward Swap Representation}
-\label{lst:extendedfxforwardswap}
+\caption{Extended Fx Forward Swap Representation, continued}
+\label{lst:extendedfxforwardswap2}
 \end{listing}
 
 The meanings and allowable values of the elements in the \verb+Extended Fx Forward Swap+  representation follow below.

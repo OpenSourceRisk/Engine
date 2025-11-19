@@ -54,7 +54,7 @@ class CrossCcySwapEngine : public PricingEngine {
                        const QuantLib::Currency& ccy2,
                        const QuantLib::Handle<QuantLib::YieldTermStructure>& currency2DiscountCurve,
                        const QuantLib::Handle<QuantLib::Quote>& spotFX,
-                       boost::optional<bool> includeSettlementDateFlows = boost::none,
+                       QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                        const QuantLib::Date& settlementDate = QuantLib::Date(),
                        const QuantLib::Date& npvDate = QuantLib::Date());
 };

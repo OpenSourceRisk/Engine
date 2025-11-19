@@ -120,7 +120,7 @@ class Deposit : public Instrument {
 class DepositEngine : public PricingEngine {
   public:
     DepositEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = QuantLib::Handle<QuantLib::YieldTermStructure>(),
-                  boost::optional<bool> includeSettlementDateFlows = boost::none,
+                  QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                   QuantLib::Date settlementDate = QuantLib::Date(),
                   QuantLib::Date npvDate = QuantLib::Date());
 };
@@ -141,7 +141,7 @@ class PaymentDiscountingEngine : public PricingEngine {
   public:
     PaymentDiscountingEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                              const QuantLib::Handle<QuantLib::Quote>& spotFX = QuantLib::Handle<QuantLib::Quote>(),
-                             boost::optional<bool> includeSettlementDateFlows = boost::none,
+                             QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                              const QuantLib::Date& settlementDate = QuantLib::Date(),
                              const QuantLib::Date& npvDate = QuantLib::Date());    
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve();    
@@ -202,7 +202,7 @@ public:
 class DiscountingCommodityForwardEngine : public PricingEngine {
 public:
     DiscountingCommodityForwardEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                      boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                      QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
                                       const QuantLib::Date& npvDate = QuantLib::Date());
 };
 

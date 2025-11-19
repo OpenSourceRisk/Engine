@@ -194,7 +194,7 @@ std::string getCalibrationDetails(HwCalibrationInfo& info,
         log << "#" << j << ", t=" << std::setprecision(6) << t << ", modelVol = " << modelVol
             << ", marketVol = " << marketVol << ", volDiff = " << volDiff << "\n";
         log << "      modelValue = " << modelValue << ", marketValue = " << marketValue << ", valueDiff = " << valueDiff << "\n";
-        log << "modelkappa = " << modelKappa << ", modelSigma =\n" << modelSigma << "\n";
+        log << "modelkappa = " << modelKappa << "\nmodelSigma =\n" << modelSigma << "\n";
         info.hwCalibrationData.push_back(
             HwCalibrationData{t, modelVol, marketVol, modelValue, marketValue, modelSigma, modelKappa});
     }
@@ -203,7 +203,7 @@ std::string getCalibrationDetails(HwCalibrationInfo& info,
         modelSigma = parametrization->sigma_x(t + 1E-4);
         modelKappa = parametrization->kappa(t + 1E-4);
     }
-    log << "t >= " << t << ": kappa = " << modelKappa << ", sigma = \n" << modelSigma << "\n";
+    log << "t >= " << t << ": kappa = " << modelKappa << "\nsigma = \n" << modelSigma << "\n";
     return log.str();
 }
 

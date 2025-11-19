@@ -6,6 +6,7 @@
     <xs:all>
       <xs:element type="parExcludes" name="ParConversionExcludes" minOccurs="0"/>
       <xs:element type="xs:string" name="ParSensiRemoveFixing" minOccurs="0"/>
+      <xs:element type="parConversionMatrixRegularisation" name="ParConversionMatrixRegularisation" minOccurs="0"/>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
@@ -613,5 +614,13 @@
       <xs:element type="riskFactorKeyType" name="RiskFactorKeyType"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:simpleType name="parConversionMatrixRegularisation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Silent"/>
+      <xs:enumeration value="Warning"/>
+      <xs:enumeration value="Disable"/>
+    </xs:restriction>
+  </xs:simpleType>
 
 </xs:schema>

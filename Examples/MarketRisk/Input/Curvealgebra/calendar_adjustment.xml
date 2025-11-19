@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CalendarAdjustments>
+    <Calendar name="ICE_FuturesUS">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2023-07-04</Date>
+            <Date>2023-09-04</Date>
+            <Date>2024-09-02</Date>
+            <Date>2024-09-03</Date>
+            <Date>2025-01-01</Date>
+            <Date>2025-04-18</Date>
+            <Date>2025-12-25</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays />
+    </Calendar>
+    <Calendar name="WeekendsOnly">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>1999-01-01</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays />
+    </Calendar>
+</CalendarAdjustments>

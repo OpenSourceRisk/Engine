@@ -27,6 +27,7 @@
 #include <ql/cashflows/simplecashflow.hpp>
 
 #include <ql/time/calendars/target.hpp>
+#include <ql/indexes/inflation/euhicp.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -256,7 +257,7 @@ void Swap::setIsdaTaxonomyFields() {
     additionalData_["isdaTransaction"] = string("");
 }
 
-const std::map<std::string,boost::any>& Swap::additionalData() const {
+const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());

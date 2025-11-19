@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/model/blackscholesmodelbuilderbase.hpp
-    \brief builder for an array of black scholes processes
+/*! \file ored/model/assetmodelbuilderbase.hpp
+    \brief builder for an array of processes
     \ingroup utilities
 */
 
@@ -28,7 +28,7 @@
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
 
-#include <qle/models/blackscholesmodelwrapper.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 
 #include <ql/processes/blackscholesprocess.hpp>
 
@@ -38,19 +38,18 @@ namespace data {
 using namespace QuantExt;
 using namespace QuantLib;
 
-class BlackScholesModelBuilderBase : public ModelBuilder {
+class AssetModelBuilderBase : public ModelBuilder {
 public:
-    BlackScholesModelBuilderBase(
-        const std::vector<Handle<YieldTermStructure>>& curves,
-        const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-        const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
-        const Handle<YieldTermStructure>& baseCurve = {});
-    BlackScholesModelBuilderBase(const Handle<YieldTermStructure>& curve,
-                                 const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                                 const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                                 const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {});
+    AssetModelBuilderBase(const std::vector<Handle<YieldTermStructure>>& curves,
+                          const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+                          const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {});
+    AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
+                          const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                          const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+                          const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {});
 
-    Handle<BlackScholesModelWrapper> model() const;
+    Handle<AssetModelWrapper> model() const;
 
     //! \name ModelBuilder interface
     //@{
@@ -61,15 +60,15 @@ public:
 
 protected:
     // generic ctor, you should override setupDateAndTimes() if using this one
-    BlackScholesModelBuilderBase(const Handle<YieldTermStructure>& curve,
-                                 const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process);
+    AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
+                          const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process);
 
     virtual void setupDatesAndTimes() const;
 
-    virtual std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const = 0;
+    virtual AssetModelWrapper::ProcessType processType() const = 0;
+    virtual std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const = 0;
     virtual std::vector<std::vector<Real>> getCurveTimes() const = 0;
     virtual std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const = 0;
-
 
     void performCalculations() const override;
     bool calibrationPointsChanged(const bool updateCache) const;
@@ -83,7 +82,7 @@ protected:
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid discretisationTimeGrid_;         // the (possibly refined) time grid for the simulation
 
-    mutable RelinkableHandle<BlackScholesModelWrapper> model_;
+    mutable RelinkableHandle<AssetModelWrapper> model_;
 
     bool forceCalibration_ = false;
     QuantLib::ext::shared_ptr<MarketObserver> marketObserver_;

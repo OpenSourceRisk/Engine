@@ -211,6 +211,7 @@ QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
 }
 
 void Analytic::setUp() {
+
     if (!portfolio_) {
         portfolio_ = QuantLib::ext::make_shared<Portfolio>();
         if (inputs()->portfolio()) {
@@ -218,9 +219,21 @@ void Analytic::setUp() {
                 portfolio_->add(trade);
         }
     }
+
     buildConfigurations();
-    if (inputs()->enrichIndexFixings() && portfolio_)
-        enrichIndexFixings(portfolio_);
+
+    /* if we do not load all fixings, and the portfolio is not built at this point,
+       we built it against a dummy market using the portfolio analyser, so that
+       we can ask the portfolio for its required fixings in the market data loader
+       and also enrich the index fixings here (if desired). */
+    if (!portfolio_->empty() && !inputs()->allFixings()) {
+        if (!portfolio_->isBuilt()) {
+            PortfolioAnalyser(portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(),
+                              configurations().curveConfig, inputs_->refDataManager(), inputs_->iborFallbackConfig());
+        }
+        if (inputs()->enrichIndexFixings())
+            enrichIndexFixings(portfolio_);
+    }
 }
 
 void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -261,14 +274,14 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
         ALOG("Skip building the market due to missing today's market parameters in configurations"); 
     }
     const bool returnTimer = true;
-    boost::optional<cpu_timer> mTimer = stopTimer("buildMarket()", returnTimer);
+    QuantLib::ext::optional<cpu_timer> mTimer = stopTimer("buildMarket()", returnTimer);
     if (mTimer)
         LOG("Market Build time " << setprecision(2) << mTimer->format(default_places, "%w") << " sec");
 }
 
-void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& mcr) {
-    if (mcr)
-        mcr->populateReport(market_, configurations().todaysMarketParams);
+void Analytic::marketCalibration(const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& mcr) {
+    for (auto r : mcr)
+        r->populateReport(market_, configurations().todaysMarketParams);
 }
 
 void Analytic::buildPortfolio(const bool emitStructuredError) {
@@ -344,13 +357,6 @@ void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Por
 
     startTimer("enrichIndexFixings()");
     QL_REQUIRE(portfolio, "portfolio cannot be empty");
-        
-    //! if the portfolio is not built, create a portfolio analyser which builds the portfolio under a dummy market
-    if (!portfolio->isBuilt()) {
-        PortfolioAnalyser(
-            portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(), configurations().curveConfig,
-            inputs_->refDataManager(), inputs_->iborFallbackConfig());
-    }
 
     auto isFallbackFixingDateWithinLimit = [this](Date originalFixingDate, Date fallbackFixingDate) {
         if (fallbackFixingDate > originalFixingDate) {

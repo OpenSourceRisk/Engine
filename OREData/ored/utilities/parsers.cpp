@@ -881,40 +881,40 @@ QuantExt::CrossAssetModel::AssetType parseCamAssetType(const string& s) {
     }
 }
 
-pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
+pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size precision) {
     string resultType;
     std::ostringstream oss;
 
     if (anyType.type() == typeid(int)) {
         resultType = "int";
-        int r = boost::any_cast<int>(anyType);
+        int r = QuantLib::ext::any_cast<int>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Size)) {
         resultType = "size";
-        int r = boost::any_cast<Size>(anyType);
+        int r = QuantLib::ext::any_cast<Size>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(double)) {
         resultType = "double";
-        double r = boost::any_cast<double>(anyType);
+        double r = QuantLib::ext::any_cast<double>(anyType);
         if (r != Null<Real>())
             oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
-        std::string r = boost::any_cast<std::string>(anyType);
+        std::string r = QuantLib::ext::any_cast<std::string>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Date)) {
         resultType = "date";
-        oss << io::iso_date(boost::any_cast<Date>(anyType));
+        oss << io::iso_date(QuantLib::ext::any_cast<Date>(anyType));
     } else if (anyType.type() == typeid(bool)) {
         resultType = "bool";
-        oss << std::boolalpha << boost::any_cast<bool>(anyType);
+        oss << std::boolalpha << QuantLib::ext::any_cast<bool>(anyType);
     } else if (anyType.type() == typeid(std::vector<bool>)) {
         resultType = "vector_bool";
-        std::vector<bool> r = boost::any_cast<std::vector<bool>>(anyType);
+        std::vector<bool> r = QuantLib::ext::any_cast<std::vector<bool>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::boolalpha << "\"" << boost::any_cast<bool>(anyType);
+            oss << std::boolalpha << "\"" << QuantLib::ext::any_cast<bool>(anyType);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
@@ -922,7 +922,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
-        std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
+        std::vector<double> r = QuantLib::ext::any_cast<std::vector<double>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -938,7 +938,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<Date>)) {
         resultType = "vector_date";
-        std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
+        std::vector<Date> r = QuantLib::ext::any_cast<std::vector<Date>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -950,7 +950,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<std::string>)) {
         resultType = "vector_string";
-        std::vector<std::string> r = boost::any_cast<std::vector<std::string>>(anyType);
+        std::vector<std::string> r = QuantLib::ext::any_cast<std::vector<std::string>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
@@ -962,7 +962,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(std::vector<CashFlowResults>)) {
         resultType = "vector_cashflows";
-        std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
+        std::vector<CashFlowResults> r = QuantLib::ext::any_cast<std::vector<CashFlowResults>>(anyType);
         if (!r.empty()) {
             oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); ++i) {
@@ -972,21 +972,21 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         }
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
-        QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
+        QuantLib::Matrix r = QuantLib::ext::any_cast<QuantLib::Matrix>(anyType);
         std::regex pattern("\n");
         std::ostringstream tmp;
         tmp << std::setprecision(precision) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
     } else if (anyType.type() == typeid(QuantLib::Array)) {
         resultType = "array";
-        QuantLib::Array r = boost::any_cast<QuantLib::Array>(anyType);
+        QuantLib::Array r = QuantLib::ext::any_cast<QuantLib::Array>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(QuantLib::Currency)) {
         resultType = "currency";
-        QuantLib::Currency r = boost::any_cast<QuantLib::Currency>(anyType);
+        QuantLib::Currency r = QuantLib::ext::any_cast<QuantLib::Currency>(anyType);
         oss << r;
     } else {
-        ALOG("Unsupported Boost::Any type");
+        ALOG("Unsupported QuantLib::ext::any type");
         resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());
@@ -1627,6 +1627,31 @@ std::string splitByLastDelimiter(const std::string& source, const std::string& d
 std::string removeAfterLastDelimiter(const std::string& source, const std::string& delimiter) {
     auto const pos = source.find_last_of(delimiter);
     return source.substr(0, pos);
+}
+
+ParConversionMatrixRegularisation parseParConversionMatrixRegularisation(const std::string& s) {
+    if (s == "Silent") {
+        return ParConversionMatrixRegularisation::Silent;
+    } else if (s == "Warning") {
+        return ParConversionMatrixRegularisation::Warning;
+    } else if (s == "Disable") {
+        return ParConversionMatrixRegularisation::Disable;
+    } else {
+        QL_FAIL("Invalid ParConversionMatrixRegularisation: " << s << ". Valid values are: Silent, Warning, Disable");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation regularisation) {
+    if (regularisation == ParConversionMatrixRegularisation::Silent) {
+        os << "Silent";
+    } else if (regularisation == ParConversionMatrixRegularisation::Warning) {
+        os << "Warning";
+    } else if (regularisation == ParConversionMatrixRegularisation::Disable) {
+        os << "Disable";
+    } else {
+        QL_FAIL("Unknown ParConversionMatrixRegularisation");
+    }
+    return os;
 }
 
 } // namespace data

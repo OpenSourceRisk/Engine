@@ -105,8 +105,8 @@ vector<string> SimmConfigurationBase::labels2(const RiskType& rt) const {
     return lookup(rt, mapLabels_2_);
 }
 
-QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional<string> qualifier,
-                                             boost::optional<std::string> label_1, const std::string&) const {
+QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, QuantLib::ext::optional<string> qualifier,
+                                             QuantLib::ext::optional<std::string> label_1, const std::string&) const {
 
     QL_REQUIRE(isValidRiskType(rt),
                "The risk type " << rt << " is not valid for SIMM configuration with name" << name_);
@@ -146,8 +146,8 @@ QuantLib::Real SimmConfigurationBase::weight(const RiskType& rt, boost::optional
     }
 
     // If we get to here, we have failed to get a risk weight
-    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier << ","
-                                                                                  << label_1 << ")");
+    QL_FAIL("Could not find a risk weight for (risk type, qualifier, Label1) = (" << rt << "," << qualifier.value_or("") << ","
+                                                                                  << label_1.value_or("") << ")");
 }
 
 QuantLib::Real SimmConfigurationBase::curvatureWeight(const RiskType& rt, const std::string& label_1) const {
@@ -174,8 +174,8 @@ Real SimmConfigurationBase::historicalVolatilityRatio(const RiskType& rt) const 
     }
 }
 
-Real SimmConfigurationBase::sigma(const RiskType& rt, boost::optional<std::string> qualifier,
-                                  boost::optional<std::string> label_1, const std::string& calculationCurrency) const {
+Real SimmConfigurationBase::sigma(const RiskType& rt, QuantLib::ext::optional<std::string> qualifier,
+                                  QuantLib::ext::optional<std::string> label_1, const std::string& calculationCurrency) const {
 
     Real sigmaMultiplier = SimmConfigurationBase::sigmaMultiplier();
 
@@ -214,8 +214,9 @@ Real SimmConfigurationBase::sigma(const RiskType& rt, boost::optional<std::strin
 }
 
 QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const string& firstQualifier,
-                                                  const string& firstLabel_1, const string& firstLabel_2,
-                                                  const RiskType& secondRt, const string& secondQualifier,
+                                                  const string& firstBucket, const string& firstLabel_1,
+                                                  const string& firstLabel_2, const RiskType& secondRt,
+                                                  const string& secondQualifier, const string& secondBucket,
                                                   const string& secondLabel_1, const string& secondLabel_2,
                                                   const std::string&) const {
 
@@ -226,8 +227,8 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
                "The risk type " << secondRt << " is not valid for SIMM configuration with name" << name());
 
     // Deal with trivial case of everything equal
-    if (firstRt == secondRt && firstQualifier == secondQualifier && firstLabel_1 == secondLabel_1 &&
-        firstLabel_2 == secondLabel_2) {
+    if (firstRt == secondRt && firstQualifier == secondQualifier && firstBucket == secondBucket &&
+        firstLabel_1 == secondLabel_1 && firstLabel_2 == secondLabel_2) {
         return 1.0;
     }
 
@@ -236,8 +237,8 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         (firstRt == RiskType::EquityVol && secondRt == RiskType::EquityVol)) {
 
         // Get the bucket of each qualifier
-        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
 
         // Residual is special, 0 correlation inter and intra except if same qualifier
         if (bucket_1 == "Residual" || bucket_2 == "Residual") {
@@ -262,8 +263,8 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         (firstRt == RiskType::CreditVol && secondRt == RiskType::CreditVol)) {
 
         // Get the bucket of each qualifier
-        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
 
         // Residual is special
         if (bucket_1 == "Residual" || bucket_2 == "Residual") {
@@ -302,8 +303,8 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         (firstRt == RiskType::CreditVolNonQ && secondRt == RiskType::CreditVolNonQ)) {
 
         // Get the bucket of each qualifier
-        string bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        string bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
 
         // Residual is special
         if (bucket_1 == "Residual" || bucket_2 == "Residual") {
@@ -342,8 +343,8 @@ QuantLib::Real SimmConfigurationBase::correlation(const RiskType& firstRt, const
         (firstRt == RiskType::CommodityVol && secondRt == RiskType::CommodityVol)) {
 
         // Get the bucket index of each qualifier
-        const string& bucket_1 = simmBucketMapper_->bucket(firstRt, firstQualifier);
-        const string& bucket_2 = simmBucketMapper_->bucket(secondRt, secondQualifier);
+        string bucket_1 = firstBucket.empty() ? simmBucketMapper_->bucket(firstRt, firstQualifier) : firstBucket;
+        string bucket_2 = secondBucket.empty() ? simmBucketMapper_->bucket(secondRt, secondQualifier) : secondBucket;
 
         if (bucket_1 == bucket_2) {
             auto bucketKey = makeKey(bucket_1, "", "");

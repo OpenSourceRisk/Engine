@@ -17,6 +17,7 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 // clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -318,6 +319,7 @@ BOOST_AUTO_TEST_CASE(testUpfrontCurveBuildFailsIfNoRunningSpread) {
 
     Date asof(6, Nov, 2020);
     Settings::instance().evaluationDate() = Date(6, Nov, 2020);
+    BOOST_LOG_SCOPED_THREAD_ATTR("NoConsole", boost::log::attributes::constant<bool>(true));
     BOOST_CHECK_THROW(createTodaysMarket(asof, "upfront", tmf), QuantLib::Error);
 }
 

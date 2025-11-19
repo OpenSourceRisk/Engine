@@ -61,14 +61,6 @@ SimmHelper::SimmHelper(const std::vector<std::string>& currencies, const QuantLi
             *market_->swapIndex(market_->swapIndexBase(currencies_[ccyIndex])),
             [this](const Date& d) { return timeFromReference(d); });
     }
-
-    // buffers for retrieving SIMM components, dimension 1 as above
-    irDeltaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
-    fxDeltaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
-    irVegaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
-    fxVegaIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
-    irCurvatureIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
-    fxCurvatureIM_ = QuantLib::ext::make_shared<QuantExt::RandomVariable>(1);
 }
 
 Real SimmHelper::timeFromReference(const Date& d) const {
@@ -93,7 +85,7 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
     std::vector<Array> fxVega;
     Real theta;
     
-    std::tie(delta, swaptionVegaRisk, fxVega, theta) = boost::any_cast<std::tuple<Array, vector<Array>, vector<Array>, Real>>(r);
+    std::tie(delta, swaptionVegaRisk, fxVega, theta) = QuantLib::ext::any_cast<std::tuple<Array, vector<Array>, vector<Array>, Real>>(r);
 
     DLOG("SimmHelper delta size: " << delta.size());
     DLOG("SimmHelper swaptionVegaRisk size: " << swaptionVegaRisk.size());
@@ -190,26 +182,17 @@ Real SimmHelper::initialMargin(const std::string& nettingSetId, const Size dateI
         }
     }
 
-    RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, irDeltaIM_, irVegaIM_,
-                                              irCurvatureIM_, fxDeltaIM_, fxVegaIM_, fxCurvatureIM_);
+    RandomVariable res = imCalculator_->value(irDeltaIM, irVegaIM, fxDeltaIM, fxVegaIM, &irDeltaIM_, &irVegaIM_,
+                                              &irCurvatureIM_, &fxDeltaIM_, &fxVegaIM_, &fxCurvatureIM_);
     totalMargin_ = res.at(0);
 
-    if (irDeltaIM_ && fxDeltaIM_)
-        deltaMargin_ = irDeltaIM_->at(0) + fxDeltaIM_->at(0);
+    deltaMargin_ = irDeltaIM_.at(0) + fxDeltaIM_.at(0);
+    vegaMargin_ = irVegaIM_.at(0) + fxVegaIM_.at(0);
+    curvatureMargin_ = irCurvatureIM_.at(0) + fxCurvatureIM_.at(0);
+    irDeltaMargin_ = irDeltaIM_.at(0);
+    fxDeltaMargin_ = fxDeltaIM_.at(0);
 
-    if (irVegaIM_ && fxVegaIM_)
-        vegaMargin_ = irVegaIM_->at(0) + fxVegaIM_->at(0);
-
-    if (irCurvatureIM_ && fxCurvatureIM_)
-        curvatureMargin_ = irCurvatureIM_->at(0) + fxCurvatureIM_->at(0);
-
-    if (irDeltaIM_)
-        irDeltaMargin_ = irDeltaIM_->at(0);
-
-    if (fxDeltaIM_)
-        fxDeltaMargin_ = fxDeltaIM_->at(0);
-
-    LOG("SimmHelper::initialMargin done for date " << dateIndex << ", sample " << sampleIndex);
+    DLOG("SimmHelper::initialMargin done for date " << dateIndex << ", sample " << sampleIndex);
 
     return totalMargin_;
     

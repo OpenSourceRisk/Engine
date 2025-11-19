@@ -82,7 +82,7 @@ private:
     Currency ccy2_;
     Handle<YieldTermStructure> currency2Discountcurve_;
     Handle<Quote> spotFX_;
-    boost::optional<bool> includeSettlementDateFlows_;
+    QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;
     Date npvDate_;
 };

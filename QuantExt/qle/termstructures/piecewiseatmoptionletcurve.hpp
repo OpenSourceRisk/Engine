@@ -46,8 +46,8 @@ public:
                                bool flatFirstPeriod = true,
                                const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
                                const QuantLib::Real capFloorVolDisplacement = 0.0,
-                               const boost::optional<QuantLib::VolatilityType> optionletVolType = boost::none,
-                               const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
+                               const QuantLib::ext::optional<QuantLib::VolatilityType> optionletVolType = QuantLib::ext::nullopt,
+                               const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement = QuantLib::ext::nullopt,
                                bool interpOnOptionlets = true, const Interpolator& i = Interpolator(),
                                const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
                                const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
@@ -59,8 +59,8 @@ public:
                                bool flatFirstPeriod = true,
                                const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
                                const QuantLib::Real capFloorVolDisplacement = 0.0,
-                               const boost::optional<QuantLib::VolatilityType> optionletVolType = boost::none,
-                               const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
+                               const QuantLib::ext::optional<QuantLib::VolatilityType> optionletVolType = QuantLib::ext::nullopt,
+                               const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement = QuantLib::ext::nullopt,
                                bool interpOnOptionlets = true, const Interpolator& i = Interpolator(),
                                const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
                                const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
@@ -166,8 +166,8 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, bool flatFirstPeriod,
     const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
-    const boost::optional<QuantLib::VolatilityType> optionletVolType,
-    const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
+    const QuantLib::ext::optional<QuantLib::VolatilityType> optionletVolType,
+    const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap, const Period& rateComputationPeriod, const Size onCapSettlementDays)
     : QuantLib::OptionletVolatilityStructure(settlementDays, cftvc->calendar(), cftvc->businessDayConvention(),
                                              cftvc->dayCounter()),
@@ -192,8 +192,8 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, bool flatFirstPeriod,
     const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
-    const boost::optional<QuantLib::VolatilityType> optionletVolType,
-    const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
+    const QuantLib::ext::optional<QuantLib::VolatilityType> optionletVolType,
+    const QuantLib::ext::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap, const Period& rateComputationPeriod, const Size onCapSettlementDays)
     : QuantLib::OptionletVolatilityStructure(referenceDate, cftvc->calendar(), cftvc->businessDayConvention(),
                                              cftvc->dayCounter()),

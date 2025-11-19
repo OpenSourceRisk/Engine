@@ -100,7 +100,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     }
 
     Date payDate = expiryDate;
-    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
     if (opd) {
         if (opd->rulesBased()) {
             payDate = opd->calendar().advance(expiryDate, opd->lag(), Days, opd->convention());
@@ -193,6 +193,21 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             requiredFixings_.addFixingDate(d, fxIndex_, payDate);
     }
 
+}
+
+Real FxDoubleTouchOption::strike() const {
+    Real strike = Null<Real>();
+
+    try {
+        auto underlying = QuantLib::ext::dynamic_pointer_cast<ore::data::DoubleBarrierOptionWrapper>(instrument_);
+        auto dBarOpt = QuantLib::ext::dynamic_pointer_cast<QuantLib::DoubleBarrierOption>(underlying->qlInstrument());
+        auto payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(dBarOpt->payoff());
+        strike = payoff->strike();
+    } catch (...){
+        
+    }
+
+    return strike;
 }
 
 void FxDoubleTouchOption::fromXML(XMLNode* node) {

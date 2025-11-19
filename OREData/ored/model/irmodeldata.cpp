@@ -49,6 +49,10 @@ CalibrationType parseCalibrationType(const string& s) {
         return CalibrationType::Bootstrap;
     else if (boost::algorithm::to_upper_copy(s) == "BESTFIT")
         return CalibrationType::BestFit;
+    else if (boost::algorithm::to_upper_copy(s) == "FIRSTBESTFITTHENBOOTSTRAP")
+        return CalibrationType::FirstBestFitThenBootstrap;
+    else if (boost::algorithm::to_upper_copy(s) == "STATISTICALWITHRISKNEUTRALVOLATILITY")
+        return CalibrationType::StatisticalWithRiskNeutralVolatility;
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationType::None;
     else
@@ -60,6 +64,8 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationType& type) {
         oss << "Bootstrap";
     else if (type == CalibrationType::BestFit)
         oss << "BestFit";
+    else if (type == CalibrationType::FirstBestFitThenBootstrap)
+        oss << "FirstBestFitThenBootsrap";
     else if (type == CalibrationType::None)
         oss << "None";
     else

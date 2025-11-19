@@ -41,10 +41,10 @@ SyntheticCDO::SyntheticCDO(const QuantLib::ext::shared_ptr<QuantExt::Basket>& ba
                            const Schedule& schedule, Rate upfrontRate, Rate runningRate, const DayCounter& dayCounter,
                            BusinessDayConvention paymentConvention, bool settlesAccrual,
                            CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime, Date protectionStart,
-                           Date upfrontDate, boost::optional<Real> notional, Real recoveryRate,
+                           Date upfrontDate, QuantLib::ext::optional<Real> notional, Real recoveryRate,
                            const DayCounter& lastPeriodDayCounter)
     : basket_(basket), side_(side), upfrontRate_(upfrontRate), runningRate_(runningRate),
-      leverageFactor_(notional ? notional.get() / basket->trancheNotional() : 1.), dayCounter_(dayCounter),
+      leverageFactor_(notional ? notional.value() / basket->trancheNotional() : 1.), dayCounter_(dayCounter),
       paymentConvention_(paymentConvention), settlesAccrual_(settlesAccrual),
       protectionPaymentTime_(protectionPaymentTime),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),

@@ -23,19 +23,20 @@
 
 #pragma once
 
+#include <ored/portfolio/cashflowutils.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
-#include <ored/portfolio/tradefactory.hpp> // just convenience so that client code needs to include trade.hpp only
-
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
+#include <ql/cashflow.hpp>
 
 namespace ore {
 namespace data {
@@ -43,34 +44,6 @@ using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 using QuantLib::Date;
 using std::string;
-
-struct TradeCashflowReportData {
-    QuantLib::Size cashflowNo;
-    QuantLib::Size legNo;
-    QuantLib::Date payDate;
-    std::string flowType;
-    double amount;
-    std::string currency;
-    double coupon;
-    double accrual;
-    QuantLib::Date accrualStartDate;
-    QuantLib::Date accrualEndDate;
-    double accruedAmount;
-    QuantLib::Date fixingDate;
-    double fixingValue;
-    double notional;
-    double discountFactor;
-    double presentValue;
-    double fxRateLocalBase;
-    double presentValueBase;
-    std::string baseCurrency;
-    double floorStrike;
-    double capStrike;
-    double floorVolatility;
-    double capVolatility;
-    double effectiveFloorVolatility;
-    double effectiveCapVolatility;
-};
 
 //! Trade base class
 /*! Instrument interface to pricing and risk applications
@@ -149,7 +122,7 @@ public:
     //! Set the envelope with counterparty and portfolio info
     void setEnvelope(const Envelope& envelope);
 
-    void setAdditionalData(const std::map<std::string, boost::any>& additionalData);
+    void setAdditionalData(const std::map<std::string, QuantLib::ext::any>& additionalData);
 
     //! Set the trade actions
     TradeActions& tradeActions() { return tradeActions_; }
@@ -192,7 +165,7 @@ public:
     const string& maturityType() const { return maturityType_; }
 
     virtual bool isExpired(const Date& d) const {
-        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        QuantLib::ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
         if(lastRelevantDate_!=Null<Date>()){
             return QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred(d, inc);
         }else{
@@ -205,7 +178,7 @@ public:
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
-    const virtual std::map<std::string,boost::any>& additionalData() const;
+    const virtual std::map<std::string,QuantLib::ext::any>& additionalData() const;
 
     /*! returns the sensi template, e.g. "IR_Analytical" for this trade,
         this is only available after build() has been called */
@@ -246,6 +219,12 @@ public:
                                                            const std::string& configuration,
                                                            const bool includePastCashflows) const;
 
+    /* set build status, this flag is maintained in buildTrade() and Trade::reset(), i.e. _not_ in Trade::build() */
+    void setBuilt(const bool b = true) const { isBuilt_ = b; }
+
+    /* get build status */
+    bool isBuilt() const { return isBuilt_; }
+
 protected:
     string tradeType_; // class name of the derived class
     QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
@@ -280,7 +259,7 @@ protected:
                      const string& configuration);
 
     RequiredFixings requiredFixings_;
-    mutable std::map<std::string,boost::any> additionalData_;
+    mutable std::map<std::string,QuantLib::ext::any> additionalData_;
 
     /* sets additional data based on given internal legNo (0, 1, ...), the result leg id is derived from this
        as "legNo + 1", i.e. starting with 1 (1, 2, ...). The result leg id can be overwriten using the second
@@ -294,15 +273,16 @@ private:
     string id_;
     Envelope envelope_;
     TradeActions tradeActions_;
+    mutable bool isBuilt_ = false;
 };
 
 template <class T>
 inline T Trade::additionalDatum(const std::string& tag) const {
-    std::map<std::string,boost::any>::const_iterator value =
+    std::map<std::string,QuantLib::ext::any>::const_iterator value =
         additionalData_.find(tag);
     QL_REQUIRE(value != additionalData_.end(),
                tag << " not provided");
-    return boost::any_cast<T>(value->second);
+    return QuantLib::ext::any_cast<T>(value->second);
 }
 
 } // namespace data

@@ -90,7 +90,7 @@ public:
         const vector<string>& smileOptionTenors = vector<string>(),
         const vector<string>& smileUnderlyingTenors = vector<string>(),
         const vector<string>& smileSpreads = vector<string>(),
-        const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = boost::none);
+        const QuantLib::ext::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = QuantLib::ext::nullopt);
     //! Detailed contructor for proxy config
     GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
                                       const std::string& qualifierLabel, const string& curveID,
@@ -138,7 +138,7 @@ public:
     const std::string& proxyTargetShortSwapIndexBase() const { return proxyTargetShortSwapIndexBase_; }
     const std::string& proxyTargetSwapIndexBase() const { return proxyTargetSwapIndexBase_; }
     //
-    const boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
+    const QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
         return parametricSmileConfiguration_;
     }
     //
@@ -199,7 +199,7 @@ private:
     string proxyTargetShortSwapIndexBase_;
     string proxyTargetSwapIndexBase_;
 
-    boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
+    QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
 
     ReportConfig reportConfig_;
 };

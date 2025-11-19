@@ -87,7 +87,7 @@ public:
                const bool emitStructuredError = true);
 
     //! if the portfolio has been built
-    bool isBuilt() const { return isBuilt_; }
+    bool isBuilt() const;
 
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;
@@ -138,7 +138,6 @@ private:
     bool buildFailedTrades_, ignoreTradeBuildFail_;
     std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
-    bool isBuilt_ = false;
 };
 
 std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(

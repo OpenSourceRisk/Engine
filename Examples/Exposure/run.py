@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
                               # Legacy Examples
 cases = [ "run_swapflat.py",  # 1, 11
           "run_swap.py",      # 2
+          "run_swap_hw2f.py", # same as 2, but with hw2f
           "run_fra.py",       # 23
           "run_swaption.py",  # 3, 4, 5
           "run_capfloor.py",  # 6
@@ -22,7 +23,8 @@ cases = [ "run_swapflat.py",  # 1, 11
           "run_hw2f.py",      # 37 and 38
           "run_wwr.py",       # 34
           "run_flipview.py",   # 35
-          "run_xva_corr.py"
+          "run_xva_corr.py",
+          "run_hwhistoricalcalibration.py"
          ]
 
 # Get max parallel from environment variable, default to 1

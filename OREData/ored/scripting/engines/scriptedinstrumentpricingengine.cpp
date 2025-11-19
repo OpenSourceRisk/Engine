@@ -31,22 +31,22 @@ namespace data {
 
 namespace {
 
-// helper that converts a context value to a ql additional result (i.e. boost::any)
+// helper that converts a context value to a ql additional result (i.e. QuantLib::ext::any)
 
-struct anyGetter : public boost::static_visitor<boost::any> {
+struct anyGetter : public boost::static_visitor<QuantLib::ext::any> {
     explicit anyGetter(const QuantLib::ext::shared_ptr<Model>& model) : model_(model) {}
-    boost::any operator()(const RandomVariable& x) const { return model_->extractT0Result(x); }
-    boost::any operator()(const EventVec& x) const { return x.value; }
-    boost::any operator()(const IndexVec& x) const { return x.value; }
-    boost::any operator()(const CurrencyVec& x) const { return x.value; }
-    boost::any operator()(const DaycounterVec& x) const { return x.value; }
-    boost::any operator()(const Filter& x) const {
-        QL_FAIL("can not convert Filter to boost::any, unexpected call to anyGetter");
+    QuantLib::ext::any operator()(const RandomVariable& x) const { return model_->extractT0Result(x); }
+    QuantLib::ext::any operator()(const EventVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const IndexVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const CurrencyVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const DaycounterVec& x) const { return x.value; }
+    QuantLib::ext::any operator()(const Filter& x) const {
+        QL_FAIL("can not convert Filter to QuantLib::ext::any, unexpected call to anyGetter");
     }
     QuantLib::ext::shared_ptr<Model> model_;
 };
 
-boost::any valueToAny(const QuantLib::ext::shared_ptr<Model>& model, const ValueType& v) {
+QuantLib::ext::any valueToAny(const QuantLib::ext::shared_ptr<Model>& model, const ValueType& v) {
     return boost::apply_visitor(anyGetter(model), v);
 }
 
@@ -133,7 +133,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
             auto s = workingContext->scalars.find(r.second);
             bool resultSet = false;
             if (s != workingContext->scalars.end()) {
-                boost::any t = valueToAny(model_, s->second);
+                QuantLib::ext::any t = valueToAny(model_, s->second);
                 results_.additionalResults[r.first] = t;
                 addMcErrorEstimate(r.first + "_MCErrEst", s->second);
                 DLOG("got additional result '" << r.first << "' referencing script variable '" << r.second << "'");
@@ -149,13 +149,13 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                 std::vector<std::string> tmpstring;
                 std::vector<QuantLib::Date> tmpdate;
                 for (auto const& d : v->second) {
-                    boost::any t = valueToAny(model_, d);
+                    QuantLib::ext::any t = valueToAny(model_, d);
                     if (t.type() == typeid(double))
-                        tmpdouble.push_back(boost::any_cast<double>(t));
+                        tmpdouble.push_back(QuantLib::ext::any_cast<double>(t));
                     else if (t.type() == typeid(std::string))
-                        tmpstring.push_back(boost::any_cast<std::string>(t));
+                        tmpstring.push_back(QuantLib::ext::any_cast<std::string>(t));
                     else if (t.type() == typeid(QuantLib::Date))
-                        tmpdate.push_back(boost::any_cast<QuantLib::Date>(t));
+                        tmpdate.push_back(QuantLib::ext::any_cast<QuantLib::Date>(t));
                     else {
                         QL_FAIL("unexpected result type '" << t.type().name() << "' for result variable '" << r.first
                                                            << "' referencing script variable '" << r.second << "'");

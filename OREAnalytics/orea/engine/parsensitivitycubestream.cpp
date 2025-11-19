@@ -31,7 +31,7 @@ namespace analytics {
 ParSensitivityCubeStream::ParSensitivityCubeStream(
     const QuantLib::ext::shared_ptr<ZeroToParCube>& cube,
                                                    const string& currency,
-                                                   const const QuantLib::ext::shared_ptr<Portfolio>& portfolio)
+                                                   const QuantLib::ext::shared_ptr<Portfolio>& portfolio)
     : zeroCubeIdx_(0), cube_(cube), currency_(currency), portfolio_(portfolio), itCurrent_(currentDeltas_.begin()) {
     QL_REQUIRE(!cube_->zeroCubes().empty(), "ParSensitivityCubeStream: cube contains no zero cubes");
 

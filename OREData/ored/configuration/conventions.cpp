@@ -1852,7 +1852,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData, 
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData, 
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
@@ -1882,7 +1882,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
@@ -1913,7 +1913,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
@@ -1945,7 +1945,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Bus
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
                                                      const string& indexName,
                                                      const std::string& optionFrequency)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::BusinessDaysAfter),
@@ -2522,7 +2522,7 @@ void FxOptionTimeWeightingConvention::fromXML(XMLNode* node) {
 
     weekdayWeights_.resize(7);
     auto w = XMLUtils::getChildNode(node, "WeekdayWeights");
-    QL_REQUIRE(w, "FxOptionTimeWeightingConventions::fromXML(): 'WeekDayWeights' node not found.");
+    QL_REQUIRE(w, "FxOptionTimeWeightingConventions::fromXML(): 'WeekdayWeights' node not found.");
     weekdayWeights_[QuantLib::Weekday::Monday - 1] = parseReal(XMLUtils::getChildValue(w, "Monday"));
     weekdayWeights_[QuantLib::Weekday::Tuesday - 1] = parseReal(XMLUtils::getChildValue(w, "Tuesday"));
     weekdayWeights_[QuantLib::Weekday::Wednesday - 1] = parseReal(XMLUtils::getChildValue(w, "Wednesday"));
@@ -2560,7 +2560,7 @@ XMLNode* FxOptionTimeWeightingConvention::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("FxOptionTimeWeighting");
     XMLUtils::addChild(doc, node, "Id", id_);
 
-    auto w = XMLUtils::addChild(doc, node, "WeekDayWeights");
+    auto w = XMLUtils::addChild(doc, node, "WeekdayWeights");
     XMLUtils::addChild(doc, w, "Monday", weekdayWeights_[QuantLib::Weekday::Monday - 1]);
     XMLUtils::addChild(doc, w, "Tuesday", weekdayWeights_[QuantLib::Weekday::Tuesday - 1]);
     XMLUtils::addChild(doc, w, "Wednesday", weekdayWeights_[QuantLib::Weekday::Wednesday - 1]);

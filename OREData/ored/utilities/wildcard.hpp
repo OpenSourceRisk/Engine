@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ql/shared_ptr.hpp>
 
 #include <regex>
@@ -59,15 +59,15 @@ private:
 
     bool hasWildCard_ = false;
     std::size_t wildCardPos_;
-    boost::optional<std::string> regexString_;
-    boost::optional<std::string> prefixString_;
+    QuantLib::ext::optional<std::string> regexString_;
+    QuantLib::ext::optional<std::string> prefixString_;
     mutable QuantLib::ext::shared_ptr<std::regex> regex_;
 };
 
 bool operator<(const Wildcard& w1, const Wildcard& w2);
 
 //! checks if at most one element in C has a wild card and returns it in this case
-template <class C> boost::optional<Wildcard> getUniqueWildcard(const C& c) {
+template <class C> QuantLib::ext::optional<Wildcard> getUniqueWildcard(const C& c) {
     for (auto const& a : c) {
         Wildcard w(a);
         if (w.hasWildcard()) {
@@ -75,7 +75,7 @@ template <class C> boost::optional<Wildcard> getUniqueWildcard(const C& c) {
             return w;
         }
     }
-    return boost::none;
+    return QuantLib::ext::nullopt;
 }
 
 // The quoteNames set can have a mix of exact RIC names and regex strings to match multiple RICs. This function splits

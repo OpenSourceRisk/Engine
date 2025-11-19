@@ -104,7 +104,9 @@ AtmStrike::AtmStrike(DeltaVolQuote::AtmType atmType, boost::optional<DeltaVolQuo
 
 DeltaVolQuote::AtmType AtmStrike::atmType() const { return atmType_; }
 
-boost::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const { return deltaType_; }
+boost::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const {
+    return deltaType_;
+}
 
 void AtmStrike::fromString(const string& strStrike) {
 

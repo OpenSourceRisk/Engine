@@ -377,7 +377,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     report.end();
 }
 
-void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+void addTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                        const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -391,18 +391,6 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
     const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
     const vector<Real>& epe_b = postProcess->tradeEPE_B_timeWeighted(tradeId);
     const vector<Real>& eepe_b = postProcess->tradeEEPE_B_timeWeighted(tradeId);
-    report.addColumn("TradeId", string())
-        .addColumn("Date", Date())
-        .addColumn("Time", double(), 6)
-        .addColumn("EPE", double())
-        .addColumn("ENE", double())
-        .addColumn("AllocatedEPE", double())
-        .addColumn("AllocatedENE", double())
-        .addColumn("PFE", double())
-        .addColumn("BaselEE", double())
-        .addColumn("BaselEEE", double())
-        .addColumn("TimeWeightedBaselEPE", double(), 2)
-        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     report.next()
         .add(tradeId)
         .add(today)
@@ -432,6 +420,54 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
             .add(eee_b[j + 1])
             .add(epe_b[j + 1])
             .add(eepe_b[j + 1]);
+    }
+}
+
+void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                       const string& tradeId) {
+    report.addColumn("TradeId", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double())
+        .addColumn("ENE", double())
+        .addColumn("AllocatedEPE", double())
+        .addColumn("AllocatedENE", double())
+        .addColumn("PFE", double())
+        .addColumn("BaselEE", double())
+        .addColumn("BaselEEE", double())
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
+    
+    addTradeExposures(report, postProcess, tradeId);
+    report.end();
+}
+
+void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("TradeId", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double())
+        .addColumn("ENE", double())
+        .addColumn("AllocatedEPE", double())
+        .addColumn("AllocatedENE", double())
+        .addColumn("PFE", double())
+        .addColumn("BaselEE", double())
+        .addColumn("BaselEEE", double())
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
+
+    for (const auto& [tradeId, _] : postProcess->tradeIds()) {
+        try {
+            addTradeExposures(report, postProcess, tradeId);
+        }
+        catch (const std::exception& e) {
+            QuantLib::ext::shared_ptr<Trade> failedTrade = postProcess->portfolio()->trades().find(tradeId)->second;
+            map<string, string> subfields;
+            subfields.insert({"tradeId", tradeId});
+            subfields.insert({"tradeType", failedTrade->tradeType()});
+            StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(), subfields).log();
+            report.end();
+        }
     }
     report.end();
 }
@@ -491,6 +527,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib:
         .addColumn("BaselEEE", double(), 2)
         .addColumn("TimeWeightedBaselEPE", double(), 2)
         .addColumn("TimeWeightedBaselEEPE", double(), 2);
+
     addNettingSetExposure(report, postProcess, nettingSetId);
     report.end();
 }
@@ -504,30 +541,63 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib:
         .addColumn("PFE", double(), 2)
         .addColumn("ExpectedCollateral", double(), 2)
         .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
+        .addColumn("BaselEEE", double(), 2)
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
 
-    for (const auto& [n,_] : postProcess->nettingSetIds()) {
-        addNettingSetExposure(report, postProcess, n);
+    for (const auto& [nettingSetId, _] : postProcess->nettingSetIds()) {
+        try {
+            addNettingSetExposure(report, postProcess, nettingSetId);
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.", e.what(),
+                                            {{"nettingSetId", nettingSetId}}).log();
+            report.end();
+        }
     }
     report.end();
 }
 
-void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
-                                                   QuantLib::ext::shared_ptr<PostProcess> postProcess,
-                                                   const string& nettingSetId) {
+void addNettingSetCvaSensitivities(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                   const string& nettingSetId) {
     const vector<Real> grid = postProcess->spreadSensitivityTimes();
     const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
     const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
-    report.addColumn("NettingSet", string())
-        .addColumn("Time", double(), 6)
-        .addColumn("CvaHazardRateSensitivity", double(), 6)
-        .addColumn("CvaSpreadSensitivity", double(), 6);
 
     if (sensiHazardRate.size() == 0 || sensiCdsSpread.size() == 0)
         return;
 
     for (Size j = 0; j < grid.size(); ++j) {
         report.next().add(nettingSetId).add(grid[j]).add(sensiHazardRate[j]).add(sensiCdsSpread[j]);
+    }
+}
+
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                   QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                                   const string& nettingSetId) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6)
+        .addColumn("CvaSpreadSensitivity", double(), 6);
+
+    addNettingSetCvaSensitivities(report, postProcess, nettingSetId);
+    report.end();
+}
+
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                   QuantLib::ext::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6)
+        .addColumn("CvaSpreadSensitivity", double(), 6);
+
+    for (const auto& [nettingSetId, _] : postProcess->nettingSetIds()) {
+        try {
+            addNettingSetCvaSensitivities(report, postProcess, nettingSetId);
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
+                                            {{"nettingSetId", nettingSetId}}).log();
+            report.end();
+        }
     }
     report.end();
 }
@@ -632,7 +702,7 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
     report.end();
 }
 
-void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+void addNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                         const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -642,16 +712,6 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext
     const vector<Real>& floorInc = postProcess->collateralFloorIncrements(nettingSetId);
     Real colva = postProcess->nettingSetCOLVA(nettingSetId);
     Real floorValue = postProcess->nettingSetCollateralFloor(nettingSetId);
-
-    report.addColumn("NettingSet", string())
-        .addColumn("Date", Date())
-        .addColumn("Time", double(), 4)
-        .addColumn("CollateralBalance", double(), 4)
-        .addColumn("COLVA Increment", double(), 4)
-        .addColumn("COLVA", double(), 4)
-        .addColumn("CollateralFloor Increment", double(), 4)
-        .addColumn("CollateralFloor", double(), 4);
-
     report.next()
         .add(nettingSetId)
         .add(Null<Date>())
@@ -676,6 +736,42 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext
             .add(colvaSum)
             .add(floorInc[j + 1])
             .add(floorSum);
+    }
+}
+
+void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                        const string& nettingSetId) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 4)
+        .addColumn("CollateralBalance", double(), 4)
+        .addColumn("COLVA Increment", double(), 4)
+        .addColumn("COLVA", double(), 4)
+        .addColumn("CollateralFloor Increment", double(), 4)
+        .addColumn("CollateralFloor", double(), 4);
+
+    addNettingSetColva(report, postProcess, nettingSetId);
+    report.end();
+}
+
+void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 4)
+        .addColumn("CollateralBalance", double(), 4)
+        .addColumn("COLVA Increment", double(), 4)
+        .addColumn("COLVA", double(), 4)
+        .addColumn("CollateralFloor Increment", double(), 4)
+        .addColumn("CollateralFloor", double(), 4);
+
+    for (const auto& [nettingSetId, _] : postProcess->nettingSetIds()) {
+        try {
+            addNettingSetColva(report, postProcess, nettingSetId);
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.", e.what(),
+                                            {{"nettingSetId", nettingSetId}}).log();
+            report.end();
+        }
     }
     report.end();
 }
@@ -923,17 +1019,17 @@ void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
 
 namespace {
 template <class T>
-void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
-    T map = boost::any_cast<T>(resultMap);
+void addMapResults(QuantLib::ext::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
+    T map = QuantLib::ext::any_cast<T>(resultMap);
     for (auto it : map) {
         std::string name = resultName + "_" + it.first.code();
-        boost::any tmp = it.second;
+        QuantLib::ext::any tmp = it.second;
         auto p = parseBoostAny(tmp);
         report.next().add(tradeId).add(name).add(p.first).add(p.second);
     }
 }
 
-void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
+void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const QuantLib::ext::any& result,
                  const std::size_t precision) {
     auto p = parseBoostAny(result, precision);
     if (boost::starts_with(p.first, "vector")) {
@@ -1012,7 +1108,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                 if (i > 0 && instruments[i - 1] == nullptr)
                     continue;
 
-                std::map<std::string, boost::any> thisAddResults =
+                std::map<std::string, QuantLib::ext::any> thisAddResults =
                     i == 0 ? additionalResults : instruments[i - 1]->additionalResults();
 
                 // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in
@@ -1626,10 +1722,10 @@ void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& repo
             .addColumn("IMModel", string())
             .addColumn("TradeType", string());
 
-        if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+        if (hasScheduleTrades || crif->type() == Crif::CrifType::FRTB)
             report->addColumn("end_date", string());
 
-        if (crif->type() == Crif::CrifType::Frtb) {
+        if (crif->type() == Crif::CrifType::FRTB) {
             report->addColumn("Label3", string())
                 .addColumn("CreditQuality", string())
                 .addColumn("LongShortInd", string())
@@ -1673,10 +1769,10 @@ void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& repo
                 .add(ore::data::to_string(cr.imModel))
                 .add(cr.tradeType);
 
-            if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+            if (hasScheduleTrades || crif->type() == Crif::CrifType::FRTB)
                 report->add(cr.endDate);
 
-            if (crif->type() == Crif::CrifType::Frtb) {
+            if (crif->type() == Crif::CrifType::FRTB) {
                 report->add(cr.label3)
                     .add(cr.creditQuality)
                     .add(cr.longShortInd)
@@ -2559,6 +2655,284 @@ void ReportWriter::writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis,
         reportOut.add(sr.value);
     }
 
+    reportOut.end();
+}
+
+void ReportWriter::writeSaccrTradeDetailReport(
+    ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::analytics::SaccrTradeData>& tradeData) const {
+
+    const auto& nettingSets = tradeData->nettingSets();
+    bool hasNettingSetDetails = std::any_of(nettingSets.begin(), nettingSets.end(),
+                                            [](const NettingSetDetails& nsd) { return !nsd.emptyOptionalFields(); });
+
+    LOG("Writing SA-CCR trade detail report");
+    report.addColumn("TradeId", string()).addColumn("TradeType", string()).addColumn("NettingSet", string());
+
+    if (hasNettingSetDetails) {
+        for (const auto& nettingSetField : NettingSetDetails::optionalFieldNames())
+            report.addColumn(nettingSetField, string());
+    }
+
+    report.addColumn("NPV", Real(), 2)
+        .addColumn("AssetClass", string())
+        .addColumn("HedgingSet", string())
+        .addColumn("HedgingSubset", string())
+        .addColumn("Bucket", string())
+        .addColumn("Qualifier", string())
+        .addColumn("Currency", string())
+        .addColumn("delta", Real(), 4)
+        .addColumn("d", Real(), 4)
+        .addColumn("MF", Real(), 7)
+        .addColumn("M", Real(), 4)
+        .addColumn("S", Real(), 4)
+        .addColumn("E", Real(), 4)
+        .addColumn("T", Real(), 4)
+        .addColumn("SD", Real())
+        .addColumn("CurrentPrice", Real(), 6)
+        .addColumn("NumNominalFlows", Size())
+        .addColumn("Price", Real(), 4)
+        .addColumn("Strike", Real(), 4)
+        .addColumn("Volatility", Real(), 4);
+
+    for (const auto& [tid, timpl] : tradeData->data()) {
+        for (const auto& c : timpl->getContributions()) {
+            report.next().add(tid).add(timpl->trade()->tradeType());
+
+            map<string, string> nettingSetMap = timpl->nettingSetDetails().mapRepresentation();
+            for (const auto& fieldName : NettingSetDetails::fieldNames(hasNettingSetDetails))
+                report.add(nettingSetMap[fieldName]);
+
+            string npvCcy = timpl->trade()->npvCurrency();
+            Real npvFxRate = npvCcy.empty() ? Null<Real>() : tradeData->getFxRate(npvCcy + tradeData->baseCurrency());
+            Real npvBase = timpl->NPV() * npvFxRate;
+
+            report.add(npvBase)
+                .add(ore::data::to_string(c.underlyingData.saccrAssetClass))
+                .add(c.hedgingData.hedgingSet);
+
+            Real adjNotional = c.adjustedNotional;
+            Real notionalFxRate =
+                c.currency.empty() ? Null<Real>() : tradeData->getFxRate(c.currency + tradeData->baseCurrency());
+
+            report.add(c.hedgingData.hedgingSubset.value_or(""))
+                .add(c.bucket)
+                .add(c.underlyingData.qualifier)
+                .add(tradeData->baseCurrency())
+                .add(c.delta)
+                .add(adjNotional * notionalFxRate)
+                .add(c.maturityFactor)
+                .add(c.maturity)
+                .add(c.startDate.value_or(Null<Real>()))
+                .add(c.endDate.value_or(Null<Real>()))
+                .add(c.lastExerciseDate.value_or(Null<Real>()))
+                .add(timpl->getSupervisoryDuration(c.underlyingData.saccrAssetClass, c.startDate, c.endDate)
+                         .value_or(Null<Real>()));
+            Real currentPrice = c.currentPrice.value_or(Null<Real>());
+            if (currentPrice != Null<Real>())
+                currentPrice *= notionalFxRate;
+            report.add(currentPrice)
+                .add(timpl->getNominalFlowCount().value_or(Null<Size>()))
+                .add(c.optionDeltaPrice.value_or(Null<Real>()))
+                .add(c.strike.value_or(Null<Real>()))
+                .add(timpl->getSupervisoryOptionVolatility(c.underlyingData));
+            // auto tradeDates = timpl->getDates();
+            // report.add(tradeDates.M)
+            //     .add(tradeDates.S.value_or(Null<Real>()))
+            //     .add(tradeDates.E.value_or(Null<Real>()))
+            //     .add(c.lastExerciseDate.value_or(Null<Real>()))
+            //     .add(timpl->getSupervisoryDuration(c.underlyingData.saccrAssetClass, c.startDate, c.endDate)
+            //              .value_or(Null<Real>()));
+
+            // Real currentPrice = c.currentPrice.value_or(Null<Real>());
+            // if (currentPrice != Null<Real>())
+            //     currentPrice *= notionalFxRate;
+            // report.add(currentPrice)
+            //     .add(timpl->getNominalFlowCount().value_or(Null<Size>()))
+            //     .add(c.optionDeltaPrice.value_or(Null<Real>()))
+            //    .add(c.strike.value_or(Null<Real>()))
+            //    .add(timpl->getSupervisoryOptionVolatility(c));
+        }
+        // report.next().add(tid).add(timpl->trade()->tradeType());
+
+        // map<string, string> nettingSetMap = timpl->nettingSetDetails().mapRepresentation();
+        // for (const auto& fieldName : NettingSetDetails::fieldNames(hasNettingSetDetails))
+        //     report.add(nettingSetMap[fieldName]);
+
+        // report.add(ore::data::to_string(timpl->getAssetClass())).add(timpl->getHedgingSet());
+
+        // auto adjNotional = timpl->getAdjustedNotional();
+        // Real notionalFxRate = adjNotional.currency.empty()
+        //                           ? Null<Real>()
+        //                           : tradeData->getFxRate(adjNotional.currency + tradeData->baseCurrency());
+        // string npvCcy = timpl->trade()->npvCurrency();
+        // Real npvFxRate = npvCcy.empty() ? Null<Real>() : tradeData->getFxRate(npvCcy + tradeData->baseCurrency());
+        // Real npvBase = timpl->NPV() * npvFxRate;
+        //
+        // SaccrTradeData::Delta delta = timpl->getDelta();
+        // report.add(timpl->getHedgingSubset().value_or(""))
+        //     .add(npvBase)
+        //     .add(tradeData->baseCurrency())
+        //     .add(timpl->getSupervisoryDuration().value_or(Null<Real>()))
+        //     .add(delta.delta)
+        //     .add(adjNotional.notional * notionalFxRate)
+        //     .add(timpl->getMaturityFactor());
+        //
+        // auto tradeDates = timpl->getDates();
+        // report.add(tradeDates.M)
+        //     .add(tradeDates.S.value_or(Null<Real>()))
+        //     .add(tradeDates.E.value_or(Null<Real>()))
+        //     .add(delta.exerciseDate.value_or(Null<Real>()));
+
+        // Real currentPrice1 = adjNotional.currentPrice1.value_or(Null<Real>());
+        // if (currentPrice1 != Null<Real>())
+        //     currentPrice1 *= notionalFxRate;
+        // Real currentPrice2 = adjNotional.currentPrice2.value_or(Null<Real>());
+        // if (currentPrice2 != Null<Real>())
+        //     currentPrice2 *= notionalFxRate;
+        // report.add(currentPrice1)
+        //     .add(currentPrice2)
+        //     .add(timpl->getNominalFlowCount().value_or(Null<Size>()))
+        //     .add(delta.price.value_or(Null<Real>()))
+        //     .add(delta.strike.value_or(Null<Real>()))
+        //     .add(delta.volatility.value_or(Null<Real>()));
+    }
+    report.end();
+    LOG("Finished writing SA-CCR trade detail report");
+}
+
+void ReportWriter::writeCapitalCrifReport(ore::data::Report& report,
+                                              const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
+                                              const std::string& baseCurrency, const char& csvQuoteChar) const {
+    bool hasNettingSetDetails = crif ? crif->hasNettingSetDetails() : false;
+
+    // Add report headers
+    report.addColumn("TradeID", string())
+        .addColumn("PortfolioID", string())
+        .addColumn("CounterpartyName", string())
+        .addColumn("CounterpartyID", string())
+        .addColumn("NettingSetNumber", string())
+        .addColumn("RiskType", string())
+        .addColumn("HedgingSet", string())
+        .addColumn("Qualifier", string())
+        .addColumn("Bucket", string())
+        .addColumn("Label1", string())
+        .addColumn("Label2", string())
+        .addColumn("AmountCurrency", string())
+        .addColumn("Amount", double(), 2)
+        .addColumn("AmountUSD", double(), 2)
+        .addColumn("ValuationDate", Date())
+        .addColumn("EndDate", double(), 3)
+        .addColumn("Label3", double(), 5)
+        .addColumn("Regulation", string())
+        .addColumn("Model", string())
+        .addColumn("TradeType", string());
+    if (hasNettingSetDetails) {
+        for (const string& optionalField : NettingSetDetails::optionalFieldNames())
+            report.addColumn(optionalField, string());
+    }
+
+    // Write CRIF records
+    if (crif) {
+        for (const auto& srecord : *crif) {
+            auto crifRecord = srecord.toCrifRecord();
+            DLOG("Writing CRIF record to report: " << crifRecord);
+
+            report.next()
+                .add(crifRecord.tradeId)
+                .add(crifRecord.nettingSetDetails.nettingSetId())
+                .add(crifRecord.counterpartyName)
+                .add(crifRecord.counterpartyId)
+                .add(crifRecord.nettingSetNumber)
+                .add(ore::data::to_string(crifRecord.riskType))
+                .add(crifRecord.hedgingSet)
+                .add(crifRecord.qualifier)
+                .add(crifRecord.bucket);
+
+            string labelStr;
+            // Label 1 (SA-CCR)
+            if (crifRecord.saccrLabel1.which() == 0) {
+                Real value = boost::get<Real>(crifRecord.saccrLabel1);
+                labelStr = value == Null<Real>() ? nullString_ : ore::data::to_string(value);
+            } else if (crifRecord.saccrLabel1.which() == 1) {
+                labelStr = boost::get<string>(crifRecord.saccrLabel1);
+            } else if (crifRecord.saccrLabel1.which() == 2) {
+                Size value = boost::get<Size>(crifRecord.saccrLabel1);
+                labelStr = value == Null<Size>() ? nullString_ : ore::data::to_string(value);
+            } else {
+                QL_FAIL("Unexpected type (" << crifRecord.saccrLabel1.which() << ") for CrifRecord SA-CCR label1");
+            }
+            report.add(labelStr);
+
+            // Label 2 (SA-CCR)
+            if (crifRecord.saccrLabel2.which() == 0) {
+                Real value = boost::get<Real>(crifRecord.saccrLabel2);
+                labelStr = value == Null<Real>() ? nullString_ : ore::data::to_string(value);
+            } else if (crifRecord.saccrLabel2.which() == 1) {
+                labelStr = boost::get<string>(crifRecord.saccrLabel2);
+            } else {
+                QL_FAIL("Unexpected type (" << crifRecord.saccrLabel2.which() << ") for CrifRecord SA-CCR label2");
+            }
+            report.add(labelStr);
+
+            report.add(crifRecord.amountCurrency)
+                .add(crifRecord.amount)
+                .add(crifRecord.amountUsd)
+                .add(crifRecord.valuationDate)
+                .add(crifRecord.saccrEndDate)
+                .add(crifRecord.saccrLabel3)
+                .add(ore::data::to_string(crifRecord.regulation))
+                .add(ore::data::to_string(crifRecord.capitalModel))
+                .add(crifRecord.tradeType);
+
+            if (hasNettingSetDetails) {
+                map<string, string> crNettingSetDetailsMap =
+                    NettingSetDetails(crifRecord.nettingSetDetails).mapRepresentation();
+                for (const string& optionalField : NettingSetDetails::optionalFieldNames())
+                    report.add(crNettingSetDetailsMap[optionalField]);
+            }
+        }
+    }
+
+    report.end();
+}
+  
+
+void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
+                             const Size& principalComponent, ore::data::Report& reportOut){
+    QL_REQUIRE((eigenValue.size() == eigenVector.columns() && eigenVector.rows() == eigenVector.columns()),
+                "EigenVector and EigenValue size not match.");
+    reportOut.addColumn("PrincipalComponent", Size())
+        .addColumn("EigenValue", double(), 15);
+    for (Size i = 0; i < eigenValue.size(); ++i) {
+        reportOut.addColumn("EigenVector_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < principalComponent; ++i) {
+        reportOut.next().add(i).add(eigenValue[i]);
+        for (Size j = 0; j < eigenValue.size(); ++j) {
+            reportOut.add(eigenVector[j][i]);
+        }
+    }
+    reportOut.end();
+}
+
+void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut) {
+    QL_REQUIRE(v.rows() == kappa.rows(), "v and kappa must have same rows.");
+    reportOut.addColumn("PrincipalComponent", Size());
+    for (Size i = 0; i < v.columns(); ++i) {
+        reportOut.addColumn("v_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < kappa.columns(); ++i) {
+        reportOut.addColumn("kappa_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < v.rows(); ++i) {
+        reportOut.next().add(i);
+        for (Size j = 0; j < v.columns(); ++j) {
+            reportOut.add(v[i][j]);
+        }
+        for (Size j = 0; j < kappa.columns(); ++j) {
+            reportOut.add(kappa[i][j]);
+        }
+    }
     reportOut.end();
 }
   

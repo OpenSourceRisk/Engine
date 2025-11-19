@@ -1,7 +1,7 @@
 {
   "csv_settings": {
     "files": {
-      "im_schedule.csv": {
+      "im_schedule\\.csv": {
         "keys": [
           "Portfolio",
           "ProductClass",
@@ -22,7 +22,7 @@
           }
         ]
       },
-      "im_schedule_trade.csv": {
+      "im_schedule_trade\\.csv": {
         "keys": [
           "TradeId",
           "Portfolio",
@@ -90,7 +90,7 @@
           }
         ]
       },
-      "smrcdetail.csv": {
+      "smrcdetail\\.csv": {
         "keys": [
           "TradeId"
         ],
@@ -111,7 +111,7 @@
           }
         ]
       },
-      "smrc.csv": {
+      "smrc\\.csv": {
         "keys": [
           "TradeType",
           "Asset"
@@ -128,7 +128,7 @@
           }
         ]
       },
-      "simm_sensitivity_config.csv": {
+      "simm_sensitivity_config\\.csv": {
         "keys": [
           "Key"
         ],
@@ -138,7 +138,7 @@
               "BaseValue",
               "ShiftSize"
             ],
-            "abs_tol": 1E-7,
+            "abs_tol": 1e-07,
             "rel_tol": 1e-12
           }
         ]
@@ -153,25 +153,25 @@
           "ShiftSize_2",
           "Currency"
         ],
-		"use_cols": [
+        "use_cols": [
           "Base NPV",
           "Delta",
           "Gamma"
         ],
-		"optional_cols": [
-            "Currency(Trade)",
-            "Base NPV(Trade)",
-            "Delta(Trade)",
-            "Gamma(Trade)"
+        "optional_cols": [
+          "Currency(Trade)",
+          "Base NPV(Trade)",
+          "Delta(Trade)",
+          "Gamma(Trade)"
         ],
-		"require_equal_optional_cols": false,
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-			  "Base NPV(Trade)",
-			  "Delta(Trade)"
+              "Base NPV(Trade)",
+              "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -222,20 +222,20 @@
           "Delta",
           "Gamma"
         ],
-		"optional_cols": [
-            "Currency(Trade)",
-            "Base NPV(Trade)",
-            "Delta(Trade)",
-            "Gamma(Trade)"
+        "optional_cols": [
+          "Currency(Trade)",
+          "Base NPV(Trade)",
+          "Delta(Trade)",
+          "Gamma(Trade)"
         ],
-		"require_equal_optional_cols": false,
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-			  "Base NPV(Trade)",
-			  "Delta(Trade)"
+              "Base NPV(Trade)",
+              "Delta(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -361,14 +361,22 @@
           "TradeType",
           "NettingSet",
           "AssetClass",
-          "HedgingSet"
+          "HedgingSet",
+          "HedgingSubset"
+        ],
+        "optional_keys": [
+          "AgreementType",
+          "CallType",
+          "InitialMarginType",
+          "LegalEntityId"
         ],
         "column_settings": [
           {
             "names": [
               "NPV",
-              "NpvCcy",
-              "SD",
+              "Bucket",
+              "Qualifier",
+              "Currency",
               "delta",
               "d",
               "MF",
@@ -376,18 +384,56 @@
               "S",
               "E",
               "T",
-              "CurrentPrice1",
-              "CurrentPrice2",
+              "SD",
+              "CurrentPrice",
               "NumNominalFlows",
               "Price",
-              "Strike"
+              "Strike",
+              "Volatility"
             ],
             "abs_tol": 0.05,
             "rel_tol": null
           }
         ]
       },
-      "crifPlus.csv": {
+      "capital_crif\\.csv": {
+        "keys": [
+          "TradeID",
+          "PortfolioID",
+          "CounterpartyName",
+          "CounterpartyID",
+          "NettingSetNumber",
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2",
+          "AmountCurrency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": null
+          },
+          {
+            "names": [
+              "ValuationDate",
+              "EndDate",
+              "Label3",
+              "Regulation",
+              "Model",
+              "TradeType"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      "crifPlus\\.csv": {
         "keys": [
           "TradeID",
           "PortfolioID",
@@ -410,7 +456,7 @@
           }
         ]
       },
-      "frtbcrif.csv": {
+      "frtbcrif\\.csv": {
         "keys": [
           "RiskType",
           "Qualifier",
@@ -429,7 +475,7 @@
           }
         ]
       },
-      ".*crif.csv": {
+      ".*crif\\.csv": {
         "keys": [
           "TradeID",
           "PortfolioID",
@@ -511,7 +557,7 @@
           }
         ]
       },
-      "frtb.csv": {
+      "frtb\\.csv": {
         "keys": [
           "CorrelationScenario",
           "CapitalRequirement",
@@ -528,7 +574,7 @@
           }
         ]
       },
-      "frtb_rrao.csv": {
+      "frtb_rrao\\.csv": {
         "keys": [
           "CorrelationScenario",
           "CapitalRequirement",
@@ -545,7 +591,7 @@
           }
         ]
       },
-      "frtb_drc.csv": {
+      "frtb_drc\\.csv": {
         "keys": [
           "CorrelationScenario",
           "CapitalRequirement",
@@ -637,10 +683,10 @@
           "SIMMCalculationCurrency"
         ],
         "optional_cols": [
-            "ExceptionsDecorrelated",
-            "GreenUpToDecorrelated",
-            "AmberUpToDecorrelated",
-            "ZoneDecorrelated"
+          "ExceptionsDecorrelated",
+          "GreenUpToDecorrelated",
+          "AmberUpToDecorrelated",
+          "ZoneDecorrelated"
         ],
         "require_equal_optional_cols": false,
         "column_settings": [
@@ -1020,8 +1066,8 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1036,8 +1082,8 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1051,8 +1097,8 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1066,12 +1112,12 @@
               "BaseParRate",
               "ScenarioParRate"
             ],
-            "abs_tol": 1e-04,
-            "rel_tol": 1e-8
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-08
           }
         ]
       },
-      "stress_scenarios.csv": {
+      "stress_scenarios\\.csv": {
         "keys": [
           "Date",
           "Scenario"
@@ -1084,8 +1130,8 @@
             "names": [
               "Numeraire"
             ],
-            "abs_tol": 0.000001,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
           }
         ]
       },
@@ -1102,8 +1148,39 @@
             "names": [
               "Numeraire"
             ],
-            "abs_tol": 0.000001,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
+          }
+        ]
+      },
+      "xvacg-cva-sensi-scenario\\.csv": {
+        "keys": [
+          "TradeId",
+          "Factor",
+          "Up/Down"
+        ],
+        "use_cols": [
+          "Base NPV",
+          "ShiftSize_1",
+          "Scenario NPV",
+          "Difference"
+        ],
+        "drop_rows": {
+          "cols": [
+            "Difference"
+          ],
+          "threshold": 0.0
+        },
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "ShiftSize_1",
+              "Scenario NPV",
+              "Difference"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": 0.0001
           }
         ]
       },
@@ -1133,7 +1210,7 @@
               "ShiftSize_2"
             ],
             "abs_tol": 0.03,
-            "rel_tol": 1e-9
+            "rel_tol": 1e-09
           }
         ]
       },
@@ -1153,46 +1230,22 @@
           }
         ]
       },
-      "xvacg-exposure.csv": {
+      "xvacg-exposure\\.csv": {
         "keys": [
-            "Date"
+          "Date"
         ],
         "use_cols": [
-	    "EPE",
-	    "ENE"
+          "EPE",
+          "ENE"
         ],
         "column_settings": [
           {
             "names": [
-		"EPE",
-		"ENE"
+              "EPE",
+              "ENE"
             ],
             "abs_tol": 0.01,
-            "rel_tol": 1e-6
-          }
-        ]
-      },
-      "xvacg-cva-sensi-scenario.csv": {
-        "keys": [
-            "TradeId",
-	    "Factor",
-	    "Upd/Down"
-        ],
-        "use_cols": [
-	    "Base NPV",
-	    "ShiftSize_1",
-	    "Scenario NPV"
-        ],
-        "column_settings": [
-          {
-            "names": [
-		"Base NPV",
-		"ShiftSize_1",
-		"Scenario NPV",
-		"Difference"
-            ],
-            "abs_tol": 0.05,
-            "rel_tol": 1e-4
+            "rel_tol": 1e-06
           }
         ]
       },
@@ -1252,34 +1305,34 @@
           "ShiftSize_2",
           "Currency"
         ],
-		"use_cols": [
+        "use_cols": [
           "Base NPV",
           "Delta",
           "Gamma"
         ],
-		"optional_cols": [
-            "Currency(Trade)",
-            "Base NPV(Trade)",
-            "Delta(Trade)",
-            "Gamma(Trade)"
+        "optional_cols": [
+          "Currency(Trade)",
+          "Base NPV(Trade)",
+          "Delta(Trade)",
+          "Gamma(Trade)"
         ],
-		"require_equal_optional_cols": false,
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Delta",
-			  "Gamma",
-			  "Base NPV(Trade)",
-			  "Delta(Trade)",
-			  "Gamma(Trade)"
+              "Gamma",
+              "Base NPV(Trade)",
+              "Delta(Trade)",
+              "Gamma(Trade)"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
       },
-      ".*todaysmarketcalibration.*\\.csv": {
+      "marketcalibration\\.csv|todaysmarketcalibration\\.csv": {
         "keys": [
           "MarketObjectType",
           "MarketObjectId",
@@ -1302,7 +1355,7 @@
           }
         ]
       },
-      "flownpv.csv": {
+      "flownpv\\.csv": {
         "keys": [
           "TradeId"
         ],
@@ -1327,21 +1380,6 @@
               "NPV(Base)"
             ],
             "abs_tol": 1e-06,
-            "rel_tol": 1e-12
-          }
-        ]
-      },
-      ".*npv.*\\.json": {
-        "keys": [
-          "tradeId"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "npv",
-              "npvBase"
-            ],
-            "abs_tol": null,
             "rel_tol": 1e-12
           }
         ]
@@ -1474,6 +1512,53 @@
           }
         ]
       },
+      "(todaysmarketcalibration_cashflows|marketcalibration_cashflows)\\.csv": {
+        "keys": [
+          "MarketObjectType",
+          "MarketObjectId",
+          "PillarDate",
+          "MdLabel",
+          "CashflowNo",
+          "LegNo"
+        ],
+        "use_cols": [
+          "Amount",
+          "Coupon",
+          "fixingValue",
+          "PayDate",
+          "FlowType",
+          "Currency",
+          "AccrualStartDate",
+          "AccrualEndDate",
+          "AccruedAmount",
+          "fixingDate",
+          "Notional"
+        ],
+        "optional_cols": [
+          "PresentValue",
+          "DiscountFactor",
+          "fxRateBase",
+          "BaseCurrency",
+          "PresentValueBase"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "Coupon",
+              "fixingValue",
+              "AccruedAmount",
+              "Notional",
+              "PresentValue",
+              "DiscountFactor",
+              "fxRateBase",
+              "PresentValueBase"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 1e-08
+          }
+        ]
+      },
       ".*(flow|flows|cashflow).*\\.csv": {
         "keys": [
           "TradeId",
@@ -1532,7 +1617,7 @@
           }
         ]
       },
-      "xvacg-exposure.csv": {
+      "xvacg-exposure\\.csv": {
         "keys": [
           "Date"
         ],
@@ -1547,7 +1632,7 @@
           }
         ]
       },
-      "xvaExplain.csv": {
+      "xvaExplain\\.csv": {
         "keys": [
           "RiskFactor",
           "TradeId",
@@ -1565,7 +1650,7 @@
           }
         ]
       },
-      "xvaExplain_details.csv": {
+      "xvaExplain_details\\.csv": {
         "keys": [
           "Scenario",
           "TradeId",
@@ -1581,7 +1666,18 @@
               "FBAexOwnSP",
               "FCAexOwnSP",
               "FBAexAllSP",
-              "FCAexAllSP"
+              "FCAexAllSP",
+              "COLVA",
+              "MVA",
+              "OurKVACCR",
+              "TheirKVACCR",
+              "OurKVACVA",
+              "TheirKVACVA",
+              "CollateralFloor",
+              "AllocatedCVA",
+              "AllocatedDVA",
+              "BaselEPE",
+              "BaselEEPE"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -1756,7 +1852,7 @@
           }
         ]
       },
-      "timeaveragedexposure.csv": {
+      "timeaveragedexposure\\.csv": {
         "keys": [
           "NettingSetId",
           "Sample"
@@ -1774,7 +1870,7 @@
           }
         ]
       },
-      "criftotrade_trade_summary.csv": {
+      "criftotrade_trade_summary\\.csv": {
         "keys": [
           "trade_id",
           "trade_type",
@@ -1796,7 +1892,7 @@
           }
         ]
       },
-      "dividends.csv": {
+      "dividends\\.csv": {
         "keys": [
           "dividendExDate",
           "equityId"
@@ -1827,7 +1923,7 @@
           }
         ]
       },
-      "pnl.csv": {
+      "pnl\\.csv": {
         "keys": [
           "TradeId"
         ],
@@ -1848,12 +1944,12 @@
               "CleanPnL",
               "DirtyPnL"
             ],
-            "abs_tol": 1e-03,
+            "abs_tol": 0.001,
             "rel_tol": 1e-12
           }
         ]
       },
-      "pnl_explain.csv": {
+      "pnl_explain\\.csv": {
         "keys": [
           "TradeId"
         ],
@@ -1901,7 +1997,7 @@
           }
         ]
       },
-      "parshifts.csv": {
+      "parshifts\\.csv": {
         "keys": [
           "ScenarioLabel",
           "ParKey"
@@ -1916,7 +2012,7 @@
           }
         ]
       },
-      "historical_PnL.csv": {
+      "historical_PnL\\.csv": {
         "keys": [
           "Portfolio",
           "RiskClass",
@@ -1927,14 +2023,14 @@
         "column_settings": [
           {
             "names": [
-			  "PLAmount"
+              "PLAmount"
             ],
             "abs_tol": 1e-05,
             "rel_tol": 1e-05
           }
         ]
       },
-      "eigenvalues.csv": {
+      "eigenvalues\\.csv": {
         "keys": [
           "number"
         ],
@@ -1943,33 +2039,201 @@
             "names": [
               "value"
             ],
-            "abs_tol": 1e-8,
-            "rel_tol": 1e-4
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
           }
         ]
       },
-      "eigenvectors.csv": {
+      "eigenvectors\\.csv": {
         "keys": [
           "tenor"
         ],
         "column_settings": [
           {
             "names": [
-		"eigenvector_1",
-		"eigenvector_2",
-		"eigenvector_3",
-		"eigenvector_4",
-		"eigenvector_5",
-		"eigenvector_6",
-		"eigenvector_7",
-		"eigenvector_8"
+              "eigenvector_1",
+              "eigenvector_2",
+              "eigenvector_3",
+              "eigenvector_4",
+              "eigenvector_5",
+              "eigenvector_6",
+              "eigenvector_7",
+              "eigenvector_8"
             ],
-            "abs_tol": 1e-8,
-            "rel_tol": 1e-4
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
           }
         ]
       },
-      "sacva_sensitivities.csv": {
+      "pca_EUR-EURIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EigenValue",
+              "EigenVector_0",
+              "EigenVector_1",
+              "EigenVector_2",
+              "EigenVector_3",
+              "EigenVector_4",
+              "EigenVector_5",
+              "EigenVector_6",
+              "EigenVector_7"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "pca_GBP-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EigenValue",
+              "EigenVector_0",
+              "EigenVector_1",
+              "EigenVector_2",
+              "EigenVector_3",
+              "EigenVector_4",
+              "EigenVector_5",
+              "EigenVector_6",
+              "EigenVector_7"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "pca_USD-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EigenValue",
+              "EigenVector_0",
+              "EigenVector_1",
+              "EigenVector_2",
+              "EigenVector_3",
+              "EigenVector_4",
+              "EigenVector_5",
+              "EigenVector_6",
+              "EigenVector_7"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_EUR-EURIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_GBP-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_USD-LIBOR-3M.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_EUR.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_GBP.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "meanReversion_USD.csv": {
+        "keys": [
+          "PrincipalComponent"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "v_0",
+              "v_1",
+              "kappa_0",
+              "kappa_1"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 0.0001
+          }
+        ]
+      },
+      "sacva_sensitivities\\.csv": {
         "keys": [
           "NettingSet",
           "RiskType",
@@ -1983,8 +2247,8 @@
             "names": [
               "Value"
             ],
-            "abs_tol": 1e-03,
-            "rel_tol": 1e-04
+            "abs_tol": 0.001,
+            "rel_tol": 0.0001
           }
         ]
       }
@@ -1992,6 +2256,21 @@
   },
   "json_settings": {
     "files": {
+      ".*npv.*\\.json": {
+        "keys": [
+          "tradeId"
+        ],
+        "settings": [
+          {
+            "names": [
+              "npv",
+              "npvBase"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "log_progress.*\\.json": {
         "ignore_keys": [
           "@timestamp"

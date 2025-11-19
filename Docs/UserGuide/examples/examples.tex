@@ -1044,6 +1044,7 @@ The examples can be run individually (see below) or all together with {\tt pytho
 \begin{itemize}
 \item Swap with flat yield curve: {\tt python run\_swapflat.py}
 \item Swap with normal yield curves: {\tt python run\_swap.py}
+\item Swap with normal yield curves in HW2F: {\tt python run\_swap\_hw2f.py}
 \item FRA: {\tt python run\_fra.py}
 \item European/American/Bermudan Swation and CallableSwap: {\tt python run\_swaption.py}
 \item Caps/Floors: {\tt python run\_capfloor.py}
@@ -1065,9 +1066,14 @@ Further exposure simulation features:
 \begin{itemize}
 \item Long-term simulation with and without horizon shift in the Linear Gauss Markov model: {\tt python run\_longterm.py}
 \item Simulation in different measures: {\tt python run\_measures.py}
-\item Simulation in the two-factor Hull-White model: {\tt python run\_hw2f.py}
+\item Simulation in the two-factor Hull-White model, calibrated to historical and risk neutral volatilities: {\tt python run\_hw2f.py}
 \item Wrong-Way-Risk: {\tt python run\_wwr.py}
 \item Flip View, switch perspectives easily for XVA: {\tt python run\_flipview.py}
+\end{itemize}
+
+Parameter calibration for exposure simulation model:
+\begin{itemize}
+\item HW n-factor historical calibration: {\tt python run\_hwhistoricalcalibration.py}
 \end{itemize}
 
 All cases are discussed in the following subsections.
@@ -1155,6 +1161,8 @@ only and moves (on average) out of the money during its life. Similarly, the Swa
 counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's
 perspective (ENE) 'detach' here, while both can still be be reconciled with payer or respectively receiver Swaption
 prices.
+
+% TODO add description for 2F simulation
 
 \subsubsection{Forward Rate Agreement}\label{example:exposure_fra}
 
@@ -1754,6 +1762,8 @@ Each of the two factors of each HW model is correlated with each of the two fact
 with the FX factors. Remember that the factors represent principal components of interest rate movements and so the
 correlations can be interpreted as correlations of these principal components with each other and the fx rate processes.
 
+% TODO add description for risk neutral calibration
+
 \subsubsection{Wrong-Way-Risk}\label{example:exposure_wwr}
 
 Calling
@@ -1799,6 +1809,30 @@ Calling
 
 demonstrates how ORE can be used to quickly switch perspectives in XVA calculations with minimal changes in the {\tt ore.xml}
 file only. In particular it avoids manipulating the portfolio input or the netting set.
+
+\subsubsection{HW n-Factor Historical Calibration}\label{example:exposure_hwhistoricalcalibration}
+
+Calling
+
+\medskip
+\centerline{\tt python run\_hwhistoricalcalibration.py } 
+\medskip
+
+demonstrates how ORE provides functionality to calibrate the mean reversion speed($\kappa$) and volatility($\sigma$) parameters for the Hull-White $n$-factor model using historical market data. Two approaches are available:
+
+\begin{enumerate}
+    \item Full Calibration Using Historical Data
+    \begin{itemize}
+        \item ORE performs Principal Component Analysis (PCA) on historical interest rate curves and FX spot data.
+        \item Based on PCA results, ORE will use eigenvalues and eigenvectors to calibrate constant parameters for the HW $n$-factor model, including $\kappa$ and $\sigma$.
+    \end{itemize}
+
+    \item Mean Reversion Calibration Only
+    \begin{itemize}
+        \item Users can provide their own eigenvalues and eigenvectors for each curve.
+        \item ORE will then perform mean reversion calibration using these inputs without recalculating PCA.
+    \end{itemize}
+\end{enumerate}
 
 
 \subsection{Netting Set Exposure and Collateral}\label{example:exposurewithcollateral}

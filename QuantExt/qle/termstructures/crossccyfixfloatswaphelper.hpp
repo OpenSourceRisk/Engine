@@ -38,19 +38,25 @@ namespace QuantExt {
 */
 class CrossCcyFixFloatSwapHelper : public RelativeDateRateHelper {
 public:
-    CrossCcyFixFloatSwapHelper(
-        const QuantLib::Handle<QuantLib::Quote>& rate, const QuantLib::Handle<QuantLib::Quote>& spotFx,
-        QuantLib::Natural settlementDays, const QuantLib::Calendar& paymentCalendar,
-        QuantLib::BusinessDayConvention paymentConvention, const QuantLib::Period& tenor,
-        const QuantLib::Currency& fixedCurrency, QuantLib::Frequency fixedFrequency,
-        QuantLib::BusinessDayConvention fixedConvention, const QuantLib::DayCounter& fixedDayCount,
-        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
-        const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false, const bool telescopicValueDates_ = false,
-        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
-        boost::optional<bool> includeSpread = boost::none, boost::optional<Period> lookback = boost::none,
-        boost::optional<Size> fixingDays = boost::none, boost::optional<Size> rateCutoff = boost::none,
-        boost::optional<bool> isAveraged = boost::none);
+    CrossCcyFixFloatSwapHelper(const QuantLib::Handle<QuantLib::Quote>& rate,
+                               const QuantLib::Handle<QuantLib::Quote>& spotFx, QuantLib::Natural settlementDays,
+                               const QuantLib::Calendar& paymentCalendar,
+                               QuantLib::BusinessDayConvention paymentConvention, const QuantLib::Period& tenor,
+                               const QuantLib::Currency& fixedCurrency, QuantLib::Frequency fixedFrequency,
+                               QuantLib::BusinessDayConvention fixedConvention,
+                               const QuantLib::DayCounter& fixedDayCount,
+                               const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+                               const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
+                               const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false,
+                               const bool telescopicValueDates_ = false,
+                               const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                               const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
+                               const std::vector<Calendar>& spotFXSettleCalendar = std::vector<Calendar>(),
+                               QuantLib::ext::optional<bool> includeSpread = QuantLib::ext::nullopt,
+                               QuantLib::ext::optional<Period> lookback = QuantLib::ext::nullopt,
+                               QuantLib::ext::optional<Size> fixingDays = QuantLib::ext::nullopt,
+                               QuantLib::ext::optional<Size> rateCutoff = QuantLib::ext::nullopt,
+                               QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt);
 
     //! \name Observer interface
     //@{
@@ -94,11 +100,13 @@ private:
     bool endOfMonth_;
     bool telescopicValueDates_;
     QuantLib::Pillar::Choice pillarChoice_;
-    boost::optional<bool> includeSpread_;
-    boost::optional<Period> lookback_;
-    boost::optional<Size> fixingDays_;
-    boost::optional<Size> rateCutoff_;
-    boost::optional<bool> isAveraged_;
+    std::vector<Natural> spotFXSettleDaysVec_;
+    std::vector<Calendar> spotFXSettleCalendarVec_;
+    QuantLib::ext::optional<bool> includeSpread_;
+    QuantLib::ext::optional<Period> lookback_;
+    QuantLib::ext::optional<Size> fixingDays_;
+    QuantLib::ext::optional<Size> rateCutoff_;
+    QuantLib::ext::optional<bool> isAveraged_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap_;
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;

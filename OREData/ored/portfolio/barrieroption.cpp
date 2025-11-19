@@ -56,7 +56,7 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // get the expiry date
     Date expiryDate = parseDate(option_.exerciseDates().front());
     Date payDate = expiryDate;
-    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
     if (opd) {
         if (opd->rulesBased()) {
             Calendar payCalendar = opd->calendar();
@@ -102,7 +102,7 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     if (payDate > expiryDate) {
         // Has the option been marked as exercised
-        const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+        const QuantLib::ext::optional<OptionExerciseData>& oed = option_.exerciseData();
         if (oed) {
             QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
                                                       << io::iso_date(oed->date())
@@ -317,6 +317,11 @@ void EquityOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::E
     eqIndex_ = ef->market()->equityCurve(equityName()).currentLink();
 
     BarrierOption::build(ef);
+}
+
+map<AssetClass, set<string>> EquityOptionWithBarrier::underlyingIndices(
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::EQ, set<string>({equityName()})}};
 }
 
 void EquityOptionWithBarrier::additionalFromXml(XMLNode* node) {

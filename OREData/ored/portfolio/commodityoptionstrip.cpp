@@ -384,7 +384,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
         vector<string> strExerciseDate = {to_string(exerciseDate)};
 
         // If cash settlement and European, create the OptionPaymentData for the OptionData block below.
-        boost::optional<OptionPaymentData> paymentData = boost::none;
+        QuantLib::ext::optional<OptionPaymentData> paymentData = QuantLib::ext::nullopt;
         if (settlement == "Cash" && style == "European") {
 
             Date paymentDate = cf->date();
@@ -431,7 +431,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
 
             OptionData optionData(to_string(tempDatum.position), tempDatum.type, style, false, strExerciseDate,
                                   settlement, "", PremiumData(), {}, {}, "", "", "", {}, {}, "", "", "", "", "",
-                                  automaticExercise, boost::none, paymentData);
+                                  automaticExercise, QuantLib::ext::nullopt, paymentData);
 
 
             QuantLib::ext::shared_ptr<Trade> commOption;
