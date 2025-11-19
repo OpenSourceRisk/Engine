@@ -1,13 +1,14 @@
 \subsubsection{Extended Accumulator}
 \label{pricing:extended_accumulator}
  
-An Extended Accumulator is an exchange of notionals at multiple times in the future. We buy B and sell A. 
+An ExtendedAccumulator requires the party that is long to periodically buy an underlying asset A (FX, Equity, or Commodity) at a pre-determined strike price K.
+A feature of the ExtendedAccumulator is knock-out, i.e. the contract terminates early if a Barrier observed on a single date (the Extension Decision Date) is hit.
 $$
-\NPV= \sum LongShort \cdot N \cdot (K - X_A(T))
+\NPV= \sum LongShort \cdot FixingAmount \cdot (K - X_A(T))
 $$
 Where:
 \begin{itemize}
-\item $N$: the notional amount in currency/unit of A
+\item $FixingAmount$: the fixing amount in currency/unit of A
 \item $K$: the strike rate
-\item $X_A(T)$: the exchanged element - a rate or unit
+\item $X_A(T)$: the fixing of the price of A at each observation date T
 \end{itemize}
