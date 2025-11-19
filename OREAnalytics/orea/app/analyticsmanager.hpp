@@ -54,6 +54,8 @@ public:
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() { return inputs_; }
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     void runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
+    void
+    runAnalytics(const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& marketCalibrationReport);
     void addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic);
 
     std::vector<std::string> failedAnalytics() { return failedAnalytics_; }

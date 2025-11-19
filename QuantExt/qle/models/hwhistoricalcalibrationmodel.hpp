@@ -4,13 +4,12 @@
 */
 
 /*!
-  \file orea/app/calibrateparameter.hpp
-  \calibrate parameter (sigma) for PFE model
+  \file qle/models/hwhistoricalcalibrationmodel.hpp
+  \calibrate parameter (kappa, sigma) for HW n-factor model
  */
 
 #pragma once
 
-#include <ql/currency.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/time/date.hpp>
 
