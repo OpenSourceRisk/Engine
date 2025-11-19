@@ -651,6 +651,8 @@ The meanings and allowable values for the \lstinline!CorridorVarianceSwapData! n
 
 \subsubsection{Indexed Corridor Variance Swap}
 
+Also called Cross Corridor Variance Swap. The payoff depends on the variance of one equity index (the Underlying) for the days another 
+equity index (the CorridorIndex) is within a corridor.  
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -1431,7 +1433,10 @@ Listing \ref{lst:eqpairwisevarianceswap_data} shows the structure of example tra
 The payout formula is:
 
 \begin{equation*}
-  Payout = \min \Big( \max(equityAmount1 + equityAmount2 + equityAmountBasket, LowerLimit), UpperLimit \Big)
+\begin{split}
+Payout = \min \Big\{ \max \big( & equityAmount1 + equityAmount2 \\
+& + equityAmountBasket,\; \text{LowerLimit} \big),\; \text{UpperLimit} \Big\}
+\end{split}
 \end{equation*}
 
 where
