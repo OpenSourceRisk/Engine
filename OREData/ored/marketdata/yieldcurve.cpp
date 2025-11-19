@@ -77,6 +77,7 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -1007,15 +1008,43 @@ void YieldCurve::buildZeroCurve(const std::size_t index) {
         QuantLib::ext::dynamic_pointer_cast<DirectYieldCurveSegment>(curveSegments_[index][0]);
     auto zeroQuoteIDs = zeroCurveSegment->quotes();
 
-    for (Size i = 0; i < zeroQuoteIDs.size(); ++i) {
-        QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(zeroQuoteIDs[i], asofDate_);
-        if (marketQuote) {
-            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::ZERO,
-                       "Market quote not of type zero.");
-            QuantLib::ext::shared_ptr<ZeroQuote> zeroQuote =
-                QuantLib::ext::dynamic_pointer_cast<ZeroQuote>(marketQuote);
-            zeroQuotes.push_back(zeroQuote);
+    // Extract quote strings for wildcard check
+    vector<string> quotes;
+    quotes.reserve(zeroQuoteIDs.size());
+    std::transform(zeroQuoteIDs.begin(), zeroQuoteIDs.end(),
+                   std::back_inserter(quotes),
+                   [](const std::pair<string, bool>& pair) {
+                       return pair.first;
+                   });
+    // Check for wildcard pattern
+    auto wildcard = getUniqueWildcard(quotes);
+    // Get market data using wildcard or traditional path
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> marketData;
+    if (wildcard) {
+        marketData = loader_.get(*wildcard, asofDate_);
+    } else {
+        for (Size i = 0; i < zeroQuoteIDs.size(); ++i) {
+            ext::shared_ptr<MarketDatum> marketQuote = loader_.get(zeroQuoteIDs[i], asofDate_);
+            if (marketQuote)
+                marketData.insert(marketQuote);
         }
+    }
+    // Process market data into zero quotes
+    for (const auto& marketQuote : marketData) {
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::ZERO,
+                   "Market quote not of type zero.");
+        QuantLib::ext::shared_ptr<ZeroQuote> zeroQuote =
+            QuantLib::ext::dynamic_pointer_cast<ZeroQuote>(marketQuote);
+        // If not using wildcard, verify quote is in config list
+        if (!wildcard) {
+            auto it = std::find_if(zeroQuoteIDs.begin(), zeroQuoteIDs.end(),
+                                   [&](const std::pair<string, bool>& p) {
+                                       return p.first == marketQuote->name();
+                                   });
+            if (it == zeroQuoteIDs.end())
+                continue;
+        }
+        zeroQuotes.push_back(zeroQuote);
     }
 
     // Create the (date, zero) pairs.
@@ -1289,7 +1318,15 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
                    "Market quote not of type Discount.");
         QuantLib::ext::shared_ptr<DiscountQuote> discountQuote =
             QuantLib::ext::dynamic_pointer_cast<DiscountQuote>(marketQuote);
-
+        // If not using wildcard, verify quote is in config list
+        if (!wildcard) {
+            auto it = std::find_if(discountQuoteIDs.begin(), discountQuoteIDs.end(),
+                                   [&](const std::pair<string, bool>& p) {
+                                       return p.first == marketQuote->name();
+                                   });
+            if (it == discountQuoteIDs.end())
+                continue;
+        }
         if (discountQuote->date() != Date()) {
 
             data[discountQuote->date()] = discountQuote->quote()->value();
