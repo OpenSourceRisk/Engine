@@ -146,7 +146,7 @@ The script `ExtendedAccumulator' referenced in the trade above is shown in Listi
 PayOff Formula \ref{pricing:extended_accumulator}:
 
 $$
-\NPV= \sum LongShort \cdot N \cdot (K - X_A(T))
+PayOff = \sum LongShort \cdot N \cdot (K - X_A(T))
 $$
 
 \begin{listing}[H]
@@ -167,6 +167,7 @@ IF Underlying(ExtensionDecisionDate)>ExtensionTrigger THEN
       Value = Value + PAY(LongShort * FixingAmount * (Strike-Fixing), ConditionalObservationDates[d], ConditionalSettlementDates[d], PayCurrency);
    END;
 END;
+currentNotional = FixingAmount * Strike; 
 \end{minted}
 \caption{ExtendedAccumulator Script}
 \label{lst:extendedaccumulator_script}
