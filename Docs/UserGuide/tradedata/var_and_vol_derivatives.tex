@@ -1431,7 +1431,10 @@ Listing \ref{lst:eqpairwisevarianceswap_data} shows the structure of example tra
 The payout formula is:
 
 \begin{equation*}
-  Payout = \min \Big( \max(equityAmount1 + equityAmount2 + equityAmountBasket, LowerLimit), UpperLimit \Big)
+\begin{split}
+Payout = \min \Big\{ \max \big( & equityAmount1 + equityAmount2 \\
+& + equityAmountBasket,\; \text{LowerLimit} \big),\; \text{UpperLimit} \Big\}
+\end{split}
 \end{equation*}
 
 where
