@@ -336,11 +336,12 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     refData.tenor = Period(cdsConv->frequency());
     refData.calendar = cdsConv->calendar();
     refData.convention = cdsConv->paymentConvention();
-    refData.termConvention = cdsConv->paymentConvention();
+    refData.termConvention = Unadjusted;
     refData.rule = cdsConv->rule();
     refData.payConvention = cdsConv->paymentConvention();
     refData.dayCounter = cdsConv->dayCounter();
-    refData.lastPeriodDayCounter = cdsConv->lastPeriodDayCounter();
+    if (cdsConv->lastPeriodDayCounter() != DayCounter())
+        refData.lastPeriodDayCounter = cdsConv->lastPeriodDayCounter();
     refData.cashSettlementDays = cdsConv->upfrontSettlementDays();
 
     // If the configuration instructs us to imply a default from the market data, we do it here.

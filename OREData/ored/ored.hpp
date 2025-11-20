@@ -220,6 +220,7 @@
 #include <ored/portfolio/callablebondreferencedata.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cashflowutils.hpp>
 #include <ored/portfolio/cashposition.hpp>
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
