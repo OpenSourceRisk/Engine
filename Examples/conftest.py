@@ -24,8 +24,8 @@ def pytest_runtest_makereport(item, call):
     # - UPDATE_FAILED_EXPECTED_OUTPUT → copy only if test failed
     if copy_all_output or (copy_failed_output and report.failed):
         # Build test path
-        test_name = item.name
-        test_name = test_name.replace('-', '/', 1)
+        test_name_props = item.name.split("_", 1)
+        test_name = test_name_props[1]
         test_path = Path(item.config.rootdir) / test_name
 
         copy_existing_files(test_path)
