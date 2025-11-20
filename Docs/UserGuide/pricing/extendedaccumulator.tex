@@ -1,0 +1,14 @@
+\subsubsection{Extended Accumulator}
+\label{pricing:extended_accumulator}
+ 
+An ExtendedAccumulator requires the party that is long to periodically buy an underlying asset A (FX, Equity, or Commodity) at a pre-determined strike price K.
+A feature of the ExtendedAccumulator is knock-out, i.e. the contract terminates early if a Barrier observed on a single date (the Extension Decision Date) is hit.
+$$
+PayOff= \sum LongShort \cdot FixingAmount \cdot (K - X_A(T))
+$$
+Where:
+\begin{itemize}
+\item $FixingAmount$: the fixing amount in currency/unit of A
+\item $K$: the strike. For Fx, the Fx strike rate is defined as amount in domestic currency (CCY2) for one unit of foreign currency (CCY1). For Equity and Commodity: The strike value for one unit/share/contract of the underlying equity or commodity, expressed in the domestic currency (CCY2).
+\item $X_A(T)$: the fixing value of the asset A at each observation date T
+\end{itemize}
