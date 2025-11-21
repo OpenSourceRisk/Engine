@@ -146,8 +146,16 @@ The script `ExtendedAccumulator' referenced in the trade above is shown in Listi
 PayOff Formula:
 
 $$
-PayOff = \sum LongShort \cdot N \cdot (K - X_A(T))
+PayOff = \sum \omega \cdot N \cdot (K - X_A(T))
 $$
+
+Where:
+\begin{itemize}
+\item $\omega \in \{-1,1\}$ is $1$ for a long and $-1$ for a short position
+\item $FixingAmount$: the fixing amount in currency/unit of A
+\item $K$: the strike. For Fx, the Fx strike rate is defined as amount in domestic currency (CCY2) for one unit of foreign currency (CCY1). For Equity and Commodity: The strike value for one unit/share/contract of the underlying equity or commodity, expressed in the domestic currency (CCY2).
+\item $X_A(T)$: the fixing value of the asset A at each observation date T
+\end{itemize}
 
 \begin{listing}[hbt]
 \begin{minted}[fontsize=\scriptsize]{Basic}
