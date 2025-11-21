@@ -143,14 +143,14 @@ The meanings and allowable values of the elements in the \verb+Extended Accumula
 \end{itemize}
 
 The script `ExtendedAccumulator' referenced in the trade above is shown in Listing \ref{lst:extendedaccumulator_script}.\\
-PayOff Formula \ref{pricing:extended_accumulator}:
+PayOff Formula:
 
 $$
 PayOff = \sum LongShort \cdot N \cdot (K - X_A(T))
 $$
 
-\begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
 
 REQUIRE {FixingAmount >= 0} AND {Strike >= 0};
 REQUIRE {SIZE(ConditionalObservationDates) == SIZE(ConditionalSettlementDates)};
