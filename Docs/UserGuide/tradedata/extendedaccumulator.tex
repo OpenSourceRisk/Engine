@@ -1,6 +1,6 @@
 \subsubsection{Extended Accumulator}
 
-Extended Accumulator are represented as scripted trades, refer to appendix A for an introduction. Listing \ref{lst:extendedaccumulator} shows the structure of an example.
+Extended Accumulator are represented as scripted trades, refer to appendix A for an introduction. Below shows the structure of an example.
 
 An Extended Accumulator is like an Accumulator with regular and conditional observation and settlement dates. After the regular observation dates a European barrier is applied on 
 the Extension Decision Date. If the barrier is  hit the trade terminates, otherwise the trade continues with cashflows generated on the conditional observation dates.
@@ -118,7 +118,6 @@ Where:
 
 \begin{listing}[hbt]
 \begin{minted}[fontsize=\scriptsize]{Basic}
-
 REQUIRE {FixingAmount >= 0} AND {Strike >= 0};
 REQUIRE {SIZE(ConditionalObservationDates) == SIZE(ConditionalSettlementDates)};
 NUMBER d, Fixing;
