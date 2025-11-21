@@ -5,128 +5,87 @@ Extended Accumulator are represented as scripted trades, refer to appendix A for
 An Extended Accumulator is like an Accumulator with regular and conditional observation and settlement dates. After the regular observation dates a European barrier is applied on 
 the Extension Decision Date. If the barrier is  hit the trade terminates, otherwise the trade continues with cashflows generated on the conditional observation dates.
 
-\begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Trade id="ExtendedAccumulator">
-      <TradeType>ScriptedTrade</TradeType>
-      <Envelope>
-         <CounterParty>CPTY_A</CounterParty>
-         <NettingSetId>CRIF_20191230</NettingSetId>
-         <PortfolioIds/>
-         <AdditionalFields/>
-      </Envelope>
-      <ScriptedTradeData>
-			<ScriptName>ExtendedAccumulator</ScriptName>
-			<Data>
-				<Event>
-					<Name>ObservationDates</Name>
-					<ScheduleData>
-						<Dates>
-							<Calendar/>
-							<Tenor/>
-							<Dates>
-								<Date>2019-09-30</Date>
-								<Date>2019-10-31</Date>
-								<Date>2019-11-28</Date>
-								<Date>2019-12-31</Date>
-								<Date>2020-01-30</Date>
-								<Date>2020-02-27</Date>
-							</Dates>
-						</Dates>
-					</ScheduleData>
-				</Event>
-				<Event>
-					<Name>ObservationSettlementDates</Name>
-					<ScheduleData>
-						<Dates>
-							<Calendar/>
-							<Tenor/>
-							<Dates>
-								<Date>2019-10-02</Date>
-								<Date>2019-11-02</Date>
-								<Date>2019-12-30</Date>
-								<Date>2020-01-02</Date>
-								<Date>2020-02-03</Date>
-								<Date>2020-03-30</Date>
-							</Dates>
-						</Dates>
-					</ScheduleData>
-				</Event>
-				<Event>
-					<Name>ExtensionDecisionDate</Name>
-					<Value>2020-02-25</Value>
-				</Event>
-				<Event>
-					<Name>ConditionalObservationDates</Name>
-					<ScheduleData>
-						<Dates>
-							<Calendar/>
-							<Tenor/>
-							<Dates>
-								<Date>2020-03-31</Date>
-								<Date>2020-04-30</Date>
-								<Date>2020-05-29</Date>
-								<Date>2020-06-30</Date>
-								<Date>2020-07-31</Date>
-								<Date>2020-08-31</Date>
-							</Dates>
-						</Dates>
-					</ScheduleData>
-				</Event>
-				<Event>
-					<Name>ConditionalSettlementDates</Name>
-					<ScheduleData>
-						<Dates>
-							<Calendar/>
-							<Tenor/>
-							<Dates>
-								<Date>2020-03-31</Date>
-								<Date>2020-04-30</Date>
-								<Date>2020-05-29</Date>
-								<Date>2020-06-30</Date>
-								<Date>2020-07-31</Date>
-								<Date>2020-08-31</Date>
-							</Dates>
-						</Dates>
-					</ScheduleData>
-				</Event>
-				<Number>
-					<Name>LongShort</Name>
-					<Value>1</Value>
-				</Number>
-				<Number>
-					<Name>FixingAmount</Name>
-					<Value>840336</Value>
-				</Number>
-				<Number>
-					<Name>Strike</Name>
-					<Value>1.19</Value>
-				</Number>
-				<Number>
-					<Name>ExtensionTrigger</Name>
-					<Value>1.19</Value>
-				</Number>
-				<Index>
-					<Name>Underlying</Name>
-					<Value>FX-ECB-EUR-USD</Value>
-				</Index>
-				<Currency>
-					<Name>PayCurrency</Name>
-					<Value>USD</Value>
-				</Currency>
-			</Data>
-		</ScriptedTradeData>
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FxExtendedAccumulatorLong">
+   <TradeType>ScriptedTrade</TradeType>
+   <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CRIF_20191230</NettingSetId>
+      <AdditionalFields/>
+   </Envelope>
+   <ExtendedAccumulatorData>
+      <LongShort type="longShort">Long</LongShort>
+      <FixingAmount type="number">840336</FixingAmount>
+      <Strike type="number">1.19</Strike>
+      <PayCurrency type="currency">USD</PayCurrency>
+      <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+      <ObservationDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2019-09-30</Date>
+                  <Date>2019-10-31</Date>
+                  <Date>2019-11-28</Date>
+                  <Date>2019-12-31</Date>
+                  <Date>2020-01-30</Date>
+                  <Date>2020-02-27</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ObservationDates>
+      <ObservationSettlementDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2019-10-02</Date>
+                  <Date>2019-11-02</Date>
+                  <Date>2019-12-30</Date>
+                  <Date>2020-01-02</Date>
+                  <Date>2020-02-03</Date>
+                  <Date>2020-03-30</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ObservationSettlementDates>
+      <ExtensionDecisionDate type="event">2020-02-25</ExtensionDecisionDate>
+      <ExtensionTrigger type="number">1.19</ExtensionTrigger>
+      <ConditionalObservationDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2020-03-31</Date>
+                  <Date>2020-04-30</Date>
+                  <Date>2020-05-29</Date>
+                  <Date>2020-06-30</Date>
+                  <Date>2020-07-31</Date>
+                  <Date>2020-08-31</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ConditionalObservationDates>
+      <ConditionalSettlementDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2020-03-31</Date>
+                  <Date>2020-04-30</Date>
+                  <Date>2020-05-29</Date>
+                  <Date>2020-06-30</Date>
+                  <Date>2020-07-31</Date>
+                  <Date>2020-08-31</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ConditionalSettlementDates>
+   </ExtendedAccumulatorData>
 </Trade>
 \end{minted}
-\caption{Extended Accumulator Representation}
-\label{lst:extendedaccumulator}
-\end{listing}
 
 The meanings and allowable values of the elements in the \verb+Extended Accumulator+  representation follow below.
 
 \begin{itemize}
 \item LongShort: Defines whether the trade is long or short, i.e long means one buys the underlying asset and short sells the underlying asset at each observation date. \\
-	Allowable values: \emph{Long, Short}
+   Allowable values: \emph{Long, Short}
 \item Strike: For Fx, the Fx strike rate is defined as amount in domestic currency (CCY2) for one unit of foreign currency (CCY1). For Equity and Commodity: The strike value for one unit/share/contract of the underlying equity or commodity, expressed in the domestic currency (CCY2).
 \item Underlying: Underlying index. For Fx: Value is a string of the form FX-SOURCE-CCY1-CCY2 where CCY1 is the foreign currency, CCY2 is the domestic currency, and SOURCE is the fixing source.\\
   Allowable values: See Section \ref{data_index} for allowable values.
