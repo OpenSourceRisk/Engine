@@ -18,6 +18,9 @@
 
 #include <ored/model/assetmodelbuilderbase.hpp>
 #include <ored/model/utilities.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <fstream>
+#include <sstream>
 
 namespace ore {
 namespace data {
@@ -126,9 +129,45 @@ void AssetModelBuilderBase::performCalculations() const {
 
         // notify model observers
         model_->notifyObservers();
+
+	/*
+	// FIXME: Move to reports and ensure uniqueness of the report name so that we do not overwrite previous reports
+	std::ofstream file;
+	file.open("Output/assetmodelcalibration.csv");
+	file << "Index,RMSE,Expiry,Moneyness,MarketValue,ModelValue,MarketVol,ModelVol,DiffVol" << std::endl;
+	for (auto r : calibrationResults_) {
+	  std::string index = r.first;
+	  Real rmse = r.second.rmse;
+          for (auto i : r.second.data)
+              file << index << "," << rmse << "," << i.expiry << "," << i.moneyness << "," << i.marketValue << ","
+                   << i.modelValue << "," << i.marketVol << "," << i.modelVol << "," << i.marketVol - i.modelVol
+                   << std::endl;
+        }
+        file.close();
+	*/
     }
 }
 
+std::map<std::string, QuantLib::ext::any> AssetModelBuilderBase::getAdditionalCalibrationResultsMap() {
+    std::map<std::string, QuantLib::ext::any> result;
+    std::ostringstream o;
+    o << "Index,RMSE,Expiry,Moneyness,MarketValue,ModelValue,MarketVol,ModelVol,DiffVol";
+    if (calibrationResults_.size() > 0)
+        result["hestonCalibration_0"] = o.str();
+    Size count = 1;
+    for (auto r : calibrationResults_) {
+        std::string index = r.first;
+        Real rmse = r.second.rmse;
+        for (auto i : r.second.data) {
+	  std::ostringstream o;
+	    o << index << "," << rmse << "," << i.expiry << "," << i.moneyness << "," << i.marketValue << ","
+                   << i.modelValue << "," << i.marketVol << "," << i.modelVol << "," << i.marketVol - i.modelVol;
+	    result["hestonCalibration_" + to_string(count++)] = o.str();
+	  }
+    }
+    return result;
+}
+  
 bool AssetModelBuilderBase::calibrationPointsChanged(const bool updateCache) const {
 
     // get times for curves and times / strikes for vols

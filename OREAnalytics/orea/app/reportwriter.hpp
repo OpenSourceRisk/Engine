@@ -252,6 +252,8 @@ public:
     void writeCapitalCrifReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
                                 const std::string& baseCurrency, const char& csvQuoteChar = '\0') const;
 
+    void writeAssetModelCalibration(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) const;
+  
 protected:
     std::string nullString_;
     void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,

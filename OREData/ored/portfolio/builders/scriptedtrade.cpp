@@ -1377,7 +1377,7 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
     LOG("ScriptedTradeEngineBuilder::buildHeston() called");
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(modelIndices_,
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationExpiries_,
         calibrationMoneyness_, calibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
         hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_, referenceCalibrationGrid_,
@@ -1394,7 +1394,7 @@ void ScriptedTradeEngineBuilder::buildFdHeston(
     const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig) {
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
-    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
+    auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(modelIndices_,
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationExpiries_,
         calibrationMoneyness_, calibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
         hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_, referenceCalibrationGrid_,

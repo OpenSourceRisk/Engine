@@ -182,27 +182,28 @@ void HestonModelCalibration::buildExpectedVariances() {
 }
 
 void HestonModelCalibration::logCalibration(const std::vector<Real>& moneyness) {
-    Real rmse = 0;
+    results_.rmse = 0;
     Size count = 0;
     DLOG("helperCount,expiry,moneyness,error,marketValue,modelValue,diffValue,marketVol,modelVol");
     for (Size j = 0; j < expiries_.size(); j++) {
         for (Size k = 0; k < moneyness.size(); k++) {
             auto option = QuantLib::ext::dynamic_pointer_cast<BlackCalibrationHelper>(helpers_[count]);
-            const Real diff = option->calibrationError();
-            rmse += diff * diff;
-            Real mktValue = option->marketValue();
+            const Real err = option->calibrationError();
+            results_.rmse += err * err;
+            Real marketValue = option->marketValue();
             Real modelValue = option->modelValue();
             Real marketVol = option->volatility()->value();
-            Real modelVol = option->impliedVolatility(modelValue, 1e-4, 1000, 1e-4, 3.0);
-            DLOG(count + 1 << "/" << helpers_.size() << "," << expiries_[j] << ","
-                                          << moneyness[k] << "," << diff << "," << mktValue << "," << modelValue << ","
-                                          << modelValue - mktValue << "," << marketVol << "," << modelVol);
-            count++;
+            Real modelVol = option->impliedVolatility(modelValue, 1e-8, 1000, 1e-4, 3.0);
+            DLOG(++count << "/" << helpers_.size() << "," << expiries_[j] << "," << moneyness[k] << "," << err << ","
+                         << marketValue << "," << modelValue << "," << modelValue - marketValue << "," << marketVol
+                         << "," << modelVol << "," << marketVol - modelVol);
+            results_.data.push_back(CalibrationResults::InstrumentResult(expiries_[j], moneyness_[k], marketValue,
+                                                                         modelValue, marketVol, modelVol));
         }
     }
-    rmse = sqrt(rmse / helpers_.size());
-
-    DLOG("rmse: " << rmse);
+    results_.rmse = sqrt(results_.rmse / helpers_.size());
+    
+    DLOG("rmse: " << results_.rmse);
 }
 
 QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
@@ -315,7 +316,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     Real feller = 2.0 * hestonModel->params()[0] * hestonModel->params()[1] / pow(hestonModel->params()[2], 2);
     DLOG("feller: " << feller);
     if (feller < 1) {
-        ALOG("feller constraint violated");
+        ALOG("feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
     }
 
     logCalibration(moneyness);

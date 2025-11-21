@@ -1,6 +1,6 @@
 <Portfolio>
 
-  <Trade id="1:EquityOption:AN">
+  <Trade id="1:EquityOption">
     <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -26,7 +26,7 @@
     </EquityOptionData>
   </Trade>
 
-  <Trade id="2:EquityOptionSTOXX">
+  <Trade id="2:ScriptedEquityOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -87,7 +87,8 @@
     </ScriptedTradeData>
   </Trade>
 
-    <Trade id="3:EquityOptionDAX">
+  <!--
+  <Trade id="3:EquityOptionDAX">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -147,8 +148,145 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
+  -->
 
-  <Trade id="4:RainbowOption">
+    <!-- Analytic pricer -->
+  <Trade id="3:EquityBarrierOption">
+    <TradeType>EquityBarrierOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <EquityBarrierOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>true</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2023-09-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BarrierData>
+        <Type>UpAndOut</Type>
+        <Style>American</Style>
+        <Levels>
+          <Level>5000</Level>
+        </Levels>
+        <Rebate>0</Rebate>
+        <RebateCurrency>EUR</RebateCurrency>
+        <RebatePayTime>atExpiry</RebatePayTime>
+      </BarrierData>      
+      <StartDate>2023-06-05</StartDate>
+      <Calendar>TARGET</Calendar>
+      <Name>RIC:.STOXX50E</Name>
+      <Currency>EUR</Currency>
+      <Strike>4350</Strike>
+      <Quantity>1000</Quantity>
+    </EquityBarrierOptionData>
+  </Trade>  
+
+  <!-- Equity Barrier Option as scripted trade with daily observations -->
+  <Trade id="4:ScriptedEquityBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>SingleBarrierOption</ScriptName>
+      <Data>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Event>
+          <Name>StartDate</Name>
+          <Value>2023-06-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value> <!-- 1:Call -1:Put -->
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value> <!-- 1:Long -1:Short -->
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        
+        <!-- barrier option specifics -->
+        <Number>
+          <Name>PayoffType</Name>
+          <Value>0</Value><!-- 0:Vanilla 1:CashOrNothing -->
+        </Number>
+        <Number>
+          <Name>Amount</Name>
+          <Value>0</Value>
+        </Number>
+        <Number>
+          <Name>BarrierLevel</Name>
+          <Value>5000</Value>
+        </Number>
+        <Number>
+          <Name>BarrierType</Name>
+          <Value>4</Value> <!-- 1:DownIn 2:UpIn 3:DownOut 4:UpOut -->
+        </Number>
+        <Number>
+          <Name>BarrierRebate</Name>
+          <Value>0</Value>
+        </Number>
+        <Currency>
+          <Name>BarrierRebateCurrency</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Number>
+          <Name>BarrierRebatePayTime</Name>
+          <Value>1</Value> <!-- 0:atHit 1:atExpiry -->
+        </Number>
+        <Event>
+          <Name>BarrierMonitoringDates</Name>
+          <ScheduleData>
+            <Rules>
+              <StartDate>2023-06-05</StartDate>
+              <EndDate>2023-09-05</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
+            </Rules>
+          </ScheduleData>
+        </Event>       
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="5:RainbowOption-STOXX-DAX">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -159,62 +297,90 @@
       <Settlement type="event">2023-09-05</Settlement>
       <LongShort type="longShort">Long</LongShort>
       <Notional type="number">1</Notional>
-      <Strike type="number">2000</Strike>
+      <Strike type="number">4000</Strike>
       <Underlyings type="index">
         <Value>EQ-RIC:.STOXX50E</Value>
         <Value>EQ-RIC:.GDAXI</Value>
       </Underlyings>
       <Weights type="number">
-        <Value>0.27</Value><!-- initial price: 15964 --> 
+        <Value>0.25</Value><!-- initial price: 15964 --> 
         <Value>1.00</Value><!-- initial price:  4338 -->
       </Weights>
       <PayCcy type="currency">EUR</PayCcy>
     </RainbowOptionData>
     <!--
-  <ScriptedTradeData>
-    <ScriptName>BestOfAssetOrCashRainbowOption</ScriptName>
-    <Data>
-      <Event>
-        <Name>Expiry</Name>
-        <Value>2020-02-15</Value>
-      </Event>
-      <Event>
-        <Name>Settlement</Name>
-        <Value>2020-02-20</Value>
-      </Event>
-      <Number>
-        <Name>LongShort</Name>
-        <Value>1</Value>
-      </Number>
-      <Number>
-        <Name>Notional</Name>
-        <Value>1</Value>
-      </Number>
-      <Number>
-        <Name>Strike</Name>
-        <Value>2000</Value>
-      </Number>
-      <Index>
-        <Name>Underlyings</Name>
-        <Values>
-                <Value>EQ-RIC:.SPX</Value>
-                <Value>EQ-RIC:.STOXX50E</Value>
-        </Values>
-      </Index>
-      <Number>
-        <Name>Weights</Name>
-        <Values>
-          <Value>1.0</Value>
-          <Value>1.0</Value>
-        </Values>
-      </Number>
-      <Currency>
-        <Name>PayCcy</Name>
-        <Value>USD</Value>
-      </Currency>
-    </Data>
-  </ScriptedTradeData>
-  -->
-    </Trade>
- 
+    <ScriptedTradeData>
+      <ScriptName>BestOfAssetOrCashRainbowOption</ScriptName>
+      <Data>
+	<Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+	</Event>
+	<Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+	</Event>
+	<Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+	</Number>
+	<Number>
+          <Name>Notional</Name>
+          <Value>1</Value>
+	</Number>
+	<Number>
+          <Name>Strike</Name>
+          <Value>2000</Value>
+	</Number>
+	<Index>
+          <Name>Underlyings</Name>
+          <Values>
+            <Value>EQ-RIC:.STOXX50E</Value>
+            <Value>EQ-RIC:.GDAXI</Value>
+          </Values>
+	</Index>
+	<Number>
+          <Name>Weights</Name>
+          <Values>
+            <Value>0.25</Value>
+            <Value>1.0</Value>
+          </Values>
+	</Number>
+	<Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+	</Currency>
+      </Data>
+    </ScriptedTradeData>
+    -->
+  </Trade>
+  
+  <Trade id="6:RainbowOption-STOXX-DAX-SPX">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+    </Envelope>
+    <RainbowOptionData>
+      <Expiry type="event">2023-09-05</Expiry>
+      <Settlement type="event">2023-09-05</Settlement>
+      <LongShort type="longShort">Long</LongShort>
+      <Notional type="number">1</Notional>
+      <Strike type="number">4000</Strike>
+      <Underlyings type="index">
+        <Value>EQ-RIC:.STOXX50E</Value>
+        <Value>EQ-RIC:.GDAXI</Value>
+        <Value>EQ-RIC:.SPX</Value>
+        <!--<Value>EQ-RIC:.NDX</Value>-->
+      </Underlyings>
+      <Weights type="number">
+        <Value>0.25</Value><!-- initial price: 15964 --> 
+        <Value>1.00</Value><!-- initial price:  4338 -->
+        <Value>1.00</Value><!-- initial price:  4274 -->
+        <!--<Value>0.25</Value>--><!-- initial price: 14556 -->	
+      </Weights>
+      <PayCcy type="currency">EUR</PayCcy>
+    </RainbowOptionData>
+   </Trade>
+   
 </Portfolio>

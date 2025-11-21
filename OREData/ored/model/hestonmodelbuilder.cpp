@@ -44,13 +44,11 @@
 #include <ql/pricingengines/vanilla/fdhestonvanillaengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-#include <ored/model/hestonmodelcalibration.hpp>
-
 namespace ore {
 namespace data {
 
 HestonModelBuilder::HestonModelBuilder(
-    const std::vector<Handle<YieldTermStructure>>& curves,
+    const std::vector<std::string>& indices, const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const std::vector<Period>& calibrationExpiries, const std::vector<Real>& calibrationMoneyness,
@@ -60,7 +58,7 @@ HestonModelBuilder::HestonModelBuilder(
     Size calibrationRestarts, Real tolerance, const std::string& referenceCalibrationGrid, const bool dontCalibrate,
     const Handle<YieldTermStructure>& baseCurve)
     : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
-      calibrationExpiries_(calibrationExpiries), calibrationMoneyness_(calibrationMoneyness),
+      indices_(indices), calibrationExpiries_(calibrationExpiries), calibrationMoneyness_(calibrationMoneyness),
       calibrationVarianceTerms_(calibrationVarianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
       relaxedFellerConstraint_(relaxedFellerConstraint), calibrationRestarts_(calibrationRestarts),
       tolerance_(tolerance), referenceCalibrationGrid_(referenceCalibrationGrid), dontCalibrate_(dontCalibrate) {}
@@ -77,14 +75,20 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
     DLOG("dontCalibrate: " << dontCalibrate_);
     DLOG("initial values: " << to_string(initialValues_));
 
+    QL_REQUIRE(indices_.size() == processes_.size(), "indices and processes size mismatch");
     QL_REQUIRE(initialValues_.size() == 5, "5 initial values expected, found " << initialValues_.size());
-
+    
     for (Size i = 0; i < processes_.size(); ++i) {
 
-        HestonModelCalibration hmc(processes_[i], calibrationExpiries_, calibrationMoneyness_, calibrationVarianceTerms_, initialValues_,
-                                   fixedValues_, relaxedFellerConstraint_, calibrationRestarts_, tolerance_, dontCalibrate_);
+        DLOG("Create Heston process for " << indices_[i]);
+
+        HestonModelCalibration hmc(processes_[i], calibrationExpiries_, calibrationMoneyness_,
+                                   calibrationVarianceTerms_, initialValues_, fixedValues_, relaxedFellerConstraint_,
+                                   calibrationRestarts_, tolerance_, dontCalibrate_);
 
         processes.push_back(hmc.model()->process());
+
+	calibrationResults_[indices_[i]] = hmc.results();
     }
 
     return processes;

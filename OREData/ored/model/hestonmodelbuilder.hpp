@@ -24,7 +24,9 @@
 #pragma once
 
 #include <ored/model/assetmodelbuilderbase.hpp>
+#include <ored/model/hestonmodelcalibration.hpp>
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
+
 
 namespace ore {
 namespace data {
@@ -33,7 +35,7 @@ using namespace QuantLib;
 
 class HestonModelBuilder final : public AssetModelBuilderBase {
 public:
-    HestonModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
+    HestonModelBuilder(const std::vector<std::string>& indices, const std::vector<Handle<YieldTermStructure>>& curves,
                        const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                        const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
                        const Size timeStepsPerYear = 1,
@@ -48,7 +50,7 @@ public:
                        Real relaxedFellerConstraint = 1.0, Size calibrationRestarts = 50, Real tolerance = 0.001,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
                        const Handle<YieldTermStructure>& baseCurve = {});
-    HestonModelBuilder(const Handle<YieldTermStructure>& curve,
+    HestonModelBuilder(const std::vector<std::string>& indices, const Handle<YieldTermStructure>& curve,
                        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                        const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
                        const Size timeStepsPerYear = 1,
@@ -63,7 +65,7 @@ public:
                        Real relaxedFellerConstraint = 1.0, Size calibrationRestarts = 50, Real tolerance = 0.001,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
                        const Handle<YieldTermStructure>& baseCurve = {})
-        : HestonModelBuilder(std::vector<Handle<YieldTermStructure>>{curve},
+        : HestonModelBuilder(indices, std::vector<Handle<YieldTermStructure>>{curve},
                              std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
                              addDates, timeStepsPerYear, calibrationExpiries, calibrationMoneyness,
                              calibrationVarianceTerms, initialValues, fixedValues, relaxedFellerConstraint,
@@ -87,6 +89,7 @@ private:
         Real futureVariance(const Date& maturity) const { return calculateFutureVariance(maturity); }
     };
 
+    std::vector<std::string> indices_;
     std::vector<Period> calibrationExpiries_;
     std::vector<Real> calibrationMoneyness_;
     std::vector<Period> calibrationVarianceTerms_;

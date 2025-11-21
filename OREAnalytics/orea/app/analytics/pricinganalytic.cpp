@@ -114,8 +114,18 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
+
+            if (analytic()->portfolio()->engineFactory()->modelBuilders().size() > 0) {
+                CONSOLEW("Pricing: Asset Model Calibration Report");
+                auto calReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString()).writeAssetModelCalibration(*calReport, analytic()->portfolio());
+                analytic()->addReport(type, "assetmodelcalibration", calReport);
+                CONSOLE("OK");
+            } else {
+	        WLOG("portfolo does not have any model builders");
+            }
         }
-        else if (type == "CASHFLOW") {
+	else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
             ReportWriter(inputs_->reportNaString())
                 .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
@@ -124,7 +134,7 @@ void PricingAnalyticImpl::runAnalytic(
             analytic()->addReport(type, "cashflow", report);
             CONSOLE("OK");
         }
-        else if (type == "CASHFLOWNPV") {
+	else if (type == "CASHFLOWNPV") {
             CONSOLEW("Pricing: Cashflow NPV report");
             ReportWriter(inputs_->reportNaString())
                 .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
@@ -136,7 +146,7 @@ void PricingAnalyticImpl::runAnalytic(
             analytic()->addReport(type, "cashflownpv", report);
             CONSOLE("OK");
         }
-        else if (type == "SENSITIVITY") {
+	else if (type == "SENSITIVITY") {
             CONSOLEW("Risk: Sensitivity Report");
             LOG("Sensi Analysis - Initialise");
             bool ccyConv = false;
@@ -280,8 +290,7 @@ void PricingAnalyticImpl::runAnalytic(
         
             LOG("Sensi Analysis - Completed");
             CONSOLE("OK");
-        }
-        else {
+        } else {
             QL_FAIL("PricingAnalytic type " << type << " invalid");
         }
     }

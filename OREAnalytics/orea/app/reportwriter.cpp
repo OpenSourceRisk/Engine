@@ -26,6 +26,7 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/math/distributioncount.hpp>
@@ -2799,6 +2800,48 @@ void ReportWriter::writeCapitalCrifReport(ore::data::Report& report,
 
     report.end();
 }
-  
+
+void ReportWriter::writeAssetModelCalibration(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) const {
+    //    const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& factory) const {
+
+    DLOG("ReportWriter::writeAssetModelCalibration called");
+    // Add report headers
+    report.addColumn("TradeID", string())
+        .addColumn("Index", string())
+        .addColumn("RMSE", double(), 6)
+        .addColumn("Expiry", Period())
+        .addColumn("Moneyness", double(), 4)
+        .addColumn("MarketValue", double(), 4)
+        .addColumn("ModelValue", double(), 4)
+        .addColumn("MarketVol", double(), 4)
+        .addColumn("ModelVol", double(), 4)
+        .addColumn("VolDifference", double(), 4);
+
+    QL_REQUIRE(portfolio->engineFactory(), "portfolio engine factory is null");
+    for (auto p : portfolio->engineFactory()->modelBuilders()) {
+        std::string tradeId = p.first;
+	DLOG("model builder found for id " << tradeId);
+	if (auto amb = QuantLib::ext::dynamic_pointer_cast<AssetModelBuilderBase>(p.second)) {
+            for (auto r : amb->calibrationResults()) {
+                std::string index = r.first;
+                Real rmse = r.second.rmse;
+                for (auto i : r.second.data) {
+                    report.next()
+                        .add(tradeId)
+                        .add(index)
+                        .add(rmse)
+                        .add(i.expiry)
+                        .add(i.moneyness)
+                        .add(i.marketValue)
+                        .add(i.modelValue)
+                        .add(i.marketVol)
+                        .add(i.modelVol)
+                        .add(i.marketVol - i.modelVol);
+                }
+            }
+        }
+    }
+}
+
 } // namespace analytics
 } // namespace ore

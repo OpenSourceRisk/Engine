@@ -368,6 +368,46 @@
       <Extrapolation>true</Extrapolation>
     </EquityCurve>
 
+    <EquityCurve>
+      <CurveId>RIC:.SPX</CurveId>
+      <CurveDescription>SP500 Price Index option implied forward curve</CurveDescription>
+      <Currency>USD</Currency>
+      <Calendar/>
+      <ForecastingCurve>USD-SOFR</ForecastingCurve>
+      <Type>OptionPremium</Type>
+      <ExerciseStyle>European</ExerciseStyle>
+      <SpotQuote>EQUITY/PRICE/RIC:.SPX/USD</SpotQuote>
+      <Quotes>
+	<Quote>EQUITY_OPTION/PRICE/RIC:.SPX/USD/*</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <DividendInterpolation>
+	<InterpolationVariable>Zero</InterpolationVariable>
+	<InterpolationMethod>Linear</InterpolationMethod>
+      </DividendInterpolation>
+      <Extrapolation>true</Extrapolation>
+    </EquityCurve>
+
+    <EquityCurve>
+      <CurveId>RIC:.NDX</CurveId>
+      <CurveDescription>Nasdaq Price Index option implied forward curve</CurveDescription>
+      <Currency>USD</Currency>
+      <Calendar/>
+      <ForecastingCurve>USD-SOFR</ForecastingCurve>
+      <Type>OptionPremium</Type>
+      <ExerciseStyle>European</ExerciseStyle>
+      <SpotQuote>EQUITY/PRICE/RIC:.NDX/USD</SpotQuote>
+      <Quotes>
+	<Quote>EQUITY_OPTION/PRICE/RIC:.NDX/USD/*</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <DividendInterpolation>
+	<InterpolationVariable>Zero</InterpolationVariable>
+	<InterpolationMethod>Linear</InterpolationMethod>
+      </DividendInterpolation>
+      <Extrapolation>true</Extrapolation>
+    </EquityCurve>
+
   </EquityCurves>
 
   <EquityVolatilities>
@@ -439,15 +479,126 @@
       </StrikeSurface>
     </EquityVolatility>
 
+    <EquityVolatility>
+      <CurveId>RIC:.SPX</CurveId>
+      <CurveDescription>Lognormal option implied vols for RIC:.SPX</CurveDescription>
+      <Currency>USD</Currency>
+      <DayCounter>A365</DayCounter>
+      <StrikeSurface>
+        <QuoteType>Premium</QuoteType>
+        <ExerciseType>European</ExerciseType>
+        <Strikes>*</Strikes>
+        <Expiries>*</Expiries>
+        <TimeInterpolation>Linear</TimeInterpolation>
+        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>UseInterpolator</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      </StrikeSurface>
+    </EquityVolatility>
+
+    <EquityVolatility>
+      <CurveId>RIC:.NDX</CurveId>
+      <CurveDescription>Lognormal option implied vols for RIC:.NDX</CurveDescription>
+      <Currency>USD</Currency>
+      <DayCounter>A365</DayCounter>
+      <StrikeSurface>
+        <QuoteType>Premium</QuoteType>
+        <ExerciseType>European</ExerciseType>
+        <Strikes>*</Strikes>
+        <Expiries>*</Expiries>
+        <TimeInterpolation>Linear</TimeInterpolation>
+        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>UseInterpolator</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      </StrikeSurface>
+    </EquityVolatility>
+
   </EquityVolatilities>
 
   <Correlations>
     <Correlation>
       <CurveId>EQ-RIC:.STOXX50E&amp;EQ-RIC:.GDAXI</CurveId>
-      <CurveDescription>Correlation curve for EQ-RIC:.STOXX50E&amp;EQ-RIC:.GDAXI</CurveDescription>
+      <CurveDescription>Correlation curve for EQ-RIC:.STOXX50E vs EQ-RIC:.GDAXI</CurveDescription>
       <CorrelationType>Generic</CorrelationType>
       <Index1>EQ-RIC:.STOXX50E</Index1>
       <Index2>EQ-RIC:.GDAXI</Index2>
+      <Conventions/>
+      <Dimension>ATM</Dimension>
+      <QuoteType>RATE</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>weekends only</Calendar>
+      <BusinessDayConvention>Modified Following</BusinessDayConvention>
+      <OptionTenors>*</OptionTenors>
+    </Correlation>
+    <Correlation>
+      <CurveId>EQ-RIC:.STOXX50E&amp;EQ-RIC:.SPX</CurveId>
+      <CurveDescription>Correlation curve for EQ-RIC:.STOXX50E vs EQ-RIC:.SPX</CurveDescription>
+      <CorrelationType>Generic</CorrelationType>
+      <Index1>EQ-RIC:.STOXX50E</Index1>
+      <Index2>EQ-RIC:.SPX</Index2>
+      <Conventions/>
+      <Dimension>ATM</Dimension>
+      <QuoteType>RATE</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>weekends only</Calendar>
+      <BusinessDayConvention>Modified Following</BusinessDayConvention>
+      <OptionTenors>*</OptionTenors>
+    </Correlation>
+    <Correlation>
+      <CurveId>EQ-RIC:.STOXX50E&amp;EQ-RIC:.NDX</CurveId>
+      <CurveDescription>Correlation curve for EQ-RIC:.STOXX50E vs EQ-RIC:.NDX</CurveDescription>
+      <CorrelationType>Generic</CorrelationType>
+      <Index1>EQ-RIC:.STOXX50E</Index1>
+      <Index2>EQ-RIC:.NDX</Index2>
+      <Conventions/>
+      <Dimension>ATM</Dimension>
+      <QuoteType>RATE</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>weekends only</Calendar>
+      <BusinessDayConvention>Modified Following</BusinessDayConvention>
+      <OptionTenors>*</OptionTenors>
+    </Correlation>
+    <Correlation>
+      <CurveId>EQ-RIC:.GDAXI&amp;EQ-RIC:.SPX</CurveId>
+      <CurveDescription>Correlation curve for EQ-RIC:.GDAXI vs EQ-RIC:.SPX</CurveDescription>
+      <CorrelationType>Generic</CorrelationType>
+      <Index1>EQ-RIC:.GDAXI</Index1>
+      <Index2>EQ-RIC:.SPX</Index2>
+      <Conventions/>
+      <Dimension>ATM</Dimension>
+      <QuoteType>RATE</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>weekends only</Calendar>
+      <BusinessDayConvention>Modified Following</BusinessDayConvention>
+      <OptionTenors>*</OptionTenors>
+    </Correlation>
+    <Correlation>
+      <CurveId>EQ-RIC:.GDAXI&amp;EQ-RIC:.NDX</CurveId>
+      <CurveDescription>Correlation curve for EQ-RIC:.GDAXI vs EQ-RIC:.NDX</CurveDescription>
+      <CorrelationType>Generic</CorrelationType>
+      <Index1>EQ-RIC:.GDAXI</Index1>
+      <Index2>EQ-RIC:.NDX</Index2>
+      <Conventions/>
+      <Dimension>ATM</Dimension>
+      <QuoteType>RATE</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>weekends only</Calendar>
+      <BusinessDayConvention>Modified Following</BusinessDayConvention>
+      <OptionTenors>*</OptionTenors>
+    </Correlation>
+    <Correlation>
+      <CurveId>EQ-RIC:.SPX&amp;EQ-RIC:.NDX</CurveId>
+      <CurveDescription>Correlation curve for EQ-RIC:.SPX vs EQ-RIC:.NDX</CurveDescription>
+      <CorrelationType>Generic</CorrelationType>
+      <Index1>EQ-RIC:.SPX</Index1>
+      <Index2>EQ-RIC:.NDX</Index2>
       <Conventions/>
       <Dimension>ATM</Dimension>
       <QuoteType>RATE</QuoteType>

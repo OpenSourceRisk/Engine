@@ -134,10 +134,13 @@ public:
     underlyingIndices(AssetClass assetClass,
                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr, const bool useCache = true);
 
+    const QuantLib::ext::shared_ptr<EngineFactory> engineFactory() { return engineFactory_; }
+
 private:
     bool buildFailedTrades_, ignoreTradeBuildFail_;
     std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
 };
 
 std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(

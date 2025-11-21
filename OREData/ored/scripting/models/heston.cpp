@@ -68,7 +68,15 @@ void Heston::generatePaths() const {
     // if (indices_.size() == 1) 
     //     return generateSingleAssetPaths();
 
-    DLOG("Heston::generatePaths() called");
+    if (indices_.size() == 1) {
+        DLOG("Heston::generatePaths() called for single index:");
+        DLOG(indices_.front());
+    } else {
+        DLOG("Heston::generatePaths() called for " << indices_.size() << " indices:");
+        for (auto i : indices_) {
+            DLOG(i);
+        }
+    }
 
     Matrix C = getCorrelation();
 
@@ -119,11 +127,24 @@ void Heston::generatePaths() const {
 
     Matrix sqrtCorr = pseudoSqrt(correlation, params_.salvagingAlgorithm);
 
-    // Matrix sqrtCorrSquared = sqrtCorr * transpose(sqrtCorr);
+    Matrix sqrtCorrSquared = sqrtCorr * transpose(sqrtCorr);
     // std::cout << "C: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << C << std::endl;
     // std::cout << "Correlation: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << correlation << std::endl;
     // std::cout << "sqrtCorr: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << sqrtCorr << std::endl;
     // std::cout << "sqrtCorrSquared : " << std::endl << std::showpos << std::fixed << std::setprecision(2) << sqrtCorrSquared << std::endl;
+    for (Size i = 0; i < 2 * n; ++i) {
+        for (Size j = 0; j < 2 * n; ++j) {
+            if (fabs(correlation[i][j] - correlation[j][i]) > 1e-9) {
+                ALOG("correlation matrix not symmetric for i=" << i << ", j=" << j << ": " << std::setprecision(6)
+                                                               << correlation[i][j] << " vs " << correlation[j][i]);
+            }
+            if (fabs(correlation[i][j] - sqrtCorrSquared[i][j]) > 1e-6) {
+                ALOG("correlation matrix square root problem for i=" << i << ", j=" << j << ": " << std::setprecision(6)
+                                                                     << correlation[i][j] << " vs "
+                                                                     << sqrtCorrSquared[i][j]);
+            }
+        }
+    }
 
     // precompute index for drift adjustment for eq / com indices that are not in base ccy
     std::vector<Size> eqComIdx(indices_.size());
@@ -301,10 +322,8 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
         // std::cout << "Qinv(" << j << "):" << std::endl << Qinv[j] << std::endl;
     }
 
-    // Empirical spot correlations
-    Size spotCorrelations = indices_.size() == 0 ? 0 : indices_.size() * (indices_.size() - 1) / 2;
-    DLOG("# spot correlations = " << spotCorrelations);
-    std::vector<std::vector<Real>> cov(spotCorrelations, std::vector<Real>(timeGrid_.size() - 1, 0.0));   
+    // Empirical covariances at each time step
+    std::vector<Matrix> cov(timeGrid_.size() - 1, Matrix(correlation.rows(), correlation.columns()));
 
     // Empirical Heston correlation for each index at each time grid point, before and after decorrelation
     std::vector<std::vector<Real>> cov1(indices_.size(), std::vector<Real>(timeGrid_.size() - 1, 0.0));
@@ -335,11 +354,9 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 	    Array dWcor = sqrtCorr * p.value[i];
 
             if (checkCorrelations) {
-                Size count = 0;
-                for (Size j1 = 0; j1 < indices_.size(); j1++) {
-                    for (Size j2 = 0; j2 < j1; j2++) {
-                        cov[count][i] += dWcor[2 * j1] * dWcor[2 * j2];
-                    }
+                for (Size j1 = 0; j1 < dWcor.size(); j1++) {
+                    for (Size j2 = 0; j2 < dWcor.size(); j2++)
+                        cov[i][j1][j2] += dWcor[j1] * dWcor[j2];
                 }
             }
 
@@ -395,26 +412,18 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
             }
         }
 
-        std::vector<Real> expected(spotCorrelations, 0.0);
-        Size count = 0;
-        for (Size j1 = 0; j1 < indices_.size(); j1++) {
-            for (Size j2 = 0; j2 < j1; j2++) {
-                expected[count] = correlation[2*j1][2*j2];
-                count++;
-            }
-        }
-        for (Size j = 0; j < spotCorrelations; ++j) {
-            for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
-                Real c = cov[j][i] / size();
-                DLOG("spotCorrelation[" << j << "][" << i << "] = " << std::setprecision(4) << std::fixed
-                                        << std::showpos << c);
-                QL_REQUIRE(fabs(c - expected[j]) < tol,
-                           "empirical spot correlation " << c << " does not match expected " << expected[j]);
+        for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
+            for (Size j1 = 0; j1 < correlation.rows(); j1++) {
+                for (Size j2 = 0; j2 < correlation.columns(); j2++) {
+                    Real c = cov[i][j1][j2] / size();
+                    DLOG("empiricalCorrelation[" << i << "][" << j1 << "][" << j2 << "] = " << std::setprecision(4)
+                                                 << std::fixed << std::showpos << c);
+                    QL_REQUIRE(fabs(c - correlation[j1][j2]) < tol,
+                               "empirical correlation " << c << " does not match expected " << correlation[j1][j2]);
+                }
             }
         }
     }
-
-    DLOG("Heston::populatePathValues() done");
 }
 
 void Heston::setAdditionalResults() const {
@@ -443,6 +452,14 @@ void Heston::setAdditionalResults() const {
             additionalResults_["Heston.Forward_" + indices_[i].name() + "_" + ore::data::to_string(d)] = forward;
             ++timeStep;
         }
+    }
+
+    for (Size i = 0; i < indices_.size(); ++i) {
+        additionalResults_["Heston.theta_" + indices_[i].name()] = model_->hestonProcesses()[i]->theta();
+        additionalResults_["Heston.kappa_" + indices_[i].name()] = model_->hestonProcesses()[i]->kappa();
+        additionalResults_["Heston.sigma_" + indices_[i].name()] = model_->hestonProcesses()[i]->sigma();
+        additionalResults_["Heston.rho_" + indices_[i].name()] = model_->hestonProcesses()[i]->rho();
+        additionalResults_["Heston.v0_" + indices_[i].name()] = model_->hestonProcesses()[i]->v0();
     }
 }
 

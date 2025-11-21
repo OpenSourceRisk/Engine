@@ -43,9 +43,8 @@ using namespace QuantLib;
      The market variance curve is constructed using the method inherited from the variance swap replication engine.
      See https:://ssrn.com//abstract=2255550
      
-     2) With these reasonable (and close to optimal?) starting points we calibrate the full Heston model as usual.
+     2) With these starting points we calibrate the full Heston model as usual.
 
-     Optionally, we keep theta/kappa/v0 from step (1) and just calibrate sigma and rho in step (2).    
    */
 class HestonModelCalibration {
 public:
@@ -66,6 +65,8 @@ public:
           restarts_(restarts), tolerance_(tolerance), dontCalibrate_(dontCalibrate) {}
 
     ext::shared_ptr<HestonModel> model();
+
+    const CalibrationResults& results() const { return results_; }
 
 private:
     class VarianceCalculator : public GeneralisedReplicatingVarianceSwapEngine {
@@ -110,6 +111,8 @@ private:
     std::vector<ext::shared_ptr<CalibrationHelper>> helpers_;
     std::vector<Time> varianceTimes_;
     std::vector<Real> annualisedVariances_;
+
+    CalibrationResults results_;
 };
 
 class RelaxedFellerConstraint : public Constraint {
