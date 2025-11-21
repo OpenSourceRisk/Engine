@@ -115,6 +115,25 @@ private:
     std::vector<bool> fixed_;
 };
 
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s) {
+    static std::map<std::string, HestonProcess::Discretization> m = {
+        {"PartialTruncation", HestonProcess::PartialTruncation},
+        {"FullTruncation", HestonProcess::FullTruncation},
+        {"Reflection", HestonProcess::Reflection},
+        {"NonCentralChiSquareVariance", HestonProcess::NonCentralChiSquareVariance},
+        {"QuadraticExponential", HestonProcess::QuadraticExponential},
+        {"QuadraticExponentialMartingale", HestonProcess::QuadraticExponentialMartingale},
+        {"BroadieKayaExactSchemeLobatto", HestonProcess::BroadieKayaExactSchemeLobatto},
+        {"BroadieKayaExactSchemeLaguerre", HestonProcess::BroadieKayaExactSchemeLaguerre},
+        {"BroadieKayaExactSchemeTrapezoidal", HestonProcess::BroadieKayaExactSchemeTrapezoidal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to HestonProcess::Discretization");
+    }
+}
+  
 std::vector<Real> HestonModelCalibration::buildHelpers(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
     Handle<Quote> s0 = process_->stateVariable();
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
@@ -122,7 +141,6 @@ std::vector<Real> HestonModelCalibration::buildHelpers(const QuantLib::ext::shar
     Handle<BlackVolTermStructure> vts = process_->blackVolatility();
     std::vector<Real> moneyness = moneyness_.size() > 0 ? moneyness_ : std::vector<Real>(1, 0.0);
     QL_REQUIRE(expiries_.size() > 0, "no option expiries given");
-
     DayCounter dc = vts->dayCounter();
     Calendar cal = vts->calendar();
 
@@ -207,6 +225,10 @@ void HestonModelCalibration::logCalibration(const std::vector<Real>& moneyness) 
 }
 
 QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
+    DLOG("dontCalibrate: " << dontCalibrate_);
+    DLOG("initial values: " << to_string(initialValues_));
+    DLOG("discretization: " << to_string(discretization_));
+
     if (restarts_ > 0)
         return model2();
     else
@@ -214,11 +236,8 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
 }
 
 QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
-
     DLOG("model1 called");
-    DLOG("dontCalibrate: " << dontCalibrate_);
-    DLOG("initial values: " << to_string(initialValues_));
-
+    
     QL_REQUIRE(initialValues_.size() == 5, "5 initial values expected, found " << initialValues_.size());
 
     Real theta = initialValues_[0];
@@ -230,7 +249,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     if (dontCalibrate_) {
         auto hestonProcess =
             QuantLib::ext::make_shared<HestonProcess>(process_->riskFreeRate(), process_->dividendYield(),
-                                                      process_->stateVariable(), v0, kappa, theta, sigma, rho);
+                                                      process_->stateVariable(), v0, kappa, theta, sigma, rho, discretization_);
         return QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     }
 
@@ -291,7 +310,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
     Handle<YieldTermStructure> dts = process_->dividendYield();
 
-    auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho);
+    auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho, discretization_);
     auto hestonModel = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     auto hestonEngine = QuantLib::ext::make_shared<AnalyticHestonEngine>(hestonModel, 64);
     // auto hestonEngine = QuantLib::ext::make_shared<COSHestonEngine>(hestonModel, 12, 75);
@@ -348,10 +367,9 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     Real v0 = initialValues_[4];
 
     if (dontCalibrate_) {
-        // with default HestonProcess::Discretization
         auto hestonProcess =
             QuantLib::ext::make_shared<HestonProcess>(process_->riskFreeRate(), process_->dividendYield(),
-                                                      process_->stateVariable(), v0, kappa, theta, sigma, rho);
+                                                      process_->stateVariable(), v0, kappa, theta, sigma, rho, discretization_);
         return QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     }
 
@@ -363,13 +381,12 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
     Handle<YieldTermStructure> dts = process_->dividendYield();
 
-    auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho);
+    auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho, discretization_);
     auto model = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     auto hestonEngine = QuantLib::ext::make_shared<AnalyticHestonEngine>(model, 64);
     // auto hestonEngine = QuantLib::ext::make_shared<COSHestonEngine>(model, 12, 75);
     // auto hestonEngine = QuantLib::ext::make_shared<ExponentialFittingHestonEngine>(model);
-    Constraint fellerConstraint = HestonModel::FellerConstraint();
-    //Constraint constraint = fellerConstraint;
+    //Constraint constraint = HestonModel::FellerConstraint();
     //Constraint constraint = NoConstraint();
     Constraint constraint = RelaxedFellerConstraint(relaxedFellerConstraint_);
     LevenbergMarquardt method; 
@@ -420,7 +437,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     Real feller = 2.0 * bestParams[0] * bestParams[1] / pow(bestParams[2], 2);
     DLOG("feller: " << feller);
     if (feller < 1) {
-        ALOG("feller constraint violated");
+        ALOG("feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
     }
 
     DLOG("Model Calibration Results:");

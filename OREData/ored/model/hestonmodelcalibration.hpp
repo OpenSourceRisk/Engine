@@ -59,10 +59,12 @@ public:
                            // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
                            const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.9, 0.04},
                            const std::vector<bool>& fixedValues = {false, false, false, false, false},
-                           Real relaxedFellerConstraint = 1.0, Size restarts = 0, Real tolerance = 0.001, const bool dontCalibrate = false)
+                           Real relaxedFellerConstraint = 1.0, Size restarts = 0, Real tolerance = 0.001,
+                           const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
+                           const bool dontCalibrate = false)
         : process_(process), expiries_(expiries), moneyness_(moneyness), varianceTerms_(varianceTerms),
           initialValues_(initialValues), fixedValues_(fixedValues), relaxedFellerConstraint_(relaxedFellerConstraint),
-          restarts_(restarts), tolerance_(tolerance), dontCalibrate_(dontCalibrate) {}
+          restarts_(restarts), tolerance_(tolerance), discretization_(discretization), dontCalibrate_(dontCalibrate) {}
 
     ext::shared_ptr<HestonModel> model();
 
@@ -105,6 +107,7 @@ private:
     Real relaxedFellerConstraint_;
     Size restarts_;
     Real tolerance_;
+    HestonProcess::Discretization discretization_;
     bool dontCalibrate_;
 
     // Results
@@ -139,6 +142,8 @@ public:
         QL_REQUIRE(epsilon > 0.0 && epsilon <= 1.0, "epsilon " << epsilon << " out of range [0,1]");
     }
 };
-  
+
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s);
+
 } // namespace data
 } // namespace ore

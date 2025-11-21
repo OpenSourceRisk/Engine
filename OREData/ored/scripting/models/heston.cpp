@@ -263,7 +263,7 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
                                 const Matrix& correlation, const Matrix& sqrtCorr,
                                 const std::vector<Size>& eqComIdx) const {
 
-    bool checkCorrelations = true;
+    bool checks = true;
     
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
                                                   std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
@@ -328,7 +328,11 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
     // Empirical Heston correlation for each index at each time grid point, before and after decorrelation
     std::vector<std::vector<Real>> cov1(indices_.size(), std::vector<Real>(timeGrid_.size() - 1, 0.0));
     std::vector<std::vector<Real>> cov2(indices_.size(), std::vector<Real>(timeGrid_.size() - 1, 0.0));
-    
+
+    // Cache variance processes along entire path to check proximity to zero, effect of a relaxed Feller constraint
+    std::vector<std::vector<Real>> varianceState(indices_.size(), std::vector<Real>(timeGrid_.size() - 1, 0.0));
+
+    Size countStuck = 0;
     for (Size path = 0; path < size(); ++path) {
         auto p = gen->next();
         state = state0;
@@ -353,7 +357,7 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 	    
 	    Array dWcor = sqrtCorr * p.value[i];
 
-            if (checkCorrelations) {
+            if (checks) {
                 for (Size j1 = 0; j1 < dWcor.size(); j1++) {
                     for (Size j2 = 0; j2 < dWcor.size(); j2++)
                         cov[i][j1][j2] += dWcor[j1] * dWcor[j2];
@@ -368,12 +372,12 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 	        // 2-d array of correlated Wiener increments for the Heston subsystem j	      
 	        dw[0] = dWcor[2*j];
 	        dw[1] = dWcor[2*j+1];
-		if (checkCorrelations)
+		if (checks)
 		    cov1[j][i] += dw[0] * dw[1];
 		
 	        // Decorrelate the subsystem, 2-d array of independent Wiener increments
 		Array dw_decorrelated = Qinv[j] * dw;
-		if (checkCorrelations)
+		if (checks)
 		    cov2[j][i] += dw_decorrelated[0] * dw_decorrelated[1];
 		
 		// The Heston process in QL expects the latter independent increments as input
@@ -384,6 +388,9 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 		// decorrelation step.
 		state[j] = process->evolve(t0, state[j], dt, dw_decorrelated);
 
+		// Keep track of the variance states to analyse below
+		varianceState[j][i] = state[j][1];
+		
 		// TODO: foreign currency index drift adjustment
 	    }
 	    
@@ -394,10 +401,32 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
                 ++date;
                 ++pos;
             }
+	}
+
+        // Check variance process
+        if (checks) {
+            Real tol = 1e-8; // FIXME
+            int iMax = int(timeGrid_.size()) - 2;
+            for (Size j = 0; j < indices_.size(); ++j) {
+                Size iStuck = timeGrid_.size();
+                for (int i = iMax - 1; i >= 0; --i) {
+                    if (varianceState[j][i] < tol && varianceState[j][i + 1] < tol)
+                        iStuck = i;
+                }
+                if (iStuck <= iMax - 1) {
+		    countStuck++;
+		    // ALOG("Heston path " << path << " for index " << indices_[j].name()
+                    //                     << " seems to get stuck at time step " << iStuck << "/" << iMax - 1);
+                }
+            }
         }
     }
 
-    if (checkCorrelations) {
+    if (checks) {
+        if (countStuck > 0) {
+            ALOG("Variance process stuck across " << size() * indices_.size() << " paths: " << countStuck);
+        }
+
         // The accuracy of the empirical correlation depends on number of samples and sampling method.
         // So use a generous tolerance here, anyway just a temporary test.
         Real tol = 0.01;
