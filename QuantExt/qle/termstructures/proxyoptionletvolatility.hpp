@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ql/indexes/iborindex.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
 namespace QuantExt {
@@ -40,9 +41,9 @@ public:
     QuantLib::Rate maxStrike() const override { return baseVol_->maxStrike(); }
     QuantLib::Date maxDate() const override { return baseVol_->maxDate(); }
     const QuantLib::Date& referenceDate() const override { return baseVol_->referenceDate(); }
-    VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
-    Real displacement() const override { return baseVol_->displacement(); }
-    Calendar calendar() const override { return baseVol_->calendar(); }
+    QuantLib::VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
+    QuantLib::Real displacement() const override { return baseVol_->displacement(); }
+    QuantLib::Calendar calendar() const override { return baseVol_->calendar(); }
 
     const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& baseVol() const { return baseVol_; }
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex() const { return baseIndex_; }
@@ -50,6 +51,10 @@ public:
     const QuantLib::Period& baseRateComputationPeriod() const { return baseRateComputationPeriod_; }
     const QuantLib::Period& targetRateComputationPeriod() const { return targetRateComputationPeriod_; }
     double scalingFactor() const { return scalingFactor_; }
+
+    static QuantLib::Real getAtmLevel(const QuantLib::Date& fixingDate,
+                                      const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
+                                      const QuantLib::Period& rateComputationPeriod);
 
 private:
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
