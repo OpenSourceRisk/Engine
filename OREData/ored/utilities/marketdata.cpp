@@ -301,7 +301,7 @@ indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market
                                  const std::string& baseCorrelationCurveId, const std::string& configuration) {
     Handle<QuantExt::BaseCorrelationTermStructure> curve;
     try {
-        curve = market->baseCorrelation(baseCorrelationCurveId, configuration);
+        return market->baseCorrelation(baseCorrelationCurveId, configuration);
     } catch (const std::exception&) {
         DLOG("Could not find base correlation curve " << baseCorrelationCurveId
                                                       << ", fall back on curve id without tenor.");

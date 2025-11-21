@@ -1,0 +1,25 @@
+<StressTesting>
+
+    <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+
+    <StressTest id="base_stress">
+        <CommodityCurves>
+            <CommodityCurve commodity="NaturalGas">
+                <Currency>USD</Currency>
+                <ShiftType>Relative</ShiftType>
+                <Shifts>0.05,0.05</Shifts>
+                <ShiftTenors>1Y,10Y</ShiftTenors>
+            </CommodityCurve>
+        </CommodityCurves>
+    </StressTest>
+    <StressTest id="basis_stress">
+        <CommodityCurves>
+            <CommodityCurve commodity="NaturalGasBasis">
+                <Currency>USD</Currency>
+                <ShiftType>Relative</ShiftType>
+                <Shifts>0.05,0.05</Shifts>
+                <ShiftTenors>1Y,10Y</ShiftTenors>
+            </CommodityCurve>
+        </CommodityCurves>
+    </StressTest>
+</StressTesting>

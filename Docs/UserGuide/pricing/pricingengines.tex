@@ -1823,6 +1823,10 @@ The parameters have the following meaning:
 \item Curve: Index, Underlying
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item CalibrateUnderlyingCurves [optional]: Only applies when Curve is set to Underlying. 
+If true, it apply a spread to the the individual constituent curves to match the index CDS spread. 
+This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
+(See Calibration of default curves for index tranches for details.)
 \end{itemize}
 
 \begin{longlisting}
@@ -1835,6 +1839,7 @@ The parameters have the following meaning:
         <Parameter name="Curve">Index</Parameter>
         <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+        <Parameter name="CalibrateUnderlyingCurves">false</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -1867,6 +1872,10 @@ The parameters have the following meaning:
 \item FepCurve: Index, Underlying
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item CalibrateUnderlyingCurves [optional]: Only applies when Curve or FepCurve is set to Underlying. 
+If true, it apply a spread to the the individual constituent curves to match the index CDS spread. 
+This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
+(See Calibration of default curves for index tranches for details.)
 \end{itemize}
 
 \begin{longlisting}
@@ -1898,6 +1907,10 @@ The parameters have the following meaning:
 \item FepCurve: Index, Underlying
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item CalibrateUnderlyingCurves [optional]: Only applies when Curve or FepCurve is set to Underlying. 
+If true, it apply a spread to the the individual constituent curves to match the index CDS spread. 
+This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
+(See Calibration of default curves for index tranches for details.)
 \end{itemize}
 
 \begin{longlisting}

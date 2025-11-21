@@ -44,12 +44,12 @@ public:
                                    const std::vector<std::vector<QuantExt::RandomVariable>>& irVega,
                                    const std::vector<QuantExt::RandomVariable>& fxDelta,
                                    const std::vector<std::vector<QuantExt::RandomVariable>>& fxVega,
-                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginIR = nullptr,
-                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginIR = nullptr,
-                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginIR = nullptr,
-                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> deltaMarginFX = nullptr,
-                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> vegaMarginFX = nullptr,
-                                   QuantLib::ext::shared_ptr<QuantExt::RandomVariable> curvatureMarginFX = nullptr);
+                                   QuantExt::RandomVariable* deltaMarginIrReturn = nullptr,
+                                   QuantExt::RandomVariable* vegaMarginIrReturn = nullptr,
+                                   QuantExt::RandomVariable* curvatureMarginIrReturn = nullptr,
+                                   QuantExt::RandomVariable* deltaMarginFxReturn = nullptr,
+                                   QuantExt::RandomVariable* vegaMarginFxReturn = nullptr,
+                                   QuantExt::RandomVariable* curvatureMarginFxReturn = nullptr);
 
 private:
     // input params

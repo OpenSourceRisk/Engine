@@ -19,6 +19,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -316,6 +317,14 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             
             writePnl_ = tradeGroup->allLevel() && riskGroup->allLevel();
             tradeIdIdxPairs_ = tradeIdGroups_.at(tradeGroupKey(tradeGroup));
+            if (tradeIdIdxPairs_.size() == 0) {
+                StructuredAnalyticsErrorMessage(
+                    "Market Risk Backtest", "No trades for tradeGroup",
+                    "No trades to process for RiskGroup: " + riskGroup->to_string() + ", TradeGroup: "
+                        + tradeGroup->to_string())
+                    .log();
+                continue;
+            }
 
             // populate the tradeIds
             transform(tradeIdIdxPairs_.begin(), tradeIdIdxPairs_.end(), back_inserter(tradeIds_),

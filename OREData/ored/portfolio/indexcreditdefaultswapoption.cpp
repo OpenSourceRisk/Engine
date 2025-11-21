@@ -287,8 +287,9 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
 
     // for cash settlement build the underlying swap with the inccy discount curve
     Settlement::Type settleType = parseSettlementType(option_.settlement());
-    cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
-                                                    swap_.recoveryRate(), settleType == Settlement::Cash));
+    cds->setPricingEngine(iCdsEngineBuilder->engine(
+        ccy, creditCurveId, constituentIds, overrideCurve, iCdsOptionEngineBuilder->calibrateUnderlyingCurves(),
+        constituentNtls, swap_.recoveryRate(), settleType == Settlement::Cash));
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -312,7 +313,8 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
-    option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds));
+    option->setPricingEngine(
+        iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds, constituentNtls));
     setSensitivityTemplate(*iCdsOptionEngineBuilder);
     addProductModelEngine(*iCdsOptionEngineBuilder);
 

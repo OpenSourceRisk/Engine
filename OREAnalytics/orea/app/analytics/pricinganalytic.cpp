@@ -118,7 +118,7 @@ void PricingAnalyticImpl::runAnalytic(
             if (analytic()->portfolio()->engineFactory()->modelBuilders().size() > 0) {
                 CONSOLEW("Pricing: Asset Model Calibration Report");
                 auto calReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                ReportWriter(inputs_->reportNaString()).writeAssetModelCalibration(*calReport, analytic()->portfolio());
+                ReportWriter(inputs_->reportNaString()).writeAssetModelCalibrationReport(*calReport, analytic()->portfolio());
                 analytic()->addReport(type, "assetmodelcalibration", calReport);
                 CONSOLE("OK");
             } else {

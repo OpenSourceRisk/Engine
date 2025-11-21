@@ -160,9 +160,10 @@ contains an ID pointing to a line in the {\tt market.txt} file, i.e.\ in this ca
 or discount factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt conventions.xml} file
 described in section \ref{sec:conventions}. The \lstinline!Conventions! node associates conventions with the quotes.
 
-For \emph{Discount} type segments, the quotes can be given using a wildcard. Any valid and matching quotes will then be loaded from the provided market data. An example wildcard is:
+For both \emph{Zero} and \emph{Discount} type segments, the quotes can be given using a wildcard. Any valid and matching quotes will then be loaded from the provided market data. Example wildcards are:
 \begin{itemize}
-  \item {DISCOUNT/RATE/EUR/EUR3M/*}
+  \item {ZERO/RATE/EUR/*} - matches all EUR zero rate quotes
+  \item {DISCOUNT/RATE/EUR/EUR3M/*} - matches all EUR discount factor quotes for the EUR3M curve
 \end{itemize}
 
 \begin{listing}[H]

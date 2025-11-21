@@ -109,3 +109,11 @@ Decompose credit index sensitivities into basket constituent sensitivities, deco
 pricing engine setting.
 
 Run with: <code>python run_sensi_cr_decomp.py</code>
+
+## Sensitivity and Stress Analysis with curve algebra for commodity basis curves
+
+When the base curve is shifted in sensitivity or stresstest scenario, the basis curve will be shifted along when 
+curve algebra is defined in the simulation market config. The test portfolio contains of a basis swap, which should generate
+only a sensitivty under the basis shift and a option on the derived instrument which should show identical sensitivity on the base and basis curve.
+
+Run with: <code>python run_curvealgebra.py</code>

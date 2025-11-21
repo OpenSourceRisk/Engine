@@ -75,7 +75,7 @@ void BasisTwoSwapHelper::initializeDates() {
        of the atm swap rate in MakeVanillaSwap operator ...(). If it is
        Null, you get an exception because the discountRelinkableHandle_
        is initially empty. */
-    longSwap_ = MakeVanillaSwap(swapTenor_, longIndex_, 0.0)
+    longSwap_ = MakeVanillaSwap(swapTenor_, longIndex_, quote().empty() || !longMinusShort_ ? 0.0 : quote()->value())
                     .withDiscountingTermStructure(discountRelinkableHandle_)
                     .withFixedLegDayCount(longFixedDayCount_)
                     .withFixedLegTenor(Period(longFixedFrequency_))
@@ -84,7 +84,7 @@ void BasisTwoSwapHelper::initializeDates() {
                     .withFixedLegCalendar(calendar_)
                     .withFloatingLegCalendar(calendar_);
 
-    shortSwap_ = MakeVanillaSwap(swapTenor_, shortIndex_, 0.0)
+    shortSwap_ = MakeVanillaSwap(swapTenor_, shortIndex_, quote().empty() || longMinusShort_ ? 0.0 : quote()->value())
                      .withDiscountingTermStructure(discountRelinkableHandle_)
                      .withFixedLegDayCount(shortFixedDayCount_)
                      .withFixedLegTenor(Period(shortFixedFrequency_))

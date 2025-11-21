@@ -523,6 +523,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityDoubleBarrierOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(MidPointCdsEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(IsdaCdsEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilder, false)

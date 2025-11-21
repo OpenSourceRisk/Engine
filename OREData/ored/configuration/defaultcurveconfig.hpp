@@ -51,7 +51,7 @@ public:
     class Config : public XMLSerializable {
     public:
         //! Supported default curve types
-        enum class Type { SpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null };
+        enum class Type { SpreadCDS, ConvSpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null };
         Config(const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                const DayCounter& dayCounter, const string& conventionID,
                const std::vector<std::pair<std::string, bool>>& cdsQuotes = {}, bool extrapolation = true,

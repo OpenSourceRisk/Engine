@@ -60,6 +60,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
         {"HAZARD_RATE", MarketDatum::InstrumentType::HAZARD_RATE},
         {"RECOVERY_RATE", MarketDatum::InstrumentType::RECOVERY_RATE},
+        {"ASSUMED_RECOVERY_RATE", MarketDatum::InstrumentType::ASSUMED_RECOVERY_RATE},
         {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
         {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
@@ -485,6 +486,23 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
                 docClause = tokens[5];
         }
         return QuantLib::ext::make_shared<RecoveryRateQuote>(value, asof, datumName, underlyingName, seniority, ccy, docClause);
+    }
+
+    case MarketDatum::InstrumentType::ASSUMED_RECOVERY_RATE: {
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5 || tokens.size() == 6,
+                   "3, 5 or 6 tokens expected in " << datumName);
+        const string& underlyingName = tokens[2]; // issuer name for CDS, security ID for bond specific RRs
+        string seniority = "";
+        string ccy = "";
+        string docClause = "";
+        if (tokens.size() >= 5) {
+            // CDS
+            seniority = tokens[3];
+            ccy = tokens[4];
+            if (tokens.size() == 6)
+                docClause = tokens[5];
+        }
+        return QuantLib::ext::make_shared<AssumedRecoveryRateQuote>(value, asof, datumName, underlyingName, seniority, ccy, docClause);
     }
 
     case MarketDatum::InstrumentType::CAPFLOOR: {

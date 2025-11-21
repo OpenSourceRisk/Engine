@@ -25,6 +25,8 @@
 
 #include <ql/patterns/lazyobject.hpp>
 #include <qle/termstructures/commoditybasispricetermstructure.hpp>
+#include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/spreadedpricetermstructure.hpp>
 
 namespace QuantExt {
 
@@ -67,6 +69,23 @@ public:
     QuantLib::Time minTime() const override { return priceCurve_->minTime(); }
     const QuantLib::Currency& currency() const override { return priceCurve_->currency(); }
     std::vector<QuantLib::Date> pillarDates() const override { return priceCurve_->pillarDates(); }
+
+    void makeThisCurveSpreaded(const std::vector<QuantLib::Handle<PriceTermStructure>>& bases,
+                               const std::vector<double>& multiplier) {
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(priceCurve_)) {
+            c->makeThisCurveSpreaded(bases, multiplier);
+        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedPriceTermStructure>(priceCurve_)) {
+            c->makeThisCurveSpreaded(bases, multiplier);
+        } else if (auto c = QuantLib::ext::dynamic_pointer_cast<CommodityBasisPriceCurveWrapper>(priceCurve_)) {
+            c->makeThisCurveSpreaded(bases, multiplier);
+        } else {
+            QL_FAIL(
+                "CommodityBasisPriceCurveWrapper::makeThisCurveSpreaded(): underlying price curve could not be cast to "
+                "InterpolatedPriceCurve<Linear>, SpreadedPriceTermStructure or CommodityBasisPriceCurveWrapper, "
+                "internal error (contact dev)");
+        }
+        update();
+    }
 
 private:
     void performCalculations() const override {}

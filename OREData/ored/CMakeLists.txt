@@ -90,6 +90,8 @@ model/fxbsdata.cpp
 model/hestonmodelbuilder.cpp
 model/hestonmodelcalibration.cpp
 model/hwbuilder.cpp
+model/hwhistoricalcalibrationmodelbuilder.cpp
+model/hwhistoricalcalibrationmodeldata.cpp
 model/inflation/infdkbuilder.cpp
 model/inflation/infdkdata.cpp
 model/inflation/infjybuilder.cpp
@@ -201,6 +203,7 @@ portfolio/callablebond.cpp
 portfolio/callablebondreferencedata.cpp
 portfolio/callableswap.cpp
 portfolio/capfloor.cpp
+portfolio/cashflowutils.cpp
 portfolio/cashposition.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
@@ -501,6 +504,8 @@ model/fxbsdata.hpp
 model/hestonmodelbuilder.hpp
 model/hestonmodelcalibration.hpp
 model/hwbuilder.hpp
+model/hwhistoricalcalibrationmodelbuilder.hpp
+model/hwhistoricalcalibrationmodeldata.hpp
 model/inflation/infdkbuilder.hpp
 model/inflation/infdkdata.hpp
 model/inflation/infjybuilder.hpp
@@ -618,6 +623,7 @@ portfolio/callablebond.hpp
 portfolio/callablebondreferencedata.hpp
 portfolio/callableswap.hpp
 portfolio/capfloor.hpp
+portfolio/cashflowutils.hpp
 portfolio/cashposition.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp

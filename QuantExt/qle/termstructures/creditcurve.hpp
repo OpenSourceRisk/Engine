@@ -47,6 +47,7 @@ public:
         QuantLib::DayCounter dayCounter = QuantLib::Actual360(false);
         QuantLib::DayCounter lastPeriodDayCounter = QuantLib::Actual360(true);
         QuantLib::Natural cashSettlementDays = 3;
+        std::string type = std::string();
     };
 
     explicit CreditCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,

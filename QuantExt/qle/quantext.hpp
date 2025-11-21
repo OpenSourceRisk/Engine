@@ -327,6 +327,7 @@
 #include <qle/models/homogeneouspooldef.hpp>
 #include <qle/models/hullwhitebucketing.hpp>
 #include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/hwhistoricalcalibrationmodel.hpp>
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/hwpiecewiseparametrization.hpp>
@@ -552,7 +553,6 @@
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
-#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
