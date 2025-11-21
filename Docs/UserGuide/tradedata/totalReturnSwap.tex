@@ -214,6 +214,22 @@ indices.
 \label{lst:fxterms}
 \end{listing}
 
+\item FXConversion [Optional]: Determines what Fx rate is used in the payoff calculation, the rate at the  \emph{Start} of 
+the period (default) or the rate at the \emph{End}.  Only has an impact If the underlying asset currency is different from 
+the return currency.
+
+With the default FXConversion \emph{Start} the accrual pricing return is:\\
+(Ntl x today's price x today's Fx rate) - (Ntl x initial price x initial Fx rate)\\
+When the as of date is the date of the final price (end of period) we have:\\
+(Ntl x final price x final Fx rate) - (Ntl x initial price x initial Fx rate)
+
+With the FXConversion \emph{End}  the accrual pricing return is:\\
+(Ntl x todays price x today's Fx rate) - (Ntl x initial price x today's Fx rate)\\
+When the as of date is the date of the final price (end of period) we have:\\
+(Ntl x final price x final Fx rate) - (Ntl x initial price x final Fx rate)
+
+Allowable values: \emph{Start}, \emph{End}. Defaults to \emph{Start} if omitted.
+
   \item PayUnderlyingCashFlowsImmediately [Optional]: If true, underlying cashflows like coupon or amortisation payments
     from bonds or dividend payments from equities, are paid when they occur. If false, these cashflows are paid together
     with the next return payment. If omitted, the default value is false for trade type TotalReturnSwap and true for
