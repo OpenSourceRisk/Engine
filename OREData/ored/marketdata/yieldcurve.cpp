@@ -2041,8 +2041,11 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
                      QL_REQUIRE(!depositHelper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
                                 "YieldCurve::addDeposits(): ibor index has empty forwarding term structure");
                      return getCashflowReportData(
-                         {QuantLib::Leg{depositHelper->iborCoupon()}}, {false}, {1.0}, currency_[index].code(),
-                         {currency_[index].code()}, asofDate_,
+                         {QuantLib::Leg{
+                             depositHelper->iborCoupon(),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(1.0, depositHelper->iborCoupon()->date()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, asofDate_)}},
+                         {false}, {1.0E6}, currency_[index].code(), {currency_[index].code()}, asofDate_,
                          {*depositHelper->iborCoupon()->iborIndex()->forwardingTermStructure()}, {1.0}, {}, {});
                  }}});
         }
