@@ -341,7 +341,7 @@ TradeCashflowReportData getCashflowReportData(
     if (amount != Null<Real>())
         effectiveAmount = amount * multiplier;
 
-    discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurveCcy->discount(payDate);
+    discountFactor = payDate < asof ? 0.0 : discountCurveCcy->discount(payDate);
     if (effectiveAmount != Null<Real>())
         presentValue = discountFactor * effectiveAmount;
     try {
