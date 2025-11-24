@@ -108,6 +108,7 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/escpi.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/formulabasedindex.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>

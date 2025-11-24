@@ -221,7 +221,7 @@ Handle<IborIndex> DependencyMarket::iborIndex(const string& name, const string& 
                                       << rfrName << "' to OvernightIndex, this is unexpected.");
         auto fallbackData = iborFallbackConfig_->fallbackData(name);
 	if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iip))
-            ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
+            ii = Handle<IborIndex>(QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
                 original, oi, fallbackData.spread,
                                                                                fallbackData.switchDate, false));
 	else

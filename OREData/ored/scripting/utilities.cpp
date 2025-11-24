@@ -509,7 +509,7 @@ QuantLib::ext::shared_ptr<FallbackIborIndex> IndexInfo::irIborFallback(const Qua
     return nullptr;
 }
 
-QuantLib::ext::shared_ptr<FallbackIborIndex>
+QuantLib::ext::shared_ptr<FallbackOvernightIndex>
 IndexInfo::irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 									 const Date& asof) const {
     if (isIrIbor_ && iborFallbackConfig->isIndexReplaced(name_, asof)) {
@@ -519,7 +519,7 @@ IndexInfo::irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfi
         QL_REQUIRE(on, "IndexInfo::irIborFallback(): could not cast rfr index '"
                            << data.rfrIndex << "' for ibor fallback index '" << name_ << "' to an overnight index");
         if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(irIbor_))
-            return QuantLib::ext::make_shared<FallbackIborIndex>(original, on, data.spread, data.switchDate,
+            return QuantLib::ext::make_shared<FallbackOvernightIndex>(original, on, data.spread, data.switchDate,
                                                                  original->forwardingTermStructure());
 	else
 	    return nullptr;

@@ -31,6 +31,7 @@
 
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
 
 #pragma once
 
@@ -116,7 +117,7 @@ public:
     QuantLib::ext::shared_ptr<FallbackIborIndex> irIborFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                                         const Date& asof = QuantLib::Date::maxDate()) const;
     // nullptr if it is no overnight fallback index
-    QuantLib::ext::shared_ptr<FallbackIborIndex>
+    QuantLib::ext::shared_ptr<FallbackOvernightIndex>
     irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 								  const Date& asof = QuantLib::Date::maxDate()) const;
     QuantLib::ext::shared_ptr<SwapIndex> irSwap() const { return irSwap_; }

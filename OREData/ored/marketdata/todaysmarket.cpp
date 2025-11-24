@@ -47,6 +47,7 @@
 #include <qle/indexes/dividendmanager.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
@@ -343,7 +344,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
                                    << fallbackData.rfrIndex << "' as fallback for ibor index '" << node.name
                                    << "', but this is not an overnight index. Are the fallback rules correct here?");
                     if (auto original = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
-                        tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
+                        tmpIndex = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
                             original, oi, fallbackData.spread, fallbackData.switchDate,
                             iborFallbackConfig_->useRfrCurveInTodaysMarket());
                     else

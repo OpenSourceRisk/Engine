@@ -454,7 +454,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
         Problem problem(t, noConstraint, guess);
         try {
             lm.minimize(problem, endCriteria);
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             continue;
         }
 
@@ -599,7 +599,7 @@ void SabrParametricVolatility::calculate() {
             calibrationErrors_[key] = error;
             lognormalShifts_[key] = shift;
             noOfAttempts_[key] = noOfAttempts;
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             // all calibration failed -> do not populate params, but interpolate them below
         }
     }
