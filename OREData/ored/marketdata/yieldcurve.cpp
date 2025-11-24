@@ -2373,9 +2373,9 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                                             : *oisHelper->swap()->iborIndex()->forwardingTermStructure();
                              return getCashflowReportData(
                                  {oisHelper->swap()->fixedLeg(), oisHelper->swap()->floatingLeg()}, {false, true},
-                                 {1.0, 1.0}, currency_[index].code(),
-                                 {currency_[index].code(), currency_[index].code()}, asofDate_,
-                                 {dsc, dsc}, {1.0, 1.0}, {}, {});
+                                 {1.0E6, 1.0E6}, currency_[index].code(),
+                                 {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0},
+                                 {}, {});
                          }}});
                 } else {
                     auto oisHelper = QuantLib::ext::make_shared<QuantExt::DatedOISRateHelper>(
