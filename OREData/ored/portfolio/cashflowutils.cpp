@@ -176,7 +176,8 @@ TradeCashflowReportData getCashflowReportData(
     const std::string ccy, const Date asof, const ext::shared_ptr<YieldTermStructure>& discountCurveCcy,
     const double fxCcyBase,
     const std::function<ext::shared_ptr<SwaptionVolatilityStructure>(const std::string& qualifier)>& swaptionVol,
-    const std::function<ext::shared_ptr<OptionletVolatilityStructure>(const std::string& qualifier)>& capFloorVol) {
+    const std::function<ext::shared_ptr<OptionletVolatilityStructure>(const std::string& qualifier)>& capFloorVol,
+    const std::string& overwriteFlowType, const Real overwriteNotional) {
 
     QL_REQUIRE(ptrFlow, "getCashflowReportData: prtFlow is null.");
     QL_REQUIRE(discountCurveCcy || ptrFlow->hasOccurred(asof), "getCashflowReportData: discountCurveCcy is null.");
@@ -305,6 +306,7 @@ TradeCashflowReportData getCashflowReportData(
         fixingDate = ptrIndCf->fixingDate();
         fixingValue = ptrIndCf->indexFixing();
         flowType = "Index";
+        // notional = ptrIndCf->notional(); // TODO we should enable this
     } else if (ptrCommIndCf) {
         fixingDate = ptrCommIndCf->lastPricingDate();
         fixingValue = ptrCommIndCf->fixing();
@@ -443,8 +445,10 @@ TradeCashflowReportData getCashflowReportData(
 
     TradeCashflowReportData result;
 
+    Real effNotional = overwriteNotional != Null<Real>() ? overwriteNotional : notional;
+
     result.payDate = payDate;
-    result.flowType = flowType;
+    result.flowType = overwriteFlowType.empty() ? flowType : overwriteFlowType;
     result.amount = effectiveAmount;
     result.currency = ccy;
     result.coupon = coupon;
@@ -454,7 +458,7 @@ TradeCashflowReportData getCashflowReportData(
     result.accruedAmount = accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier);
     result.fixingDate = fixingDate;
     result.fixingValue = fixingValue;
-    result.notional = notional * (notional == Null<Real>() ? 1.0 : multiplier);
+    result.notional = effNotional * (effNotional == Null<Real>() ? 1.0 : multiplier);
     result.discountFactor = discountFactor;
     result.presentValue = presentValue;
     result.fxRateLocalBase = fxCcyBase;
@@ -478,12 +482,16 @@ std::vector<TradeCashflowReportData> getCashflowReportData(
     const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
         swaptionVol,
     const std::function<
-        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol) {
+        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol,
+    const std::vector<std::string>& overwriteFlowType, const std::vector<Real>& overwriteNotional) {
     std::vector<TradeCashflowReportData> result;
     for (Size i = 0; i < legs.size(); ++i) {
+        std::string owFlowType = overwriteFlowType.size() > i ? overwriteFlowType[i] : std::string();
+        Real owNotional = overwriteNotional.size() > i ? overwriteNotional[i] : Null<Real>();
         for (Size j = 0; j < legs[i].size(); ++j) {
             result.push_back(getCashflowReportData(legs[i][j], payer[i], multiplier[i], baseCcy, ccys[i], asof,
-                                                   discountCurvesCcy[i], fxCcyBase[i], swaptionVol, optionletVol));
+                                                   discountCurvesCcy[i], fxCcyBase[i], swaptionVol, optionletVol,
+                                                   owFlowType, owNotional));
             result.back().cashflowNo = j + 1;
             result.back().legNo = i;
         }

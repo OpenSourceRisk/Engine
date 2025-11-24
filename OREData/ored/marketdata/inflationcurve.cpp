@@ -315,10 +315,10 @@ InflationCurve::CurveBuildResults
                 results.rateHelperTypes.push_back("ZeroCouponInflation");
                 results.cashflowGenerators.push_back(
                     std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
-                        return getCashflowReportData({instrument->swap()->leg(0), instrument->swap()->leg(1)},
-                                                     {false, true}, {1.0, 1.0}, index->currency().code(),
-                                                     {index->currency().code(), index->currency().code()}, asof,
-                                                     {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {});
+                        return getCashflowReportData(
+                            {instrument->swap()->leg(0), instrument->swap()->leg(1)}, {false, true}, {1.0E6, 1.0E6},
+                            index->currency().code(), {index->currency().code(), index->currency().code()}, asof,
+                            {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {}, {"Interest", ""}, {1.0E6, 1.0E6});
                     }));
             }
         }
@@ -422,9 +422,9 @@ InflationCurve::CurveBuildResults
             results.cashflowGenerators.push_back(
                 std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
                     return getCashflowReportData({instrument->swap()->leg(0), instrument->swap()->leg(1)},
-                                                 {false, true}, {1.0, 1.0}, index->currency().code(),
+                                                 {false, true}, {1.0E6, 1.0E6}, index->currency().code(),
                                                  {index->currency().code(), index->currency().code()}, asof,
-                                                 {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {});
+                                                 {*nominalTs, *nominalTs}, {1.0E6, 1.0E6}, {}, {});
                 }));
         }
     }

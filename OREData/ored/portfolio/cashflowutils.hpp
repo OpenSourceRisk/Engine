@@ -77,7 +77,8 @@ TradeCashflowReportData getCashflowReportData(
     const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
         swaptionVol,
     const std::function<
-        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol);
+        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol,
+    const std::string& overwriteFlowType = std::string(), const Real overwriteNotional = Null<Real>());
 
 // Populate TradeCashflowReportData based on Leg(s). Note: cashfowNo and legNo will _not_ be populated.
 std::vector<TradeCashflowReportData> getCashflowReportData(
@@ -88,7 +89,8 @@ std::vector<TradeCashflowReportData> getCashflowReportData(
     const std::function<QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure>(const std::string& qualifier)>&
         swaptionVol,
     const std::function<
-        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol);
+        QuantLib::ext::shared_ptr<QuantLib::OptionletVolatilityStructure>(const std::string& qualifier)>& optionletVol,
+    const std::vector<std::string>& overwriteFlowType = {}, const std::vector<Real>& overwriteNotional = {});
 
 // Populate vector<TradeCashflowReportData> based on additional results map
 void populateReportDataFromAdditionalResults(
