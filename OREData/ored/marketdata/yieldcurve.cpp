@@ -2078,8 +2078,11 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
                      QL_REQUIRE(!depositHelper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
                                 "YieldCurve::addDeposits(): ibor index has empty forwarding term structure");
                      return getCashflowReportData(
-                         {QuantLib::Leg{depositHelper->iborCoupon()}}, {false}, {1.0}, currency_[index].code(),
-                         {currency_[index].code()}, asofDate_,
+                         {QuantLib::Leg{
+                             depositHelper->iborCoupon(),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(1.0, depositHelper->iborCoupon()->date()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, asofDate_)}},
+                         {false}, {1.0E6}, currency_[index].code(), {currency_[index].code()}, asofDate_,
                          {*depositHelper->iborCoupon()->iborIndex()->forwardingTermStructure()}, {1.0}, {}, {});
                  }}});
         }
@@ -2146,14 +2149,21 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     futureConvention->overnightIndexFutureNettingType());
                 instruments.push_back(
                     {helper, "Short OI Future", marketQuote->name(), marketQuote->quote()->value(),
-                     std::function<std::vector<TradeCashflowReportData>()>{[helper, index, this]() {
-                         Leg l = {QuantLib::ext::make_shared<FixedRateCoupon>(
+                     std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
+                                                                            r = marketQuote->quote()->value(), this]() {
+                         Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->future()->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0,
                              helper->future()->overnightIndex()->dayCounter(), helper->future()->valueDate(),
                              helper->future()->maturityDate())};
-                         return getCashflowReportData(
-                             {l}, {false}, {1.0}, currency_[index].code(), {currency_[index].code()}, asofDate_,
-                             {*helper->future()->overnightIndex()->forwardingTermStructure()}, {1.0}, {}, {});
+                         Leg m{QuantLib::ext::make_shared<FixedRateCoupon>(
+                             helper->future()->maturityDate(), 1.0, 1.0 - r / 100.0,
+                             helper->future()->overnightIndex()->dayCounter(), helper->future()->valueDate(),
+                             helper->future()->maturityDate())};
+                         return getCashflowReportData({l, m}, {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
+                                                      {currency_[index].code(), currency_[index].code()}, asofDate_,
+                                                      {*helper->future()->overnightIndex()->forwardingTermStructure(),
+                                                       *helper->future()->overnightIndex()->forwardingTermStructure()},
+                                                      {1.0, 1.0}, {}, {});
                      }}});
 
                 TLOG("adding OI future helper: price=" << futureQuote->quote()->value() << " start=" << startDate
@@ -2186,14 +2196,18 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
 
                 instruments.push_back(
                     {helper, "Short MM Future", marketQuote->name(), marketQuote->quote()->value(),
-                     std::function<std::vector<TradeCashflowReportData>()>{[helper, index, this]() {
-                         Leg l = {QuantLib::ext::make_shared<FixedRateCoupon>(
+                     std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
+                                                                            r = marketQuote->quote()->value(), this]() {
+                         Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0, helper->dayCounter(),
                              helper->earliestDate(), helper->maturityDate())};
-                         return getCashflowReportData(
-                             {l}, {false}, {1.0}, currency_[index].code(), {currency_[index].code()}, asofDate_,
-                             {ext::shared_ptr<YieldTermStructure>(helper->termStructure(), QuantLib::null_deleter())},
-                             {1.0}, {}, {});
+                         Leg m{QuantLib::ext::make_shared<FixedRateCoupon>(
+                             helper->maturityDate(), 1.0, 1.0 - r / 100.0, helper->dayCounter(),
+                             helper->earliestDate(), helper->maturityDate())};
+                         ext::shared_ptr<YieldTermStructure> ts(helper->termStructure(), QuantLib::null_deleter());
+                         return getCashflowReportData({l, m}, {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
+                                                      {currency_[index].code(), currency_[index].code()}, asofDate_,
+                                                      {ts, ts}, {1.0, 1.0}, {}, {});
                      }}});
             }
         }
@@ -2249,13 +2263,24 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
 
             instruments.push_back(
                 {helper, "FRA", marketQuote->name(), marketQuote->quote()->value(),
-                 std::function<std::vector<TradeCashflowReportData>()>{[helper, index, this]() {
+                 std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
+                                                                        r = marketQuote->quote()->value(), this]() {
                      QL_REQUIRE(!helper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
                                 "YieldCurve::addFras(): ibor index has empty forwarding term structure");
-                     return getCashflowReportData({QuantLib::Leg{helper->iborCoupon()}}, {false}, {1.0},
-                                                  currency_[index].code(), {currency_[index].code()}, asofDate_,
-                                                  {*helper->iborCoupon()->iborIndex()->forwardingTermStructure()},
-                                                  {1.0}, {}, {});
+                     return getCashflowReportData(
+                         {QuantLib::Leg{helper->iborCoupon()},
+                          QuantLib::Leg{
+                              QuantLib::ext::make_shared<FixedRateCoupon>(
+                                  helper->iborCoupon()->date(), 1.0, r, helper->iborCoupon()->dayCounter(),
+                                  helper->iborCoupon()->accrualStartDate(), helper->iborCoupon()->accrualEndDate(),
+                                  helper->iborCoupon()->referencePeriodStart(),
+                                  helper->iborCoupon()->referencePeriodEnd()),
+                          }},
+                         {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
+                         {currency_[index].code(), currency_[index].code()}, asofDate_,
+                         {*helper->iborCoupon()->iborIndex()->forwardingTermStructure(),
+                          *helper->iborCoupon()->iborIndex()->forwardingTermStructure()},
+                         {1.0, 1.0}, {}, {});
                  }}});
         }
     }
@@ -2328,9 +2353,9 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                                             : *oisHelper->swap()->iborIndex()->forwardingTermStructure();
                              return getCashflowReportData(
                                  {oisHelper->swap()->fixedLeg(), oisHelper->swap()->floatingLeg()}, {false, true},
-                                 {1.0, 1.0}, currency_[index].code(),
-                                 {currency_[index].code(), currency_[index].code()}, asofDate_,
-                                 {dsc, dsc}, {1.0, 1.0}, {}, {});
+                                 {1.0E6, 1.0E6}, currency_[index].code(),
+                                 {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0},
+                                 {}, {});
                          }}});
             } else {
                 if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>()) {
@@ -2348,9 +2373,9 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                                             : *oisHelper->swap()->iborIndex()->forwardingTermStructure();
                              return getCashflowReportData(
                                  {oisHelper->swap()->fixedLeg(), oisHelper->swap()->floatingLeg()}, {false, true},
-                                 {1.0, 1.0}, currency_[index].code(),
-                                 {currency_[index].code(), currency_[index].code()}, asofDate_,
-                                 {dsc, dsc}, {1.0, 1.0}, {}, {});
+                                 {1.0E6, 1.0E6}, currency_[index].code(),
+                                 {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0},
+                                 {}, {});
                          }}});
                 } else {
                     auto oisHelper = QuantLib::ext::make_shared<QuantExt::DatedOISRateHelper>(
@@ -2367,9 +2392,9 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                                             : *oisHelper->swap()->iborIndex()->forwardingTermStructure();
                              return getCashflowReportData(
                                  {oisHelper->swap()->fixedLeg(), oisHelper->swap()->floatingLeg()}, {false, true},
-                                 {1.0, 1.0}, currency_[index].code(),
-                                 {currency_[index].code(), currency_[index].code()}, asofDate_,
-                                 {dsc, dsc}, {1.0, 1.0}, {}, {});
+                                 {1.0E6, 1.0E6}, currency_[index].code(),
+                                 {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0},
+                                 {}, {});
                          }}});
                 }
             }
@@ -2428,7 +2453,7 @@ void YieldCurve::addSwaps(const std::size_t index, const QuantLib::ext::shared_p
                                                    : *swapHelper->swap()->floatIndex()->forwardingTermStructure();
                                            return getCashflowReportData(
                                                {swapHelper->swap()->fixedLeg(), swapHelper->swap()->floatLeg()},
-                                               {false, true}, {1.0, 1.0}, currency_[index].code(),
+                                               {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
                                                {currency_[index].code(), currency_[index].code()}, asofDate_,
                                                {dsc, dsc}, {1.0, 1.0}, {}, {});
                                        }}});
@@ -2445,7 +2470,7 @@ void YieldCurve::addSwaps(const std::size_t index, const QuantLib::ext::shared_p
                                                           : *swapHelper->swap()->iborIndex()->forwardingTermStructure();
                                            return getCashflowReportData(
                                                {swapHelper->swap()->fixedLeg(), swapHelper->swap()->floatingLeg()},
-                                               {false, true}, {1.0, 1.0}, currency_[index].code(),
+                                               {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
                                                {currency_[index].code(), currency_[index].code()}, asofDate_,
                                                {dsc, dsc}, {1.0, 1.0}, {}, {});
                                        }}});
@@ -2538,7 +2563,7 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
                          return getCashflowReportData(
                              {helper->averageOIS()->fixedLeg(), helper->averageOIS()->overnightLeg(),
                               helper->spreadLeg()},
-                             {false, true, true}, {1.0, 1.0, 1.0}, currency_[index].code(),
+                             {false, true, true}, {1.0E6, 1.0E6, 1.0E6}, currency_[index].code(),
                              {currency_[index].code(), currency_[index].code(), currency_[index].code()}, asofDate_,
                              {dsc, dsc, dsc}, {1.0, 1.0, 1.0}, {}, {});
                      }}});
@@ -2635,7 +2660,7 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                                        auto dsc = *helper->discountHandle();
                                        return getCashflowReportData(
                                            {helper->swap()->recLeg(), helper->swap()->payLeg()}, {false, true},
-                                           {1.0, 1.0}, currency_[index].code(),
+                                           {1.0E6, 1.0E6}, currency_[index].code(),
                                            {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc},
                                            {1.0, 1.0}, {}, {});
                                    }}});
@@ -2732,7 +2757,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
                          return getCashflowReportData(
                              {helper->longSwap()->fixedLeg(), helper->longSwap()->floatingLeg(),
                               helper->shortSwap()->fixedLeg(), helper->shortSwap()->floatingLeg()},
-                             {false, true, true, false}, {1.0, 1.0, 1.0, 1.0}, currency_[index].code(),
+                             {false, true, true, false}, {1.0E6, 1.0E6, 1.0E6, 1.0E6}, currency_[index].code(),
                              {currency_[index].code(), currency_[index].code(), currency_[index].code(),
                               currency_[index].code()},
                              asofDate_, {dsc, dsc, dsc, dsc}, {1.0, 1.0, 1.0, 1.0}, {}, {});
@@ -2802,7 +2827,7 @@ void YieldCurve::addBMABasisSwaps(const std::size_t index, const QuantLib::ext::
                                     ? *discountCurve_[index]
                                     : *helper->swap()->bmaIndex()->forwardingTermStructure();
                      return getCashflowReportData({helper->swap()->indexLeg(), helper->swap()->bmaLeg()}, {false, true},
-                                                  {1.0, 1.0}, currency_[index].code(),
+                                                  {1.0E6, 1.0E6}, currency_[index].code(),
                                                   {currency_[index].code(), currency_[index].code()}, asofDate_,
                                                   {dsc, dsc}, {1.0, 1.0}, {}, {});
                  }}});
@@ -3031,7 +3056,7 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                      Leg domCf = {QuantLib::ext::make_shared<SimpleCashFlow>(
                          fxForwardHelper->impliedQuote() + spotFx->value(), fxForwardHelper->latestDate())};
                      return getCashflowReportData(
-                         {forCf, domCf}, {false, true}, {1.0, 1.0}, fxSpotTargetCcy.code(),
+                         {forCf, domCf}, {false, true}, {1.0E6, 1.0E6}, fxSpotTargetCcy.code(),
                          {fxSpotSourceCcy.code(), fxSpotTargetCcy.code()}, asofDate_, {forCurve, domCurve},
                          {spotFx->value() * domCurve->discount(fxForwardHelper->earliestDate()) /
                               forCurve->discount(fxForwardHelper->earliestDate()),
@@ -3228,8 +3253,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                              }
                              return getCashflowReportData(
                                  {helper->swap()->leg(forLegIndex), helper->swap()->leg(domLegIndex)}, {false, true},
-                                 {1.0, 1.0}, fxSpotTargetCcy.code(), {fxSpotSourceCcy.code(), fxSpotTargetCcy.code()},
-                                 asofDate_, {forCurve, domCurve},
+                                 {1.0E6, 1.0E6}, fxSpotTargetCcy.code(),
+                                 {fxSpotSourceCcy.code(), fxSpotTargetCcy.code()}, asofDate_, {forCurve, domCurve},
                                  {fxSpotQuote->quote()->value() * domCurve->discount(fxSpotSettlementDate) /
                                       forCurve->discount(fxSpotSettlementDate),
                                   1.0},
@@ -3286,7 +3311,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                              domCurve = domesticCurveGiven ? *domesticDiscount : bootstrappedCurve;
                              return getCashflowReportData(
                                  {helper->swap()->leg(0), helper->swap()->leg(1), helper->swap()->leg(2)},
-                                 {false, true, true}, {1.0, 1.0, 1.0}, domesticIndex->currency().code(),
+                                 {false, true, true}, {1.0E6, 1.0E6, 1.0E6}, domesticIndex->currency().code(),
                                  {foreignIndex->currency().code(), domesticIndex->currency().code(),
                                   domesticIndex->currency().code()},
                                  asofDate_, {forCurve, domCurve, domCurve},
@@ -3420,7 +3445,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                              forCurve = *floatLegDisc;
                              domCurve = bootstrappedCurve;
                              return getCashflowReportData(
-                                 {helper->swap()->leg(0), helper->swap()->leg(1)}, {true, false}, {1.0, 1.0},
+                                 {helper->swap()->leg(0), helper->swap()->leg(1)}, {true, false}, {1.0E6, 1.0E6},
                                  fxSpotTargetCcy.code(), {fxSpotTargetCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
                                  {domCurve, forCurve},
                                  {1.0, fxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
@@ -3451,7 +3476,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                                              forCurve->discount(fxSpotSettlementDate);
                              return getCashflowReportData(
                                  {helper->swap()->leg(0), helper->swap()->leg(1), helper->swap()->leg(2)},
-                                 {true, false, resetsOnFloatLeg}, {1.0, 1.0, 1.0}, fxSpotTargetCcy.code(),
+                                 {true, false, resetsOnFloatLeg}, {1.0E6, 1.0E6, 1.0E6}, fxSpotTargetCcy.code(),
                                  {fxSpotSourceCcy.code(), fxSpotTargetCcy.code(),
                                   resetsOnFloatLeg ? fxSpotSourceCcy.code() : fxSpotTargetCcy.code()},
                                  asofDate_, {forCurve, domCurve, resetsOnFloatLeg ? forCurve : domCurve},
