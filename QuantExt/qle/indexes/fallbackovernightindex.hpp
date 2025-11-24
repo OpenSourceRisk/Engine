@@ -51,7 +51,8 @@ public:
 		return iborFallbackIndex_->pastFixing(fixingDate);
     }
     QuantLib::ext::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& forwarding) const override {
-        return iborFallbackIndex_->clone(forwarding);
+        return QuantLib::ext::make_shared<FallbackOvernightIndex>(originalIndex(), rfrIndex(), spread(), switchDate(),
+                                                                 forwarding);
     }
 
     QuantLib::ext::shared_ptr<OvernightIndex> originalIndex() const {
