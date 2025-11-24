@@ -69,7 +69,8 @@ private:
     //! Build a default curve from CDS spread quotes
     void buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const QuantLib::Date& asof,
                        const DefaultCurveSpec& spec, const Loader& loader,
-                       std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
+                       std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                       bool implyDefaultFromMarket);
 
     //! Build a default curve from hazard rate quotes
     void buildHazardRateCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
