@@ -2,7 +2,7 @@
   <Product type="CreditDefaultSwap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <Engine>MidPointCdsEngine</Engine>
+    <Engine>IsdaCdsEngine</Engine>
     <EngineParameters/>
   </Product>
   <GlobalParameters>

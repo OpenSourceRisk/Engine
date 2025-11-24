@@ -479,6 +479,7 @@ public:
         QuantLib::Date successorImplementationDate;
         QuantLib::Date predecessorImplementationDate;
         string entityType;
+        string primaryPriceType;
     };
     CreditReferenceDatum() {}
 

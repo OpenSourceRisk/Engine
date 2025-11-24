@@ -99,6 +99,7 @@ public:
         FX_FWD,
         HAZARD_RATE,
         RECOVERY_RATE,
+        ASSUMED_RECOVERY_RATE,
         SWAPTION,
         CAPFLOOR,
         FX_OPTION,
@@ -816,6 +817,43 @@ public:
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
         return QuantLib::ext::make_shared<RecoveryRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, docClause_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& seniority() const { return seniority_; }
+    const string& ccy() const { return ccy_; }
+    const string& underlyingName() const { return underlyingName_; }
+    const string& docClause() const { return docClause_; }
+    //@}
+private:
+    string underlyingName_;
+    string seniority_;
+    string ccy_;
+    string docClause_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+//! Assumed Recovery rate data class
+/*!
+  This class holds single market points of type
+  - ASSUMED_RECOVERY_RATE
+  \ingroup marketdata
+*/
+class AssumedRecoveryRateQuote : public MarketDatum {
+public:
+    AssumedRecoveryRateQuote() {}
+    //! Constructor
+    AssumedRecoveryRateQuote(Real value, Date asofDate, const string& name, const string& underlyingName,
+                      const string& seniority, const string& ccy, const string& docClause = "")
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ASSUMED_RECOVERY_RATE),
+          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), docClause_(docClause) {}
+    
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<AssumedRecoveryRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, docClause_);
     }
 
     //! \name Inspectors
