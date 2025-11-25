@@ -78,7 +78,7 @@ public:
         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
-        const bool continueOnError = false, bool dryRun = false);
+        const bool continueOnError = false, const bool dryRun = false, const bool useAtParCouponsTrades = true);
 
     //! Constructor using multi-threaded engine
     SensitivityAnalysis(const Size nThreads, const Date& asof,
@@ -186,8 +186,8 @@ private:
     Size nThreads_;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     std::string context_;
-    bool useAtParCouponsCurves_;
-    bool useAtParCouponsTrades_;
+    bool useAtParCouponsCurves_ = true;
+    bool useAtParCouponsTrades_ = true;
 
 protected:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;

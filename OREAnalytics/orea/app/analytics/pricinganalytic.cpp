@@ -148,7 +148,8 @@ void PricingAnalyticImpl::runAnalytic(
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
-                    inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                    inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun(),
+                    inputs_->useAtParCouponsTrades());
                 LOG("Single-threaded sensi analysis created");
             }
             else {

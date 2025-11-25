@@ -55,9 +55,9 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
         sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
             portfolio, analytic->market(), Market::defaultConfiguration, inputs->pricingEngine(),
             analytic->configurations().simMarketParams, analytic->configurations().sensiScenarioData,
-            inputs->sensiRecalibrateModels(), inputs->sensiLaxFxConversion(),
-            analytic->configurations().curveConfig, analytic->configurations().todaysMarketParams, false,
-            inputs->refDataManager(), inputs->iborFallbackConfig(), true, inputs->dryRun());
+            inputs->sensiRecalibrateModels(), inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
+            analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
+            inputs->iborFallbackConfig(), true, inputs->dryRun(), inputs->useAtParCouponsTrades());
     } else {
         sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
             inputs->nThreads(), inputs->asof(), analytic->loader(), portfolio, Market::defaultConfiguration,

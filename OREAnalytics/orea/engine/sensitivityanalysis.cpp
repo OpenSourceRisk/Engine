@@ -51,13 +51,15 @@ SensitivityAnalysis::SensitivityAnalysis(
     const bool laxFxConversion, const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun)
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun,
+    const bool useAtParCouponsTrades)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
       laxFxConversion_(laxFxConversion), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError),
-      engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
+      engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true),
+      useAtParCouponsTrades_(useAtParCouponsTrades) {}
 
 SensitivityAnalysis::SensitivityAnalysis(
     const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
