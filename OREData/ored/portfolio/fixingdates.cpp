@@ -57,6 +57,8 @@
 #include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -631,7 +633,22 @@ void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(indexName), c.date());
 }
 
-void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) { c.underlying()->accept(*this); }
+void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) { 
+    c.underlying()->accept(*this);
+    if(market_){
+        Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(IndexNameTranslator::instance().oreName(c.index()->name()));
+        QuantLib::ext::shared_ptr<DynamicOptionletVolatilityStructure> capletVol =
+                                QuantLib::ext::dynamic_pointer_cast<DynamicOptionletVolatilityStructure>(ovs.currentLink());
+        if(capletVol){
+            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> source = capletVol->getSource();
+            QuantLib::ext::shared_ptr<ProxyOptionletVolatility> pov = QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(source);
+            if(pov){
+                QuantLib::ext::shared_ptr<QuantLib::IborIndex> baseIndex = pov->getBaseIndex();
+                requiredFixings_.addFixingDates(c.underlying()->fixingDates(), IndexNameTranslator::instance().oreName(baseIndex->name()), c.date());
+            }
+        }
+    }
+}
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(c.index()->name()),

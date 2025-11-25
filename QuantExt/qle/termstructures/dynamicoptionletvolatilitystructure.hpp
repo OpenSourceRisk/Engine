@@ -45,6 +45,8 @@ public:
     DynamicOptionletVolatilityStructure(const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source,
                                         Natural settlementDays, const Calendar& calendar,
                                         ReactionToTimeDecay decayMode = ConstantVariance);
+    
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> getSource() { return source_; }
 
 protected:
     //! \name OptionletVolatilityStructure interface

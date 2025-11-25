@@ -43,6 +43,8 @@ public:
     VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
     Real displacement() const override { return baseVol_->displacement(); }
     Calendar calendar() const override { return baseVol_->calendar(); }
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getBaseIndex() const { return baseIndex_; }
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getTargetIndex() const { return targetIndex_; }
 
 private:
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;

@@ -22,7 +22,7 @@ namespace QuantExt {
 DynamicOptionletVolatilityStructure::DynamicOptionletVolatilityStructure(
     const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source, Natural settlementDays, const Calendar& calendar,
     ReactionToTimeDecay decayMode)
-    : OptionletVolatilityStructure(settlementDays, calendar, source->businessDayConvention(), source->dayCounter()),
+    : OptionletVolatilityStructure(source->referenceDate(), calendar, source->businessDayConvention(), source->dayCounter()),
       source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()),
       volatilityType_(source->volatilityType()), displacement_(source->displacement()) {
     QL_REQUIRE(decayMode_ != ForwardForwardVariance,
@@ -48,7 +48,9 @@ Date DynamicOptionletVolatilityStructure::maxDate() const {
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }
 
-void DynamicOptionletVolatilityStructure::update() { TermStructure::update(); }
+void DynamicOptionletVolatilityStructure::update() {
+    TermStructure::update(); 
+}
 
 QuantLib::ext::shared_ptr<SmileSection> DynamicOptionletVolatilityStructure::smileSectionImpl(Time optionTime) const {
     return source_->smileSection(optionTime);
