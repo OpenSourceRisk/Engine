@@ -137,10 +137,8 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
                                          const SalvagingAlgorithm::Type varSalvagingAlgorithm,
                                          QuantLib::ext::optional<ore::data::TimePeriod> period,
-                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown,
-                                         const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown,
-                useAtParCouponsCurves, useAtParCouponsTrades),
+                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown)
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }
@@ -152,10 +150,9 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
                                          const SalvagingAlgorithm::Type varSalvagingAlgorithm,
                                          QuantLib::ext::optional<ore::data::TimePeriod> period,
-                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown,
-                                         const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
+                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr,
-                breakdown, useAtParCouponsCurves, useAtParCouponsTrades),
+                breakdown),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }

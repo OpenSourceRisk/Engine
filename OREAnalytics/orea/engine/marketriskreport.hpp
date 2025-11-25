@@ -227,17 +227,15 @@ public:
 
     MarketRiskReport(const std::string& calculationCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                      const std::string& portfolioFilter, QuantLib::ext::optional<ore::data::TimePeriod> period,
-                     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
-                     std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
-                     std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
-                     std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false,
-                     const bool requireTradePnl = false, const bool requireRiskFactorPnl = false,
-                     const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true)
-        : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter),
-          period_(period), hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
-          fullRevalArgs_(std::move(fullRevalArgs)), multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown),
-          requireTradePnl_(requireTradePnl), requireRiskFactorPnl_(requireRiskFactorPnl),
-          useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {}
+                     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
+        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
+        std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
+        const bool requireTradePnl = false, const bool requireRiskFactorPnl = false)
+        : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter), period_(period),
+          hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
+          fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
+          requireTradePnl_(requireTradePnl), requireRiskFactorPnl_(requireRiskFactorPnl) {
+    }
     virtual ~MarketRiskReport() {}
 
     virtual void initialise();
@@ -277,9 +275,6 @@ protected:
     bool requireTradePnl_ = false;
     // Whether we require risk factor level PnLs to use for later calculations
     bool requireRiskFactorPnl_ = false;
-
-    bool useAtParCouponsCurves_ = true;
-    bool useAtParCouponsTrades_ = true;
 
     QuantLib::ext::shared_ptr<MarketRiskGroupBaseContainer> riskGroups_;
     QuantLib::ext::shared_ptr<TradeGroupBaseContainer> tradeGroups_;

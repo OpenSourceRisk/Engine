@@ -75,7 +75,7 @@ namespace analytics {
 
 std::pair<std::set<std::string>, std::set<std::string>>
 applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                    const set<CrifRecord::Regulation>& simmExemptionOverrides, const bool useAtParCoupons) {
+                    const set<CrifRecord::Regulation>& simmExemptionOverrides) {
     LOG("Start applying SIMM exemptions to the portfolio");
 
     // Collect portfolio regulation details 
@@ -468,9 +468,8 @@ applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<Engine
     for (auto& trade : newTrades) {
         DLOG("Adding replacement trade with ID " << trade->id());
         portfolio.remove(trade->id());
-        auto [ft, success] =
-            buildTrade(trade, engineFactory, "portfolioModifier/SIMM exemptions", portfolio.ignoreTradeBuildFail(),
-                       portfolio.buildFailedTrades(), true, useAtParCoupons);
+        auto [ft, success] = buildTrade(trade, engineFactory, "portfolioModifier/SIMM exemptions",
+                                        portfolio.ignoreTradeBuildFail(), portfolio.buildFailedTrades(), true);
         if (success)
             portfolio.add(trade);
         else if (ft)
@@ -481,5 +480,6 @@ applySimmExemptions(Portfolio& portfolio, const QuantLib::ext::shared_ptr<Engine
 
     return std::make_pair(removedTrades, modifiedTrades);
 }
+
 }
 }

@@ -150,7 +150,7 @@ void MarketRiskReport::initialise() {
                                                          fullRevalArgs_->iborFallbackConfig_);
 
             DLOG("Building the portfolio");
-            portfolio_->build(factory_, "historical pnl generation", true, useAtParCouponsTrades_);
+            portfolio_->build(factory_, "historical pnl generation");
             DLOG("Portfolio built");
 
             LOG("Creating the historical P&L generator (dryRun=" << std::boolalpha << fullRevalArgs_->dryRun_ << ")");
@@ -237,7 +237,7 @@ void MarketRiskReport::initSimMarket() {
     auto initMarket = QuantLib::ext::make_shared<TodaysMarket>(
         multiThreadArgs_->today_, multiThreadArgs_->todaysMarketParams_, multiThreadArgs_->loader_,
         multiThreadArgs_->curveConfigs_, true, true, false, fullRevalArgs_->referenceData_, false,
-        fullRevalArgs_->iborFallbackConfig_, false, true, useAtParCouponsCurves_);
+        fullRevalArgs_->iborFallbackConfig_);
 
     fullRevalArgs_->simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket, multiThreadArgs_->simMarketData_, multiThreadArgs_->configuration_,

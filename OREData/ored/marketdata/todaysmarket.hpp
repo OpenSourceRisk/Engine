@@ -79,6 +79,7 @@ class CorrelationCurve;
  */
 class TodaysMarket : public MarketImpl {
 public:
+    //! Constructor taking pointers and allowing for a lazy build of the market objects
     TodaysMarket( //! Valuation date
         const Date& asof,
         //! Description of the market composition
@@ -103,9 +104,7 @@ public:
         //! build calibration info?
         const bool buildCalibrationInfo = true,
         //! support pseudo currencies
-        const bool handlePseudoCurrencies = true,
-        //! use at par coupon convention for rate curve building
-        const bool useAtParCoupons = true);
+        const bool handlePseudoCurrencies = true);
 
     QuantLib::ext::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
@@ -116,18 +115,17 @@ private:
 
     // input parameters
 
-    QuantLib::ext::shared_ptr<TodaysMarketParameters> params_;
-    QuantLib::ext::shared_ptr<Loader> loader_;
-    QuantLib::ext::shared_ptr<const CurveConfigurations> curveConfigs_;
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters> params_;
+    const QuantLib::ext::shared_ptr<Loader> loader_;
+    const QuantLib::ext::shared_ptr<const CurveConfigurations> curveConfigs_;
 
-    bool continueOnError_;
-    bool loadFixings_;
-    bool lazyBuild_;
-    bool preserveQuoteLinkage_;
-    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
-    QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
-    bool buildCalibrationInfo_;
-    bool useAtParCoupons_;
+    const bool continueOnError_;
+    const bool loadFixings_;
+    const bool lazyBuild_;
+    const bool preserveQuoteLinkage_;
+    const QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
+    const bool buildCalibrationInfo_;
 
     // initialise market
     void initialise(const Date& asof);
