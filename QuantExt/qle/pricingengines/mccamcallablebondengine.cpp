@@ -268,42 +268,24 @@ void McCamCallableBondBaseEngine::calculateModels(
                                                 << callTimes.size() << " events.");
                 auto callPriceAmount = getCallPriceAmount(callData->priceType, callData->includeAccrual, callData->price, notionalAccrualCalc.notional(*t), notionalAccrualCalc.accrual(*t));
                 auto strikePrice = RandomVariable(calibrationSamples_, callPriceAmount) / numeraire;
-                
                 RandomVariable exerciseValueCall =
-                    max(exerciseValue - strikePrice, RandomVariable(calibrationSamples_, 0.0));
-                std::cout << "Exercise time " << *t << ": call price " << callData->price << " notional "
-                          << notionalAccrualCalc.notional(*t) << " and accruals " << notionalAccrualCalc.accrual(*t)
-                          << " callPriceAmount" << callPriceAmount << " deflated callprice[0]" << strikePrice[0]
-                          << " numeraire " << numeraire[0] << std::endl;
-
-                std::cout << "Exercise time " << *t << ": call price " << callData->price << " notional "
-                          << notionalAccrualCalc.notional(*t) << " and accruals " << notionalAccrualCalc.accrual(*t)
-                          << " callPriceAmount" << callPriceAmount << " deflated callprice[0]" << strikePrice[1]
-                          << std::endl;
-                std::cout << "Exercise time " << *t << ": call price " << callData->price << " notional "
-                          << notionalAccrualCalc.notional(*t) << " and accruals " << notionalAccrualCalc.accrual(*t)
-                          << " callPriceAmount" << callPriceAmount << " deflated callprice[0]" << strikePrice[2]
-                          << std::endl;
-                std::cout << "  exercise value (sample 0): " << exerciseValue[0] << std::endl;
-                std::cout << "  exercise value call (sample 0): " << exerciseValueCall[0] << std::endl;
-                std::cout << " df = " << discountCurve->discount(*t) << std::endl;
+                    min(strikePrice - exerciseValue, RandomVariable(calibrationSamples_, 0.0));
                 regModelContinuationValueCall[counter] = RegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValueCall[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                          simulationTimes,
-                                                         exerciseValueCall > RandomVariable(calibrationSamples_, 0.0));
+                                                         exerciseValueCall < RandomVariable(calibrationSamples_, 0.0));
                 auto continuationValue = regModelContinuationValueCall[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
 
-                auto exerciseFilter = exerciseValueCall > continuationValue &&
-                                      exerciseValueCall > RandomVariable(calibrationSamples_, 0.0);
+                auto exerciseFilter = exerciseValueCall < continuationValue &&
+                                      exerciseValueCall < RandomVariable(calibrationSamples_, 0.0);
 
                 pathValueOption = conditionalResult(exerciseFilter, exerciseValueCall, pathValueOption);
                 Size callIdx = callTimes.size() - callTimeIdx;
                 callTimeIdx++;
-                std::cout << "update callIndicator to " << callIdx << std::endl;
                 pathExerciseProbsCall[callIdx] =
                     conditionalResult(exerciseFilter, RandomVariable(calibrationSamples_, 1.0) / numeraire,
                                       pathExerciseProbsCall[callIdx]);
@@ -321,11 +303,17 @@ void McCamCallableBondBaseEngine::calculateModels(
             }
 
             if (isPutTime) {
-                auto putPrice = RandomVariable(calibrationSamples_, 1.0 * notionalAccrualCalc.notional(*t) +
-                                                                        notionalAccrualCalc.accrual(*t)) /
-                                numeraire;
-                auto exerciseValuePut = max(putPrice - exerciseValue, RandomVariable(calibrationSamples_, 0.0));
-                std::cout << "Exercise time " << *t << ": put price " << putPrice[0] << std::endl;
+                auto& [_, putData] = *putDataIt;
+                QL_REQUIRE(putTimes.size() >= putTimeIdx,
+                           "We processing the " << putTimeIdx << " put event, but there should be only "
+                                                << putTimes.size() << " events.");
+                auto putPriceAmount =
+                    getCallPriceAmount(putData->priceType, putData->includeAccrual, putData->price,
+                                       notionalAccrualCalc.notional(*t), notionalAccrualCalc.accrual(*t));
+                auto strikePrice = RandomVariable(calibrationSamples_, putPriceAmount) / numeraire;
+                RandomVariable exerciseValuePut =
+                    max(strikePrice - exerciseValue, RandomVariable(calibrationSamples_, 0.0));
+                std::cout << "Exercise time " << *t << ": put price " << putPriceAmount << std::endl;
                 std::cout << "  exercise value (sample 0): " << exerciseValue[0] << std::endl;
                 std::cout << "  exercise value call (sample 0): " << exerciseValuePut[0] << std::endl;
                 regModelContinuationValuePut[counter] = RegressionModel(
@@ -338,7 +326,7 @@ void McCamCallableBondBaseEngine::calculateModels(
                 auto continuationValue = regModelContinuationValuePut[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
                 pathValueOption = conditionalResult(exerciseValuePut > continuationValue &&
-                                                        exerciseValuePut > RandomVariable(calibrationSamples_, 0.0),
+                                                    exerciseValuePut > RandomVariable(calibrationSamples_, 0.0),
                                                     exerciseValuePut, pathValueOption);
                 Size putIdx = putTimes.size() - putTimeIdx;
                 putTimeIdx++;

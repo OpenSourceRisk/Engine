@@ -237,8 +237,8 @@ private:
         settlementDate_ = arguments_.settlementDate;
         includeTodaysCashflows_ = false;
         McCamCallableBondBaseEngine::calculate();
-        results_.value = resultUnderlyingNpv_ -  resultValue_;
-        results_.settlementValue = resultUnderlyingSettlementValue_ -  resultSettlementValue_;
+        results_.value = resultUnderlyingNpv_ +  resultValue_;
+        results_.settlementValue = resultUnderlyingSettlementValue_ +  resultSettlementValue_;
 
 
 
@@ -250,8 +250,8 @@ private:
         std::cout <<"  result value: " << resultValue_ << std::endl;\
         std::cout << "  result underlying npv: " << resultUnderlyingNpv_ << std::endl;
         std::cout << " underlying settlement value: " << resultUnderlyingSettlementValue_ << std::endl;
-        std::cout << " final npv: " << resultUnderlyingNpv_ -  resultValue_ << std::endl;
-        std::cout << " final settlement value: " << resultUnderlyingSettlementValue_ -  resultSettlementValue_ << std::endl;
+        std::cout << " final npv: " << resultUnderlyingNpv_ +  resultValue_ << std::endl;
+        std::cout << " final settlement value: " << resultUnderlyingSettlementValue_ +  resultSettlementValue_ << std::endl;
         
         
         
