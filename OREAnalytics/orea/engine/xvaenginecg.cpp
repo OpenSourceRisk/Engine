@@ -95,18 +95,16 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const string& marketConfiguration, const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-                         const bool bumpCvaSensis, const bool enableDynamicIM, const Size dynamicIMStepSize,
-                         const Size regressionOrder, const Real regressionVarianceCutoff,
-                         const Size regressionOrderDynamicIm, const double regressionVarianceCutoffDynamicIm,
-                         const bool tradeLevelBreakDown, const std::vector<Size>& regressionReportTimeStepsDynamicIM,
-                         const bool useRedBlocks, const bool useExternalComputeDevice,
-                         const bool externalDeviceCompatibilityMode,
+                         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool bumpCvaSensis,
+                         const bool enableDynamicIM, const Size dynamicIMStepSize, const Size regressionOrder,
+                         const Real regressionVarianceCutoff, const Size regressionOrderDynamicIm,
+                         const double regressionVarianceCutoffDynamicIm, const bool tradeLevelBreakDown,
+                         const std::vector<Size>& regressionReportTimeStepsDynamicIM, const bool useRedBlocks,
+                         const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool usePythonIntegration, const bool usePythonIntegrationDynamicIm,
                          const bool continueOnCalibrationError, const bool allowModelFallbacks,
-                         const bool continueOnError, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades,
-                         const std::string& context)
+                         const bool continueOnError, const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
@@ -122,15 +120,14 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
       usePythonIntegrationDynamicIm_(usePythonIntegrationDynamicIm),
       continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks),
-      continueOnError_(continueOnError), useAtParCouponsCurves_(useAtParCouponsCurves),
-      useAtParCouponsTrades_(useAtParCouponsTrades), context_(context) {}
+      continueOnError_(continueOnError), context_(context) {}
 
 void XvaEngineCG::buildT0Market() {
     DLOG("XvaEngineCG: build init market");
     boost::timer::cpu_timer timer;
     initMarket_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
         asof_, todaysMarketParams_, loader_, curveConfigs_, continueOnError_, true, true, referenceData_, false,
-        iborFallbackConfig_, false, true, useAtParCouponsCurves_);
+        iborFallbackConfig_, false, true);
     timing_t0_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build init market done");
 }
@@ -256,7 +253,7 @@ void XvaEngineCG::buildPortfolio() {
         EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
             model_, std::vector<Date>(simulationDates_.begin(), simulationDates_.end())));
 
-    portfolio_->build(factory, "xva engine cg", true, useAtParCouponsTrades_);
+    portfolio_->build(factory, "xva engine cg", true);
 
     timing_pf_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build trades (" << portfolio_->size() << ") done.");

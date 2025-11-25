@@ -74,8 +74,7 @@ public:
                                   QuantLib::ext::optional<ore::data::TimePeriod> period,
                                   const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                                   std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false,
-                                  const bool includeExpectedShortfall = false, const bool tradePnl = false,
-                                  const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true);
+                                  const bool includeExpectedShortfall = false, const bool tradePnl = false);
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 

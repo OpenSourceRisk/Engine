@@ -334,8 +334,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         sensiAnalytic->setMarket(simMarket1);
         sensiAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
         sensiAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-        mporPortfolioNew->build(analytic()->impl()->engineFactory(), "portfolio_t1_m0_p1_new", true,
-                                inputs_->useAtParCouponsTrades());
+        mporPortfolioNew->build(analytic()->impl()->engineFactory(), "portfolio_t1_m0_p1_new");
         sensiAnalytic->setPortfolio(mporPortfolioNew);
         sensiAnalytic->buildPortfolio();
 

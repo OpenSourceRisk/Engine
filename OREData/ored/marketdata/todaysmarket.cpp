@@ -75,18 +75,15 @@ namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
                            const QuantLib::ext::shared_ptr<Loader>& loader,
-                           const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
-                           const bool continueOnError, const bool loadFixings, const bool lazyBuild,
-                           const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                           const bool preserveQuoteLinkage,
+                           const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs, const bool continueOnError,
+                           const bool loadFixings, const bool lazyBuild,
+                           const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData, const bool preserveQuoteLinkage,
                            const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig,
-                           const bool buildCalibrationInfo, const bool handlePseudoCurrencies,
-                           const bool useAtParCoupons)
+                           const bool buildCalibrationInfo, const bool handlePseudoCurrencies)
     : MarketImpl(handlePseudoCurrencies), params_(params), loader_(loader), curveConfigs_(curveConfigs),
       continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
       preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig), buildCalibrationInfo_(buildCalibrationInfo),
-      useAtParCoupons_(useAtParCoupons) {
+      iborFallbackConfig_(iborFallbackConfig), buildCalibrationInfo_(buildCalibrationInfo) {
     QL_REQUIRE(params_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_, "TodaysMarket: CurveConfigurations are null");
@@ -300,8 +297,7 @@ void TodaysMarket::buildNode(const std::string& configuration, ReducedNode& redu
             DLOG("Building YieldCurve " << reducedNode << " for asof " << asof_);
             yieldCurve = QuantLib::ext::make_shared<YieldCurve>(
                 asof_, ycspecs, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, *fx_,
-                referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this,
-                useAtParCoupons_);
+                referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, buildCalibrationInfo_, this);
         }
 
         for (auto const& node: reducedNode.nodes) {
