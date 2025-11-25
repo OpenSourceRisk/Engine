@@ -1071,6 +1071,11 @@ Further exposure simulation features:
 \item Flip View, switch perspectives easily for XVA: {\tt python run\_flipview.py}
 \end{itemize}
 
+Parameter calibration for exposure simulation model:
+\begin{itemize}
+\item HW n-factor historical calibration: {\tt python run\_hwhistoricalcalibration.py}
+\end{itemize}
+
 All cases are discussed in the following subsections.
 
 \subsubsection{Swap with flat yield curve}\label{example:exposure_swapflat}
@@ -1804,6 +1809,30 @@ Calling
 
 demonstrates how ORE can be used to quickly switch perspectives in XVA calculations with minimal changes in the {\tt ore.xml}
 file only. In particular it avoids manipulating the portfolio input or the netting set.
+
+\subsubsection{HW n-Factor Historical Calibration}\label{example:exposure_hwhistoricalcalibration}
+
+Calling
+
+\medskip
+\centerline{\tt python run\_hwhistoricalcalibration.py } 
+\medskip
+
+demonstrates how ORE provides functionality to calibrate the mean reversion speed($\kappa$) and volatility($\sigma$) parameters for the Hull-White $n$-factor model using historical market data. Two approaches are available:
+
+\begin{enumerate}
+    \item Full Calibration Using Historical Data
+    \begin{itemize}
+        \item ORE performs Principal Component Analysis (PCA) on historical interest rate curves and FX spot data.
+        \item Based on PCA results, ORE will use eigenvalues and eigenvectors to calibrate constant parameters for the HW $n$-factor model, including $\kappa$ and $\sigma$.
+    \end{itemize}
+
+    \item Mean Reversion Calibration Only
+    \begin{itemize}
+        \item Users can provide their own eigenvalues and eigenvectors for each curve.
+        \item ORE will then perform mean reversion calibration using these inputs without recalculating PCA.
+    \end{itemize}
+\end{enumerate}
 
 
 \subsection{Netting Set Exposure and Collateral}\label{example:exposurewithcollateral}

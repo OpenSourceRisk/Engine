@@ -180,7 +180,7 @@ parRateCurveHelpers(const string& name, const vector<Period>& parTenor, const ve
         BOOST_ASSERT(*exDiscount);
         rateHelper = QuantLib::ext::make_shared<QuantExt::SpreadCdsHelper>(
             parRateQuote, tenor, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-            cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate, exDiscount,
+            cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate, exDiscount, CreditDefaultSwap::PricingModel::Midpoint,
             true, QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault, today + cdsConv->settlementDays());
         instruments.push_back(rateHelper);
     }

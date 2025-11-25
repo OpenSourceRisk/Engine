@@ -30,14 +30,13 @@ CreditIndexConstituentCurveCalibration::CalibrationResults CreditIndexConstituen
         ext::shared_ptr<IndexCreditDefaultSwap> indexCDS;
         QuantLib::ext::shared_ptr<SimpleQuote> calibrationFactor;
 
-        auto maturity = cdsMaturity(indexStartDate_, indexTenor_, DateGeneration::Rule::CDS2015);
+        auto maturity = cdsMaturity(startDate_, indexTerm_, DateGeneration::Rule::CDS2015);
         if (maturity > Settings::instance().evaluationDate()) {
-            Schedule cdsSchedule(indexStartDate_, maturity, 3 * Months, WeekendsOnly(), Unadjusted, Unadjusted,
-                                 DateGeneration::Rule::CDS2015, false);
+            Schedule cdsSchedule(startDate_, maturity, tenor_, calendar_, convention_, termConvention_, rule_, endOfMonth_);
             indexCDS = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
-                Protection::Buyer, totalNotional, remainingNotionals, 0.0, indexSpread_, cdsSchedule, Following,
-                Actual360(false), true, CreditDefaultSwap::atDefault, Date(), Date(),
-                QuantLib::ext::shared_ptr<Claim>(), Actual360(true), true);
+                Protection::Buyer, totalNotional, remainingNotionals, 0.0, runningSpread_, cdsSchedule, payConvention_,
+                dayCounter_, true, CreditDefaultSwap::atDefault, Date(), Date(),
+                QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter_, true, Date(), cashSettlementDays_);
             calibrationFactor = ext::make_shared<SimpleQuote>(1.0);
         }
 

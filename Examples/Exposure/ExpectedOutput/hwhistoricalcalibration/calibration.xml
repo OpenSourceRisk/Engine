@@ -1,0 +1,135 @@
+<CrossAssetModel>
+	<DomesticCcy>USD</DomesticCcy>
+	<Currencies>
+		<Currency>USD</Currency>
+		<Currency>EUR</Currency>
+		<Currency>GBP</Currency>
+	</Currencies>
+	<BootstrapTolerance>0.0001</BootstrapTolerance>
+	<Discretization>Euler</Discretization>
+	<Measure>BA</Measure>
+	<InterestRateModels>
+		<HWModel key="EUR-EURIBOR-3M">
+			<CalibrationType>None</CalibrationType>
+			<Volatility>
+				<Calibrate>N</Calibrate>
+				<VolatilityType>HullWhite</VolatilityType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Sigma>
+						<Row>-0.0229152, 0.00802074, 0, 0</Row>
+						<Row>0, 0, -0.0236755, 0.0272979</Row>
+					</Sigma>
+				</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>4.99999, 0.0305188, 0.0350268, 0.0723209</Kappa>
+				</InitialValue>
+			</Reversion>
+		</HWModel>
+		<HWModel key="GBP-LIBOR-3M">
+			<CalibrationType>None</CalibrationType>
+			<Volatility>
+				<Calibrate>N</Calibrate>
+				<VolatilityType>HullWhite</VolatilityType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Sigma>
+						<Row>0.00884376, -0.0149944, 0, 0</Row>
+						<Row>0, 0, -0.0319848, 0.0372505</Row>
+					</Sigma>
+				</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>0.00971349, 5, 0.0644724, 0.111779</Kappa>
+				</InitialValue>
+			</Reversion>
+		</HWModel>
+		<HWModel key="USD-LIBOR-3M">
+			<CalibrationType>None</CalibrationType>
+			<Volatility>
+				<Calibrate>N</Calibrate>
+				<VolatilityType>HullWhite</VolatilityType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Sigma>
+						<Row>-0.0122469, 0.0105949, 0, 0</Row>
+						<Row>0, 0, 0.0324875, -0.027352</Row>
+					</Sigma>
+				</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>1.18575, 0.0189524, 0.0883031, 0.0448402</Kappa>
+				</InitialValue>
+			</Reversion>
+		</HWModel>
+	</InterestRateModels>
+	<ForeignExchangeModels>
+		<CrossCcyLGM foreignCcy="EUR">
+			<DomesticCcy>USD</DomesticCcy>
+			<CalibrationType>None</CalibrationType>
+			<Sigma>
+				<Calibrate>N</Calibrate>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.0719723</InitialValue>
+			</Sigma>
+		</CrossCcyLGM>
+		<CrossCcyLGM foreignCcy="GBP">
+			<DomesticCcy>USD</DomesticCcy>
+			<CalibrationType>None</CalibrationType>
+			<Sigma>
+				<Calibrate>N</Calibrate>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.0935444</InitialValue>
+			</Sigma>
+		</CrossCcyLGM>
+	</ForeignExchangeModels>
+	<InstantaneousCorrelations>
+		<Correlation factor1="FX:EURUSD" factor2="FX:GBPUSD" index1="0" index2="0">0.618322</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="FX:EURUSD" index1="0" index2="0">-0.0255821</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="FX:EURUSD" index1="1" index2="0">-0.00362845</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="FX:GBPUSD" index1="0" index2="0">-0.111091</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="FX:GBPUSD" index1="1" index2="0">-0.0861682</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:GBP-LIBOR-3M" index1="0" index2="0">0.74608</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:GBP-LIBOR-3M" index1="0" index2="1">-0.0624759</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:GBP-LIBOR-3M" index1="1" index2="0">-0.0606025</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:GBP-LIBOR-3M" index1="1" index2="1">0.53283</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="0" index2="0">0.653024</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="0" index2="1">0.159646</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="1" index2="0">-0.144779</Correlation>
+		<Correlation factor1="IR:EUR-EURIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="1" index2="1">0.482742</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="FX:EURUSD" index1="0" index2="0">-0.0799031</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="FX:EURUSD" index1="1" index2="0">-0.110196</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="FX:GBPUSD" index1="0" index2="0">-0.0583432</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="FX:GBPUSD" index1="1" index2="0">-0.0737356</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="0" index2="0">0.610888</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="0" index2="1">0.12151</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="1" index2="0">-0.168197</Correlation>
+		<Correlation factor1="IR:GBP-LIBOR-3M" factor2="IR:USD-LIBOR-3M" index1="1" index2="1">0.417725</Correlation>
+		<Correlation factor1="IR:USD-LIBOR-3M" factor2="FX:EURUSD" index1="0" index2="0">-0.109284</Correlation>
+		<Correlation factor1="IR:USD-LIBOR-3M" factor2="FX:EURUSD" index1="1" index2="0">-0.186751</Correlation>
+		<Correlation factor1="IR:USD-LIBOR-3M" factor2="FX:GBPUSD" index1="0" index2="0">-0.0439526</Correlation>
+		<Correlation factor1="IR:USD-LIBOR-3M" factor2="FX:GBPUSD" index1="1" index2="0">-0.179559</Correlation>
+	</InstantaneousCorrelations>
+</CrossAssetModel>
+

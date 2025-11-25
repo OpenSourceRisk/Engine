@@ -1103,6 +1103,110 @@ The meanings and allowable values in the \lstinline!FloatingStrikeForwardStartin
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
+\subsubsection{ACR Option}
+ 
+% we only have a scripted trade representation for this at the moment 
+ 
+An ACR Option is represented as {\em acr option}, refer to Section 
+\ref{app:scriptedtrade} for an introduction.
+ 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<Trade id="ArcOption">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <ArcOptionData>
+    <LongShort type="longShort">Short</LongShort>
+    <SettlementDate type="event">2020-07-20</SettlementDate>
+    <Notional type="number">100000000</Notional>
+    <StrikeFactor type="number">0.9950</StrikeFactor>
+    <BarrierFactor type="number">0.9840</StrikeFactor>
+    <CapRate type="number">0.02</CapRate>
+    <Offset type="number">0.0628</Offset>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-01-15</StartDate>
+          <EndDate>2020-07-10</EndDate>
+          <Tenor>1M</Tenor>
+          <Calendar>US</Calendar>
+          <Convention>Following</Convention>
+          <TermConvention>Following</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <Underlying type="index">FX-ECB-JPY-USD</Underlying>
+    <PayCcy type="currency">JPY</PayCcy>
+    <Expiry type="event">2020-07-15</Expiry>
+  </ArcOptionData>
+</Trade>
+\end{minted} 
+ 
+The script referenced in the trade above is shown in Listing \ref{lst:arc_option}.
+ 
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\footnotesize]{Basic} 
+ NUMBER d, effectiveExchangeRate, netAccAmount, currPrice, pay;
+  NUMBER payoff, strike, sr1, sr2, sr3, itm, K, expectedN, settlementAmount;
+
+  netAccAmount = 0;
+
+  FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+    sr2 = Underlying(ValuationSchedule[d]);
+    sr1 = Underlying(ValuationSchedule[d-1]);
+    K = sr1*StrikeFactor;
+    IF sr2 < sr1*BarrierFactor THEN
+      itm = Notional*((1/sr2)-(1/K));
+    ELSE
+      itm = 0;
+    END;
+    netAccAmount = netAccAmount + itm;
+  END;
+
+  expectedN = SIZE(ValuationSchedule) - 1;
+  sr3 = Underlying(ValuationSchedule[expectedN]);
+  
+  effectiveExchangeRate = Notional / ((Notional/sr3)-netAccAmount);
+  
+  IF effectiveExchangeRate >= CapRate THEN
+      settlementAmount = Notional/(CapRate + Offset);
+  ELSE
+      settlementAmount = Notional/(effectiveExchangeRate + Offset);
+  END;
+
+  pay = PAY(settlementAmount, Expiry, SettlementDate, PayCcy);
+  Option = pay;
+\end{minted} 
+\caption{Payoff script for an Arc Option.} 
+\label{lst:arc_option} 
+\end{listing} 
+ 
+The meanings and allowable values in the \lstinline!ArcOptionData! node below.
+ 
+\begin{itemize} 
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See Section \ref{data_index} for allowable values.
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!StrikeFactor!: The strike factor used within ITM computation.
+  \item{}[number] \lstinline!BarrierFactor!: The barrier factor used within the condition for the ITM computation.
+  \item{}[number] \lstinline!Notional!: Notional amount. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!CapRate!: Rate used to compute the settlement amount.
+  \item{}[number] \lstinline!Offset!: Offset used to compute the settlement amount.
+  \item{}[event] \lstinline!SettlementDate!: Settlement date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!SettlementCurrency!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
 \subsubsection{Forward Starting Swaption}
  
 % we only have a scripted trade representation for this at the moment 

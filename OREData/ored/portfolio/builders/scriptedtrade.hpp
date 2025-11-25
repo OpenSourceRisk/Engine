@@ -93,6 +93,8 @@ protected:
     void buildFdBlackScholes(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
     void buildLocalVol(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
     void buildFdLocalVol(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildHeston(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
+    void buildFdHeston(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);
     void buildGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                           const std::vector<std::string>& conditionalExpectationModelStates);
     void buildFdGaussianCam(const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig);

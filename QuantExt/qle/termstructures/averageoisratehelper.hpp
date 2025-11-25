@@ -61,6 +61,7 @@ public:
     //@{
     Spread onSpread() const;
     QuantLib::ext::shared_ptr<AverageOIS> averageOIS() const;
+    const Leg& spreadLeg() const;
     //@}
     //! \name Visitability
     //@{
@@ -69,6 +70,7 @@ public:
 protected:
     void initializeDates() override;
     QuantLib::ext::shared_ptr<AverageOIS> averageOIS_;
+    Leg spreadLeg_;
     // Swap
     Period spotLagTenor_;
     Period swapTenor_;

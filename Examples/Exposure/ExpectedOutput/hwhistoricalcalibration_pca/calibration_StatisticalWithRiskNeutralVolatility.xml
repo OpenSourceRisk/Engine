@@ -1,0 +1,83 @@
+<CrossAssetModel>
+	<DomesticCcy>USD</DomesticCcy>
+	<Currencies>
+		<Currency>USD</Currency>
+		<Currency>EUR</Currency>
+		<Currency>GBP</Currency>
+	</Currencies>
+	<BootstrapTolerance>0.0001</BootstrapTolerance>
+	<Discretization>Euler</Discretization>
+	<Measure>BA</Measure>
+	<InterestRateModels>
+		<HWModel key="EUR">
+			<CalibrationType>StatisticalWithRiskNeutralVolatility</CalibrationType>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>4.99999, 0.0305188, 0.0350268, 0.0723209</Kappa>
+				</InitialValue>
+			</Reversion>
+			<PCALoadings>
+				<Loadings>-1.42058, 0.497231</Loadings>
+				<Loadings>-3.47138, 4.00252</Loadings>
+			</PCALoadings>
+			<PCASigma0>
+				<Calibrate>Y</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.000260203</InitialValue>
+			</PCASigma0>
+			<PCASigmaRatios>1, 0.178764</PCASigmaRatios>
+		</HWModel>
+		<HWModel key="GBP">
+			<CalibrationType>StatisticalWithRiskNeutralVolatility</CalibrationType>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>0.00971349, 5, 0.0644724, 0.111779</Kappa>
+				</InitialValue>
+			</Reversion>
+			<PCALoadings>
+				<Loadings>0.411974, -0.698493</Loadings>
+				<Loadings>-3.88859, 4.52878</Loadings>
+			</PCALoadings>
+			<PCASigma0>
+				<Calibrate>Y</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.000460823</InitialValue>
+			</PCASigma0>
+			<PCASigmaRatios>1, 0.146814</PCASigmaRatios>
+		</HWModel>
+		<HWModel key="USD">
+			<CalibrationType>StatisticalWithRiskNeutralVolatility</CalibrationType>
+			<Reversion>
+				<Calibrate>N</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>
+					<Kappa>1.18575, 0.0189524, 0.0883031, 0.0448402</Kappa>
+				</InitialValue>
+			</Reversion>
+			<PCALoadings>
+				<Loadings>-0.588533, 0.509142</Loadings>
+				<Loadings>3.8159, -3.2127</Loadings>
+			</PCALoadings>
+			<PCASigma0>
+				<Calibrate>Y</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.000433025</InitialValue>
+			</PCASigma0>
+			<PCASigmaRatios>1, 0.167388</PCASigmaRatios>
+		</HWModel>
+	</InterestRateModels>
+</CrossAssetModel>
+

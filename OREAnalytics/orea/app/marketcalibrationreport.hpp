@@ -134,6 +134,8 @@ public:
 
     // write out to file, should be overwritten in derived classes
     virtual QuantLib::ext::shared_ptr<ore::data::Report> outputCalibrationReport() = 0;
+    virtual QuantLib::ext::shared_ptr<ore::data::Report> outputCashflowReport() = 0;
+
 
 protected:
     std::size_t precision_;
@@ -150,9 +152,11 @@ class MarketCalibrationReport : public MarketCalibrationReportBase {
 public:
     MarketCalibrationReport(const std::string& calibrationFilter,
                             const QuantLib::ext::shared_ptr<ore::data::Report>& report,
+                            const QuantLib::ext::shared_ptr<ore::data::Report>& report_cashflows,
                             std::size_t precision = 8);
-    
+
     QuantLib::ext::shared_ptr<ore::data::Report> outputCalibrationReport() override;
+    QuantLib::ext::shared_ptr<ore::data::Report> outputCashflowReport() override;
 
     void addYieldCurveImpl(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts, const std::string& name, bool isDiscount, 
         const std::string& label, const std::string& type,
@@ -188,6 +192,7 @@ public:
 
 private:
      QuantLib::ext::shared_ptr<ore::data::Report> report_;
+     QuantLib::ext::shared_ptr<ore::data::Report> report_cashflows_;
 
      void addRowReport(const std::string& moType, const std::string& moId, const std::string& resId,
                        const std::string& key1, const std::string& key2, const std::string& key3,

@@ -21,6 +21,7 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/termstructures/creditcurve.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -37,12 +38,55 @@ public:
         std::string errorMessage;
     };
 
-    CreditIndexConstituentCurveCalibration(const Date& indexStartDate, const Period indexTenor,
-                                           const double indexSpread, const Handle<Quote>& indexRecoveryRate,
-                                           const Handle<DefaultProbabilityTermStructure>& indexCurve,
-                                           const Handle<YieldTermStructure>& discountCurve)
-        : indexStartDate_(indexStartDate), indexSpread_(indexSpread), indexTenor_(indexTenor),
-          indexRecoveryRate_(indexRecoveryRate), indexCurve_(indexCurve), discountCurve_(discountCurve) {}
+    CreditIndexConstituentCurveCalibration(
+        const Date& indexStartDate, const Period& indexTerm, const double indexSpread,
+        const Handle<Quote>& indexRecoveryRate, const Handle<DefaultProbabilityTermStructure>& indexCurve,
+        const Handle<YieldTermStructure>& discountCurve,
+        QuantLib::Period tenor = 3 * Months,
+        QuantLib::Calendar calendar = QuantLib::WeekendsOnly(),
+        QuantLib::BusinessDayConvention convention = QuantLib::Following,
+        QuantLib::BusinessDayConvention termConvention = QuantLib::Unadjusted,
+        QuantLib::DateGeneration::Rule rule = QuantLib::DateGeneration::CDS2015, bool endOfMonth = false,
+        QuantLib::BusinessDayConvention payConvention = QuantLib::Following,
+        QuantLib::DayCounter dayCounter = QuantLib::Actual360(false),
+        QuantLib::DayCounter lastPeriodDayCounter = QuantLib::Actual360(true), QuantLib::Natural cashSettlementDays = 3)
+        : startDate_(indexStartDate), indexTerm_(indexTerm), tenor_(tenor),
+          calendar_(calendar), convention_(convention), termConvention_(termConvention), rule_(rule),
+          endOfMonth_(endOfMonth), runningSpread_(indexSpread), payConvention_(payConvention),
+          dayCounter_(dayCounter), lastPeriodDayCounter_(lastPeriodDayCounter),
+          cashSettlementDays_(cashSettlementDays), indexRecoveryRate_(indexRecoveryRate),
+          indexCurve_(indexCurve), discountCurve_(discountCurve) {
+        QL_REQUIRE(startDate_ != Null<Date>(), "CreditIndexConstituentCurveCalibration: Index start date is null");
+        QL_REQUIRE(indexTerm_ != 0 * Days, "CreditIndexConstituentCurveCalibration: Index term is null");
+        QL_REQUIRE(runningSpread_ != Null<double>(), "CreditIndexConstituentCurveCalibration: Index running spread is null");
+        QL_REQUIRE(!indexCurve_.empty(), "CreditIndexConstituentCurveCalibration: Index curve handle is empty");
+        QL_REQUIRE(!indexRecoveryRate_.empty(), "CreditIndexConstituentCurveCalibration: Index recovery rate handle is empty");
+        QL_REQUIRE(!discountCurve_.empty(), "CreditIndexConstituentCurveCalibration: Discount curve handle is empty");
+    }
+
+    CreditIndexConstituentCurveCalibration(const Handle<CreditCurve>& indexRefData)
+        : CreditIndexConstituentCurveCalibration(
+              indexRefData->refData().startDate, indexRefData->refData().indexTerm,
+              indexRefData->refData().runningSpread, indexRefData->recovery(), indexRefData->curve(),
+              indexRefData->rateCurve(), indexRefData->refData().tenor, indexRefData->refData().calendar,
+              indexRefData->refData().convention, indexRefData->refData().termConvention, indexRefData->refData().rule,
+              indexRefData->refData().endOfMonth, indexRefData->refData().payConvention,
+              indexRefData->refData().dayCounter, indexRefData->refData().lastPeriodDayCounter,
+              indexRefData->refData().cashSettlementDays) {
+        lastPeriodDayCounter_ = lastPeriodDayCounter_ == DayCounter() ? Actual360(true) : lastPeriodDayCounter_;
+    }
+
+    CreditIndexConstituentCurveCalibration(const boost::shared_ptr<CreditCurve>& indexRefData)
+        : CreditIndexConstituentCurveCalibration(
+              indexRefData->refData().startDate, indexRefData->refData().indexTerm,
+              indexRefData->refData().runningSpread, indexRefData->recovery(), indexRefData->curve(),
+              indexRefData->rateCurve(), indexRefData->refData().tenor, indexRefData->refData().calendar,
+              indexRefData->refData().convention, indexRefData->refData().termConvention, indexRefData->refData().rule,
+              indexRefData->refData().endOfMonth, indexRefData->refData().payConvention,
+              indexRefData->refData().dayCounter, indexRefData->refData().lastPeriodDayCounter,
+              indexRefData->refData().cashSettlementDays) {
+        lastPeriodDayCounter_ = lastPeriodDayCounter_ == DayCounter() ? Actual360(true) : lastPeriodDayCounter_;
+    }
 
     CalibrationResults calibratedCurves(const std::vector<std::string>& names,
                                         const std::vector<double>& remainingNotionals,
@@ -59,9 +103,22 @@ private:
     buildShiftedCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
                       const QuantLib::Date& maturity,
                       const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor) const;
-    Date indexStartDate_;
-    double indexSpread_;
-    Period indexTenor_;
+    // Index Reference Data
+    QuantLib::Date startDate_;
+    QuantLib::Period indexTerm_;
+    QuantLib::Period tenor_;
+    // Index Conventions
+    QuantLib::Calendar calendar_;
+    QuantLib::BusinessDayConvention convention_;
+    QuantLib::BusinessDayConvention termConvention_;
+    QuantLib::DateGeneration::Rule rule_;
+    bool endOfMonth_;
+    QuantLib::Real runningSpread_;
+    QuantLib::BusinessDayConvention payConvention_;
+    QuantLib::DayCounter dayCounter_;
+    QuantLib::DayCounter lastPeriodDayCounter_;
+    QuantLib::Natural cashSettlementDays_;
+    // Index Market Data
     Handle<Quote> indexRecoveryRate_;
     Handle<DefaultProbabilityTermStructure> indexCurve_;
     Handle<YieldTermStructure> discountCurve_;

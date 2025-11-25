@@ -65,11 +65,11 @@ QuantLib::Real SimmConfiguration_ISDA_V2_6_5::weight(const CrifRecord::RiskType&
     return SimmConfigurationBase::weight(rt, qualifier, label_1);
 }
 
-QuantLib::Real SimmConfiguration_ISDA_V2_6_5::correlation(const CrifRecord::RiskType& firstRt, const string& firstQualifier,
-                                                        const string& firstLabel_1, const string& firstLabel_2,
-                                                        const CrifRecord::RiskType& secondRt, const string& secondQualifier,
-                                                        const string& secondLabel_1, const string& secondLabel_2,
-                                                        const std::string& calculationCurrency) const {
+QuantLib::Real SimmConfiguration_ISDA_V2_6_5::correlation(
+    const CrifRecord::RiskType& firstRt, const std::string& firstQualifier, const std::string& firstBucket,
+    const std::string& firstLabel_1, const std::string& firstLabel_2, const CrifRecord::RiskType& secondRt,
+    const std::string& secondQualifier, const std::string& secondBucket, const std::string& secondLabel_1,
+    const std::string& secondLabel_2, const std::string& calculationCurrency) const {
 
     if (firstRt == CrifRecord::RiskType::FX && secondRt == CrifRecord::RiskType::FX) {
         QL_REQUIRE(calculationCurrency != "", "no calculation currency provided corr");
@@ -85,8 +85,9 @@ QuantLib::Real SimmConfiguration_ISDA_V2_6_5::correlation(const CrifRecord::Risk
         }
     }
 
-    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstLabel_1, firstLabel_2, secondRt,
-                                              secondQualifier, secondLabel_1, secondLabel_2);
+    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstBucket, firstLabel_1, firstLabel_2,
+                                              secondRt, secondQualifier, secondBucket, secondLabel_1, secondLabel_2,
+                                              calculationCurrency);
 }
 
 SimmConfiguration_ISDA_V2_6_5::SimmConfiguration_ISDA_V2_6_5(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,

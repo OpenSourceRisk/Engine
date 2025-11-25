@@ -16,21 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/model/blackscholesmodelbuilderbase.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
 #include <ored/model/utilities.hpp>
 
 namespace ore {
 namespace data {
 
-BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
-    const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-    const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
-    const Handle<YieldTermStructure>& baseCurve)
-    : BlackScholesModelBuilderBase(std::vector<Handle<YieldTermStructure>>{curve},
-                                   std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>{process},
-                                   simulationDates, addDates, timeStepsPerYear, baseCurve) {}
+AssetModelBuilderBase::AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
+                                             const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                                             const std::set<Date>& simulationDates, const std::set<Date>& addDates,
+                                             const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve)
+    : AssetModelBuilderBase(std::vector<Handle<YieldTermStructure>>{curve},
+                            std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>{process},
+                            simulationDates, addDates, timeStepsPerYear, baseCurve) {}
 
-BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
+AssetModelBuilderBase::AssetModelBuilderBase(
     const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
@@ -38,7 +38,7 @@ BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     : curves_(curves), baseCurve_(baseCurve), processes_(processes), simulationDates_(simulationDates),
       addDates_(addDates), timeStepsPerYear_(timeStepsPerYear) {
 
-    QL_REQUIRE(!curves_.empty(), "BlackScholesModelBuilderBase: no curves given");
+    QL_REQUIRE(!curves_.empty(), "AssetModelBuilderBase: no curves given");
 
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
 
@@ -59,7 +59,7 @@ BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     alwaysForwardNotifications();
 
     allCurves_ = curves_;
-    if(!baseCurve_.empty())
+    if (!baseCurve_.empty())
         allCurves_.push_back(baseCurve_);
     for (auto const& p : processes_) {
         vols_.push_back(p->blackVolatility());
@@ -68,29 +68,29 @@ BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     }
 }
 
-BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
-    const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process)
-    : BlackScholesModelBuilderBase(curve, process, {}, {}, 1) {}
+AssetModelBuilderBase::AssetModelBuilderBase(const Handle<YieldTermStructure>& curve,
+                                             const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process)
+    : AssetModelBuilderBase(curve, process, {}, {}, 1) {}
 
-Handle<BlackScholesModelWrapper> BlackScholesModelBuilderBase::model() const {
+Handle<AssetModelWrapper> AssetModelBuilderBase::model() const {
     calculate();
     return model_;
 }
 
-bool BlackScholesModelBuilderBase::requiresRecalibration() const {
+bool AssetModelBuilderBase::requiresRecalibration() const {
     setupDatesAndTimes();
     return calibrationPointsChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_;
 }
 
-void BlackScholesModelBuilderBase::newCalcWithoutRecalibration() const { calculate(); }
+void AssetModelBuilderBase::newCalcWithoutRecalibration() const { calculate(); }
 
-void BlackScholesModelBuilderBase::forceRecalculate() {
+void AssetModelBuilderBase::forceRecalculate() {
     forceCalibration_ = true;
     ModelBuilder::forceRecalculate();
     forceCalibration_ = false;
 }
 
-void BlackScholesModelBuilderBase::setupDatesAndTimes() const {
+void AssetModelBuilderBase::setupDatesAndTimes() const {
     Date referenceDate = curves_.front()->referenceDate();
     effectiveSimulationDates_.clear();
     effectiveSimulationDates_.insert(referenceDate);
@@ -108,7 +108,7 @@ void BlackScholesModelBuilderBase::setupDatesAndTimes() const {
     discretisationTimeGrid_ = TimeGrid(times.begin(), times.end(), steps);
 }
 
-void BlackScholesModelBuilderBase::performCalculations() const {
+void AssetModelBuilderBase::performCalculations() const {
     if (requiresRecalibration()) {
 
         // update vol and curves cache
@@ -121,15 +121,15 @@ void BlackScholesModelBuilderBase::performCalculations() const {
 
         // setup model
 
-        model_.linkTo(QuantLib::ext::make_shared<BlackScholesModelWrapper>(getCalibratedProcesses(), effectiveSimulationDates_,
-                                                                   discretisationTimeGrid_));
+        model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(
+            processType(), getCalibratedProcesses(), effectiveSimulationDates_, discretisationTimeGrid_));
 
         // notify model observers
         model_->notifyObservers();
     }
 }
 
-bool BlackScholesModelBuilderBase::calibrationPointsChanged(const bool updateCache) const {
+bool AssetModelBuilderBase::calibrationPointsChanged(const bool updateCache) const {
 
     // get times for curves and times / strikes for vols
 

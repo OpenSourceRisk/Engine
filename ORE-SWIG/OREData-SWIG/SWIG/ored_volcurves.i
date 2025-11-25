@@ -24,7 +24,7 @@
 %{
 using ore::data::GenericYieldVolCurve;
 using ore::data::SwaptionVolCurve;
-using ore::data::BlackScholesModelBuilderBase;
+using ore::data::AssetModelBuilderBase;
 using ore::data::LocalVolModelBuilder;
 using namespace std;
 %}
@@ -79,7 +79,7 @@ class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
                               const std::vector<Real>& calibrationMoneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
                               const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
                               const Handle<YieldTermStructure>& baseCurve = {});
-         std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+         std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
 };
 
 

@@ -600,6 +600,7 @@
   <xs:simpleType name="defaultCurveType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="SpreadCDS"/>
+      <xs:enumeration value="ConvSpreadCDS"/>
       <xs:enumeration value="HazardRate"/>
       <xs:enumeration value="Benchmark"/>
       <xs:enumeration value="Price"/>

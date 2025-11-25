@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/model/blackscholesmodelbuilderbase.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
 
 #include <qle/instruments/commodityapo.hpp>
 
@@ -33,7 +33,7 @@ namespace data {
 using namespace QuantExt;
 using namespace QuantLib;
 
-class CommodityApoModelBuilder : public BlackScholesModelBuilderBase {
+class CommodityApoModelBuilder : public AssetModelBuilderBase {
 public:
     CommodityApoModelBuilder(const Handle<YieldTermStructure>& curve,
                              const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
@@ -42,7 +42,9 @@ public:
 
 protected:
     void setupDatesAndTimes() const override;
-    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+
+    AssetModelWrapper::ProcessType processType() const override;
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
     std::vector<std::vector<Real>> getCurveTimes() const override;
     std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 

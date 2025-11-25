@@ -43,8 +43,9 @@ using namespace QuantExt;
 
 BlackScholesCG::BlackScholesCG(const ModelCG::Type type, const Size paths, const std::string& currency,
                                const Handle<YieldTermStructure>& curve, const std::string& index,
-                               const std::string& indexCurrency, const Handle<BlackScholesModelWrapper>& model,
-                               const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+                               const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
+                               const std::set<Date>& simulationDates,
+                               const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                const std::string& calibration, const std::vector<Real>& calibrationStrikes)
     : BlackScholesCG(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, simulationDates,
                      iborFallbackConfig, calibration, {{index, calibrationStrikes}}) {}
@@ -55,7 +56,7 @@ BlackScholesCG::BlackScholesCG(
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
     const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
-    const Handle<BlackScholesModelWrapper>& model,
+    const Handle<AssetModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
@@ -100,7 +101,7 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
         const std::vector<IndexInfo>& indices, const std::vector<std::string>& indexCurrencies,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
         const std::set<Date>& effectiveSimulationDates, const TimeGrid& timeGrid,
-        const std::vector<Size>& positionInTimeGrid, const Handle<BlackScholesModelWrapper>& model,
+        const std::vector<Size>& positionInTimeGrid, const Handle<AssetModelWrapper>& model,
         const std::vector<Real>& calibrationStrikes)
         : indices_(indices), indexCurrencies_(indexCurrencies), correlations_(correlations),
           effectiveSimulationDates_(effectiveSimulationDates), timeGrid_(timeGrid),
@@ -182,11 +183,13 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
             while (tidx <= positionInTimeGrid_[i]) {
                 Array d_variance(indices_.size());
                 for (Size j = 0; j < indices_.size(); ++j) {
-                    Real tmp = model_->processes()[j]->blackVolatility()->blackVariance(
+                    Real tmp = model_->generalizedBlackScholesProcesses()[j]->blackVolatility()->blackVariance(
                         timeGrid_[tidx],
                         calibrationStrikes_[j] == Null<Real>()
-                            ? atmForward(model_->processes()[j]->x0(), model_->processes()[j]->riskFreeRate(),
-                                         model_->processes()[j]->dividendYield(), timeGrid_[tidx])
+                            ? atmForward(model_->generalizedBlackScholesProcesses()[j]->x0(),
+                                         model_->generalizedBlackScholesProcesses()[j]->riskFreeRate(),
+                                         model_->generalizedBlackScholesProcesses()[j]->dividendYield(),
+                                         timeGrid_[tidx])
                             : calibrationStrikes_[j]);
                     d_variance[j] = std::max(tmp - variance[j], 1E-20);
                     variance[j] = tmp;
@@ -266,7 +269,7 @@ struct SqrtCovCalculator : public QuantLib::LazyObject {
     const std::set<Date>& effectiveSimulationDates_;
     const TimeGrid& timeGrid_;
     const std::vector<Size>& positionInTimeGrid_;
-    const Handle<BlackScholesModelWrapper>& model_;
+    const Handle<AssetModelWrapper>& model_;
 
     // inputs that we need to copy
     const std::vector<Real> calibrationStrikes_;
@@ -326,7 +329,8 @@ void BlackScholesCG::performCalculations() const {
     // init underlying path where we map a date to a randomvariable representing the path values
 
     for (auto const& d : effectiveSimulationDates_) {
-        underlyingPaths_[d] = std::vector<std::size_t>(model_->processes().size(), ComputationGraph::nan);
+        underlyingPaths_[d] =
+            std::vector<std::size_t>(model_->generalizedBlackScholesProcesses().size(), ComputationGraph::nan);
     }
 
     // determine calibration strikes
@@ -403,7 +407,7 @@ void BlackScholesCG::performCalculations() const {
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
         Date d = *(++date);
         for (Size j = 0; j < indices_.size(); ++j) {
-            auto p = model_->processes().at(j);
+            auto p = model_->generalizedBlackScholesProcesses().at(j);
             std::string id = std::to_string(j) + "_" + ore::data::to_string(d);
             std::size_t div =
                 addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::div, {}, {}, d, {}, {}, j),
@@ -437,7 +441,7 @@ void BlackScholesCG::performCalculations() const {
 
     std::vector<std::size_t> logState(indices_.size());
     for (Size j = 0; j < indices_.size(); ++j) {
-        auto p = model_->processes().at(j);
+        auto p = model_->generalizedBlackScholesProcesses().at(j);
         logState[j] =
             addModelParameter(ModelCG::ModelParameter(ModelCG::ModelParameter::Type::logX0, {}, {}, {}, {}, {}, j),
                               [p] { return std::log(p->x0()); });
@@ -472,10 +476,11 @@ void BlackScholesCG::performCalculations() const {
         Size timeStep = 0;
         for (auto const& d : effectiveSimulationDates_) {
             Real t = timeGrid_[positionInTimeGrid_[timeStep]];
-            Real forward = atmForward(model_->processes()[i]->x0(), model_->processes()[i]->riskFreeRate(),
-                                      model_->processes()[i]->dividendYield(), t);
+            Real forward = atmForward(model_->generalizedBlackScholesProcesses()[i]->x0(),
+                                      model_->generalizedBlackScholesProcesses()[i]->riskFreeRate(),
+                                      model_->generalizedBlackScholesProcesses()[i]->dividendYield(), t);
             if (timeStep > 0) {
-                Real volatility = model_->processes()[i]->blackVolatility()->blackVol(
+                Real volatility = model_->generalizedBlackScholesProcesses()[i]->blackVolatility()->blackVol(
                     t, calibrationStrikes[i] == Null<Real>() ? forward : calibrationStrikes[i]);
                 additionalResults_["BlackScholes.Volatility_" + indices_[i].name() + "_" + ore::data::to_string(d)] =
                     volatility;
@@ -676,7 +681,7 @@ std::size_t BlackScholesCG::getIndexValue(const Size indexNo, const Date& d, con
     auto res = underlyingPaths_.at(d).at(indexNo);
     // compute forwarding factor
     if (effFwd != Null<Date>()) {
-        auto p = model_->processes().at(indexNo);
+        auto p = model_->generalizedBlackScholesProcesses().at(indexNo);
         std::size_t div_d = addModelParameter(
             ModelCG::ModelParameter(ModelCG::ModelParameter::Type::div, {}, {}, d, {}, {}, {}, indexNo),
             [p, d]() { return p->dividendYield()->discount(d); });

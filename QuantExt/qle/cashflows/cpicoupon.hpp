@@ -179,6 +179,7 @@ public:
     CPILeg& withObservationLag(const Period& observationLag);
     CPILeg& withSubtractInflationNominalAllCoupons(bool subtractInflationNominalAllCoupons);
     CPILeg& withBaseDate(const Date& baseDate);
+    CPILeg& withPaymentDates(const std::vector<Date>& paymentDates);
     operator Leg() const;
 
 private:
@@ -208,7 +209,7 @@ private:
     Date startDate_;
     // Needed if baseCPI is not given
     Date baseDate_;
-    
+    std::vector<Date> paymentDates_;
 };
 
 } // namespace QuantExt

@@ -93,12 +93,18 @@ std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analyt
 
 void AnalyticsManager::runAnalytics(
     const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
+    runAnalytics(marketCalibrationReport == nullptr
+                     ? std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>()
+                     : std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>{marketCalibrationReport});
+}
+
+void AnalyticsManager::runAnalytics(
+    const std::vector<QuantLib::ext::shared_ptr<MarketCalibrationReportBase>>& marketCalibrationReport) {
     QL_REQUIRE(initialised_, "AnalyticsManager has not been initialised");
     if (analytics_.size() == 0)
         return;
 
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
-
     // load the market data if at least one analytic requires that and we have non-empty tmps
     if (std::any_of(analytics_.begin(), analytics_.end(),
                     [](const std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>& a) {
@@ -151,8 +157,7 @@ void AnalyticsManager::runAnalytics(
         a.second->stopTimer("Run " + a.second->label() + "Analytic");
         LOG("run analytic with label '" << a.first << "' finished.");
         // then populate the market calibration report if required
-        if (marketCalibrationReport)
-            a.second->marketCalibration(marketCalibrationReport);
+        a.second->marketCalibration(marketCalibrationReport);
     }
 
     if (inputs_->portfolio()) {
@@ -174,11 +179,15 @@ void AnalyticsManager::runAnalytics(
         reports_["STATS"]["runtimes"] = runTimesReport;
     }
 
-    if (marketCalibrationReport) {
-        auto report = marketCalibrationReport->outputCalibrationReport();
-        if (report) {
-            if (auto rpt = QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(report))
-                reports_["MARKET"]["todaysmarketcalibration"] = rpt;
+    Size noa = 0, nob = 0;
+    for (auto r : marketCalibrationReport) {
+        if (auto rpt = QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(r->outputCalibrationReport())) {
+            std::string suffix = noa++ == 0 ? std::string() : "_" + std::to_string(noa);
+            reports_["MARKET"]["todaysmarketcalibration" + suffix] = rpt;
+        }
+        if (auto rpt = QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(r->outputCashflowReport())) {
+            std::string suffix = nob++ == 0 ? std::string() : "_" + std::to_string(nob);
+            reports_["MARKET"]["todaysmarketcalibration_cashflows" + suffix] = rpt;
         }
     }
 

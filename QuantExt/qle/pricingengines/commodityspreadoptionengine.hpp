@@ -25,12 +25,13 @@
 
 #include <qle/instruments/commodityspreadoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/blackscholesmodelwrapper.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <ql/pricingengines/diffusioncalculator.hpp>
+
 namespace QuantExt {
 
 /*! Commodity Spread Option Engine
