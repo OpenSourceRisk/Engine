@@ -752,11 +752,11 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
 
-    tmp = params_->get("setup", "useAtParCouponCurves", false);
+    tmp = params_->get("setup", "useAtParCouponsCurves", false);
     if (tmp != "")
         setUseAtParCouponsCurves(ore::data::parseBool(tmp));
 
-    tmp = params_->get("setup", "useAtParCouponTrades", false);
+    tmp = params_->get("setup", "useAtParCouponsTrades", false);
     if (tmp != "")
         setUseAtParCouponsTrades(ore::data::parseBool(tmp));
 
