@@ -396,6 +396,20 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates
     return gen_->next(d);
 }
 
+RiskFactorBreakDownHistoricalScenarioGenerator::RiskFactorBreakDownHistoricalScenarioGenerator(
+    const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen) : HistoricalScenarioGenerator(*gen), gen_(gen){
+
+}
+
+void RiskFactorBreakDownHistoricalScenarioGenerator::reset() {
+    gen_->reset();
+    HistoricalScenarioGenerator::reset();
+}
+
+QuantLib::ext::shared_ptr<Scenario> RiskFactorBreakDownHistoricalScenarioGenerator::next(const Date& d) {
+    return gen_->next(d);
+}
+
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
     const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,

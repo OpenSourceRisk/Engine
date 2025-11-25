@@ -37,11 +37,12 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     const string& portfolioFilter, const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
-    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl)
+    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs)),
       includeExpectedShortfall_(includeExpectedShortfall) {
     fullReval_ = true;
     tradePnl_ = tradePnl;
+    riskFactorBreakdown_ = riskFactorBreakdown;
 }
 
 void HistoricalSimulationVarReport::createVarCalculator() {
@@ -67,6 +68,9 @@ void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
     if (!tradePnl_) {
         pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
+    }else if(riskFactorBreakdown_){
+        //The PnL breakdown on risk factors
+        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnl();
     } else {
         tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
     }
@@ -93,6 +97,8 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
                 report->add(hisScenGen_->endDates()[s]);
                 report->add(tradePnls_[s][t.second]);
             }
+        }else if(riskFactorBreakdown_){
+            //The PnL breakdown on risk factors
         } else {
             report->next();
             report->add(tg->portfolioId());

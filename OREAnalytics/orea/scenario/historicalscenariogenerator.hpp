@@ -274,6 +274,16 @@ private:
     std::vector<bool> isRelevantScenario_;
     QuantLib::Size i_orig_;
 };
+// Historical scenario generator based on risk factors
+class RiskFactorBreakDownHistoricalScenarioGenerator : public HistoricalScenarioGenerator{
+public:
+    RiskFactorBreakDownHistoricalScenarioGenerator(const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen);
+
+    void reset() override;
+    QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+private:
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> gen_;
+};
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
     const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,

@@ -225,6 +225,16 @@ TradePnlStore HistoricalPnlGenerator::tradeLevelPnl(const set<pair<string, Size>
 
 TradePnlStore HistoricalPnlGenerator::tradeLevelPnl() const { return tradeLevelPnl(timePeriod()); }
 
+using RiskFactorPnLStore = HistoricalPnlGenerator::RiskFactorPnLStore;
+
+RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl() const {
+
+    // Create result with enough space
+    RiskFactorPnLStore pnls;
+
+    return pnls;
+}
+
 const QuantLib::ext::shared_ptr<NPVCube>& HistoricalPnlGenerator::cube() const { return cube_; }
 
 set<pair<string, Size>> HistoricalPnlGenerator::tradeIdIndexPairs() const {
