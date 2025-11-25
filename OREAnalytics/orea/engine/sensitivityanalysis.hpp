@@ -96,7 +96,8 @@ public:
                         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig =
                             QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()),
                         const bool continueOnError = false, bool dryRun = false,
-                        const std::string& context = "sensi analysis");
+                        const std::string& context = "sensi analysis", const bool useAtParCouponsCurves = true,
+                        const bool useAtParCouponsTrades = true);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -185,6 +186,8 @@ private:
     Size nThreads_;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     std::string context_;
+    bool useAtParCouponsCurves_;
+    bool useAtParCouponsTrades_;
 
 protected:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
