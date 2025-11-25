@@ -91,6 +91,64 @@ public:
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
     QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
 
+
+// the implementation of the amc calculator interface used by the amc valuation engine
+    class CallableBondAmcCalculator : public AmcCalculator {
+    public:
+        CallableBondAmcCalculator() = default;
+        CallableBondAmcCalculator(
+            const std::vector<Size>& externalModelIndices, 
+            const std::set<Real>& exerciseXvaTimes,
+            const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+            const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
+            const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes,
+            const std::array<std::vector<RegressionModel>, 2>& regModelUndDirty,
+            const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValueCall,
+            const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValuePut,
+            const std::array<std::vector<RegressionModel>, 2>& regModelOption,
+            const Real resultValue, const Array& initialState, const Currency& baseCurrency,
+            const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
+            const bool includeReferenceDateEvents, const std::vector<double>& notionals, const Leg& leg);
+
+        Currency npvCurrency() override { return baseCurrency_; }
+        std::vector<QuantExt::RandomVariable>
+        simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                     const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                     const std::vector<size_t>& relevantPathIndex,
+                     const std::vector<size_t>& relevantTimeIndex) override;
+
+    protected:
+        std::vector<Size> externalModelIndices_;
+        std::set<Real> exerciseXvaTimes_;
+        std::set<Real> exerciseTimes_;
+        std::set<Real> xvaTimes_;
+        std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>> callTimes_;
+        std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>> putTimes_;
+        std::array<std::vector<RegressionModel>, 2> regModelUndDirty_;
+        std::array<std::vector<RegressionModel>, 2> regModelContinuationValueCall_;
+        std::array<std::vector<RegressionModel>, 2> regModelContinuationValuePut_;
+        std::array<std::vector<RegressionModel>, 2> regModelOption_;
+        Real resultValue_;
+        Array initialState_;
+        Currency baseCurrency_;
+        bool reevaluateExerciseInStickyRun_;
+
+        // set from global settings via base engine
+        bool includeTodaysCashflows_;
+        bool includeReferenceDateEvents_;
+
+        std::vector<Filter> exercisedCall_;
+        std::vector<Filter> exercisedPut_;
+        std::vector<double> notionals_;
+        Leg leg_;
+        // used for serialisation of amc trianing
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
+
+    };
+
+
+
     // input data from the derived pricing engines, to be set in these engines
     mutable Leg leg_;
     mutable std::vector<CallableBond::CallabilityData> callData_;
