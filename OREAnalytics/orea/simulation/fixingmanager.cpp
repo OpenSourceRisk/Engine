@@ -70,13 +70,10 @@ void FixingManager::initialise(const QuantLib::ext::shared_ptr<Portfolio>& portf
         auto r = t->requiredFixings();
         r.unsetPayDates();
         for (auto const& [name, fixingDates] : r.fixingDatesIndices(QuantLib::Date::maxDate())) {
-            std::cout<<"name = "<<name<<std::endl;
             std::set<Date> dates;
             for (const auto& [d, _] : fixingDates) {
-                std::cout<<d<<"|";
                 dates.insert(d);
             }
-            std::cout<<std::endl;
             try {
                 auto rawIndex = parseIndex(name);
                 if (auto index = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(rawIndex)) {

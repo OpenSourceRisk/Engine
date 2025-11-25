@@ -52,6 +52,7 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
     : OptionletVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
       baseIndex_(baseIndex), targetIndex_(targetIndex), baseRateComputationPeriod_(baseRateComputationPeriod),
       targetRateComputationPeriod_(targetRateComputationPeriod), scalingFactor_(scalingFactor) {
+
     QL_REQUIRE(baseIndex != nullptr, "ProxyOptionletVolatility: no base index given.");
     QL_REQUIRE(targetIndex != nullptr, "ProxyOptionletVolatility: no target index given.");
     QL_REQUIRE((!isOis(targetIndex_) && !isBMA(targetIndex)) || targetRateComputationPeriod != 0 * Days,
