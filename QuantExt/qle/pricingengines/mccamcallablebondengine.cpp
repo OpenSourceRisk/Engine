@@ -269,19 +269,19 @@ void McCamCallableBondBaseEngine::calculateModels(
                 auto callPriceAmount = getCallPriceAmount(callData->priceType, callData->includeAccrual, callData->price, notionalAccrualCalc.notional(*t), notionalAccrualCalc.accrual(*t));
                 auto strikePrice = RandomVariable(calibrationSamples_, callPriceAmount) / numeraire;
                 RandomVariable exerciseValueCall =
-                    min(strikePrice - exerciseValue, RandomVariable(calibrationSamples_, 0.0));
+                    min(strikePrice - exerciseValue, pathValueOption);
                 regModelContinuationValueCall[counter] = RegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValueCall[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                          simulationTimes,
-                                                         exerciseValueCall < RandomVariable(calibrationSamples_, 0.0));
+                                                         exerciseValueCall < pathValueOption);
                 auto continuationValue = regModelContinuationValueCall[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
 
                 auto exerciseFilter = exerciseValueCall < continuationValue &&
-                                      exerciseValueCall < RandomVariable(calibrationSamples_, 0.0);
+                                      exerciseValueCall < pathValueOption;
 
                 pathValueOption = conditionalResult(exerciseFilter, exerciseValueCall, pathValueOption);
                 Size callIdx = callTimes.size() - callTimeIdx;
@@ -312,7 +312,7 @@ void McCamCallableBondBaseEngine::calculateModels(
                                        notionalAccrualCalc.notional(*t), notionalAccrualCalc.accrual(*t));
                 auto strikePrice = RandomVariable(calibrationSamples_, putPriceAmount) / numeraire;
                 RandomVariable exerciseValuePut =
-                    max(strikePrice - exerciseValue, RandomVariable(calibrationSamples_, 0.0));
+                    max(strikePrice - exerciseValue, pathValueOption);
                 std::cout << "Exercise time " << *t << ": put price " << putPriceAmount << std::endl;
                 std::cout << "  exercise value (sample 0): " << exerciseValue[0] << std::endl;
                 std::cout << "  exercise value call (sample 0): " << exerciseValuePut[0] << std::endl;
@@ -322,11 +322,11 @@ void McCamCallableBondBaseEngine::calculateModels(
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValuePut[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                          simulationTimes,
-                                                         exerciseValuePut > RandomVariable(calibrationSamples_, 0.0));
+                                                         exerciseValuePut > pathValueOption);
                 auto continuationValue = regModelContinuationValuePut[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
                 pathValueOption = conditionalResult(exerciseValuePut > continuationValue &&
-                                                    exerciseValuePut > RandomVariable(calibrationSamples_, 0.0),
+                                                    exerciseValuePut > pathValueOption,
                                                     exerciseValuePut, pathValueOption);
                 Size putIdx = putTimes.size() - putTimeIdx;
                 putTimeIdx++;
