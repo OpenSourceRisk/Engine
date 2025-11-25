@@ -208,15 +208,18 @@ void HestonModelCalibration::logCalibration(const std::vector<Real>& moneyness) 
             auto option = QuantLib::ext::dynamic_pointer_cast<BlackCalibrationHelper>(helpers_[count]);
             const Real err = option->calibrationError();
             results_.rmse += err * err;
-            Real marketValue = option->marketValue();
-            Real modelValue = option->modelValue();
-            Real marketVol = option->volatility()->value();
-            Real modelVol = option->impliedVolatility(modelValue, 1e-8, 1000, 1e-4, 3.0);
-            DLOG(++count << "/" << helpers_.size() << "," << expiries_[j] << "," << moneyness[k] << "," << err << ","
-                         << marketValue << "," << modelValue << "," << modelValue - marketValue << "," << marketVol
-                         << "," << modelVol << "," << marketVol - modelVol);
-            results_.data.push_back(CalibrationResults::InstrumentResult(expiries_[j], moneyness_[k], marketValue,
-                                                                         modelValue, marketVol, modelVol));
+            CalibrationInstrumentResults result;
+	    result.expiry = expiries_[j];
+	    result.moneyness = moneyness_[k];
+	    result.marketValue = option->marketValue();
+            result.modelValue = option->modelValue();
+            result.marketVol = option->volatility()->value();
+            result.modelVol = option->impliedVolatility(result.modelValue, 1e-8, 1000, 1e-4, 3.0); // FIXME: expose parameters?
+            DLOG(++count << "/" << helpers_.size() << "," << result.expiry << "," << result.moneyness << "," << err
+                         << "," << result.marketValue << "," << result.modelValue << ","
+                         << result.modelValue - result.marketValue << "," << result.marketVol << "," << result.modelVol
+                         << "," << result.marketVol - result.modelVol);
+            results_.data.push_back(result);
         }
     }
     results_.rmse = sqrt(results_.rmse / helpers_.size());
@@ -229,6 +232,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
     DLOG("initial values: " << to_string(initialValues_));
     DLOG("discretization: " << to_string(discretization_));
 
+    results_.clear();
     if (restarts_ > 0)
         return model2();
     else
@@ -335,11 +339,27 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     Real feller = 2.0 * hestonModel->params()[0] * hestonModel->params()[1] / pow(hestonModel->params()[2], 2);
     DLOG("feller: " << feller);
     if (feller < 1) {
-        ALOG("feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
+        ALOG("Feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
     }
 
     logCalibration(moneyness);
 
+    results_.indexName = indexName_;
+    
+    results_.parameterNames.clear();
+    results_.parameterNames.push_back("theta");  
+    results_.parameterNames.push_back("kappa");  
+    results_.parameterNames.push_back("sigma");  
+    results_.parameterNames.push_back("rho");  
+    results_.parameterNames.push_back("v0");  
+
+    results_.parameterValues.clear();
+    results_.parameterValues.push_back(hestonModel->theta());
+    results_.parameterValues.push_back(hestonModel->kappa());
+    results_.parameterValues.push_back(hestonModel->sigma());
+    results_.parameterValues.push_back(hestonModel->rho());
+    results_.parameterValues.push_back(hestonModel->v0());
+    
     return hestonModel;
 }
 
@@ -437,7 +457,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     Real feller = 2.0 * bestParams[0] * bestParams[1] / pow(bestParams[2], 2);
     DLOG("feller: " << feller);
     if (feller < 1) {
-        ALOG("feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
+        ALOG("Feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
     }
 
     DLOG("Model Calibration Results:");
@@ -449,6 +469,22 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
 
     logCalibration(moneyness);
 
+    results_.indexName = indexName_;
+
+    results_.parameterNames.clear();
+    results_.parameterNames.push_back("theta");  
+    results_.parameterNames.push_back("kappa");  
+    results_.parameterNames.push_back("sigma");  
+    results_.parameterNames.push_back("rho");  
+    results_.parameterNames.push_back("v0");  
+
+    results_.parameterValues.clear();
+    results_.parameterValues.push_back(model->theta());
+    results_.parameterValues.push_back(model->kappa());
+    results_.parameterValues.push_back(model->sigma());
+    results_.parameterValues.push_back(model->rho());
+    results_.parameterValues.push_back(model->v0());
+    
     return model;
 }
 

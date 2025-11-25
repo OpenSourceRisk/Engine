@@ -106,15 +106,6 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     setSensitivityTemplate(builder->sensitivityTemplate());
     addProductModelEngine(*builder);
 
-    // Add model calibration results to instrument additonal data
-    for (auto p : engineFactory->modelBuilders()) {
-        if (p.first == id()) {
-            if (auto amb = QuantLib::ext::dynamic_pointer_cast<AssetModelBuilderBase>(p.second)) {
-                for (auto r : amb->getAdditionalCalibrationResultsMap())
-                    additionalData_.insert(r);
-            }
-        }
-    }
     DLOG("ScriptedTrade::build() done for trade " << id());
 }
 

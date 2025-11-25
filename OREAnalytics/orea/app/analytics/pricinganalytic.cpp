@@ -115,15 +115,18 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLE("OK");
             }
 
-            if (analytic()->portfolio()->engineFactory()->modelBuilders().size() > 0) {
                 CONSOLEW("Pricing: Asset Model Calibration Report");
                 auto calReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString()).writeAssetModelCalibrationReport(*calReport, analytic()->portfolio());
                 analytic()->addReport(type, "assetmodelcalibration", calReport);
                 CONSOLE("OK");
-            } else {
-	        WLOG("portfolo does not have any model builders");
-            }
+	    
+                CONSOLEW("Pricing: Asset Model Path Report");
+                auto pathReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString()).writeAssetModelPathReport(*pathReport, analytic()->portfolio());
+                analytic()->addReport(type, "assetmodelpaths", pathReport);
+                CONSOLE("OK");
+	    
         }
 	else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");

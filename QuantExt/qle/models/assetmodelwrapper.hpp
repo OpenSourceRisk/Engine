@@ -31,6 +31,31 @@ namespace QuantExt {
 
 using namespace QuantLib;
 
+struct CalibrationInstrumentResults {
+    Period expiry;
+    Real moneyness;
+    Real marketValue;
+    Real modelValue;
+    Real marketVol;
+    Real modelVol;
+};
+
+struct CalibrationResults {
+    std::string indexName;
+    std::vector<std::string> parameterNames;
+    std::vector<Real> parameterValues;
+    Real rmse;
+    std::vector<CalibrationInstrumentResults> data;
+
+    void clear() {
+        indexName = "";
+        parameterNames.clear();
+        parameterValues.clear();
+        rmse = 0.0;
+        data.clear();
+    }
+};
+
 /* This class acts as an intermediate class between the model builder and the script model. The motivation to have a
    builder and this wrapper at all is to filter notifications from the vol surfaces and curves so that a recalculations
    only happens when relevant market data has changed */
@@ -40,7 +65,8 @@ public:
     AssetModelWrapper();
     AssetModelWrapper(const ProcessType processType,
                       const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
-                      const std::set<Date>& effectiveSimulationDates, const TimeGrid& discretisationTimeGrid);
+                      const std::set<Date>& effectiveSimulationDates, const TimeGrid& discretisationTimeGrid,
+		      const std::vector<CalibrationResults>& calibrationResults = std::vector<CalibrationResults>());
 
     const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes() const;
     const std::set<Date>& effectiveSimulationDates() const;
@@ -52,6 +78,8 @@ public:
 
     ProcessType processType() const;
 
+    const std::vector<CalibrationResults>& calibration() { return calibration_; }
+
 private:
     void update() override;
     ProcessType processType_ = ProcessType::None;
@@ -60,6 +88,7 @@ private:
     std::vector<QuantLib::ext::shared_ptr<HestonProcess>> hestonProcesses_;
     std::set<Date> effectiveSimulationDates_;
     TimeGrid discretisationTimeGrid_;
+    std::vector<CalibrationResults> calibration_;
 };
 
 } // namespace QuantExt

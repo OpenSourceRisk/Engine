@@ -41,9 +41,9 @@ AssetModel::AssetModel(const Model::Type type, const Size paths, const std::stri
                        const std::string& indexCurrency, const Handle<AssetModelWrapper>& model,
                        const std::set<Date>& simulationDates,
                        const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const std::string& calibration,
-                       const std::vector<Real>& calibrationStrikes, const Params& params)
+                       const std::vector<Real>& calibrationStrikes, const Params& params, bool debug)
     : AssetModel(type, paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, {currency}, model, {},
-                 simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params) {}
+                 simulationDates, iborFallbackConfig, calibration, {{index, calibrationStrikes}}, params, debug) {}
 
 AssetModel::AssetModel(
     const Model::Type type, const Size paths, const std::vector<std::string>& currencies,
@@ -55,11 +55,11 @@ AssetModel::AssetModel(
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const std::set<Date>& simulationDates, const ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes,
-    const Params& params)
+    const Params& params, bool debug)
     : ModelImpl(type, params, curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices,
                 indexCurrencies, simulationDates, iborFallbackConfig),
       curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
-      calibration_(calibration), calibrationStrikes_(calibrationStrikes) {
+      calibration_(calibration), calibrationStrikes_(calibrationStrikes), debug_(debug) {
 
     // check inputs
 

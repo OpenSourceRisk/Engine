@@ -83,13 +83,13 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
 
         DLOG("Create Heston process for " << indices_[i]);
 
-        HestonModelCalibration hmc(processes_[i], calibrationExpiries_, calibrationMoneyness_,
+        HestonModelCalibration hmc(indices_[i], processes_[i], calibrationExpiries_, calibrationMoneyness_,
                                    calibrationVarianceTerms_, initialValues_, fixedValues_, relaxedFellerConstraint_,
                                    calibrationRestarts_, tolerance_, discretization_, dontCalibrate_);
 
         processes.push_back(hmc.model()->process());
 
-	calibrationResults_[indices_[i]] = hmc.results();
+	calibrationResults_.push_back(hmc.results());
     }
 
     return processes;

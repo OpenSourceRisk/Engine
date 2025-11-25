@@ -27,6 +27,15 @@
 namespace ore {
 namespace data {
 
+/*!
+  Path generation for multiple assets using the Heston model
+
+  TODO:
+  - Check foreign currency drift adjustment
+  - Check materiality of variance paths dropping to zero when the Feller constraint is violated
+  - Compare terminal spot price distribution in MC vs analytical, with and without Feller violation 
+  
+*/
 class Heston final : public AssetModel {
 public:
     using AssetModel::AssetModel;
@@ -45,8 +54,16 @@ private:
                             const Matrix& correlation, const Matrix& sqrtCorr,
                             const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
-
+ 
     void generateSingleAssetPaths() const; 
+};
+
+
+struct MultiAssetHestonPaths {
+    Size samples;
+    std::vector<std::string> indexNames;
+    std::vector<Date> dates;
+    std::map<Date, std::vector<std::vector<Real>>> data;
 };
 
 } // namespace data

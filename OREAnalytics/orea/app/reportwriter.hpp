@@ -259,12 +259,14 @@ public:
     void writeCapitalCrifReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
                                 const std::string& baseCurrency, const char& csvQuoteChar = '\0') const;
 
-    void writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) const;
-  
     virtual void writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
                                  const Size& principalComponent, ore::data::Report& reportOut);
 
     virtual void writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut);
+
+    void writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+
+    void writeAssetModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
 protected:
     std::string nullString_;

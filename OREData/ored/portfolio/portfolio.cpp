@@ -174,8 +174,6 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             .log();
     }
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
-
-    engineFactory_ = engineFactory;
 }
 
 bool Portfolio::isBuilt() const {

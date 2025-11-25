@@ -32,23 +32,39 @@ namespace data {
 
 using namespace QuantLib;
 
-  /* The naive calibration of all Heston parameters (theta, kappa, sigma, rho, v0) to the European Option surface
-     is very sensitive to the choice of initial values. We therefore calibrate in two steps:
-     
-     1) Set initial values of theta, kappa and v0 using the variance curve implied from the option
-     surface. Heston model implied expected variance:
+/*! This class provides two Heston Model calibration approaches
 
-              E[v(T)] = theta * T + (v0 - theta) * (1 - exp(-kappa * T)) / kappa 
+   1) Variance curve fit followed by usual calibration
 
-     The market variance curve is constructed using the method inherited from the variance swap replication engine.
-     See https:://ssrn.com//abstract=2255550
-     
-     2) With these starting points we calibrate the full Heston model as usual.
+      We first fit three of the model parameters (theta, kappa, v0) to the variance curve, using
+      - market variances computed from the option surface as implemented in the replicating variance swap engine in ORE
+      - the expected variance of the Heston model, E[v(T)] = theta * T + (v0 - theta) * (1 - exp(-kappa * T)) / kappa
+      See https:://ssrn.com//abstract=2255550
 
-   */
+      We then use the resulting theta, kappa and v0 to overwrite the Heston model parameter initial values
+      and run a full calibration, varying all 5 model parameters ((theta, kappa, sigma, rho, v0).
+      If these initial theta and kappa parameters lead to a Feller constraint violation with the initial value of sigma,
+      then we modify sigma to ensure rhe constraint is satisfied at least initially.
+
+      While computing market variances from the option surface we check for arbitrage, i.e. whether cumulative
+      variance as a function time decreases at some point. If so, then we log an ALERT but continue.
+
+      With these starting points we calibrate the full Heston model as usual, using LevenbergMarquardt.
+      Any subset of the parameters can be kept fixed in this process.
+
+      Note that we can choose to relax the Feller constraint continuously from its original value 1 down to 0,
+      i.e. no constraint.
+      
+   2) Randomised initial values
+
+      Alternatively, we randomise inital values and run the calibration repeatedly using LevenbergMarquardt
+      (again any subset of parameters can be kept fixed). The best barameter set is kept.
+      This method is used when argument restarts > 0.
+
+ */
 class HestonModelCalibration {
 public:
-    HestonModelCalibration(const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    HestonModelCalibration(const std::string& indexName, const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                            const std::vector<Period>& expiries = {3 * Months, 6 * Months, 1 * Years, 2 * Years,
                                                                   3 * Years, 5 * Years},
                            const std::vector<Real>& moneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
@@ -62,9 +78,10 @@ public:
                            Real relaxedFellerConstraint = 1.0, Size restarts = 0, Real tolerance = 0.001,
                            const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                            const bool dontCalibrate = false)
-        : process_(process), expiries_(expiries), moneyness_(moneyness), varianceTerms_(varianceTerms),
-          initialValues_(initialValues), fixedValues_(fixedValues), relaxedFellerConstraint_(relaxedFellerConstraint),
-          restarts_(restarts), tolerance_(tolerance), discretization_(discretization), dontCalibrate_(dontCalibrate) {}
+        : indexName_(indexName), process_(process), expiries_(expiries), moneyness_(moneyness),
+          varianceTerms_(varianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
+          relaxedFellerConstraint_(relaxedFellerConstraint), restarts_(restarts), tolerance_(tolerance),
+          discretization_(discretization), dontCalibrate_(dontCalibrate) {}
 
     ext::shared_ptr<HestonModel> model();
 
@@ -98,6 +115,7 @@ private:
     Real getRMSE();
   
     // Inputs
+    std::string indexName_;
     ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
     std::vector<Period> expiries_;
     std::vector<Real> moneyness_;
@@ -114,7 +132,6 @@ private:
     std::vector<ext::shared_ptr<CalibrationHelper>> helpers_;
     std::vector<Time> varianceTimes_;
     std::vector<Real> annualisedVariances_;
-
     CalibrationResults results_;
 };
 

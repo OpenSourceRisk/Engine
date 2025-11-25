@@ -194,6 +194,7 @@ protected:
     Size hestonCalibrationRestarts_; // Max. number of initial value sets
     Real hestonTolerance_; // Implied vol RMSE below which we stop the search -->
     HestonProcess::Discretization hestonProcessDiscretization_;
+    bool addPathsToAdditionalResults_;
 };
 
 } // namespace data

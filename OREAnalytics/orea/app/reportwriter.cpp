@@ -27,6 +27,8 @@
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/model/assetmodelbuilderbase.hpp>
+#include <ored/scripting/models/assetmodel.hpp>
+#include <ored/scripting/models/heston.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/math/distributioncount.hpp>
@@ -2897,46 +2899,6 @@ void ReportWriter::writeCapitalCrifReport(ore::data::Report& report,
     report.end();
 }
 
-void ReportWriter::writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) const {
-    QL_REQUIRE(portfolio->engineFactory(), "portfolio engine factory is null");
-
-    report.addColumn("TradeID", string())
-        .addColumn("Index", string())
-        .addColumn("RMSE", double(), 6)
-        .addColumn("Expiry", Period())
-        .addColumn("Moneyness", double(), 4)
-        .addColumn("MarketValue", double(), 4)
-        .addColumn("ModelValue", double(), 4)
-        .addColumn("MarketVol", double(), 4)
-        .addColumn("ModelVol", double(), 4)
-        .addColumn("VolDifference", double(), 4);
-
-    for (auto p : portfolio->engineFactory()->modelBuilders()) {
-        std::string tradeId = p.first;
-	DLOG("model builder found for id " << tradeId);
-	if (auto amb = QuantLib::ext::dynamic_pointer_cast<AssetModelBuilderBase>(p.second)) {
-            for (auto r : amb->calibrationResults()) {
-                std::string index = r.first;
-                Real rmse = r.second.rmse;
-                for (auto i : r.second.data) {
-                    report.next()
-                        .add(tradeId)
-                        .add(index)
-                        .add(rmse)
-                        .add(i.expiry)
-                        .add(i.moneyness)
-                        .add(i.marketValue)
-                        .add(i.modelValue)
-                        .add(i.marketVol)
-                        .add(i.modelVol)
-                        .add(i.marketVol - i.modelVol);
-                }
-            }
-        }
-    }
-}
-
-
 void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
                              const Size& principalComponent, ore::data::Report& reportOut){
     QL_REQUIRE((eigenValue.size() == eigenVector.columns() && eigenVector.rows() == eigenVector.columns()),
@@ -2975,6 +2937,83 @@ void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa
     }
     reportOut.end();
 }
-  
+
+void ReportWriter::writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeID", string())
+        .addColumn("Index", string())
+        .addColumn("RMSE", double(), 6)
+        .addColumn("ParameterNames", string())
+        .addColumn("ParameterValues", string())
+        .addColumn("Expiry", Period())
+        .addColumn("Moneyness", double(), 4)
+        .addColumn("MarketValue", double(), 4)
+        .addColumn("ModelValue", double(), 4)
+        .addColumn("MarketVol", double(), 4)
+        .addColumn("ModelVol", double(), 4)
+        .addColumn("VolDifference", double(), 4);
+
+    for (auto& [id, trade] : portfolio->trades()) {
+        string tradeId = id;
+        auto additionalResults = trade->instrument()->additionalResults();
+        std::string name = "Heston.calibration";
+        if (additionalResults.count(name) != 0) {
+	    DLOG("MultiAssetHeston calibration found in additional results");
+	    QuantLib::ext::any res = additionalResults[name];
+            std::vector<CalibrationResults> results = QuantLib::ext::any_cast<std::vector<CalibrationResults>>(res);
+	    DLOG("MultiAssetHeston calibration unpacked");
+            for (auto result : results) {
+                for (auto helper : result.data) {
+                    report.next()
+                        .add(tradeId)
+                        .add(result.indexName)
+                        .add(result.rmse)
+                        .add(to_string(result.parameterNames))
+                        .add(to_string(result.parameterValues))
+                        .add(helper.expiry)
+                        .add(helper.moneyness)
+                        .add(helper.marketValue)
+                        .add(helper.modelValue)
+                        .add(helper.marketVol)
+                        .add(helper.modelVol)
+		        .add(helper.modelVol - helper.marketVol);
+                }
+            }
+        }
+    }
+}
+
+void ReportWriter::writeAssetModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeId", string())
+        .addColumn("Index", string())
+        .addColumn("Date", Date())
+        .addColumn("Sample", Size())
+        .addColumn("Value", double(), 6);
+
+    for (auto& [id, trade] : portfolio->trades()) {
+        string tradeId = id;
+        auto additionalResults = trade->instrument()->additionalResults();
+        std::string name = "Heston.paths";
+        if (additionalResults.count(name) != 0) {
+            QuantLib::ext::any res = additionalResults[name];
+            DLOG("MultiAssetHestonPaths found in trade " << id);
+            MultiAssetHestonPaths paths = QuantLib::ext::any_cast<MultiAssetHestonPaths>(res);
+            DLOG("MultiAssetHestonPaths cast ok");
+            for (Size d = 0; d < paths.dates.size(); ++d) {
+                Date date = paths.dates[d];
+                for (Size i = 0; i < paths.indexNames.size(); ++i) {
+                    for (Size j = 0; j < paths.samples; ++j) {
+                        report.next()
+			  .add(id)
+			  .add(paths.indexNames[i])
+			  .add(date)
+			  .add(j)
+			  .add(paths.data[date][i][j]);
+                    }
+                }
+            }
+        }
+    }
+}
+
 } // namespace analytics
 } // namespace ore

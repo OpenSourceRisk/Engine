@@ -39,6 +39,7 @@ namespace data {
 using namespace QuantExt;
 using namespace QuantLib;
 
+  /*
 class CalibrationResults {
 public:
     class InstrumentResult {
@@ -60,7 +61,7 @@ public:
     Real rmse;
     std::vector<InstrumentResult> data;
 };
-
+  */
 class AssetModelBuilderBase : public ModelBuilder {
 public:
     AssetModelBuilderBase(const std::vector<Handle<YieldTermStructure>>& curves,
@@ -81,8 +82,8 @@ public:
     void newCalcWithoutRecalibration() const override;
     //@}
 
-    const std::map<std::string, CalibrationResults>& calibrationResults() { return calibrationResults_; }
-    std::map<std::string, QuantLib::ext::any> getAdditionalCalibrationResultsMap();
+    //const std::map<std::string, CalibrationResults>& calibrationResults() { return calibrationResults_; }
+    //std::map<std::string, QuantLib::ext::any> getAdditionalCalibrationResultsMap();
 
 protected:
     // generic ctor, you should override setupDateAndTimes() if using this one
@@ -116,7 +117,9 @@ protected:
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;
     mutable CalibrationPointCache cache_;
-    mutable std::map<std::string, CalibrationResults> calibrationResults_;
+    //mutable std::map<std::string, CalibrationResults> calibrationResults_;
+    mutable std::vector<CalibrationResults> calibrationResults_;
+
 };
 
 } // namespace data

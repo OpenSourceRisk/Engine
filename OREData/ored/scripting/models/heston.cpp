@@ -271,7 +271,7 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
         ++date;
         for (Size j = 0; j < indices_.size(); ++j) {
-            rvs[j][i] = &underlyingPaths_[*date][j];
+            rvs[j][i] = &paths[*date][j];
             rvs[j][i]->expand();
         }
     }
@@ -387,13 +387,23 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 		// and not QE. To use the Heston implementation as is we take the simple
 		// decorrelation step.
 		state[j] = process->evolve(t0, state[j], dt, dw_decorrelated);
-
+		
 		// Keep track of the variance states to analyse below
 		varianceState[j][i] = state[j][1];
-		
-		// TODO: foreign currency index drift adjustment
 	    }
-	    
+
+	    // FIXME ?
+	    // Loop over all indices again and add drift for eq / com indices that are not in base ccy
+            for (Size j = 0; j < indices_.size(); ++j) {
+		Size j0 = eqComIdx[j];
+                if (j0 != Null<Size>()) {
+                    Real volIdx = std::sqrt(state[j0][1]);
+                    Real volj = std::sqrt(state[j][1]);
+                    Real drift = - correlation[j0][j] * volIdx * volj * dt;
+		    state[j][0] *= std::exp(drift);
+                }
+            }
+
             // on the effective simulation dates populate the underlying paths
             if (i + 1 == *pos) {
 	        for (Size j = 0; j < indices_.size(); ++j)
@@ -489,6 +499,30 @@ void Heston::setAdditionalResults() const {
         additionalResults_["Heston.sigma_" + indices_[i].name()] = model_->hestonProcesses()[i]->sigma();
         additionalResults_["Heston.rho_" + indices_[i].name()] = model_->hestonProcesses()[i]->rho();
         additionalResults_["Heston.v0_" + indices_[i].name()] = model_->hestonProcesses()[i]->v0();
+    }
+    
+    for (Size i = 0; i < indices_.size(); ++i)
+        additionalResults_["Heston.Index[" + to_string(i) + "]"] = indices_[i].name();
+
+    if (model_->calibration().size() > 0)
+        additionalResults_["Heston.calibration"] = model_->calibration();
+    
+    if (debug_) {
+        // copy path data
+        MultiAssetHestonPaths paths;
+        paths.samples = size();
+        for (auto i : indices_)
+            paths.indexNames.push_back(i.name());
+        for (auto d : effectiveSimulationDates_) {
+            paths.dates.push_back(d);
+            paths.data[d] = std::vector<std::vector<Real>>(indices_.size(), std::vector<Real>(size(), 0.0));
+            for (Size i = 0; i < indices_.size(); ++i) {
+                for (Size j = 0; j < size(); ++j) {
+                    paths.data[d][i][j] = underlyingPaths_[d][i][j];
+                }
+            }
+        }
+        additionalResults_["Heston.paths"] = paths;
     }
 }
 

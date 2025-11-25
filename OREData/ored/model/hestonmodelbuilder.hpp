@@ -33,6 +33,10 @@ namespace data {
 
 using namespace QuantLib;
 
+/*!
+  This class delegates calibration of individual Heston models for each asset to
+  the HestonModelCalibration class. 
+ */
 class HestonModelBuilder final : public AssetModelBuilderBase {
 public:
     HestonModelBuilder(const std::vector<std::string>& indices, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -83,15 +87,6 @@ protected:
     std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 
 private:
-    class VarianceCalculator : public GeneralisedReplicatingVarianceSwapEngine {
-    public:
-        VarianceCalculator(const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process)
-            : GeneralisedReplicatingVarianceSwapEngine(QuantLib::ext::shared_ptr<QuantLib::Index>(), process,
-                                                       process->riskFreeRate()) {}
-
-        Real futureVariance(const Date& maturity) const { return calculateFutureVariance(maturity); }
-    };
-
     std::vector<std::string> indices_;
     std::vector<Period> calibrationExpiries_;
     std::vector<Real> calibrationMoneyness_;

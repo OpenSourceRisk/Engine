@@ -71,8 +71,8 @@
       <!-- ordering: theta, kappa, sigma, rho, v0 -->
       <Parameter name="HestonInitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter>
       <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter><!-- applies to simple calibration, without randomised initial values -->
-      <Parameter name="HestonRelaxedFellerConstraint">0.5</Parameter> <!-- in [0,1] -->
-      <Parameter name="HestonCalibrationRestarts">100</Parameter> <!-- max. number of initial value sets, 0 means simple calibration -->
+      <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter> <!-- in [0,1] -->
+      <Parameter name="HestonCalibrationRestarts">0</Parameter> <!-- max. number of initial value sets, 0 means simple calibration -->
       <Parameter name="HestonTolerance">0.001</Parameter> <!-- implied vol RMSE where we stop the search -->
       <!-- PartialTruncation,
            FullTruncation,
@@ -85,6 +85,7 @@
            BroadieKayaExactSchemeTrapezoidal
       -->
       <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
+      <Parameter name="AddPathsToAdditionalResults">true</Parameter>
     </EngineParameters>
   </Product>
 

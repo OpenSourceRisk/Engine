@@ -1,5 +1,6 @@
 <Portfolio>
 
+  <!--
   <Trade id="1:EquityOption">
     <TradeType>EquityOption</TradeType>
     <Envelope>
@@ -25,7 +26,9 @@
       <Quantity>1000</Quantity>
     </EquityOptionData>
   </Trade>
+  -->
 
+  <!--
   <Trade id="2:ScriptedEquityOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
@@ -86,7 +89,8 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-
+  -->
+  
   <!--
   <Trade id="3:EquityOptionDAX">
     <TradeType>ScriptedTrade</TradeType>
@@ -150,7 +154,8 @@
   </Trade>
   -->
 
-    <!-- Analytic pricer -->
+  <!-- Analytic pricer -->
+  <!--
   <Trade id="3:EquityBarrierOption">
     <TradeType>EquityBarrierOption</TradeType>
     <Envelope>
@@ -187,8 +192,10 @@
       <Quantity>1000</Quantity>
     </EquityBarrierOptionData>
   </Trade>  
-
+  -->
+  
   <!-- Equity Barrier Option as scripted trade with daily observations -->
+  <!--
   <Trade id="4:ScriptedEquityBarrierOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
@@ -213,11 +220,11 @@
         </Number>
         <Number>
           <Name>PutCall</Name>
-          <Value>1</Value> <!-- 1:Call -1:Put -->
+          <Value>1</Value> 
         </Number>
         <Number>
           <Name>LongShort</Name>
-          <Value>1</Value> <!-- 1:Long -1:Short -->
+          <Value>1</Value> 
         </Number>
         <Currency>
           <Name>PayCcy</Name>
@@ -236,10 +243,9 @@
           <Value>1000</Value>
         </Number>
         
-        <!-- barrier option specifics -->
         <Number>
           <Name>PayoffType</Name>
-          <Value>0</Value><!-- 0:Vanilla 1:CashOrNothing -->
+          <Value>0</Value>
         </Number>
         <Number>
           <Name>Amount</Name>
@@ -251,7 +257,7 @@
         </Number>
         <Number>
           <Name>BarrierType</Name>
-          <Value>4</Value> <!-- 1:DownIn 2:UpIn 3:DownOut 4:UpOut -->
+          <Value>4</Value> 
         </Number>
         <Number>
           <Name>BarrierRebate</Name>
@@ -263,7 +269,7 @@
         </Currency>
         <Number>
           <Name>BarrierRebatePayTime</Name>
-          <Value>1</Value> <!-- 0:atHit 1:atExpiry -->
+          <Value>1</Value> 
         </Number>
         <Event>
           <Name>BarrierMonitoringDates</Name>
@@ -285,8 +291,8 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-
-  <Trade id="5:RainbowOption-STOXX-DAX">
+  -->
+  <Trade id="5:RainbowOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -354,7 +360,10 @@
     </ScriptedTradeData>
     -->
   </Trade>
-  
+
+  <!-- initial prices: 15964,4338,4274,14556 -->
+  <!-- Skip EQ-RIC:.NDX, weight 0.25 -->
+  <!--
   <Trade id="6:RainbowOption-STOXX-DAX-SPX">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
@@ -371,16 +380,14 @@
         <Value>EQ-RIC:.STOXX50E</Value>
         <Value>EQ-RIC:.GDAXI</Value>
         <Value>EQ-RIC:.SPX</Value>
-        <!--<Value>EQ-RIC:.NDX</Value>-->
       </Underlyings>
       <Weights type="number">
-        <Value>0.25</Value><!-- initial price: 15964 --> 
-        <Value>1.00</Value><!-- initial price:  4338 -->
-        <Value>1.00</Value><!-- initial price:  4274 -->
-        <!--<Value>0.25</Value>--><!-- initial price: 14556 -->	
+        <Value>0.25</Value>
+        <Value>1.00</Value>
+        <Value>1.00</Value>
       </Weights>
       <PayCcy type="currency">EUR</PayCcy>
     </RainbowOptionData>
    </Trade>
-   
+  -->
 </Portfolio>
