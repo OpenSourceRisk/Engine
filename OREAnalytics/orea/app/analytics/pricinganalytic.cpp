@@ -115,18 +115,25 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLE("OK");
             }
 
-                CONSOLEW("Pricing: Asset Model Calibration Report");
+	    if (inputs_->outputAssetModelCalibration()) {
+                CONSOLEW("Pricing: Asset Model Calibration Reports");
                 auto calReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString()).writeAssetModelCalibrationReport(*calReport, analytic()->portfolio());
-                analytic()->addReport(type, "assetmodelcalibration", calReport);
+                analytic()->addReport(type, "assetmodel_calibration", calReport);
+
+		auto calDetailReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString()).writeAssetModelCalibrationDetailReport(*calDetailReport, analytic()->portfolio());
+                analytic()->addReport(type, "assetmodel_calibration_detail", calDetailReport);
                 CONSOLE("OK");
-	    
+	    }
+
+	    if (inputs_->outputAssetModelPaths()) {
                 CONSOLEW("Pricing: Asset Model Path Report");
                 auto pathReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString()).writeAssetModelPathReport(*pathReport, analytic()->portfolio());
-                analytic()->addReport(type, "assetmodelpaths", pathReport);
+                analytic()->addReport(type, "assetmodel_paths", pathReport);
                 CONSOLE("OK");
-	    
+	    }
         }
 	else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");

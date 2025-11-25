@@ -292,12 +292,13 @@
     </ScriptedTradeData>
   </Trade>
   -->
-  <Trade id="5:RainbowOption">
+  <Trade id="RainbowOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
     </Envelope>
+    <!--
     <RainbowOptionData>
       <Expiry type="event">2023-09-05</Expiry>
       <Settlement type="event">2023-09-05</Settlement>
@@ -309,14 +310,14 @@
         <Value>EQ-RIC:.GDAXI</Value>
       </Underlyings>
       <Weights type="number">
-        <Value>0.25</Value><!-- initial price: 15964 --> 
-        <Value>1.00</Value><!-- initial price:  4338 -->
+        <Value>0.25</Value>
+        <Value>1.00</Value>
       </Weights>
       <PayCcy type="currency">EUR</PayCcy>
-    </RainbowOptionData>
-    <!--
+      </RainbowOptionData>
+    -->
     <ScriptedTradeData>
-      <ScriptName>BestOfAssetOrCashRainbowOption</ScriptName>
+      <ScriptName>RainbowOption</ScriptName>
       <Data>
 	<Event>
           <Name>Expiry</Name>
@@ -336,7 +337,7 @@
 	</Number>
 	<Number>
           <Name>Strike</Name>
-          <Value>2000</Value>
+          <Value>4000</Value>
 	</Number>
 	<Index>
           <Name>Underlyings</Name>
@@ -358,13 +359,11 @@
 	</Currency>
       </Data>
     </ScriptedTradeData>
-    -->
   </Trade>
 
-  <!-- initial prices: 15964,4338,4274,14556 -->
   <!-- Skip EQ-RIC:.NDX, weight 0.25 -->
   <!--
-  <Trade id="6:RainbowOption-STOXX-DAX-SPX">
+  <Trade id="RainbowOption2">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>

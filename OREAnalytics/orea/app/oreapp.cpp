@@ -907,6 +907,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setAdditionalResultsReportPrecision(parseInteger(tmp));
 
+    tmp = params_->get("npv", "outputAssetModelCalibration", false);
+    if (tmp != "")
+        setOutputAssetModelCalibration(parseBool(tmp));
+
+    tmp = params_->get("npv", "outputAssetModelPaths", false);
+    if (tmp != "")
+        setOutputAssetModelPaths(parseBool(tmp));
+
     /*************
      * CASHFLOW
      *************/

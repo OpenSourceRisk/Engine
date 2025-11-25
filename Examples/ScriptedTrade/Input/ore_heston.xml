@@ -31,6 +31,8 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
       <Parameter name="additionalResults">Y</Parameter>
+      <Parameter name="outputAssetModelCalibration">Y</Parameter>
+      <Parameter name="outputAssetModelPaths">Y</Parameter>
     </Analytic>
     <Analytic type="cashflow">
       <Parameter name="active">Y</Parameter>

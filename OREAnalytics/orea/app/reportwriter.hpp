@@ -266,7 +266,9 @@ public:
 
     void writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
-    void writeAssetModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+    void writeAssetModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+
+  void writeAssetModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
 protected:
     std::string nullString_;

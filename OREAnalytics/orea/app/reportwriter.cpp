@@ -2941,9 +2941,43 @@ void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa
 void ReportWriter::writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
     report.addColumn("TradeID", string())
         .addColumn("Index", string())
-        .addColumn("RMSE", double(), 6)
-        .addColumn("ParameterNames", string())
-        .addColumn("ParameterValues", string())
+        .addColumn("Name", string())
+        .addColumn("Value", double(), 6);
+
+    for (auto& [id, trade] : portfolio->trades()) {
+        string tradeId = id;
+        auto additionalResults = trade->instrument()->additionalResults();
+        std::string name = "Heston.calibration";
+        if (additionalResults.count(name) != 0) {
+            DLOG("MultiAssetHeston calibration found in additional results");
+            QuantLib::ext::any res = additionalResults[name];
+            std::vector<CalibrationResults> results = QuantLib::ext::any_cast<std::vector<CalibrationResults>>(res);
+            for (auto result : results) {
+                Size n = result.parameterNames.size();
+                if (result.parameterNames.size() != result.parameterValues.size()) {
+                    ALOG("number of parameters names " << result.parameterNames.size() << " does not match values "
+                                                       << result.parameterValues.size());
+                    n = std::min(result.parameterNames.size(), result.parameterValues.size());
+                }
+                for (Size i = 0; i < n; ++i)
+                    report.next()
+                        .add(tradeId)
+                        .add(result.indexName)
+                        .add(result.parameterNames[i])
+                        .add(result.parameterValues[i]);
+                report.next()
+		  .add(tradeId)
+		  .add(result.indexName)
+		  .add("Error")
+		  .add(result.rmse);
+            }
+        }
+    }
+}
+
+void ReportWriter::writeAssetModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeID", string())
+        .addColumn("Index", string())
         .addColumn("Expiry", Period())
         .addColumn("Moneyness", double(), 4)
         .addColumn("MarketValue", double(), 4)
@@ -2966,9 +3000,6 @@ void ReportWriter::writeAssetModelCalibrationReport(ore::data::Report& report, c
                     report.next()
                         .add(tradeId)
                         .add(result.indexName)
-                        .add(result.rmse)
-                        .add(to_string(result.parameterNames))
-                        .add(to_string(result.parameterValues))
                         .add(helper.expiry)
                         .add(helper.moneyness)
                         .add(helper.marketValue)
@@ -2981,7 +3012,7 @@ void ReportWriter::writeAssetModelCalibrationReport(ore::data::Report& report, c
         }
     }
 }
-
+  
 void ReportWriter::writeAssetModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
     report.addColumn("TradeId", string())
         .addColumn("Index", string())
