@@ -65,7 +65,8 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
             analytic->configurations().sensiScenarioData, inputs->sensiRecalibrateModels(),
             inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
             analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
-            inputs->iborFallbackConfig(), true, inputs->dryRun(), "analytic/" + analytic->label());
+            inputs->iborFallbackConfig(), true, inputs->dryRun(), "analytic/" + analytic->label(),
+            inputs->useAtParCouponsCurves(), inputs->useAtParCouponsTrades());
     }
 
     LOG("Sensitivity analysis initialised");
@@ -210,7 +211,8 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->startTimer("applySimmExemptions()");
     try {
         std::tie(removedTrades, modifiedTrades) =
-            applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides());
+            applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides(),
+                                inputs_->useAtParCouponsTrades());
     } catch (std::exception& e) {
         QL_FAIL(e.what());
     }

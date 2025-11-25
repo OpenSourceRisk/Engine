@@ -119,7 +119,9 @@ public:
         //! build calibration info
         const bool buildCalibrationInfo = true,
         //! market object to look up external discount curves
-        const Market* market = nullptr);
+        const Market* market = nullptr,
+        //! use at par coupons
+        const bool useAtParCoupons = true);
 
     //! \name Inspectors
     //@{
@@ -187,11 +189,12 @@ private:
     map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
     map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
-    const QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
-    const bool preserveQuoteLinkage_;
+    bool preserveQuoteLinkage_;
     bool buildCalibrationInfo_;
     const Market* market_;
+    bool useAtParCoupons_;
 
     map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;
 
