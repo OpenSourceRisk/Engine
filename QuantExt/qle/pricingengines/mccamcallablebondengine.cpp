@@ -865,7 +865,8 @@ McCamCallableBondBaseEngine::CallableBondAmcCalculator::CallableBondAmcCalculato
 std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
     const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
-    QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator::simulatePath(): no future path times, this is not allowed.");
+    
+        QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator::simulatePath(): no future path times, this is not allowed.");
     QL_REQUIRE(pathTimes.size() == paths.size(),
                "MultiLegBaseAmcCalculator::simulatePath(): inconsistent pathTimes size ("
                    << pathTimes.size() << ") and paths size (" << paths.size() << ") - internal error.");
@@ -906,7 +907,6 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
     // simulate the path: result at first time index is simply the reference date npv
 
     result[0] = RandomVariable(samples, resultValue_);
-    return result;
 
     // if we don't have an exercise, we return the dirty npv of the underlying at all times
 
