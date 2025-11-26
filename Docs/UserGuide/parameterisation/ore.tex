@@ -27,6 +27,8 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
   <Parameter name="dividendDataFile">../../Input/dividends_20160205.txt</Parameter> <!-- Optional -->
   <Parameter name="implyTodaysFixings">Y</Parameter>
+  <Parameter name="useAtParCouponsCurves">Y</Parameter>
+  <Parameter name="useAtParCouponsTrades">Y</Parameter>
   <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
   <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
   <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
@@ -72,6 +74,11 @@ today's fixings would not be loaded but implied, relevant when pricing/bootstrap
 e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt
   conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the iborFallbackConfig, the marketDataFile and the
 fixingDataFile are explained in the sections below.
+
+\medskip The parameters {\tt useAtParCouponsCurves} and {\tt useAtParCouponsTrades} control whether to use par
+approximation or indexed ibor coupons when building curves or building ore trades, respectively. This goes back to the
+QuantLib flag \verb+QL_USE_INDEXED_COUPON+ and the associated runtime setting. The default is \verb+true+ for both flags
+which is also the default setting when building QuantLib.
 
 \medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and
 business days to be added to specified calendars.

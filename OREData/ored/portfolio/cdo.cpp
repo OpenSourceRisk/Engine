@@ -41,6 +41,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
+#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/optimization/costfunction.hpp>
@@ -49,7 +50,6 @@
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
-#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>

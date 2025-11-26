@@ -127,6 +127,8 @@ public:
     void setBuildFailedTrades(bool b);
     void setObservationModel(const std::string& s);
     void setImplyTodaysFixings(bool b);
+    void setUseAtParCouponsCurves(bool b);
+    void setUseAtParCouponsTrades(bool b);
     void setMarketConfig(const std::string& config, const std::string& context); 
     void setResultsPath(boost::filesystem::path resultsPath);
     void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);

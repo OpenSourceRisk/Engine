@@ -32,12 +32,12 @@ Allowable values: Any real number.
     \hline
  Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA, IMM\_FRA,
   IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, CDS\_INDEX, FX\_SPOT, FX\_FWD,
-  SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
+  SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE, ASSUMED\_RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
   EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION} \\
 \hline
-  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
+  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, CONV\_CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
   RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
   BASE\_CORRELATION, SHIFT} \\
 \hline
@@ -678,6 +678,14 @@ As noted in the table above, the CDS documentation clause and CDS running spread
 \item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y/500!
 \item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y!
 \item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y/500!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/JPM/SNRFOR/USD/5Y/100!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/5Y/100!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y/500!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y!
+\item \lstinline!CDS/CONV_CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y/500!
 \end{itemize}
 
 \subsection{CDS Upfront Price}
@@ -721,7 +729,7 @@ As noted in the table above, the CDS documentation clause and CDS running spread
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \lstinline!RECOVERY_RATE! & \\ \hline
+    Instrument Type & \lstinline!RECOVERY_RATE! or \lstinline!ASSUMED_RECOVERY_RATE! & \\ \hline
     Quote Type & \lstinline!RATE! & \\ \hline
     Entity & String & The CDS reference entity name \\ \hline
     Tier & String & The CDS tier \\ \hline
@@ -772,7 +780,7 @@ Bond recovery rates can also be specified per security. This requires only one k
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{RECOVERY\_RATE} & \\ \hline
+    Instrument Type & \emph{RECOVERY\_RATE} or \emph{ASSUMED\_RECOVERY\_RATE} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     ID & String &  Security ID \\ \hline
   \end{tabular}
@@ -780,9 +788,12 @@ Bond recovery rates can also be specified per security. This requires only one k
   \label{tab:secrecrate_quote}
 \end{table}
 
+Currently, only par (real) recovery rates (quote type \lstinline!RECOVERY_RATE!) are supported.
+
 Example:
 \begin{itemize}
 \item {RECOVERY\_RATE/RATE/SECURITY\_1}
+\item {ASSUMED\_RECOVERY\_RATE/RATE/SECURITY\_1}
 \end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

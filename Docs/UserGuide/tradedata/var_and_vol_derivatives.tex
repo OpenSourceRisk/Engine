@@ -56,6 +56,8 @@ Trade input and the associated payoff script are described in the following for 
 
 \subsubsection{Variance Option}
 
+An option on the realised variance/volatility of an underlying.
+
 The traditional trade representation is as follows, using an EQ underlying in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -193,6 +195,9 @@ The meanings and allowable values for the \lstinline!VarianceOptionData! node be
 
 \subsubsection{Variance Swap with KI/KO Barrier}
 
+A capped and/or floored variance swap with a knock-in/knock-out feature. Note that this trade type is also used for regular capped/floored 
+variance swaps without barrier, by setting the \lstinline!BarrierType! to \emph{UpIn} and \lstinline!BarrierLevel! to zero.
+
 The traditional trade representation is as follows, using an FX underlying in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -230,7 +235,7 @@ The traditional trade representation is as follows, using an FX underlying in th
 </Trade>
 \end{minted}
 
-The KIKOVarianceSwap script referenced in the trade above is shown in listing
+The \emph{KIKOVarianceSwap} script referenced in the trade above is shown in listing
 \ref{lst:kiko_variance_swap}
 
 \begin{listing}[hbt]
@@ -476,6 +481,8 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionDoubleK
 
 \subsubsection{Corridor Variance Swap}
 
+A capped and/or floored variance swap where variance is accrued only when the underlying trades within a pre-specified window defined by an upper and lower bound.
+
 The traditional trade representation is as follows, using an FX underlying in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -515,7 +522,7 @@ The traditional trade representation is as follows, using an FX underlying in th
 </Trade>
 \end{minted}
 
-The CorridorVarianceSwap script referenced in the trade above is shown in listing
+The \emph{CorridorVarianceSwap} script referenced in the trade above is shown in listing
 \ref{lst:corridor_variance_swap}
 
 \begin{listing}[hbt]
@@ -651,6 +658,9 @@ The meanings and allowable values for the \lstinline!CorridorVarianceSwapData! n
 
 \subsubsection{Indexed Corridor Variance Swap}
 
+Also called Cross Corridor Variance Swap. The payoff depends on the variance of one equity index (the Underlying) for the days another 
+equity index (the CorridorIndex) is within a corridor.  
+
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -690,7 +700,7 @@ The traditional trade representation is as follows, using EQ underlyings in this
 </Trade>
 \end{minted}
 
-The IndexedCorridorVarianceSwap script referenced in the trade above is shown in listing
+The \emph{IndexedCorridorVarianceSwap} script referenced in the trade above is shown in listing
 \ref{lst:indexed_corridor_variance_swap}
 
 \begin{listing}[hbt]
@@ -822,6 +832,8 @@ The meanings and allowable values for the \lstinline!IndexedCorridorVarianceSwap
 
 \subsubsection{Corridor Variance Swap with KI/KO Barrier}
 
+A capped and/or floored corridor variance swap with a KnockIn/KnockOut feature.
+
 The traditional trade representation is as follows, using an EQ underlying in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -869,7 +881,7 @@ The traditional trade representation is as follows, using an EQ underlying in th
 </Trade>
 \end{minted}
 
-The KIKOCorridorVarianceSwap script referenced in the trade above is shown in listing
+The \emph{KIKOCorridorVarianceSwap} script referenced in the trade above is shown in listing
 \ref{lst:kiko_variance_swap}
 
 \begin{listing}[hbt]
@@ -1010,6 +1022,11 @@ The meanings and allowable values for the \lstinline!KIKOCorridorVarianceSwapDat
 
 \subsubsection{Conditional Variance Swap 01}
 
+\emph{ConditionalVarianceSwap01} is a type of conditional variance swap that accrues variance contributions only when the underlying trades within a 
+specified single barrier window - (differing from the \emph{CorridorVarianceSwap} that has a double barrier window.) In the \emph{01} variant, the variance amount used to scale the notional is calculated directly based on the Strike parameter. 
+It supports several features such as caps, floors, accrual adjustments, and counting both observations, providing a way to conditionally accumulate 
+variance with notional scaling tied closely to the Strike.
+
 The traditional trade representation is as follows, using an FX underlying in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -1049,7 +1066,7 @@ The traditional trade representation is as follows, using an FX underlying in th
 </Trade>
 \end{minted}
 
-The ConditionalVarianceSwap01 script referenced in the trade above is shown in listing
+The \emph{ConditionalVarianceSwap01} script referenced in the trade above is shown in listing
 \ref{lst:conditional_variance_swap_01}
 
 \begin{listing}[hbt]
@@ -1189,6 +1206,11 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
 
 \subsubsection{Conditional Variance Swap 02}
 
+\emph{ConditionalVarianceSwap02} accrues variance only when the underlying trades within the single barrier window, but differs from the \emph{01} variant by including an 
+additional VarianceReference parameter. This parameter acts as a separate variance strike used to scale the notional amount, distinct 
+from the Strike parameter used in the payoff calculation. This added flexibility allows for more sophisticated structuring, where the 
+strike for variance scaling and the strike for payoff determination can differ.
+
 The traditional trade representation is as follows, using an FX underlying in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -1229,7 +1251,7 @@ The traditional trade representation is as follows, using an FX underlying in th
 </Trade>
 \end{minted}
 
-The ConditionalVarianceSwap02 script referenced in the trade above is shown in listing
+The \emph{ConditionalVarianceSwap02} script referenced in the trade above is shown in listing
 \ref{lst:conditional_variance_swap_02}
 
 \begin{listing}[hbt]
@@ -1374,6 +1396,8 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
 
 \subsubsection{Pairwise Variance Swap}
 
+A capped and/or floored variance swap on a basket of two underlyings, with an optional lag in the variance accrual.
+
 The \lstinline!FxPairwiseVarianceSwap! and \lstinline!EquityPairwiseVarianceSwap! trade types
 have trade data containers (respectively):
 \begin{itemize}
@@ -1431,7 +1455,10 @@ Listing \ref{lst:eqpairwisevarianceswap_data} shows the structure of example tra
 The payout formula is:
 
 \begin{equation*}
-  Payout = \min \Big( \max(equityAmount1 + equityAmount2 + equityAmountBasket, LowerLimit), UpperLimit \Big)
+\begin{split}
+Payout = \min \Big\{ \max \big( & equityAmount1 + equityAmount2 \\
+& + equityAmountBasket,\; \text{LowerLimit} \big),\; \text{UpperLimit} \Big\}
+\end{split}
 \end{equation*}
 
 where
@@ -1666,6 +1693,8 @@ The meanings and allowable values for the \lstinline!PairwiseVarianceSwapData! n
 
 \subsubsection{Variance Dispersion Swap}
 
+A capped and/or floored variance swap that pays on the difference in the realised volatilities between two baskets of underlyings.
+
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -1733,7 +1762,7 @@ The traditional trade representation is as follows, using EQ underlyings in this
 </Trade>
 \end{minted}
 
-The VarianceDispersionSwap script referenced in the trade above is shown in listing
+The \emph{VarianceDispersionSwap} script referenced in the trade above is shown in listing
 \ref{lst:variance_dispersion_swap}
 
 \begin{listing}[hbt]
@@ -1955,7 +1984,7 @@ The traditional trade representation is as follows, using EQ underlyings in this
 </Trade>
 \end{minted}
 
-The CorridorVarianceDispersionSwap script referenced in the trade above is shown in listing
+The \emph{CorridorVarianceDispersionSwap} script referenced in the trade above is shown in listing
 \ref{lst:corridor_variance_dispersion_swap}
 
 \begin{listing}[hbt]
@@ -2200,7 +2229,7 @@ The traditional trade representation is as follows, using EQ underlyings in this
 </Trade>
 \end{minted}
 
-The KOCorridorVarianceDispersionSwap script referenced in the trade above is shown in listing
+The \emph{KOCorridorVarianceDispersionSwap} script referenced in the trade above is shown in listing
 \ref{lst:ko_corridor_variance_dispersion_swap}
 
 \begin{listing}[hbt]
@@ -2571,6 +2600,8 @@ The meanings and allowable values for the \lstinline!PairwiseGeometricVarianceDi
 
 \subsubsection{Gamma Swap}
 
+A vanilla variance swap with a weight function on the underlying.
+
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
 \begin{minted}[fontsize=\scriptsize]{xml}
@@ -2603,7 +2634,7 @@ The traditional trade representation is as follows, using EQ underlyings in this
 </Trade>
 \end{minted}
 
-The GammaSwap script referenced in the trade above is shown in listing
+The \emph{GammaSwap} script referenced in the trade above is shown in listing
 \ref{lst:gamma_swap}
 
 \begin{listing}[hbt]
@@ -2669,6 +2700,8 @@ The meanings and allowable values for the \lstinline!GammaSwapData! node below.
 \end{itemize}
 
 \subsubsection{Basket Variance Swap}
+
+A capped and/or floored variance swap on a basket of underlyings.
 
 The \lstinline!FxBasketVarianceSwap! and \lstinline!EquityBasketVarianceSwap! \lstinline!CommodityBasketVarianceSwap! trade types
 have trade data containers (respectively):
