@@ -15,7 +15,6 @@
     <Parameter name="pricingEnginesFile">pricingengine_callablebond.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_callablebond.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
-    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
     <Parameter name="referenceDataFile">reference_data_callablebond.xml</Parameter>
     <Parameter name="nThreads">1</Parameter>
   </Setup>
