@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="CallableBondTrade">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_1</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+  <Trade id="UnderlyingBondTrade">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <BondData>
+      <SecurityId>SECURITY_1_STRIPPED</SecurityId>
+      <BondNotional>100000000</BondNotional>
+    </BondData>
+  </Trade>
+</Portfolio>
