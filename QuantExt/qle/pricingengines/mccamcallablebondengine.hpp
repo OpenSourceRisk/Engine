@@ -310,7 +310,7 @@ public:
 
 private:
     void calculate() const override {
-        std::cout << "Calculate McCamCallableBondEngine" << std::endl;
+        //std::cout << "Calculate McCamCallableBondEngine" << std::endl;
         leg_ = arguments_.cashflows;
         currency_ = model_->irlgm1f(0)->currency();
         notionals_ = arguments_.notionals;
