@@ -17,29 +17,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/currencies/exchangeratemanager.hpp>
-#include <ql/indexes/ibor/all.hpp>
-#include <ql/math/functional.hpp>
-#include <ql/math/interpolations/backwardflatinterpolation.hpp>
-#include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
-#include <ql/math/interpolations/mixedinterpolation.hpp>
-#include <ql/math/randomnumbers/haltonrsg.hpp>
-#include <ql/pricingengines/bond/bondfunctions.hpp>
-#include <ql/pricingengines/bond/discountingbondengine.hpp>
-#include <ql/quotes/derivedquote.hpp>
-#include <ql/termstructures/yield/bondhelpers.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/yield/nonlinearfittingmethods.hpp>
-#include <ql/termstructures/yield/oisratehelper.hpp>
-#include <ql/termstructures/yield/overnightindexfutureratehelper.hpp>
-#include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
-#include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
-#include <ql/termstructures/yield/ratehelpers.hpp>
-#include <ql/time/daycounters/actual360.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/time/imm.hpp>
-#include <ql/utilities/null_deleter.hpp>
+#include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
+#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
@@ -63,21 +54,31 @@
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
+#include <qle/utilities/localiborcouponsettings.hpp>
 
-#include <ored/marketdata/defaultcurve.hpp>
-#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
-#include <ored/marketdata/marketdatumparser.hpp>
-#include <ored/marketdata/yieldcurve.hpp>
-#include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/envelope.hpp>
-#include <ored/portfolio/referencedata.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/marketdata.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/to_string.hpp>
-#include <ored/utilities/wildcard.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/currencies/exchangeratemanager.hpp>
+#include <ql/indexes/ibor/all.hpp>
+#include <ql/math/functional.hpp>
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
+#include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
+#include <ql/math/interpolations/mixedinterpolation.hpp>
+#include <ql/math/randomnumbers/haltonrsg.hpp>
+#include <ql/pricingengines/bond/bondfunctions.hpp>
+#include <ql/pricingengines/bond/discountingbondengine.hpp>
+#include <ql/quotes/derivedquote.hpp>
+#include <ql/termstructures/yield/bondhelpers.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/termstructures/yield/nonlinearfittingmethods.hpp>
+#include <ql/termstructures/yield/oisratehelper.hpp>
+#include <ql/termstructures/yield/overnightindexfutureratehelper.hpp>
+#include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
+#include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
+#include <ql/termstructures/yield/ratehelpers.hpp>
+#include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <ql/time/imm.hpp>
+#include <ql/utilities/null_deleter.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -353,11 +354,12 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                        const FXTriangulation& fxTriangulation,
                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-                       const bool preserveQuoteLinkage, const bool buildCalibrationInfo, const Market* market)
+                       const bool preserveQuoteLinkage, const bool buildCalibrationInfo, const Market* market,
+                       const bool useAtParCoupons)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), requiredYieldCurves_(requiredYieldCurves),
       requiredDefaultCurves_(requiredDefaultCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), preserveQuoteLinkage_(preserveQuoteLinkage),
-      buildCalibrationInfo_(buildCalibrationInfo), market_(market) {
+      buildCalibrationInfo_(buildCalibrationInfo), market_(market), useAtParCoupons_(useAtParCoupons) {
 
     /* after the curve build is done we have to destroy temp piecewise curves to avoid performance problems in xva
        simulations - this is also why we flatten the piecewise curves (see flattenPiecewiseCurve()) */
@@ -367,9 +369,15 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         ~CleanUp() {
             c_->requiredYieldCurveHandles_.clear();
             c_->discountCurve_.clear();
+            c_->multiCurve_.reset();
+            c_->rateHelperCashflowGenerator_.clear();
         }
         YieldCurve* c_;
     } cleanUp(this);
+
+    /* for the duration of the curve build set at par coupon convention */
+
+    LocalIborCouponSettings lset(useAtParCoupons_);
 
     // copy the required yield curves container to our handle container and add empty handles for the curves to be built
 
@@ -612,11 +620,6 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                                                                 << curveSpec_[index]->name() << ": " << e.what());
         }
     }
-
-    // clear all references to rate helpers which can slow down xva sims via notifications
-
-    multiCurve_.reset();
-    rateHelperCashflowGenerator_.clear();
 
     // exit the curve builder
 
