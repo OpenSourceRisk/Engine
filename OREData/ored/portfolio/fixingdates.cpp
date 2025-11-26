@@ -637,11 +637,11 @@ void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) {
     c.underlying()->accept(*this);
     if(market_){
         Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(IndexNameTranslator::instance().oreName(c.index()->name()));
-        QuantLib::ext::shared_ptr<DynamicOptionletVolatilityStructure> capletVol =
-                                QuantLib::ext::dynamic_pointer_cast<DynamicOptionletVolatilityStructure>(ovs.currentLink());
+        QuantLib::ext::shared_ptr<QuantExt::DynamicOptionletVolatilityStructure> capletVol =
+                                QuantLib::ext::dynamic_pointer_cast<QuantExt::DynamicOptionletVolatilityStructure>(ovs.currentLink());
         if(capletVol){
             QuantLib::ext::shared_ptr<OptionletVolatilityStructure> source = capletVol->getSource();
-            QuantLib::ext::shared_ptr<ProxyOptionletVolatility> pov = QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(source);
+            QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility> pov = QuantLib::ext::dynamic_pointer_cast<QuantExt::ProxyOptionletVolatility>(source);
             if(pov){
                 QuantLib::ext::shared_ptr<QuantLib::IborIndex> baseIndex = pov->getBaseIndex();
                 requiredFixings_.addFixingDates(c.underlying()->fixingDates(), IndexNameTranslator::instance().oreName(baseIndex->name()), c.date());

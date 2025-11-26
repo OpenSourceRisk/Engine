@@ -146,8 +146,8 @@ void CapFloorVolCurve::buildProxyCurve(
                "CapFloorVolCurve::buildProxyCurve(): required source cap vol curve '" << config.proxySourceCurveId()
                                                                                       << "' not found.");
 
-    capletVol_ = QuantLib::ext::make_shared<ProxyOptionletVolatility>(
-        Handle<OptionletVolatilityStructure>(sourceVol->second.first->capletVolStructure()), sourceIndex, targetIndex,
+    capletVol_ = QuantLib::ext::make_shared<QuantExt::ProxyOptionletVolatility>(
+        Handle<QuantExt::OptionletVolatilityStructure>(sourceVol->second.first->capletVolStructure()), sourceIndex, targetIndex,
         config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod(), config.proxyScalingFactor());
 }
 
