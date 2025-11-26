@@ -16,6 +16,22 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/array.hpp>
+
+#include <ql/cashflows/averagebmacoupon.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
+#include <ql/cashflows/cmscoupon.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
+#include <ql/indexes/swapindex.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/equitycashflow.hpp>
@@ -31,32 +47,12 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
-#include <qle/pricingengines/mccamcallablebondengine.hpp>
-#include <qle/processes/irlgm1fstateprocess.hpp>
-#include <qle/utilities/callablebond.hpp>
-
-#include <ql/cashflows/averagebmacoupon.hpp>
-#include <ql/cashflows/capflooredcoupon.hpp>
-#include <ql/cashflows/cmscoupon.hpp>
-#include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
-#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
-#include <ql/indexes/swapindex.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
-
-#include <qle/termstructures/effectivebonddiscountcurve.hpp>
-#include <qle/utilities/callablebond.hpp>
-
-#include <ql/termstructures/credit/flathazardrate.hpp>
-#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
-
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/array.hpp>
 #include <qle/pricingengines/fdcallablebondevents.hpp>
+#include <qle/pricingengines/mccamcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmcallablebondengine.hpp>
+#include <qle/processes/irlgm1fstateprocess.hpp>
+#include <qle/termstructures/effectivebonddiscountcurve.hpp>
+
 namespace QuantExt {
 
 Real getCallPriceAmount(CallableBond::CallabilityData::PriceType priceType, bool includeAccrual, Real price,
@@ -253,7 +249,7 @@ void McCamCallableBondBaseEngine::calculateModels(
             auto numeraire = lgmVectorised_[0].numeraire(
                 *t, pathValues[timeIndex(*t, simulationTimes)][model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
                 discountCurve);
-            
+
             RandomVariable exerciseValueCall(calibrationSamples_, 0.0);
             if (isCallTime) // is call price
             {
@@ -272,8 +268,9 @@ void McCamCallableBondBaseEngine::calculateModels(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
-                regModelContinuationValueCall[counter].train(polynomOrder_, polynomType_, pathValueOption,
-                                                             pathValuesRef, simulationTimes, exerciseValueCall < RandomVariable(calibrationSamples_, 0.0));
+                regModelContinuationValueCall[counter].train(
+                    polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes,
+                    exerciseValueCall < RandomVariable(calibrationSamples_, 0.0));
                 auto continuationValue = regModelContinuationValueCall[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
 
@@ -312,12 +309,13 @@ void McCamCallableBondBaseEngine::calculateModels(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
-                regModelContinuationValuePut[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
-                                                            simulationTimes, exerciseValuePut > RandomVariable(calibrationSamples_, 0.0));
+                regModelContinuationValuePut[counter].train(
+                    polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes,
+                    exerciseValuePut > RandomVariable(calibrationSamples_, 0.0));
                 auto continuationValue = regModelContinuationValuePut[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
-                pathValueOption = conditionalResult(exerciseValuePut > continuationValue,
-                                                    exerciseValuePut, pathValueOption);
+                pathValueOption =
+                    conditionalResult(exerciseValuePut > continuationValue, exerciseValuePut, pathValueOption);
                 Size putIdx = putTimes.size() - putTimeIdx;
                 putTimeIdx++;
 
@@ -774,19 +772,18 @@ void McCamCallableBondBaseEngine::calculate() const {
     resultUnderlyingNpv_ = expectation(pathValueUndDirty).at(0) * model_->numeraire(0, 0.0, 0.0, effDiscountCurve);
     resultValue_ = expectation(pathValueOption).at(0) * model_->numeraire(0, 0.0, 0.0, effDiscountCurve);
 
+    auto notionalAccrualCalc = ext::make_shared<QuantExt::CurrentNotionalAccrualsCalculator>(today_, notionals_.front(), leg_,
+                                                                    *model_->irlgm1f(0)->termStructure());
+
     amcCalculator_ = QuantLib::ext::make_shared<CallableBondAmcCalculator>(
-        externalModelIndices_, exerciseXvaTimes, exerciseTimes, xvaTimes,
-        callTimes, putTimes,
+        externalModelIndices_, exerciseXvaTimes, exerciseTimes, xvaTimes, callTimes, putTimes,
         std::array<std::vector<RegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
         std::array<std::vector<RegressionModel>, 2>{regModelContinuationValueCall,
                                                     regModelContinuationValueCallCloseOut},
         std::array<std::vector<RegressionModel>, 2>{regModelContinuationValuePut, regModelContinuationValuePutCloseOut},
         std::array<std::vector<RegressionModel>, 2>{regModelOption, regModelOptionCloseOut}, resultValue_,
         model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency(), reevaluateExerciseInStickyRun_,
-        includeTodaysCashflows_, includeReferenceDateEvents_, notionals_, leg_);
-
-    QuantExt::CurrentNotionalAccrualsCalculator notionalAccrualCalc(today_, notionals_.front(), leg_,
-                                                                    *model_->irlgm1f(0)->termStructure());
+        includeTodaysCashflows_, includeReferenceDateEvents_, notionalAccrualCalc);
 
     std::vector<double> times;
     std::vector<double> pathCallPrices;
@@ -795,14 +792,14 @@ void McCamCallableBondBaseEngine::calculate() const {
     for (size_t i = 0; i < exerciseXvaTimes.size(); ++i) {
         times.push_back(*std::next(exerciseXvaTimes.begin(), i));
         double t = times.back();
-        pathCallAccruals.push_back(notionalAccrualCalc.accrual(t));
-        pathCallNotionals.push_back(notionalAccrualCalc.notional(t));
+        pathCallAccruals.push_back(notionalAccrualCalc->accrual(t));
+        pathCallNotionals.push_back(notionalAccrualCalc->notional(t));
         auto it = callTimes.find(t);
         bool isCallDate = it != callTimes.end();
         if (isCallDate) {
             auto& [_, callData] = *it;
             auto callPriceAmount = getCallPriceAmount(callData->priceType, callData->includeAccrual, callData->price,
-                                                      notionalAccrualCalc.notional(t), notionalAccrualCalc.accrual(t));
+                                                      notionalAccrualCalc->notional(t), notionalAccrualCalc->accrual(t));
             pathCallPrices.push_back(callPriceAmount);
         } else {
             pathCallPrices.push_back(0.0);
@@ -842,7 +839,8 @@ McCamCallableBondBaseEngine::CallableBondAmcCalculator::CallableBondAmcCalculato
     const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValuePut,
     const std::array<std::vector<RegressionModel>, 2>& regModelOption, const Real resultValue,
     const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
-    const bool includeTodaysCashflows, const bool includeReferenceDateEvents, const QuantExt::CurrentNotionalAccrualsCalculator& notionalAccrualCalc)
+    const bool includeTodaysCashflows, const bool includeReferenceDateEvents,
+    const ext::shared_ptr<QuantExt::CurrentNotionalAccrualsCalculator>& notionalAccrualCalc)
     : externalModelIndices_(externalModelIndices), exerciseXvaTimes_(exerciseXvaTimes), exerciseTimes_(exerciseTimes),
       xvaTimes_(xvaTimes), callTimes_(callTimes), putTimes_(putTimes), regModelUndDirty_(regModelUndDirty),
       regModelContinuationValueCall_(regModelContinuationValueCall),
@@ -896,7 +894,7 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
 
     result[0] = RandomVariable(samples, resultValue_);
     return result;
-    
+
     // if we don't have an exercise, we return the dirty npv of the underlying at all times
 
     if (exerciseTimes_.empty()) {
@@ -911,11 +909,9 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
         result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
         return result;
     }
-    
+
     /* if we have an exercise we need to determine the exercise indicators except for a sticky run
        where we reuse the last saved indicators */
-    
-
 
     if (!stickyCloseOutRun || reevaluateExerciseInStickyRun_) {
 
@@ -932,7 +928,6 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
             auto itPut = putTimes_.find(t);
             bool isCallEvent = itCall != callTimes_.end();
             bool isPutEvent = itPut != putTimes_.end();
-
 
             if (xvaTimes_.size() == 0)
                 break;
@@ -951,13 +946,13 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
             if (isCallEvent) {
                 auto callAmount =
                     getCallPriceAmount(itCall->second->priceType, itCall->second->includeAccrual, itCall->second->price,
-                                       notionalAccrualCalculator_.notional(t), notionalAccrualCalculator_.accrual(t));
+                                       notionalAccrualCalculator_->notional(t), notionalAccrualCalculator_->accrual(t));
 
                 RandomVariable continuationValueCall =
                     regModelContinuationValueCall_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
                 auto exerciseValue = RandomVariable(samples, callAmount) - underlyingValue;
-                
+
                 exercisedCall_[counter + 1] =
                     !wasExercisedPut && !wasExercisedCall && exerciseValue < continuationValueCall;
                 wasExercisedCall = wasExercisedCall || exercisedCall_[counter + 1];
@@ -965,15 +960,14 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
             if (isPutEvent) {
                 auto putAmount =
                     getCallPriceAmount(itPut->second->priceType, itPut->second->includeAccrual, itPut->second->price,
-                                       notionalAccrualCalculator_.notional(t), notionalAccrualCalculator_.accrual(t));
+                                       notionalAccrualCalculator_->notional(t), notionalAccrualCalculator_->accrual(t));
 
                 RandomVariable continuationValuePut =
                     regModelContinuationValuePut_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
-                auto exerciseValue = RandomVariable(samples, putAmount) - underlyingValue;        
-                
-                exercisedPut_[counter + 1] =
-                    !wasExercisedPut && exerciseValue > continuationValuePut;
+                auto exerciseValue = RandomVariable(samples, putAmount) - underlyingValue;
+
+                exercisedPut_[counter + 1] = !wasExercisedPut && exerciseValue > continuationValuePut;
                 wasExercisedPut = wasExercisedPut || exercisedPut_[counter + 1];
             }
 
@@ -985,7 +979,7 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
             ++counter;
         }
     }
-    
+
     // now we can populate the result using the exercise indicators
 
     Size counter = 0;
@@ -993,7 +987,6 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
     Size exerciseCounter = 0;
 
     Filter wasExercised(samples, false);
-    
 
     for (auto t : exerciseXvaTimes_) {
         RandomVariable exercisePayments = RandomVariable(samples, 0.0);
@@ -1001,22 +994,20 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
             // if t is an exercise time we pay the exercise amount, for all following times the exerise amount is zero
             ++exerciseCounter;
             wasExercised = wasExercised || exercisedCall_[exerciseCounter] || exercisedPut_[exerciseCounter];
-            exercisePayments =
-                conditionalResult(exercisedCall_[exerciseCounter],
-                                  RandomVariable(samples, getCallPriceAmount(
-                                                        callTimes_.at(t)->priceType, callTimes_.at(t)->includeAccrual,
-                                                        callTimes_.at(t)->price,
-                                                        notionalAccrualCalculator_.notional(t),
-                                                        notionalAccrualCalculator_.accrual(t))),
-                                  exercisePayments);
-            exercisePayments = 
-                conditionalResult(exercisedPut_[exerciseCounter],
-                                  RandomVariable(samples, getCallPriceAmount(
-                                                        putTimes_.at(t)->priceType, putTimes_.at(t)->includeAccrual,
-                                                        putTimes_.at(t)->price,
-                                                        notionalAccrualCalculator_.notional(t),
-                                                        notionalAccrualCalculator_.accrual(t))),
-                                  exercisePayments);
+            exercisePayments = conditionalResult(
+                exercisedCall_[exerciseCounter],
+                RandomVariable(samples,
+                               getCallPriceAmount(callTimes_.at(t)->priceType, callTimes_.at(t)->includeAccrual,
+                                                  callTimes_.at(t)->price, notionalAccrualCalculator_->notional(t),
+                                                  notionalAccrualCalculator_->accrual(t))),
+                exercisePayments);
+            exercisePayments = conditionalResult(
+                exercisedPut_[exerciseCounter],
+                RandomVariable(samples,
+                               getCallPriceAmount(putTimes_.at(t)->priceType, putTimes_.at(t)->includeAccrual,
+                                                  putTimes_.at(t)->price, notionalAccrualCalculator_->notional(t),
+                                                  notionalAccrualCalculator_->accrual(t))),
+                exercisePayments);
         }
 
         if (xvaTimes_.find(t) != xvaTimes_.end()) {
@@ -1030,7 +1021,8 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
             RandomVariable underlyingValue =
                 regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
 
-            result[xvaCounter + 1] = conditionalResult(wasExercised, exercisePayments, underlyingValue + futureOptionValue);
+            result[xvaCounter + 1] =
+                conditionalResult(wasExercised, exercisePayments, underlyingValue + futureOptionValue);
 
             ++xvaCounter;
         }
@@ -1048,7 +1040,7 @@ void McCamCallableBondBaseEngine::CallableBondAmcCalculator::serialize(Archive& 
     ar& boost::serialization::base_object<AmcCalculator>(*this);
 
     ar & externalModelIndices_;
-    
+
     ar & exerciseXvaTimes_;
     ar & exerciseTimes_;
     ar & xvaTimes_;
