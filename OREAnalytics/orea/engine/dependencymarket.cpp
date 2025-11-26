@@ -412,7 +412,7 @@ Handle<OptionletVolatilityStructure> DependencyMarket::capFloorVol(const string&
     if (curveConfigs_ && curveConfigs_->hasCapFloorVolCurveConfig(name)) {
         auto cc = curveConfigs_->capFloorVolCurveConfig(name);
         if (!cc->proxyTargetIndex().empty()){
-            QuantLib::ext::shared_ptr<ProxyOptionletVolatility> capletVol = QuantLib::ext::make_shared<ProxyOptionletVolatility>(handleflatRateCvs, parseIborIndex(cc->proxySourceIndex()), 
+            QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility> capletVol = QuantLib::ext::make_shared<QuantExt::ProxyOptionletVolatility>(handleflatRateCvs, parseIborIndex(cc->proxySourceIndex()), 
                                                                                   parseIborIndex(cc->proxyTargetIndex()), cc->proxySourceRateComputationPeriod(), 
                                                                                   cc->proxyTargetRateComputationPeriod(), cc->proxyScalingFactor());
             return Handle<OptionletVolatilityStructure>(capletVol);
