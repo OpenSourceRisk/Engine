@@ -44,7 +44,7 @@ void PricingAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 
-    setGenerateAdditionalResults(inputs_->outputAdditionalResults());
+    setGenerateAdditionalResults(true);
 }
 
 void PricingAnalyticImpl::runAnalytic( 
