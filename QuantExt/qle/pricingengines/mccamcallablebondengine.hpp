@@ -108,7 +108,8 @@ public:
             const std::array<std::vector<RegressionModel>, 2>& regModelOption,
             const Real resultValue, const Array& initialState, const Currency& baseCurrency,
             const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
-            const bool includeReferenceDateEvents, const std::vector<double>& notionals, const Leg& leg);
+            const bool includeReferenceDateEvents, const QuantExt::CurrentNotionalAccrualsCalculator&
+                notionalAccrualCalculator);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable>
@@ -139,8 +140,7 @@ public:
 
         std::vector<Filter> exercisedCall_;
         std::vector<Filter> exercisedPut_;
-        std::vector<double> notionals_;
-        Leg leg_;
+        QuantExt::CurrentNotionalAccrualsCalculator notionalAccrualCalculator_;
         // used for serialisation of amc trianing
         friend class boost::serialization::access;
         template <class Archive> void serialize(Archive& ar, const unsigned int version);

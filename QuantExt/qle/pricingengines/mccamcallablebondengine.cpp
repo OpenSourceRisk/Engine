@@ -248,7 +248,6 @@ void McCamCallableBondBaseEngine::calculateModels(
             regressionMaxSimTimesEq_, regressionVarGroupMode_);
         regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef, simulationTimes);
         if (isExerciseTime) {
-
             RandomVariable exerciseValue = regModelUndDirty[counter].apply(model_->stateProcess()->initialValues(),
                                                                            pathValuesRef, simulationTimes);
             auto numeraire = lgmVectorised_[0].numeraire(
@@ -843,15 +842,14 @@ McCamCallableBondBaseEngine::CallableBondAmcCalculator::CallableBondAmcCalculato
     const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValuePut,
     const std::array<std::vector<RegressionModel>, 2>& regModelOption, const Real resultValue,
     const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
-    const bool includeTodaysCashflows, const bool includeReferenceDateEvents, const std::vector<double>& notionals,
-    const Leg& leg)
+    const bool includeTodaysCashflows, const bool includeReferenceDateEvents, const QuantExt::CurrentNotionalAccrualsCalculator& notionalAccrualCalc)
     : externalModelIndices_(externalModelIndices), exerciseXvaTimes_(exerciseXvaTimes), exerciseTimes_(exerciseTimes),
       xvaTimes_(xvaTimes), callTimes_(callTimes), putTimes_(putTimes), regModelUndDirty_(regModelUndDirty),
       regModelContinuationValueCall_(regModelContinuationValueCall),
       regModelContinuationValuePut_(regModelContinuationValuePut), regModelOption_(regModelOption),
       resultValue_(resultValue), initialState_(initialState), baseCurrency_(baseCurrency),
       reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun), includeTodaysCashflows_(includeTodaysCashflows),
-      includeReferenceDateEvents_(includeReferenceDateEvents) {}
+      includeReferenceDateEvents_(includeReferenceDateEvents), notionalAccrualCalculator_(notionalAccrualCalc) {}
 
 std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
@@ -865,13 +863,13 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
                    << relevantPathIndex.size() << ") >= xvaTimes (" << xvaTimes_.size()
                    << ") required - internal error.");
 
-    //bool stickyCloseOutRun = false;
-    //std::size_t regModelIndex = 0;
+    bool stickyCloseOutRun = false;
+    std::size_t regModelIndex = 0;
 
     for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
         if (relevantPathIndex[i] != relevantTimeIndex[i]) {
-            //stickyCloseOutRun = true;
-            //regModelIndex = 1;
+            stickyCloseOutRun = true;
+            regModelIndex = 1;
             break;
         }
     }
@@ -898,7 +896,7 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
 
     result[0] = RandomVariable(samples, resultValue_);
     return result;
-    /*
+    
     // if we don't have an exercise, we return the dirty npv of the underlying at all times
 
     if (exerciseTimes_.empty()) {
@@ -913,17 +911,20 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
         result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
         return result;
     }
-    */
+    
     /* if we have an exercise we need to determine the exercise indicators except for a sticky run
        where we reuse the last saved indicators */
-    /*
+    
+
+
     if (!stickyCloseOutRun || reevaluateExerciseInStickyRun_) {
 
         exercisedCall_ = std::vector<Filter>(exerciseTimes_.size() + 1, Filter(samples, false));
         exercisedPut_ = std::vector<Filter>(exerciseTimes_.size() + 1, Filter(samples, false));
         Size counter = 0;
 
-        Filter wasExercised(samples, false);
+        Filter wasExercisedCall(samples, false);
+        Filter wasExercisedPut(samples, false);
 
         for (auto t : exerciseTimes_) {
 
@@ -947,34 +948,44 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
             RandomVariable underlyingValue =
                 regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
-
-
-
             if (isCallEvent) {
+                auto callAmount =
+                    getCallPriceAmount(itCall->second->priceType, itCall->second->includeAccrual, itCall->second->price,
+                                       notionalAccrualCalculator_.notional(t), notionalAccrualCalculator_.accrual(t));
 
-                getCallPriceAmount(itCall->second->priceType, itCall->second->includeAccrual,
-                                   itCall->second->price, RandomVariable(samples, 1.0),
-                                   RandomVariable(samples, 0.0));
-
-                RandomVariable continuationValue =
+                RandomVariable continuationValueCall =
                     regModelContinuationValueCall_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
+                auto exerciseValue = RandomVariable(samples, callAmount) - underlyingValue;
+                
                 exercisedCall_[counter + 1] =
-                    !wasExercised && exerciseValue < continuationValue && exerciseValue > RandomVariable(samples, 0.0);
-                wasExercised = wasExercised || exercisedCall_[counter + 1];
+                    !wasExercisedPut && !wasExercisedCall && exerciseValue < continuationValueCall;
+                wasExercisedCall = wasExercisedCall || exercisedCall_[counter + 1];
+            }
+            if (isPutEvent) {
+                auto putAmount =
+                    getCallPriceAmount(itPut->second->priceType, itPut->second->includeAccrual, itPut->second->price,
+                                       notionalAccrualCalculator_.notional(t), notionalAccrualCalculator_.accrual(t));
+
+                RandomVariable continuationValuePut =
+                    regModelContinuationValuePut_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
+
+                auto exerciseValue = RandomVariable(samples, putAmount) - underlyingValue;        
+                
+                exercisedPut_[counter + 1] =
+                    !wasExercisedPut && exerciseValue > continuationValuePut;
+                wasExercisedPut = wasExercisedPut || exercisedPut_[counter + 1];
             }
 
-            RandomVariable continuationValue =
-                regModelContinuationValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
-
-            exercised_[counter + 1] =
-                !wasExercised && exerciseValue > continuationValue && exerciseValue > RandomVariable(samples, 0.0);
-            wasExercised = wasExercised || exercised_[counter + 1];
+            if (isPutEvent && isCallEvent) {
+                exercisedCall_[counter + 1] = exercisedCall_[counter + 1] && !exercisedPut_[counter + 1];
+                wasExercisedCall = wasExercisedCall && !wasExercisedPut;
+            }
 
             ++counter;
         }
     }
-
+    
     // now we can populate the result using the exercise indicators
 
     Size counter = 0;
@@ -982,66 +993,44 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
     Size exerciseCounter = 0;
 
     Filter wasExercised(samples, false);
-    std::map<Real, RandomVariable> cashSettlements;
+    
 
     for (auto t : exerciseXvaTimes_) {
-
+        RandomVariable exercisePayments = RandomVariable(samples, 0.0);
         if (auto it = exerciseTimes_.find(t); it != exerciseTimes_.end()) {
-
-            // update was exercised based on exercise at the exercise time
-
+            // if t is an exercise time we pay the exercise amount, for all following times the exerise amount is zero
             ++exerciseCounter;
-            wasExercised = wasExercised || exercised_[exerciseCounter];
-
-            // if cash settled, determine the amount on exercise and until when it is to be included in exposure
-
-            if (settlement_ == Settlement::Type::Cash) {
-                RandomVariable cashPayment =
-                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
-                cashPayment = applyFilter(cashPayment, exercised_[exerciseCounter]);
-                cashSettlements[cashSettlementTimes_[exerciseCounter - 1]] = cashPayment;
-            }
+            wasExercised = wasExercised || exercisedCall_[exerciseCounter] || exercisedPut_[exerciseCounter];
+            exercisePayments =
+                conditionalResult(exercisedCall_[exerciseCounter],
+                                  RandomVariable(samples, getCallPriceAmount(
+                                                        callTimes_.at(t)->priceType, callTimes_.at(t)->includeAccrual,
+                                                        callTimes_.at(t)->price,
+                                                        notionalAccrualCalculator_.notional(t),
+                                                        notionalAccrualCalculator_.accrual(t))),
+                                  exercisePayments);
+            exercisePayments = 
+                conditionalResult(exercisedPut_[exerciseCounter],
+                                  RandomVariable(samples, getCallPriceAmount(
+                                                        putTimes_.at(t)->priceType, putTimes_.at(t)->includeAccrual,
+                                                        putTimes_.at(t)->price,
+                                                        notionalAccrualCalculator_.notional(t),
+                                                        notionalAccrualCalculator_.accrual(t))),
+                                  exercisePayments);
         }
 
         if (xvaTimes_.find(t) != xvaTimes_.end()) {
-
             // there is no continuation value on the last exercise date
-
             RandomVariable futureOptionValue =
                 exerciseCounter == exerciseTimes_.size()
                     ? RandomVariable(samples, 0.0)
                     : max(RandomVariable(samples, 0.0),
                           regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
 
+            RandomVariable underlyingValue =
+                regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
 
-            RandomVariable exercisedValue(samples, 0.0);
-
-            if (settlement_ == Settlement::Type::Physical) {
-                exercisedValue = conditionalResult(
-                    exercised_[exerciseCounter],
-                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
-                    regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
-            } else {
-                for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
-                    if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
-                        exercisedValue += it->second;
-                        ++it;
-                    } else {
-                        it = cashSettlements.erase(it);
-                    }
-                }
-            }
-
-            // update for rebate payments
-
-            if (regModelRebate_[regModelIndex][counter].isTrained()) {
-                RandomVariable rebate =
-                    regModelRebate_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
-                rebate = applyFilter(rebate, exercised_[exerciseCounter]);
-                exercisedValue += rebate;
-            }
-
-            result[xvaCounter + 1] = conditionalResult(wasExercised, exercisedValue, futureOptionValue);
+            result[xvaCounter + 1] = conditionalResult(wasExercised, exercisePayments, underlyingValue + futureOptionValue);
 
             ++xvaCounter;
         }
@@ -1051,7 +1040,6 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
 
     result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
     return result;
-    */
 }
 
 template <class Archive>
