@@ -7,7 +7,7 @@ The Best Entry Option is an option on a single underlying that has a payoff cont
 
 On the option expiry date, if the value of the underlying index (denoted `$Index_{Final}$') is greater than or equal to the strike price $K$, the payoff of the option is given by:
 \begin{align*}
-	\text{Notional} \times \text{Multiplier} \times \text{min}\left(\text{Cap}, \text{max}\left(0, \frac{Index_{Final} - Index_{Initial}}{Index_{Inital}}\right)\right).
+	\text{Notional} \times \text{Multiplier} \times \text{min}\left(\text{Cap}, \text{max}\left(0, \frac{Index_{Final} - Index_{Initial}}{Index_{Initial}}\right)\right).
 \end{align*}
 If $Index_{Final}$ is less than $K$, the payoff is given by
 \begin{align*}
