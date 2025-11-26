@@ -96,6 +96,24 @@ protected:
                const QuantLib::Date& maturityDate) override;
 };
 
+class CallableBondLgmAmcEngineBuilder : public CallableBondLgmEngineBuilder {
+public:
+    CallableBondLgmAmcEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                    const std::vector<Date>& simulationDates,
+                                    const std::vector<Date>& stickyCloseOutDates)
+        : CallableBondLgmEngineBuilder("AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
 
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
+    engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate) override;
+
+private:
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
+};
 } // namespace data
 } // namespace ore

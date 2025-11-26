@@ -24,10 +24,10 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <qle/pricingengines/numericlgmcallablebondengine.hpp>
-#include <qle/pricingengines/mccamcallablebondengine.hpp>
-
 #include <ql/time/date.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
+#include <qle/pricingengines/mccamcallablebondengine.hpp>
+#include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -161,6 +161,7 @@ boost::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const s
 
     return calib->model();
 }
+
 
 template <class... Args>
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
@@ -317,6 +318,78 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmMcEngineBuilde
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
         referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
         generateAdditionalResults, simulationDates, stickyCloseOutDates, externalModelIndices,
+        parseBool(engineParameter("MinObsDate", {}, false, "true")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
+}
+
+QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmAmcEngineBuilder::engineImpl(
+    const std::string& id, const std::string& ccy, const std::string& creditCurveId, const std::string& securityId,
+    const std::string& referenceCurveId, const std::string& incomeCurveId, const QuantLib::Date& maturityDate) {
+    std::string marketConfig = configuration(ore::data::MarketContext::pricing);
+
+    // get reference curve, default curve, recovery and spread
+
+    Handle<YieldTermStructure> referenceCurve = market_->yieldCurve(referenceCurveId, marketConfig);
+
+    Handle<DefaultProbabilityTermStructure> defaultCurve;
+    if (!creditCurveId.empty())
+        defaultCurve = securitySpecificCreditCurve(market_, securityId, creditCurveId, marketConfig)->curve();
+
+    Handle<YieldTermStructure> incomeCurve = referenceCurve;
+    if (!incomeCurveId.empty())
+        incomeCurve = market_->yieldCurve(incomeCurveId, marketConfig);
+
+    Handle<Quote> recovery;
+    try {
+        recovery = market_->recoveryRate(securityId, marketConfig);
+    } catch (...) {
+        WLOG("security specific recovery rate not found for security ID "
+             << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
+        if (!creditCurveId.empty())
+            recovery = market_->recoveryRate(creditCurveId, marketConfig);
+    }
+
+    Handle<Quote> discountingSpread;
+    try {
+        discountingSpread = market_->securitySpread(securityId, marketConfig);
+    } catch (...) {
+    }
+
+    // determine whether add results should be generated
+
+    bool generateAdditionalResults = false;
+    auto p = globalParameters_.find("GenerateAdditionalResults");
+    if (p != globalParameters_.end()) {
+        generateAdditionalResults = parseBool(p->second);
+    }
+    bool spreadOnIncome = true;
+    // get LGM model
+    std::vector<Size> externalModelIndices;
+    Currency cur = parseCurrency(ccy);
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(getProjectedCrossAssetModel(
+        cam_, {std::make_pair(QuantExt::CrossAssetModel::AssetType::IR, cam_->ccyIndex(cur))}, externalModelIndices));
+    return ext::make_shared<QuantExt::McCamCallableBondEngine>(
+        model, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
+        parseSequenceType(engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
+        parseInteger(engineParameter("Training.Samples", {}, true, std::string())),
+        parseInteger(engineParameter("Pricing.Samples", {}, false, "0")),
+        parseInteger(engineParameter("Training.Seed", {}, true, std::string())),
+        parseInteger(engineParameter("Pricing.Seed", {}, false, "42")),
+        parseInteger(engineParameter("Training.BasisFunctionOrder", {}, true, std::string())),
+        parsePolynomType(engineParameter("Training.BasisFunction", {}, true, std::string())),
+        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
+        referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
+        generateAdditionalResults, simulationDates_, stickyCloseOutDates_, externalModelIndices,
         parseBool(engineParameter("MinObsDate", {}, false, "true")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
