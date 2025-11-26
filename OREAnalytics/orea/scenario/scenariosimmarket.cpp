@@ -947,8 +947,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DLOG("Dynamic (" << wrapper->volatilityType() << ") yield vols (" << decayModeString
                                             << ") for qualifier " << name);
 
-                            QL_REQUIRE(!QuantLib::ext::dynamic_pointer_cast<ProxySwaptionVolatility>(*wrapper),
-                                "DynamicSwaptionVolatilityMatrix does not support ProxySwaptionVolatility surface");
+                            // QL_REQUIRE(!QuantLib::ext::dynamic_pointer_cast<ProxySwaptionVolatility>(*wrapper),
+                            //     "DynamicSwaptionVolatilityMatrix does not support ProxySwaptionVolatility surface");
 
                             QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmSlice;
                             if (isAtm)
@@ -1207,9 +1207,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol =
-                                QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(),
-                                                                                        decayMode);
+                            auto proxyVolConfig = QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(*wrapper);
+                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol = nullptr;
+                            if(proxyVolConfig){
+                                capletVol = QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, NullCalendar(), decayMode);
+                            }else{
+                                capletVol = QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
+                            }
+
                             hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
                         }
                         hCapletVol->setAdjustReferenceDate(false);

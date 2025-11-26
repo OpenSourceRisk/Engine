@@ -22,6 +22,17 @@ namespace QuantExt {
 DynamicOptionletVolatilityStructure::DynamicOptionletVolatilityStructure(
     const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source, Natural settlementDays, const Calendar& calendar,
     ReactionToTimeDecay decayMode)
+    : OptionletVolatilityStructure(settlementDays, calendar, source->businessDayConvention(), source->dayCounter()),
+      source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()),
+      volatilityType_(source->volatilityType()), displacement_(source->displacement()) {
+    QL_REQUIRE(decayMode_ != ForwardForwardVariance,
+               "ForwardVariance not yet supported for DynamicOptionletVolatilityStructure");
+    enableExtrapolation(source->allowsExtrapolation());
+}
+
+DynamicOptionletVolatilityStructure::DynamicOptionletVolatilityStructure(
+    const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source, const Calendar& calendar,
+    ReactionToTimeDecay decayMode)
     : OptionletVolatilityStructure(source->referenceDate(), calendar, source->businessDayConvention(), source->dayCounter()),
       source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()),
       volatilityType_(source->volatilityType()), displacement_(source->displacement()) {
