@@ -64,16 +64,17 @@
       <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
-      <!-- Heston spcific settings -->
+      
+      <!-- Heston spcific -->
+
       <Parameter name="CalibrationMoneyness">-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0</Parameter>
       <Parameter name="CalibrationExpiries">3M</Parameter>
-      <Parameter name="CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y, 15M, 18M, 21M, 2Y, 4Y, 5Y, 6Y, 7Y, 10Y</Parameter>
-      <!-- ordering: theta, kappa, sigma, rho, v0 -->
-      <Parameter name="HestonInitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter>
-      <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter><!-- applies to simple calibration, without randomised initial values -->
-      <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter> <!-- in [0,1] -->
-      <Parameter name="HestonCalibrationRestarts">0</Parameter> <!-- max. number of initial value sets, 0 means simple calibration -->
-      <Parameter name="HestonTolerance">0.001</Parameter> <!-- implied vol RMSE where we stop the search -->
+      <Parameter name="CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y, 15M, 18M, 21M, 2Y, 5Y, 7Y, 10Y</Parameter>
+      <Parameter name="HestonInitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter> <!-- ordering: theta, kappa, sigma, rho, v0 -->
+      <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter>                <!-- applies to simple calibration, without randomised initial values -->
+      <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter>             <!-- in [0,1] -->
+      <Parameter name="HestonCalibrationRestarts">0</Parameter>                    <!-- max. number of initial value sets, 0 means simple calibration -->
+      <Parameter name="HestonTolerance">0.001</Parameter>                          <!-- implied vol RMSE where we stop the search -->
       <!-- PartialTruncation,
            FullTruncation,
            Reflection,
@@ -82,8 +83,7 @@
            QuadraticExponentialMartingale,
            BroadieKayaExactSchemeLobatto,
            BroadieKayaExactSchemeLaguerre,
-           BroadieKayaExactSchemeTrapezoidal
-      -->
+           BroadieKayaExactSchemeTrapezoidal -->
       <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
       <Parameter name="AddPathsToAdditionalResults">true</Parameter>
     </EngineParameters>

@@ -28,8 +28,7 @@
   </Trade>
   -->
 
-  <!--
-  <Trade id="2:ScriptedEquityOption">
+  <Trade id="EquityOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -37,22 +36,7 @@
       <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
-      <Script>
-        <Code><![CDATA[
-             NUMBER Payoff;
-             Payoff = PutCall * (Underlying(Expiry) - Strike);
-             Option = PAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy);
-        ]]></Code>
-        <NPV>Option</NPV>
-        <CalibrationSpec>
-          <Calibration>
-            <Index>Underlying</Index>
-            <Strikes>
-              <Strike>Strike</Strike>
-            </Strikes>
-          </Calibration>
-        </CalibrationSpec>
-      </Script>
+      <ScriptName>EuropeanOption</ScriptName>
       <Data>
         <Event>
           <Name>Expiry</Name>
@@ -89,7 +73,6 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-  -->
   
   <!--
   <Trade id="3:EquityOptionDAX">
@@ -100,22 +83,7 @@
       <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
-      <Script>
-        <Code><![CDATA[
-             NUMBER Payoff;
-             Payoff = PutCall * (Underlying(Expiry) - Strike);
-             Option = PAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy);
-        ]]></Code>
-        <NPV>Option</NPV>
-        <CalibrationSpec>
-          <Calibration>
-            <Index>Underlying</Index>
-            <Strikes>
-              <Strike>Strike</Strike>
-            </Strikes>
-          </Calibration>
-        </CalibrationSpec>
-      </Script>
+      <ScriptName>EuropeanOption</ScriptName>
       <Data>
         <Event>
           <Name>Expiry</Name>
@@ -155,8 +123,7 @@
   -->
 
   <!-- Analytic pricer -->
-  <!--
-  <Trade id="3:EquityBarrierOption">
+  <Trade id="EquityBarrierOptionAnalytic">
     <TradeType>EquityBarrierOption</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -192,11 +159,9 @@
       <Quantity>1000</Quantity>
     </EquityBarrierOptionData>
   </Trade>  
-  -->
   
   <!-- Equity Barrier Option as scripted trade with daily observations -->
-  <!--
-  <Trade id="4:ScriptedEquityBarrierOption">
+  <Trade id="EquityBarrierOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
@@ -241,8 +206,7 @@
         <Number>
           <Name>Quantity</Name>
           <Value>1000</Value>
-        </Number>
-        
+        </Number>       
         <Number>
           <Name>PayoffType</Name>
           <Value>0</Value>
@@ -291,31 +255,13 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-  -->
+
   <Trade id="RainbowOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
     </Envelope>
-    <!--
-    <RainbowOptionData>
-      <Expiry type="event">2023-09-05</Expiry>
-      <Settlement type="event">2023-09-05</Settlement>
-      <LongShort type="longShort">Long</LongShort>
-      <Notional type="number">1</Notional>
-      <Strike type="number">4000</Strike>
-      <Underlyings type="index">
-        <Value>EQ-RIC:.STOXX50E</Value>
-        <Value>EQ-RIC:.GDAXI</Value>
-      </Underlyings>
-      <Weights type="number">
-        <Value>0.25</Value>
-        <Value>1.00</Value>
-      </Weights>
-      <PayCcy type="currency">EUR</PayCcy>
-      </RainbowOptionData>
-    -->
     <ScriptedTradeData>
       <ScriptName>RainbowOption</ScriptName>
       <Data>
@@ -361,32 +307,4 @@
     </ScriptedTradeData>
   </Trade>
 
-  <!-- Skip EQ-RIC:.NDX, weight 0.25 -->
-  <!--
-  <Trade id="RainbowOption2">
-    <TradeType>ScriptedTrade</TradeType>
-    <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId>CPTY</NettingSetId>
-    </Envelope>
-    <RainbowOptionData>
-      <Expiry type="event">2023-09-05</Expiry>
-      <Settlement type="event">2023-09-05</Settlement>
-      <LongShort type="longShort">Long</LongShort>
-      <Notional type="number">1</Notional>
-      <Strike type="number">4000</Strike>
-      <Underlyings type="index">
-        <Value>EQ-RIC:.STOXX50E</Value>
-        <Value>EQ-RIC:.GDAXI</Value>
-        <Value>EQ-RIC:.SPX</Value>
-      </Underlyings>
-      <Weights type="number">
-        <Value>0.25</Value>
-        <Value>1.00</Value>
-        <Value>1.00</Value>
-      </Weights>
-      <PayCcy type="currency">EUR</PayCcy>
-    </RainbowOptionData>
-   </Trade>
-  -->
 </Portfolio>
