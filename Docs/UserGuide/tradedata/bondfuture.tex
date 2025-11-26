@@ -5,7 +5,7 @@
 
 A Bond Future is a contract that establishes an agreement to buy or sell an underlying bond at a future point in time
 (expiry) at an agreed price (strike amount). The underlying bond can be selected by the contract seller from a list of
-eligible securities and is called "cheapest to deliver" (CTD). The bond is exchanged with a cash payment determined as
+eligible securities and is called ``cheapest to deliver'' (CTD). The bond is exchanged with a cash payment determined as
 the future settlement price multiplied by a conversion factor that is specific to the CTD bond and which compensates for
 the different yields of the bonds in the underlying basket.
 
@@ -130,7 +130,7 @@ Finally, the conversion factor can be given in the market data or it can be dedu
 
 \subsubsection*{Derivation of the LastTradingDate and LastDeliveryDate}
 The example with the reference data block above, i.e. listing \ref{lst:bondfuturerefdata}, shows how to set up a future referencing an USD 10-Year-T-Note.
-The rules to derive last trading and last delivery date are taken from the CME Group primer "Understanding Treasury Futures". These are:
+The rules to derive last trading and last delivery date are taken from the CME Group primer ``Understanding Treasury Futures''. These are:
 \begin{itemize}
   \item Last Delivery Day: Last business day of the delivery month
   \item Last Trading Day: Seventh business day preceding the last business day of the delivery month
@@ -143,7 +143,7 @@ From the settlement, we can define the expiry date (last trading) by {\tt Expiry
 From this we are getting the Last Trading Date to be the 20th of March and the Last Delivery Date to be the 31st of March.
 
 \subsubsection*{CTD Selection}
-The selection of the CTD bond is implemented in ORE as described in Hull's "Options, Futures and Other Derivatives":
+The selection of the CTD bond is implemented in ORE as described in Hull's ``Options, Futures and Other Derivatives'':
 Be \emph{sp} the quoted future settlement price, \emph{ai} accrued interest, \emph{cf} the bond specific conversion
 factor and \emph{bp} the bond price.  The party with the short position receives
 

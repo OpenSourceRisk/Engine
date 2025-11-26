@@ -256,7 +256,7 @@ For CommodityAccumulators: The FixingAmount is expressed as number of units of t
 
 \item Strike [Optional]: Global strike associated to the ranges.  Is overwritten by local strikes defined in \lstinline!RangeBounds! or modified by range strike adjustments. Note that each RangeBound needs a strike, either the global strike defined here, or a local one in the \lstinline!RangeBounds! nodes which then overwrites the global one.
 
-For FxAccumulators: The the fx strike rate (global and local) is defined as amount in domestic currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). 
+For FxAccumulators: The fx strike rate (global and local) is defined as amount in domestic currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). 
 
 For Equity- and CommodityAccumulators: The strike value (global and local) for one unit/share/contract of the underlying equity or commodity, expressed in the currency the equity or commodity is quoted or in any other pay currency. In case of a composite option style a FxIndex is required (see below). For EquityAccumulators, the \lstinline!StrikeData! node (see above) should be used.
 
