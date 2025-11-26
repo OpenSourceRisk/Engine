@@ -947,8 +947,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DLOG("Dynamic (" << wrapper->volatilityType() << ") yield vols (" << decayModeString
                                             << ") for qualifier " << name);
 
-                            // QL_REQUIRE(!QuantLib::ext::dynamic_pointer_cast<ProxySwaptionVolatility>(*wrapper),
-                            //     "DynamicSwaptionVolatilityMatrix does not support ProxySwaptionVolatility surface");
+                            QL_REQUIRE(!QuantLib::ext::dynamic_pointer_cast<ProxySwaptionVolatility>(*wrapper),
+                                "DynamicSwaptionVolatilityMatrix does not support ProxySwaptionVolatility surface");
 
                             QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmSlice;
                             if (isAtm)
