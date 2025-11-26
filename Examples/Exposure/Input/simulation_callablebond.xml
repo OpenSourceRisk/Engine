@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <Simulation>
   <Parameters>
-    <Grid>528,2W</Grid>
+    <Grid>200,1M</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>Burley2020SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>8192</Samples>
+    <Samples>4096</Samples>
     <DayCounter>A365F</DayCounter>
   </Parameters>
   <CrossAssetModel>
