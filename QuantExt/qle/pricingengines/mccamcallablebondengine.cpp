@@ -145,6 +145,7 @@ RandomVariable McCamCallableBondBaseEngine::cashflowPathValue(
         }
         states[i] = tmp;
     }
+    /*
     std::cout << "McCamCallableBondBaseEngine::cashflowPathValue(): calculating amount for cf legNo " << cf.legNo
               << " cfNo " << cf.cfNo << " payTime " << cf.payTime << " payCcyIndex " << cf.payCcyIndex << " payer "
               << cf.payer << " amount " << cf.amountCalculator(n, states)[0] << " " << cf.amountCalculator(n, states)[1]
@@ -153,6 +154,7 @@ RandomVariable McCamCallableBondBaseEngine::cashflowPathValue(
                      cf.payTime, pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
                      discountCurve)[0]
               << " df " << discountCurve->discount(cf.payTime) << std::endl;
+    */
     auto amount =
         cf.amountCalculator(n, states) /
         lgmVectorised_[0].numeraire(
@@ -194,9 +196,10 @@ void McCamCallableBondBaseEngine::calculateModels(
     for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
 
         bool isExerciseTime = exerciseTimes.find(*t) != exerciseTimes.end();
+        /*
         std::cout << "McCamCallableBondBaseEngine::calculateModels(): processing time " << *t
                   << (isExerciseTime ? " (exercise time)" : "") << std::endl;
-
+        */
         auto callDataIt = callTimes.find(*t);
         bool isCallTime = callDataIt != callTimes.end();
         auto putDataIt = putTimes.find(*t);
@@ -204,10 +207,12 @@ void McCamCallableBondBaseEngine::calculateModels(
         QL_REQUIRE(!isExerciseTime || (isCallTime || isPutTime),
                    "McCamCallableBondBaseEngine::calculateModels(): exercise time "
                        << *t << " is not marked as call or put time");
+        /*
         bool isXvaTime = xvaTimes.find(*t) != xvaTimes.end();
+        
         std::cout << "McCamCallableBondBaseEngine::calculateModels(): processing time " << *t
                   << (isExerciseTime ? " (exercise time)" : "") << (isXvaTime ? " (xva time)" : "") << std::endl;
-
+        */
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
             if (cfStatus[i] == CfStatus::done)
@@ -216,10 +221,11 @@ void McCamCallableBondBaseEngine::calculateModels(
             // We consider the accruals in the exercise decision already, so we include also accrued cashflows here
 
             bool isPartOfUnderlying = cashflowInfo[i].payTime > *t - (includeTodaysCashflows_ ? tinyTime : 0.0);
-
+            /*
             std::cout << "  cashflow " << i << ": payTime " << cashflowInfo[i].payTime << ", exIntoCriterionTime "
                       << cashflowInfo[i].exIntoCriterionTime << ", isPartOfUnderlying " << isPartOfUnderlying
                       << ", status " << (cfStatus[i] == CfStatus::open ? "open" : "done") << std::endl;
+            */
             if (cfStatus[i] == CfStatus::open) {
                 if (isPartOfUnderlying) {
                     auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes, discountCurve);
@@ -228,16 +234,16 @@ void McCamCallableBondBaseEngine::calculateModels(
                     cfStatus[i] = CfStatus::done;
                 }
             }
-            std::cout << ", status (after) " << (cfStatus[i] == CfStatus::open ? "open" : "done") << std::endl;
+            //std::cout << ", status (after) " << (cfStatus[i] == CfStatus::open ? "open" : "done") << std::endl;
         }
 
         // Since we take the accruals into account in the exercise price, we
-
+        /*
         for (size_t i = 0; i < 10; ++i) {
             std::cout << " pathValueUndirty[" << i << "] = " << pathValueUndDirty[i] << " todays value "
                       << pathValueUndDirty[i] * model_->numeraire(0, 0, 0, discountCurve) << std::endl;
         }
-
+        */
         regModelUndDirty[counter] = RegressionModel(
             *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
             regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
@@ -396,7 +402,7 @@ void McCamCallableBondBaseEngine::generatePathValues(const std::vector<Real>& si
 }
 
 void McCamCallableBondBaseEngine::calculate() const {
-    std::cout << "Calculate McCamCallableBondBaseEngine" << std::endl;
+    
     today_ = model_->irlgm1f(0)->termStructure()->referenceDate();
     includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
     /*
@@ -429,7 +435,7 @@ void McCamCallableBondBaseEngine::calculate() const {
     auto effDiscountCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<EffectiveBondDiscountCurve>(
         referenceCurve_, creditCurve_, discountingSpread_, recoveryRate_));
 
-    std::cout << "built effDiscountCurve" << std::endl;
+    //std::cout << "built effDiscountCurve" << std::endl;
 
     // set up lgm vectorized instances for each currency
 
@@ -443,7 +449,7 @@ void McCamCallableBondBaseEngine::calculate() const {
             lgmVectorised_.push_back(LgmVectorised(model_->irlgm1f(i)));
         }
     }
-    std::cout << "set up lgm vectorised instances" << std::endl;
+    //std::cout << "set up lgm vectorised instances" << std::endl;
     // populate the info to generate the (alive) cashflow amounts
 
     std::vector<CashflowInfo> cashflowInfo;
@@ -504,11 +510,13 @@ void McCamCallableBondBaseEngine::calculate() const {
     } else {
         Size steps = std::max<Size>(std::lround(effectiveTimeStepsPerYear * (*events.times().rbegin()) + 0.5), 1);
         grid = TimeGrid(events.times().begin(), events.times().end(), steps);
+        /*
         std::cout << "NumericLgmCallableBondEngineBase::calculate(): using time grid with " << grid.size() - 1
                   << " steps (effectiveTimeStepsPerYear=" << effectiveTimeStepsPerYear << ")" << std::endl;
         for (const auto t : grid) {
             std::cout << "  grid time: " << t << std::endl;
         }
+            */
     }
     events.finalise(grid);
 
@@ -652,10 +660,12 @@ void McCamCallableBondBaseEngine::calculate() const {
             xvaTimes.insert(time(d));
         }
     }
+    /*
     std::cout << "exercise Times" << std::endl;
     for (auto const& t : exerciseTimes) {
-        std::cout << "  " << t << std::endl;
+        //std::cout << "  " << t << std::endl;
     }
+    */
     /* build combined time sets */
 
     std::set<Real> exerciseXvaTimes;
@@ -804,19 +814,22 @@ void McCamCallableBondBaseEngine::calculate() const {
         } else {
             pathCallPrices.push_back(0.0);
         }
+        /*
         std::cout << i << "," << t << "," << "," << pathCallAccruals.back() << "," << pathCallNotionals.back() << ","
                   << (isCallDate ? "1" : "0") << "," << pathCallPrices.back() << "," << std::endl;
+        */
+
     }
 
     for (size_t i = 0; i < pathExercisesCall.size(); ++i) {
         callProbs_.push_back(expectation(pathExercisesCall[i]).at(0) *
                              model_->numeraire(0, 0.0, 0.0, effDiscountCurve));
-        std::cout << "Exercise Time" << i << ": call prob " << callProbs_.back() << std::endl;
+        //std::cout << "Exercise Time" << i << ": call prob " << callProbs_.back() << std::endl;
     }
 
     for (size_t i = 0; i < pathExercisesPut.size(); ++i) {
         putProbs_.push_back(expectation(pathExercisesPut[i]).at(0) * model_->numeraire(0, 0.0, 0.0, effDiscountCurve));
-        std::cout << "Exercise Time" << i << ": put prob " << putProbs_.back() << std::endl;
+        //std::cout << "Exercise Time" << i << ": put prob " << putProbs_.back() << std::endl;
     }
 
     resultUnderlyingSettlementValue_ = resultUnderlyingNpv_ / effIncomeCurve->discount(settlementDate_) /
