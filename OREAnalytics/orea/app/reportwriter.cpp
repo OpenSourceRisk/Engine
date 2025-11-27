@@ -2938,35 +2938,28 @@ void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa
     reportOut.end();
 }
 
-void ReportWriter::writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+void ReportWriter::writeModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
     report.addColumn("TradeID", string())
         .addColumn("Index", string())
         .addColumn("Name", string())
         .addColumn("Value", double(), 6);
 
-    for (auto& [id, trade] : portfolio->trades()) {
-        string tradeId = id;
-        auto additionalResults = trade->instrument()->additionalResults();
-        std::string name = "Heston.calibration";
-        if (additionalResults.count(name) != 0) {
+    for (const auto& [id, trade] : portfolio->trades()) {
+        const auto& additionalResults = trade->instrument()->additionalResults();
+        if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
             DLOG("MultiAssetHeston calibration found in additional results");
-            QuantLib::ext::any res = additionalResults[name];
-            std::vector<CalibrationResults> results = QuantLib::ext::any_cast<std::vector<CalibrationResults>>(res);
-            for (auto result : results) {
-                Size n = result.parameterNames.size();
-                if (result.parameterNames.size() != result.parameterValues.size()) {
-                    ALOG("number of parameters names " << result.parameterNames.size() << " does not match values "
-                                                       << result.parameterValues.size());
-                    n = std::min(result.parameterNames.size(), result.parameterValues.size());
-                }
+            const std::vector<AssetModelCalibrationResults>& results = QuantLib::ext::any_cast<std::vector<AssetModelCalibrationResults>>(r->second);
+            for (const auto& result : results) {
+                Size n = result.parameters.size();
+		DLOG("paramters: " << n);
                 for (Size i = 0; i < n; ++i)
                     report.next()
-                        .add(tradeId)
+                        .add(id)
                         .add(result.indexName)
-                        .add(result.parameterNames[i])
-                        .add(result.parameterValues[i]);
+                        .add(result.parameters[i].first)
+                        .add(result.parameters[i].second);
                 report.next()
-		  .add(tradeId)
+		  .add(id)
 		  .add(result.indexName)
 		  .add("Error")
 		  .add(result.rmse);
@@ -2975,7 +2968,7 @@ void ReportWriter::writeAssetModelCalibrationReport(ore::data::Report& report, c
     }
 }
 
-void ReportWriter::writeAssetModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+void ReportWriter::writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
     report.addColumn("TradeID", string())
         .addColumn("Index", string())
         .addColumn("Expiry", Period())
@@ -2986,19 +2979,15 @@ void ReportWriter::writeAssetModelCalibrationDetailReport(ore::data::Report& rep
         .addColumn("ModelVol", double(), 4)
         .addColumn("VolDifference", double(), 4);
 
-    for (auto& [id, trade] : portfolio->trades()) {
-        string tradeId = id;
-        auto additionalResults = trade->instrument()->additionalResults();
-        std::string name = "Heston.calibration";
-        if (additionalResults.count(name) != 0) {
+    for (const auto& [id, trade] : portfolio->trades()) {
+        const auto& additionalResults = trade->instrument()->additionalResults();
+        if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
 	    DLOG("MultiAssetHeston calibration found in additional results");
-	    QuantLib::ext::any res = additionalResults[name];
-            std::vector<CalibrationResults> results = QuantLib::ext::any_cast<std::vector<CalibrationResults>>(res);
-	    DLOG("MultiAssetHeston calibration unpacked");
-            for (auto result : results) {
-                for (auto helper : result.data) {
+            const std::vector<AssetModelCalibrationResults>& results = QuantLib::ext::any_cast<std::vector<AssetModelCalibrationResults>>(r->second);
+            for (const auto& result : results) {
+                for (const auto& helper : result.data) {
                     report.next()
-                        .add(tradeId)
+                        .add(id)
                         .add(result.indexName)
                         .add(helper.expiry)
                         .add(helper.moneyness)
@@ -3013,24 +3002,26 @@ void ReportWriter::writeAssetModelCalibrationDetailReport(ore::data::Report& rep
     }
 }
   
-void ReportWriter::writeAssetModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
     report.addColumn("TradeId", string())
         .addColumn("Index", string())
         .addColumn("Date", Date())
         .addColumn("Sample", Size())
         .addColumn("Value", double(), 6);
 
-    for (auto& [id, trade] : portfolio->trades()) {
-        string tradeId = id;
-        auto additionalResults = trade->instrument()->additionalResults();
-        std::string name = "Heston.paths";
-        if (additionalResults.count(name) != 0) {
-            QuantLib::ext::any res = additionalResults[name];
-            DLOG("MultiAssetHestonPaths found in trade " << id);
-            MultiAssetHestonPaths paths = QuantLib::ext::any_cast<MultiAssetHestonPaths>(res);
-            DLOG("MultiAssetHestonPaths cast ok");
+    Date today = Settings::instance().evaluationDate();
+    for (const auto& [id, trade] : portfolio->trades()) {
+        const auto& additionalResults = trade->instrument()->additionalResults();
+        if (auto r = additionalResults.find("Heston.paths"); r != additionalResults.end()) {
+            DLOG("MultiAssetHestonPaths found for trade " << id);
+	    // FIXME: paths are still copied here again
+            const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<MultiAssetHestonPaths>(r->second);
+            DLOG("MultiAssetHestonPaths copied");
             for (Size d = 0; d < paths.dates.size(); ++d) {
                 Date date = paths.dates[d];
+		if (date == today)
+		    continue;
+		auto it = paths.data.find(date);
                 for (Size i = 0; i < paths.indexNames.size(); ++i) {
                     for (Size j = 0; j < paths.samples; ++j) {
                         report.next()
@@ -3038,11 +3029,11 @@ void ReportWriter::writeAssetModelPathReport(ore::data::Report& report, const ex
 			  .add(paths.indexNames[i])
 			  .add(date)
 			  .add(j)
-			  .add(paths.data[date][i][j]);
+			  .add(it->second[i][j]);
                     }
                 }
             }
-        }
+	}
     }
 }
 

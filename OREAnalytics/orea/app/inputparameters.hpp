@@ -191,8 +191,6 @@ public:
     void setAdditionalResultsReportPrecision(std::size_t p) { additionalResultsReportPrecision_ = p; }
     // Setters for cashflows
     void setIncludePastCashflows(bool b) { includePastCashflows_ = b; }
-    void setOutputAssetModelCalibration(bool b) { outputAssetModelCalibration_ = b; };
-    void setOutputAssetModelPaths(bool b) { outputAssetModelPaths_ = b; };
 
     // Setters for curves/markets
     void setOutputCurves(bool b) { outputCurves_ = b; }
@@ -668,8 +666,6 @@ public:
      ***************************/
     bool outputAdditionalResults() const { return outputAdditionalResults_; };
     std::size_t additionalResultsReportPrecision() const { return additionalResultsReportPrecision_; }
-    bool outputAssetModelCalibration() const { return outputAssetModelCalibration_; };
-    bool outputAssetModelPaths() const { return outputAssetModelPaths_; };
 
     /***********************
      * Getters for cashflows
@@ -1153,8 +1149,6 @@ protected:
      *************/
     bool outputAdditionalResults_ = false;
     std::size_t additionalResultsReportPrecision_ = 6;
-    bool outputAssetModelCalibration_ = false;
-    bool outputAssetModelPaths_ = false;
     bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";

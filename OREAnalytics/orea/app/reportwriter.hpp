@@ -264,11 +264,11 @@ public:
 
     virtual void writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut);
 
-    void writeAssetModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+    void writeModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
-    void writeAssetModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+    void writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
-  void writeAssetModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+    void writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
 
 protected:
     std::string nullString_;

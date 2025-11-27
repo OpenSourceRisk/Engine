@@ -19,22 +19,20 @@
 #include <ored/model/utilities.hpp>
 
 #include <ored/model/hestonmodelcalibration.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/instruments/payoffs.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
-#include <ql/processes/hestonprocess.hpp>
-#include <ql/processes/hestonslvprocess.hpp>
-#include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/math/optimization/differentialevolution.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
+#include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/models/equity/hestonmodel.hpp>
 #include <ql/models/equity/hestonmodelhelper.hpp>
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/analytichestonengine.hpp>
 #include <ql/pricingengines/vanilla/analyticpdfhestonengine.hpp>
 #include <ql/pricingengines/vanilla/analyticptdhestonengine.hpp>
@@ -42,7 +40,10 @@
 #include <ql/pricingengines/vanilla/exponentialfittinghestonengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/pricingengines/vanilla/fdhestonvanillaengine.hpp>
+#include <ql/processes/hestonprocess.hpp>
+#include <ql/processes/hestonslvprocess.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 namespace ore {
 namespace data {
@@ -52,9 +53,9 @@ namespace data {
 
         V(t) = theta + (v0 - theta) * (1 - exp(-kappa * t)) / (kappa * t)
 
-	lim_{t->0} V(t) = v0
+        lim_{t->0} V(t) = v0
 
-	lim_{t->infty} V(t) = theta
+        lim_{t->infty} V(t) = theta
 
   Cost Function:
 
@@ -83,14 +84,14 @@ public:
 
     Real annualisedModelVariance(Real t, Array x) const {
         QL_REQUIRE(x.size() == 3, "3 parameters expected");
-	// keep theta fixed
+        // keep theta fixed
         Real theta = fixed_[0] ? initialValues_[0] : x[0];
         Real kappa = fixed_[1] ? initialValues_[1] : x[1];
         Real v0 = fixed_[2] ? initialValues_[2] : x[2];
         return theta + (v0 - theta) * (1.0 - exp(-kappa * t)) / (kappa * t);
     }
 
-    // sum of error^2 across all time points 
+    // sum of error^2 across all time points
     Real value(const Array& x) const override {
         QL_REQUIRE(x.size() == 3, "3 parameters expected");
         Real res = 0;
@@ -115,25 +116,6 @@ private:
     std::vector<bool> fixed_;
 };
 
-HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s) {
-    static std::map<std::string, HestonProcess::Discretization> m = {
-        {"PartialTruncation", HestonProcess::PartialTruncation},
-        {"FullTruncation", HestonProcess::FullTruncation},
-        {"Reflection", HestonProcess::Reflection},
-        {"NonCentralChiSquareVariance", HestonProcess::NonCentralChiSquareVariance},
-        {"QuadraticExponential", HestonProcess::QuadraticExponential},
-        {"QuadraticExponentialMartingale", HestonProcess::QuadraticExponentialMartingale},
-        {"BroadieKayaExactSchemeLobatto", HestonProcess::BroadieKayaExactSchemeLobatto},
-        {"BroadieKayaExactSchemeLaguerre", HestonProcess::BroadieKayaExactSchemeLaguerre},
-        {"BroadieKayaExactSchemeTrapezoidal", HestonProcess::BroadieKayaExactSchemeTrapezoidal}};
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Cannot convert \"" << s << "\" to HestonProcess::Discretization");
-    }
-}
-  
 std::vector<Real> HestonModelCalibration::buildHelpers(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
     Handle<Quote> s0 = process_->stateVariable();
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
@@ -150,7 +132,7 @@ std::vector<Real> HestonModelCalibration::buildHelpers(const QuantLib::ext::shar
     BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::ImpliedVolError;
     helpers_.clear();
 
-    for (auto& optionMaturity : expiries_) {
+    for (const auto& optionMaturity : expiries_) {
 
         DLOG("option expiry " << optionMaturity);
         Date mat = cal.advance(yts->referenceDate(), optionMaturity);
@@ -160,7 +142,7 @@ std::vector<Real> HestonModelCalibration::buildHelpers(const QuantLib::ext::shar
         const Real atmVol = std::max(1e-4, vts->blackVol(tau, fwdPrice));
         DLOG("atm: strike " << fwdPrice << " vol " << atmVol);
 
-        for (auto& m : moneyness) {
+        for (const auto& m : moneyness) {
             const Real strikePrice = fwdPrice * std::exp(-m * atmVol * std::sqrt(tau));
             Handle<Quote> vol(QuantLib::ext::make_shared<SimpleQuote>(vts->blackVol(mat, strikePrice, true)));
             auto helper = QuantLib::ext::make_shared<HestonModelHelper>(optionMaturity, cal, s0, strikePrice, vol, yts,
@@ -173,7 +155,6 @@ std::vector<Real> HestonModelCalibration::buildHelpers(const QuantLib::ext::shar
 
     return moneyness;
 }
-
 
 void HestonModelCalibration::buildExpectedVariances() {
     varianceTimes_.clear();
@@ -188,7 +169,7 @@ void HestonModelCalibration::buildExpectedVariances() {
         Date mat = cal.advance(vts->referenceDate(), p);
         Time t = dc.yearFraction(vts->referenceDate(), mat);
         Real v = varianceCalculator->futureVariance(mat);
-	varianceTimes_.push_back(t);
+        varianceTimes_.push_back(t);
         annualisedVariances_.push_back(v);
         DLOG("annualised variance at " << p << " : " << v << " total " << v * t);
         current = v * t;
@@ -208,13 +189,14 @@ void HestonModelCalibration::logCalibration(const std::vector<Real>& moneyness) 
             auto option = QuantLib::ext::dynamic_pointer_cast<BlackCalibrationHelper>(helpers_[count]);
             const Real err = option->calibrationError();
             results_.rmse += err * err;
-            CalibrationInstrumentResults result;
-	    result.expiry = expiries_[j];
-	    result.moneyness = moneyness_[k];
-	    result.marketValue = option->marketValue();
+	    AssetModelCalibrationResults::InstrumentResults result;
+            result.expiry = expiries_[j];
+            result.moneyness = moneyness_[k];
+            result.marketValue = option->marketValue();
             result.modelValue = option->modelValue();
             result.marketVol = option->volatility()->value();
-            result.modelVol = option->impliedVolatility(result.modelValue, 1e-8, 1000, 1e-4, 3.0); // FIXME: expose parameters?
+            result.modelVol =
+                option->impliedVolatility(result.modelValue, 1e-8, 1000, 1e-4, 3.0); // FIXME: expose parameters?
             DLOG(++count << "/" << helpers_.size() << "," << result.expiry << "," << result.moneyness << "," << err
                          << "," << result.marketValue << "," << result.modelValue << ","
                          << result.modelValue - result.marketValue << "," << result.marketVol << "," << result.modelVol
@@ -223,7 +205,7 @@ void HestonModelCalibration::logCalibration(const std::vector<Real>& moneyness) 
         }
     }
     results_.rmse = sqrt(results_.rmse / helpers_.size());
-    
+
     DLOG("rmse: " << results_.rmse);
 }
 
@@ -241,7 +223,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
 
 QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     DLOG("model1 called");
-    
+
     QL_REQUIRE(initialValues_.size() == 5, "5 initial values expected, found " << initialValues_.size());
 
     Real theta = initialValues_[0];
@@ -251,9 +233,9 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     Real v0 = initialValues_[4];
 
     if (dontCalibrate_) {
-        auto hestonProcess =
-            QuantLib::ext::make_shared<HestonProcess>(process_->riskFreeRate(), process_->dividendYield(),
-                                                      process_->stateVariable(), v0, kappa, theta, sigma, rho, discretization_);
+        auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(
+            process_->riskFreeRate(), process_->dividendYield(), process_->stateVariable(), v0, kappa, theta, sigma,
+            rho, discretization_);
         return QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     }
 
@@ -267,12 +249,12 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
 
     theta = annualisedVariances_.back();
     v0 = annualisedVariances_.front();
-    
-    bool fixTheta = true;   // FIXME: Keep theta fixed to find reasonable kappa?
+
+    bool fixTheta = true; // FIXME: Keep theta fixed to find reasonable kappa?
     bool fixKappa = false;
     bool fixVo = false;
     HestonVarianceCostFunction cost(varianceTimes_, annualisedVariances_, theta, kappa, v0, fixTheta, fixKappa, fixVo);
-    Constraint constraint = PositiveConstraint(); 
+    Constraint constraint = PositiveConstraint();
     Problem problem(cost, constraint, cost.initialValues());
     LevenbergMarquardt method;
     EndCriteria endCriteria(1000, 100, 1e-8, 1e-8, 1e-8);
@@ -306,7 +288,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
         sigma = 0.5 * sqrt(2.0 * kappa * theta);
         WLOG("update sigma to satisfy Feller: " << initialValues_[2] << " -> " << sigma);
     }
-    
+
     /**********************************************************
      * 3. Calibrate the full model to the Equity option surface
      **********************************************************/
@@ -314,16 +296,17 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
     Handle<YieldTermStructure> dts = process_->dividendYield();
 
-    auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho, discretization_);
+    auto hestonProcess =
+        QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho, discretization_);
     auto hestonModel = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     auto hestonEngine = QuantLib::ext::make_shared<AnalyticHestonEngine>(hestonModel, 64);
     // auto hestonEngine = QuantLib::ext::make_shared<COSHestonEngine>(hestonModel, 12, 75);
     // auto hestonEngine = QuantLib::ext::make_shared<ExponentialFittingHestonEngine>(hestonModel);
     Constraint fellerConstraint = HestonModel::FellerConstraint();
-    //Constraint hestonConstraint = NoConstraint();
-    //Constraint hestonConstraint = fellerConstraint;
+    // Constraint hestonConstraint = NoConstraint();
+    // Constraint hestonConstraint = fellerConstraint;
     Constraint hestonConstraint = RelaxedFellerConstraint(relaxedFellerConstraint_);
-    LevenbergMarquardt om; 
+    LevenbergMarquardt om;
     EndCriteria hestonEndCriteria(400, 40, 1.0e-8, 1.0e-8, 1.0e-8);
     std::vector<Real> weights;
 
@@ -345,21 +328,14 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     logCalibration(moneyness);
 
     results_.indexName = indexName_;
-    
-    results_.parameterNames.clear();
-    results_.parameterNames.push_back("theta");  
-    results_.parameterNames.push_back("kappa");  
-    results_.parameterNames.push_back("sigma");  
-    results_.parameterNames.push_back("rho");  
-    results_.parameterNames.push_back("v0");  
 
-    results_.parameterValues.clear();
-    results_.parameterValues.push_back(hestonModel->theta());
-    results_.parameterValues.push_back(hestonModel->kappa());
-    results_.parameterValues.push_back(hestonModel->sigma());
-    results_.parameterValues.push_back(hestonModel->rho());
-    results_.parameterValues.push_back(hestonModel->v0());
-    
+    results_.parameters.clear();
+    results_.parameters.push_back(std::make_pair("theta", hestonModel->theta()));
+    results_.parameters.push_back(std::make_pair("kappa", hestonModel->kappa()));
+    results_.parameters.push_back(std::make_pair("sigma", hestonModel->sigma()));
+    results_.parameters.push_back(std::make_pair("rho", hestonModel->rho()));
+    results_.parameters.push_back(std::make_pair("v0", hestonModel->v0()));
+
     return hestonModel;
 }
 
@@ -387,29 +363,30 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     Real v0 = initialValues_[4];
 
     if (dontCalibrate_) {
-        auto hestonProcess =
-            QuantLib::ext::make_shared<HestonProcess>(process_->riskFreeRate(), process_->dividendYield(),
-                                                      process_->stateVariable(), v0, kappa, theta, sigma, rho, discretization_);
+        auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(
+            process_->riskFreeRate(), process_->dividendYield(), process_->stateVariable(), v0, kappa, theta, sigma,
+            rho, discretization_);
         return QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     }
 
     // FIXME: Move parameters to constructor
-    int restarts = restarts_; 
+    int restarts = restarts_;
     int seed = 42;
 
     Handle<Quote> s0 = process_->stateVariable();
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
     Handle<YieldTermStructure> dts = process_->dividendYield();
 
-    auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho, discretization_);
+    auto hestonProcess =
+        QuantLib::ext::make_shared<HestonProcess>(yts, dts, s0, v0, kappa, theta, sigma, rho, discretization_);
     auto model = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     auto hestonEngine = QuantLib::ext::make_shared<AnalyticHestonEngine>(model, 64);
     // auto hestonEngine = QuantLib::ext::make_shared<COSHestonEngine>(model, 12, 75);
     // auto hestonEngine = QuantLib::ext::make_shared<ExponentialFittingHestonEngine>(model);
-    //Constraint constraint = HestonModel::FellerConstraint();
-    //Constraint constraint = NoConstraint();
+    // Constraint constraint = HestonModel::FellerConstraint();
+    // Constraint constraint = NoConstraint();
     Constraint constraint = RelaxedFellerConstraint(relaxedFellerConstraint_);
-    LevenbergMarquardt method; 
+    LevenbergMarquardt method;
     EndCriteria hestonEndCriteria(400, 40, 1.0e-8, 1.0e-8, 1.0e-8);
 
     std::vector<Real> moneyness = buildHelpers(hestonEngine);
@@ -440,7 +417,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
         if (restarts > 0) {
             Array newParams(5);
             std::vector<Real> sample = halton.nextSequence().value;
-	    // FIXME: Expose the parameter ranges for theta, kappa, sigma and rho
+            // FIXME: Expose the parameter ranges for theta, kappa, sigma and rho
             newParams[0] = 0.0001 + 0.1 * sample[0];                                         // theta
             newParams[1] = 0.0001 + 20.0 * sample[1];                                        // kappa
             newParams[2] = std::sqrt(newParams[1] * newParams[0] / (0.5 + 1.0 * sample[2])); // sigma
@@ -471,20 +448,13 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
 
     results_.indexName = indexName_;
 
-    results_.parameterNames.clear();
-    results_.parameterNames.push_back("theta");  
-    results_.parameterNames.push_back("kappa");  
-    results_.parameterNames.push_back("sigma");  
-    results_.parameterNames.push_back("rho");  
-    results_.parameterNames.push_back("v0");  
+    results_.parameters.clear();
+    results_.parameters.push_back(std::make_pair("theta", model->theta()));
+    results_.parameters.push_back(std::make_pair("kappa", model->kappa()));
+    results_.parameters.push_back(std::make_pair("sigma", model->sigma()));
+    results_.parameters.push_back(std::make_pair("rho", model->rho()));
+    results_.parameters.push_back(std::make_pair("v0", model->v0()));
 
-    results_.parameterValues.clear();
-    results_.parameterValues.push_back(model->theta());
-    results_.parameterValues.push_back(model->kappa());
-    results_.parameterValues.push_back(model->sigma());
-    results_.parameterValues.push_back(model->rho());
-    results_.parameterValues.push_back(model->v0());
-    
     return model;
 }
 

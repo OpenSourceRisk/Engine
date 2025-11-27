@@ -17,7 +17,6 @@
 */
 
 #include <ored/scripting/models/heston.hpp>
-#include <iostream>
 
 namespace ore {
 namespace data {

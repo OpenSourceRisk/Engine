@@ -63,6 +63,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
+#include <ql/processes/hestonprocess.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -670,5 +671,13 @@ std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
 
 std::string splitByLastDelimiter(const std::string& s, const std::string& delimeter);
 std::string removeAfterLastDelimiter(const std::string& s, const std::string& delimeter);
+
+
+//! Convert text to HestonProcess::Discretization
+/*!
+\ingroup utilities
+*/
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s);
+
 } // namespace data
 } // namespace ore

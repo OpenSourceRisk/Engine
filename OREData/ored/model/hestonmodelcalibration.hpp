@@ -85,7 +85,7 @@ public:
 
     ext::shared_ptr<HestonModel> model();
 
-    const CalibrationResults& results() const { return results_; }
+    const AssetModelCalibrationResults& results() const { return results_; }
 
 private:
     class VarianceCalculator : public GeneralisedReplicatingVarianceSwapEngine {
@@ -132,7 +132,7 @@ private:
     std::vector<ext::shared_ptr<CalibrationHelper>> helpers_;
     std::vector<Time> varianceTimes_;
     std::vector<Real> annualisedVariances_;
-    CalibrationResults results_;
+    AssetModelCalibrationResults results_;
 };
 
 class RelaxedFellerConstraint : public Constraint {
@@ -159,8 +159,6 @@ public:
         QL_REQUIRE(epsilon > 0.0 && epsilon <= 1.0, "epsilon " << epsilon << " out of range [0,1]");
     }
 };
-
-HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s);
 
 } // namespace data
 } // namespace ore

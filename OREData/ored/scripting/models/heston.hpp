@@ -60,6 +60,15 @@ private:
 
 
 struct MultiAssetHestonPaths {
+    // MultiAssetHestonPaths() { DLOG("MultiAssetHestonPaths ctor called"); }
+    // ~MultiAssetHestonPaths() { DLOG("MultiAssetHestonPaths destructor called"); }
+    // MultiAssetHestonPaths(const MultiAssetHestonPaths& p) {
+    //     DLOG("MultiAssetHestonPaths copy ctor called");
+    //     samples = p.samples;
+    //     indexNames = p.indexNames;
+    // 	dates = p.dates;
+    // 	data = p.data;
+    // }
     Size samples;
     std::vector<std::string> indexNames;
     std::vector<Date> dates;

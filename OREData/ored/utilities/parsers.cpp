@@ -1654,5 +1654,24 @@ std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation reg
     return os;
 }
 
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s) {
+    static std::map<std::string, HestonProcess::Discretization> m = {
+        {"PartialTruncation", HestonProcess::PartialTruncation},
+        {"FullTruncation", HestonProcess::FullTruncation},
+        {"Reflection", HestonProcess::Reflection},
+        {"NonCentralChiSquareVariance", HestonProcess::NonCentralChiSquareVariance},
+        {"QuadraticExponential", HestonProcess::QuadraticExponential},
+        {"QuadraticExponentialMartingale", HestonProcess::QuadraticExponentialMartingale},
+        {"BroadieKayaExactSchemeLobatto", HestonProcess::BroadieKayaExactSchemeLobatto},
+        {"BroadieKayaExactSchemeLaguerre", HestonProcess::BroadieKayaExactSchemeLaguerre},
+        {"BroadieKayaExactSchemeTrapezoidal", HestonProcess::BroadieKayaExactSchemeTrapezoidal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to HestonProcess::Discretization");
+    }
+}
+
 } // namespace data
 } // namespace ore

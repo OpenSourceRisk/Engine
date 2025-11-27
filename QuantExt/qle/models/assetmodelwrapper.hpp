@@ -31,26 +31,23 @@ namespace QuantExt {
 
 using namespace QuantLib;
 
-struct CalibrationInstrumentResults {
-    Period expiry;
-    Real moneyness;
-    Real marketValue;
-    Real modelValue;
-    Real marketVol;
-    Real modelVol;
-};
-
-struct CalibrationResults {
+struct AssetModelCalibrationResults {
+    struct InstrumentResults {
+        Period expiry;
+        Real moneyness;
+        Real marketValue;
+        Real modelValue;
+        Real marketVol;
+        Real modelVol;
+    };
     std::string indexName;
-    std::vector<std::string> parameterNames;
-    std::vector<Real> parameterValues;
+    std::vector<std::pair<std::string,Real>> parameters;
     Real rmse;
-    std::vector<CalibrationInstrumentResults> data;
+    std::vector<InstrumentResults> data;
 
     void clear() {
         indexName = "";
-        parameterNames.clear();
-        parameterValues.clear();
+        parameters.clear();
         rmse = 0.0;
         data.clear();
     }
@@ -66,7 +63,7 @@ public:
     AssetModelWrapper(const ProcessType processType,
                       const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
                       const std::set<Date>& effectiveSimulationDates, const TimeGrid& discretisationTimeGrid,
-		      const std::vector<CalibrationResults>& calibrationResults = std::vector<CalibrationResults>());
+		      const std::vector<AssetModelCalibrationResults>& calibrationResults = std::vector<AssetModelCalibrationResults>());
 
     const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes() const;
     const std::set<Date>& effectiveSimulationDates() const;
@@ -78,7 +75,7 @@ public:
 
     ProcessType processType() const;
 
-    const std::vector<CalibrationResults>& calibration() { return calibration_; }
+    const std::vector<AssetModelCalibrationResults>& calibration() { return calibration_; }
 
 private:
     void update() override;
@@ -88,7 +85,7 @@ private:
     std::vector<QuantLib::ext::shared_ptr<HestonProcess>> hestonProcesses_;
     std::set<Date> effectiveSimulationDates_;
     TimeGrid discretisationTimeGrid_;
-    std::vector<CalibrationResults> calibration_;
+    std::vector<AssetModelCalibrationResults> calibration_;
 };
 
 } // namespace QuantExt
