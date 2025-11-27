@@ -773,9 +773,11 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
 
 void FixingDateGetter::visit(BondTRSCashFlow& bc) {
     if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_) {
-        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), bc.date());
+        bool startTodaysFixing = Settings::instance().evaluationDate() == bc.fixingStartDate();
+        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), bc.date(), false, !startTodaysFixing);
     }
-    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date());
+    bool endTodaysFixing = Settings::instance().evaluationDate() == bc.fixingEndDate();
+    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date(), false, !endTodaysFixing);
     if (bc.fxIndex()) {
         requiredFixings_.addFixingDate(bc.fxFixingStartDate(),
                                        IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
