@@ -115,8 +115,8 @@ example trades for an FX and Equity underlying.
           <Date>2017-03-01</Date>
           <Date>2020-03-01</Date>
           <Date>2025-03-01</Date>
-          <Date>2026-03-01</Date> 
-          <Date>2027-03-01</Date>                   
+          <Date>2026-03-01</Date>
+          <Date>2027-03-01</Date>
           <Date>2028-03-01</Date>
         </Dates>
       </Dates>
@@ -167,14 +167,14 @@ the Underlying node. For non-quanto Equity- and CommodityTaRFs this should be th
 Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
       Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 
-    \item FixingAmount: The unlevered FixingAmount amount to be used at each fixing date, as per the payout formula above.  
-    
+    \item FixingAmount: The unlevered FixingAmount amount to be used at each fixing date, as per the payout formula above.
+
     For FxTaRFs: The FixingAmount is expressed in the foreign currency (\lstinline!CCY1!).
-    
+
    For EquityTaRFs: The FixingAmount is expressed as number of shares/units of the underlying equity or equity index.
-    
+
    For CommodityTaRFs: The FixingAmount is expressed as number of units of the underlying commodity.
-    
+
       Allowable values: Any positive real number. Note that the FixingAmount must
 be positive both for Long and Short positions.
 
@@ -216,15 +216,15 @@ be positive both for Long and Short positions.
       the global strike defined here, or a local one in the \lstinline!RangeBounds! nodes which then overwrites the
       global one. For FX, the strike is expressed as amount in \lstinline!CCY2! per one unit of \lstinline!CCY1! as
       defined in the Name field in the Underlying node.
-    
+
 The logic for global and local strikes is as follows:
 
 - if a local Strike for a range is given, this local Strike will be used for the range (a global Strike will be ignored if given)\\
 - otherwise if a global Strike and a local StrikeAdjustment are given, the strike used for the range will be global Strike + local StrikeAdjustment\\
 - otherwise if a global Strike, but no local StrikeAdjustment is given, the strike used for the range will be the global Strike\\
 - if no global strike and no local strike is given for an range, an error is thrown, since the strike information is not sufficient
-    
-      Allowable values: Any positive real number. 
+
+      Allowable values: Any positive real number.
     \item Underlying: A node with the underlying of the TaRF instrument.
 
 For FxTaRFs: \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string on the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign currency, \lstinline!CCY2! is the domestic currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
@@ -242,13 +242,13 @@ For CommodityTaRFs: \lstinline!Type! is set to \emph{Commodity} and \lstinline!N
       Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. If omitted or left blank, defaults to the \emph{NullCalendar} (no holidays).
     \item SettlementConvention [Optional]: The convention used to compute the settlement date from the corresponding fixing date. \\
       Allowable values: Any valid roll convention (\emph{U,F,P,MF,MP}), see Table \ref{tab:convention} Roll Convention. If omitted or left blank, defaults to \emph{F} (following).
-    \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. 
+    \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}.
 The relevant fields in the \lstinline!OptionData! node for an TaRF are:
 
 \begin{itemize}
 \item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
 \item \lstinline!PayoffType! can be \emph{TargetFull}, \emph{TargetExact}, or \emph{TargetTruncated}, impacting the payment after a Knock-Out event as per:
-      
+
      \emph{TargetExact}: the payment is set to the pre-determined \lstinline!TargetAmount!\\
      \emph{TargetFull}: the unadjusted payment is made\\
      \emph{TargetTruncated}: no payment is made
@@ -272,17 +272,17 @@ The relevant fields in the \lstinline!OptionData! node for an TaRF are:
       node. If the value for \lstinline!RangeFrom! is omitted it is interpreted as $-\infty$ (unbounded towards minus
       infinity). If \lstinline!RangeTo! is omitted it is interpreted as $\infty$ (unbounded towards plus infinity).
       Note that if the underlying takes a value not covered by any range/interval, no payout will occur.
-    
+
     For FxTaRFs: The  \lstinline!Strike!, \lstinline!StrikeAdjustment!, \lstinline!RangeFrom! and \lstinline!RangeTo! Fx rates are all defined as amount in domestic
 currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!).
-    
+
 For Equity- and CommodityTaRFs: The \lstinline!Strike!, \lstinline!StrikeAdjustment!, \lstinline!RangeFrom! and \lstinline!RangeTo!  are all defined as the value of one
 unit/share/contract of the underlying equity or commodity, expressed in the currency the equity or commodity is quoted in. \\
-    
+
 Allowable values: For each range, see \ref{ss:rangebound}. Note that an interval/range can't have both a local \lstinline!Strike!  and a local \lstinline!StrikeAdjustment!. If no global \lstinline!Strike! is given, each interval/range must have a local \lstinline!Strike!.
 
     \item Barriers: Specification of barriers, see \ref{ss:barrier_data}. Multiple \lstinline!BarrierData! sub-nodes can be included within the \lstinline!Barriers! node. Relevant fields for each TaRF \lstinline!BarrierData! sub-node are \lstinline!Type! and \lstinline!Level!.  For a TaRF, \lstinline!Type! can be set to \emph{CumulatedProfitCap}, \emph{CumulatedProfitCapPoints} or \emph{FixingCap}. Notice that \emph{CumulatedProfitCapPoints} can not be combined with the other barrier types.
-    
+
     \begin{itemize}
     \item \emph{CumulatedProfitCap}: The TaRF terminates once the generated profit from the long side's view reaches the
       CumulatedProfitCap. (Continuous TaRF) For an FxTaRF the CumulatedProfitCap is quoted in

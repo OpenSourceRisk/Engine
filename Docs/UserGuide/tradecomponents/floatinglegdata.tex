@@ -47,7 +47,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
 
 \begin{itemize}
 \item Index:  The combination of currency, index and term that
-  identifies the relevant fixings and yield curve of the floating leg.  
+  identifies the relevant fixings and yield curve of the floating leg.
 
   Allowable values: An alphanumeric string of the form CCY-INDEX-TENOR. CCY, INDEX and TENOR must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TENOR must be an integer followed by D, W,
   M or Y. See Table \ref{tab:indices}. TENOR is not required for Overnight indices, but can be set to \emph{1D}.
@@ -61,9 +61,9 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 \item HasSubPeriods [Optional]: For cases where several Ibor fixings result in a single payment for a period, e.g. if
   the Ibor tenor is 3M and the schedule tenor is 6M, two fixings are used to compute the amount of the semiannual coupon
   payments. \emph{true} indicates that an average (IsAveraged = true) or a compounded (IsAveraged=false) value of the
-  fixings is used to determine the payment rate.  \emph{false} indicates that the initial index period fixing determines the payment rate for the 
+  fixings is used to determine the payment rate.  \emph{false} indicates that the initial index period fixing determines the payment rate for the
   full tenor, i.e. no further fixings, no averaging and no compounding. IsAveraged is ignored for Ibor legs when HasSubPeriods is set to  \emph{false}.
-  HasSubPeriods does not apply to Overnight indices. 
+  HasSubPeriods does not apply to Overnight indices.
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
@@ -196,7 +196,7 @@ in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
   For overnight coupons this is the number of business days by which the value dates are shifted into the past to get
   the fixing observation dates. In the context of RFRs the FixingDays parameter is sometimes also called
   ``obervation lag''.
-  
+
   The calendar used for the fixing gap, is the calendar associated with the floating index, as defined in the conventions for the index.
 
   Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted. See defaults per index in Table \ref{tab:fixingdaysdefaults}.
@@ -224,10 +224,10 @@ Allowable values: any non-negative whole number
   coupons exceeds the number of spread values, the spread will be kept
   flat at the value of last entered spread for the remaining coupons.
   The number of entered spread values cannot exceed the number of
-  coupons. 
+  coupons.
 
   Allowable values: Each child element can take any real number. The spread is expressed in decimal form, e.g. 0.005 is
-  a spread of 0.5\% or 50 bp. 
+  a spread of 0.5\% or 50 bp.
 
 For the {\tt <Spreads>} section, the same applies as for notionals and
 rates - a list of changing spreads can be specified without or with individual start dates as shown
@@ -249,7 +249,7 @@ If the entire {\tt <Spreads>} section is omitted, it defaults to a spread of \em
 
 \item Gearings [Optional]: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
   multiplied by the given factors. The mode of specification is analogous to spreads, see above.
-  
+
 If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \emph{1}.
 
 \item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is

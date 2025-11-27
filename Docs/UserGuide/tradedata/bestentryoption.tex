@@ -38,15 +38,15 @@ example for an Equity Underlying. For a more detailed description of the computa
   Allowable Values: See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
 
 \item SettlementDate: The date on which the option payoff is settled. The SettlementDate is used unadjusted
-  as given. 
+  as given.
 
   Allowable Values: any valid date greater or equal to the exercise date.
 
-\item Notional: The notional amount. 
+\item Notional: The notional amount.
 
   Allowable Values: any real number
 
-\item Strike: The strike value used to compute the payoff of the option. This value should be provided as a decimal, representing a percentage of the value of $Index_{Initial}$, e.g. a value of $K = 0.6 \implies 0.6 \times Index_{Initial}$ in the computation of the payoff. 
+\item Strike: The strike value used to compute the payoff of the option. This value should be provided as a decimal, representing a percentage of the value of $Index_{Initial}$, e.g. a value of $K = 0.6 \implies 0.6 \times Index_{Initial}$ in the computation of the payoff.
   Allowable Values: any real number
 
 \item Multiplier: The payoff multiplier used in the case that the underlying index is greater than the strike on the settlement date. If omitted defaults to $1$.
@@ -57,7 +57,7 @@ example for an Equity Underlying. For a more detailed description of the computa
 
   Allowable Values: any real number
 
-\item LongShort: Denotes whether the payoff is computed relative to the holder or seller of the option.  
+\item LongShort: Denotes whether the payoff is computed relative to the holder or seller of the option.
 
   Allowable Values: \emph{Long}, \emph{Short}.
 

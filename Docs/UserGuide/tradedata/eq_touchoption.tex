@@ -2,18 +2,18 @@
 
 \ifdefined\IncludePayoff{{\bf Payoff}
 
-This product has a continuously monitored single barrier with a Cash-or-Nothing 
+This product has a continuously monitored single barrier with a Cash-or-Nothing
 digital underlying.
 
 At expiry an Equity Touch Option pays either a fixed predetermined payoff amount or
-zero (Cash-or-Nothing) depending upon an Equity spot rate reaching a pre-set barrier 
+zero (Cash-or-Nothing) depending upon an Equity spot rate reaching a pre-set barrier
 level.
 \begin{itemize}
-\item Can be of the same four main types as a regular Barrier Equity Option: 
-Up-and-out, Down-and-out, Up-and-in, Down-and-in. 
-\item A Knock-In or One-Touch option has a fixed payout if the barrier is 
+\item Can be of the same four main types as a regular Barrier Equity Option:
+Up-and-out, Down-and-out, Up-and-in, Down-and-in.
+\item A Knock-In or One-Touch option has a fixed payout if the barrier is
 breached, and no payout otherwise. The payout can be at expiry or at hit.
-\item A Knock-Out or No-Touch option has no payout if the barrier is breached, 
+\item A Knock-Out or No-Touch option has no payout if the barrier is breached,
 and fixed payout at expiry otherwise.
 \item The buyer of a Equity Touch Option pays a premium to the seller.
 \end{itemize}
@@ -22,13 +22,13 @@ and fixed payout at expiry otherwise.
 
 \else
 
-An Equity Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit a barrier (UpAndIn, DownAndIn) resp. has not hit a barrier (UpAndOut, DownAndOut) using continuous monitoring between start and expiry date. No rebates are supported. 
+An Equity Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit a barrier (UpAndIn, DownAndIn) resp. has not hit a barrier (UpAndOut, DownAndOut) using continuous monitoring between start and expiry date. No rebates are supported.
 
 \fi
 
 The \lstinline!EquityTouchOptionData!  node is the trade data container for the \emph{EquityTouchOption} trade type. The
 \lstinline!EquityTouchOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
-specific to the Equity Touch Option. 
+specific to the Equity Touch Option.
 
 The structure of an example \lstinline!EquityTouchOptionData! node for an Equity Touch Option is shown in Listing
 \ref{lst:eqtouchoption_data}.
@@ -43,7 +43,7 @@ The structure of an example \lstinline!EquityTouchOptionData! node for an Equity
                 <Settlement>Cash</Settlement>
                 <ExerciseDates>
                  <ExerciseDate>2022-03-01</ExerciseDate>
-                </ExerciseDates>                                
+                </ExerciseDates>
                 ...
             </OptionData>
             <BarrierData>
@@ -71,18 +71,18 @@ The meanings and allowable values of the elements in the \lstinline!EquityTouchO
 \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. The \lstinline!OptionType! sub-node
 is not required and is inferred from the \lstinline!BarrierData! type (i.e.\ \emph{Call} for an Up barrier, and \emph{Put} for a Down barrier).
 The relevant fields in the \lstinline!OptionData! node for an EquityTouchOption are:
-	
+
 	\begin{itemize}
 	\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
 
-	%\item  \lstinline!Style! [Optional] The allowable value is \emph{European}, as the Equity Touch Option  allows for \emph{European} exercise style only. Defaults to \emph{European} if omitted.	
-	
+	%\item  \lstinline!Style! [Optional] The allowable value is \emph{European}, as the Equity Touch Option  allows for \emph{European} exercise style only. Defaults to \emph{European} if omitted.
+
 	\item  \lstinline!PayOffAtExpiry! [Optional] \emph{true} for payoff at expiry and \emph{false} for payoff at hit. For  \emph{UpAndOut} and \emph{DownAndOut} barriers, only payoff at expiry (i.e. \emph{true}) is supported. Defaults to  \emph{true} if left blank or omitted.
-	
+
 	\item  \lstinline!Settlement! The allowable values are \emph{Cash} or \emph{Physical}.
-	
-	\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. 
-	
+
+	\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given.
+
     \item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
       Allowable values:  See section \ref{ss:premiums}
@@ -93,7 +93,7 @@ The relevant fields in the \lstinline!OptionData! node for an EquityTouchOption 
 Level specified in BarrierData should be quoted in the same currency as the underlying Equity spot price.
 StrictComparison [Optional]: Define whether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
 
-\item PayoffCurrency: The payoff currency of the Equity Touch Option is the currency of the payoff amount. Must be consistent with the currency of the underlying Equity spot price.   
+\item PayoffCurrency: The payoff currency of the Equity Touch Option is the currency of the payoff amount. Must be consistent with the currency of the underlying Equity spot price.
 
 Allowable values:  See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
 
@@ -113,6 +113,6 @@ Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item EQIndex[Optional]: A reference to an Equity Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional and can be omitted but not left blank.
 
-Allowable values:  The format of the Equity Index is``EQ-RICCode''. 
+Allowable values:  The format of the Equity Index is``EQ-RICCode''.
 
 \end{itemize}
