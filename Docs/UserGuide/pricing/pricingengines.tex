@@ -1824,7 +1824,7 @@ The parameters have the following meaning:
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item CalibrateUnderlyingCurves [optional]: Only applies when Curve is set to Underlying. 
-If true, it apply a spread to the the individual constituent curves to match the index CDS spread. 
+If true, it apply a spread to the individual constituent curves to match the index CDS spread. 
 This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
 (See Calibration of default curves for index tranches for details.)
 \end{itemize}
@@ -1873,7 +1873,7 @@ The parameters have the following meaning:
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item CalibrateUnderlyingCurves [optional]: Only applies when Curve or FepCurve is set to Underlying. 
-If true, it apply a spread to the the individual constituent curves to match the index CDS spread. 
+If true, it apply a spread to the individual constituent curves to match the index CDS spread. 
 This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
 (See Calibration of default curves for index tranches for details.)
 \end{itemize}
@@ -1908,7 +1908,7 @@ The parameters have the following meaning:
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \item CalibrateUnderlyingCurves [optional]: Only applies when Curve or FepCurve is set to Underlying. 
-If true, it apply a spread to the the individual constituent curves to match the index CDS spread. 
+If true, it apply a spread to the individual constituent curves to match the index CDS spread. 
 This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
 (See Calibration of default curves for index tranches for details.)
 \end{itemize}
@@ -2155,7 +2155,7 @@ The parameters have the following meaning:
 \item min, max: min max std dev for Gauss copula
 \item steps: integration steps
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
-\item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
+\item useAssumedRecovery: whether to use specialized default curves, which are bootstrapped using the assumed recovery rate
 \item recoveryRateGrid: recovery rate grid for the recovery rate grid
 \item recoveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
@@ -2799,7 +2799,7 @@ Engine description:
 
 BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Bachelier model or the Kirk
 approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two different commodities are
-taken from correlation termstructure and the the intra-asset correlation between two future contracts of the same underlying (calendar spread) 
+taken from correlation termstructure and the intra-asset correlation between two future contracts of the same underlying (calendar spread) 
 is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$

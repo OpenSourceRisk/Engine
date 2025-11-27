@@ -178,7 +178,7 @@ $\NPV(t)$ itself. However, we rather choose to use an adequate market point (int
 variable $x$, because this is generalised more easily to the multi-dimensional case. As regression basis functions we
 use polynomials, i.e. regression functions of the form $c_0 + c_1\,x + c_2\,x^2 + ...+ c_n\,x^n$ where the order $n$ of
 the polynomial can be selected by the user. Choosing the lowest order $n=0$, we obtain the simplest possible estimate,
-the variance of $X$ across all samples at time $t$, so that we apply a single $\DIM(t)$ irrespective of the 'state of
+the variance of $X$ across all samples at time $t$, so that we apply a single $\DIM(t)$ irrespective of the `state of
 the world' at time $t$ in that case.  The extension to multi-dimensional regression is also implemented in ORE. The user
 can choose several regressors simultaneously (e.g. a EUR rate, a USD rate, USD/EUR spot FX rate, etc.) in order order to
 cover complex multi-currency portfolios.
@@ -286,7 +286,7 @@ $\KVA_{CCR}$ is the sum of the expected risk capital amount discounted at {\em c
 $$
 \KVA_{CCR} = \sum_i \RC(t_i) \times \frac{1}{ (1 + r_{cd})^{\delta(t_{i-1}, t_i)}} \times \delta(t_{i-1}, t_i) \times h \times a
 $$
-assuming Actual/Actual day count to compute the year factions $delta$.
+assuming Actual/Actual day count to compute the year factions $\delta$.
 
 In ORE we compute KVA CCR from both perspectives - ``our'' KVA driven by EPE and the counterparty default risk, and similarly ``their'' KVA driven by ENE and our default risk.
 
@@ -458,7 +458,7 @@ $$
 By construction, $\sum_i A_i(t) = E(t)$ and hence $\sum_i \EPE_i(t) = \EPE(t)$.\\
 
 We introduced the {\em cutoff } parameter $\epsilon>0$ above in order to handle the case where the netting set value
-$\NPV(t)$ (almost) vanishes due to netting, while the netting set 'exposure' $E(t)$ does not. This is possible in a
+$\NPV(t)$ (almost) vanishes due to netting, while the netting set `exposure' $E(t)$ does not. This is possible in a
 model with nonzero MTA and MPoR. Since a single scenario with vanishing $\NPV(t)$ suffices to invalidate the expected
 exposure at this time $t$, the cutoff is essential. Despite introducing this cutoff, it is obvious that the marginal
 allocation method can lead to spikes in the allocated exposures. And generally, the marginal allocation leads to both
@@ -470,4 +470,4 @@ $$
 w_i = \CVA_i / \sum_i \CVA_i.
 $$
 This yields allocated exposures proportional to the netting set exposure, avoids spikes and negative $\EPE$, but does
-not distinguish the 'direction' of each trade's contribution to $\EPE$ and $\CVA$.
+not distinguish the `direction' of each trade's contribution to $\EPE$ and $\CVA$.

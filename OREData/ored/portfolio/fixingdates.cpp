@@ -722,9 +722,10 @@ void FixingDateGetter::visit(QuantExt::SubPeriodsCoupon1& c) {
 
 void FixingDateGetter::visit(IndexedCoupon& c) {
     // the coupon's index might be null if an initial fixing is provided
-    if (c.index())
-        requiredFixings_.addFixingDate(c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()),
-                                       c.date());
+    if (c.index()) {
+        bool isTodaysFixing = Settings::instance().evaluationDate() == c.fixingDate();
+        requiredFixings_.addFixingDate(c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), false, !isTodaysFixing);
+    }
     QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexedCoupon): underlying() is null");
     c.underlying()->accept(*this);
 }
@@ -799,9 +800,11 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
 
 void FixingDateGetter::visit(BondTRSCashFlow& bc) {
     if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_) {
-        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), bc.date());
+        bool startTodaysFixing = Settings::instance().evaluationDate() == bc.fixingStartDate();
+        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), bc.date(), false, !startTodaysFixing);
     }
-    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date());
+    bool endTodaysFixing = Settings::instance().evaluationDate() == bc.fixingEndDate();
+    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date(), false, !endTodaysFixing);
     if (bc.fxIndex()) {
         requiredFixings_.addFixingDate(bc.fxFixingStartDate(),
                                        IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());

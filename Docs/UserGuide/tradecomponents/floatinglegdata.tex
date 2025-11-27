@@ -265,22 +265,22 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   \item IncludeSpread = false, LocalCapFloor = false:\\
     $$ A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)$$
   \item IncludeSpread = true, LocalCapFloor = false:\\
-    $$ A = \min \left( \max \left( \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)$$
+    $$ A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)$$
   \item IncludeSpread = false, LocalCapFloor = true:\\
     $$ A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s $$
   \item IncludeSpread = true, LocalCapFloor = true:\\
-    $$ A = \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau} $$
+    $$ A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau} $$
   \end{itemize}
   The cases for Averaged coupons are:
   \begin{itemize}
   \item IncludeSpread = false, LocalCapFloor = false:\\
     $$ A = \min \left( \max \left( g \cdot \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)$$
   \item IncludeSpread = true, LocalCapFloor = false:\\
-    $$ A = \min \left( \max \left( \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)$$
+    $$ A = \min \left( \max \left( g \cdot \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)$$
   \item IncludeSpread = false, LocalCapFloor = true:\\
     $$ A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i , F), C))}{\tau} + s $$
   \item IncludeSpread = true, LocalCapFloor = true:\\
-    $$ A = \cdot \frac{\sum (\tau_i \min ( \max ( f_i + s , F), C))}{\tau} $$
+    $$ A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i + s , F), C))}{\tau} $$
   \end{itemize}
 
 \item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
