@@ -40,7 +40,7 @@ The basic pricing is as described under point \emph{1)} but now we account for t
 		$$V(t)=\sum_{ T_f<t_i<T}c_{t_i}{\bar{P}_{BRY}}(t,t_i)+\bar{P}_{BRY}(t,T)+R(T_f,T)$$
 		\begin{itemize}
 			\item $R$ reflects face-value recovery between $T_f$ and $T$: $$R(T_f,T)=R\int_{T_f}^T\rho(s){P}_{BRY}(T_f,s)*Spread\ d s,$$ where $\rho$ is the time-density of default conditioned on the event that no default occurs before $T_f$.
-			\item $\bar{P}_{BRY}=P_{BRY}*Spread*CondSurvivalProb$ accounts for potential default 
+			\item $\bar{P}_{BRY}=P_{BRY}*Spread*CondSurvivalProb$ accounts for potential default
 			\item Conditional survival probabilities are given by $$CondSurvivalProb(t,t_i)=S(t,t_i)/S(t,T_f)$$
 			\item $S(t_1,t_2)$ being the survival probability between $t_1$ and $t_2$.
 			\item $BRY$: base reference curve, $COM$: compounding curve
@@ -50,19 +50,19 @@ The basic pricing is as described under point \emph{1)} but now we account for t
 		Cash(T_f):=\frac{V(t)}{{P}_{COM}(t,T_f)}
 		\end{align*}
 	\end{itemize}
-	
+
 	\item Taking account of possible default before $T_f$. If default occurs before $T_f$ we receive a defaulted bond. In other words we only receive recovery value, but we will have to still pay $K$. The NPV of the derivative under face value recovery is therefore
 	\begin{align*}
 	F(t,T_f)=&\int_{t}^{T_f}(RN-K)*P_{OIS}(t,s)\rho(s)d s\\
 	&+ (Cash(T_f)-K)*S(t,T_f)*P_{OIS}(t,T_f)
 	\end{align*}
 	Notice that now the $OIS$ curve is used for discounting as we value a derivative.
-	
-\end{enumerate}
 
 \end{enumerate}
 
-The cashflow reports provides the relevant future cashflows of the underlying bond with the corresponding discount factors from the BRY and 
+\end{enumerate}
+
+The cashflow reports provides the relevant future cashflows of the underlying bond with the corresponding discount factors from the BRY and
 the forward cashflows at expiry date with the discount factor from the OIS curve.
 The sum of the present values of the forward cashflows is equal to the Forward NPV.
 

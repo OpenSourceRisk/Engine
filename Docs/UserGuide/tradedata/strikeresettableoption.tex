@@ -29,38 +29,38 @@ example for an Equity Underlying. For a more detailed description of the computa
 
   Allowable Values: See \ref{ss:underlying}
 
-\item LongShort: Denotes whether the payoff is computed relative to the holder or seller of the option.  
+\item LongShort: Denotes whether the payoff is computed relative to the holder or seller of the option.
 
   Allowable Values: \emph{Long}, \emph{Short}.
-  
-\item OptionType: Denotes whether the option is a call option or put option.  
+
+\item OptionType: Denotes whether the option is a call option or put option.
 
   Allowable Values: \emph{Call}, \emph{Put}.
 
 \item Currency: The payment currency.
 
   Allowable Values: See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
-  
+
 \item Strike: The initial strike value used to compute the payoff of the option.
   Allowable Values: any real number
-  
+
 \item ResetStrike: The new strike value if the trigger event occurred used to compute the payoff of the option.
   Allowable Values: any real number
-  
+
 \item TriggerType: Determine the direction of the trigger event. If \emph{Up}, the trigger event occurs when the underlying value is above the \lstinline!TriggerPrice! on any \lstinline!ObservationDates!. If \emph{Down}, the trigger event occurs when the underlying value is below the \lstinline!TriggerPrice! on any \lstinline!ObservationDates!.
 
   Allowable Values: \emph{Up}, \emph{Down}
-  
-\item TriggerPrice: Determine the value of the underlying for a trigger event. 
+
+\item TriggerPrice: Determine the value of the underlying for a trigger event.
 
   Allowable Values: any real number
-  
+
 \item ExpiryDate: The date on which the option expires and the payoff is computed.
 
   Allowable Values: any valid date before the SettlementDate
 
 \item SettlementDate: The date on which the option payoff is settled. The SettlementDate is used unadjusted
-  as given. 
+  as given.
 
   Allowable Values: any valid date greater or equal to the exercise date.
 

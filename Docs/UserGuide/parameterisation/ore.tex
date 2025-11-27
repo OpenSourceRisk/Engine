@@ -67,8 +67,8 @@ The logMask allows filtering subsets of these categories and controlling the ver
 
 When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term
 structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link
-them with pricing engines as specified in {\tt pricingengine.xml}. The counterpaty information in {\tt counterparty.xml} covers
-minimal counterarty-level information needed in a few capital analytics as shown in example sections \ref{example:marketrisk} and {\ref{example:creditrisk}.
+them with pricing engines as specified in {\tt pricingengine.xml}. The counterparty information in {\tt counterparty.xml} covers
+minimal counterparty-level information needed in a few capital analytics as shown in example sections \ref{example:marketrisk} and \ref{example:creditrisk}.
 When parameter {\tt implyTodaysFixings} is set to Y,
 today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as
 e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt
@@ -913,8 +913,8 @@ all other parameters as above.
 \label{lst:ore_zerotoparsensi}
 \end{listing}
 
-The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivites. Those raw sensitivites will be converted into par sensitivities, using the same methodology as in the embedded approach above, and the configuration is described in \ref{sec:sensitivity}.
-The raw sensitivites csv input file *sensitivityInputFile* needs to have at least six columns, the column names can be user configured in the master input file. Here is a description of each of the columns:
+The parameters have the same interpretation as for the sensitivity analytic. There is one new parameter *sensitivityInputFile* which points to a csv file with the raw (zero)sensitivities. Those raw sensitivities will be converted into par sensitivities, using the same methodology as in the embedded approach above, and the configuration is described in \ref{sec:sensitivity}.
+The raw sensitivities csv input file *sensitivityInputFile* needs to have at least six columns, the column names can be user configured in the master input file. Here is a description of each of the columns:
 \begin{enumerate}
 \item idColumn: Column with a unique identifier for the trade / nettingset / portfolio.
 \item riskFactorColumn: Column with the identifier of the zero/raw sensitiviy. The risk factor name needs to follow the ORE naming convention, e.g. DiscountCurve/EUR/5/1Y (the 6th bucket in EUR discount curve as specified in the sensitivity.xml)\

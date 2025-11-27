@@ -74,24 +74,22 @@ KOKI \}$. The variables $R_x$ are initialised in the same way as $V_x$, but with
 the rebate payment $R$. The rebate NPV is then computed as the discounted value of $R$ at $t=0$ minus $R_V$ (because
 $R_V$ represents an option that pays $R$ at maturity if the original barrier option is active).
 
-When evaluated via Monte-Carlo simulation, the exercise probability and the trigger probability are 
-given as additional results. Additional to this, the knock-out probability of the transatlantic feature is given as well if relevant. 
+When evaluated via Monte-Carlo simulation, the exercise probability and the trigger probability are
+given as additional results. Additional to this, the knock-out probability of the transatlantic feature is given as well if relevant.
 Therein, there are the following definitions active:
 
 \begin{table}[h]
   \begin{tabular}{p{4.5cm}|p{8cm}}
-      Additional Result&Description\\ 
+      Additional Result&Description\\
       \hline
-      ExerciseProbability&The estimated probability of the exercise event. The latter means that the payoff 
-      is non-zero at maturity (i.e. the plain vanilla part of the payoff is positive and no knock-out event 
+      ExerciseProbability&The estimated probability of the exercise event. The latter means that the payoff
+      is non-zero at maturity (i.e. the plain vanilla part of the payoff is positive and no knock-out event
       has accrued and necessary knock-in events have occurred until then).\\ \hline
-      TriggerProbability&The estimated probability of the exercise event. The latter means that the knock-in 
-      or the knock-out event (or one of them if there are multiple ones) has been triggered.\\ \hline      
-      TransatlanticTriggered&The estimated probability of the transatlantic trigger event. The latter means 
+      TriggerProbability&The estimated probability of the exercise event. The latter means that the knock-in
+      or the knock-out event (or one of them if there are multiple ones) has been triggered.\\ \hline
+      TransatlanticTriggered&The estimated probability of the transatlantic trigger event. The latter means
       that the transatlantic knock-out event (or at least one of them if there are multiple ones) has been triggerd.\\ \hline
   \end{tabular}
   \caption{Additional results output labels for the Generic Barrier Option}
   \label{tab:AdditionalResultsGenericBarrier}
 \end{table}
-
-

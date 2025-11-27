@@ -17,10 +17,10 @@ A BondFuture can be used both as a stand alone trade (TradeType:
 
 \begin{itemize}
   \item ContractName: This ID defines both: which bond future reference datum to take and security specific spread to be used for pricing.
-  
+
   Allowable values: A string identifying the contract name, supported in the market data configuration.
   \item ContractNotional: The notional of the position, expressed in the currency of the bond.
-  
+
   Allowable values: A non-negative real number.
   \item LongShort: A flag that determines whether the forward contract is entered in long (\emph{L}) or short (\emph{S}) position.
 
@@ -31,11 +31,11 @@ Although it is not part of the trade representation, we also explain the corresp
 listing \ref{lst:bondfuturerefdata}. The following fields should always be specified:
 
 \begin{itemize}
-  \item Currency: The currency in which the future is denominated. 
-  
+  \item Currency: The currency in which the future is denominated.
+
   Allowable values: See Table \ref{tab:currency}.
-  \item DeliveryBasket: A list of eligible securities/bond identifiers. 
-  
+  \item DeliveryBasket: A list of eligible securities/bond identifiers.
+
   Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix
   \item Settlement [Optional]: \emph{Cash} or \emph{Physical}. Optional, defaults to \emph{Physical}.
   \item DirtyQuotation [Optional]: Whether the market quote of the future price is dirty (\emph{true}) or clean (\emph{false}, default if not specified).
@@ -51,8 +51,8 @@ The last trading (expiry) and last delivery (settlement) date of the future can 
 Alternatively, these dates can be derived from the following set of fields:
 
 \begin{itemize}
-  \item ContractMonth: specifies the delivery month. 
-  
+  \item ContractMonth: specifies the delivery month.
+
   Allowable values are written English calendar month or its three letter abbreviation, e.g. \emph{January} or \emph{Jan}.
   \item RootDate: used to calculate the day of the month.
 
@@ -135,7 +135,7 @@ The rules to derive last trading and last delivery date are taken from the CME G
   \item Last Delivery Day: Last business day of the delivery month
   \item Last Trading Day: Seventh business day preceding the last business day of the delivery month
 \end{itemize}
-The year is derived form the as-of date. Being the following year or the same depending whether the contract month has been passed this year or not.
+The year is derived from the as-of date. Being the following year or the same depending whether the contract month has been passed this year or not.
 Our starting point, i.e. the root date, is the 'Last business day of the delivery month'.
 We achieved this by setting {\tt ContractMonth} = \emph{March} and {\tt RootDate} = \emph{End}.
 From this root we can define the settlement date (last delivery) by {\tt SettlementBasis} = \emph{Root} in combination with {\tt SettlementLag} = \emph{0D}.

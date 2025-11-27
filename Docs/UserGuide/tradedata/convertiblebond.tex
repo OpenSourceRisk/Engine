@@ -15,7 +15,7 @@ bond into shares instead of accepting the payment from the issuer call (``forced
 
 For a detachable or stripped convertible bond the optionality can be traded separately from the bond. We set the NPV for
 a detachable convertible bond to the difference of the convertible bond npv and the bond floor npv, where the bond floor
-denotes the underyling vanilla bond stripped of any optionality.
+denotes the underlying vanilla bond stripped of any optionality.
 
 Additional features of convertible bonds include dividend protection, contingent conversion, mandatory conversion,
 conversion ratio resets, make-whole calls, dividend-forfeit clauses, copay clauses.
@@ -326,7 +326,7 @@ The conversion ratio is a function of the stock price at the conversion date.
 {\bf Input}}\fi
 
 A convertible bond is set up in ORE using a {\tt ConvertibleBondData} block as shown in listing
-\ref{lst:convertiblebonddata1}. The bond details are read from reference data in this case. 
+\ref{lst:convertiblebonddata1}. The bond details are read from reference data in this case.
 
 A convertible bond is a bond, that can be converted into a prespecified number of shares, given by:
 $$
@@ -357,7 +357,7 @@ values of the elements in the {\tt ConvertibleBondData} block are as follows:
   \item BondNotional: The notional of the underlying bond expressed in the currency of the bond.\\
       Allowable values:  Any positive real number.
     \item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. \\
-      Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.          
+      Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.
 \end{itemize}
 
 \begin{listing}[H]
@@ -472,19 +472,19 @@ Allowable values: American, Bermudan
 \item TriggerRatios: A list of trigger ratios $T$ for soft calls. A soft call can be executed only if the equity price
   on the exercise date is above the Conversion Price (defined below) times the trigger ratio, i.e. $S_t > C^P_tT$. Only applicable to
   Calls, not to Puts. Required for soft calls, can be omitted otherwise.\\
-  
+
 $$
 Conversion Price, C^P_t = \frac{1}{ConversionRatio}
 $$
-  
-For cross-currency trades the conversion price is usually quoted in equity ccy, i.e.  
-  
+
+For cross-currency trades the conversion price is usually quoted in equity ccy, i.e.
+
 $$
 Conversion Price, C^P_t = \frac{1}{ConversionRatio \cdot X_t}
-$$  
-  
-where $X_t$ converts one equity ccy unit to bond ccy  
-  
+$$
+
+where $X_t$ converts one equity ccy unit to bond ccy
+
   Allowable values: Any positive real number.
 
 \item NOfMTriggers: A list of n-of-m trigger specifications for calls, i.e. the soft-call trigger defined by
@@ -1150,7 +1150,7 @@ for examples of dividend protection schedules.
   adjusted. In both cases, the adjustment can be upwards only or up and down.\\
   Allwoable values: CrUpOnly, CrUpDown, CrUpOnly2, CrUpDown2, PassThroughUpOnly, PassThroughUpDown
 \item DividendTypes: Whether the conversion ratio adjustment is calculated in terms of absolute or relative
-  dividends. Does not have an effect for pass through dividends (should be set to Aboslute in this case).\\
+  dividends. Does not have an effect for pass through dividends (should be set to Absolute in this case).\\
   Allwoable values: Absolute, Relative
 \item Thresholds: The threshold $H$. Notice that the threshold applies to each single period of the dividend protection
   schedule. If the threshold is e.g. provided on an annual basis in the terms of the convertible bond, but the dividend
@@ -1161,7 +1161,7 @@ for examples of dividend protection schedules.
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <!-- Divdend protection based on aboslute dividend amounts via adjustment
+  <!-- Dividend protection based on absolute dividend amounts via adjustment
        of the conversion rate, up-only adjustment. -->
     <DividendProtectionData>
       <ScheduleData>
