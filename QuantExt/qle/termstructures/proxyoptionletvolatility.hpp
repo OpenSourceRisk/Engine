@@ -56,7 +56,7 @@ public:
                                       const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                       const QuantLib::Period& rateComputationPeriod);
 
-     QuantLib::ext::shared_ptr<QuantLib::IborIndex> getBaseIndex() const { return baseIndex_; }
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getBaseIndex() const { return baseIndex_; }
     QuantLib::ext::shared_ptr<QuantLib::IborIndex> getTargetIndex() const { return targetIndex_; }
 
 private:
