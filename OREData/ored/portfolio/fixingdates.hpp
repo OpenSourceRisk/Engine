@@ -276,8 +276,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
 
 public:
     //! Constructor
-    FixingDateGetter(RequiredFixings& requiredFixings, const QuantLib::ext::shared_ptr<ore::data::Market>& market = nullptr) : 
-                        requiredFixings_(requiredFixings), market_(market) {}
+    FixingDateGetter(RequiredFixings& requiredFixings, const QuantLib::ext::shared_ptr<ore::data::Market>& market = nullptr, const QuantLib::Date& maturity = Null<Date>()) : 
+                        requiredFixings_(requiredFixings), market_(market), max_(maturity) {}
 
     //! \name Visitor interface
     //@{
@@ -329,6 +329,7 @@ protected:
 private:
     // flag to indicate if coupon start date fixings are always required, even if initial prices provided
     bool requireFixingStartDates_ = false;
+    QuantLib::Date max_;
     // We may need fixings for an additional FX Index at every fixing date
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> additionalFxIndex_;
 };

@@ -46,10 +46,6 @@ public:
     DynamicOptionletVolatilityStructure(const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source,
                                         Natural settlementDays, const Calendar& calendar,
                                         ReactionToTimeDecay decayMode = ConstantVariance);
-    // Constructor to initialize with a fixed reference date
-    DynamicOptionletVolatilityStructure(const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source,
-                                        const Calendar& calendar,
-                                        ReactionToTimeDecay decayMode = ConstantVariance);
     
     QuantLib::ext::shared_ptr<OptionletVolatilityStructure> getSource() { return source_; }
 

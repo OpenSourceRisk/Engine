@@ -59,7 +59,6 @@
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
@@ -1207,13 +1206,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            auto proxyVolConfig = QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(*wrapper);
-                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol = nullptr;
-                            if(proxyVolConfig){
-                                capletVol = QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, NullCalendar(), decayMode);
-                            }else{
-                                capletVol = QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
-                            }
+                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol = 
+                                    QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
 
                             hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
                         }

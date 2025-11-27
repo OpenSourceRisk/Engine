@@ -30,17 +30,6 @@ DynamicOptionletVolatilityStructure::DynamicOptionletVolatilityStructure(
     enableExtrapolation(source->allowsExtrapolation());
 }
 
-DynamicOptionletVolatilityStructure::DynamicOptionletVolatilityStructure(
-    const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source, const Calendar& calendar,
-    ReactionToTimeDecay decayMode)
-    : OptionletVolatilityStructure(source->referenceDate(), calendar, source->businessDayConvention(), source->dayCounter()),
-      source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()),
-      volatilityType_(source->volatilityType()), displacement_(source->displacement()) {
-    QL_REQUIRE(decayMode_ != ForwardForwardVariance,
-               "ForwardVariance not yet supported for DynamicOptionletVolatilityStructure");
-    enableExtrapolation(source->allowsExtrapolation());
-}
-
 Rate DynamicOptionletVolatilityStructure::minStrike() const { return source_->minStrike(); }
 
 Rate DynamicOptionletVolatilityStructure::maxStrike() const { return source_->maxStrike(); }

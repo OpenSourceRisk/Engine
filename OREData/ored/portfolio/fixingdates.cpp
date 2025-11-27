@@ -644,7 +644,17 @@ void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) {
             QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility> pov = QuantLib::ext::dynamic_pointer_cast<QuantExt::ProxyOptionletVolatility>(source);
             if(pov){
                 QuantLib::ext::shared_ptr<QuantLib::IborIndex> baseIndex = pov->getBaseIndex();
-                requiredFixings_.addFixingDates(c.underlying()->fixingDates(), IndexNameTranslator::instance().oreName(baseIndex->name()), c.date());
+                // Create a window of fixings [min, max_] to cover all potential fixings
+                auto test = c.underlying()->fixingDates();
+                std::sort(test.begin(), test.end());
+                QuantLib::Date minDate = test.front() > Settings::instance().evaluationDate()?Settings::instance().evaluationDate():test.front();
+                std::vector<QuantLib::Date> businessDates;
+                for (QuantLib::Date d = minDate; d <= max_; d = d + 1) {
+                    if (baseIndex->fixingCalendar().isBusinessDay(d)) {
+                        businessDates.push_back(d);
+                    }
+                }
+                requiredFixings_.addFixingDates(businessDates, IndexNameTranslator::instance().oreName(baseIndex->name()), c.date());
             }
         }
     }
