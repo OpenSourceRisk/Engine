@@ -27,9 +27,11 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/models/heston.hpp>
 
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -985,8 +987,14 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         resultType = "currency";
         QuantLib::Currency r = QuantLib::ext::any_cast<QuantLib::Currency>(anyType);
         oss << r;
+    } else if (anyType.type() == typeid(MultiAssetHestonPaths)) {
+        resultType = "heston_paths";
+        oss << "see separate report";
+    } else if (anyType.type() == typeid(std::vector<AssetModelCalibrationResults>)) {
+        resultType = "vector_calibration_results";
+        oss << "see separate reports";
     } else {
-        ALOG("Unsupported QuantLib::ext::any type");
+      ALOG("Unsupported QuantLib::ext::any type");
         resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());

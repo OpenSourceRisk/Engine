@@ -2947,8 +2947,9 @@ void ReportWriter::writeModelCalibrationReport(ore::data::Report& report, const 
     for (const auto& [id, trade] : portfolio->trades()) {
         const auto& additionalResults = trade->instrument()->additionalResults();
         if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
-            DLOG("MultiAssetHeston calibration found in additional results");
-            const std::vector<AssetModelCalibrationResults>& results = QuantLib::ext::any_cast<std::vector<AssetModelCalibrationResults>>(r->second);
+            DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+            const std::vector<AssetModelCalibrationResults>& results =
+                QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
             for (const auto& result : results) {
                 Size n = result.parameters.size();
 		DLOG("paramters: " << n);
@@ -2982,8 +2983,9 @@ void ReportWriter::writeModelCalibrationDetailReport(ore::data::Report& report, 
     for (const auto& [id, trade] : portfolio->trades()) {
         const auto& additionalResults = trade->instrument()->additionalResults();
         if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
-	    DLOG("MultiAssetHeston calibration found in additional results");
-            const std::vector<AssetModelCalibrationResults>& results = QuantLib::ext::any_cast<std::vector<AssetModelCalibrationResults>>(r->second);
+            DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+            const std::vector<AssetModelCalibrationResults>& results =
+                QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
             for (const auto& result : results) {
                 for (const auto& helper : result.data) {
                     report.next()
@@ -3014,8 +3016,7 @@ void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::sh
         const auto& additionalResults = trade->instrument()->additionalResults();
         if (auto r = additionalResults.find("Heston.paths"); r != additionalResults.end()) {
             DLOG("MultiAssetHestonPaths found for trade " << id);
-	    // FIXME: paths are still copied here again
-            const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<MultiAssetHestonPaths>(r->second);
+            const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<const MultiAssetHestonPaths&>(r->second);
             DLOG("MultiAssetHestonPaths copied");
             for (Size d = 0; d < paths.dates.size(); ++d) {
                 Date date = paths.dates[d];

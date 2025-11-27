@@ -69,6 +69,14 @@ struct MultiAssetHestonPaths {
     // 	dates = p.dates;
     // 	data = p.data;
     // }
+    // MultiAssetHestonPaths& operator=(MultiAssetHestonPaths& a) {
+    //     DLOG("MultiAssetHestonPaths copy assignment ctor called");
+    //     return *this;
+    // }
+    // MultiAssetHestonPaths& operator=(MultiAssetHestonPaths&& a) {
+    //     DLOG("MultiAssetHestonPaths move assignment ctor called");
+    //     return *this;
+    // }
     Size samples;
     std::vector<std::string> indexNames;
     std::vector<Date> dates;
@@ -77,3 +85,5 @@ struct MultiAssetHestonPaths {
 
 } // namespace data
 } // namespace ore
+
+
