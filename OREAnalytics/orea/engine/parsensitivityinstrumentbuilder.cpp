@@ -434,7 +434,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
             Size n_expiries = data.shiftExpiries.size();
 
             // Determine if the cap floor is ATM
-            bool isAtm = data.shiftStrikes.size() == 1 && data.shiftStrikes[0] == 0.0 && data.isRelative;
+            bool isAtm = data.shiftStrikes.size() == 1 && data.shiftStrikes[0] == 0.0;
 
             for (Size j = 0; j < n_strikes; ++j) {
                 Real strike = data.shiftStrikes[j];
