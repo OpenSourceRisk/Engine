@@ -2242,6 +2242,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+	  <xs:element type="trsFxConversion" name="FXConversion" minOccurs="0" maxOccurs="1"/>
       <xs:element type="fxTermsData" name="FXTerms" minOccurs="0" maxOccurs="1"/>
       <xs:element type="scheduleData" name="ScheduleData" maxOccurs="1" minOccurs="1"/>
       <xs:element type="xs:boolean" name="PayBondCashFlowsImmediately" minOccurs="0"/>
@@ -2423,6 +2424,13 @@
       <xs:enumeration value="Fixed"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="trsFxConversion">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Start"/>
+      <xs:enumeration value="End"/>
+    </xs:restriction>
+  </xs:simpleType>  
 
   <xs:complexType name="trsFundingData">
     <xs:choice minOccurs="0" maxOccurs="unbounded">

@@ -558,7 +558,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackOvernightIndex>(
                                 original, rfrInd, fallbackData.spread, fallbackData.switchDate,
                                     iborFallbackConfig_->useRfrCurveInSimulationMarket());
-                                        else
+                            else
                                 i = QuantLib::ext::make_shared<QuantExt::FallbackIborIndex>(
                                                 i, rfrInd, fallbackData.spread, fallbackData.switchDate,
                                                 iborFallbackConfig_->useRfrCurveInSimulationMarket());

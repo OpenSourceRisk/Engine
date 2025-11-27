@@ -1109,7 +1109,7 @@ The meaning of each of the elements in Listing \ref{lst:basecorr_upfront_configu
 \subsubsection{FXSpots}
 
 Listing \ref{lst:fxspot_configuration} shows the configuration of the fxSpots. It is assumed that each FXSpot CurveId is of
-the form "Ccy1Ccy2".
+the form ``Ccy1Ccy2''.
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -1264,7 +1264,7 @@ This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning
 This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning of this node is given in the description of the \lstinline!DontThrow! node. This node should hold a positive integer. If omitted, the default value is 10.
 
 \item \lstinline!Global! [Optional]: This nodes specifies whether the curve should use a global bootstrap over all
-  instruments of the curve (true) or iterative bootstrap (false, default value). If global boostrap is used, only the
+  instruments of the curve (true) or iterative bootstrap (false, default value). If global bootstrap is used, only the
   Accuracy field of the BootstrapConfig is relevant and specifies the accuracy of the global optimizer. If a cycle is
   present in the dependency graph of the curves, all members of the cycle must use global bootstrap, in this case a
   global optimization is run over all instrument of all members of the cycle simultaneously.
