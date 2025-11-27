@@ -697,7 +697,7 @@ void FixingDateGetter::visit(IndexedCoupon& c) {
     // the coupon's index might be null if an initial fixing is provided
     if (c.index()) {
         bool isTodaysFixing = Settings::instance().evaluationDate() == c.fixingDate();
-        requiredFixings_.addFixingDate(c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), false, isTodaysFixing);
+        requiredFixings_.addFixingDate(c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), false, !isTodaysFixing);
     }
     QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexedCoupon): underlying() is null");
     c.underlying()->accept(*this);
