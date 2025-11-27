@@ -9,11 +9,11 @@ ORE's sensitivity analysis framework uses ``bump and revalue'' to compute Intere
 \item Yield curves including e.g. equity forecast yield curves (in the zero rate domain)
 \item FX Spots
 \item FX volatilities
-\item Swaption volatilities, ATM matrix or cube 
+\item Swaption volatilities, ATM matrix or cube
 \item Cap/Floor volatility matrices (in the caplet/floorlet domain)
 \item Default probability curves (in the ``zero rate'' domain, expressing survival probabilities $S(t)$ in term of zero rates $z(t)$ via $S(t)=\exp(-z(t)\times t)$ with Actual/365 day counter)
 \item Equity spot prices
-\item Equity volatilities, ATM or including strike dimension 
+\item Equity volatilities, ATM or including strike dimension
 \item Zero inflation curves
 \item Year-on-Year inflation curves
 \item CDS volatilities
@@ -23,17 +23,17 @@ ORE's sensitivity analysis framework uses ``bump and revalue'' to compute Intere
 Apart from first order sensitivities (deltas), ORE computes second order sensitivities (gammas and cross gammas) as well. Deltas are computed using up-shifts and base values as
 $$
 \delta = \frac{f(x+\Delta)-f(x)}{\Delta},
-$$ 
+$$
 where the shift $\Delta$ can be absolute or expressed as a relative move $\Delta_r$ from the current level, $\Delta=x\,\Delta_r$. Gammas are computed using up- and down-shifts
 $$
 \gamma = \frac{f(x+\Delta)+f(x-\Delta) - 2\,f(x)}{\Delta^2},
-$$ 
+$$
 cross gammas using up-shifts and base values as
 $$
 \gamma_{cross} = \frac{f(x+\Delta_x,y+\Delta_y)-f(x+\Delta_x,y) -f(x,y+\Delta_y) + f(x,y)}{\Delta_x\,\Delta_y}.
-$$ 
+$$
 
-From the above it is clear that this involves the application of 1-d shifts (e.g. to discount zero curves) and 2-d shifts (e.g. to Swaption volatility matrices). The structure of the shift curves/matrices does not have to match the structure of the underlying data to be shifted, in particular the shift ``curves/matrices'' can be less granular than the market to be shifted. 
+From the above it is clear that this involves the application of 1-d shifts (e.g. to discount zero curves) and 2-d shifts (e.g. to Swaption volatility matrices). The structure of the shift curves/matrices does not have to match the structure of the underlying data to be shifted, in particular the shift ``curves/matrices'' can be less granular than the market to be shifted.
 Figure \ref{fig_shiftcurve} illustrates for the one-dimensional case how shifts are applied.
 \begin{figure}[h]
 \begin{center}
@@ -41,11 +41,11 @@ Figure \ref{fig_shiftcurve} illustrates for the one-dimensional case how shifts 
 \end{center}
 \caption{1-d shift curve (bottom) applied to a more granular underlying curve (top). }
 \label{fig_shiftcurve}
-\end{figure} 
+\end{figure}
 
 Shifts at the left and right end of the shift curve are extrapolated flat, i.e. applied to all data of the original curve to the left and to the right of the shift curve ends. In between, all shifts are distributed linearly as indicated to the left and right up to the adjacent shift grid points. As a result, a parallel shift of the all points on the shift curve yields a parallel shift of all points on the underlying curve.   \\
 
-The two-dimensional case is covered in an analogous way, applying flat extrapolation at the boundaries and ``pyramidal-shaped'' linear interpolation for the bulk of the points. 
+The two-dimensional case is covered in an analogous way, applying flat extrapolation at the boundaries and ``pyramidal-shaped'' linear interpolation for the bulk of the points.
 
 The details of the computation of sensitivities to implied volatilities in strike direction can be summarised as
 follows, see also table \ref{sensi_config_overview} for an overview of the admissible configurations and the results
@@ -173,40 +173,40 @@ The par rate conversion supports the following par instruments:
 
 \section{Economic P\&L}\label{economic_pnl}
 
-The economic P\&L of a portfolio denotes the change in its economic value over  
+The economic P\&L of a portfolio denotes the change in its economic value over
 a time period $t_1$ to $t_2$. The economic value evolution during the period is due to three components
- 
+
 \begin{itemize}
 \item the change in present value from period start to end
 \item incoming and outgoing cash flows
-\item accumulated cost of funding required to set up the portfolio initially 
+\item accumulated cost of funding required to set up the portfolio initially
 \end{itemize}
 
 In the following, we consider a portfolio consisting of assets in various currencies. We decompose the portfolio into parts each denominated in a different currency and value each sub-portfolio in its currency. We denote the sub-portfolio values at time $t$ in the respective currency $P_1(t), P_2(t), \dots$. Instruments with cash flows in more than one currency are decomposed into single-currency instruments and assigned into the related sub-portfolio.
-The total portfolio value expressed in base currency (e.g. EUR) is 
-\begin{equation} 
+The total portfolio value expressed in base currency (e.g. EUR) is
+\begin{equation}
 	P(t) = \sum_c P_c(t)\:X_c(t) \label{initial_value_base}
 \end{equation}
-where $X_c$ is the exchange rate that converts an amount in currency $c$ into an amount in base currency by multiplication. All prices $P_c(t)$ denote {\em dirty} market values (or theoretical values where market values are not available) at time $t$. 
+where $X_c$ is the exchange rate that converts an amount in currency $c$ into an amount in base currency by multiplication. All prices $P_c(t)$ denote {\em dirty} market values (or theoretical values where market values are not available) at time $t$.
 
 In the following we consider three points in time,
 \begin{itemize}
 \item $t_0$: the time just before the first actual cash flow has appeared in the portfolio under consideration, possibly years ago
 \item $t_1$: the beginning of the period for which we want to determine P\&L
 \item $t_2$: the end of the period for which we want to determine P\&L
-\end{itemize} 
+\end{itemize}
 
 \subsection*{Original P\&L} \label{trade_start}
 
 The original P\&L is the portfolio's P\&L from portfolio inception $t_0$.
-In this case the portfolio value at $t_0$ is 
+In this case the portfolio value at $t_0$ is
 $$P(t_0) = 0,$$
 and the P\&L up to time $t_2$ is given by the portfolio value at $t_2$ plus the balance of currency accounts that collect incoming and outgoing cash flows and are compounded up to time $t_2$:
 \begin{equation}
 \pi(0, t_2) = P(t_2) + \sum_c X_c(t_2)\:B_c(t_2)
 \label{pnl_3}
 \end{equation}
-where 
+where
 \begin{equation}
 B_c(t_2) = \sum_{j=0}^{I(t_2)-1} F_c(\tau_j)\:C_c(\tau_j, t_2), \quad C_c(\tau_j, t_2)=\prod_{k=I(\tau_j)}^{I(t_2)-1} (1+r_c(\tau_k)\delta_k),
 \end{equation}
@@ -217,14 +217,14 @@ sums and products are taken over daily time steps $\tau_j$ and
 $I(t)$ & is the day's index associated with time $t$ \\
 $F_c(\tau_{j})$ & is the net cash flow in currency $c$ on date/time $\tau_j$, possibly zero \\
 $r_c(\tau_j)$ & is the Bank's overnight funding and investment rate in currency $c$ for interest period $[\tau_j, \,\tau_{j+1}]$ (overnight)\\
-$\delta_j$ & is the related day count fraction for period $[\tau_j, \,\tau_{j+1}]$ 
+$\delta_j$ & is the related day count fraction for period $[\tau_j, \,\tau_{j+1}]$
 \end{tabular}
 
 \bigskip
 
 The balances $B_c$ can also be constructed iteratively
 \begin{eqnarray*}
-B_c(\tau_{j+1}) &=& B_c(\tau_{j}) (1+r_c(\tau_j)\delta_j) + F_c(\tau_{j+1}) 
+B_c(\tau_{j+1}) &=& B_c(\tau_{j}) (1+r_c(\tau_j)\delta_j) + F_c(\tau_{j+1})
 \label{recursion}\\
 j &=& 0, 1, 2, \dots \nonumber\\
 B_c(\tau_0) &=& 0. \nonumber
@@ -238,19 +238,19 @@ The P\&L for a period of interest $[t_1;\,t_2]$ is then computed by taking the d
 \end{eqnarray}
 
 One can show that
-\begin{equation} 
-	B_c(t_2) = B_c(t_1) \:C_c(t_1, t_2) 
-	+ \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2) 
+\begin{equation}
+	B_c(t_2) = B_c(t_1) \:C_c(t_1, t_2)
+	+ \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
 \label{bc}
 \end{equation}
-which separates the contribution to $B_c(t_2)$ from cash flows in period $[t_1;t_2]$ (right-most sum) and contributions from realized P\&L and cost of funding of previous periods accumulated in $B_c(t_1)$. We can now insert (\ref{bc}) into (\ref{pnl_1}) to eliminate $B_c(t_2)$ and obtain 
+which separates the contribution to $B_c(t_2)$ from cash flows in period $[t_1;t_2]$ (right-most sum) and contributions from realized P\&L and cost of funding of previous periods accumulated in $B_c(t_1)$. We can now insert (\ref{bc}) into (\ref{pnl_1}) to eliminate $B_c(t_2)$ and obtain
 \begin{eqnarray}
 	\pi(t_1, t_2) &=& P(t_2) - P(t_1)
 	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
 	\nonumber\\
 	&& + \sum_c B_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} \label{pnl_1a}
 \end{eqnarray}
- 
+
 \subsection*{Cost of Carry}
 
 Separating actual cash flows and prices from compounding effects yields
@@ -260,12 +260,12 @@ $$
 	+ CC(t_1,t_2)
 $$
 
-where the cost of carry term is 
+where the cost of carry term is
 \begin{eqnarray}
-CC(t_1,t_2) &=& 
+CC(t_1,t_2) &=&
 	\sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:
 	\left(C_c(\tau_j, t_2) - 1\right) \nonumber\\
-&& + \sum_c \:B_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} 
+&& + \sum_c \:B_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\}
 \label{CC}
 \end{eqnarray}
 
@@ -277,10 +277,10 @@ $$
 $$
 Inserting this into (\ref{CC}),
 \begin{eqnarray*}
-CC(t_1,t_2) &=& 
+CC(t_1,t_2) &=&
 	\sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:
 	\left(C_c(\tau_j, t_2) - 1\right) \\
-&& + \sum_c \:(\pi_c(t_1) - P_c(t_1))\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\}, 
+&& + \sum_c \:(\pi_c(t_1) - P_c(t_1))\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\},
 \end{eqnarray*}
 shows that there is a contribution to $\pi(t_1,t_2)$, via the cost of carry, due to compounding and FX effects on previous periods' P\&L result.
 
@@ -288,7 +288,7 @@ shows that there is a contribution to $\pi(t_1,t_2)$, via the cost of carry, due
 We now take the view that the portfolio is liquidated at time $t_1$, so that the account balance equals the P\&L at $t_1$. We further assume that this balance is then removed (``sell down'' of P\&L) and transferred into a separate portfolio, the Bank's equity\footnote{Equity is in turn managed and most likely invested into financial instruments other than a Bank account}. The same portfolio is thereafter set up again so that the currency account balance turns into a liability $B_c(t_1) = - P_c(t_1)$, and the total starting balance is $B(t_1)=-P(t_1)$. In contrast to the previous section, this changes the balance at time $t_1$ suddenly and without relation to an actual cash flow.
 
 This raises the question how the artificial initial balance is funded subsequently, in currency for each sub-portfolio or in base currency only. This
-choice may vary by portfolio, depend on the actual currencies in which the Bank can source funding, depend on the location/economy in which the portfolio is run, which currency is a reasonable benchmark, etc. 
+choice may vary by portfolio, depend on the actual currencies in which the Bank can source funding, depend on the location/economy in which the portfolio is run, which currency is a reasonable benchmark, etc.
 
 \subsection*{Funding in Currency}\label{funding_ccy}
 
@@ -320,7 +320,7 @@ $$
 	+ CC_2(t_1,t_2)
 $$
 
-where the cost of carry term is 
+where the cost of carry term is
 \begin{eqnarray*}
 CC_2(t_1,t_2) &=& \sum_c \:X_c(t_2)\:
 \sum_{j=I(t_1)}^{I(t_2)-1} F_c(\tau_j) \: \left(C_c(\tau_j, t_2) - 1\right)\\
@@ -333,7 +333,7 @@ In this section we assume that the setup cost for the portfolio is converted int
 This means we insert artificial initial balances $B_c(t_1)=0$ except for the base currency account $B(t_1) = -P(t_1)$.
 Inserting this opening balance at $t_1$ into (\ref{pnl_1a}) now yields
 \begin{eqnarray}
-	\pi_3(t_1, t_2) &=& P(t_2) 
+	\pi_3(t_1, t_2) &=& P(t_2)
 	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
 	\nonumber\\
 	&& - P(t_1)\:C(t_1, t_2)
@@ -347,27 +347,27 @@ where $C(t_1,t_2)$ is the compounding factor in base currency.
 Separating actual cash flows and prices from compounding effects yields now
 
 $$
-	\pi_3(t_1, t_2) = P(t_2) - P(t_1) 
+	\pi_3(t_1, t_2) = P(t_2) - P(t_1)
 	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)
 	+ CC_3(t_1, t_2)
 $$
 where
 \begin{eqnarray*}
-CC_3(t_1, t_2) &=& 
+CC_3(t_1, t_2) &=&
 \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:(C_c(\tau_j, t_2)-1)\\
 &&  - P(t_1)\:(C(t_1, t_2) - 1)
 \end{eqnarray*}
 
 \subsubsection*{FX Effect}\label{fx_effect}
 
-The difference between (\ref{pnl_2}) and (\ref{pnl_3}) is 
+The difference between (\ref{pnl_2}) and (\ref{pnl_3}) is
 
-$$ \pi_2(t_1, t_2) - \pi_3(t_1, t_2) = P(t_1)\:C(t_1, t_2) 
+$$ \pi_2(t_1, t_2) - \pi_3(t_1, t_2) = P(t_1)\:C(t_1, t_2)
 	- \sum_c P_c(t_1)\:X_c(t_2)\:C_c(t_1, t_2).
 $$
 
 The expected value of this difference at period start $t_1$ is zero, but the retrospectively realized difference at period end $t_2$ is nonzero in general.
- 
+
 
 \section{Risk Hypothetical P\&L}\label{sec:pl}
 
@@ -377,10 +377,10 @@ computing risk measures such as Value at Risk or for backtesting a
 market risk model.
 
 These P\&L's are different from the economic P\&L introduced in
-section \ref{economic_pnl} above, but rather {\em risk-hypothetical} 
+section \ref{economic_pnl} above, but rather {\em risk-hypothetical}
 due to the application  of some historical market moves to the
 current market which gives rise to a valuation change.
-  
+
 %\subsection{Basics}\label{sec:pl_basics}
 
 Consider a history of market risk factors $X_i(j)$ where $i\in\{1,\ldots,n\}$ identifies the risk factor and
@@ -531,14 +531,14 @@ rest to be zero.
 
 Note that the types $T_i$ used to generate the historical returns \eqref{histReturns} can be different from those used
 in the Taylor expansion \eqref{taylorPl}. It is important though that the same types $T_i$ are used for the
-derivatives operators $D^i_{T_i}$ and the returns $R_{T_i}$ in \eqref{taylorPl}. 
+derivatives operators $D^i_{T_i}$ and the returns $R_{T_i}$ in \eqref{taylorPl}.
 
 A number of configurations are hard-coded into ORE depending on whether raw sensitivities, backtesting sensitivities or CRIF sensitivities are being called. These configurations are displayed in \ref{sensiReturnTypes} - note that there is currently no distinction made in ORE between raw sensitivities and backtest sensitivities.
 
 \begin{table}[ht]
   \begin{tabular}{|l|c|c|c|c|}
     \hline
-    \multicolumn{1}{|c|}{\multirow{2}{*}{ORE Risk Factor}} & \multicolumn{2}{c|}{Backtest Sensitivities} & \multicolumn{2}{c|}{CRIF Sensitivities} \\ \cline{2-5} 
+    \multicolumn{1}{|c|}{\multirow{2}{*}{ORE Risk Factor}} & \multicolumn{2}{c|}{Backtest Sensitivities} & \multicolumn{2}{c|}{CRIF Sensitivities} \\ \cline{2-5}
     \multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{Return Type} & \multicolumn{1}{c|}{Shift Size} & \multicolumn{1}{c|}{Return Type} & \multicolumn{1}{c|}{Shift Size} \\ \hline
     Discount Curve & A & 0.01\% & A & 0.01\% \\
     Index Curve & A & 0.01\% & A & 0.01\% \\
@@ -573,7 +573,7 @@ A number of configurations are hard-coded into ORE depending on whether raw sens
 
 **During a CRIF run, the FX spot delta is computed using the central difference approximation by default. A smaller shift size of $0.1\%$ is used because of this. Furthermore, for FX vanilla European and American options, there are analytic formulae available for FX deltas. These are implemented in ORE during a CRIF run.
 
-Note - the values $A$ and $R$ here refer to the absolute and relative shifts defined in \eqref{derivs}. 
+Note - the values $A$ and $R$ here refer to the absolute and relative shifts defined in \eqref{derivs}.
 
 \section{Value at Risk}\label{sec:app_var}
 
@@ -593,11 +593,11 @@ generated by the sensitivity based PL vector $\pi_S$ (call side), resp. $-\pi_S$
 For the computation of the parametric, or variance-covariance VaR, we rely on a second order sensitivity-based P\&L approximation
 
 \begin{eqnarray}\label{taylorPl2}
-  \pi_S & = & \sum_{i=1}^n D^i_{T_i}\,V\cdot Y_i 
+  \pi_S & = & \sum_{i=1}^n D^i_{T_i}\,V\cdot Y_i
         + \frac{1}{2} \sum_{i,j=1}^n D^{i,j}_{T_i,T_j}\,V\cdot Y_i\cdot Y_j
 \end{eqnarray}
 
-with 
+with
 \begin{itemize}
 \item portfolio value $V$
 \item random variables $Y_i$ representing risk factor returns; these are assumed to be multivariate normally distributed with zero mean
@@ -623,14 +623,14 @@ approximations (``bump and revalue'').
 To approximate the $p$-quantile of $\pi_S$ in \eqref{taylorPl2} ORE offers the techniques outlined below.
 
 \subsection{Delta Gamma Normal Approximation}
- 
-The distribution of \eqref{taylorPl2} is non-normal due to the second order terms. 
-The delta gamma normal approximation in ORE computes mean $m$ and variance $v$ of the portfolio value change $\pi_S$ (discarding moments higher than two) following \cite{alexander} and provides a simple VaR estimate 
+
+The distribution of \eqref{taylorPl2} is non-normal due to the second order terms.
+The delta gamma normal approximation in ORE computes mean $m$ and variance $v$ of the portfolio value change $\pi_S$ (discarding moments higher than two) following \cite{alexander} and provides a simple VaR estimate
 $$
 VaR = m + N^{-1}(q)\,\sqrt{v}
 $$
 for the desired quantile $q$ ($N$ is the cumulative standard normal distribution). Omitting the second order terms in \eqref{taylorPl2} yields the delta normal approximation.
- 
+
 \subsection{Cornish-Fisher Expansion}
 
 The first four moments of the distribution of $\pi_S$ in \eqref{taylorPl2} can be computed in closed form using the covariance matrix $C$ and the sensitivities of first and second order $D_i$
@@ -648,4 +648,3 @@ distribution generated by the Monte Carlo samples. Apart from the Monte Carlo Er
 method, so that albeit slow it is well suited to produce values against which any other approximate approaches can be tested. Numerically, the simulation is implemented using a Cholesky Decomposition
 of the covariance matrix $C$ in conjunction with a pseudo random number generator (Mersenne Twister) and an
 implementation of the inverse cumulative normal distribution to transform $U[0,1]$ variates to $N(0,1)$ variates.
-

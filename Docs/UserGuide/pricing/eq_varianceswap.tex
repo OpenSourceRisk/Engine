@@ -44,7 +44,7 @@ pricing engine configuration (see e.g. listing \ref{eq_var_swap_pricing_config_1
 \begin{itemize}
 \item Scheme [Optional, default GaussLobatto]: GaussLobatto or Segment, this determines the integration scheme used
 \item Bounds [Optional, default PriceThreshold]: ``Fixed'': The integration bounds are found by
-  
+
   $$
   \text{Lower} = F e ^ {m \sigma \sqrt{T}},  \text{Upper} = F e ^ {M \sigma \sqrt{T}}
   $$
@@ -232,7 +232,7 @@ Date & EQ Price & Log-Return & Accrued Daily Variance \\
 2023-03-10 & 3861.59 & -0.0145844 & 0.00111448 \\
 2023-03-13 & 3855.76 & -0.00151036 & 0.00111676 \\
 \hline
-annualized & & & 0.0351779 
+annualized & & & 0.0351779
 \end{tabular}
 \end{center}
 \caption{Accrued daily variance, the annualized variance is calculated as ``accrued daily variance x 252 / number of days''.}
@@ -305,7 +305,7 @@ $$
 
 \bigskip
 
-\underline{\emph{Swap NPV:}} The NPV of the swap is finally computed by 
+\underline{\emph{Swap NPV:}} The NPV of the swap is finally computed by
 
 $$
 P(0,T) \cdot \omega \cdot N_{var} \cdot 10000 \cdot ( Var - K_{var}  )

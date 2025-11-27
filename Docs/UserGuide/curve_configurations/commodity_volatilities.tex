@@ -71,7 +71,7 @@ Listing \ref{lst:comm_vol_curve_config} outlines the configuration for the one-d
 The meaning of each of the elements is given below. Elements that were defined for the previous configuration and are common to all of the configurations are not repeated.
 \begin{itemize}
 \item \lstinline!QuoteType! [Optional]: The allowable values in general for \lstinline!QuoteType! are \lstinline!ImpliedVolatility! and \lstinline!Premium!. Currently, only \lstinline!ImpliedVolatility! is supported for commodity volatility curves. This is the default for \lstinline!QuoteType! so this node may be omitted.
-\item \lstinline!VolatilityType! [Optional]: The allowable values in general for \lstinline!VolatilityType! are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!. 
+\item \lstinline!VolatilityType! [Optional]: The allowable values in general for \lstinline!VolatilityType! are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!.
 \lstinline!Normal!, \lstinline!ShiftedLognormal! and \lstinline!Lognormal! are supported for constant and absolute strike surfaces. For all other types only \lstinline!Lognormal! is supported. \lstinline!Lognormal! is the default for \lstinline!VolatilityType! so this node may be omitted.
 \item \lstinline!ExerciseType! [Optional]: This node is described below in the context of surfaces. For commodity volatility curves, it is ignored and should be omitted.
 \item \lstinline!Quotes!: A list of commodity option volatility quotes with different expiries to use in the commodity curve building. The commodity option volatility quotes are explained in Section \ref{md:commodity_option_iv}. As indicated above, any quote string used here much start with \lstinline!COMMODITY_OPTION/RATE_LNVOL!. A single regular expression \lstinline!Quote! is also supported here in place of a list of explicit \lstinline!Quote! strings. Note that if a list of explicit \lstinline!Quote! strings are provided, it is an error to have a duplicated option expiry date. If a regular expression is used, the first quote found is used and subsequent qutoes with the same expiry are discarded with a warning issued.
@@ -264,7 +264,7 @@ Defines how to extrapolate in the time direction. Allowed values are:
     \item \lstinline!UseInterpolator!: Extends the configured interpolation (linear) into the extrapolated range.
     \item \lstinline!Linear!: Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility. Prefer \lstinline!UseInterpolator! for clarity.
   \end{itemize}
-  
+
 \item \lstinline!TimeExtrapolationVariance!:
 Specifies whether to extrapolate variance or volatility in the time direction. Allowed values are:
   \begin{itemize}
@@ -366,7 +366,7 @@ Defines how to extrapolate in the time direction. Allowed values are:
     \item \lstinline!UseInterpolator!: Extends the configured interpolation (linear) into the extrapolated range.
     \item \lstinline!Linear!: Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility. Prefer \lstinline!UseInterpolator! for clarity.
   \end{itemize}
-  
+
 \item \lstinline!TimeExtrapolationVariance!:
 Specifies whether to extrapolate variance or volatility in the time direction. Allowed values are:
   \begin{itemize}
@@ -452,7 +452,7 @@ Defines how to extrapolate in the time direction. Allowed values are:
     \item \lstinline!UseInterpolator!: Extends the configured interpolation (linear) into the extrapolated range.
     \item \lstinline!Linear!: Legacy identifier and falls back to \lstinline!UseInterpolator!, but only for backward compatibility. Prefer \lstinline!UseInterpolator! for clarity.
   \end{itemize}
-  
+
 \item \lstinline!TimeExtrapolationVariance!:
 Specifies whether to extrapolate variance or volatility in the time direction. Allowed values are:
   \begin{itemize}
@@ -464,7 +464,7 @@ Specifies whether to extrapolate variance or volatility in the time direction. A
     \item Ignored if \lstinline!TimeExtrapolation! is set to \lstinline!Flat!.
     \item Volatility extrapolation in time works only with linear interpolation.
   \end{itemize}
-  
+
 \item \lstinline!StrikeInterpolation!:
 Only \lstinline!Linear! is supported here. Note that the interpolation is in terms of variance.
 

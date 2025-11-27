@@ -1,5 +1,5 @@
 \subsubsection{Barrier Data}
-\label{ss:barrier_data} 
+\label{ss:barrier_data}
 
 This trade component node is used within the trade data containers listed in table \ref{tab:barrierstyles}. Note that not
 every trade type allows for all barrier styles, the allowable combinations are listed in table \ref{tab:barrierstyles}.
@@ -52,7 +52,7 @@ The meanings and allowable values of the elements in the \lstinline!BarrierData!
 
 \begin{itemize}
 \item Type: Specifies barrier type.
-The allowable values are given in Table \ref{tab:barriertype}. 
+The allowable values are given in Table \ref{tab:barriertype}.
 
 \begin{table}[H]
 \centering
@@ -137,9 +137,9 @@ Allowable values:  Any positive real number. Defaults to zero if omitted. Cannot
 \item StrictComparison [Optional]: Determines how the  barrier is checked, as per:
 
   \emph{0}: the barrier checks use $<=$, $>=$ to check In-barriers and $<$, $>$ to check Out-barriers.
-  
+
   \emph{1}: the barrier checks use strict comparison $<$ and $>$ for both In- and Out-barriers.
-  
+
   \emph{2}: the barrier checks use strict or equal comparison $<=$ and $>=$ for both In- and Out-barriers.
 
   Allowable Values: \emph{0}, \emph{1}, or \emph{2}. Defaults to \emph{0} if omitted.
@@ -150,4 +150,3 @@ Allowable values:  Any positive real number. Defaults to zero if omitted. Cannot
   Allowable Values: \emph{true}, \emph{false}
 
 \end{itemize}
-

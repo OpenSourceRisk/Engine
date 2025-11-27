@@ -225,8 +225,8 @@ Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_so
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FRA Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-A node with name \emph{FRA} is used to store conventions for FRA quotes. The structure of this node is shown in Listing 
-\ref{lst:fra_conventions}. The only piece of information needed is the underlying index name and this is given in the 
+A node with name \emph{FRA} is used to store conventions for FRA quotes. The structure of this node is shown in Listing
+\ref{lst:fra_conventions}. The only piece of information needed is the underlying index name and this is given in the
 \lstinline!Index! node. For example, this could be EUR-EURIBOR-6M, CHF-LIBOR-6M etc.
 
 \begin{listing}[H]
@@ -383,7 +383,7 @@ period. This rate cut-off gives the number of days e.g.\ 2 for Fed Funds average
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{Tenor Basis Swap Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-A node with name \emph{TenorBasisSwap} is used to store conventions for tenor basis swap quotes. The structure of this 
+A node with name \emph{TenorBasisSwap} is used to store conventions for tenor basis swap quotes. The structure of this
 node is shown in Listing \ref{lst:tenor_basis_conventions}.
 
 \begin{listing}[H]
@@ -408,19 +408,19 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
 \item PayIndex: The name of Ibor/Overnight Index of the pay leg.
-\item PayFrequency [Optional]: The frequency of payments on the PayIndex leg. This is usually the same as the PayIndex's tenor. 
-However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs. 
+\item PayFrequency [Optional]: The frequency of payments on the PayIndex leg. This is usually the same as the PayIndex's tenor.
+However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs.
 If not provided, this defaults to the PayIndex's tenor.
 \item ReceiveIndex: The name of Ibor/Overnight Index of the receive leg.
-\item ReceiveFrequency [Optional]: The frequency of payments on the ReceiveIndex leg. This is usually the same as the ReceiveIndex's tenor. 
-However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs. 
+\item ReceiveFrequency [Optional]: The frequency of payments on the ReceiveIndex leg. This is usually the same as the ReceiveIndex's tenor.
+However, it can also be longer, e.g. overnight indexed vs overnight indexed basis swaps that may be quarterly on both legs.
 If not provided, this defaults to the ReceiveIndex's tenor.
-\item SpreadOnRec [Optional]: \emph{True}  if the tenor basis swap quote has the spread on the pay index leg and \emph{False} if not. 
+\item SpreadOnRec [Optional]: \emph{True}  if the tenor basis swap quote has the spread on the pay index leg and \emph{False} if not.
 If not provided, this defaults to \emph{True}.
-\item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is performed on the spread leg and \emph{False} if not. 
+\item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is performed on the spread leg and \emph{False} if not.
 If not provided, this defaults to \emph{False}.
-\item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging}. It applies to Ibor vs OI and Ibor vs Ibor basis swaps when the frequency of payments on the spread leg does not equal the spread leg index’s tenor. 
-If \emph{Compounding} is specified, then the spread tenor Ibor index is compounded and paid on the frequency specified in the corresponding node. 
+\item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging}. It applies to Ibor vs OI and Ibor vs Ibor basis swaps when the frequency of payments on the spread leg does not equal the spread leg index’s tenor.
+If \emph{Compounding} is specified, then the spread tenor Ibor index is compounded and paid on the frequency specified in the corresponding node.
 If \emph{Averaging} is specified, then the short tenor Ibor index is averaged and paid on the frequency specified in the corresponding node.
 \end{itemize}
 
@@ -874,14 +874,14 @@ The meaning of the elements is as follows:
   calendar from the swap conventions will be used as a fall back.
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FX Option Conventions}\label{sss:fx_option_conv}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-A node with name \emph{FxOption} is used to store conventions for FX option quotes for a given currency pair. The 
-structure of this node is shown in Listing \ref{lst:fx_option_conventions}. 
- 
-\begin{listing}[H] 
-%\hrule\medskip 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{FxOption} is used to store conventions for FX option quotes for a given currency pair. The
+structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <FxOption>
   <Id>EUR-USD-FXOPTION</Id>
@@ -894,19 +894,19 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
   <RiskReversalInFavorOf>Call</RiskReversalInFavorOf>
   <ButterflyStyle>Broker</ButterflyStyle>
 </FxOption>
-\end{minted} 
-\caption{FX option conventions} 
-\label{lst:fx_option_conventions} 
-\end{listing} 
- 
- 
-The meanings of the various elements in this node are as follows: 
+\end{minted}
+\caption{FX option conventions}
+\label{lst:fx_option_conventions}
+\end{listing}
+
+
+The meanings of the various elements in this node are as follows:
 \begin{itemize}
 \item FXConventionID: The FX convention for the currency pair (see \ref{sss:fx_convention}). Optional, if not given, the
   FX spot days default to $2$ and the advance calendar defaults to source ccy + target ccy default calendars.
-\item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd, 
-AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
-\item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 
+\item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd,
+AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}).
+\item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot,
     PaFwd}).
 \item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is greater
   or equal the switch tenor (``long term'' atm and delta type)
@@ -916,7 +916,7 @@ AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}).
   switch point, if SwitchTenor is given
 \item RiskReversalInFavorOf [Optional]: Call (default), Put. Only relevant for BF, RR market data input.
 \item ButterflyStyle [Optional]: Broker (default), Smile. Only relevant for BF, RR market data input.
-\end{itemize} 
+\end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FX Option Time Weighting Scheme}\label{sss:fx_option_timeweighting}
@@ -1097,7 +1097,7 @@ The meanings of the various elements in this node are as follows:
 \item \lstinline!OneContractMonth! [Optional]: This node takes a calendar month in the form of the first three characters of the month with the first character capitalised. The month provided should be an arbitrary valid future contract month. It is used in cases where the \lstinline!ContractFrequency! is not \lstinline!Monthly! in order to determine the valid contract months. If omitted, it defaults to January.
 \item \lstinline!OffsetDays! [Optional]: The number of business days that the expiry date is before the base date where the base date is implied by the \lstinline!AnchorDay! node above. Any non-negative integer is allowed here. If omitted, this takes a default value of zero.
 \item \lstinline!BusinessDayConvention! [Optional]: The business day roll convention used to adjust the expiry date. The allowable values are given in Table \ref{tab:allow_stand_data}. If omitted, it defaults to \lstinline!Preceding!.
-\item \lstinline!AdjustBeforeOffset! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, if the base date implied by the \lstinline!AnchorDay! node above is not a good business day according to the calendar provided in the \lstinline!Calendar! node, this date is adjusted before the offset specified in the \lstinline!OffsetDays! is applied. If \lstinline!false!, this adjustment does not happen. If omitted, it defaults to \lstinline!true!. 
+\item \lstinline!AdjustBeforeOffset! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, if the base date implied by the \lstinline!AnchorDay! node above is not a good business day according to the calendar provided in the \lstinline!Calendar! node, this date is adjusted before the offset specified in the \lstinline!OffsetDays! is applied. If \lstinline!false!, this adjustment does not happen. If omitted, it defaults to \lstinline!true!.
 \item \lstinline!IsAveraging! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. This node indicates if the future contract is based on the average commodity price of the contract period. If omitted, it defaults to \lstinline!false!.
 \item \lstinline!OptionExpiryOffset! [Optional]: The number of business days that the option expiry date is before the future expiry date. Any non-negative integer is allowed here. If omitted, this takes a default value of zero and the expiry date of an option on the future contract is assumed to equal the expiry date of the future contract.
 \item \lstinline!ProhibitedExpiries! [Optional]: This node can be used to specify explicit dates which are not allowed as future contract expiry dates or as option expiry dates. A useful example of this is the ICE Brent contract which has the following constraint on expiry dates: \emph{If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or (ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day}. Each \lstinline!Date! node can take optional attributes. The default values of these attributes is shown in Listing \ref{lst:commodity_future_conventions}. The \lstinline!convention! attribute accepts a valid business day convention in the list \lstinline!Preceding!, \lstinline!ModifiedPreceding!, \lstinline!Following! and \lstinline!ModifiedFollowing!. This \lstinline!convention! indicates how the future expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. If omitted, the default is \lstinline!Preceding!. Both \lstinline!Preceding! and \lstinline!ModifiedPreceding! indicate that the next available business day before the date is tested. \lstinline!Following! and \lstinline!ModifiedFollowing! indicate that the next available business day after the date is tested. The \lstinline!optionConvention! attribute allows the same values and behaves in the same way to determine how the option expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. The \lstinline!forFuture! and \lstinline!forOption! boolean attributes enable the prohibited expiry to apply only for the future expiry date or the option expiry date respectively by setting the value to \lstinline!false!.
@@ -1277,7 +1277,5 @@ The meaning of the elements is as follows:
 \item Compounding: Compounding of the yield - Simple, Compounded, Continuous, SimpleThenCompounded
 \item Frequency: Frequency of the cash flows - Annual, Semiannual, Quarterly, Monthly etc.
 \item PriceType: Dirty or Clean
-\item Accuracy/MaxEvaluations/Guess: QuantLib parameters that control the convergence of the numerical price to yield conversion. 
+\item Accuracy/MaxEvaluations/Guess: QuantLib parameters that control the convergence of the numerical price to yield conversion.
 \end{itemize}
-
-

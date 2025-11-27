@@ -108,7 +108,7 @@ The risk class correlations and its subcomponents are given in Listing \ref{lst:
 \label{lst:simmcalibration_risk_class_correlations}
 \end{listing}
 
-Each correlation value is given by a {\tt <Correlation>} node with attributes {\tt label1} and {\tt label2} to 
+Each correlation value is given by a {\tt <Correlation>} node with attributes {\tt label1} and {\tt label2} to
 specify the risk classes to which it applies.
 
 Since the risk-class-specific components have many sub-nodes in common, the following section will be a description of the
@@ -126,7 +126,7 @@ All risk class subnodes (i.e.\ {\tt InterestRate}, {\tt CreditQualifying}, etc.)
   \item {\tt <ConcentrationThresholds>}
 \end{enumerate}
 
-The general stucture is given by Listing \ref{lst:simmcalibration_general_structure}. Note that
+The general structure is given by Listing \ref{lst:simmcalibration_general_structure}. Note that
 {\tt <HistoricalVolatilityRatio>} only applies to InterestRate, Equity, Commodity and FX, and
 {\tt <CurrencyLists>} only applies to InterestRate and FX.
 
@@ -599,4 +599,3 @@ The above values are found in the following sections of the ISDA SIMM Methodolog
     Each {\tt <Currency>} must have a {\tt bucket} attribute associating it with a currency risk group. \\
     Allowable {\tt bucket} values: \emph{``1''} for ``Category 1 - Significantly material'', \emph{``2''} for ``Category 2 - Frequently traded'', and \emph{``3''} for ``Category 3 - Others''.
 \end{itemize}
-

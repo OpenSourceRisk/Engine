@@ -8,11 +8,11 @@ digital underlying option.
 At expiry a digital FX Barrier option pays either the payoff of a digital Cash-or-Nothing underlying option depending
 upon an FX spot rate reaching a pre-set barrier level.
 \begin{itemize}
-\item Can be of the same four main types as a regular Barrier FX Option: 
-Up-and-out, Down-and-out, Up-and-in, Down-and-in. 
+\item Can be of the same four main types as a regular Barrier FX Option:
+Up-and-out, Down-and-out, Up-and-in, Down-and-in.
 \item A Knock-In or One-Touch option pays the underlying option payoff if the barrier is
-breached, and no payout otherwise. 
-\item A Knock-Out or No-Touch option has no payout if the barrier is breached, 
+breached, and no payout otherwise.
+\item A Knock-Out or No-Touch option has no payout if the barrier is breached,
 and pays the underlying option payoff otherwise.
 \item The buyer of a Digital FX Barrier Option pays a premium to the seller.
 \end{itemize}
@@ -27,7 +27,7 @@ An FX Digital Barrier Option pays a given cash amount in domestic currency at ex
 
 The \lstinline!FxDigitalBarrierOptionData!  node is the trade data container for the \emph{FxDigitalBarrierOption} trade type.   The
 \lstinline!FxDigitalBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
-specific to the FX Digital Barrier Option. 
+specific to the FX Digital Barrier Option.
 
 The structure of an example \lstinline!FxDigitalBarrierOptionData! node for a FX Digital Barrier Option is shown in Listing
 \ref{lst:fxdigitalbarrieroption_data}.
@@ -39,10 +39,10 @@ The structure of an example \lstinline!FxDigitalBarrierOptionData! node for a FX
             <OptionData>
                 <LongShort>Long</LongShort>
                 <OptionType>Call</OptionType>
-                <Style>European</Style>              
+                <Style>European</Style>
                 <ExerciseDates>
                  <ExerciseDate>2021-12-14</ExerciseDate>
-                </ExerciseDates> 
+                </ExerciseDates>
                 ...
             </OptionData>
             <BarrierData>
@@ -56,7 +56,7 @@ The structure of an example \lstinline!FxDigitalBarrierOptionData! node for a FX
             <FXIndex>FX-ECB-EUR-USD</FXIndex>
             <Strike>1.1</Strike>
             <PayoffAmount>100000</PayoffAmount>
-            <PayoffCurrency>USD</PayoffCurrency>            
+            <PayoffCurrency>USD</PayoffCurrency>
             <ForeignCurrency>EUR</ForeignCurrency>
             <DomesticCurrency>USD</DomesticCurrency>
         </FxDigitalBarrierOptionData>
@@ -69,7 +69,7 @@ The meanings and allowable values of the elements in the \lstinline!FxDigitalBar
 
 \begin{itemize}
 
-\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. 
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}.
 The relevant fields in the \lstinline!OptionData! node for an FxDigitalBarrierOption are:
 
 \begin{itemize}
@@ -89,7 +89,7 @@ Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}
 
-\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}. 
+\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
 
 Note that the \emph{FxDigitalBarrierOption} is a single barrier instrument, and can have only one BarrierData node with one barrier level.
 
@@ -109,15 +109,15 @@ Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item FXIndex[Optional]: A reference to an FX Index source to check if the barrier has been breached. Required if StartDate is set to a date prior to today's date, otherwise optional, and can be omitted but not left blank.
 
-Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
+Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.
 \item \lstinline!FXIndexDailyLows! [Optional]: Refers to an FX Index that tracks the daily low quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix \emph{\_LOW} to the FXIndex source (e.g. \emph{FX-SOURCE\_LOW-CCY1-CCY2}). If no fixings are available, the system will fall back to using the fixings from the FXIndex.
 
-Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.  
+Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.
 
 \item \lstinline!FXIndexDailyHighs! [Optional]: Refers to an FX Index that tracks the daily high quotes. This is used to check if the barrier was breached at any point during the day. If not provided, ORE will automatically derive the index name by appending the suffix \emph{\_HIGH} to the FXIndex source (e.g. \emph{FX-SOURCE\_HIGH-CCY1-CCY2}). If no fixings are available, the system will fall back to using the fixings from the FXIndex.
 
-Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}. 
-\item Strike: The FX strike price, expressed as the amount in DomesticCurrency per one unit of ForeignCurrency. 
+Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as described in table \ref{tab:fxindex_data}.
+\item Strike: The FX strike price, expressed as the amount in DomesticCurrency per one unit of ForeignCurrency.
 
 Allowable values:  Any positive real number.
 
@@ -129,11 +129,11 @@ Allowable values:  Any positive real number.
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item ForeignCurrency: The foreign currency of the FX digital barrier option is equivalent to the bought currency.  
+\item ForeignCurrency: The foreign currency of the FX digital barrier option is equivalent to the bought currency.
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item DomesticCurrency: The domestic currency of the FX digital barrier option is equivalent to the sold currency. 
+\item DomesticCurrency: The domestic currency of the FX digital barrier option is equivalent to the sold currency.
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 

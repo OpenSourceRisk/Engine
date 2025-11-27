@@ -3,7 +3,7 @@
 \ifdefined\IncludePayoff{{\bf Payoff}
 
 A worst of basket swap is a swap transaction written on a basket of $n$ underlyings. The
-buyer receives an initial fixed amount from the seller and then pays a floating rate over 
+buyer receives an initial fixed amount from the seller and then pays a floating rate over
 the life of the contract and in turn receives coupons based on an equity notional
 amount, subject to a coupon trigger event.
 
@@ -50,7 +50,7 @@ where
 However, if a knock-out event was triggered for (at least) one of $t_1^d, t_2^d, \ldots
 t_{i-1}^d$, then the Floating and Coupon amounts for $t_i^s, t_{i+1}^s, t_{i+2}^s, \ldots, t_m^s$ are all zero.
 
-For instruments with accruing coupons, instead of a single observation (date) for 
+For instruments with accruing coupons, instead of a single observation (date) for
 a fixed coupon trigger event in a coupon period, the fixed trigger criteria is observed
 on a regular basis, and then the fixed coupon is scaled in proportion to the number of
 days in the period over which the fixed coupon trigger event was observed. For example, if
@@ -358,8 +358,8 @@ Worst Of Basket Swaps can alternatively be represented as {\em scripted trades},
 
 The WorstOfBasketSwap script referenced in the trade above is shown in Listing \ref{lst:worst_of_basket_swap}.
 
-\begin{listing}[hbt] 
-\begin{minted}[fontsize=\tiny]{Basic} 
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\tiny]{Basic}
 REQUIRE SIZE(Underlyings) == SIZE(InitialPrices);
 REQUIRE SIZE(SettlementDates) == SIZE(DeterminationDates);
 REQUIRE SIZE(KnockOutLevels) == SIZE(DeterminationDates) - 1;
@@ -380,7 +380,7 @@ FOR d IN (2, n, 1) DO
   accrualFraction = dcf(FloatingDayCountFraction, DeterminationDates[d-1], DeterminationDates[d]);
   Option = Option - LOGPAY(LongShort * Quantity * alive * fixing * accrualFraction,
                            FixingSchedule[d-1], SettlementDates[d], PayCcy, 1, FloatingLeg);
-  
+
   numOfTriggeredAssets = 0;
   FOR u IN (1, SIZE(Underlyings), 1) DO
     IF Underlyings[u](DeterminationDates[d]) >= CouponTriggerLevels[d-1] * InitialPrices[u] THEN
@@ -406,7 +406,7 @@ FOR d IN (2, n, 1) DO
       IF {u == 1} OR {performance < worstPerformance} THEN
         worstPerformance = performance;
       END;
-    END;       
+    END;
 
     IF worstPerformance < min(Strike, KnockInLevel) THEN
       payoff = worstPerformance - Strike;
@@ -427,11 +427,11 @@ FOR d IN (2, n, 1) DO
     END;
   END;
 END;
-\end{minted} 
-\caption{Payoff script for a Worst Of Basket Swap.} 
+\end{minted}
+\caption{Payoff script for a Worst Of Basket Swap.}
 \label{lst:worst_of_basket_swap}
-\end{listing} 
- 
+\end{listing}
+
 The net cashflows under a (scripted) worst of basket swap from the long perspective are:
 \begin{enumerate}
   \item Receive an initial fixed amount: \lstinline!InitialFixedRate! $*$ \lstinline!Quantity!,

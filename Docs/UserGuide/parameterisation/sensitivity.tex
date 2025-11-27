@@ -9,11 +9,11 @@ ORE currently supports sensitivity analysis with respect to
 \item Yield curves including e.g. equity forecast yield curves (in the zero rate domain)
 \item FX Spots
 \item FX volatilities
-\item Swaption volatilities, ATM matrix or cube 
+\item Swaption volatilities, ATM matrix or cube
 \item Cap/Floor volatility matrices (in the caplet/floorlet domain)
 \item Default probability curves (in the ``zero rate'' domain, expressing survival probabilities $S(t)$ in term of zero rates $z(t)$ via $S(t)=\exp(-z(t)\times t)$ with Actual/365 day counter)
 \item Equity spot prices
-\item Equity volatilities, ATM or including strike dimension 
+\item Equity volatilities, ATM or including strike dimension
 \item Zero inflation curves
 \item Year-on-Year inflation curves
 \item CDS volatilities
@@ -22,7 +22,7 @@ ORE currently supports sensitivity analysis with respect to
 \item Correlation termstructures
 \end{itemize}
 
-The {\tt sensitivity.xml} file specifies how sensitivities are computed for each market component. 
+The {\tt sensitivity.xml} file specifies how sensitivities are computed for each market component.
 The general structure is shown in listing \ref{lst:sensitivity_config}, for a more comprehensive case see {\tt Examples/Example\_15}. A subset of the following parameters is used in each market component to specify the sensitivity analysis:
 
 \begin{itemize}
@@ -248,7 +248,7 @@ selected risk factor types by adding an optional block to the sensitivity config
   </ParConversionExcludes>
 
   ...
-  
+
 </SensitivityAnalysis>
 \end{minted}
 \caption{Par conversion excludes}
@@ -263,7 +263,7 @@ selected indexes by adding an optional block to the sensitivity configuration as
 <SensitivityAnalysis>
 
   <ParSensiRemoveFixing>.*</ParSensiRemoveFixing>
-  
+
 </SensitivityAnalysis>
 \end{minted}
 \caption{Par Sensitivity excludes fixings}
@@ -283,7 +283,7 @@ By default, par sensitivity analysis sets small diagonal elements in the par con
 <SensitivityAnalysis>
 
   <ParConversionMatrixRegularisation>Warning</ParConversionMatrixRegularisation>
-  
+
 </SensitivityAnalysis>
 \end{minted}
 \caption{Par conversion matrix regularisation}
@@ -308,7 +308,7 @@ Using DiscountCurves as an example, the full sensitivity specification including
 	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
 	</Conventions>
       </ParConversion>
-    </DiscountCurve>   
+    </DiscountCurve>
 \end{minted}
 \caption{Par sensitivity configuration}
 \label{lst:par_sensitivity_config}
@@ -343,7 +343,7 @@ ParConversion Fields:
 \begin{itemize}
 \item \textbf{Instruments} a comma separated list of par instrument types, see below for the possible values.
 \item \textbf{DiscountCurve} \textit{optional}: discount curve used for pricing the par instrument.
-\item \textbf{RateComputationPeriod} \textit{optional}: required for OIS CapFloors, sepcify the period of the optionlet. 
+\item \textbf{RateComputationPeriod} \textit{optional}: required for OIS CapFloors, sepcify the period of the optionlet.
 \end{itemize}
 
 
@@ -353,15 +353,14 @@ Note
 \item The length of list of (par) instruments needs to match the length of the list of shift tenors
 \item Permissible codes for the assumed par instruments:
 	\begin{itemize}
-	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves 
+	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves
 	\item DEP, FRA, IRS, OIS, TBS in the case of IndexCurves
-	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves 
+	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves
 	\item ZIS, YYS for YYInflationIndexCurves, interpreted as Year-on-Year Inflation Swaps linked to Zero Inflation resp. YoY Inflation curves
 	\item ZIS, YYS for YYCapFloorVolatilities, interpreted as Year-on-Year Inflation Cap Floor linked to Zero Inflation resp. YoY Inflation curves
 	\item Any code for CreditCurves, interpreted as CDS
 	\item Any code for ZeroInflationIndexCurves, interpreted as CPI Swaps linked to Zero Inflation curves
 	\item Any code for CapFloorVolatilities, interpreted as flat Cap/Floor
 	\end{itemize}
-\item One convention needs to be referenced for each of the instrument codes	
+\item One convention needs to be referenced for each of the instrument codes
 \end{itemize}
-

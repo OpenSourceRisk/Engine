@@ -10,7 +10,7 @@ underlying security over the term of the contract.
 
 A potential feature of an accumulator is a knock-out, i.e. the
 contract terminates early if the underlying price exceeds some
-threshold above strike. 
+threshold above strike.
 
 Another feature is leverage, i.e. the investor buys a certain number
 of shares per day when the security trades below $K$, and an enhanced
@@ -19,11 +19,11 @@ of shares per day when the security trades below $K$, and an enhanced
 The accumulator investor speculates that the security trades between
 strike price $K$ and the knock-out level thoughout the life of
 the contract.
- 
+
 A decumulator is the reverse of an accumulator -- in this case, the
 investor is required to sell shares periodically at a pre-determined
 fixed price. A potential knock-out is set below the strike price (and
-below the spot price at inception). 
+below the spot price at inception).
 
 Accumulators/decumulators are also traded on FX underlyings,
 Commodity underlyings are possible as well.
@@ -189,8 +189,8 @@ $$
 Payout = RangeBound(Leverage) \cdot FixingAmount \cdot (fix - Strike),
 $$
 
-i.e.\ for an Accumulator the holder pays 
- [\lstinline!Strike! * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)] expressed in \lstinline!Currency! and receives/buys 
+i.e.\ for an Accumulator the holder pays
+ [\lstinline!Strike! * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)] expressed in \lstinline!Currency! and receives/buys
  [fix * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)]'s worth of equity/CCY1/commodity in \lstinline!Currency! on each  observation date.
 
 If \lstinline!NakedOption! is \emph{true}, the payout formula for an Accumulator (long perspective) is:
@@ -212,8 +212,8 @@ $$
 Payout = RangeBound(Leverage) \cdot FixingAmount \cdot (Strike - fix),
 $$
 
-For a Decumulator the holder pays/sells 
-[fix * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)]'s worth of equity/CCY1/commodity in \lstinline!Currency!, and receives 
+For a Decumulator the holder pays/sells
+[fix * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)]'s worth of equity/CCY1/commodity in \lstinline!Currency!, and receives
 [\lstinline!Strike! * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)]  expressed in \lstinline!Currency!  on each  observation date.
 
 If \lstinline!NakedOption! is \emph{true}, the payout formula for a Decumulator (long perspective) is:
@@ -231,7 +231,7 @@ The meanings and allowable values of the elements in the data node follow below.
 
 \begin{itemize}
 
-\item StrikeData [Optional]: A node containing the global strike in \lstinline!Value! and the currency in which both the underlying and the strike are quoted in \lstinline!Currency!. Only supported for EquityAccumulators. 
+\item StrikeData [Optional]: A node containing the global strike in \lstinline!Value! and the currency in which both the underlying and the strike are quoted in \lstinline!Currency!. Only supported for EquityAccumulators.
 
 Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. The strike may be any positive real number. The currency provided in this node may be quoted as corresponding minor currency to the underlying major currency. If omitted, local strikes should be used in each \lstinline!RangeBound! node.
 
@@ -241,14 +241,14 @@ Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 
 \item FixingAmount: The unleveraged notional amount accumulated at each fixing date.
 
-For FxAccumulators: The FixingAmount is expressed in the foreign currency (\lstinline!CCY1!). 
+For FxAccumulators: The FixingAmount is expressed in the foreign currency (\lstinline!CCY1!).
 
 For EquityAccumulators: The FixingAmount is expressed as number of shares/units of the underlying equity or equity index.
 
 For CommodityAccumulators: The FixingAmount is expressed as number of units of the underlying commodity.
 
 %    Allowable values: Any positive real number. Note that the FixingAmount must be positive both for accumulators and decumulators, and for Long and Short positions.
-    Allowable values: Any real number. Note that a negative amount causes an Accumulator to become a Decumulator, and vice-versa. 
+    Allowable values: Any real number. Note that a negative amount causes an Accumulator to become a Decumulator, and vice-versa.
 
 \item DailyFixingAmount [Optional]: For accumulator type ``01'' only: If \emph{true}, the fixing amount for a period is calculated as the given FixingAmount times the number of calendar days in the period. The periods are given by [StartDate, ObservationDate(1)], [ObservationDate(1), ObservationDate(2)], ... etc. i.e. if \emph{true}, a StartDate is required to determine the calendar days in the first period. If \emph{false}, the fixing amount is used directly without any weighting.
 
@@ -256,7 +256,7 @@ For CommodityAccumulators: The FixingAmount is expressed as number of units of t
 
 \item Strike [Optional]: Global strike associated to the ranges.  Is overwritten by local strikes defined in \lstinline!RangeBounds! or modified by range strike adjustments. Note that each RangeBound needs a strike, either the global strike defined here, or a local one in the \lstinline!RangeBounds! nodes which then overwrites the global one.
 
-For FxAccumulators: The fx strike rate (global and local) is defined as amount in domestic currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). 
+For FxAccumulators: The fx strike rate (global and local) is defined as amount in domestic currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!).
 
 For Equity- and CommodityAccumulators: The strike value (global and local) for one unit/share/contract of the underlying equity or commodity, expressed in the currency the equity or commodity is quoted or in any other pay currency. In case of a composite option style a FxIndex is required (see below). For EquityAccumulators, the \lstinline!StrikeData! node (see above) should be used.
 
@@ -265,10 +265,10 @@ The logic for global and local strikes is as follows:
 - if a local Strike for an interval is given, this local Strike will be used for the interval (a global Strike will be ignored if given)\\
 - otherwise if a global Strike and a local StrikeAdjustment are given, the strike used for the interval will be global Strike + local StrikeAdjustment\\
 - otherwise if a global Strike, but no local StrikeAdjustment is given, the strike used for the interval will be the global Strike\\
-- if no global strike and no local strike is given for an interval, an error is thrown, since the strike information is not sufficient  
+- if no global strike and no local strike is given for an interval, an error is thrown, since the strike information is not sufficient
 
     Allowable values: Any positive real number.
-    
+
 \item Underlying: A node with the underlying of the Accumulator instrument.
 
 For FxAccumulators: \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign currency, \lstinline!CCY2! is the domestic currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
@@ -278,18 +278,18 @@ For EquityAccumulators: \lstinline!Type! is set to \emph{Equity} and \lstinline!
 For CommodityAccumulators: \lstinline!Type! is set to \emph{Commodity} and \lstinline!Name! is an identifier of the commodity as outlined in \ref{ss:underlying} and in Table \ref{tab:commodity_data}.
 
     Allowable values: Any FX, Equity or Commodity underlying as specified in \ref{ss:underlying}
-    
-\item OptionData: See \ref{ss:option_data}. A node that describes whether the instrument is \emph{Long} or \emph{Short}, whether the payoff type is \emph{Accumulator} or \emph{Decumulator},  
+
+\item OptionData: See \ref{ss:option_data}. A node that describes whether the instrument is \emph{Long} or \emph{Short}, whether the payoff type is \emph{Accumulator} or \emph{Decumulator},
 
 The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
 
 \begin{itemize}
-\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}. Note that a \emph{Long} \emph{Accumulator} is equivalent to a \emph{Short} \emph{Decumulator} except when there are guaranteed fixings, i.e.\ when a Barrier node of Type \emph{FixingFloor} is present. The \emph{FixingFloor} causes asymmetry in the payoff.  
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}. Note that a \emph{Long} \emph{Accumulator} is equivalent to a \emph{Short} \emph{Decumulator} except when there are guaranteed fixings, i.e.\ when a Barrier node of Type \emph{FixingFloor} is present. The \emph{FixingFloor} causes asymmetry in the payoff.
 
 \lstinline!PayoffType! The allowable values are \emph{Accumulator} or \emph{Decumulator}. For a long accumulator the strike is paid and the underlying received, for a long decumulator it is the other way around.
 
 \end{itemize}
-    
+
 \item StartDate [Mandatory for American Style Barrier or if a daily fixing amount is used, Optional for European Style or no Barrier and no daily fixing amount is used]:  Used to set the start of the knock out monitoring -  American knock out events are monitored from this
   date on. This field is only relevant for accumulators of type American Knock-Out, and not used otherwise. Can be
   omitted for European knock outs, or if there is no barrier. \\
@@ -321,8 +321,8 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
     \item the observation dates (type 01 accumulator, i.e.\ no PricingDates are given), if barrier style is European
     \item from the start date to the first observation date and between the observation dates on a continuous basis
       (type 01 accumulator), if barrier style is American.
-    \item StrictComparison [Optional]: \emph{0}, \emph{1}. Defaults to \emph{0}. Determines how the barrier is checked as per: 
-    
+    \item StrictComparison [Optional]: \emph{0}, \emph{1}. Defaults to \emph{0}. Determines how the barrier is checked as per:
+
      \emph{0}: the barrier checks use $<=$, $>=$.
 
      \emph{1}: the barrier checks use strict comparison $<$ and $>$.
@@ -342,10 +342,10 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
     The barrier \lstinline!Level! for \lstinline!Type!  \emph{FixingFloor}  is a non-negative integer.
 
     Allowable values: For each \lstinline!BarrierData! node, see \ref{ss:barrier_data}. For Accumulators/Decumulators, the following values for \lstinline!Type! are relevant: \emph{UpAndOut}, \emph{DownAndOut} and \emph{FixingFloor}. The barrier \lstinline!Style! can be \emph{European} (monitored on observation dates) or \emph{American} (continuously monitored).
-\item KnockOutSettlementAtPeriodEnd [Optional]: Only relevant for \emph{type 02 accumulator}. Controls the settlement behavior in case of an knock out events. 
-    If \emph{true} the settlement of a knock out event takes place at the end of the observation period, otherwise on the knock out event date plus the 
+\item KnockOutSettlementAtPeriodEnd [Optional]: Only relevant for \emph{type 02 accumulator}. Controls the settlement behavior in case of an knock out events.
+    If \emph{true} the settlement of a knock out event takes place at the end of the observation period, otherwise on the knock out event date plus the
     defined settlement delay. Defaults to \emph{false}.
-\item KnockOutFixingAtKOSettlement [Optional]: Only relevant for \emph{type 02 accumulator}. Controls the settlement behavior in case of an knock out events. 
+\item KnockOutFixingAtKOSettlement [Optional]: Only relevant for \emph{type 02 accumulator}. Controls the settlement behavior in case of an knock out events.
     If \emph{true} the fixing at knockout settlement date is used to compute the knockout flow, otherwise the fixing at knockout date. Defaults to \emph{false}.
 \item FxIndex [Optional]: Required for composite accumulators of type 2, where the strike, knockout barrier and pay currency are different from the underlying quote currency. Intended for Commodity and Equity Accumulators. A node with the underlying of the FX conversion from quote currency to pay currency.
 \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign (quote) currency, \lstinline!CCY2! is the domestic (pay) currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
