@@ -279,6 +279,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 // Build the default curve of the requested type
                 switch (config.second.type()) {
                 case DefaultCurveConfig::Config::Type::SpreadCDS:
+                case DefaultCurveConfig::Config::Type::ConvSpreadCDS:
                 case DefaultCurveConfig::Config::Type::Price:
                     buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
                                   implyDefaultFromMarket);
@@ -309,7 +310,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                            << " was not recognised");
                 }
                 built = true;
-
+                break;
                 if (buildCalibrationInfo) {
                     auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
 
