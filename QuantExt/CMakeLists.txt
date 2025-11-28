@@ -7,16 +7,6 @@ enable_testing()
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-if (ORE_BUILD_TESTS)
-    SET(COMPONENTS_CONDITIONAL "unit_test_framework")
-else()
-    SET(COMPONENTS_CONDITIONAL "")
-endif()
-
-
-find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log_setup log filesystem OPTIONAL_COMPONENTS system chrono)
-
-
 if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
     find_library(RT_LIBRARY rt REQUIRED)
 endif()
@@ -52,7 +42,6 @@ if (ORE_PYTHON_INTEGRATION)
     include_directories(${Python_INCLUDE_DIRS})
 endif()
 
-include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${ORETEST_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

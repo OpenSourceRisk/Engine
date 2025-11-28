@@ -239,8 +239,13 @@ endif()
 
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 
+# Avoid using Boost auto-linking
+add_compile_definitions(BOOST_ALL_NO_LIB)
+
+# Find Boost components.
+find_package(Boost REQUIRED COMPONENTS serialization timer log)
+
 if (MSVC)
-    find_package(Boost)
     if(Boost_VERSION_STRING LESS 1.84.0)
         add_compile_definitions(_WINVER=0x0601)
         add_compile_definitions(_WIN32_WINNT=0x0601)
@@ -309,6 +314,7 @@ macro(set_ql_library_name)
     set(QL_LIB_NAME ql_library)
   else()
     get_library_name("QuantLib" QL_LIB_NAME)
+    set(QL_LIB_NAME "${QL_LIB_NAME}$<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>")
   endif()
 endmacro()
 
