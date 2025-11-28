@@ -231,7 +231,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                            map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
                            const bool buildCalibrationInfo) {
 
-    const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
+    const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs =
+        curveConfigs.defaultCurveConfig(spec.curveConfigID());
     bool built = false;
     std::string errors;
     std::string typeStr;
@@ -303,99 +304,102 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 }
                 built = true;
                 break;
+                /*            } catch (exception& e) {
+                                std::ostringstream message;
+                                message << "build attempt failed for " << configs->curveID() << " using config with
+                   priority "
+                                        << config.first << ": " << e.what()
+                                        << " and implyDefaultFromMarket= " << to_string(implyDefaultFromMarket);
+                                DLOG(message.str());
+                                if (!errors.empty())
+                                    errors += ", ";
+                                errors += message.str();
+                            }*/
+
+                // Build the default curve of the requested type
+                switch (config.second.type()) {
+                case DefaultCurveConfig::Config::Type::SpreadCDS:
+                case DefaultCurveConfig::Config::Type::Price:
+                    buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves, implyDefaultFromMarket);
+                    typeStr = "SpreadCDS";
+                    break;
+                case DefaultCurveConfig::Config::Type::HazardRate:
+                    buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
+                    typeStr = "HazardRate";
+                    break;
+                case DefaultCurveConfig::Config::Type::Benchmark:
+                    buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
+                    typeStr = "Benchmark";
+                    break;
+                case DefaultCurveConfig::Config::Type::MultiSection:
+                    buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                    typeStr = "MultiSection";
+                    break;
+                case DefaultCurveConfig::Config::Type::TransitionMatrix:
+                    buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                    typeStr = "TransitionMatrix";
+                    break;
+                case DefaultCurveConfig::Config::Type::Null:
+                    buildNullCurve(configs->curveID(), config.second, asof, spec);
+                    typeStr = "Null";
+                    break;
+                default:
+                    QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
+                                                           << " was not recognised");
+                }
+                built = true;
+
+                if (buildCalibrationInfo) {
+                    auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
+
+                    // Get Report Config details first
+                    try {
+                        ReportConfig rc =
+                            effectiveReportConfig(curveConfigs.reportConfigDefaultCurves(), configs->reportConfig());
+                        std::vector<QuantLib::Period> pillars = *rc.expiries();
+                        if (!pillars.empty()) {
+                            calInfo->pillarDates.clear();
+                            for (auto const& p : pillars)
+                                calInfo->pillarDates.push_back(asof + p);
+                        }
+                    } catch (...) {
+                        DLOG(
+                            "Report configuration for default curves not set - using predefined/default pillar dates.");
+                    }
+
+                    // Build calibration structure
+                    calInfo->typeStr = typeStr;
+                    calInfo->dayCounter = config.second.dayCounter().name();
+                    calInfo->calendar = curve_->refData().calendar.name();
+                    calInfo->runningSpread = config.second.runningSpread();
+
+                    if (calInfo->pillarDates.empty()) {
+                        for (auto const& p : DefaultCurveCalibrationInfo::defaultPeriods)
+                            calInfo->pillarDates.push_back(asof + p);
+                    }
+                    for (auto const& d : calInfo->pillarDates) {
+                        calInfo->defaultProb.push_back(curve_->curve()->defaultProbability(d, true));
+                        calInfo->survivalProb.push_back(curve_->curve()->survivalProbability(d, true));
+                        calInfo->hazardRates.push_back(curve_->curve()->hazardRate(d, true));
+                        calInfo->defaultDensities.push_back(curve_->curve()->defaultDensity(d, true));
+                    }
+
+                    calibrationInfo_ = calInfo;
+                }
+
+                break;
             } catch (exception& e) {
                 std::ostringstream message;
                 message << "build attempt failed for " << configs->curveID() << " using config with priority "
-                        << config.first << ": " << e.what()
-                        << " and implyDefaultFromMarket= " << to_string(implyDefaultFromMarket);
+                        << config.first << ": " << e.what();
                 DLOG(message.str());
                 if (!errors.empty())
                     errors += ", ";
                 errors += message.str();
             }
-
-            // Build the default curve of the requested type
-            switch (config.second.type()) {
-            case DefaultCurveConfig::Config::Type::SpreadCDS:
-            case DefaultCurveConfig::Config::Type::Price:
-                buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
-                typeStr = "SpreadCDS";
+            if (built)
                 break;
-            case DefaultCurveConfig::Config::Type::HazardRate:
-                buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
-                typeStr = "HazardRate";
-                break;
-            case DefaultCurveConfig::Config::Type::Benchmark:
-                buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
-                typeStr = "Benchmark";
-                break;
-            case DefaultCurveConfig::Config::Type::MultiSection:
-                buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                typeStr = "MultiSection";
-                break;
-            case DefaultCurveConfig::Config::Type::TransitionMatrix:
-                buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                typeStr = "TransitionMatrix";
-                break;
-            case DefaultCurveConfig::Config::Type::Null:
-                buildNullCurve(configs->curveID(), config.second, asof, spec);
-                typeStr = "Null";
-                break;
-            default:
-                QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
-                                                       << " was not recognised");
-            }
-            built = true;
-
-            if (buildCalibrationInfo) {
-                auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
-
-                // Get Report Config details first
-                try {
-                    ReportConfig rc =
-                        effectiveReportConfig(curveConfigs.reportConfigDefaultCurves(), configs->reportConfig());
-                    std::vector<QuantLib::Period> pillars = *rc.expiries();
-                    if (!pillars.empty()) {
-                        calInfo->pillarDates.clear();
-                        for (auto const& p : pillars)
-                            calInfo->pillarDates.push_back(asof + p);
-                    }
-                } catch (...) {
-                    DLOG("Report configuration for default curves not set - using predefined/default pillar dates.");
-                }
-
-                // Build calibration structure
-                calInfo->typeStr = typeStr;
-                calInfo->dayCounter = config.second.dayCounter().name();
-                calInfo->calendar = curve_->refData().calendar.name();
-                calInfo->runningSpread = config.second.runningSpread();
-
-                if (calInfo->pillarDates.empty()) {
-                    for (auto const& p : DefaultCurveCalibrationInfo::defaultPeriods)
-                        calInfo->pillarDates.push_back(asof + p);
-                }
-                for (auto const& d : calInfo->pillarDates) {
-                    calInfo->defaultProb.push_back(curve_->curve()->defaultProbability(d, true));
-                    calInfo->survivalProb.push_back(curve_->curve()->survivalProbability(d, true));
-                    calInfo->hazardRates.push_back(curve_->curve()->hazardRate(d, true));
-                    calInfo->defaultDensities.push_back(curve_->curve()->defaultDensity(d, true));
-                }
-
-                calibrationInfo_ = calInfo;
-            }
-
-            break;
-        } catch (exception& e) {
-            std::ostringstream message;
-            message << "build attempt failed for " << configs->curveID() << " using config with priority "
-                    << config.first << ": " << e.what();
-            DLOG(message.str());
-            if (!errors.empty())
-                errors += ", ";
-            errors += message.str();
         }
-        if (built)
-            break;
     }
     QL_REQUIRE(built, "default curve building failed for " << spec.curveConfigID() << ": " << errors);
 }
