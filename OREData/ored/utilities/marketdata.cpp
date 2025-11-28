@@ -31,6 +31,7 @@
 #include <qle/indexes/fxindex.hpp>
 
 #include <ql/time/imm.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -72,6 +73,10 @@ Handle<YieldTermStructure> xccyYieldCurve(const QuantLib::ext::shared_ptr<Market
 
 Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& name,
                                              const std::string& configuration) {
+    if (name == "NULLCURVE") {
+        return Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<QuantLib::FlatForward>(market->asofDate(), 0.0, Actual365Fixed()));
+    }
     try {
         return market->iborIndex(name, configuration)->forwardingTermStructure();
     } catch (...) {
@@ -83,7 +88,6 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
     QL_FAIL("Could not find index or yield curve with name '" << name << "' under configuration '" << configuration
                                                               << "' or default configuration.");
 }
-
 
 std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate){
     std::ostringstream oss;
