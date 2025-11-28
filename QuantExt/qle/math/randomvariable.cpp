@@ -738,8 +738,6 @@ RandomVariable round(RandomVariable x, const RandomVariable& y) {
     x.checkTimeConsistencyAndUpdate(y.time());
     if (!y.deterministic_)
         x.expand();
-    else if (QuantLib::close_enough(y.constantData_, 1.0))
-        return x;
     if (x.deterministic()){
         double factor = std::pow(10, y.constantData_);
         x.constantData_ = std::round(x.constantData_*factor)/factor;
