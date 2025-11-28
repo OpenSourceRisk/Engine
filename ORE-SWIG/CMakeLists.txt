@@ -31,17 +31,12 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-# To build the module, we moreover need Boost, Swig, Python
-set(BOOST_COMPONENT_LIST serialization date_time filesystem timer thread log regex)
-
-
-if(ORE_USE_ZLIB)
-    list(APPEND BOOST_COMPONENT_LIST iostreams)
-    if(MSVC)
-        list(APPEND BOOST_COMPONENT_LIST zlib)
-    endif()
-endif()
-find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST} OPTIONAL_COMPONENTS system)
+# FD-BST: if(ORE_USE_ZLIB)
+# FD-BST:     list(APPEND BOOST_COMPONENT_LIST iostreams)
+# FD-BST:     if(MSVC)
+# FD-BST:         list(APPEND BOOST_COMPONENT_LIST zlib)
+# FD-BST:     endif()
+# FD-BST: endif()
 find_package(SWIG REQUIRED)
 find_package(Python REQUIRED COMPONENTS Development)
 if(ORE_USE_ZLIB)
@@ -64,7 +59,7 @@ include_directories(${QUANTEXT_SOURCE_DIR})
 include_directories(${OREDATA_SOURCE_DIR})
 include_directories(${OREANALYTICS_SOURCE_DIR})
 
-include_directories(${Boost_INCLUDE_DIRS})
+# FD-BST: include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
 # Add to the list of link directories
@@ -107,7 +102,7 @@ swig_add_library(OREP TYPE MODULE LANGUAGE python SOURCES ${PROJECT_SOURCE_DIR}/
 set(CMAKE_DEBUG_POSTFIX ${TEMP_CMAKE_DEBUG_POSTFIX})
 
 # Add all libraries to link with
-target_link_libraries(OREP ${Boost_LIBRARIES})
+target_link_libraries(OREP Boost::boost Boost::filesystem Boost::log Boost::serialization Boost::timer)
 target_link_libraries(OREP ${QL_LIB_NAME})
 target_link_libraries(OREP ${QLE_LIB_NAME})
 target_link_libraries(OREP ${ORED_LIB_NAME})
