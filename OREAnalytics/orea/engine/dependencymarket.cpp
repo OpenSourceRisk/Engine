@@ -36,6 +36,7 @@
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
 
 #include <ql/currencies/europe.hpp>
 #include <ql/indexes/ibor/eonia.hpp>
@@ -408,17 +409,29 @@ Handle<OptionletVolatilityStructure> DependencyMarket::capFloorVol(const string&
     addMarketObject(MarketObject::CapFloorVol, name, config);
     // ensure that the dependent ibor indiex is captured
     iborIndex(capFloorVolIndexBase(name, config).first, config);
-    return flatRateCvs();
+    Handle<OptionletVolatilityStructure> handleflatRateCvs = flatRateCvs();
+    if (curveConfigs_ && curveConfigs_->hasCapFloorVolCurveConfig(name)) {
+        auto cc = curveConfigs_->capFloorVolCurveConfig(name);
+        if (!cc->proxyTargetIndex().empty()){
+            QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility> capletVol = QuantLib::ext::make_shared<QuantExt::ProxyOptionletVolatility>(handleflatRateCvs, parseIborIndex(cc->proxySourceIndex()), 
+                                                                                  parseIborIndex(cc->proxyTargetIndex()), cc->proxySourceRateComputationPeriod(), 
+                                                                                  cc->proxyTargetRateComputationPeriod(), cc->proxyScalingFactor());
+            return Handle<OptionletVolatilityStructure>(capletVol);
+        }
+    }
+    return handleflatRateCvs;
 }
 
 std::pair<string, QuantLib::Period> DependencyMarket::capFloorVolIndexBase(const string& name,
                                                                            const string& config) const {
     if (curveConfigs_ && curveConfigs_->hasCapFloorVolCurveConfig(name)) {
         auto cc = curveConfigs_->capFloorVolCurveConfig(name);
-        if (!cc->proxyTargetIndex().empty())
+        if (!cc->proxyTargetIndex().empty()){
             return std::make_pair(cc->proxyTargetIndex(), cc->proxyTargetRateComputationPeriod());
-        else
+        }
+        else{
             return std::make_pair(cc->index(), cc->rateComputationPeriod());
+        }  
     }
     QuantLib::ext::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(name, index)) {
