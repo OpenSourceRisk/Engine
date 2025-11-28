@@ -4141,6 +4141,7 @@
       <xs:element type="stFreeStyleNumberVector" name="KnockInPrices"/>
       <xs:element type="stFreeStyleNumber" name="BonusCoupon"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationSchedule"/>
       <xs:element type="stFreeStyleEvent" name="ObservationDate"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
