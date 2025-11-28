@@ -243,7 +243,11 @@ set(Boost_NO_WARN_NEW_VERSIONS ON)
 add_compile_definitions(BOOST_ALL_NO_LIB)
 
 # Find Boost components.
-find_package(Boost REQUIRED COMPONENTS serialization timer log)
+set(BOOST_COMPONENT_LIST filesystem serialization timer log)
+if(ORE_BUILD_TESTS)
+    list(APPEND BOOST_COMPONENT_LIST unit_test_framework)
+endif()
+find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
 
 if (MSVC)
     if(Boost_VERSION_STRING LESS 1.84.0)

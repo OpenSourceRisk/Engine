@@ -8,16 +8,6 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-if (ORE_BUILD_TESTS)
-    SET(COMPONENTS_CONDITIONAL "unit_test_framework")
-else()
-    SET(COMPONENTS_CONDITIONAL "")
-endif()
-
-find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log_setup log filesystem OPTIONAL_COMPONENTS system chrono)
-
-
-include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${QUANTEXT_SOURCE_DIR})
 include_directories(${ORETEST_SOURCE_DIR})
