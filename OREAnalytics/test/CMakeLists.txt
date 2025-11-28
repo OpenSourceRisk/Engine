@@ -29,11 +29,10 @@ testportfolio.cpp
 testsuite.cpp)
 
 add_executable(orea-test-suite ${OREAnalytics-Test_SRC})
-target_link_libraries(orea-test-suite ${QL_LIB_NAME})
-target_link_libraries(orea-test-suite ${QLE_LIB_NAME})
-target_link_libraries(orea-test-suite ${ORED_LIB_NAME})
-target_link_libraries(orea-test-suite ${OREA_LIB_NAME})
-target_link_libraries(orea-test-suite ${Boost_LIBRARIES} ${RT_LIBRARY})
+target_link_libraries(orea-test-suite ${QL_LIB_NAME} ${QLE_LIB_NAME} ${ORED_LIB_NAME} ${OREA_LIB_NAME})
+if(DEFINED RT_LIBRARY AND NOT "${RT_LIBRARY}" MATCHES ".*NOTFOUND$")
+    target_link_libraries(orea-test-suite ${RT_LIBRARY})
+endif()
 
 add_test(NAME orea-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} COMMAND orea-test-suite -- --base_data_path=.)
 
