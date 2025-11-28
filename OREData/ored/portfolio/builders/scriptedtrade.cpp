@@ -590,20 +590,20 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
             parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers()), &parseReal);
     } else if (modelParam_ == "Heston") {
         calibrationMoneyness_ =
-            parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers()), &parseReal);
+	  parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false, "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"), &parseReal);
         calibrationExpiries_ =
-            parseListOfValues<Period>(engineParameter("CalibrationExpiries", getModelEngineQualifiers()), &parsePeriod);
+	  parseListOfValues<Period>(engineParameter("CalibrationExpiries", getModelEngineQualifiers(),false,"3M,6M"), &parsePeriod);
         calibrationVarianceTerms_ =
-            parseListOfValues<Period>(engineParameter("CalibrationVarianceTerms", getModelEngineQualifiers()), &parsePeriod);
+	  parseListOfValues<Period>(engineParameter("CalibrationVarianceTerms", getModelEngineQualifiers(), false, "1M,2M,3M,6M,9M,1Y,15M,18M,21M,2Y,5Y,7Y,10Y"), &parsePeriod);
         hestonInitialValues_ =
-            parseListOfValues<Real>(engineParameter("HestonInitialValues", getModelEngineQualifiers()), &parseReal);
+	  parseListOfValues<Real>(engineParameter("HestonInitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"), &parseReal);
         hestonFixedValues_ =
-            parseListOfValues<bool>(engineParameter("HestonFixedValues", getModelEngineQualifiers()), &parseBool);
-        hestonRelaxedFellerConstraint_ = parseReal(engineParameter("HestonRelaxedFellerConstraint", getModelEngineQualifiers()));
-        hestonCalibrationRestarts_ = parseInteger(engineParameter("HestonCalibrationRestarts", getModelEngineQualifiers()));
-        hestonTolerance_ = parseReal(engineParameter("HestonTolerance", getModelEngineQualifiers()));
+	  parseListOfValues<bool>(engineParameter("HestonFixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
+        hestonRelaxedFellerConstraint_ = parseReal(engineParameter("HestonRelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
+        hestonCalibrationRestarts_ = parseInteger(engineParameter("HestonCalibrationRestarts", getModelEngineQualifiers(), false, "0"));
+        hestonTolerance_ = parseReal(engineParameter("HestonTolerance", getModelEngineQualifiers(), false, "0.001"));
         hestonProcessDiscretization_ =
-	  parseHestonProcessDiscretization(engineParameter("HestonProcessDiscretization", getModelEngineQualifiers()));
+	  parseHestonProcessDiscretization(engineParameter("HestonProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
 	addPathsToAdditionalResults_ = parseBool(engineParameter("AddPathsToAdditionalResults", getModelEngineQualifiers(), false, "false"));
     }
 

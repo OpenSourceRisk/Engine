@@ -74,6 +74,7 @@ void Heston::generatePaths() const {
         DLOG("Heston::generatePaths() called for " << indices_.size() << " indices:");
         for (auto i : indices_) {
             DLOG(i);
+	    QL_REQUIRE(!i.isFx(), "Heston does not support FullDynamicFX yet");
         }
     }
 
@@ -127,10 +128,6 @@ void Heston::generatePaths() const {
     Matrix sqrtCorr = pseudoSqrt(correlation, params_.salvagingAlgorithm);
 
     Matrix sqrtCorrSquared = sqrtCorr * transpose(sqrtCorr);
-    // std::cout << "C: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << C << std::endl;
-    // std::cout << "Correlation: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << correlation << std::endl;
-    // std::cout << "sqrtCorr: " << std::endl << std::showpos << std::fixed << std::setprecision(2) << sqrtCorr << std::endl;
-    // std::cout << "sqrtCorrSquared : " << std::endl << std::showpos << std::fixed << std::setprecision(2) << sqrtCorrSquared << std::endl;
     for (Size i = 0; i < 2 * n; ++i) {
         for (Size j = 0; j < 2 * n; ++j) {
             if (fabs(correlation[i][j] - correlation[j][i]) > 1e-9) {
@@ -145,7 +142,9 @@ void Heston::generatePaths() const {
         }
     }
 
-    // precompute index for drift adjustment for eq / com indices that are not in base ccy
+    // Precompute index for drift adjustment for eq / com indices that are not in base ccy
+    // FIXME: The Heston drift adjustment(s) need to be validated. For now we require that
+    // the pricing engine's FullDynamicFx flag is set to false, so that no adjustment is needed.
     std::vector<Size> eqComIdx(indices_.size());
     for (Size j = 0; j < indices_.size(); ++j) {
         Size idx = Null<Size>();
@@ -307,7 +306,6 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
         Qinv[j][1][0] = -r / std::sqrt(1.0 - r * r);
         Qinv[j][1][1] = 1.0 / std::sqrt(1.0 - r * r);
 
-	
         // // double check with numerical inversion
         // Matrix Qi = inverse(Q);
 
@@ -391,11 +389,12 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 		varianceState[j][i] = state[j][1];
 	    }
 
-	    // FIXME ?
+	    // FIXME: Validate Heston drift adjustment(s)
 	    // Loop over all indices again and add drift for eq / com indices that are not in base ccy
             for (Size j = 0; j < indices_.size(); ++j) {
 		Size j0 = eqComIdx[j];
                 if (j0 != Null<Size>()) {
+		    QL_FAIL("Heston drift adjustments to be validated");
                     Real volIdx = std::sqrt(state[j0][1]);
                     Real volj = std::sqrt(state[j][1]);
                     Real drift = - correlation[j0][j] * volIdx * volj * dt;

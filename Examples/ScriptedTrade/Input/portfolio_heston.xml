@@ -290,11 +290,13 @@
           <Values>
             <Value>EQ-RIC:.STOXX50E</Value>
             <Value>EQ-RIC:.GDAXI</Value>
+            <Value>EQ-RIC:.SPX</Value>
           </Values>
 	</Index>
 	<Number>
           <Name>Weights</Name>
           <Values>
+            <Value>1.0</Value>
             <Value>0.25</Value>
             <Value>1.0</Value>
           </Values>
