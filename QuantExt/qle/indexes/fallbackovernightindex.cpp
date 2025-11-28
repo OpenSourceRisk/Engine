@@ -32,6 +32,8 @@ FallbackOvernightIndex::FallbackOvernightIndex(const QuantLib::ext::shared_ptr<O
                      originalIndex->fixingCalendar(), originalIndex->dayCounter(), Handle<YieldTermStructure>()) {
     iborFallbackIndex_ = std::make_unique<FallbackIborIndex>(originalIndex, rfrIndex, spread, switchDate, useRfrCurve);
     termStructure_ = iborFallbackIndex_->forwardingTermStructure();
+    registerWith(originalIndex);
+    registerWith(rfrIndex);
 }
 
 FallbackOvernightIndex::FallbackOvernightIndex(const QuantLib::ext::shared_ptr<OvernightIndex> originalIndex,
@@ -43,6 +45,9 @@ FallbackOvernightIndex::FallbackOvernightIndex(const QuantLib::ext::shared_ptr<O
     iborFallbackIndex_ =
         std::make_unique<FallbackIborIndex>(originalIndex, rfrIndex, spread, switchDate, forwardingCurve);
     termStructure_ = iborFallbackIndex_->forwardingTermStructure();
+    registerWith(originalIndex);
+    registerWith(rfrIndex);
+    registerWith(forwardingCurve);
 }
 
 } // namespace QuantExt
