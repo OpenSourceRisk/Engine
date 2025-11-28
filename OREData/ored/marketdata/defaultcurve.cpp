@@ -276,24 +276,12 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     }
                 }
 
-                
-                /*            } catch (exception& e) {
-                                std::ostringstream message;
-                                message << "build attempt failed for " << configs->curveID() << " using config with
-                   priority "
-                                        << config.first << ": " << e.what()
-                                        << " and implyDefaultFromMarket= " << to_string(implyDefaultFromMarket);
-                                DLOG(message.str());
-                                if (!errors.empty())
-                                    errors += ", ";
-                                errors += message.str();
-                            }*/
-
                 // Build the default curve of the requested type
                 switch (config.second.type()) {
                 case DefaultCurveConfig::Config::Type::SpreadCDS:
                 case DefaultCurveConfig::Config::Type::Price:
-                    buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves, implyDefaultFromMarket);
+                    buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
+                                  implyDefaultFromMarket);
                     typeStr = "SpreadCDS";
                     break;
                 case DefaultCurveConfig::Config::Type::HazardRate:
