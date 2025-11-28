@@ -130,7 +130,7 @@
 \begin{document}
 
 \title{ORE Design}
-\date{24 June 2025}
+\date{30 October 2025}
 \maketitle
 
 \newpage
@@ -293,7 +293,7 @@ int main(int argc, char** argv) {
 		OREApp ore(params);
 		return ore.run();
 	} catch (const exception& e) {
-		cout << endl << "an error occured: " << e.what() << endl;
+		cout << endl << "an error occurred: " << e.what() << endl;
 		return -1;
 	}
 }
@@ -839,7 +839,7 @@ virtual boost::shared_ptr<Scenario> clone() const = 0;
 \end{listing}
 
 The scenario object refers to a unique reference date and contains an arbitrarily large number of data points that are identified by a RiskFactorKey. The key identifies the risk factor class (25 types so far in ORE, see the definition in
-{\tt OREAnalytics/orea/scenario/scenario.hpp}, e.g. {\tt DiscoutCurve}, {\tt IndexCurve}, {\tt SwaptionVolatility}, etc.), a name (e.g. a currency or index name), and an integer indicating the position of the data item in a vector, matrix or cube. A market
+{\tt OREAnalytics/orea/scenario/scenario.hpp}, e.g. {\tt DiscountCurve}, {\tt IndexCurve}, {\tt SwaptionVolatility}, etc.), a name (e.g. a currency or index name), and an integer indicating the position of the data item in a vector, matrix or cube. A market
 evolution or path is hence represented by a vector of scenarios. So far there is only one derived class from the base Scenario in ORE, {\tt SimpleScenario}, which stores the scenario data in simple vectors and maps, also serializable.
 
 \subsubsection{Engine}
@@ -848,19 +848,19 @@ The {\tt OREAnalytics/orea/engine} folder comprises a number of calculators (wra
 \item {\bf ValuationEngine} - performs a market simulation, prices a portfolio under scenarios, possibly through time, and fills a resulting NPV cube, with the help of the ValuationCalculator class; the ValuationEngine is used for Monte Carlo simulations of the market evolution but also the hypothetical scenario analytics below
 \item {\bf SensitivityAnalysis}, also performed with the help of ValuationEngine and ValuationCalculator: This class wraps functionality to perform a sensitivity analysis for a given portfolio.
 \begin{itemize}
-\item builds the "simulation" market to which sensitivity scenarios are applied, 
+\item builds the ``simulation'' market to which sensitivity scenarios are applied, 
 \item builds the portfolio linked to this simulation market
 \item generates sensitivity scenarios
-\item runs the scenario "engine" to apply these and compute the NPV impacts of all required shifts
+\item runs the scenario ``engine'' to apply these and compute the NPV impacts of all required shifts
 \item compiles first and second order sensitivities for all factors and all trades
 \item fills result structures that can be queried
 \end{itemize}
 \item {\bf StressTest}, also performed with the help of ValuationEngine and ValuationCalculator: This class wraps functionality to perform a stress testing analysis for a given portfolio and
 \begin{itemize}
-\item builds the "simulation" market to which stress scenarios are applied, 
+\item builds the ``simulation'' market to which stress scenarios are applied, 
 \item builds the portfolio linked to this simulation market
 \item generates stress scenarios
-\item runs the scenario "engine" to apply these and compute the NPV impacts of all required shifts
+\item runs the scenario ``engine'' to apply these and compute the NPV impacts of all required shifts
 \item fills result structures that can be queried
 \item writes stress test report to a file
 \end{itemize}
@@ -969,7 +969,7 @@ The {\tt PostProcess} class does these tasks with the help of other classes (see
 \end{itemize}
 \item {\tt ExposureAllocator}/ {\tt RelativeFairValueNetExposureAllocator}/ {\tt RelativeFairValueGrossExposureAllocator}/ {\tt RelativeXvaExposureAllocator}/ {\tt NoneExposureAllocator}: calculates EPE/ENE based on selected AllocationMethod
 \item {\tt CollateralExposureHelper}: This class contains helper functions to aid in the calculation of collateralised exposures. It can be used to calculate margin requirements in the presence of e.g. thresholds and minimum transfer amounts, update collateral account details with e.g. new margin call info, and return collateralised exposures to the user/invoker.
-\item {\tt CollateralAccount}: This class holds information corresponding to collateral cash accounts. It stores a balance as well as an asof date for the balance. The class also includes "margin" information relating to the most recent margin call (e.g. call amount, status, expected pay date. The idea is that this class can be updated on-the-run with new margin requirements and collateral balances, and the timestamps updated accordingly.
+\item {\tt CollateralAccount}: This class holds information corresponding to collateral cash accounts. It stores a balance as well as an asof date for the balance. The class also includes ``margin'' information relating to the most recent margin call (e.g. call amount, status, expected pay date. The idea is that this class can be updated on-the-run with new margin requirements and collateral balances, and the timestamps updated accordingly.
 \item {\tt CVASpreadSensitivityCalculator}: Compute hazard rate and CDS spread sensitivities for a given exposure profile on an externally provided sensitivity grid.
 \end{itemize}
 
@@ -1706,7 +1706,7 @@ we have extended the OREApp API and added the InputParameters API to the SWIG wr
 for data management outside (before and after) calling {\tt ORE.run()} and to facilitate
 ORE-based application development in Python.
 
-We curently extend the SWIG wrapper scope mainly upon client request, rather than embarking
+We currently extend the SWIG wrapper scope mainly upon client request, rather than embarking
 on a systematic internal extension project. 
 
 \subsection*{Python Wheels}
@@ -1929,7 +1929,7 @@ released to ORE yet, but essential for the service automation:
   to maintain such data manually
 \end{itemize}
 
-\subsubsection*{RESTORE Implemenation}
+\subsubsection*{RESTORE Implementation}
 
 Source code components and their purpose
 \begin{itemize}

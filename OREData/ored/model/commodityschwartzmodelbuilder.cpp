@@ -19,7 +19,8 @@
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-#include <qle/models/commodityschwartzparametrization.hpp>
+#include <qle/models/commodityschwartzpiecewiseconstantparametrization.hpp>
+#include <qle/models/commodityschwartzconstantparametrization.hpp>
 #include <qle/models/futureoptionhelper.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 
@@ -75,27 +76,39 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
     Array seasonalityTimes_a, seasonalityValues_a;
 
     if (data->seasonalityParamType()  == ParamType::Constant ){
-        QL_REQUIRE(data->seasonalityTimes().size() == 0, "empty seasonality time grid expected");
+        QL_REQUIRE(data->seasonalityTimes().size() == 0, "seasonality time grid size 0 expected");
         QL_REQUIRE(data->seasonalityValues().size() == 1, "initial seasonality grid size 1 expected");
-        seasonalityTimes_a = Array(0);
         seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
     } else {
         if (data->calibrateSeasonality()) { // override
             QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
             // the last expiry is taken, as a(T) is calibrated not \int_{0}^T \sigma_{T-1}(u)du
             seasonalityTimes_a = Array(optionExpiries_.begin(), optionExpiries_.end()); 
-            seasonalityValues_a = Array(seasonalityTimes_a.size() + 1, data->seasonalityValues()[0]);
+            seasonalityValues_a = Array(seasonalityTimes_a.size(), data->seasonalityValues()[0]);
         } else {
             // use input time grid and input alpha array otherwise
             seasonalityTimes_a = Array(data->seasonalityTimes().begin(), data->seasonalityTimes().end());
             seasonalityValues_a = Array(data->seasonalityValues().begin(), data->seasonalityValues().end());
-            QL_REQUIRE(seasonalityValues_a.size() == seasonalityTimes_a.size() + 1, "seasonality grids do not match");
+            QL_REQUIRE(seasonalityValues_a.size() == seasonalityTimes_a.size(), "seasonality grids do not match");
         }
     }
-    parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzParametrization>(ccy, name, curve_, fxSpot_,
-        data->sigmaValue(), data->kappaValue(),
-        data->driftFreeState(),
-        seasonalityTimes_a, seasonalityValues_a);
+    if (data->seasonalityParamType() == ParamType::Piecewise)
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzPiecewiseConstantParametrization>(ccy, name, curve_, fxSpot_,
+                                                                                                    data->sigmaValue(), data->kappaValue(),
+                                                                                                    seasonalityTimes_a, seasonalityValues_a, 
+                                                                                                    QuantLib::ext::make_shared<QuantLib::NoConstraint>(),
+                                                                                                    data->driftFreeState());
+    else if (data->seasonalityParamType() == ParamType::Constant)
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzConstantParametrization>(ccy, name, curve_, fxSpot_,
+                                                                                                    data->sigmaValue(), data->kappaValue(),
+                                                                                                    seasonalityValues_a[0],
+                                                                                                    data->driftFreeState());
+    else
+        QL_FAIL("interpolation type not supported for commodity");
+
+
+
+    //TODO: constant parametrisation see eqbsmodelbuilder.cpp
     model_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
     params_ = model_->params();
 }

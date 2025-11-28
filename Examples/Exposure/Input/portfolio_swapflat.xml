@@ -71,6 +71,7 @@
       </LegData>
     </SwapData>
   </Trade>
+  <!--
   <Trade id="Swaption_01_19">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -1609,5 +1610,6 @@
         </ScheduleData>
       </LegData>
     </SwaptionData>
-  </Trade>
+    </Trade>
+    -->
 </Portfolio>

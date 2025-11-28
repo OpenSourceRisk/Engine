@@ -68,7 +68,7 @@ public:
         QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
-        const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData = boost::none);
+        const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData = QuantLib::ext::nullopt);
 
     /*! \param price             The average price.
         \param index             The commodity index. Used to convey the commodity's name and calendar. The underlying 
@@ -101,7 +101,7 @@ public:
         QuantLib::Integer futureMonthOffset = 0,
         bool useBusinessDays = true,
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(),
-        const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData = boost::none);
+        const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData = QuantLib::ext::nullopt);
     //@}
 
     //! \name PriceHelper interface
@@ -133,7 +133,7 @@ private:
         QuantLib::Integer futureMonthOffset,
         bool useBusinessDays,
         QuantLib::Natural dailyExpiryOffset,
-        const boost::optional<std::pair<Calendar, Real>>& offPeakPowerData);
+        const QuantLib::ext::optional<std::pair<Calendar, Real>>& offPeakPowerData);
 
     QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
     QuantLib::RelinkableHandle<PriceTermStructure> termStructureHandle_;

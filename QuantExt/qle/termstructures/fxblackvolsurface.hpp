@@ -24,7 +24,7 @@
 #ifndef quantext_fx_black_vol_surface_hpp
 #define quantext_fx_black_vol_surface_hpp
 
-#include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/quotes/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>

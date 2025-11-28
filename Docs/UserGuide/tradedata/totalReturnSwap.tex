@@ -55,10 +55,13 @@ indices.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
   \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
-    node. When using reference data, a TRS on a convertible bond can also be captured as a TRS on a bond, i.e. there is
-    no need to distinguish between a TRS on a Bond and a TRS on a convertible Bond in this case, the pricer will figure
+    node. When using reference data, a TRS on a Convertible Bond can also be captured as a TRS on a Bond, i.e. there is
+    no need to distinguish between a TRS on a Bond and a TRS on a Convertible Bond in this case, the pricer will figure
     out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the
     security id field.
+  \item CallableBond: See \ref{ss:callable_bond}, the trade data is given in a CallableBond sub node. When using reference data, 
+  a TRS on a Callable Bond can also be captured as a TRS on a bond, i.e. there is no need to distinguish between a TRS on a Bond and a TRS on a Callable Bond.  
+  The pricer will figure out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the security id field.   
   \item EquityPosition: See \ref{ss:equity_position}, the trade data is given in a EquityPositionData sub
     node. Notice that the equities given in the basket must be available as quoted market data. To represent a TRS on an Equity Futures position, one or multiple EquityPosition underlyings are used, where the equity positions cover the underlying equity of the futures position.
 
@@ -211,6 +214,22 @@ indices.
 \label{lst:fxterms}
 \end{listing}
 
+\item FXConversion [Optional]: Determines what Fx rate is used in the payoff calculation, the rate at the  \emph{Start} of 
+the period (default) or the rate at the \emph{End}.  Only has an impact If the underlying asset currency is different from 
+the return currency.
+
+With the default FXConversion \emph{Start} the accrual pricing return is:\\
+(Ntl x today's price x today's Fx rate) - (Ntl x initial price x initial Fx rate)\\
+When the as of date is the date of the final price (end of period) we have:\\
+(Ntl x final price x final Fx rate) - (Ntl x initial price x initial Fx rate)
+
+With the FXConversion \emph{End}  the accrual pricing return is:\\
+(Ntl x todays price x today's Fx rate) - (Ntl x initial price x today's Fx rate)\\
+When the as of date is the date of the final price (end of period) we have:\\
+(Ntl x final price x final Fx rate) - (Ntl x initial price x final Fx rate)
+
+Allowable values: \emph{Start}, \emph{End}. Defaults to \emph{Start} if omitted.
+
   \item PayUnderlyingCashFlowsImmediately [Optional]: If true, underlying cashflows like coupon or amortisation payments
     from bonds or dividend payments from equities, are paid when they occur. If false, these cashflows are paid together
     with the next return payment. If omitted, the default value is false for trade type TotalReturnSwap and true for
@@ -323,6 +342,32 @@ indices.
 \caption{Generic Total Return Swap with Convertible Bond underlying}
 \label{lst:trsdata}
 \end{listing}
+
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>CallableBond</TradeType>
+          <CallableBondData>
+            <BondData>
+              <SecurityId>ISIN:XS0123456789</SecurityId>
+              <BondNotional>100000000</BondNotional>
+            </BondData>
+          </CallableBondData>
+        </Trade>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap with Callable Bond underlying}
+\label{lst:trsdata15}
+\end{listing}
+
+
 
 \begin{listing}[H]
 %\hrule\medskip

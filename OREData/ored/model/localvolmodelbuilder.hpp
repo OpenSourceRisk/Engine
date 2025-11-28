@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ored/model/blackscholesmodelbuilderbase.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
 
 namespace ore {
 namespace data {
 
 using namespace QuantLib;
 
-class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
+class LocalVolModelBuilder final : public AssetModelBuilderBase {
 public:
     enum class Type { Dupire, DupireFloored, AndreasenHuge };
     LocalVolModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
@@ -52,7 +52,9 @@ public:
                                addDates, timeStepsPerYear, lvType, calibrationMoneyness, referenceCalibrationGrid,
                                dontCalibrate, baseCurve) {}
 
-    std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+    std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
+
+    AssetModelWrapper::ProcessType processType() const override;
 
 protected:
     std::vector<std::vector<Real>> getCurveTimes() const override;

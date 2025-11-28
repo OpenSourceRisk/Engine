@@ -198,7 +198,7 @@ void SimmSensitivityStorageManager::addSensitivities(QuantLib::ext::shared_ptr<o
 	<< trade->id() << " sample=" << sampleIndex << " date=" << dateIndex);
 }
 
-boost::any SimmSensitivityStorageManager::getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
+QuantLib::ext::any SimmSensitivityStorageManager::getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
 							   const std::string& nettingSetId, const Size dateIndex,
 							   const Size sampleIndex) const {
 

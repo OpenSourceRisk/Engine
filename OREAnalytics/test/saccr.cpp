@@ -140,12 +140,12 @@ vector<TestTradeData> getTestTradeData(const QuantLib::ext::shared_ptr<SaccrTrad
             res.push_back(TestTradeData(
                 tid, timpl->trade()->tradeType(), timpl->trade()->envelope().nettingSetId(),
                 tc.underlyingData.saccrAssetClass, tc.hedgingData.hedgingSet,
-                tc.hedgingData.hedgingSubset.get_value_or(""),
+                tc.hedgingData.hedgingSubset.value_or(""),
                 timpl->NPV(), tc.currency, tc.adjustedNotional, tc.delta, tc.adjustedNotional, tc.maturityFactor,
-                tc.maturity, tc.startDate.get_value_or(Null<Real>()), tc.endDate.get_value_or(Null<Real>()),
-                tc.lastExerciseDate.get_value_or(Null<Real>()),
-                tc.optionDeltaPrice.get_value_or(Null<Real>()), tc.strike.get_value_or(Null<Real>()),
-                tc.numNominalFlows.get_value_or(Null<Size>())));
+                tc.maturity, tc.startDate.value_or(Null<Real>()), tc.endDate.value_or(Null<Real>()),
+                tc.lastExerciseDate.value_or(Null<Real>()),
+                tc.optionDeltaPrice.value_or(Null<Real>()), tc.strike.value_or(Null<Real>()),
+                tc.numNominalFlows.value_or(Null<Size>())));
         }
     }
     return res;

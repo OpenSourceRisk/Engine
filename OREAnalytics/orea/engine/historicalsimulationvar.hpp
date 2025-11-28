@@ -71,10 +71,11 @@ public:
     HistoricalSimulationVarReport(const std::string& baseCurrency,
                                   const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                                   const std::string& portfolioFilter, const vector<Real>& p,
-                                  boost::optional<ore::data::TimePeriod> period,
+                                  QuantLib::ext::optional<ore::data::TimePeriod> period,
                                   const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                                   std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false,
-                                  const bool includeExpectedShortfall = false, const bool tradePnl = false);
+                                  const bool includeExpectedShortfall = false, const bool tradePnl = false,
+                                  const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true);
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
 

@@ -80,7 +80,7 @@ the (forward) derivatives of $y$ w.r.t. the input variables $a, b, c$
   \frac{\partial y}{\partial c} &= \frac{\partial y}{\partial e} \cdot \frac{\partial e}{\partial c} = -d
   \end{align*}
 
-The following section provides a brief introduction to the AD mechanics, {\em Forward} and {\em Backward} modes. The latter is also referred to as Adjoint Algorithmic Differentiation (AAD) and particularly important for fast sensitivity calulation.
+The following section provides a brief introduction to the AD mechanics, {\em Forward} and {\em Backward} modes. The latter is also referred to as Adjoint Algorithmic Differentiation (AAD) and particularly important for fast sensitivity calculation.
 
 %------------------------------------------------------------------------------------------------------------
 \subsection{Automatic Differentiation Basics}
@@ -270,7 +270,7 @@ However, in ORE we apply AAD in the context of the scripted trade module only. R
 the operator overloading path introducing an ``active'' {\tt Real} data type, replacing the
 ``inactive'' {\tt Real} type across the entire ORE libraries, we extract the computation graph
 explicitly from the script in its AST representation in order to utilize AAD in the scripted trade
-processing only. Thus we avoid negative perfomance impact (recall the ``factor 4'' overhead)
+processing only. Thus we avoid negative performance impact (recall the ``factor 4'' overhead)
 elsewhere and in the valuation of vanilla instruments. Moreover, we make the ``AAD activation'' of the
 scripted trade framework configurable, i.e. we can switch AAD on and off without recompiling the
 code base. How this works is discussed briefly in the following.
@@ -529,7 +529,7 @@ public:
 
     // refdate <= obsdate required
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                            const boost::optional<long>& memSlot, const std::size_t addRegressor1,
+                            const QuantLib::ext::optional<long>& memSlot, const std::size_t addRegressor1,
                             const std::size_t addRegressor2) const = 0;
     ...
 
@@ -1008,7 +1008,7 @@ apply both in ore currently:
 
 In general the calculations described in the previous sections are performed on suitable subsets of the whole
 portfolio. First of all, if the dynamic delta is required for each individual trade, these subsets consist of a single
-trade. If the dynamic delta is only required on the portfolio level, the porfolio is first decomposed into
+trade. If the dynamic delta is only required on the portfolio level, the portfolio is first decomposed into
 
 \begin{itemize}
 \item ``plain vanilla'' trades for which the calculations can be done on an the level of aggregated npvs

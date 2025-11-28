@@ -75,7 +75,7 @@
 
 \title{ORE Compute Framework Interface}
 \author{Acadia}
-\date{24 June 2025}
+\date{30 October 2025}
 \maketitle
 
 \newpage
@@ -455,7 +455,7 @@ if (useExternalComputeFramework_ && newExternalCalc) {
 
 where \verb+k+ loops over the dimensions (e.g. number of assets) and \verb+j+ loops over the time steps and \verb+rv+ is
 a vector of vectors storing the indices of the required random variates by dimensions and time steps. The external
-random variable contructor used in this case is
+random variable constructor used in this case is
 
 \begin{minted}[fontsize=\footnotesize]{xml}
 ExternalRandomVariable::ExternalRandomVariable(std::size_t id)
@@ -650,7 +650,7 @@ The different variable types are represented as follows, \verb+i+ denoting the g
 \begin{itemize}
 \item input variables: {\tt x[offset + i]}, with x a buffer in the global address space
 \item input variates: {\tt r[offset + i]}, with r a buffer in the global address space
-\item intermediate variables: {\tt b[offset + i]}, with b a buffer in the global address space. It is refered to as the
+\item intermediate variables: {\tt b[offset + i]}, with b a buffer in the global address space. It is referred to as the
   values buffer. Note that this buffer also contains conditional expectation arguments and results and all output
   variables.
 \end{itemize}

@@ -58,7 +58,7 @@ public:
                           const std::vector<Real>& gearing, const std::vector<Real>& spread,
                           const std::vector<Real>& cappedRate, const std::vector<Real>& flooredRate,
                           const DayCounter& floatingDayCount,
-                          boost::optional<BusinessDayConvention> paymentConvention = boost::none);
+                          QuantLib::ext::optional<BusinessDayConvention> paymentConvention = QuantLib::ext::nullopt);
 
     //! \name Inspectors
     //@{

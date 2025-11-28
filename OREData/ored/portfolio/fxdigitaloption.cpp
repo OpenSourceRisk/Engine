@@ -86,7 +86,7 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
     
     Date paymentDate = expiryDate;
-    const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+    const QuantLib::ext::optional<OptionPaymentData>& opd = option_.paymentData();
     
     if (opd) {
         if (opd->rulesBased()) {
@@ -107,7 +107,7 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     bool exercised = false;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex;
     if (paymentDate == expiryDate) {
-        const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+        const QuantLib::ext::optional<OptionExerciseData>& oed = option_.exerciseData();
         if (oed) {
             QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date ("
                                                         << io::iso_date(oed->date())

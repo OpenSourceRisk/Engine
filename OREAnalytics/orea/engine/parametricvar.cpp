@@ -136,9 +136,11 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          const string& portfolioFilter, const vector<Real>& p,
                                          const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
                                          const SalvagingAlgorithm::Type varSalvagingAlgorithm,
-                                         boost::optional<ore::data::TimePeriod> period,
-                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown),
+                                         QuantLib::ext::optional<ore::data::TimePeriod> period,
+                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown,
+                                         const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown,
+                useAtParCouponsCurves, useAtParCouponsTrades),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }
@@ -149,10 +151,11 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          const vector<Real>& p,
                                          const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
                                          const SalvagingAlgorithm::Type varSalvagingAlgorithm,
-                                         boost::optional<ore::data::TimePeriod> period,
-                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown)
+                                         QuantLib::ext::optional<ore::data::TimePeriod> period,
+                                         std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown,
+                                         const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr,
-                breakdown),
+                breakdown, useAtParCouponsCurves, useAtParCouponsTrades),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }

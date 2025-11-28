@@ -118,7 +118,7 @@ DefaultCurveConfig::Config::Config(const Type& type, const string& discountCurve
                                    const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
                                    const Date& startDate, const BootstrapConfig& bootstrapConfig,
                                    QuantLib::Real runningSpread, const QuantLib::Period& indexTerm,
-                                   const boost::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates,
+                                   const QuantLib::ext::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates,
                                    const int priority)
     : cdsQuotes_(cdsQuotes), type_(type), discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote),
       dayCounter_(dayCounter), conventionID_(conventionID), extrapolation_(extrapolation),
@@ -139,6 +139,8 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         type_ = Type::HazardRate;
     } else if (type == "Price") {
         type_ = Type::Price;
+    } else if (type == "ConvSpreadCDS") {
+        type_ = Type::ConvSpreadCDS;
     } else if (type == "Benchmark") {
         type_ = Type::Benchmark;
     } else if (type == "MultiSection") {
@@ -201,10 +203,10 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         // Read the optional start date
         string d = XMLUtils::getChildValue(node, "StartDate", false);
         if (d != "") {
-            if (type_ == Type::SpreadCDS || type_ == Type::Price) {
+            if (type_ == Type::SpreadCDS || type_ == Type::Price || type_ == Type::ConvSpreadCDS) {
                 startDate_ = parseDate(d);
             } else {
-                WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price'");
+                WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price' or 'ConvSpreadCDS'");
             }
         }
         string s = XMLUtils::getChildValue(node, "RunningSpread", false);
@@ -217,7 +219,7 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         }
         string t = XMLUtils::getChildValue(node, "IndexTerm", false);
         indexTerm_ = t.empty() ? 0 * Days : parsePeriod(t);
-        implyDefaultFromMarket_ = boost::none;
+        implyDefaultFromMarket_ = QuantLib::ext::nullopt;
         if (XMLNode* n = XMLUtils::getChildNode(node, "ImplyDefaultFromMarket"))
             implyDefaultFromMarket_ = parseBool(XMLUtils::getNodeValue(n));
         // Optional bootstrap configuration
@@ -230,9 +232,11 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
 XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Configuration");
     XMLUtils::addAttribute(doc, node, "priority", std::to_string(priority_));
-    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price) {
+    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price || type_ == Type::ConvSpreadCDS) {
         if (type_ == Type::SpreadCDS) {
             XMLUtils::addChild(doc, node, "Type", "SpreadCDS");
+        } else if (type_ == Type::ConvSpreadCDS){
+            XMLUtils::addChild(doc, node, "Type", "ConvSpreadCDS");
         } else if (type_ == Type::HazardRate) {
             XMLUtils::addChild(doc, node, "Type", "HazardRate");
         } else {

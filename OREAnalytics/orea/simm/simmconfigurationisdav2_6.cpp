@@ -37,8 +37,8 @@ QuantLib::Size SimmConfiguration_ISDA_V2_6::group(const string& qualifier,
     return result;
 }
 
-QuantLib::Real SimmConfiguration_ISDA_V2_6::weight(const RiskType& rt, boost::optional<string> qualifier,
-                                                   boost::optional<std::string> label_1,
+QuantLib::Real SimmConfiguration_ISDA_V2_6::weight(const RiskType& rt, QuantLib::ext::optional<string> qualifier,
+                                                   QuantLib::ext::optional<std::string> label_1,
                                                    const std::string& calculationCurrency) const {
 
     if (rt == RiskType::FX) {
@@ -54,8 +54,9 @@ QuantLib::Real SimmConfiguration_ISDA_V2_6::weight(const RiskType& rt, boost::op
 }
 
 QuantLib::Real SimmConfiguration_ISDA_V2_6::correlation(const RiskType& firstRt, const string& firstQualifier,
-                                                        const string& firstLabel_1, const string& firstLabel_2,
-                                                        const RiskType& secondRt, const string& secondQualifier,
+                                                        const string& firstBucket, const string& firstLabel_1,
+                                                        const string& firstLabel_2, const RiskType& secondRt,
+                                                        const string& secondQualifier, const string& secondBucket,
                                                         const string& secondLabel_1, const string& secondLabel_2,
                                                         const std::string& calculationCurrency) const {
 
@@ -73,8 +74,9 @@ QuantLib::Real SimmConfiguration_ISDA_V2_6::correlation(const RiskType& firstRt,
         }
     }
 
-    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstLabel_1, firstLabel_2, secondRt,
-                                              secondQualifier, secondLabel_1, secondLabel_2);
+    return SimmConfigurationBase::correlation(firstRt, firstQualifier, firstBucket, firstLabel_1, firstLabel_2,
+                                              secondRt, secondQualifier, secondBucket, secondLabel_1, secondLabel_2,
+                                              calculationCurrency);
 }
 
 SimmConfiguration_ISDA_V2_6::SimmConfiguration_ISDA_V2_6(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,

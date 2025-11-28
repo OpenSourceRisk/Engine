@@ -221,21 +221,22 @@ public:
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
-                    bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
+                    bool localCapFloor = false, const QuantLib::ext::optional<Period>& lastRecentPeriod = QuantLib::ext::nullopt,
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
-                    const std::map<QuantLib::Date, double>& historicalFixings = {},
+                    const std::map<QuantLib::Date, double>& historicalFixings = {}, const ScheduleData& valuationSchedule = ScheduleData(),
                     const string& frontStubShortIndex = std::string(), const string& frontStubLongIndex = std::string(),
                     const string& frontStubRoundingType = std::string(), const string& frontStubRoundingPrecision = std::string(),
                     const string& backStubShortIndex = std::string(), const string& backStubLongIndex = std::string(),
                     const string& backStubRoundingType = std::string(), const string& backStubRoundingPrecision = std::string(),
                     bool stubUseOriginalCurve = false)
+
         : LegAdditionalData(LegType::Floating, true), index_(ore::data::internalIndexName(index)),
           fixingDays_(fixingDays), lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears),
           isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
           lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar),
-          telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings),
+          telescopicValueDates_(telescopicValueDates), historicalFixings_(historicalFixings), valuationSchedule_(valuationSchedule),
           frontStubShortIndex_(frontStubShortIndex), frontStubLongIndex_(frontStubLongIndex),
           frontStubRoundingType_(frontStubRoundingType), frontStubRoundingPrecision_(frontStubRoundingPrecision),
           backStubShortIndex_(backStubShortIndex), backStubLongIndex_(backStubLongIndex),
@@ -250,7 +251,7 @@ public:
     QuantLib::Size fixingDays() const { return fixingDays_; }
     QuantLib::Period lookback() const { return lookback_; }
     QuantLib::Size rateCutoff() const { return rateCutoff_; }
-    boost::optional<bool> isInArrears() const { return isInArrears_; }
+    QuantLib::ext::optional<bool> isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     bool hasSubPeriods() const { return hasSubPeriods_; }
     bool includeSpread() const { return includeSpread_; }
@@ -264,12 +265,13 @@ public:
     const vector<string>& gearingDates() const { return gearingDates_; }
     bool nakedOption() const { return nakedOption_; }
     bool localCapFloor() const { return localCapFloor_; }
-    const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
+    const QuantLib::ext::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
     const std::string& lastRecentPeriodCalendar() const { return lastRecentPeriodCalendar_; }
     bool telescopicValueDates() const { return telescopicValueDates_; }
     ScheduleData fixingSchedule() const { return fixingSchedule_; }
     ScheduleData resetSchedule() const { return resetSchedule_; }
     const std::map<QuantLib::Date, double>& historicalFixings() const { return historicalFixings_; }
+    ScheduleData valuationSchedule() const { return valuationSchedule_; }
     const string& frontStubShortIndex() const { return frontStubShortIndex_; }
     const string& frontStubLongIndex() const { return frontStubLongIndex_; }
     const string& frontStubRoundingType() const { return frontStubRoundingType_; }
@@ -302,7 +304,7 @@ private:
     QuantLib::Size fixingDays_ = Null<Size>();
     QuantLib::Period lookback_ = 0 * Days;
     QuantLib::Size rateCutoff_ = Null<Size>();
-    boost::optional<bool> isInArrears_;
+    QuantLib::ext::optional<bool> isInArrears_;
     bool isAveraged_ = false;
     bool hasSubPeriods_ = false;
     bool includeSpread_ = false;
@@ -316,12 +318,13 @@ private:
     vector<string> gearingDates_;
     bool nakedOption_ = false;
     bool localCapFloor_ = false;
-    boost::optional<Period> lastRecentPeriod_;
+    QuantLib::ext::optional<Period> lastRecentPeriod_;
     std::string lastRecentPeriodCalendar_;
     bool telescopicValueDates_ = false;
     ScheduleData fixingSchedule_;
     ScheduleData resetSchedule_;
     std::map<QuantLib::Date, double> historicalFixings_;
+    ScheduleData valuationSchedule_;
     string frontStubShortIndex_;
     string frontStubLongIndex_;
     string frontStubRoundingType_;
@@ -840,6 +843,7 @@ public:
     Real initialPrice() const { return initialPrice_; }
     Natural fixingDays() const { return fixingDays_; }
     ScheduleData valuationSchedule() const { return valuationSchedule_; }
+    ScheduleData paymentSchedule() const { return paymentSchedule_; }
     const string& eqCurrency() const { return eqCurrency_; }
     const string& fxIndex() const { return fxIndex_; }
     bool notionalReset() const { return notionalReset_; }
@@ -860,6 +864,7 @@ private:
     bool notionalReset_ = false;
     Natural fixingDays_ = 0;
     ScheduleData valuationSchedule_;
+    ScheduleData paymentSchedule_;
     string eqCurrency_ = "";
     string fxIndex_ = "";
     Real quantity_;
@@ -963,6 +968,7 @@ public:
     const ScheduleData& paymentSchedule() const { return paymentSchedule_; }
     bool strictNotionalDates() const { return strictNotionalDates_; }
     const bool isSimmPlainVanillaIrLeg() const { return concreteLegData_->isSimmPlainVanillaIrLeg(); };
+    const ScheduleData& valuationSchedule() const { return valuationSchedule_; }
     const string& settlementFxIndex() const { return settlementFxIndex_; }
     const string& settlementFxFixingDate() const { return settlementFxFixingDate_; }
     //@}
@@ -1021,6 +1027,7 @@ private:
     string lastPeriodDayCounter_;
     ScheduleData paymentSchedule_;
     bool strictNotionalDates_ = false;
+    ScheduleData valuationSchedule_;
     string settlementFxIndex_;
     string settlementFxFixingDate_;
 };

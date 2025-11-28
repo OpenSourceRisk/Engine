@@ -58,6 +58,14 @@ enum class CalibrationType {
       The calibration routine will consequently not throw an exception when the match
       is imperfect. */
     BestFit,
+    /*! Choose this option to first perform a best fit calibration followed by a
+      bootstrap calibration. Supported only for COM components. First, Kappa and Sigma calibrated 
+      to a basket of commodity options by using BestFit. Then, piecewise seasonality is bootstrapped 
+      by using the same set of options.      
+     */
+    FirstBestFitThenBootstrap,
+    /*! No calibration
+     */
     /*! For Hull-White, see HwPiecewiseStatisticalParametrization for details,
         external calibration of reversion (kappa), pca factor loadings (v), and
         pc volatility ratios to historical data, calibration of single piecewise

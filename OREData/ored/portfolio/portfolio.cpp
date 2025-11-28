@@ -25,6 +25,9 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/utilities/localiborcouponsettings.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 
@@ -42,7 +45,6 @@ void Portfolio::clear() {
 }
 
 void Portfolio::reset() {
-    isBuilt_ = false;
     LOG("Reset portfolio of size " << trades_.size());
     for (auto [id, t] : trades_)
         t->reset();
@@ -128,7 +130,7 @@ void Portfolio::removeMatured(const Date& asof) {
 }
 
 void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const std::string& context,
-                      const bool emitStructuredError) {
+                      const bool emitStructuredError, const bool useAtParCoupons) {
     LOG("Building Portfolio of size " << trades_.size() << " for context = '" << context << "'");
     auto trade = trades_.begin();
     Size initialSize = trades_.size();
@@ -138,7 +140,7 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         std::string tradeType = trade->second->tradeType();
         boost::timer::cpu_timer timer;
         auto [ft, success] = buildTrade((*trade).second, engineFactory, context, ignoreTradeBuildFail(),
-                                        buildFailedTrades(), emitStructuredError);
+                                        buildFailedTrades(), emitStructuredError, useAtParCoupons);
         if (success) {
             ++trade;
         } else if (ft) {
@@ -175,8 +177,12 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             .log();
     }
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
-    isBuilt_ = true;
 }
+
+bool Portfolio::isBuilt() const {
+    return std::all_of(trades_.begin(), trades_.end(), [](const auto& s) { return s.second->isBuilt(); });
+}
+
 
 Date Portfolio::maturity() const {
     QL_REQUIRE(trades_.size() > 0, "Cannot get maturity of an empty portfolio");
@@ -221,7 +227,6 @@ void Portfolio::add(const QuantLib::ext::shared_ptr<Trade>& trade) {
     QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
     underlyingIndicesCache_.clear();
     trades_[trade->id()] = trade;
-    isBuilt_ = false;
 }
 
 bool Portfolio::has(const string& id) { return trades_.find(id) != trades_.end(); }
@@ -301,13 +306,15 @@ Portfolio::underlyingIndices(AssetClass assetClass,
     return std::set<std::string>();
 }
 
-std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shared_ptr<Trade>& trade,
-                                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                                     const std::string& context, const bool ignoreTradeBuildFail,
-                                                     const bool buildFailedTrades, const bool emitStructuredError) {
+std::pair<QuantLib::ext::shared_ptr<Trade>, bool>
+buildTrade(QuantLib::ext::shared_ptr<Trade>& trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+           const std::string& context, const bool ignoreTradeBuildFail, const bool buildFailedTrades,
+           const bool emitStructuredError, const bool useAtParCoupons) {
+    QuantExt::LocalIborCouponSettings lset(useAtParCoupons);
     try {
         trade->reset();
         trade->build(engineFactory);
+        trade->setBuilt();
         TLOG("Required Fixings for trade " << trade->id() << ":");
         TLOGGERSTREAM(trade->requiredFixings());
         return std::make_pair(nullptr, true);
@@ -326,6 +333,7 @@ std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shar
             failed->setEnvelope(trade->envelope());
             failed->build(engineFactory);
             failed->resetPricingStats(trade->getNumberOfPricings(), trade->getCumulativePricingTime());
+            failed->setBuilt();
             LOG("Built failed trade with id " << failed->id());
             return std::make_pair(failed, false);
         } else {

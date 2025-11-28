@@ -46,13 +46,14 @@ public:
 
     QuantLib::Real curvatureMarginScaling() const override;
 
-    QuantLib::Real weight(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
-                          boost::optional<std::string> label_1 = boost::none,
+    QuantLib::Real weight(const CrifRecord::RiskType& rt, QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                          QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
                           const std::string& calculationCurrency = "") const override;
 
     QuantLib::Real correlation(const CrifRecord::RiskType& firstRt, const std::string& firstQualifier,
-                               const std::string& firstLabel_1, const std::string& firstLabel_2,
-                               const CrifRecord::RiskType& secondRt, const std::string& secondQualifier,
+                               const std::string& firstBucket, const std::string& firstLabel_1,
+                               const std::string& firstLabel_2, const CrifRecord::RiskType& secondRt,
+                               const std::string& secondQualifier, const std::string& secondBucket,
                                const std::string& secondLabel_1, const std::string& secondLabel_2,
                                const std::string& calculationCurrency = "") const override;
 

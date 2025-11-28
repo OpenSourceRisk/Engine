@@ -66,17 +66,17 @@ void OptionData::fromXML(XMLNode* node) {
         exerciseDatesSchedule_.fromXML(exScheduleNode);
     }
 
-    automaticExercise_ = boost::none;
+    automaticExercise_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "AutomaticExercise"))
         automaticExercise_ = parseBool(XMLUtils::getNodeValue(n));
 
-    exerciseData_ = boost::none;
+    exerciseData_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "ExerciseData")) {
         exerciseData_ = OptionExerciseData();
         exerciseData_->fromXML(n);
     }
 
-    paymentData_ = boost::none;
+    paymentData_ = QuantLib::ext::nullopt;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PaymentData")) {
         paymentData_ = OptionPaymentData();
         paymentData_->fromXML(n);

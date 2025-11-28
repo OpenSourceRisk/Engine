@@ -40,6 +40,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
@@ -98,6 +99,7 @@ public:
         FX_FWD,
         HAZARD_RATE,
         RECOVERY_RATE,
+        ASSUMED_RECOVERY_RATE,
         SWAPTION,
         CAPFLOOR,
         FX_OPTION,
@@ -815,6 +817,43 @@ public:
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {
         return QuantLib::ext::make_shared<RecoveryRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, docClause_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& seniority() const { return seniority_; }
+    const string& ccy() const { return ccy_; }
+    const string& underlyingName() const { return underlyingName_; }
+    const string& docClause() const { return docClause_; }
+    //@}
+private:
+    string underlyingName_;
+    string seniority_;
+    string ccy_;
+    string docClause_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+//! Assumed Recovery rate data class
+/*!
+  This class holds single market points of type
+  - ASSUMED_RECOVERY_RATE
+  \ingroup marketdata
+*/
+class AssumedRecoveryRateQuote : public MarketDatum {
+public:
+    AssumedRecoveryRateQuote() {}
+    //! Constructor
+    AssumedRecoveryRateQuote(Real value, Date asofDate, const string& name, const string& underlyingName,
+                      const string& seniority, const string& ccy, const string& docClause = "")
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ASSUMED_RECOVERY_RATE),
+          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), docClause_(docClause) {}
+    
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<AssumedRecoveryRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, docClause_);
     }
 
     //! \name Inspectors
@@ -1778,7 +1817,9 @@ public:
         - overnight forward: \c startTenor will be <code>0 * Days</code> and \c tenor will be <code>1 * Days</code>
         - tom-next forward: \c startTenor will be <code>1 * Days</code> and \c tenor will be <code>1 * Days</code>
     */
-    const boost::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
+    const boost::optional<QuantLib::Period>& startTenor() const {
+        return startTenor_;
+    }
 
     //! Returns \c true if the forward is tenor based and \c false if forward is date based
     bool tenorBased() const { return tenorBased_; }
@@ -1789,6 +1830,8 @@ private:
     std::string quoteCurrency_;
     QuantLib::Date expiryDate_;
     QuantLib::Period tenor_;
+    // boost optional is required as long we support boost < 1.84, where std::optional serialization is not
+    // supported
     boost::optional<QuantLib::Period> startTenor_;
     bool tenorBased_;
     //! Serialization

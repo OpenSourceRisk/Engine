@@ -1,0 +1,141 @@
+\subsubsection{Extended Accumulator}
+
+Extended Accumulator are represented as scripted trades, refer to appendix A for an introduction. Below shows the structure of an example.
+
+An Extended Accumulator is like an Accumulator with regular and conditional observation and settlement dates. After the regular observation dates a European barrier is applied on 
+the Extension Decision Date. If the barrier is  hit the trade terminates, otherwise the trade continues with cashflows generated on the conditional observation dates.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FxExtendedAccumulatorLong">
+   <TradeType>ScriptedTrade</TradeType>
+   <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CRIF_20191230</NettingSetId>
+      <AdditionalFields/>
+   </Envelope>
+   <ExtendedAccumulatorData>
+      <LongShort type="longShort">Long</LongShort>
+      <FixingAmount type="number">840336</FixingAmount>
+      <Strike type="number">1.19</Strike>
+      <PayCurrency type="currency">USD</PayCurrency>
+      <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+      <ObservationDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2019-09-30</Date>
+                  <Date>2019-10-31</Date>
+                  <Date>2019-11-28</Date>
+                  <Date>2019-12-31</Date>
+                  <Date>2020-01-30</Date>
+                  <Date>2020-02-27</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ObservationDates>
+      <ObservationSettlementDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2019-10-02</Date>
+                  <Date>2019-11-02</Date>
+                  <Date>2019-12-30</Date>
+                  <Date>2020-01-02</Date>
+                  <Date>2020-02-03</Date>
+                  <Date>2020-03-30</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ObservationSettlementDates>
+      <ExtensionDecisionDate type="event">2020-02-25</ExtensionDecisionDate>
+      <ExtensionTrigger type="number">1.19</ExtensionTrigger>
+      <ConditionalObservationDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2020-03-31</Date>
+                  <Date>2020-04-30</Date>
+                  <Date>2020-05-29</Date>
+                  <Date>2020-06-30</Date>
+                  <Date>2020-07-31</Date>
+                  <Date>2020-08-31</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ConditionalObservationDates>
+      <ConditionalSettlementDates type="event">
+         <ScheduleData>
+            <Dates>
+               <Dates>
+                  <Date>2020-03-31</Date>
+                  <Date>2020-04-30</Date>
+                  <Date>2020-05-29</Date>
+                  <Date>2020-06-30</Date>
+                  <Date>2020-07-31</Date>
+                  <Date>2020-08-31</Date>
+               </Dates>
+            </Dates>
+         </ScheduleData>
+      </ConditionalSettlementDates>
+   </ExtendedAccumulatorData>
+</Trade>
+\end{minted}
+
+The meanings and allowable values of the elements in the \verb+Extended Accumulator+  representation follow below.
+
+\begin{itemize}
+\item LongShort: Defines whether the trade is long or short, i.e long means one buys the underlying asset and short sells the underlying asset at each observation date. \\
+   Allowable values: \emph{Long, Short}
+\item Strike: For Fx, the Fx strike rate is defined as amount in domestic currency (CCY2) for one unit of foreign currency (CCY1). For Equity and Commodity: The strike value for one unit/share/contract of the underlying equity or commodity, expressed in the domestic currency (CCY2).
+\item Underlying: Underlying index. For Fx: Value is a string of the form FX-SOURCE-CCY1-CCY2 where CCY1 is the foreign currency, CCY2 is the domestic currency, and SOURCE is the fixing source.\\
+  Allowable values: See Section \ref{data_index} for allowable values.
+\item FixingAmount: The unleveraged notional amount accumulated at each fixing date. - For Fx: The FixingAmount is expressed in the foreign currency (CCY1). Note that the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}). For Equity: The FixingAmount is expressed as number of shares/units of the underlying equity or equity index. For Commodity: The FixingAmount is expressed as number of units of the underlying commodity. \\
+  Allowable values: Any real number. Note that a negative amount causes a Long ExtendedAccumulator to be a Short, and vice-versa
+\item PayCurrency: The payout currency. The result of the payout formula  is treated to be in this currency. Note that for (non-quanto) ExtendedAccumulators this should be the domestic (CCY2) currency.
+\item ExtensionDecisionDate: the date on which the Extension Condition is decided on
+\item ExtensionTrigger: the value of the index below which a Trigger Event occurs on Extension Decision Date. It is expressed in the same way as Strike outlined above. If the underlying on the extension decision date is above the barrier level, it triggers the extension on conditional observation dates. Else, the trade terminate at last observation date.
+\item SettlementDate: the settlement date of the option payoff
+\item ObservationDates: the dates on which the underlying index value is observed, define the exchange of notionals
+\item ObservationSettlementDates: observation settlement dates
+\item ConditionalObservationDates: the dates on which the underlying index value is observed, define the exchange of notionals
+\item ConditionalSettlementDates: conditional observation settlement dates
+\end{itemize}
+
+The script `ExtendedAccumulator' referenced in the trade above is shown in Listing \ref{lst:extendedaccumulator_script}.\\
+PayOff Formula:
+
+$$
+PayOff = \sum \omega \cdot FixingAmount \cdot (K - X_A(T))
+$$
+
+Where:
+\begin{itemize}
+\item $\omega \in \{-1,1\}$ is $1$ for a long and $-1$ for a short position
+\item $FixingAmount$: the fixing amount in currency/unit of A
+\item $K$: the strike. For Fx, the Fx strike rate is defined as amount in domestic currency (CCY2) for one unit of foreign currency (CCY1). For Equity and Commodity: The strike value for one unit/share/contract of the underlying equity or commodity, expressed in the domestic currency (CCY2).
+\item $X_A(T)$: the fixing value of the asset A at each observation date T
+\end{itemize}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {FixingAmount >= 0} AND {Strike >= 0};
+REQUIRE {SIZE(ConditionalObservationDates) == SIZE(ConditionalSettlementDates)};
+NUMBER d, Fixing;
+
+FOR d IN (1, SIZE(ObservationDates), 1) DO
+   Fixing = Underlying(ObservationDates[d]);
+   Value = Value + PAY(LongShort * FixingAmount * (Strike-Fixing), ObservationDates[d], ObservationSettlementDates[d], PayCurrency);
+END;
+
+IF Underlying(ExtensionDecisionDate)>ExtensionTrigger THEN
+   FOR d IN (1, SIZE(ConditionalObservationDates), 1) DO
+      Fixing = Underlying(ConditionalObservationDates[d]);
+      Value = Value + PAY(LongShort * FixingAmount * (Strike-Fixing), ConditionalObservationDates[d], ConditionalSettlementDates[d], PayCurrency);
+   END;
+END;
+currentNotional = FixingAmount * Strike; 
+\end{minted}
+\caption{ExtendedAccumulator Script}
+\label{lst:extendedaccumulator_script}
+\end{listing}
+

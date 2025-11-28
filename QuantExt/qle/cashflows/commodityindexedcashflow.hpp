@@ -23,7 +23,7 @@
 #ifndef quantext_commodity_indexed_cash_flow_hpp
 #define quantext_commodity_indexed_cash_flow_hpp
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ql/cashflow.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/time/schedule.hpp>

@@ -51,7 +51,7 @@ public:
     // Model interface implementation
     const Date& referenceDate() const override;
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                       const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                        const RandomVariable& addRegressor2) const override;
     RandomVariable fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,
                               const Date& end, const Real spread, const Real gearing, const Integer lookback,

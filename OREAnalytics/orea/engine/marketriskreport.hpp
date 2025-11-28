@@ -226,16 +226,18 @@ public:
     };
 
     MarketRiskReport(const std::string& calculationCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-                     const std::string& portfolioFilter, boost::optional<ore::data::TimePeriod> period,
-                     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
-        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
-        std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false, 
-        const bool requireTradePnl = false, const bool requireRiskFactorPnl = false)
-        : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter), period_(period),
-          hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
-          fullRevalArgs_(std::move(fullRevalArgs)),  multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown), 
-          requireTradePnl_(requireTradePnl), requireRiskFactorPnl_(requireRiskFactorPnl) {
-    }
+                     const std::string& portfolioFilter, QuantLib::ext::optional<ore::data::TimePeriod> period,
+                     const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+                     std::unique_ptr<SensiRunArgs> sensiArgs = nullptr,
+                     std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
+                     std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr, const bool breakdown = false,
+                     const bool requireTradePnl = false, const bool requireRiskFactorPnl = false,
+                     const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true)
+        : calculationCurrency_(calculationCurrency), portfolio_(portfolio), portfolioFilter_(portfolioFilter),
+          period_(period), hisScenGen_(hisScenGen), sensiArgs_(std::move(sensiArgs)),
+          fullRevalArgs_(std::move(fullRevalArgs)), multiThreadArgs_(std::move(multiThreadArgs)), breakdown_(breakdown),
+          requireTradePnl_(requireTradePnl), requireRiskFactorPnl_(requireRiskFactorPnl),
+          useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {}
     virtual ~MarketRiskReport() {}
 
     virtual void initialise();
@@ -264,7 +266,7 @@ protected:
     std::string calculationCurrency_;
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     std::string portfolioFilter_;
-    boost::optional<ore::data::TimePeriod> period_;
+    QuantLib::ext::optional<ore::data::TimePeriod> period_;
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     std::unique_ptr<SensiRunArgs> sensiArgs_;
     std::unique_ptr<FullRevalArgs> fullRevalArgs_;
@@ -275,6 +277,9 @@ protected:
     bool requireTradePnl_ = false;
     // Whether we require risk factor level PnLs to use for later calculations
     bool requireRiskFactorPnl_ = false;
+
+    bool useAtParCouponsCurves_ = true;
+    bool useAtParCouponsTrades_ = true;
 
     QuantLib::ext::shared_ptr<MarketRiskGroupBaseContainer> riskGroups_;
     QuantLib::ext::shared_ptr<TradeGroupBaseContainer> tradeGroups_;
@@ -348,7 +353,7 @@ protected:
     virtual std::string cubeFilePath(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup) const {
         return std::string();
     }
-    virtual std::vector<ore::data::TimePeriod> timePeriods() { return {period_.get()}; }
+    virtual std::vector<ore::data::TimePeriod> timePeriods() { return {period_.value()}; }
     virtual void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                               const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                               const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {}

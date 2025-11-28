@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ql/indexes/interestrateindex.hpp>
@@ -132,8 +132,8 @@ public:
         -# there is a qualifier-dependent and label1-dependent risk weight for the risk
            factor's RiskType so need all three parameters
     */
-    virtual QuantLib::Real weight(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
-                                  boost::optional<std::string> label_1 = boost::none,
+    virtual QuantLib::Real weight(const CrifRecord::RiskType& rt, QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                                  QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
                                   const std::string& calculationCurrency = "") const = 0;
 
     /*! Gives back the value of the scaling function used in the calculation of curvature risk
@@ -159,8 +159,8 @@ public:
 
         \remark For convenience, returns 1.0 if not applicable for risk type \p rt
     */
-    virtual QuantLib::Real sigma(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
-                                 boost::optional<std::string> label_1 = boost::none,
+    virtual QuantLib::Real sigma(const CrifRecord::RiskType& rt, QuantLib::ext::optional<std::string> qualifier = QuantLib::ext::nullopt,
+                                 QuantLib::ext::optional<std::string> label_1 = QuantLib::ext::nullopt,
                                  const std::string& calculationCurrency = "") const = 0;
 
     /*! Give back the scaling factor for the Interest Rate curvature margin
@@ -180,20 +180,23 @@ public:
     //! Return the correlation between SIMM risk classes \p rc_1 and \p rc_2
     virtual QuantLib::Real correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const = 0;
 
-    /*! Return the correlation between the \p firstQualifier with risk type \p firstRt,
-        Label1 value of \p firstLabel_1 and Label2 value of \p firstLabel_2 *and* the
-        \p secondQualifier with risk type \p secondRt, Label1 value of \p secondLabel_1
-        and Label2 value of \p secondLabel_2
+    /*! Return the correlation between the \p firstQualifier and \p firstBucket with risk type \p firstRt, Label1 value
+        of \p firstLabel_1 and Label2 value of \p firstLabel_2 *and* the \p secondQualifier and \p secondBucket with
+        risk type \p secondRt, Label1 value of \p secondLabel_1 and Label2 value of \p secondLabel_2
+
+        firstBucket and secondBucket are derived from firstQualifier and secondQualifier
+        if they are not given (empty string)
 
         \warning Returns 0 if no correlation found
 
         \todo test if the default return value of 0 makes sense
     */
     virtual QuantLib::Real correlation(const CrifRecord::RiskType& firstRt, const std::string& firstQualifier,
-                                       const std::string& firstLabel_1, const std::string& firstLabel_2,
-                                       const CrifRecord::RiskType& secondRt, const std::string& secondQualifier,
+                                       const std::string& firstBucket, const std::string& firstLabel_1,
+                                       const std::string& firstLabel_2, const CrifRecord::RiskType& secondRt,
+                                       const std::string& secondQualifier, const std::string& secondBucket,
                                        const std::string& secondLabel_1, const std::string& secondLabel_2,
-                                       const std::string& calculationCurrency = "") const = 0;
+                                       const std::string& calculationCurrency) const = 0;
 
     virtual bool isSimmConfigCalibration() const { return false; }
 

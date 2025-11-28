@@ -46,7 +46,7 @@ TRSWrapper::TRSWrapper(
     const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxIndexAsset, const QuantLib::ext::shared_ptr<FxIndex>& fxIndexReturn,
                        const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
                        const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices,
-                       const boost::optional<TRS::FXConversion>& fxConversion)
+                       const QuantLib::ext::optional<TRS::FXConversion>& fxConversion)
 
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),

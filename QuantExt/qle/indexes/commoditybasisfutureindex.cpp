@@ -54,7 +54,7 @@ CommodityBasisFutureIndex::CommodityBasisFutureIndex(
 QuantLib::ext::shared_ptr<CommodityIndex>
 CommodityBasisFutureIndex::clone(const QuantLib::Date& expiry,
                                  const QuantLib::Date& optionExpiryDate,
-                                 const boost::optional<QuantLib::Handle<PriceTermStructure>>& ts) const {
+                                 const QuantLib::ext::optional<QuantLib::Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     return QuantLib::ext::make_shared<CommodityBasisFutureIndex>(underlyingName(), ed, fixingCalendar(), basisFec_, baseIndex_,

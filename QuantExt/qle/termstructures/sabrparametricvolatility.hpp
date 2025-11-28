@@ -58,7 +58,7 @@ public:
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
              const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
              const QuantLib::Real outputLognormalShift = QuantLib::Null<QuantLib::Real>(),
-             const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const override;
+             const QuantLib::ext::optional<QuantLib::Option::Type> outputOptionType = QuantLib::ext::nullopt) const override;
 
     // the calculated grid of option expiries and the underlying lenghts
     const std::vector<Real>& timeToEpiries() const;
@@ -88,6 +88,10 @@ public:
     };
 
     const std::vector<CalibrationResult>& calibrationResults() const { return calibrationResults_; }
+
+    QuantLib::ext::shared_ptr<SabrParametricVolatility> clone(
+        const std::vector<ParametricVolatility::MarketSmile>& marketSmiles,
+        const std::vector<ParameterCalibration>& calibrationTypes) const;
 
 private:
     static constexpr double eps1 = .0000001;

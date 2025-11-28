@@ -354,6 +354,11 @@ CPILeg& CPILeg::withSubtractInflationNominalAllCoupons(bool subtractInflationNom
     return *this;
 }
 
+CPILeg& CPILeg::withPaymentDates(const std::vector<QuantLib::Date>& paymentDates){
+    paymentDates_ = paymentDates;
+    return *this;
+}
+
 CPILeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "no notional given");

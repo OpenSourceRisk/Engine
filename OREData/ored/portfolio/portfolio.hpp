@@ -84,10 +84,10 @@ public:
 
     //! Call build on all trades in the portfolio, the context is included in error messages
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&, const std::string& context = "unspecified",
-               const bool emitStructuredError = true);
+               const bool emitStructuredError = true, const bool useAtParCoupons = true);
 
     //! if the portfolio has been built
-    bool isBuilt() const { return isBuilt_; }
+    bool isBuilt() const;
 
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;
@@ -138,14 +138,12 @@ private:
     bool buildFailedTrades_, ignoreTradeBuildFail_;
     std::map<std::string, QuantLib::ext::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
-    bool isBuilt_ = false;
 };
 
-std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(
-    QuantLib::ext::shared_ptr<Trade>& trade,
-    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-    const std::string& context, const bool ignoreTradeBuildFail,
-    const bool buildFailedTrades, const bool emitStructuredError);
+std::pair<QuantLib::ext::shared_ptr<Trade>, bool>
+buildTrade(QuantLib::ext::shared_ptr<Trade>& trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+           const std::string& context, const bool ignoreTradeBuildFail, const bool buildFailedTrades,
+           const bool emitStructuredError, const bool useAtParCoupons);
 
 } // namespace data
 } // namespace ore

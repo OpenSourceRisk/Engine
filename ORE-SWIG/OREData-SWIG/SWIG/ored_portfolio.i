@@ -64,14 +64,14 @@ public:
     const std::map<std::string, std::string>& engineParameters(const std:: string& productName) const;
     const std::map<std::string, std::string>& globalParameters() const;
     std::vector<std::string> products() const;
-    std::string& model(const std::string& productName);
-    std::map<std::string, std::string>& modelParameters(const std::string& productName);
-    std::string& engine(const std::string& productName);
-    std::map<std::string, std::string>& engineParameters(const std::string& productName);
-    std::map<std::string, std::string>& globalParameters();
+    void setModel(const std::string& productName, const std::string& model) { model_[productName] = model; }
+    void setModelParameters(const std::string& productName, const std::map<std::string, std::string>& params) { modelParams_[productName] = params; }
+    void setEngine(const std::string& productName, const std::string& engine) { engine_[productName] = engine; }
+    void setEngineParameters(const std::string& productName, const std::map<std::string, std::string>& params) { engineParams_[productName] = params; }
+    void setGlobalParameter(const std::string& name, const std::string& param) { globalParams_[name] = param; }
     void clear();
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 %shared_ptr(LegBuilder)
@@ -126,12 +126,12 @@ public:
     const NettingSetDetails nettingSetDetails() const;
     const std::set<std::string>& portfolioIds() const;
     const std::map<std::string, std::string> additionalFields() const;
-    const std::map<std::string, boost::any>& fullAdditionalFields() const;
+    const std::map<std::string, QuantLib::ext::any>& fullAdditionalFields() const;
     string additionalField(const std::string& name, const bool mandatory = true,
                            const std::string& defaultValue = std::string()) const;
-    boost::any additionalAnyField(const std::string& name, const bool mandatory = true,
-                                  const boost::any& defaultValue = boost::none) const;
-    void setAdditionalField(const std::string& key, const boost::any& value);
+    QuantLib::ext::any additionalAnyField(const std::string& name, const bool mandatory = true,
+                                  const QuantLib::ext::any& defaultValue = boost::none) const;
+    void setAdditionalField(const std::string& key, const QuantLib::ext::any& value);
     bool initialized() const;
     bool hasNettingSetDetails() const;
 };
@@ -209,7 +209,7 @@ public:
     void fromXMLString(const std::string& xmlString);
     std::string toXMLString();
     const std::vector<LegData>& legData() const { return legData_; }
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 };
 
 %shared_ptr(OREForwardRateAgreement)
@@ -226,7 +226,7 @@ public:
     std::string toXMLString();
     const std::string& index() const { return index_; }
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string,QuantLib::ext::any>& additionalData() const override;
 };
 
 #endif

@@ -40,6 +40,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     // set isdaSubProduct to entityType in credit reference data
     additionalData_["isdaSubProduct"] = string("");
     string entity = swap_.referenceInformation() ? swap_.referenceInformation()->id() : swap_.creditCurveId();
+
     QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
     if (refData && refData->hasData("Credit", entity)) {
         auto refDatum = refData->getData("Credit", entity);
@@ -49,14 +50,26 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         if (creditRefDatum->creditData().entityType == "") {
             ALOG("EntityType is blank in credit reference data for entity " << entity);
         }
+        additionalData_["primaryPriceType"] = creditRefDatum->creditData().primaryPriceType;
     } else {
         ALOG("Credit reference data missing for entity " << entity << ", isdaSubProduct left blank");
     }
+
     // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
+    
+    Envelope env = envelope();
+    auto addFields = env.additionalFields();
+    auto it = addFields.find("use_cp_trade");
+    if (it != addFields.end() && parseBool(it->second)) {
+        additionalData_["cdsDefaultCurveEngine"] = "";
+    }else{
+        string cdsDefaultCurveType = market->defaultCurve(entity)->refData().type;
+        additionalData_["cdsDefaultCurveEngine"] = cdsDefaultCurveType == "ConvSpreadCDS" ? std::string("IsdaCdsEngine") : std::string("MidPointCdsEngine");
+    }
 
     auto legData = swap_.leg(); // copy
     const auto& notionals = swap_.leg().notionals();
@@ -169,7 +182,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     additionalData_["tradeRecoveryRate"] = swap_.recoveryRate();
 }
 
-const std::map<std::string, boost::any>& CreditDefaultSwap::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& CreditDefaultSwap::additionalData() const {
     setLegBasedAdditionalData(0, 2);
     additionalData_["legNPV[1]"] = instrument_->qlInstrument()->result<Real>("protectionLegNPV");
     additionalData_["legNPV[2]"] = instrument_->qlInstrument()->result<Real>("premiumLegNPVDirty") +

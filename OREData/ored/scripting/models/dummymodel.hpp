@@ -44,7 +44,7 @@ public:
         return dummyResult_;
     }
     RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                       const boost::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                        const RandomVariable& addRegressor2) const override {
         return dummyResult_;
     }

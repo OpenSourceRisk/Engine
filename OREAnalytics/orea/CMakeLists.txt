@@ -51,6 +51,7 @@ app/analytics/xvastressanalytic.cpp
 app/analytics/zerotoparshiftanalytic.cpp
 app/analyticsmanager.cpp
 app/cleanupsingletons.cpp
+app/hwhistoricalcalibrationdataloader.cpp
 app/initbuilders.cpp
 app/inputparameters.cpp
 app/marketcalibrationreport.cpp
@@ -264,6 +265,7 @@ app/analytics/zerotoparshiftanalytic.hpp
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
 app/dummymarketdataloader.hpp
+app/hwhistoricalcalibrationdataloader.hpp
 app/initbuilders.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp

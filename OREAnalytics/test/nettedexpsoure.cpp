@@ -373,12 +373,12 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
         std::string fileName = "scenarioData_closeout.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
         fileName = "cube_closeout.csv";
-        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
+        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
     }else{
         std::string fileName = "scenarioData.csv";
         saveAggregationScenarioData(fileName, *simMarket->aggregationScenarioData());
         fileName = "cube.csv";
-        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none});
+        saveCube(fileName, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
     }
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");

@@ -277,7 +277,7 @@ CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataM
     return result;
 }
 
-const std::map<std::string, boost::any>& CompositeTrade::additionalData() const {
+const std::map<std::string, QuantLib::ext::any>& CompositeTrade::additionalData() const {
     additionalData_.clear();
     Size counter = 0;
     for (auto const& t : trades_) {

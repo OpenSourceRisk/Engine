@@ -21,6 +21,7 @@
 #include <qle/utilities/ratehelpers.hpp>
 
 #include <ql/utilities/null_deleter.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
 
 namespace QuantExt {
 
@@ -58,15 +59,21 @@ AverageOISRateHelper::AverageOISRateHelper(
 
 void AverageOISRateHelper::initializeDates() {
 
-    averageOIS_ =
-        MakeAverageOIS(swapTenor_, overnightIndex_, onTenor_, 0.0, fixedTenor_, fixedDayCounter_, spotLagTenor_)
-            .withFixedCalendar(fixedCalendar_)
-            .withFixedConvention(fixedConvention_)
-            .withFixedTerminationDateConvention(fixedConvention_)
-            .withFixedPaymentAdjustment(fixedPaymentAdjustment_)
-            .withRateCutoff(rateCutoff_)
-            .withDiscountingTermStructure(discountRelinkableHandle_)
-            .withTelescopicValueDates(telescopicValueDates_);
+    averageOIS_ = MakeAverageOIS(swapTenor_, overnightIndex_, onTenor_, quote().empty() ? 0.0 : quote()->value(),
+                                 fixedTenor_, fixedDayCounter_, spotLagTenor_)
+                      .withFixedCalendar(fixedCalendar_)
+                      .withFixedConvention(fixedConvention_)
+                      .withFixedTerminationDateConvention(fixedConvention_)
+                      .withFixedPaymentAdjustment(fixedPaymentAdjustment_)
+                      .withRateCutoff(rateCutoff_)
+                      .withDiscountingTermStructure(discountRelinkableHandle_)
+                      .withTelescopicValueDates(telescopicValueDates_);
+
+    spreadLeg_ = FixedRateLeg(averageOIS_->onSchedule())
+                     .withNotionals(1.0)
+                     .withCouponRates(onSpread_.empty() ? 0.0 : onSpread_->value(), overnightIndex_->dayCounter())
+                     .withPaymentAdjustment(overnightIndex_->businessDayConvention())
+                     .withPaymentCalendar(overnightIndex_->fixingCalendar());
 
     earliestDate_ = averageOIS_->startDate();
 
@@ -107,6 +114,8 @@ void AverageOISRateHelper::setTermStructure(YieldTermStructure* t) {
 }
 
 Spread AverageOISRateHelper::onSpread() const { return onSpread_.empty() ? 0.0 : onSpread_->value(); }
+
+const Leg& AverageOISRateHelper::spreadLeg() const { return spreadLeg_; }
 
 QuantLib::ext::shared_ptr<AverageOIS> AverageOISRateHelper::averageOIS() const { return averageOIS_; }
 

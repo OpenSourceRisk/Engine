@@ -51,7 +51,7 @@ void updateQuantities(Leg& leg, bool isAveragingFuture, CommodityQuantityFrequen
                       const QuantLib::ext::shared_ptr<CommodityFutureConvention>& conv,
                       const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc, Natural hoursPerDay, bool useBusinessDays,
                       const std::string& daylightSavingLocation, const string& commName, bool unrealisedQuantity,
-                      const boost::optional<pair<Calendar, Real>>& offPeakPowerData) {
+                      const QuantLib::ext::optional<pair<Calendar, Real>>& offPeakPowerData) {
 
     using CQF = CommodityQuantityFrequency;
     
@@ -455,7 +455,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(
     Calendar commCal = WeekendsOnly();
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     QuantLib::ext::shared_ptr<CommodityFutureConvention> commFutureConv;
-    boost::optional<pair<Calendar, Real>> offPeakPowerData;
+    QuantLib::ext::optional<pair<Calendar, Real>> offPeakPowerData;
     bool balanceOfTheMonth = false;
     if (conventions->has(commName)) {
         QuantLib::ext::shared_ptr<Convention> commConv = conventions->get(commName);

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <ql/optional.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
@@ -51,7 +51,7 @@ public:
     class Config : public XMLSerializable {
     public:
         //! Supported default curve types
-        enum class Type { SpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null };
+        enum class Type { SpreadCDS, ConvSpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null };
         Config(const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                const DayCounter& dayCounter, const string& conventionID,
                const std::vector<std::pair<std::string, bool>>& cdsQuotes = {}, bool extrapolation = true,
@@ -61,7 +61,7 @@ public:
                const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
                QuantLib::Real runningSpread = QuantLib::Null<Real>(),
                const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
-               const boost::optional<bool>& implyDefaultFromMarket = boost::none, const bool allowNegativeRates = false,
+               const QuantLib::ext::optional<bool>& implyDefaultFromMarket = QuantLib::ext::nullopt, const bool allowNegativeRates = false,
                const int priority = 0);
         Config()
             : extrapolation_(true), spotLag_(0), runningSpread_(QuantLib::Null<Real>()), indexTerm_(0 * QuantLib::Days),
@@ -89,7 +89,7 @@ public:
         const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
         const Real runningSpread() const { return runningSpread_; }
         const QuantLib::Period& indexTerm() const { return indexTerm_; }
-        const boost::optional<bool>& implyDefaultFromMarket() const { return implyDefaultFromMarket_; }
+        const QuantLib::ext::optional<bool>& implyDefaultFromMarket() const { return implyDefaultFromMarket_; }
         const vector<string>& multiSectionSourceCurveIds() const { return multiSectionSourceCurveIds_; }
         const vector<string>& multiSectionSwitchDates() const { return multiSectionSwitchDates_; }
         const bool allowNegativeRates() const { return allowNegativeRates_; }
@@ -115,7 +115,7 @@ public:
         void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
         Real& runningSpread() { return runningSpread_; }
         QuantLib::Period& indexTerm() { return indexTerm_; }
-        boost::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
+        QuantLib::ext::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
         bool& allowNegativeRates() { return allowNegativeRates_; }
         //@}
 
@@ -155,7 +155,7 @@ public:
 
             When this flag is \c false, we make no such assumption and the default curve building fails.
         */
-        boost::optional<bool> implyDefaultFromMarket_;
+        QuantLib::ext::optional<bool> implyDefaultFromMarket_;
 
         /*! If this flag is set to true, the checks for negative hazard rates are disabled when building a curve of type
             - HazardRate

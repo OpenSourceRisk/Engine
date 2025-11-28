@@ -97,7 +97,7 @@ public:
         auto additionalResults = instrument_->additionalResults();
         auto it = additionalResults.find("CurrentNotional");
         if (it != additionalResults.end()) {
-            return boost::any_cast<double>(it->second);
+            return QuantLib::ext::any_cast<double>(it->second);
         } else {
             return Null<double>();
         }
