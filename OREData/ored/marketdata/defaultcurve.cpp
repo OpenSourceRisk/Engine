@@ -275,35 +275,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                         }
                     }
                 }
-                // Build the default curve of the requested type
-                switch (config.second.type()) {
-                case DefaultCurveConfig::Config::Type::SpreadCDS:
-                case DefaultCurveConfig::Config::Type::ConvSpreadCDS:
-                case DefaultCurveConfig::Config::Type::Price:
-                    buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
-                                  implyDefaultFromMarket);
-                    break;
-                case DefaultCurveConfig::Config::Type::HazardRate:
-                    buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
-                    break;
-                case DefaultCurveConfig::Config::Type::Benchmark:
-                    buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
-                    break;
-                case DefaultCurveConfig::Config::Type::MultiSection:
-                    buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                    break;
-                case DefaultCurveConfig::Config::Type::TransitionMatrix:
-                    buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                    break;
-                case DefaultCurveConfig::Config::Type::Null:
-                    buildNullCurve(configs->curveID(), config.second, asof, spec);
-                    break;
-                default:
-                    QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
-                                                           << " was not recognised");
-                }
-                built = true;
-                break;
+
+                
                 /*            } catch (exception& e) {
                                 std::ostringstream message;
                                 message << "build attempt failed for " << configs->curveID() << " using config with
