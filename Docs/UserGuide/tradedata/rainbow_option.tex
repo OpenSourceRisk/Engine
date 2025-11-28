@@ -1648,3 +1648,168 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
       COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
+
+\subsubsection*{Worst Performance Rainbow Option 06}
+
+A worst performance rainbow option 06 is represented as a {\em scripted trade},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction.
+
+Trade input and the payoff script are described below.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_WorstPerformanceRainbowOption06">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <WorstPerformanceRainbowOption06Data>
+    <LongShort type="longShort">Long</LongShort>
+    <Quantity type="number">200000</Quantity>
+    <Underlyings type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings>
+    <InitialPrices type="number">
+      <Value>5455.60</Value>
+      <Value>500</Value>
+    </InitialPrices>
+    <StrikePrices type="number">
+      <Value>5600</Value>
+      <Value>550</Value>
+    </StrikePrices>
+    <BarrierLevels type="number">
+      <Value>5600</Value>
+      <Value>550</Value>
+    </BarrierLevels>
+    <KnockInPrices type="number">
+      <Value>5600</Value>
+      <Value>550</Value>
+    </KnockInPrices>
+    <BonusCoupon type="number">0.1430</BonusCoupon>
+    <ObservationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-03-11</StartDate>
+          <EndDate>2020-09-04</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>USD</Calendar>
+          <Convention>ModifiedFollowing</Convention>
+          <TermConvention>ModifiedFollowing</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ObservationSchedule>
+    <ObservationDate type="event">2020-09-04</ObservationDate>
+    <SettlementDate type="event">2020-09-11</SettlementDate>
+    <PayCcy type="currency">EUR</PayCcy>
+  </WorstPerformanceRainbowOption06Data>
+</Trade>
+\end{minted}
+
+The WorstPerformanceRainbowOption06 script referenced in the trade above is shown in listing
+\ref{lst:worst_performance_rainbow_option_06}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE SIZE(Underlyings) == SIZE(InitialPrices) AND SIZE(Underlyings) == SIZE(StrikePrices);
+REQUIRE SIZE(Underlyings) == SIZE(BarrierLevels) AND SIZE(Underlyings) == SIZE(KnockInPrices);
+REQUIRE ObservationDate <= SettlementDate;
+
+NUMBER indexInitial, indexFinal, performance, d, spot;
+NUMBER worstPerformance, payoff, premium, knockedIn, u, worstUnderlying, worstUnderlyingFinalPrice;
+NUMBER deliverableAsset,fractionalAmount, fractionalCashAmount;
+
+worstUnderlying = 1;
+
+FOR u IN (1, SIZE(Underlyings), 1) DO
+  indexInitial = InitialPrices[u];
+  indexFinal = Underlyings[u](ObservationDate);
+  performance = indexFinal / indexInitial;
+
+  IF {u == 1} OR {performance < worstPerformance} THEN
+    worstPerformance = performance;
+    worstUnderlyingFinalPrice = indexFinal;
+    worstUnderlying = u;
+  END;
+END;
+
+FOR d IN (1, SIZE(ObservationSchedule), 1) DO
+  IF knockedIn == 0 THEN
+    FOR u IN (1, SIZE(Underlyings), 1) DO
+      spot = Underlyings[u](ObservationSchedule[d]);
+      IF spot < KnockInPrices[u] THEN
+        knockedIn = 1;
+      END;
+    END;
+  END;
+END;
+
+IF knockedIn == 1 AND worstUnderlyingFinalPrice < StrikePrices[worstUnderlying] THEN
+  deliverableAsset = Quantity/StrikePrices[worstUnderlying];
+  fractionalAmount = frac(deliverableAsset);
+  fractionalAmount = round(fractionalAmount,4);
+  fractionalCashAmount = worstUnderlyingFinalPrice*fractionalAmount;
+  payoff = round(fractionalCashAmount,2);
+ELSE
+  IF worstUnderlyingFinalPrice >= BarrierLevels[worstUnderlying] THEN
+    payoff = Quantity*(1+max(BonusCoupon, worstPerformance-1));
+  ELSE
+    payoff = Quantity;
+  END;
+END;
+
+payoff = LOGPAY(payoff, ObservationDate, SettlementDate, PayCcy, 1, Payoff);
+
+Option = LongShort * payoff;
+\end{minted}
+\caption{Payoff script for a WorstPerformanceRainbowOption06.}
+\label{lst:worst_performance_rainbow_option_06}
+\end{listing}
+
+The payout formula, determined on the \lstinline!ObservationDate!, is as follows, where
+$worstPerformance$ is the performance, i.e.\ $S_T/S_0$, of the worst-performing asset as
+of the final determination date $T$. The payout for a long put option is as follows:
+
+If a knock-in event was triggered and the Final Reference Price of the Worst Performing Underlying
+is below its Strike Price,
+\begin{equation*}
+  Payout = \text{\lstinline!Quantity!} * S * \text{FractionalAmount}
+\end{equation*}
+with Fractional Amount being the fractional share resulting from the calculation of the Deliverable Assets. $K$ being the strike level of the 
+worst underlying performing asset.
+\begin{equation*}
+  FractionalAmount = \text{\lstinline!Quantity!} / \text{K}
+\end{equation*}
+
+The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOption06Data! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each basket underlying. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!StrikePrices!: The strike prices used within the calculation agent. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!KnockInPrices!: The agreed European knock-in barrier level. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!Quantity!: A quantity multiplier applied to the payoff. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!BarrierLevels!: The agreed barrier level. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!BonusCoupon!: A percentage. \\
+  Allowable values: Any number.
+  \item{}[event] \lstinline!ObservationDate!: The date on which the final levels of the assets are determined. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!SettlementDate!: The settlement date for the payoff. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
