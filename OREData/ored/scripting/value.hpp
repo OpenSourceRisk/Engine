@@ -85,6 +85,7 @@ ValueType operator/(const ValueType& x, const ValueType& y);
 ValueType min(const ValueType& x, const ValueType& y);
 ValueType max(const ValueType& x, const ValueType& y);
 ValueType pow(const ValueType& x, const ValueType& y);
+ValueType round(const ValueType& x, const ValueType& y);
 
 ValueType operator-(const ValueType& x);
 ValueType abs(const ValueType& x);
@@ -93,6 +94,7 @@ ValueType log(const ValueType& x);
 ValueType sqrt(const ValueType& x);
 ValueType normalCdf(const ValueType& x);
 ValueType normalPdf(const ValueType& x);
+ValueType frac(const ValueType& x);
 
 ValueType typeSafeAssign(ValueType& x, const ValueType& y);
 

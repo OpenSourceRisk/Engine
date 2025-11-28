@@ -22,6 +22,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
+#include <cmath>
 
 #include <boost/math/distributions/normal.hpp>
 
@@ -317,6 +318,22 @@ std::size_t cg_sqrt(ComputationGraph& g, const std::size_t a, const std::string&
     if (g.isConstant(a))
         return cg_const(g, std::sqrt(g.constantValue(a)));
     return g.insert({a}, RandomVariableOpCode::Sqrt, label);
+}
+
+std::size_t cg_frac(ComputationGraph& g, const std::size_t a, const std::string& label) {
+    if (g.isConstant(a)){
+        double intPart;
+        return cg_const(g, std::modf(g.constantValue(a), &intPart));
+    } 
+    return g.insert({a}, RandomVariableOpCode::Frac, label);
+}
+
+std::size_t cg_round(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
+    if (g.isConstant(a) && g.isConstant(b)){
+        double factor = std::pow(10.0, g.constantValue(b));
+        return cg_const(g, std::round(g.constantValue(a)*factor)/factor);
+    }
+    return g.insert({a, b}, RandomVariableOpCode::Round, label);
 }
 
 std::size_t cg_log(ComputationGraph& g, const std::size_t a, const std::string& label) {

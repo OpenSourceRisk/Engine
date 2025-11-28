@@ -38,6 +38,7 @@
 #include <boost/functional/hash.hpp>
 
 #include <map>
+#include <cmath>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
 // #define ENABLE_RANDOMVARIABLE_STATS
@@ -729,6 +730,31 @@ RandomVariable pow(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable round(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(),
+               "RandomVariable: round(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    else if (QuantLib::close_enough(y.constantData_, 1.0))
+        return x;
+    if (x.deterministic()){
+        double factor = std::pow(10, y.constantData_);
+        x.constantData_ = std::round(x.constantData_*factor)/factor;
+    }
+    else {
+        resumeCalcStats();
+        for (Size i = 0; i < x.size(); ++i) {
+            double factor = std::pow(10, y[i]);
+            x.data_[i] = std::round(x.data_[i]*factor)/factor;
+        }
+        stopCalcStats(x.size());
+    }
+    return x;
+}
+
 RandomVariable operator-(RandomVariable x) {
     if (x.deterministic_)
         x.constantData_ = -x.constantData_;
@@ -788,6 +814,20 @@ RandomVariable sqrt(RandomVariable x) {
         resumeCalcStats();
         for (Size i = 0; i < x.n_; ++i) {
             x.data_[i] = std::sqrt(x.data_[i]);
+        }
+        stopCalcStats(x.n_);
+    }
+    return x;
+}
+
+RandomVariable frac(RandomVariable x) {
+    double iptr;
+    if (x.deterministic_)
+        x.constantData_ = std::modf(x.constantData_, &iptr);
+    else {
+        resumeCalcStats();
+        for (Size i = 0; i < x.n_; ++i) {
+            x.data_[i] = std::modf(x.data_[i], &iptr);
         }
         stopCalcStats(x.n_);
     }
