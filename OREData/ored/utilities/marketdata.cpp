@@ -75,7 +75,7 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
                                              const std::string& configuration) {
     if (name == "NULLCURVE") {
         return Handle<YieldTermStructure>(
-            QuantLib::ext::make_shared<QuantLib::FlatForward>(market->asofDate(), 0.0, Actual365Fixed()));
+            QuantLib::ext::make_shared<QuantLib::FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
     }
     try {
         return market->iborIndex(name, configuration)->forwardingTermStructure();
