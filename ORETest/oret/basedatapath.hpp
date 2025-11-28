@@ -32,7 +32,7 @@ using boost::filesystem::exists;
 using boost::filesystem::is_directory;
 using boost::filesystem::path;
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #define BOOST_LIB_NAME boost_system
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_filesystem
