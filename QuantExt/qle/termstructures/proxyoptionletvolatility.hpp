@@ -56,6 +56,9 @@ public:
                                       const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                       const QuantLib::Period& rateComputationPeriod);
 
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getBaseIndex() const { return baseIndex_; }
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> getTargetIndex() const { return targetIndex_; }
+
 private:
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;

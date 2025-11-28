@@ -1531,12 +1531,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            QL_REQUIRE(!QuantLib::ext::dynamic_pointer_cast<ProxyOptionletVolatility>(*wrapper), 
-                                "DynamicOptionletVolatilityStructure does not support ProxyOptionletVolatility surface.");
+                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol = 
+                                    QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
 
-                            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> capletVol =
-                                QuantLib::ext::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(),
-                                                                                                decayMode);
                             hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
                         }
                         hCapletVol->setAdjustReferenceDate(false);
