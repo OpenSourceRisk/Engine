@@ -27,28 +27,47 @@
 
 namespace QuantExt {
 using namespace QuantLib;
-
-class IborFallbackCurve : public QuantLib::YieldTermStructure {
+class SpreadedIndexYieldCurve : public QuantLib::YieldTermStructure {
 public:
-    IborFallbackCurve(const QuantLib::ext::shared_ptr<IborIndex>& originalIndex,
-                      const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex, const Real spread, const Date& switchDate);
+    SpreadedIndexYieldCurve(const QuantLib::ext::shared_ptr<IborIndex>& originalIndex,
+                            const QuantLib::ext::shared_ptr<IborIndex>& referenceIndex, 
+                            const Real spread, const bool spreadOnReference = true);
 
-    QuantLib::ext::shared_ptr<IborIndex> originalIndex() const;
-    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const;
-    Real spread() const;
-    const Date& switchDate() const;
+    QuantLib::ext::shared_ptr<IborIndex> originalIndex() const { return originalIndex_; };
+    QuantLib::ext::shared_ptr<IborIndex> referenceIndex() const { return referenceIndex_; };
+    Real spread() const { return spread_; }
 
     const Date& referenceDate() const override;
     Date maxDate() const override;
     Calendar calendar() const override;
     Natural settlementDays() const override;
 
-private:
+protected:
     Real discountImpl(QuantLib::Time t) const override;
 
+private:
     QuantLib::ext::shared_ptr<IborIndex> originalIndex_;
-    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> referenceIndex_;
     Real spread_;
+    bool spreadOnReference_ = true;
+};
+
+class IborFallbackCurve : public SpreadedIndexYieldCurve {
+public:
+    IborFallbackCurve(const QuantLib::ext::shared_ptr<IborIndex>& originalIndex,
+                      const QuantLib::ext::shared_ptr<OvernightIndex>& rfrIndex, const Real spread,
+                      const Date& switchDate)
+        : SpreadedIndexYieldCurve(originalIndex, rfrIndex, spread), switchDate_(switchDate){};
+
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const { 
+        auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(referenceIndex());
+        QL_REQUIRE(on, "IborFallbackCurve: reference index is not an OvernightIndex");
+        return on; 
+    }
+    const Date& switchDate() const { return switchDate_; };
+
+private:
+    Real discountImpl(QuantLib::Time t) const override;
     Date switchDate_;
 };
 

@@ -5,9 +5,9 @@
 
 The (Arithmetic) Average Price Option (APO) is an Asian option with
 a single-period Commodity Swap as an underlying which observes daily
-price fixings in the calculation period. Option exercise is at calculation 
+price fixings in the calculation period. Option exercise is at calculation
 period end, typically on the last floating price fixing date - in
-contrast to a Commodity Swaption \ref{ss:input_commodityswaption} 
+contrast to a Commodity Swaption \ref{ss:input_commodityswaption}
 where expiry is before underlying start. In a call option, the owner
 of the option has the right to receive average floating prices and to
 pay fixed prices. In a put option it is the other way around.
@@ -38,10 +38,10 @@ Allowable values:  See section \ref{ss:premiums}
     \item \lstinline!Type!: One of \emph{UpAndIn}, \emph{DownAndIn}, \emph{UpAndOut}, \emph{DownAndOut}
     \item \lstinline!Style!: One of \emph{European}, \emph{American}. A European barrier is observed on the last relevant pricing date of the APO while an American barrier is observed on all pricing dates of the APO.
     \item \lstinline!LevelData!: The barrier level. Only single-barrier options are allowed, i.e. exactly one level must be given.
-    \item \lstinline!StrictComparison! [Optional]: Define wether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
+    \item \lstinline!StrictComparison! [Optional]: Define whether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
 \end{itemize}
 
-\item \lstinline!Name!: An identifier specifying the commodity being referenced. This is described in section \ref{ss:commodity_floating_leg_data}. 
+\item \lstinline!Name!: An identifier specifying the commodity being referenced. This is described in section \ref{ss:commodity_floating_leg_data}.
 
 Allowable values:  See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}.
 
@@ -55,7 +55,7 @@ The meaning of the Quantity is influenced by the \lstinline!CommodityQuantityFre
 
 Allowable values: Any positive real number.
 
-\item \lstinline!StrikeData!: A \lstinline!StrikeData! node is used as described in Section \ref{ss:strikedata} to represent the APO strike price and Currency of the Strike.The APO strike price. The strike uses the price quotation outlined in the underlying contract specs for the commodity name in question. Note that for CommodityAPOs only \lstinline!StrikePrice!  is supported within the \lstinline!StrikeData! node, and not \lstinline!StrikeYield!. 
+\item \lstinline!StrikeData!: A \lstinline!StrikeData! node is used as described in Section \ref{ss:strikedata} to represent the APO strike price and Currency of the Strike.The APO strike price. The strike uses the price quotation outlined in the underlying contract specs for the commodity name in question. Note that for CommodityAPOs only \lstinline!StrikePrice!  is supported within the \lstinline!StrikeData! node, and not \lstinline!StrikeYield!.
 
 Allowable values: Only supports \lstinline!StrikePrice! as described in Section \ref{ss:strikedata}.
 
@@ -73,7 +73,7 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item \lstinline!PaymentCalendar!: The business calendar used to determine the valid payment date.
 
-Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. 
+Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!.
 
 \item \lstinline!PaymentLag!: The payment date is this number of business days after a given base date. The base date is determined by the value of the \lstinline!CommodityPayRelativeTo! node below which is generally omitted for APOs and allowed to take its default value of \lstinline!CalculationPeriodEndDate!.
 

@@ -195,7 +195,7 @@ The meanings and allowable values for the \lstinline!VarianceOptionData! node be
 
 \subsubsection{Variance Swap with KI/KO Barrier}
 
-A capped and/or floored variance swap with a knock-in/knock-out feature. Note that this trade type is also used for regular capped/floored 
+A capped and/or floored variance swap with a knock-in/knock-out feature. Note that this trade type is also used for regular capped/floored
 variance swaps without barrier, by setting the \lstinline!BarrierType! to \emph{UpIn} and \lstinline!BarrierLevel! to zero.
 
 The traditional trade representation is as follows, using an FX underlying in this example:
@@ -206,7 +206,7 @@ The traditional trade representation is as follows, using an FX underlying in th
   <Envelope>
     .....
   </Envelope>
-  <KIKOVarianceSwapData>    
+  <KIKOVarianceSwapData>
     <LongShort type="longShort">Long</LongShort>
     <Strike type="number">0.02</Strike>
     <Notional type="number">50000</Notional>
@@ -534,7 +534,7 @@ FOR d IN (2, SIZE(ValuationSchedule), 1) DO
   currPrice = Underlying(ValuationSchedule[d]);
   prevPrice = Underlying(ValuationSchedule[d-1]);
 
-  IF {CountBothObservations == 1 AND 
+  IF {CountBothObservations == 1 AND
       currPrice >= LowerBarrierLevel AND currPrice <= UpperBarrierLevel AND
       prevPrice >= LowerBarrierLevel AND prevPrice <= UpperBarrierLevel} OR
      {CountBothObservations == -1 AND
@@ -658,8 +658,8 @@ The meanings and allowable values for the \lstinline!CorridorVarianceSwapData! n
 
 \subsubsection{Indexed Corridor Variance Swap}
 
-Also called Cross Corridor Variance Swap. The payoff depends on the variance of one equity index (the Underlying) for the days another 
-equity index (the CorridorIndex) is within a corridor.  
+Also called Cross Corridor Variance Swap. The payoff depends on the variance of one equity index (the Underlying) for the days another
+equity index (the CorridorIndex) is within a corridor.
 
 The traditional trade representation is as follows, using EQ underlyings in this example:
 
@@ -897,7 +897,7 @@ FOR d IN (2, n, 1) DO
   prevPrice = Underlying(ValuationSchedule[d-1]);
 
   IF alive == 1 THEN
-    IF {CountBothObservations == 1 AND 
+    IF {CountBothObservations == 1 AND
         currPrice >= CorridorLowerBarrierLevel AND currPrice <= CorridorUpperBarrierLevel AND
         prevPrice >= CorridorLowerBarrierLevel AND prevPrice <= CorridorUpperBarrierLevel} OR
        {CountBothObservations == -1 AND
@@ -1022,9 +1022,9 @@ The meanings and allowable values for the \lstinline!KIKOCorridorVarianceSwapDat
 
 \subsubsection{Conditional Variance Swap 01}
 
-\emph{ConditionalVarianceSwap01} is a type of conditional variance swap that accrues variance contributions only when the underlying trades within a 
-specified single barrier window - (differing from the \emph{CorridorVarianceSwap} that has a double barrier window.) In the \emph{01} variant, the variance amount used to scale the notional is calculated directly based on the Strike parameter. 
-It supports several features such as caps, floors, accrual adjustments, and counting both observations, providing a way to conditionally accumulate 
+\emph{ConditionalVarianceSwap01} is a type of conditional variance swap that accrues variance contributions only when the underlying trades within a
+specified single barrier window - (differing from the \emph{CorridorVarianceSwap} that has a double barrier window.) In the \emph{01} variant, the variance amount used to scale the notional is calculated directly based on the Strike parameter.
+It supports several features such as caps, floors, accrual adjustments, and counting both observations, providing a way to conditionally accumulate
 variance with notional scaling tied closely to the Strike.
 
 The traditional trade representation is as follows, using an FX underlying in this example:
@@ -1084,7 +1084,7 @@ FOR d IN (2, SIZE(ValuationSchedule), 1) DO
         currPrice >= BarrierLevel AND prevPrice >= BarrierLevel}}}
   OR {CountBothObservations == -1 AND {
       {{BarrierType == 1 OR BarrierType == 4} AND
-        prevPrice <= BarrierLevel} OR 
+        prevPrice <= BarrierLevel} OR
       {{BarrierType == 2 OR BarrierType == 3} AND
         prevPrice <= BarrierLevel} }}
   THEN
@@ -1168,7 +1168,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
   swap (\emph{False}). \\
   Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
   The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
-  \item{}[barrierType] \lstinline!BarrierType!: Whether the instrument is an up-variance swap (\emph{UpIn} or \emph{DownOut}) or 
+  \item{}[barrierType] \lstinline!BarrierType!: Whether the instrument is an up-variance swap (\emph{UpIn} or \emph{DownOut}) or
   a down-variance swap (\emph{DownIn} or \emph{UpOut}). \\
   Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}.
   \item{}[number] \lstinline!BarrierLevel!: The agreed barrier price level. \\
@@ -1206,9 +1206,9 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
 
 \subsubsection{Conditional Variance Swap 02}
 
-\emph{ConditionalVarianceSwap02} accrues variance only when the underlying trades within the single barrier window, but differs from the \emph{01} variant by including an 
-additional VarianceReference parameter. This parameter acts as a separate variance strike used to scale the notional amount, distinct 
-from the Strike parameter used in the payoff calculation. This added flexibility allows for more sophisticated structuring, where the 
+\emph{ConditionalVarianceSwap02} accrues variance only when the underlying trades within the single barrier window, but differs from the \emph{01} variant by including an
+additional VarianceReference parameter. This parameter acts as a separate variance strike used to scale the notional amount, distinct
+from the Strike parameter used in the payoff calculation. This added flexibility allows for more sophisticated structuring, where the
 strike for variance scaling and the strike for payoff determination can differ.
 
 The traditional trade representation is as follows, using an FX underlying in this example:
@@ -1269,7 +1269,7 @@ FOR d IN (2, SIZE(ValuationSchedule), 1) DO
         currPrice >= BarrierLevel AND prevPrice >= BarrierLevel}}}
   OR {CountBothObservations == -1 AND {
       {{BarrierType == 1 OR BarrierType == 4} AND
-        prevPrice <= BarrierLevel} OR 
+        prevPrice <= BarrierLevel} OR
       {{BarrierType == 2 OR BarrierType == 3} AND
         prevPrice <= BarrierLevel} }}
   THEN
@@ -1328,7 +1328,7 @@ The payout formula is:
   Payout = 100^2 * varianceAmount * \Big[ \min \big( \max (realisedVariance^2, \text{\lstinline!Floor!}), \text{\lstinline!Cap!}\big) - \text{\lstinline!Strike!}^2 \Big],
 \end{equation*}
 where the $realisedVariance$ only consists of variance accrual contributions for when the underlying price/level
-was trading within the pre-defined window, and the ``variance strike'' used to obtain the varianceAmount is 
+was trading within the pre-defined window, and the ``variance strike'' used to obtain the varianceAmount is
 given by the variance reference strike (instead of the actual strike).
 
 The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData02! node below.
@@ -1358,7 +1358,7 @@ The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData
   swap (\emph{False}). \\
   Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
   The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
-  \item{}[barrierType] \lstinline!BarrierType!: Whether the instrument is an up-variance swap (\emph{UpIn} or \emph{DownOut}) or 
+  \item{}[barrierType] \lstinline!BarrierType!: Whether the instrument is an up-variance swap (\emph{UpIn} or \emph{DownOut}) or
   a down-variance swap (\emph{DownIn} or \emph{UpOut}). \\
   Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}.
   \item{}[number] \lstinline!BarrierLevel!: The agreed barrier price level. \\
@@ -1482,7 +1482,7 @@ The meanings and allowable values of elements in the \lstinline!EquityPairwiseVa
   \item \lstinline!UnderlyingNotionals!: The vega notional amount. If the swap was struck in terms of variance notionals
   $N_{var}$, the corresponding vega notionals are given by $N^{1,2}_{vol} = N^{1,2}_{var} \cdot 2 \cdot 100 \cdot K^{1,2}_{vol}$
   (where $K^{1,2}_{vol}$ is in absolute terms). \\
-    Allowable values: Any non-negative number. 
+    Allowable values: Any non-negative number.
   \item{} \lstinline!BasketNotional!: The basket vega notional amount. \\
     Allowable values: Any non-negative number.
   \item{} \lstinline!ValuationSchedule!: The start dates of the variance accrual schedule. This node can
@@ -1589,7 +1589,7 @@ FOR d IN (1, SIZE(ValuationSchedule)-1, 1) DO
   performance2 = ln(Underlyings[2](LaggedValuationSchedule[d]) /
                     Underlyings[2](ValuationSchedule[d]));
   basketPerformance = (performance1 + performance2) / 2;
-  
+
   realisedVariance1 = realisedVariance1 + pow(performance1, 2);
   realisedVariance2 = realisedVariance2 + pow(performance2, 2);
   realisedVarianceBasket = realisedVarianceBasket + pow(basketPerformance, 2);
@@ -1657,7 +1657,7 @@ The meanings and allowable values for the \lstinline!PairwiseVarianceSwapData! n
   (where $K^{1,2}_{vol}$ is in absolute terms). \\
   Allowable values: Any non-negative number.
   \item{}[index] \lstinline!Underlyings!: Underlying index. \\
-  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. 
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!BasketStrike!: The basket volatility strike $\hat{K}_{vol}$ quoted in absolute terms. \\
   Allowable values: Any non-negative number, as a percentage expressed in decimal form.
   \item{}[number] \lstinline!BasketNotional!: The basket vega notional amount. \\
@@ -2139,7 +2139,7 @@ The meanings and allowable values for the \lstinline!CorridorVarianceDispersionS
 
 This instrument is a variance dispersion swap with a double-barrier knock-out and a corridor feature.
 
-With the corridor feature, variance is accrued only when the the price of the first underlying of each pair of
+With the corridor feature, variance is accrued only when the price of the first underlying of each pair of
 underlyings (between the first and second basket) falls within the `corridor'. This means that the number of
 underlyings in each basket should be the same, and each pair is determined based on the order that they are
 provided in the trade XML, as in the example below.
@@ -2524,10 +2524,10 @@ FOR pair IN (1, PairCount, 1) DO
 	realisedVariance = realisedVariance + pow(basketVariance, 2);
 	basketVariance = 0;
   END;
-  
+
   equityAmountBVS = 1 / (2 * StrikesBVS[pair] * 100) * (pow(min(100 * sqrt(realisedVariance * normalizationFactor), CapAmountMultiplier * StrikesBVS[pair] * 100),2) - pow(StrikesBVS[pair] * 100, 2));
   realisedVariance = 0;
-  
+
   FOR basket IN (1, BasketCount, 1) DO
 	id = (basket - 1) * PairCount + pair;
 	FOR d IN (2, D, 1) DO
@@ -2538,7 +2538,7 @@ FOR pair IN (1, PairCount, 1) DO
 	equityAmountVS = equityAmountVS + VarianceWeights[id] * 1 / (2 * StrikesVS[id] * 100) * (pow(min(100 * sqrt(252 / expectedN * realisedVariance), CapAmountMultiplier * StrikesVS[id] * 100), 2) - pow(StrikesVS[id] * 100, 2));
 	realisedVariance = 0;
   END;
-  
+
   equityAmount = equityAmount + Notionals[pair] * max(Floor, min(Cap, equityAmountVS - equityAmountBVS));
   equityAmountVS = 0;
 END;
@@ -2571,7 +2571,7 @@ The meanings and allowable values for the \lstinline!PairwiseGeometricVarianceDi
   Allowable values: Any positive number, as a percentage expressed in decimal form.
   \item{}[number] \lstinline!BasketWeights!: List of weights applied to the realised volatility of each basket in the Basket Variance Swap transaction. \\
   Allowable values: Any positive number.
-  \item{}[number] \lstinline!VarianceWeights!: List of weights applied to the realised volatility of each underlying in the Variance Swap transaction, 
+  \item{}[number] \lstinline!VarianceWeights!: List of weights applied to the realised volatility of each underlying in the Variance Swap transaction,
   ordered sequentially in each basket before moving to the next basket. \\
   Allowable values: Any positive number.
   \item{}[number] \lstinline!Lag!: The number of lag days when calculating the realised variance in the Basket Variance Swap transaction.\\
@@ -2659,7 +2659,7 @@ The \emph{GammaSwap} script referenced in the trade above is shown in listing
         currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);
         strike = pow(Strike, 2);
 
-        payoff = LongShort * currentNotional * (realisedVariation - 
+        payoff = LongShort * currentNotional * (realisedVariation -
                     strike);
 
         Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
@@ -2923,7 +2923,7 @@ The meanings and allowable values for the \lstinline!BasketVarianceSwapData! nod
   strike. \\
   Allowable values: \emph{Long, Short}.
   \item{}[index] \lstinline!Underlyings!: List of underlying indices. \\
-  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. 
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
   \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
   If the swap was struck in terms of variance, the square root of that variance should be used here. \\
   Allowable values: Any non-negative number, as a percentage expressed in decimal form.

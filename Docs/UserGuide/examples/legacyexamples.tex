@@ -40,7 +40,7 @@ Main files in the {\tt Examples/API} directory:
 Run a local example:
 \begin{itemize}
 \item start the data service: \\
-  {\tt python3 simplefileserver.py \&} 
+  {\tt python3 simplefileserver.py \&}
 \item start the analytics service: \\
   {\tt python3 restapi.py \&}
 \item send a request to run the equivalent of Example 1: \\
@@ -62,16 +62,16 @@ all maturities, i.e. the Swap is at the money initially and remains at the money
 ORE in directory {\tt Examples/Example\_1} with
 
 \medskip
-\centerline{\tt python run.py } 
+\centerline{\tt python run.py }
 \medskip
 
-yields the exposure evolution in 
+yields the exposure evolution in
 
 \medskip
-\centerline{\tt Examples/Example\_1/Output/*.pdf } 
+\centerline{\tt Examples/Example\_1/Output/*.pdf }
 \medskip
 
-and shown in figure \ref{fig_1}. 
+and shown in figure \ref{fig_1}.
 \begin{figure}[h!]
 \begin{center}
 %\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_100k.pdf}
@@ -81,12 +81,12 @@ and shown in figure \ref{fig_1}.
 outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of Example\_1. }
 \label{fig_1}
 \end{figure}
-Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
+Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially
 
 \medskip
-\centerline{\tt ore[.exe] ore.xml} 
+\centerline{\tt ore[.exe] ore.xml}
 
-\centerline{\tt ore[.exe] ore\_swaption.xml} 
+\centerline{\tt ore[.exe] ore\_swaption.xml}
 \medskip
 
 which are wrapped into the script {\tt Examples/Example\_1/run.py} provided with the ORE release.
@@ -115,13 +115,13 @@ Moving to {\tt Examples/Example\_2}, we see what changes when using a realistic 
 environment. Running the example with
 
 \medskip
-\centerline{\tt python run.py } 
+\centerline{\tt python run.py }
 \medskip
 
-yields the exposure evolution in 
+yields the exposure evolution in
 
 \medskip
-\centerline{\tt Examples/Example\_2/Output/*.pdf } 
+\centerline{\tt Examples/Example\_2/Output/*.pdf }
 \medskip
 
 shown in figure \ref{fig_2}.
@@ -284,14 +284,14 @@ FX Option, see figure \ref{fig_7}.
 Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \begin{align*}
 \frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
-NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
+NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t)
 \end{align*}
 where $N(t)$ denotes the numeraire asset.
 One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is
 due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with deterministic Black
 volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The
 deviation can be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in
-each simulation step on each path.  
+each simulation step on each path.
 %\todo[inline]{Add exposure evolution graph with 'simulated' FX vol}
 
 %--------------------------------------------------------
@@ -328,7 +328,7 @@ the EUR leg's notional is reset to match the USD notional.
   1000 paths and quarterly time steps.}
 \label{fig_6b}
 \end{figure}
-  
+
 %--------------------------------------------------------
 \subsection{Netting Set, Collateral, XVAs, XVA Allocation}
 %--------------------------------------------------------
@@ -354,7 +354,7 @@ that the P\&L over the MPOR does not contain the cash flow effect, and exposure 
 and position of the largest spike in figure \ref{fig_9} is consistent with a cash flow of the 40 million GBP Swap in the
 example's portfolio that rolls over the 3rd of March and has a cash flow on 3 March 2020, a bit more than four years
 from the evaluation date.
-  
+
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{examples/mpl_nocollateral_epe.pdf}
@@ -420,7 +420,7 @@ single-trade VAs.  Note that COLVA, MVA and Collateral Floor are only available 
 is posted.
 
 \medskip
-Detailed output is written for COLVA and Collateral Floor to file {\tt colva\_nettingset\_*.csv} which shows the 
+Detailed output is written for COLVA and Collateral Floor to file {\tt colva\_nettingset\_*.csv} which shows the
 incremental contributions to these two VAs through time.
 
 
@@ -571,9 +571,9 @@ The way out is applying a `shift transformation' to the Linear Gauss Markov mode
 
 The effect of the 'ShiftHorizon' parameter $T$ is to apply a shift to the Linear Gauss Markov model's $H(t)$ parameter
 (see \cite{methods}) {\em after} the model has been calibrated, i.e. to replace:
-$$ 
-H(t) \rightarrow H(t) - H(T) 
-$$ 
+$$
+H(t) \rightarrow H(t) - H(T)
+$$
 It can be shown that this leaves all expectations computed in the model (such as EPE and ENE) invariant. As explained in
 \cite{Lichters}, subtracting an $H$ shift effectively means performing a change of measure from the `native' LGM measure
 to a T-Forward measure with horizon $T$, here 30 years. Both negative and positive shifts are permissible, but only
@@ -611,25 +611,25 @@ out at the chosen horizon, and the expected rate matches the forward rate.
 
 This example in folder {\tt Examples/Example\_13} demonstrates Dynamic Initial Margin calculations (see also \cite{methods}) for a number of elementary products:
 \begin{itemize}
-\item A single currency Swap in EUR (case A), 
-\item a European Swaption in EUR with physical delivery (case B), 
+\item A single currency Swap in EUR (case A),
+\item a European Swaption in EUR with physical delivery (case B),
 \item a single currency Swap in USD (case C),
 \item a EUR/USD cross currency Swap (case D),
 \item a EUR/USD FX Option (case E).
 \end{itemize}
 
-The examples can be run as before with 
+The examples can be run as before with
 
 \medskip
-\centerline{\tt python run\_A.py} 
+\centerline{\tt python run\_A.py}
 
 \medskip
-and likewise for cases B--E. The essential results of each run are visualised in the form of 
+and likewise for cases B--E. The essential results of each run are visualised in the form of
 \begin{itemize}
 \item evolution of expected DIM which feeds into the MVA calculation
-\item regression plots at selected future times 
+\item regression plots at selected future times
 \end{itemize}
-illustrated for cases A, B and E in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13c_evolution}. 
+illustrated for cases A, B and E in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13c_evolution}.
 
 \begin{figure}[h!]
 \begin{center}
@@ -661,7 +661,7 @@ The DIM evolution graphs compare a subset of the following Initial Margin projec
 For a discussion of the regression model performance see \cite{Anfuso2016,LichtersEtAl}. The cases A--E are associated with
 various ORE master input files {\tt Input/ore\_A*.xml},  {\tt Input/ore\_B*.xml}, ..., which demonstrate the required simulation
 and xva analytic configurations.
- 
+
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{examples/mpl_dim_evolution_B_swaption_eur.pdf}
@@ -710,7 +710,7 @@ portfolio used in this example consists of
 \item a FX call option on USD/GBP % commented out?
 \item a FX put option on USD/EUR
 \item an European swaption
-\item a Bermudan swaption 
+\item a Bermudan swaption
 \item a cap and a floor in USD
 \item a cap and a floor in EUR
 \item a fixed rate bond
@@ -773,13 +773,13 @@ difference of the two for each trade and scenario label.
 
 %\todo[inline]{Update after CDS has been added to the example.}
 \medskip
-Finally, this example demonstrates a parametric VaR calculation based on the sensitivity and cross gamma output from the sensitivity analysis (deltas, vegas, gammas, cross gammas) and an external covariance matrix input. The result in {\tt var.csv} shows a breakdown by portfolio, risk class (All, Interest Rate, FX, Inflation, Equity, Credit) and risk type (All, Delta \& Gamma, Vega). The results shown are Delta Gamma Normal VaRs for the 95\% and 99\% quantile, the holding period is incorporated into the input covariances. Alternatively, one can choose a Monte Carlo VaR which means that the sensitivity based P\&L distribution is evaluated with MC simulation assuming normal respectively log-normal risk factor distribution. 
- 
+Finally, this example demonstrates a parametric VaR calculation based on the sensitivity and cross gamma output from the sensitivity analysis (deltas, vegas, gammas, cross gammas) and an external covariance matrix input. The result in {\tt var.csv} shows a breakdown by portfolio, risk class (All, Interest Rate, FX, Inflation, Equity, Credit) and risk type (All, Delta \& Gamma, Vega). The results shown are Delta Gamma Normal VaRs for the 95\% and 99\% quantile, the holding period is incorporated into the input covariances. Alternatively, one can choose a Monte Carlo VaR which means that the sensitivity based P\&L distribution is evaluated with MC simulation assuming normal respectively log-normal risk factor distribution.
+
 %--------------------------------------------------------
 \subsection{Equity Derivatives Exposure}\label{ex:equityderivatives}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, sensitivities, exposures and XVA for a portfolio 
+The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, sensitivities, exposures and XVA for a portfolio
 of OTC equity derivatives. The portfolio used in this example consists of:
 
 \begin{itemize}
@@ -793,22 +793,22 @@ of OTC equity derivatives. The portfolio used in this example consists of:
 	\item an equity Swap in USD with return type ``total'' (``SP5'')
 \end{itemize}
 
-The step-by-step procedure for running ORE is identical for equities as for other asset classes; the same market and 
-portfolio data files are used to store the equity market data and trade details, respectively. For the exposure 
+The step-by-step procedure for running ORE is identical for equities as for other asset classes; the same market and
+portfolio data files are used to store the equity market data and trade details, respectively. For the exposure
 simulation, the calibration parameters for the equity risk factors can be set in the usual {\tt simulation.xml} file.
 
-Looking at the MtM results in the output file {\tt npv.csv} we observe that put-call parity ($V_{Fwd} = V_{Call} - 
-V_{Put}$) is observed as expected. Looking at Figure \ref{fig_eq_call} we observe that the Expected Exposure profile of 
-the equity call option trade is relatively smooth over time, while for the equity forward trade the Expected Exposure 
-tends to increase as we approach maturity. This behaviour is similar to what we observe in sections \ref{sec:fxfwd} 
-and \ref{sec:fxoption}. 
+Looking at the MtM results in the output file {\tt npv.csv} we observe that put-call parity ($V_{Fwd} = V_{Call} -
+V_{Put}$) is observed as expected. Looking at Figure \ref{fig_eq_call} we observe that the Expected Exposure profile of
+the equity call option trade is relatively smooth over time, while for the equity forward trade the Expected Exposure
+tends to increase as we approach maturity. This behaviour is similar to what we observe in sections \ref{sec:fxfwd}
+and \ref{sec:fxoption}.
 
 \begin{figure}[h!]
 	\begin{center}
 		\includegraphics[scale=0.45]{examples/mpl_eq_call.pdf}
 	\end{center}
-	\caption{Equity (``Luft'') call option and OTC forward exposure evolution, maturity in approximately 2.5 years. 
-	Simulation with 
+	\caption{Equity (``Luft'') call option and OTC forward exposure evolution, maturity in approximately 2.5 years.
+	Simulation with
 	10000 paths and quarterly time steps.}
 	\label{fig_eq_call}
 \end{figure}
@@ -840,7 +840,7 @@ The example generates cash flows, NPVs, exposure evolutions, XVAs, as well as tw
 \end{figure}
 
 Figure \ref{fig_yoy_swap} shows the evolution of the 5Y maturity Year-on-Year inflation swap for comparison. Note that the inflation simulation model (Dodgson-Kainth, see \cite{methods}) yields the evolution of inflation indices and inflation zero bonds which allows spanning future inflation zero curves and the pricing of CPI swaps. To price Year-on-Year inflation Swaps under future scenarios, we imply Year-on-Year inflation curves from zero inflation curves\footnote{Currently we discard the required (small) convexity adjustment. This will be supplemented in a subsequent release.}. Note that for pricing Year-on-Year Swaps as of today we use a separate inflation curve bootstrapped from quoted Year-on-Year inflation Swaps.
- 
+
 \begin{figure}[h!]
 	\begin{center}
 		\includegraphics[scale=0.45]{examples/mpl_yoy_swap.pdf}
@@ -896,7 +896,7 @@ This example in folder {\tt Examples/Example\_20} demonstrates Credit Default Sw
 \centerline{\tt python run.py}
 
 \medskip
-will launch a single ORE run to process a single name CDS example and to generate NPV and cash flows in the usual result files. 
+will launch a single ORE run to process a single name CDS example and to generate NPV and cash flows in the usual result files.
 
 \medskip
 CDS can be included in sensitivity analysis and stress testing. Exposure simulation for credit derivatives will follow in the next ORE release.
@@ -911,16 +911,16 @@ This example in folder {\tt Examples/Example\_21} demonstrates the pricing of CM
 \centerline{\tt python run.py}
 
 \medskip
-will launch a single ORE run to process the portfolio and generate NPV and cash flows in the usual result files. 
+will launch a single ORE run to process the portfolio and generate NPV and cash flows in the usual result files.
 
 \medskip
-CMS structures can be included in sensitivity analysis, stress testing and exposure simulation. 
+CMS structures can be included in sensitivity analysis, stress testing and exposure simulation.
 
 %--------------------------------------------------------
 \subsection{Option Sensitivity Analysis with Smile}% Example 22
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_22} demonstrates the current state of sensitivity calculation for European options where the volatility surface has a smile. 
+The example in folder {\tt Examples/Example\_22} demonstrates the current state of sensitivity calculation for European options where the volatility surface has a smile.
 
 \medskip
 The portfolio used in this example consists of
@@ -953,7 +953,7 @@ This example in folder {\tt Examples/Example\_23} demonstrates pricing, cash flo
 \item Forward Rate Agreements
 \item Averaging Overnight Index Swaps
 \end{itemize}
-using a minimal portfolio of four trades, one FRA and three OIS. The essential results are in {\tt npv.csv}, {\tt flows.csv} and 
+using a minimal portfolio of four trades, one FRA and three OIS. The essential results are in {\tt npv.csv}, {\tt flows.csv} and
 four {\tt exposure\_trade\_*.csv} files.
 
 %--------------------------------------------------------
@@ -972,7 +972,7 @@ in folder {\tt Examples/Example\_24} will launch two ORE runs. The first one det
 \item Commodity Forwards
 \item European Commodity Options
 \end{itemize}
-using a minimal portfolio of four forwards and two options referencing WTI and Gold. 
+using a minimal portfolio of four forwards and two options referencing WTI and Gold.
 The essential results are in {\tt npv.csv} and {\tt sensitivity.csv}.
 
 The second run determined by {\tt ore\_wti.xml} demonstrates Commodity exposure simulation for a portfolio including a
@@ -983,15 +983,15 @@ The second run determined by {\tt ore\_wti.xml} demonstrates Commodity exposure 
 \item Commodity Average Price Option
 \item Commodity Swaption
 \end{itemize}
-with the usual results, exposure reports and graphs. 
+with the usual results, exposure reports and graphs.
 
 %--------------------------------------------------------
 \subsection{CMS Spread with (Digital) Cap/Floor}% Example 25
 \label{example:25}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_25}  demonstrates pricing, sensitivity analysis 
-and exposure simulation for 
+The example in folder {\tt Examples/Example\_25}  demonstrates pricing, sensitivity analysis
+and exposure simulation for
 \begin{itemize}
 \item Capped/Floored CMS Spreads
 \item CMS Spreads with Digital Caps/Floors
@@ -1003,14 +1003,14 @@ The example can be run with
 \centerline{\tt python run.py}
 
 \medskip
-and results are in {\tt npv.csv}, {\tt sensitivity.csv}, {\tt exposure\_*.csv} 
+and results are in {\tt npv.csv}, {\tt sensitivity.csv}, {\tt exposure\_*.csv}
 and the exposure graphs in {\tt mpl\_cmsspread.pdf}.
 
 %--------------------------------------------------------
 \subsection{Bootstrap Consistency}% Example 26
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_26} confirms that bootstrapped curves 
+The example in folder {\tt Examples/Example\_26} confirms that bootstrapped curves
 correctly reprice the bootstrap instruments (FRAs, Interest Rate Swaps, FX Forwards, Cross
 Currency Basis Swaps) using three pricing setups with
 \begin{itemize}
@@ -1022,7 +1022,7 @@ all defined in {\tt Examples/Input/todaysmarket.xml}.
 
 \medskip
 The required portfolio files need to be generated from market data and conventions in
-{\tt Examples/Input} and trade templates in 
+{\tt Examples/Input} and trade templates in
 {\tt Examples/Example\_26/Helpers}, calling
 
 \medskip
@@ -1043,9 +1043,9 @@ Results are in three files {\tt *\_npv.csv} and should show zero NPVs for all be
 \label{example:27}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_27} demonstrates pricing 
-and sensitivity analysis for a series of USD Libor 3M vs. Averaged BMA (SIFMA) 
-Swaps that correspond to the instruments used to bootstrap the BMA curve. 
+The example in folder {\tt Examples/Example\_27} demonstrates pricing
+and sensitivity analysis for a series of USD Libor 3M vs. Averaged BMA (SIFMA)
+Swaps that correspond to the instruments used to bootstrap the BMA curve.
 
 The example can be run with
 
@@ -1060,9 +1060,9 @@ and results are in {\tt npv.csv} and {\tt sensitivity.csv}.
 \label{example:28}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_28} shows how to use a yield curve 
-built from a DiscountRatio segment. 
-In particular, it builds a GBP collateralized in EUR discount curve by referencing 
+The example in folder {\tt Examples/Example\_28} shows how to use a yield curve
+built from a DiscountRatio segment.
+In particular, it builds a GBP collateralized in EUR discount curve by referencing
 three other discount curves:
 \begin{itemize}
 \item a GBP collateralised in USD curve
@@ -1070,16 +1070,16 @@ three other discount curves:
 \item a EUR OIS curve i.e. a EUR collateralised in EUR curve
 \end{itemize}
 
-The implicit assumption in building the curve this way is that EUR/GBP FX 
-forwards collateralised in EUR have the same fair market rate as EUR/GBP 
-FX forwards collateralised in USD. This assumption is illustrated in the 
-example by the NPV of the two forward instruments in the portfolio returning 
-exactly 0 under both discounting regimes i.e. under USD collateralization with 
-direct curve building and under EUR collateralization with the discount ratio 
+The implicit assumption in building the curve this way is that EUR/GBP FX
+forwards collateralised in EUR have the same fair market rate as EUR/GBP
+FX forwards collateralised in USD. This assumption is illustrated in the
+example by the NPV of the two forward instruments in the portfolio returning
+exactly 0 under both discounting regimes i.e. under USD collateralization with
+direct curve building and under EUR collateralization with the discount ratio
 modified ``GBP-IN-EUR'' curve.
 
-Also, in this example, an assumption is made that there are no direct GBP/EUR FX 
-forward or cross currency quotes available which in general is false. The example 
+Also, in this example, an assumption is made that there are no direct GBP/EUR FX
+forward or cross currency quotes available which in general is false. The example
 s merely for illustration.
 
 Both collateralizaton scenarios can be run calling {\tt python run.py}.
@@ -1089,11 +1089,11 @@ Both collateralizaton scenarios can be run calling {\tt python run.py}.
 \label{example:29}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_29} demonstrates using fixed vs. float 
-cross currency swap helpers. In particular, it builds a TRY collateralised in USD 
+The example in folder {\tt Examples/Example\_29} demonstrates using fixed vs. float
+cross currency swap helpers. In particular, it builds a TRY collateralised in USD
 discount curve using TRY annual fixed vs USD 3M Libor swap quotes.
 
-The portfolio contains an at-market fixed vs. float cross currency swap that is 
+The portfolio contains an at-market fixed vs. float cross currency swap that is
 included in the curve building. The NPV of this swap should be zero when the example is run,
 using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
 
@@ -1124,22 +1124,22 @@ yields the USD-Prime curve in {\tt Examples/Example\_30/Output/curves.csv.}
 
 In the previous examples we have used a ``lagged'' approach, described at the end of the collateral section in \cite{methods},
 to take the Margin Period of Risk into account in exposure modelling. This used to have the disadvantage in ORE that we need
-to use equally-spaced time grids with time steps that match the MPoR, e.g. 2W, out to final portfolio maturity. 
+to use equally-spaced time grids with time steps that match the MPoR, e.g. 2W, out to final portfolio maturity.
 
 In this example we demonstrate an alternative approach supported by ORE since release 6. In this approach we use two nested grids: The (almost) arbitrary main simulation grid is used to compute ``default values'' which feed into the collateral balance $C(t)$ filtered by MTA and Threshold etc; an auxiliary ``close-out'' grid, offset from the main grid by the MPoR, is used to compute the delayed close-out values $V(t)$ associated with time default time $t$. The difference between $V(t)$ and $C(t)$ causes a residual exposure $[V(t)-C(t)]^+$ even if minimum transfer amounts and thresholds are zero.
 
 The close-out date value can be computed in two ways in ORE
 \begin{itemize}
 \item as of default date, by just evolving the market from default date to close-out date
-   (``sticky date''), or 
-\item  as of close-out date, by evolving both valuation date and market over the 
+   (``sticky date''), or
+\item  as of close-out date, by evolving both valuation date and market over the
    close-out period (``actual date''), i.e., the portfolio ages and cash flows might occur
-   in the close-out period causing spikes in the evolution of exposures. 
+   in the close-out period causing spikes in the evolution of exposures.
 \end{itemize}
 
 We are reusing one case from Example 10 here, perfect CSA with zero threshold and
 minimum transfer amount, so that the remaining exposure is solely due to the MPoR
-effect. The portfolio consists of a single at-the-money Swap in GBP. 
+effect. The portfolio consists of a single at-the-money Swap in GBP.
 The relevant configuration changes that trigger this modelling are in the Parameters section of {\tt simulation.xml} as shown in Listing \ref{lst:close_out_grid}
 
 \begin{listing}[H]
@@ -1214,7 +1214,7 @@ related evolution of expected DIM, benchmarked against the Delta VaR DIM model, 
 The example here is similar to that in Section \ref{example:17} in that we are generating exposures for inflation swaps. The example in Section \ref{example:17} uses the Dodgson-Kainth model whereas this example uses the Jarrow-Yildrim model. The valuation date is 2 Nov 2020 and the portfolio contains four spot starting inflation swaps:
 
 \begin{itemize}
-\item trade\_01: 20Y standard UKRPI ZCIIS struck at the fair market rate of 3.1925\% giving an NPV of 0.0. 
+\item trade\_01: 20Y standard UKRPI ZCIIS struck at the fair market rate of 3.1925\% giving an NPV of 0.0.
 \item trade\_02: 20Y standard EUHICPXT ZCIIS struck at the fair market rate of 1.16875\% giving an NPV of 0.0.
 \item trade\_03: 20Y year on year EUHICPXT swap.
 \item trade\_04: 20Y year on year UKRPI swap.
@@ -1231,16 +1231,16 @@ The example in folder {\tt Examples/Example\_33} is the credit variant of the ex
 \ref{sec:example1}. Running ORE in directory {\tt Examples/Example\_33} with
 
 \medskip
-\centerline{\tt python run.py } 
+\centerline{\tt python run.py }
 \medskip
 
-yields the exposure evolution in 
+yields the exposure evolution in
 
 \medskip
-\centerline{\tt Examples/Example\_33/Output/*.pdf } 
+\centerline{\tt Examples/Example\_33/Output/*.pdf }
 \medskip
 
-and shown in figure \ref{fig_33}. 
+and shown in figure \ref{fig_33}.
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{examples/mpl_cds_33_2w_10k.pdf}
@@ -1249,12 +1249,12 @@ and shown in figure \ref{fig_33}.
 outcome can be obtained more quickly with 5,000 samples on a monthly time grid which is the default setting of Example\_33. }
 \label{fig_33}
 \end{figure}
-Both CDS simulation and CDS Option pricing are run with calls to the ORE executable, essentially 
+Both CDS simulation and CDS Option pricing are run with calls to the ORE executable, essentially
 
 \medskip
-\centerline{\tt ore[.exe] ore.xml} 
+\centerline{\tt ore[.exe] ore.xml}
 
-\centerline{\tt ore[.exe] ore\_cds\_option.xml} 
+\centerline{\tt ore[.exe] ore\_cds\_option.xml}
 \medskip
 
 which are wrapped into the script {\tt Examples/Example\_33/run.py} provided with the ORE release.
@@ -1341,8 +1341,8 @@ The example in folder {\tt Examples/Example\_35} demonstrates how ORE can be use
 
 The example in folder {\tt Examples/Example\_36} illustrates the effect of measure changes on simulated expected and peak exposures. For that purpose we reuse Example 1 (un-collateralized vanilla swap exposure) and run the simulation three times with different risk-neutral measures,
 \begin{itemize}
-\item in the LGM measure as in Example 1 (note {\tt <Measure>LGM</Measure>} in {\tt simulation\_lgm.xml}, this is the default also if the Measure tag is omitted)  
-\item in the more common Bank Account measure (note {\tt <Measure>BA</Measure>} in {\tt simulation\_ba.xml})  
+\item in the LGM measure as in Example 1 (note {\tt <Measure>LGM</Measure>} in {\tt simulation\_lgm.xml}, this is the default also if the Measure tag is omitted)
+\item in the more common Bank Account measure (note {\tt <Measure>BA</Measure>} in {\tt simulation\_ba.xml})
 \item in the T-Forward measure with horizon T=20 at the Swap maturity (note {\tt <Measure>LGM</Measure>}  and {\tt <ShiftHorizon>20.0</ShiftHorizon>} in {\tt simulation\_fwd.xml})
 \end{itemize}
 
@@ -1376,7 +1376,7 @@ vectors, see table \ref{tab:ex37_1}.
 \begin{center}
 \begin{tabular}{r|r|r}
 tenor & eigenvector 1  & eigenvector 2   \\
-\hline      
+\hline
 1     & 0.353553390593 & -0.537955502871 \\
 2     & 0.353553390593 & -0.374924478795 \\
 3     & 0.353553390593 & -0.252916811525 \\
@@ -1407,7 +1407,7 @@ eigenvalues are given in table \ref{tab:ex37_2}.
 \begin{center}
 \begin{tabular}{r|r}
 number & value                  \\
-\hline      
+\hline
 1      & 4.9144936649319346e-05 \\
 2      & 8.846877641067412e-06  \\
 3      & 5.82566039467854e-10   \\
@@ -1429,7 +1429,7 @@ eigenvalues is given in table \ref{tab:ex37_3}.
 \begin{center}
 \begin{tabular}{r|r}
 number & sqrt(value)                \\
-\hline      
+\hline
 1      & 0.007010344973631422       \\
 2      & 0.0029743701250966414      \\
 \end{tabular}
@@ -1445,7 +1445,7 @@ matching the prescribed input values of 0.0070 and 0.0030 quite well. The correp
 \begin{center}
 \begin{tabular}{r|r|r}
 tenor & eigenvector 1       & eigenvector 2       \\
-\hline      
+\hline
 1     & 0.34688826736335926 & 0.5441204725042812  \\
 2     & 0.3489303472083185  & 0.380259707350115   \\
 3     & 0.350362134519783   & 0.2581408080614405  \\
@@ -1461,7 +1461,7 @@ tenor & eigenvector 1       & eigenvector 2       \\
 \end{table}
 
 again matching the input principal components quite well. The second eigenvector is the negative of the input vector
-here (the principal compoennt analysis can not distinguish these of course).
+here (the principal component analysis can not distinguish these of course).
 
 The example also produces a plot comparing the input eigenvectors and the model implied eigenvectors as shown in figure \ref{fig:ex37}.
 
@@ -1496,10 +1496,10 @@ correlations can be interpreted as correlations of these principal components wi
 The example in folder {\tt Examples/Example\_39} demonstrates how to use American Monte Carlo simulation (AMC) to generate exposures in ORE.
 For a sketch of the methodology and comments on its implementation in ORE see \cite{methods}.
 
-Calling 
+Calling
 
 \medskip
-\centerline {\tt python run.py} 
+\centerline {\tt python run.py}
 
 \medskip
 performs two ORE runs, a 'classical' exposure simulation and an American Monte Carlo simulation, both on a quarterly simulation grid and for the same portfolio consisting of four trades:
@@ -1511,18 +1511,18 @@ performs two ORE runs, a 'classical' exposure simulation and an American Monte C
 \item FX Option
 \end{itemize}
 
-We use a 'flat' market here (yield curve and Swaption volatility surface). The number of simulation paths is 2k in the classic simulations. If not stated otherwise below, the number of training paths and simulation paths is 10k in the AMC simulations. 
+We use a 'flat' market here (yield curve and Swaption volatility surface). The number of simulation paths is 2k in the classic simulations. If not stated otherwise below, the number of training paths and simulation paths is 10k in the AMC simulations.
 
-In the following we compare the AMC exposure profiles to those produced by the 'classic' valuation engine for each trade and the netting set. 
+In the following we compare the AMC exposure profiles to those produced by the 'classic' valuation engine for each trade and the netting set.
 
 Figure \ref{epe_swaption} shows the EPE and ENE for a Bermudan Swaption 10y into 10y in (base ccy) EUR with physical settlement. The classic run uses
 the LGM grid engine for valuation. We observe close agreement between the two runs. To achieve the observed agreement, it is essential to set the LGM model's mean reversion speed to zero in both
 \begin{itemize}
 \item the Bermudan Swaption LGM pricing model (see Input/pricingengine.xml), and
-\item the Cross Asset Model's IR model components (see Input/simulation.xml and Input/simulation\_amc.xml) 
+\item the Cross Asset Model's IR model components (see Input/simulation.xml and Input/simulation\_amc.xml)
 \end{itemize}
 and to use a high order 6 of the regression polynomials (see Input/pricingengine\_amc.xml).
- 
+
 \begin{figure}
   \includegraphics[width=0.8\textwidth]{examples/mpl_amc_bermudanswaption.pdf}
   \caption{EPE of a EUR Bermudan Swaption computed with the classic and AMC valuation engines, using 50k training paths for the AMC simulation.}
@@ -1541,7 +1541,7 @@ number of training paths for this example to 50k and the order of the basis func
   \label{epe_swap}
 \end{figure}
 
-Figure \ref{epe_ccyswap} shows the EPE and ENE for a 20y cross currency Swap EUR-USD. 
+Figure \ref{epe_ccyswap} shows the EPE and ENE for a 20y cross currency Swap EUR-USD.
 
 \begin{figure}
   \includegraphics[width=0.8\textwidth]{examples/mpl_amc_xccyswap.pdf}
@@ -1549,7 +1549,7 @@ Figure \ref{epe_ccyswap} shows the EPE and ENE for a 20y cross currency Swap EUR
   \label{epe_ccyswap}
 \end{figure}
 
-Figure \ref{epe_fxoption} shows the EPE and ENE for a vanilla FX Option EUR-USD with 10y1m expiry. 
+Figure \ref{epe_fxoption} shows the EPE and ENE for a vanilla FX Option EUR-USD with 10y1m expiry.
 For the classic run the FX volatility surface is not implied by the cross asset model but kept flat, which
 yields a slight hump in the profile. The AMC profile is flat on the other hand which demonstrates the consistency of the
 FX Option pricing with the risk factor evolution model.
@@ -1589,7 +1589,7 @@ applies to these reduced models.
 \subsubsection*{Pricing Engine Configuration}
 \label{sec:amc_pricingengineconfig}
 
-At this point we assume that the reader is generally familiar with the configuration section 
+At this point we assume that the reader is generally familiar with the configuration section
 \ref{sec:configuration}, in particular pricing engine configuration in section in \cite{products}.
 
 The pricing engine configuration is similar for all AMC enabled products, e.g. for Bermudan Swaptions:
@@ -1809,7 +1809,7 @@ Model Parameters special to that product are
 \item \verb+IrCalibrationStrategy+ can be \verb+None+, \verb+CoterminalATM+, \verb+UnderlyingATM+
 \item \verb+FXCalibration+ can be \verb+None+ or \verb+Bootstrap+
 \item \verb+ExtrapolateFxVolatility+ can be \verb+true+ or \verb+false+; if false, no calibration instruments are used
-  that require extrapolation of the market fx volatilty surface in option expiry direction
+  that require extrapolation of the market fx volatility surface in option expiry direction
 \item \verb+Corr_Key1_Key2+: These entries describe the cross asset model correlations to be used; the syntax for
   \verb+Key1+ and \verb+Key2+ is the same as in the simulation configuration for the cross asset model
 \end{enumerate}
@@ -1819,8 +1819,8 @@ Model Parameters special to that product are
 \label{example:40}
 %--------------------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_40}  demonstrates ORE's par sensitivity analysis (e.g. to Swap rates) 
-that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates), see a sketch of the 
+The example in folder {\tt Examples/Example\_40}  demonstrates ORE's par sensitivity analysis (e.g. to Swap rates)
+that is implemented  by means of a Jacobi transformation of the ``raw'' sensitivities (e.g. to zero rates), see a sketch of the
 methodology in \cite{methods} and section \ref{sec:sensitivity} for configuration details.
 
 To perform a par sensitivity analysis, the following required change in {\tt ore.xml} is required
@@ -1843,7 +1843,7 @@ To perform a par sensitivity analysis, the following required change in {\tt ore
     </Analytic>
 \end{minted}
 
-The portfolio used in this example includes products sensitive to 
+The portfolio used in this example includes products sensitive to
 \begin{itemize}
 \item Discount and index curves
 \item Credit curves
@@ -1851,14 +1851,14 @@ The portfolio used in this example includes products sensitive to
 \item CapFloor volatilities
 \end{itemize}
 
-The usual sensitivity analysis is performed by bumping the "raw" rates (zero rates, hazard rates, inflation zero rates, optionlet vols).
-This is followed by the Jacobi transformation that turns "raw" sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads, 
-CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks 
+The usual sensitivity analysis is performed by bumping the ``raw'' rates (zero rates, hazard rates, inflation zero rates, optionlet vols).
+This is followed by the Jacobi transformation that turns ``raw'' sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads,
+CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks
 in {\tt sensitivity.xml} where the assumed par instruments and corresponding conventions are coded, as shown below for three types of discount curves.
 
 \begin{minted}[fontsize=\scriptsize]{xml}
   <DiscountCurves>
-  
+
     <DiscountCurve ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -1871,8 +1871,8 @@ in {\tt sensitivity.xml} where the assumed par instruments and corresponding con
 	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
 	</Conventions>
       </ParConversion>
-    </DiscountCurve>   
-    
+    </DiscountCurve>
+
     <DiscountCurve ccy="USD">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -1899,7 +1899,7 @@ in {\tt sensitivity.xml} where the assumed par instruments and corresponding con
 	</Conventions>
       </ParConversion>
     </DiscountCurve>
-  
+
   </DiscountCurves>
 \end{minted}
 
@@ -1922,42 +1922,42 @@ portfolio of 8 copies of the vanilla swap in {\tt Example\_1}.
 Since release 9 (March 2023) we provide easy access to ORE via a pre-compiled Python module. Some example scripts using this ORE module are provided in this example, so change to this directory first
 
 \medskip
-{\tt cd Example\_42} 
+{\tt cd Example\_42}
 
 \medskip
-The examples require Python 3. The ORE Python module is then installed with a one-liner, see step 3 below. However, to separate ORE from any other Python environments on your machine, we recommend creating a virtual environment first. In that case the steps are as follows. 
+The examples require Python 3. The ORE Python module is then installed with a one-liner, see step 3 below. However, to separate ORE from any other Python environments on your machine, we recommend creating a virtual environment first. In that case the steps are as follows.
 
 \begin{enumerate}
-\item To create a virtual environment: {\tt python -m venv env1} 
+\item To create a virtual environment: {\tt python -m venv env1}
 \item To activate this environment on Windows: {\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat}  \\
-or on macOS/Linux: {\tt ./env1/bin/activate }  
+or on macOS/Linux: {\tt ./env1/bin/activate }
 \item Then install the latest release of ORE:\\
-{\tt pip install open-source-risk-engine } 
+{\tt pip install open-source-risk-engine }
 \item Try examples:\\
-	\begin{itemize} 
+	\begin{itemize}
 	\item {\tt python ore.py} \\
-	This demonstrates the Python-wrapped version of the ORE application that is also used in the command line application {\tt ore.exe}. We use it here to re-run the Swap exposure of {\tt Example\_1}. 
+	This demonstrates the Python-wrapped version of the ORE application that is also used in the command line application {\tt ore.exe}. We use it here to re-run the Swap exposure of {\tt Example\_1}.
 	\item {\tt python ore2.py} \\
-	This extends the previous example and shows how to access and post-process ORE in-memory results in the Python framework without reading files. 
+	This extends the previous example and shows how to access and post-process ORE in-memory results in the Python framework without reading files.
 	\item {\tt python commodityforward.py} \\
-	The ORE Python module also allows lower-level access to the QuantLib and QuantExt libraries, demonstrated here for a CommodityForward instrument defined in QuantExt. 
+	The ORE Python module also allows lower-level access to the QuantLib and QuantExt libraries, demonstrated here for a CommodityForward instrument defined in QuantExt.
 	Note that the ORE Python module contains the entire QuantLib Python functionality.
 	\end{itemize}
-	More use cases of the ORE Python module including Jupyter notebooks can be found in the ORE SWIG repository, in particular in folder OREAnalytics-SWIG/Python/Examples. 
+	More use cases of the ORE Python module including Jupyter notebooks can be found in the ORE SWIG repository, in particular in folder OREAnalytics-SWIG/Python/Examples.
 \item You can deactivate the environment with {\tt deactivate} \\
 or even fully remove the environment again by removing the {\tt env1} folder.
 \end{enumerate}
 
-Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig} based on your local ORE code. 
+Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig} based on your local ORE code.
 
 %--------------------------------------------------------------------
 \subsection{Credit Portfolio Model}% Example 43
 \label{example:43}
 %--------------------------------------------------------------------
 
-The purpose of the credit portfolio model in ORE is to generate an integrated portfolio gain/loss distribution at a given future horizon which is driven by 
+The purpose of the credit portfolio model in ORE is to generate an integrated portfolio gain/loss distribution at a given future horizon which is driven by
 \begin{itemize}
-\item credit defaults and rating migrations in Bonds and CDS, and 
+\item credit defaults and rating migrations in Bonds and CDS, and
 \item the PnL of a portfolio of derivatives over the specified time horizon.
 \end{itemize}
 The model integrates Credit and Market Risk by jointly evolving systemic credit risk drivers alongside the usual risk factors in ORE's Cross Asset Model.
@@ -1965,7 +1965,7 @@ See also the separate documentation in Docs/UserGuide/creditmodel.tex.
 
 By running \\
 \medskip
-\centerline{{\tt python run.py}} 
+\centerline{{\tt python run.py}}
 
 \medskip
 this example demonstrates the model's outcome for seven demo portfolios
@@ -1993,14 +1993,14 @@ Bonds and CDS & Migration & Notional & Analytic \\
 \end{tabular}
 \end{center}
 The last demo case in this table can be activated by uncommenting the corresponding section at the end of the {\tt run.py} script.
- 
+
 %--------------------------------------------------------------------
 \subsection{Initial Margin: ISDA SIMM and IM Schedule}% Example 44
 \label{example:44}
 %--------------------------------------------------------------------
 
-{\tt Example\_44} demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided 
-sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schdule" method to compute 
+{\tt Example\_44} demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided
+sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schdule" method to compute
 initial margin.
 
 ORE covers all SIMM versions since inception to date, i.e.\ 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (=2.3.8), 2.5, 2.5A, 2.6 (=2.5.6).
@@ -2008,14 +2008,14 @@ All versions have been tested against the respective ISDA SIMM model unit test s
 Any new SIMM versions will be added with each ORE release.
 
 For SIMM versions >= 2.2 we support SIMM calculation for both MPoR horizons, 1d and 10d.
- 
+
 Note that you need to purchase a SIMM model license from ISDA if you want to use the model in production, and the unit test
-suites mentioned above are provided to licensed vendors only. Therefore we unfortunately cannot share our ORE SIMM model 
-test suite here either. 
+suites mentioned above are provided to licensed vendors only. Therefore we unfortunately cannot share our ORE SIMM model
+test suite here either.
 
 By running \\
 \medskip
-\centerline{{\tt python run.py}} 
+\centerline{{\tt python run.py}}
 
 \medskip
 ORE will pick up the small example CRIF file in {\tt Input/crif.csv} (i.e.\ par sensitivities rebucketed and reformatted to match the ISDA CRIF template) and generate the resulting SIMM report in a {\tt simm.csv} file.
@@ -2047,15 +2047,15 @@ The market data input and todays's market configuration required here is minimal
 If the ORE Python module is installed, as shown in Example 42, then you can also run the SIMM example using
 
 \medskip
-\centerline{\tt python ore.py} 
+\centerline{\tt python ore.py}
 
 \subsubsection*{IM Schedule}
 
-As an additonal case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
-The related input file is {\tt Input/ore\_schedule.xml}. It is also run when calling {\tt python run.py}, and results are written to folder 
+As an additional case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
+The related input file is {\tt Input/ore\_schedule.xml}. It is also run when calling {\tt python run.py}, and results are written to folder
 {\tt Output/IM\_SCHEDULE}.
-The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional, 
-so that the  amounts in these CRIF lines are interpeted as NPV respectively notional. 
+The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional,
+so that the  amounts in these CRIF lines are interpeted as NPV respectively notional.
 Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}. Note that the product class has to be in
 \begin{itemize}
   \item Rates
@@ -2087,15 +2087,15 @@ This example in folder {\tt Examples/Example\_45} demonstrates a Cashflow CDO or
 \centerline{\tt python run.py}
 
 \medskip
-will launch a single ORE run to process a CBO example, referencing underyling bond portfolio of 20 trades. 
-The CBO is represented by a CBO reference datum specified in the reference data file. 
-NPV results are calculated for the investment in the junior tranche. 
+will launch a single ORE run to process a CBO example, referencing underlying bond portfolio of 20 trades.
+The CBO is represented by a CBO reference datum specified in the reference data file.
+NPV results are calculated for the investment in the junior tranche.
 
 %--------------------------------------------------------
 \subsection{Generic Total Return Swap}% Example 46
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_46} demonstrates ORE's generic Total Return Swap referencing a CBO. 
+This example in folder {\tt Examples/Example\_46} demonstrates ORE's generic Total Return Swap referencing a CBO.
 Calling
 
 \medskip
@@ -2109,7 +2109,7 @@ As opposed to example 45, the CBO and its bondbasket are represented explicitly 
 \subsection{Composite Trade}% Example 47
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_47} demonstrates the input of ORE's Composite Trade that can consist on any number 
+This example in folder {\tt Examples/Example\_47} demonstrates the input of ORE's Composite Trade that can consist on any number
 and type of products covered by ORE. In this case the composite consists of two Equity Swaps.
 Calling
 
@@ -2123,7 +2123,7 @@ runs ORE and generates an NPV report.
 \subsection{Convertible Bond and ASCOT}% Example 48
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_48} demonstrates the input of 
+This example in folder {\tt Examples/Example\_48} demonstrates the input of
 \begin{itemize}
 \item a ConvertibleBond  trade
 \item a related Asset Swapped Convertible Option Transaction (ASCOT)
@@ -2168,8 +2168,8 @@ The example can be run calling {\tt python run.py}.
 \label{example:50}
 %--------------------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_50} demonstrates ORE's capability to convert external computed zero sensitivities (e.g Zero rates) to par sensitivities (e.g. to Swap rates) 
-that is implemented  by means of a Jacobi transformation of the "raw" sensitivities (e.g. to zero rates), see a sketch of the 
+The example in folder {\tt Examples/Example\_50} demonstrates ORE's capability to convert external computed zero sensitivities (e.g Zero rates) to par sensitivities (e.g. to Swap rates)
+that is implemented  by means of a Jacobi transformation of the ``raw'' sensitivities (e.g. to zero rates), see a sketch of the
 methodology in \cite{methods} and section \ref{sec:sensitivity} for configuration details.
 
 To perform a par sensitivity analysis, the following required change in {\tt ore.xml} is required
@@ -2196,7 +2196,7 @@ To perform a par sensitivity analysis, the following required change in {\tt ore
     </Analytic>
 \end{minted}
 
-The portfolio used in this example includes zero sensitivities of 
+The portfolio used in this example includes zero sensitivities of
 \begin{itemize}
 \item Discount and index curves
 \item Credit curves
@@ -2215,13 +2215,13 @@ ORE reads the raw sensitivities from the csv input file *sensitivityInputFile*. 
 \item baseNpvColumn: The base npv of the trade / nettingset / portfolio in currency.
 \end{enumerate}
 
-This is followed by the Jacobi transformation that turns "raw" sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads, 
-CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks 
+This is followed by the Jacobi transformation that turns ``raw'' sensitivities  into sensitivities in the par domain (Deposit/FRA/Swap rates, FX Forwards, CC Basis Swap spreads,
+CDS spreads, ZC and YOY Inflation Swap rates, flat Cap/Floor vols). The conversion is controlled by the additional {\tt ParConversion} data blocks
 in {\tt sensitivity.xml} where the assumed par instruments and corresponding conventions are coded, as shown below for three types of discount curves.
 
 \begin{minted}[fontsize=\scriptsize]{xml}
   <DiscountCurves>
-  
+
     <DiscountCurve ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -2234,8 +2234,8 @@ in {\tt sensitivity.xml} where the assumed par instruments and corresponding con
 	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
 	</Conventions>
       </ParConversion>
-    </DiscountCurve>   
-    
+    </DiscountCurve>
+
     <DiscountCurve ccy="USD">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -2262,11 +2262,11 @@ in {\tt sensitivity.xml} where the assumed par instruments and corresponding con
 	</Conventions>
       </ParConversion>
     </DiscountCurve>
-  
+
   </DiscountCurves>
 \end{minted}
 
-Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration. 
+Finally note that par sensitivity analysis requires that the shift tenor grid in the sensitivity data above matches the corresponding grid in the simulation (market) configuration.
 See also section \ref{sec:sensitivity}.
 
 
@@ -2286,7 +2286,7 @@ The scripted trade was added to ORE to gain more flexibility in representing exo
 asset classes, path-dependence, multiple kinds of early termination options. The scripted trade module uses Monte Carlo and
 Finite Difference pricing approaches, it is an evolving interface to implement parallel processing with GPUs and a central
 interface to implement AD methods in ORE. See the separate documentation in folder Docs/ScriptedTrade for an introduction to trade
-representation, scripting language, model and pricing engine configuration. 
+representation, scripting language, model and pricing engine configuration.
 
 \medskip
 The example in this folder {\tt Examples/Example\_52} is a basic demonstration of ORE's scripted trade functionality.
@@ -2303,7 +2303,7 @@ This generates an NPV and cash flow report for the following portfolio
 \item Trade 2: Same Option as above, represented as ``generic'' scripted trade with scripted payoff embedded into the trade XML,
   pricing via Monte Carlo
 \item Trade 3: Same Option as above, same representation, pricing via Finite Differences triggered by a {\tt ProductTag} assigned
-  to the script and used in {\tt pricingengine.xml} 
+  to the script and used in {\tt pricingengine.xml}
 \item Trade 4: Same Option as above, the scripted trade now refers to an ``external'' script in {\tt scriptlibrary.xml},
   MC pricing
 \item Trade 4b: Same as trade 4, but ``compact'' scripted trade representation (uncomment trade 4b in {\tt portfolio.xml})
@@ -2396,7 +2396,7 @@ script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
 
 This example in folder {\tt Examples/Example\_56} demonstrates a prototype CVA sensitivity
 calculation applying Adjoint Algorithmic Differentiation (AAD)
-to a Swap instrument represented as scripted trade. 
+to a Swap instrument represented as scripted trade.
 
 %--------------------------------------------------------------------
 \subsection{Base Scenario Analytic}% Example 57
@@ -2416,16 +2416,16 @@ given a portfolio and externally provided ``market scenarios'' covering
 one or several historical observation period(s).
 The analytic is specified as usual in {\tt ore.xml} with the following parameters:
 \begin{itemize}
-\item outputFile: csv file name of the resulting VaR report 
+\item outputFile: csv file name of the resulting VaR report
 %\item breakdown: boolean, if true the VaR report will contain a breakdown by risk class and risk type, otherwise the report shows the portfolio-lvel VaR only.
 \item quantiles: comma searated list of quantiles to be reported
 \item portfolioFilter (optional): Only trades with {\tt portfolioId} equal to the provided filter name are processed, see {\tt portfolio.xml}; the entire portfolio is processed, if omitted
 \item historicalPeriod: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used
-\item mporDays: Number of calendar days between historical scenarios taken from the observation periods in order to compute P\&L effects (typically 1 or 10) 
+\item mporDays: Number of calendar days between historical scenarios taken from the observation periods in order to compute P\&L effects (typically 1 or 10)
 \item mporCalendar: Calendar applied in the scenario date calculation
 \item mporOverlappingPeriods: Boolean, if true we use overlapping periods of length mporDays (t to t + 10 calendate days, t+1 to t+11, t+2 to t+12, ...), otherwise consecutive periods (t to t+10, t+10 to t+20, ...)
 \item simulationConfigFile: defines the structure of the simulation market applied in the P\&L calculation, e.g. discount and index curves, yield curve tenor points used, FX pairs etc.
-\item historicalScenarioFile: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor 
+\item historicalScenarioFile: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor
 \end{itemize}
 
 The example is run as usual by calling {\tt python run.py}
@@ -2467,7 +2467,7 @@ The example in folder {\tt Examples/Example\_60} demonstrates ORE's capability t
 
 This example in folder {\tt Examples/Example\_61} demonstrates alternative ways of speeding up sensitivity
 calculations - using AAD or an external compute device.
-The test portfolio consists of 
+The test portfolio consists of
 \begin{itemize}
 \item Vanilla Equity Option
 \item Equity Barrier Option
@@ -2480,12 +2480,12 @@ The sensitivity analysis is run in four ways, see {\tt run.py},
 \item with ``classic'' bump and revalue
 \item as above but using the Computation Graph, see {\tt UseCG=true} in {\tt pricingengine\_cg.xml}, which
   is the basis for the following two approaches
-\item using AAD, see {\tt pricingengine\_ad.xml} (as in Example 
+\item using AAD, see {\tt pricingengine\_ad.xml} (as in Example
 \item using the external device if available, see {\tt pricingengine\_gpu.xml}
 \end{itemize}
 to compare sensitivities and performance. In the latter case we have set the external device in
 {\tt pricingengine\_gpu.xml} to ``BasicCpu/Default/Default'' which mimics an external device on the CPU.
-On a macbook pro (2023) with M2 Max processor, we can also choose  
+On a macbook pro (2023) with M2 Max processor, we can also choose
 ``OpenCL/Apple/Apple M2 Max'' here (a 38 core GPU).
 The Jupyter notebook {\tt ore.ipynb} in this Example\_61 folder also kicks
 off these four runs, but adds further commentary and visualises results.
@@ -2512,7 +2512,7 @@ Main output is the P\&L report in {\tt Output/Pnl/pnl.csv} with the following co
 \item PeriodCashFlow: Aggregate of trade flows in the period, converted into the P\&L currency below
 \item Theta: NPV(asof=t1; mkt=t0) - NPV(t0) + PeriodCashFLow
 \item HypotheticalCleanPnL: NPV(asof=t0; mkt=t1) - NPV(t0)
-\item CleanPnL: NPV(t1) - NPV(t0) + PeriodCashFlow 
+\item CleanPnL: NPV(t1) - NPV(t0) + PeriodCashFlow
 \item DirtyPnL: NPV(t1) - NPV(t0)
 \item Currency
 \end{itemize}
@@ -2526,7 +2526,7 @@ Moreover we write
 This example runs a second batch (see {\tt Input/ore\_explain.xml}) to explain the
 P\&L above in terms of portfolio sensitivities and changes in related market moves. The main output of this
 is in {\tt Output/PnlExplain/pnl\_explain.csv}. The PnlExplain analytic contains the Pnl analytic as dependent
-analytic, i.e. the PnlExplain analytic is self-sufficient kicking off Pnl calculation internally. 
+analytic, i.e. the PnlExplain analytic is self-sufficient kicking off Pnl calculation internally.
 The only additional piece of input for the explainer run is {\tt sensitivity.xml}.
 
 %--------------------------------------------------------------------
@@ -2584,17 +2584,17 @@ current and past CPRs or expert judgement.
 %--------------------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_67} demonstrates the XVA stresstesting with the classical and AMC XVA engine.
-The new analytic type \emph{XVA\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain. 
-The Stresstest scenarios are given in the same input format as for the regular stresstest. 
+The new analytic type \emph{XVA\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain.
+The Stresstest scenarios are given in the same input format as for the regular stresstest.
 
 To analyse the impact of market rate shifts (Swap rates, CDS spreads, flat vols), one had to
 manipulate the market data input into ORE and re-run the entire ORE process multiple times.
 
 The generated outputs are the xva and exposure reports under each scenario.
 
-The XVA stress analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves 
-different as the todaysMarket. Depending on the simulation and stress scenario settings it could use different tenors when building curves 
-or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the 
+The XVA stress analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves
+different as the todaysMarket. Depending on the simulation and stress scenario settings it could use different tenors when building curves
+or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the
 XVA stress run.
 
 %--------------------------------------------------------------------
@@ -2615,7 +2615,7 @@ The example in folder {\tt Examples/Example\_68} demonstrates several additional
   variation and initial margin balances as input
 \item {\bf BA-CVA} calculation, the Basic CVA Capital approach which is based on the SA-CCR Exposure At Default implementation,
   hence calls the former as a sub-analytic
-  \item {\bf SMRC} calculation - a basic Market Risk Capital method 
+  \item {\bf SMRC} calculation - a basic Market Risk Capital method
 \end{enumerate}
 
 All analytics can be kicked off by calling
@@ -2630,15 +2630,15 @@ Key results in the respective {\tt Output/classic} and {\tt Output/amc} folders 
 \begin{itemize}
 \item sensitivities in {\tt xva\_zero\_sensitivity\_*.csv} and {\tt xva\_par\_sensitivity\_*.csv}
 \item XVAs for all sensitivity scenarios in {\tt xva.csv}
-\item exposure profiles for all sensitivity scenaros in {\tt exposure\_nettingset\_*.csv}  
+\item exposure profiles for all sensitivity scenaros in {\tt exposure\_nettingset\_*.csv}
 \item SA-CVA results in {\tt sacva.csv}, {\tt sacvadetail.csv}
 \item SA-CCR reports in {\tt saccr.csv} and {\tt saccr\_detail.csv}
-\item BA-CVA report in {\tt bacva.csv} 
+\item BA-CVA report in {\tt bacva.csv}
 \item SMRC reports in {\tt smrc.csv} and {\tt smrcdetail.csv}
 \end{itemize}
 
 Note that we are running an (unusual) uncollateralised case here. You can activate both VM and IM as shown in previous examples,
-which will reduce CVA and cause significantly larger difference between SA-CVA and SA-CCR capital results. 
+which will reduce CVA and cause significantly larger difference between SA-CVA and SA-CCR capital results.
 
 Note:
 \begin{itemize}
@@ -2657,7 +2657,7 @@ Note:
 %--------------------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_69} demonstrates the conversion of zero shifts to par rate shifts.
-ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
+ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments.
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
 %--------------------------------------------------------------------
@@ -2665,14 +2665,14 @@ The zero rate shifts are defined as stresstests and the par instruments are defi
 \label{example:70}
 %--------------------------------------------------------------------
 
-The example in folder {\\ Examples/Example\_70} demonstrates the XVA Explain Analytic. 
-ORE can compute the market implied XVA change between two evaluation dates. For each risk factor defined in the sensitivity 
-config ORE computes the par rate change between t0 and t0 + mporDays. 
+The example in folder {\\ Examples/Example\_70} demonstrates the XVA Explain Analytic.
+ORE can compute the market implied XVA change between two evaluation dates. For each risk factor defined in the sensitivity
+config ORE computes the par rate change between t0 and t0 + mporDays.
 ORE derives for each risk factor a shift scenario ($ParRate(t_1) - ParRate(t_0)$) and computes the CVA change implied by those risk factors shifts at t0.
 
-The XVA explain analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves 
-different as the todaysMarket. Depending on the simulation and sensitivity settings it could use different tenors when building curves 
-or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the 
+The XVA explain analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves
+different as the todaysMarket. Depending on the simulation and sensitivity settings it could use different tenors when building curves
+or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the
 XVA explain run.
 
 %--------------------------------------------------------------------
@@ -2686,8 +2686,8 @@ XVA explain run.
 %--------------------------------------------------------------------
 
 The example in folder {\\tt Examples/Example\_72} demonstrates the use of the firstMporCollateralAdjustment flag.
-To have a conservative estimation of the expected positive exposure ORE applies the difference between the initial variational margin 
-collateral balance and the todays mtm on the simulated collateral during the first margin period of risk, if the difference would yield 
+To have a conservative estimation of the expected positive exposure ORE applies the difference between the initial variational margin
+collateral balance and the todays mtm on the simulated collateral during the first margin period of risk, if the difference would yield
 a higher expected exposure (in case of over collateralisation in case of a negative mtm or under-collateralisation if the mtm is positive).
 
 %--------------------------------------------------------------------
@@ -2740,7 +2740,7 @@ analytics, can be made in the Setup section of ore.xml
 \end{minted}
 
 A ``local'' and possibly different choice can be made for the simulation based analytics
-in the ``simulation'' analytic section 
+in the ``simulation'' analytic section
 
 \begin{minted}[fontsize=\scriptsize]{xml}
     <Analytic type="simulation">
@@ -2758,7 +2758,7 @@ These flags -- in the global and simulation section -- are optional. If omitted,
 
 \medskip
 
-\centerline{\tt python run.py} 
+\centerline{\tt python run.py}
 
 \medskip
 kicks off three ORE runs
@@ -2779,4 +2779,3 @@ These flags are also accessible/settable in the ORE Python wrapper.
 \subsection{TODO: FX Volatility Stresstest}% Example 77
 \label{example:77}
 %--------------------------------------------------------------------
-

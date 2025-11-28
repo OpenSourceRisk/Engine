@@ -3,22 +3,22 @@
 
 \ifdefined\IncludePayoff{{\bf Payoff}
 
-A single floating swap leg with interest payments benchmarked to IBOR or CMS 
-indices, may have a cap, floor, or collar. This creates a series of European 
-interest rate options (caplets or floorlets) where the cap or floor rate is the 
+A single floating swap leg with interest payments benchmarked to IBOR or CMS
+indices, may have a cap, floor, or collar. This creates a series of European
+interest rate options (caplets or floorlets) where the cap or floor rate is the
 strike price, and each floating rate reset date is an option expiry date. \\
 
-A collar is the combination of a series of long caplets and short floorlets 
+A collar is the combination of a series of long caplets and short floorlets
 for a long position in the collar. \\
 
-Payoff of a caplet on an IBOR floating leg coupon period to the payer of the 
+Payoff of a caplet on an IBOR floating leg coupon period to the payer of the
 leg (the option buyer):
 $$
-N[L(t_{i-1},t_i)-K]^+ \delta(t_{i-1}, t_i) 
+N[L(t_{i-1},t_i)-K]^+ \delta(t_{i-1}, t_i)
 = N \,\max(0,L(t_{i-1},t_i)-K)\,\delta(t_{i-1}, t_i)
 $$
 
-Payoff of a floorlet on an IBOR floating leg coupon period to the receiver of 
+Payoff of a floorlet on an IBOR floating leg coupon period to the receiver of
 the leg (the option buyer):
 $$
 N[K-L(t_{i-1},t_i)]^+ \delta(t_{i-1}, t_i)
@@ -30,13 +30,13 @@ Where:
 \item $N$: the Notional
 \item $L(t_{i-1},t_i)$: the IBOR index fixing for the period
 \item $K$: the cap or floor rate, i.e. the strike
-\item $\delta(t_{i-1},t_i)$: the daycount fraction for the coupon period 
+\item $\delta(t_{i-1},t_i)$: the daycount fraction for the coupon period
 \end{itemize}
 
-For a caplet or floorlet on a CMS index the $L(t_{i-1},t_i)$ index can be 
+For a caplet or floorlet on a CMS index the $L(t_{i-1},t_i)$ index can be
 replaced by $\CMS_n$ where $n$ indicates CMS rate for $n$ number of years.
-	
-Standalone caps and floors with a single payoff on an IBOR or CMS index are 
+
+Standalone caps and floors with a single payoff on an IBOR or CMS index are
 also supported. Payoff of a cap/floor on an IBOR index:
 $$
 N\cdot \left[\omega(L(t_{i-1},t_i)-K)\right]^+
@@ -59,12 +59,12 @@ OIS, CMS, Duration-adjusted CMS, CMS Spread, CPI, YY coupons.
 The \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
 is long or short, and a \lstinline!LegData!  sub-node where the
 LegType can be set to \emph{Floating}, \emph{CMS}, \emph{CMSSpread}, \emph{DurationAdjustedCMS}, \emph{CPI}
-or \emph{YY}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
+or \emph{YY}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in Listing
 \ref{lst:capfloor_data}. The optional node \emph{PaymentDates} in the \lstinline!LegData! subnode is currently only used for OIS and IBOR indices (see \ref{ss:leg_data}).
 
 A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
-elements, or both. In the case of both (I.e. a collar with long cap and short floor) the sequence is that  \lstinline!Caps! elements must be above the \lstinline!Floors! elements. Note that 
-the \lstinline!Caps! and \lstinline!Floors! elements must be outside the \lstinline!LegData! sub-node, i.e. a \emph{CapFloor} 
+elements, or both. In the case of both (I.e. a collar with long cap and short floor) the sequence is that  \lstinline!Caps! elements must be above the \lstinline!Floors! elements. Note that
+the \lstinline!Caps! and \lstinline!Floors! elements must be outside the \lstinline!LegData! sub-node, i.e. a \emph{CapFloor}
 can't have a capped or floored  \emph{Floating}  or \emph{CMS} leg.
 The \emph{Payer} flag in the LegData subnode is ignored for this instrument. Notice that the signs in the definition of a collar (long cap, short floor) for the CapFloor
 instruments is exactly opposite to \ref{ss:floatingleg_data}.
@@ -112,7 +112,7 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
   values, the rate will be kept flat at the value of last entered rate
   for the remaining coupons. For a fixed cap rate over all coupons,
   one single rate value is sufficient. The number of entered rate
-  values cannot exceed the number of coupons.  
+  values cannot exceed the number of coupons.
 
   Allowable values for each \lstinline!Cap! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
   a rate of 5\%

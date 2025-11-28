@@ -261,7 +261,7 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
             market_ = QuantLib::ext::make_shared<TodaysMarket>(
                 configurations().asofDate, configurations().todaysMarketParams, loader_, configurations().curveConfig,
                 inputs()->continueOnError(), false, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
-                inputs()->iborFallbackConfig());
+                inputs()->iborFallbackConfig(), true, true, inputs()->useAtParCouponsCurves());
         } catch (const std::exception& e) {
             if (marketRequired) {
                 stopTimer("buildMarket()");
@@ -295,7 +295,7 @@ void Analytic::buildPortfolio(const bool emitStructuredError) {
 
         LOG("Build the portfolio");
         QuantLib::ext::shared_ptr<EngineFactory> factory = impl()->engineFactory();
-        portfolio()->build(factory, "analytic/" + label(), emitStructuredError);
+        portfolio()->build(factory, "analytic/" + label(), emitStructuredError, inputs()->useAtParCouponsTrades());
 
         // remove dates that will have matured
         Date maturityDate = inputs()->asof();
@@ -342,9 +342,9 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
 
     if (!securities.empty()) {
         // always continue on error and always use lazy market building
-        QuantLib::ext::shared_ptr<Market> market =
-            QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, false, true,
-                                             params->refDataManager(), false, params->iborFallbackConfig());
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TodaysMarket>(
+            asof, todaysMarketParams, loader, curveConfigs, true, false, true, params->refDataManager(), false,
+            params->iborFallbackConfig(), false, true, params->useAtParCouponsCurves());
         return BondSpreadImply::implyBondSpreads(securities, params->refDataManager(), market, params->pricingEngine(),
                                                  Market::defaultConfiguration, params->iborFallbackConfig());
     } else {

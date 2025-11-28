@@ -751,13 +751,15 @@ AMCValuationEngine::AMCValuationEngine(
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
     const std::string& amcPathDataInput, const std::string& amcPathDataOutput, bool amcIndividualTrainingInput,
     bool amcIndividualTrainingOutput, const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    const bool handlePseudoCurrenciesTodaysMarket,
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
         cubeFactory,
     const QuantLib::ext::shared_ptr<Scenario>& offSetScenario,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
-    const bool continueOnCalibrationError, const bool allowModelFallbacks)
+    const bool continueOnCalibrationError, const bool allowModelFallbacks, const bool useAtParCouponsCurves,
+    const bool useAtParCouponsTrades)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
       aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
       amcPathDataInput_(amcPathDataInput), amcPathDataOutput_(amcPathDataOutput),
@@ -772,7 +774,8 @@ AMCValuationEngine::AMCValuationEngine(
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket), cubeFactory_(cubeFactory),
       offsetScenario_(offSetScenario), simMarketParams_(simMarketParams),
-      continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks) {
+      continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks),
+      useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {
 #ifndef QL_ENABLE_SESSIONS
     QL_FAIL(
         "AMCValuationEngine requires a build with QL_ENABLE_SESSIONS = ON when ctor multi-threaded runs is called.");
@@ -956,7 +959,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                      QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>> {
         auto initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
             today_, todaysMarketParams_, loader, curveConfigs_, true, true, true, referenceData_, false,
-            iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
+            iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_, useAtParCouponsCurves_);
         QuantLib::ext::shared_ptr<ore::data::Market> market = initMarket;
         if (offsetScenario_ != nullptr) {
             QL_REQUIRE(simMarketParams_ != nullptr,
@@ -1025,7 +1028,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                     edCopy, market, configurations, referenceData_, iborFallbackConfig_,
                     EngineBuilderFactory::instance().generateAmcEngineBuilders(model, simDates, stickyCloseOutDates));
 
-                portfolio->build(engineFactory, "amc-val-engine", true);
+                portfolio->build(engineFactory, "amc-val-engine", true, useAtParCouponsTrades_);
 
                 // run core engine code (asd is written for thread id 0 only)
 

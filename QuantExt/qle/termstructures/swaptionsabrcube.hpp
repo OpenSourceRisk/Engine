@@ -50,13 +50,25 @@ public:
                      const std::vector<Real>& outputShift = {}, const std::vector<Real>& modelShift = {},
                      const QuantLib::Size maxCalibrationAttempts = 10,
                      const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-                     const QuantLib::Real maxAcceptableError = 0.05);
+                     const QuantLib::Real maxAcceptableError = 0.05, bool stickySabr = false);
+    // LazyObject interface
     void performCalculations() const override;
+
+    // SwaptionVolatilityStructure interface
     QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
-
-    QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility() const;
-
     VolatilityType volatilityType() const override;
+
+    // inspectors
+    const QuantLib::ext::shared_ptr<ParametricVolatility>& parametricVolatility() const;
+    QuantExt::SabrParametricVolatility::ModelVariant modelVariant() const { return modelVariant_; }
+    const std::map<std::pair<QuantLib::Period, QuantLib::Period>,
+             std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
+        initialModelParameters() const { return initialModelParameters_; }
+    const std::vector<Real>& outputShift() const { return outputShift_; }
+    const std::vector<Real>& modelShift() const { return modelShift_; }
+    QuantLib::Size maxCalibrationAttempts() const { return maxCalibrationAttempts_; }
+    QuantLib::Real exitEarlyErrorThreshold() const { return exitEarlyErrorThreshold_; }
+    QuantLib::Real maxAcceptableError() const { return maxAcceptableError_; }
 
 private:
     Real shiftImpl(Time optionTime, Time swapLength) const override;
@@ -76,6 +88,7 @@ private:
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
+    bool stickySabr_;
 };
 
 } // namespace QuantExt

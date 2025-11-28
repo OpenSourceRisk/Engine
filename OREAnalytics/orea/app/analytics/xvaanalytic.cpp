@@ -464,7 +464,7 @@ XvaAnalyticImpl::classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfoli
         classicPortfolio_->add(trade);
     QL_REQUIRE(analytic()->market(), "today's market not set");
     QuantLib::ext::shared_ptr<EngineFactory> factory = engineFactory();
-    classicPortfolio_->build(factory, "analytic/" + label());
+    classicPortfolio_->build(factory, "analytic/" + label(), true, inputs_->useAtParCouponsTrades());
     Date maturityDate = inputs_->asof();
     if (inputs_->portfolioFilterDate() != Null<Date>())
         maturityDate = inputs_->portfolioFilterDate();
@@ -592,7 +592,8 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
             analytic()->configurations().simMarketParams, false, false, QuantLib::ext::make_shared<ScenarioFilter>(),
             inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
-            cptyCubeFactory, "xva-simulation", offsetScenario_);
+            cptyCubeFactory, "xva-simulation", offsetScenario_, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades());
 
         engine.setAggregationScenarioData(scenarioData_);
         engine.registerProgressIndicator(progressBar);
@@ -663,7 +664,8 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             if (inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
                 auto t = trade;
-                auto [ft, success] = buildTrade(t, factory, "analytic/" + label(), false, true, true);
+                auto [ft, success] =
+                    buildTrade(t, factory, "analytic/" + label(), false, true, true, inputs_->useAtParCouponsTrades());
                 if (success)
                     amcPortfolio_->add(trade);
                 else
@@ -731,7 +733,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
-            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -793,7 +796,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
                 inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
                 inputs_->amcIndividualTrainingInput(), inputs_->amcIndividualTrainingOutput(),
                 inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
-                simMarketParams, continueOnCalibrationError, allowModelFallbacks);
+                simMarketParams, continueOnCalibrationError, allowModelFallbacks, inputs_->useAtParCouponsCurves(),
+                inputs_->useAtParCouponsTrades());
 
             amcEngine.registerProgressIndicator(progressBar);
             amcEngine.registerProgressIndicator(progressLog);
@@ -1016,7 +1020,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
-            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.run();
 

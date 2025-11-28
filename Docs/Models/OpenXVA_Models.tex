@@ -84,7 +84,7 @@ Each of these classes provides an interface to model parameters and derived quan
 \normalsize
 \medskip
 
-As a minimum requirement, a concrete parametrization must implement \verb+zeta+ and \verb+H+ to specify the model. The other methods provide quantities that are essential in later model calculations (except \verb+hullWhiteSigma+). They are implemented using simple numerical differentiation schemes in \verb+IrLgm1fParametrization+, but should be (and are) overriden if a more efficient implementation is possible. One example for a concrete implementation is \verb+IrLgm1fPiecewiseConstantParametrization+ with constructor
+As a minimum requirement, a concrete parametrization must implement \verb+zeta+ and \verb+H+ to specify the model. The other methods provide quantities that are essential in later model calculations (except \verb+hullWhiteSigma+). They are implemented using simple numerical differentiation schemes in \verb+IrLgm1fParametrization+, but should be (and are) overridden if a more efficient implementation is possible. One example for a concrete implementation is \verb+IrLgm1fPiecewiseConstantParametrization+ with constructor
 
 \medskip
 \scriptsize
@@ -134,9 +134,9 @@ The full list of available parametrizations is as follows
 
 \subsection{Unconstrained Optimization}
 
-If parameters are constrained (e.g. by positivity) this can be specified by QL's \verb+Contraint+ and this constrain will be ensured during model calibration. However this is done by simply rejecting non-admissable points in an otherwise unconstrained optimizer (usually Levenberg Marquardt or Simplex).
+If parameters are constrained (e.g. by positivity) this can be specified by QL's \verb+Constraint+ and this constraint will be ensured during model calibration. However this is done by simply rejecting non-admissable points in an otherwise unconstrained optimizer (usually Levenberg Marquardt or Simplex).
 
-A better way of doing the optimization under constraints with unconstrained optimizers is to perform the optimization in transformed variables with unconstrained domaain. For example, positivity can be ensured by optimizing $x\in(-\infty,\infty)$, but interpreting $x^2\in(0,\infty)$ as the actual parameter value.
+A better way of doing the optimization under constraints with unconstrained optimizers is to perform the optimization in transformed variables with unconstrained domain. For example, positivity can be ensured by optimizing $x\in(-\infty,\infty)$, but interpreting $x^2\in(0,\infty)$ as the actual parameter value.
 
 Other than in \verb+Parameter+ this is natively supported in parametrizations, which are equipped with \verb+direct+ and \verb+inverse+ methods that transform raw values (on which the optimization is done) into actual parameter values (with the direct method) and vice versa (with the inverse method).
 

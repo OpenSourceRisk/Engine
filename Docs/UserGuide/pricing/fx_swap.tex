@@ -2,18 +2,18 @@
 \label{pricing:fx_swap}
 
 The FX Swap is priced as a portfolio of two FX Forwards (see
-\ref{pricing:fx_forward}), where the ``near'' leg is 
-disregarded if the cash flow time has passed (and the NPV vanishes when the the 
+\ref{pricing:fx_forward}), where the ``near'' leg is
+disregarded if the cash flow time has passed (and the NPV vanishes when the
 ``far'' leg's cash flow time has passed as well).
-%The NPV in currency A at time 0 (which is before start time t) for an FX Swap 
-%where the holder receives currency A and pays currency B at start t (and the reverse at maturity T):  
+%The NPV in currency A at time 0 (which is before start time t) for an FX Swap
+%where the holder receives currency A and pays currency B at start t (and the reverse at maturity T):
 %?NPV?_FXSwap=N_A??df?_AT-?X_0^(A/B)?N?_BT??df?_BT
 %?-N?_A+?X_0^(A/B)?N?_B0
 %
 %Where:
 %?N_BT=N?_A?X_T^(B/A)
 %N_B0=?N_A?X?_0^(B/A)
-%N_A: the set amount in currency A which is paid at start, and received at maturity 
+%N_A: the set amount in currency A which is paid at start, and received at maturity
 %N_B0: the set amount in currency B to be received at start 0
 %X_0^(A/B): the FX spot rate between currencies A and B at start 0
 %X_T^(A/B): the FX forward rate between currencies A and B for maturity T at start 0

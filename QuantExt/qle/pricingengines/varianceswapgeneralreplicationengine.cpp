@@ -39,10 +39,12 @@ using namespace QuantLib;
 namespace QuantExt {
 
 GeneralisedReplicatingVarianceSwapEngine::GeneralisedReplicatingVarianceSwapEngine(
-    const QuantLib::ext::shared_ptr<Index>& index, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-    const Handle<YieldTermStructure>& discountingTS, const VarSwapSettings settings, const bool staticTodaysSpot)
+    const QuantLib::ext::shared_ptr<Index>& index,
+    const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    const Handle<YieldTermStructure>& discountingTS, const VarSwapSettings settings, const bool staticTodaysSpot,
+    const bool generateAdditionalResults)
     : index_(index), process_(process), discountingTS_(discountingTS), settings_(settings),
-      staticTodaysSpot_(staticTodaysSpot) {
+      staticTodaysSpot_(staticTodaysSpot), generateAdditionalResults_(generateAdditionalResults) {
 
     QL_REQUIRE(process_, "Black-Scholes process not present.");
 
@@ -75,21 +77,26 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
         variance = (calculateFutureVariance(arguments_.maturityDate) * teTime -
                     calculateFutureVariance(arguments_.startDate) * tsTime) /
                    fwdTime;
-        results_.additionalResults["accruedVariance"] = 0;
-        results_.additionalResults["futureVariance"] = variance;
+        if (generateAdditionalResults_) {
+            results_.additionalResults["accruedVariance"] = 0;
+            results_.additionalResults["futureVariance"] = variance;
+        }
     } else if (arguments_.startDate == today) {
         // The only time the QL price works
         variance = calculateFutureVariance(arguments_.maturityDate);
-        results_.additionalResults["accruedVariance"] = 0;
-        results_.additionalResults["futureVariance"] = variance;
+        if (generateAdditionalResults_) {
+            results_.additionalResults["accruedVariance"] = 0;
+            results_.additionalResults["futureVariance"] = variance;
+        }
     } else {
         // Get weighted average of Future and Realised variancies.
         Real accVar = calculateAccruedVariance(jointCal);
         Real futVar = calculateFutureVariance(arguments_.maturityDate);
-        results_.additionalResults["accruedVariance"] = accVar;
-        results_.additionalResults["futureVariance"] = futVar;
-        Real totalTime =
-            jointCal.businessDaysBetween(arguments_.startDate, arguments_.maturityDate, true, true);
+        if (generateAdditionalResults_) {
+            results_.additionalResults["accruedVariance"] = accVar;
+            results_.additionalResults["futureVariance"] = futVar;
+        }
+        Real totalTime = jointCal.businessDaysBetween(arguments_.startDate, arguments_.maturityDate, true, true);
         Real accTime = jointCal.businessDaysBetween(arguments_.startDate, today, true, true);
         Real futTime = jointCal.businessDaysBetween(today, arguments_.maturityDate, false, true);
         variance = (accVar * accTime / totalTime) + (futVar * futTime / totalTime);
@@ -98,7 +105,6 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
     results_.additionalResults["totalVariance"] = variance;
 
     DiscountFactor df = discountingTS_->discount(arguments_.maturityDate);
-    results_.additionalResults["MaturityDiscountFactor"] = df;
     Real multiplier = arguments_.position == Position::Long ? 1.0 : -1.0;
 
     results_.variance = variance;
@@ -106,10 +112,13 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
                      (variance - arguments_.strike); // factor of 10000 to convert vols to market quotes
 
     Real volStrike = std::sqrt(arguments_.strike);
-    results_.additionalResults["VarianceNotional"] = arguments_.notional;
-    results_.additionalResults["VarianceStrike"] = arguments_.strike;
-    results_.additionalResults["VolatilityStrike"] = volStrike;
-    results_.additionalResults["VegaNotional"] = arguments_.notional * 2 * 100 * volStrike;
+    if (generateAdditionalResults_) {
+        results_.additionalResults["MaturityDiscountFactor"] = df;
+        results_.additionalResults["VarianceNotional"] = arguments_.notional;
+        results_.additionalResults["VarianceStrike"] = arguments_.strike;
+        results_.additionalResults["VolatilityStrike"] = volStrike;
+        results_.additionalResults["VegaNotional"] = arguments_.notional * 2 * 100 * volStrike;
+    }
 }
 
 Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance(const Calendar& jointCal) const {
@@ -219,6 +228,21 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance(const Dat
                        << settings_.priceThreshold << ", check validity of volatility surface (are vols exploding?)");
     } else {
         QL_FAIL("GeneralisedReplicationVarianceSwapEngine: internal error, unknown bounds");
+    }
+
+    // additional result: vol smile at maturity
+
+    if (generateAdditionalResults_) {
+        std::vector<Real> volSmileStrikes;
+        std::vector<Real> volSmileVolatilities;
+        constexpr Size N = 50;
+        for (Size i = 0; i < N; ++i) {
+            Real K = lower + (upper - lower) / static_cast<Real>(N) * static_cast<Real>(i);
+            volSmileStrikes.push_back(K);
+            volSmileVolatilities.push_back(process_->blackVolatility()->blackVol(T, K, true));
+        }
+        results_.additionalResults["VolatilitySmile.Strikes"] = volSmileStrikes;
+        results_.additionalResults["VolatilitySmile.Volatilities"] = volSmileVolatilities;
     }
 
     // calculate the integration integral

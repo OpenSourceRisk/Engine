@@ -353,7 +353,7 @@ parameter labels given in brackets):
 
 The minimum value $y_1$ and maximum value $y_n$ covered by the grid are determined as follows. First, the time original
 calibration time grid \ref{formula:convertible_calgrid} is enriched by additional points to ensure that a certain given
-number of time steps per year (specified as \verb+Boostrap.TimeStepsPerYear+) is used for the numerical solution of the
+number of time steps per year (specified as \verb+Bootstrap.TimeStepsPerYear+) is used for the numerical solution of the
 PDE later on, i.e.
 
 \begin{equation}
@@ -371,7 +371,7 @@ y_n = \ln \left( \max_{i=1}^M F(t_i) \right) + m_S \sigma_m(t_M)\sqrt{t_M} \Phi^
 where $\sigma_M(t_M)$ is the market volatility for an ATMF call option with expiry $t_M$.
 
 If the mesher concentration $m_c$ is not given, a uniform grid ${y_i}_{i=1,\ldots,n}$ will be built. Otherwise a grid
-concentrated around and contaning $\ln(S)$ as a grid point will be contructed following the approach described in
+concentrated around and containing $\ln(S)$ as a grid point will be constructed following the approach described in
 \cite{Clark_FXBook}, 7.11.3., i.e. using an $\sinh(\cdot)$-transformation for the uniform grid points.
 
 To each state variable grid point $y_i$ we associate the width
@@ -583,7 +583,7 @@ After the algorithm has finished, the NPV of the convertible is interpolated fro
 
 The following additional results are provided by the pricer:
 
-Results concerning the processing of events on the FD grid: 
+Results concerning the processing of events on the FD grid:
 
 \begin{itemize}
 \item time: the time associated to the FD grid point
@@ -605,7 +605,7 @@ Results concerning the processing of events on the FD grid:
   \item \verb+@0.03+ voluntary conversion with conversion ratio $0.03$
   \item \verb+@0.03 c@1.3+ contingent conversion with conversion ratio $0.03$ and coco barrier $1.3$
   \item \verb+@0.03 c@1.3b+ as before, but check is on the next date in the past without being marked with \verb+b+
-  \item \verb+peps(0.03,0.04)+: mandatory conversion with PEPS barriers $0.03$ and $0.04$ 
+  \item \verb+peps(0.03,0.04)+: mandatory conversion with PEPS barriers $0.03$ and $0.04$
   \end{itemize}
 \item CR\_reset: conversion ratio reset event:
   \begin{itemize}
@@ -617,7 +617,7 @@ Results concerning the processing of events on the FD grid:
   \end{itemize}
 \item div\_passth: dividend passthroughs:
   \begin{itemize}
-    \item \verb+@0.17+: dividend pass-through event with threshhold $0.17$
+    \item \verb+@0.17+: dividend pass-through event with threshold $0.17$
   \end{itemize}
 \item curr\_cr: the current conversion ratio associated to the time index, if there are conversion ratio reset events or
   dividend protection events with conversion ratio reset active, the number is displayed with the suffix \verb+s+ for
@@ -689,6 +689,3 @@ Results concerning the processing of events before or on the evaluation date:
 \item historicEvents.accruedDividends\_DATE1\_DATE2: dividends between the last dividend protection date before the
   evaluation date and the evaluation date, which enter the next (future) dividend reset event or pass through
 \end{itemize}
-
-
-

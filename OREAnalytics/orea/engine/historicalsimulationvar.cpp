@@ -34,11 +34,13 @@ namespace ore {
 namespace analytics {
 
 HistoricalSimulationVarReport::HistoricalSimulationVarReport(
-    const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-    const string& portfolioFilter, const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
+    const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const string& portfolioFilter,
+    const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
-    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs)),
+    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool useAtParCouponsCurves,
+    const bool useAtParCouponsTrades)
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
+                false, useAtParCouponsCurves, useAtParCouponsTrades),
       includeExpectedShortfall_(includeExpectedShortfall) {
     fullReval_ = true;
     tradePnl_ = tradePnl;

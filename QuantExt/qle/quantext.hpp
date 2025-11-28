@@ -566,7 +566,6 @@
 #include <qle/termstructures/optionletstripper2.hpp>
 #include <qle/termstructures/optionletstripperwithatm.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
-#include <qle/termstructures/overnightfallbackcurve.hpp>
 #include <qle/termstructures/parametricvolatility.hpp>
 #include <qle/termstructures/parametricvolatilitysmilesection.hpp>
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
@@ -599,6 +598,7 @@
 #include <qle/termstructures/spreadedyoyvolsurface.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/termstructures/strippedoptionlet.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>

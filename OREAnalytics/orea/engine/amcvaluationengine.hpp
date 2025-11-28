@@ -73,7 +73,8 @@ public:
             const QuantLib::Size)>& cubeFactory = {},
         const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams = nullptr,
-        const bool continueOnCalibrationError = false, const bool allowModelFallbacks = false);
+        const bool continueOnCalibrationError = false, const bool allowModelFallbacks = false,
+        const bool useAtParCouponsCurves_ = true, const bool useAtParCouponsTrades_ = true);
 
     //! build cube in single threaded run
     void buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -136,6 +137,8 @@ private:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
     bool continueOnCalibrationError_ = false;
     bool allowModelFallbacks_ = false;
+    bool useAtParCouponsCurves_ = true;
+    bool useAtParCouponsTrades_ = true;
 
     // result cubes for multi-threaded run
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCubes_;

@@ -2,8 +2,8 @@
 
 \ifdefined\IncludePayoff{{\bf Payoff}
 
-A Flexi Swap is an amortizing swap in which one party has the option to further 
-reduce the notional in each period to each value between the current notional and 
+A Flexi Swap is an amortizing swap in which one party has the option to further
+reduce the notional in each period to each value between the current notional and
 a specified lower bound for that period.
 
 Flexi Swaps are priced in ORE following the Replication Approach described in (F. Jamshidian, 2005). The replicating basket of
@@ -128,7 +128,7 @@ a multiple of the fixed leg frequency). Each lower notional bound child element 
 cannot exceed the notional amount of the corresponding coupon period on either leg and (from the second fixed coupon
 period on) the lower notional bound of the previous coupon period.
 
-In case the optional prepayments are described by a \verb+Prepayment+ node, the the single exercise opportunities are
+In case the optional prepayments are described by a \verb+Prepayment+ node, the single exercise opportunities are
 described by a \verb+PrepaymentOptions+ subnode that contains one or several \verb+PerpaymentOption+ subnodes, each of
 which comprises the following elements:
 

@@ -140,14 +140,20 @@ protected:
             staticTodaysSpot = parseBool(modelParameter("StaticTodaysSpot", {}, false, "false"));
         }
 
+        bool generateAdditionalResults = false;
+        auto p = globalParameters_.find("GenerateAdditionalResults");
+        if (p != globalParameters_.end()) {
+            generateAdditionalResults = parseBool(p->second);
+        }
+
         if (momentType == MomentType::Variance)
             return QuantLib::ext::make_shared<QuantExt::GeneralisedReplicatingVarianceSwapEngine>(
                 index, gbsp, market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
-                settings, staticTodaysSpot);
+                settings, staticTodaysSpot, generateAdditionalResults);
         else
             return QuantLib::ext::make_shared<QuantExt::VolatilityFromVarianceSwapEngine>(
                 index, gbsp, market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
-                settings, staticTodaysSpot);
+                settings, staticTodaysSpot, generateAdditionalResults);
     }
 };
 

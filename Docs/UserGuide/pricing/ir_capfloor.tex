@@ -40,7 +40,7 @@ where ``Black/Bachelier'' refers to the well-known pricing formulas \ref{models:
    \item bootstrapped from quoted market volatilities as described in \ref{pricing:ir_capfloor_bootstrap} or
    \item proxied by a another caplet volatility surface as described in \ref{pricing:ir_capfloor_proxying}. This is
      useful if no direct market quotes are available for the underlying index. For example, we might use liquid market
-     quotes to boostrap a volatility surface for backward looking USD-SOFR caplets and use the resuling caplet surface
+     quotes to bootstrap a volatility surface for backward looking USD-SOFR caplets and use the resulting caplet surface
      to proxy caplet volatilities for forward looking USD-SOFR-3M term rates.
    \end{itemize}
 \item $\sigma^2 t_f$ is the accrued variance from $t=0$ to the fixing time $t_f$ of the caplet. The square root of the

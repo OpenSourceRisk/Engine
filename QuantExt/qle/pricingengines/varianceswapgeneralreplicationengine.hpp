@@ -80,7 +80,8 @@ public:
                                              const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                              const Handle<YieldTermStructure>& discountingTS,
                                              const VarSwapSettings settings = VarSwapSettings(),
-                                             const bool staticTodaysSpot = true);
+                                             const bool staticTodaysSpot = true,
+                                             const bool generateAdditionalResults = true);
 
     void calculate() const override;
 
@@ -93,6 +94,7 @@ protected:
     Handle<YieldTermStructure> discountingTS_;
     VarSwapSettings settings_;
     bool staticTodaysSpot_;
+    bool generateAdditionalResults_;
 
     mutable Real cachedTodaysSpot_ = Null<Real>();
 };

@@ -51,13 +51,15 @@ SensitivityAnalysis::SensitivityAnalysis(
     const bool laxFxConversion, const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun)
+    const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun,
+    const bool useAtParCouponsTrades)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
       laxFxConversion_(laxFxConversion), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError),
-      engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
+      engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true),
+      useAtParCouponsTrades_(useAtParCouponsTrades) {}
 
 SensitivityAnalysis::SensitivityAnalysis(
     const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
@@ -70,14 +72,14 @@ SensitivityAnalysis::SensitivityAnalysis(
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool continueOnError, bool dryRun,
-    const std::string& context)
+    const std::string& context, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
     : marketConfiguration_(marketConfiguration), asof_(asof), simMarketData_(simMarketData),
       sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), laxFxConversion_(laxFxConversion),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
       portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
-      context_(context) {}
+      context_(context), useAtParCouponsCurves_(useAtParCouponsCurves), useAtParCouponsTrades_(useAtParCouponsTrades) {}
 
 namespace {
 std::vector<std::pair<QuantLib::ext::shared_ptr<Portfolio>, QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>>>
@@ -125,7 +127,7 @@ void SensitivityAnalysis::generateSensitivities() {
     if (!portfolio_->isBuilt() && market_) {
         auto factory = QuantLib::ext::make_shared<EngineFactory>(engineData_, market_, configurations, referenceData_,
                                                                  iborFallbackConfig_);
-        portfolio_->build(factory, "sensi analysis");
+        portfolio_->build(factory, "sensi analysis", true, useAtParCouponsTrades_);
     }
 
     std::set<std::string> sensiTemplateIdsFromPortfolio;
@@ -203,7 +205,7 @@ void SensitivityAnalysis::generateSensitivities() {
             auto factory =
                 QuantLib::ext::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
             pf->reset();
-            pf->build(factory, "sensi analysis");
+            pf->build(factory, "sensi analysis", true, useAtParCouponsTrades_);
             ValuationEngine engine(asof_, dg, simMarket_, factory->modelBuilders(), recalibrateModels_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
@@ -222,9 +224,9 @@ void SensitivityAnalysis::generateSensitivities() {
             "configuration '"
             << marketConfiguration_ << "'");
 
-        market_ =
-            QuantLib::ext::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_, true, true,
-                                                        false, referenceData_, false, iborFallbackConfig_, false);
+        market_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
+            asof_, todaysMarketParams_, loader_, curveConfigs_, true, true, false, referenceData_, false,
+            iborFallbackConfig_, false, true, useAtParCouponsCurves_);
         if (offsetScenario_ == nullptr) {
             simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
                 market_, simMarketData_, marketConfiguration_,
@@ -259,16 +261,16 @@ void SensitivityAnalysis::generateSensitivities() {
                 continue;
 
             MultiThreadedValuationEngine engine(
-                nThreads_, asof_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), scenGen->numScenarios(), loader_,
-                scenGen, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
+                nThreads_, asof_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), scenGen->numScenarios(),
+                loader_, scenGen, ed, curveConfigs_, todaysMarketParams_, marketConfiguration_, simMarketData_,
                 sensitivityData_->useSpreadedTermStructures(), false,
-                QuantLib::ext::make_shared<ore::analytics::ScenarioFilter>(), referenceData_, iborFallbackConfig_, true, true,
-                recalibrateModels_,
+                QuantLib::ext::make_shared<ore::analytics::ScenarioFilter>(), referenceData_, iborFallbackConfig_, true,
+                true, recalibrateModels_,
                 [](const QuantLib::Date& asof, const std::set<std::string>& ids, const std::vector<QuantLib::Date>&,
                    const QuantLib::Size samples) {
                     return QuantLib::ext::make_shared<ore::analytics::DoublePrecisionSensiCube>(ids, asof, samples);
                 },
-                {}, {}, context_, offsetScenario_);
+                {}, {}, context_, offsetScenario_, useAtParCouponsCurves_, useAtParCouponsTrades_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
 

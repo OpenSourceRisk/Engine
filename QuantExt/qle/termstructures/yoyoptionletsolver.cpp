@@ -32,7 +32,7 @@ double YoYOptionletStripperSolverWithFallBack::solveForImpliedVol(
     QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloorEngine> p, QuantLib::Real priceToMatch) const {
     try {
         return solver_.solveForImpliedVol(type, slope, K, lag, fixingDays, anIndex, surf, p, priceToMatch);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         ObjectiveFunction error(type, slope, K, lag, fixingDays, anIndex, surf, p, priceToMatch);
         return QuantExt::detail::dontThrowFallback(error, minVol_, maxVol_, steps_);
     }

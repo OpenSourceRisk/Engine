@@ -45,6 +45,10 @@ public:
 
     const QuantLib::Period& maxSwapTenor() const override { return baseVol_->maxSwapTenor(); }
 
+    QuantLib::Handle<QuantLib::SwaptionVolatilityStructure> baseVol() const { return baseVol_; }
+    QuantLib::ext::shared_ptr<QuantLib::SwapIndex> baseSwapIndexBase() const { return baseSwapIndexBase_; }
+    QuantLib::ext::shared_ptr<QuantLib::SwapIndex> baseShortSwapIndexBase() const { return baseShortSwapIndexBase_; }
+
 private:
     QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate,
                                                                const QuantLib::Period& swapTenor) const override;

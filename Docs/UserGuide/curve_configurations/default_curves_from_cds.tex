@@ -6,7 +6,7 @@ Listing \ref{lst:defaultcurve_cds_configuration} outlines the configuration requ
 
 \begin{itemize}
 \item
-\lstinline!CurveId!: Unique identifier for the bootstrapped default curve. For index term curves a suffix \lstinline!_5Y! should be appended to the name indicating the index term, since this is the prefered name looked up by index cds and index cds option pricers. If such a curve is not found, the pricers will fall back to the specified credit curve id without suffix, i.e. following this naming convention is not mandatory, but recommended.
+\lstinline!CurveId!: Unique identifier for the bootstrapped default curve. For index term curves a suffix \lstinline!_5Y! should be appended to the name indicating the index term, since this is the preferred name looked up by index cds and index cds option pricers. If such a curve is not found, the pricers will fall back to the specified credit curve id without suffix, i.e. following this naming convention is not mandatory, but recommended.
 
 \item \lstinline!CurveDescription! [Optional]:
 A description of the default curve. It is for information only and may be left blank.
@@ -72,7 +72,7 @@ This node holds configuration details for the iterative bootstrap that are descr
 <DefaultCurve>
   <CurveId>...</CurveId>
   <CurveDescription>...</CurveDescription>
-  <Currency>USD</Currency> 
+  <Currency>USD</Currency>
   <Type>...</Type>
   <DiscountCurve>...</DiscountCurve>
   <DayCounter>...</DayCounter>

@@ -82,6 +82,7 @@ public:
                 const std::string& externalComputeDevice = std::string(), const bool usePythonIntegration = false,
                 const bool usePythonIntegrationDynamicIm = false, const bool continueOnCalibrationError = true,
                 const bool allowModelFallbacks = true, const bool continueOnError = true,
+                const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true,
                 const std::string& context = "xva engine cg");
 
     // if nullptr, no offset scenario to be applied, otherwise the base market will be shifted by that scenario
@@ -224,6 +225,8 @@ private:
     bool continueOnCalibrationError_;
     bool allowModelFallbacks_;
     bool continueOnError_;
+    bool useAtParCouponsCurves_;
+    bool useAtParCouponsTrades_;
     std::string context_;
 
     // artefacts produced during lifetime of engine instance
