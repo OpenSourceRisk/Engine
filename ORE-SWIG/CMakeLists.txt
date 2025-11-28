@@ -70,6 +70,7 @@ add_link_directory_if_exists("${OREDATA_SOURCE_DIR}/build/ored")
 add_link_directory_if_exists("${OREANALYTICS_SOURCE_DIR}/build/orea")
 
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib")
+add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/ore/QuantLib")
 
 if(EXISTS "${CMAKE_BINARY_DIR}/ore/QuantLib/")
