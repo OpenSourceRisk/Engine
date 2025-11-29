@@ -446,7 +446,10 @@ add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
 target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME} ${QLE_LIB_NAME} ${ORED_LIB_NAME})
 
 if(ORE_USE_ZLIB)
-    target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
+    target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES} Boost::iostreams)
+    if(MSVC)
+        target_link_libraries(${OREA_LIB_NAME} Boost::zlib)
+    endif()
 endif()
 
 if (QL_USE_PCH)

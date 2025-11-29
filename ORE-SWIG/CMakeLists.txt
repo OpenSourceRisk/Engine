@@ -31,12 +31,6 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-# FD-BST: if(ORE_USE_ZLIB)
-# FD-BST:     list(APPEND BOOST_COMPONENT_LIST iostreams)
-# FD-BST:     if(MSVC)
-# FD-BST:         list(APPEND BOOST_COMPONENT_LIST zlib)
-# FD-BST:     endif()
-# FD-BST: endif()
 find_package(SWIG REQUIRED)
 find_package(Python REQUIRED COMPONENTS Development)
 if(ORE_USE_ZLIB)
@@ -51,15 +45,10 @@ include_directories(${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/QuantLib-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/QuantExt-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/OREData-SWIG/SWIG)
-
-#include_directories(${ORE_BUILD}/QuantLib)
-
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${QUANTEXT_SOURCE_DIR})
 include_directories(${OREDATA_SOURCE_DIR})
 include_directories(${OREANALYTICS_SOURCE_DIR})
-
-# FD-BST: include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
 # Add to the list of link directories
@@ -109,7 +98,10 @@ target_link_libraries(OREP ${QLE_LIB_NAME})
 target_link_libraries(OREP ${ORED_LIB_NAME})
 target_link_libraries(OREP ${OREA_LIB_NAME})
 if(ORE_USE_ZLIB)
-    target_link_libraries(OREP ${ZLIB_LIBRARIES})
+    target_link_libraries(OREP ${ZLIB_LIBRARIES} Boost::iostreams)
+    if(MSVC)
+        target_link_libraries(OREP Boost::zlib)
+    endif()
 endif()
 # On windows, do not tell the build which python libs to use.  It automatically
 # looks for python release libs, even in debug, and invoking the line below
