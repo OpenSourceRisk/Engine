@@ -334,3 +334,22 @@ function(generate_git_hash custom_target_name)
                              -P ${QUANTEXT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endfunction()
+
+find_package(Doxygen)
+if(ORE_BUILD_DOC AND NOT Doxygen_FOUND)
+    message("Doxygen needs to be installed to generate the doxygen documentation.")
+endif()
+
+function(generate_doxy_docs doxy_filename)
+    # Set the Doxygen input and output files.
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/${doxy_filename}.doxy)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+    add_custom_target("doc_${doxy_filename}" ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating API documentation for ${doxy_filename} with Doxygen."
+        VERBATIM
+    )
+endfunction()

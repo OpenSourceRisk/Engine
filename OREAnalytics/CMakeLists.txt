@@ -24,7 +24,7 @@ add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantExt/qle")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/OREData/ored")
 
 add_subdirectory("orea")
-if (ORE_BUILD_DOC)
+if (ORE_BUILD_DOC AND Doxygen_FOUND)
     add_subdirectory("doc")
 endif()
 if (ORE_BUILD_TESTS)

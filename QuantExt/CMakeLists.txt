@@ -52,7 +52,7 @@ add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 generate_git_hash(ore_qle)
 
 add_subdirectory("qle")
-if (ORE_BUILD_DOC)
+if (ORE_BUILD_DOC AND Doxygen_FOUND)
     add_subdirectory("doc")
 endif()
 if (ORE_BUILD_TESTS)
