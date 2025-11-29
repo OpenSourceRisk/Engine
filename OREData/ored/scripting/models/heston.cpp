@@ -62,8 +62,7 @@ void Heston::performCalculationsFd() const {
 
 void Heston::generatePaths() const {
 
-    // single asset
-    // FIXME: no training paths, no foreign currency index drift adjustment
+    // Single asset, no training paths, no foreign currency index drift adjustment
     // if (indices_.size() == 1) 
     //     return generateSingleAssetPaths();
 
@@ -74,8 +73,7 @@ void Heston::generatePaths() const {
         DLOG("Heston::generatePaths() called for " << indices_.size() << " indices:");
         for (auto i : indices_) {
             DLOG(i);
-	    QL_REQUIRE(!i.isFx(), "Heston does not support FullDynamicFX yet");
-        }
+	}
     }
 
     Matrix C = getCorrelation();
@@ -143,8 +141,6 @@ void Heston::generatePaths() const {
     }
 
     // Precompute index for drift adjustment for eq / com indices that are not in base ccy
-    // FIXME: The Heston drift adjustment(s) need to be validated. For now we require that
-    // the pricing engine's FullDynamicFx flag is set to false, so that no adjustment is needed.
     std::vector<Size> eqComIdx(indices_.size());
     for (Size j = 0; j < indices_.size(); ++j) {
         Size idx = Null<Size>();
@@ -389,17 +385,21 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 		varianceState[j][i] = state[j][1];
 	    }
 
-	    // FIXME: Validate Heston drift adjustment(s)
+	    // FIXME: Validate Heston drift adjustment(s) with a Martingale test
 	    // Loop over all indices again and add drift for eq / com indices that are not in base ccy
             for (Size j = 0; j < indices_.size(); ++j) {
 		Size j0 = eqComIdx[j];
                 if (j0 != Null<Size>()) {
-		    QL_FAIL("Heston drift adjustments to be validated");
+		    // spot process adjustment
                     Real volIdx = std::sqrt(state[j0][1]);
                     Real volj = std::sqrt(state[j][1]);
-                    Real drift = - correlation[j0][j] * volIdx * volj * dt;
+                    Real drift = - correlation[2*j0][2*j] * volIdx * volj * dt; 
 		    state[j][0] *= std::exp(drift);
-                }
+		    // variance process adjustment
+		    Real sigma = model_->hestonProcesses()[j]->sigma();
+		    Real rho = model_->hestonProcesses()[j]->rho();
+		    state[j][1] += drift * sigma * rho; 
+		}
             }
 
             // on the effective simulation dates populate the underlying paths

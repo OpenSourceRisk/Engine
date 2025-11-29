@@ -52,8 +52,10 @@
   <FxSpots id="default">
     <FxSpot pair="USDEUR">FX/USD/EUR</FxSpot>
   </FxSpots>
+  <FxVolatilities id="default">
+    <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+  </FxVolatilities>
   <!--
-  <FxVolatilities id="default"/>
   <SwaptionVolatilities id="default"/>
   <DefaultCurves id="default"/>
   -->

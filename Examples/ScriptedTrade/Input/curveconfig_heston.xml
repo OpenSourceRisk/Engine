@@ -517,6 +517,25 @@
 
   </EquityVolatilities>
 
+  <FXVolatilities>
+    <FXVolatility>
+      <CurveId>EURUSD</CurveId>
+      <CurveDescription>Euro United States Dollar volatility surface</CurveDescription>
+      <Dimension>Smile</Dimension>
+      <SmileType>BFRR</SmileType>
+      <SmileInterpolation>Cubic</SmileInterpolation>
+      <SmileDelta>25</SmileDelta>
+      <Conventions>EUR-USD-FXOPTION</Conventions>
+      <Expiries>*</Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
+      <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-SOFR</FXDomesticCurveID>
+      <Calendar>JoinHolidays(TARGET, US settlement)</Calendar>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Report/>
+    </FXVolatility>
+  </FXVolatilities>
+
   <Correlations>
     <Correlation>
       <CurveId>EQ-RIC:.STOXX50E&amp;EQ-RIC:.GDAXI</CurveId>
