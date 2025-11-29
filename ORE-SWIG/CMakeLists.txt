@@ -99,9 +99,6 @@ target_link_libraries(OREP ${ORED_LIB_NAME})
 target_link_libraries(OREP ${OREA_LIB_NAME})
 if(ORE_USE_ZLIB)
     target_link_libraries(OREP ${ZLIB_LIBRARIES} Boost::iostreams)
-    if(MSVC)
-        target_link_libraries(OREP Boost::zlib)
-    endif()
 endif()
 # On windows, do not tell the build which python libs to use.  It automatically
 # looks for python release libs, even in debug, and invoking the line below
