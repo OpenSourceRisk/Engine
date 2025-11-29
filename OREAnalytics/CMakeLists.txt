@@ -9,10 +9,6 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-if(ORE_USE_ZLIB)
-    find_package(ZLIB REQUIRED)
-endif()
-
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${QUANTEXT_SOURCE_DIR})
 include_directories(${OREDATA_SOURCE_DIR})

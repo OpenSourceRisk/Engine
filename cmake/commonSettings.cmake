@@ -71,6 +71,7 @@ endif()
 
 # set compiler macro if zlib is enabled
 if(ORE_USE_ZLIB)
+  find_package(ZLIB REQUIRED)
   add_compile_definitions(ORE_USE_ZLIB)
 endif()
 

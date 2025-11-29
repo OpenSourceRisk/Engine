@@ -7,7 +7,6 @@ cmake_policy(SET CMP0086 NEW)
 project(ORE-SWIG)
 
 set(CMAKE_SWIG_FLAGS "-fastdispatch")
-option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(${PROJECT_SOURCE_DIR}/../cmake/commonSettings.cmake)
 
@@ -33,9 +32,6 @@ set_ql_library_name()
 
 find_package(SWIG REQUIRED)
 find_package(Python REQUIRED COMPONENTS Development)
-if(ORE_USE_ZLIB)
-    find_package(ZLIB REQUIRED)
-endif()
 
 # Load the UseSWIG module from the cmake installation
 include(${SWIG_USE_FILE})
@@ -98,7 +94,7 @@ target_link_libraries(OREP ${QLE_LIB_NAME})
 target_link_libraries(OREP ${ORED_LIB_NAME})
 target_link_libraries(OREP ${OREA_LIB_NAME})
 if(ORE_USE_ZLIB)
-    target_link_libraries(OREP ${ZLIB_LIBRARIES} Boost::iostreams)
+    target_link_libraries(OREP ZLIB::ZLIB Boost::iostreams)
 endif()
 # On windows, do not tell the build which python libs to use.  It automatically
 # looks for python release libs, even in debug, and invoking the line below
