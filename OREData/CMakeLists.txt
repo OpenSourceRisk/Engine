@@ -14,7 +14,7 @@ else()
     SET(COMPONENTS_CONDITIONAL "")
 endif()
 
-find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log filesystem OPTIONAL_COMPONENTS system chrono)
+find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log_setup log filesystem OPTIONAL_COMPONENTS system chrono)
 
 
 include_directories(${Boost_INCLUDE_DIRS})
