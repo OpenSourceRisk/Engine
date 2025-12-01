@@ -24,7 +24,6 @@
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/timer/timer.hpp>
 
 #include <chrono>
 #include <iostream>
@@ -39,6 +38,7 @@
 namespace QuantExt {
 
 #ifdef ORE_ENABLE_OPENCL
+#include <boost/timer/timer.hpp>
 namespace {
 std::string errorText(cl_int err) {
     switch (err) {

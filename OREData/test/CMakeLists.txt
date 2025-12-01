@@ -76,10 +76,9 @@ yieldcurve.cpp
 zerocouponswap.cpp)
 
 add_executable(ored-test-suite ${OREData-Test_SRC})
-target_link_libraries(ored-test-suite ${ORED_LIB_NAME})
-target_link_libraries(ored-test-suite ${QLE_LIB_NAME})
-target_link_libraries(ored-test-suite ${QL_LIB_NAME})
-target_link_libraries(ored-test-suite ${Boost_LIBRARIES})
+target_link_libraries(ored-test-suite ${QL_LIB_NAME} ${QLE_LIB_NAME} ${ORED_LIB_NAME}
+    Boost::unit_test_framework
+)
 
 # under windows our unit test code switches to .. since it assumes the test executable is run from /bin
 # we work around that by explicitly specifying the base_data_path to be the current directory

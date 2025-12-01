@@ -24,13 +24,13 @@
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/timer/timer.hpp>
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
 #ifdef ORE_ENABLE_CUDA
+#include <boost/timer/timer.hpp>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <curand_kernel.h>

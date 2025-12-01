@@ -37,7 +37,7 @@ using boost::unit_test::framework::master_test_suite;
 using ore::test::getBaseDataPath;
 using ore::test::setupTestLogging;
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>

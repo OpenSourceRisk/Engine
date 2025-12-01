@@ -34,7 +34,7 @@
 
 #include <iostream>
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>

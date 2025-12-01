@@ -825,10 +825,7 @@ version.hpp)
 
 writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
 add_library(${ORED_LIB_NAME} ${OREData_SRC})
-target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
-
+target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME} ${QLE_LIB_NAME} Boost::filesystem Boost::log)
 
 if (QL_USE_PCH)
 target_precompile_headers(${ORED_LIB_NAME}

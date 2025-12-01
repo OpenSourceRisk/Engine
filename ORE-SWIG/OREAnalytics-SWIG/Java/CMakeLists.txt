@@ -51,9 +51,6 @@ include_directories(${PROJECT_SOURCE_DIR}/../../QuantExt-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/../../OREData-SWIG/SWIG)
 include_directories(${PROJECT_SOURCE_DIR}/../../OREAnalytics-SWIG/SWIG)
 
-find_package (Boost REQUIRED COMPONENTS serialization date_time filesystem OPTIONAL_COMPONENTS system)
-include_directories(${Boost_INCLUDE_DIRS})
-
 # specify library search path (update this when we build ORE with cmake)
 add_link_directory_if_exists(${ORE}/build/QuantLib/ql)
 add_link_directory_if_exists(${ORE}/build/QuantExt/qle)
@@ -84,7 +81,7 @@ swig_link_libraries(${ORE_JAVA_LIB_NAME} ${QL_LIB_NAME})
 swig_link_libraries(${ORE_JAVA_LIB_NAME} ${QLE_LIB_NAME})
 swig_link_libraries(${ORE_JAVA_LIB_NAME} ${ORED_LIB_NAME})
 swig_link_libraries(${ORE_JAVA_LIB_NAME} ${OREA_LIB_NAME})
-swig_link_libraries(${ORE_JAVA_LIB_NAME} ${Boost_LIBRARIES})
+swig_link_libraries(${ORE_JAVA_LIB_NAME} Boost::boost Boost::filesystem Boost::log Boost::serialization Boost::timer)
 
 #add_dependencies(${ORE_JAVA_LIB_NAME} ${QLE_LIB_NAME})
 #add_dependencies(${ORE_JAVA_LIB_NAME} ${ORED_LIB_NAME})
