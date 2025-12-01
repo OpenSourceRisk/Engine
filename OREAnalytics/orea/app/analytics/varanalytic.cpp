@@ -119,7 +119,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         if (inputs_->outputHistoricalScenarios())
             ReportWriter().writeHistoricalScenarios(
                 scenarios->scenarioLoader(),
-                QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenrios.csv").string(),
+                QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenarios.csv").string(),
                                                   ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
 
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
@@ -183,7 +183,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 
         inputs_->varQuantiles(), benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown(), inputs_->includeExpectedShortfall(),
-        inputs_->tradePnl());
+        inputs_->tradePnl(), inputs_->riskFactorBreakdown());
 
 }
 

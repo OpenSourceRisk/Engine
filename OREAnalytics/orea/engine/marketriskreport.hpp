@@ -37,7 +37,7 @@ namespace ore {
 namespace analytics {
 
 using TradePnLStore = std::vector<std::vector<QuantLib::Real>>;
-using RiskFactorPnLStore = std::map<RiskFactorKey,QuantLib::Real>;
+using RiskFactorPnLStore = std::map<std::pair<RiskFactorKey,RiskFactorKey>,QuantLib::Real>;
 
 class MarketRiskGroupBase {
 public:

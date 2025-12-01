@@ -20,6 +20,7 @@
 
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/historicalsensipnlcalculator.hpp>
 
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -227,10 +228,48 @@ TradePnlStore HistoricalPnlGenerator::tradeLevelPnl() const { return tradeLevelP
 
 using RiskFactorPnLStore = HistoricalPnlGenerator::RiskFactorPnLStore;
 
-RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl() const {
+RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::TimePeriod& period) const {
 
     // Create result with enough space
     RiskFactorPnLStore pnls;
+    ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();//->next(hisScenGen_->baseScenario()->asof());
+    std::vector<RiskFactorKey> deltaKeys = sc->keys();
+    std::set<std::string> ids = cube_->ids();
+    std::vector<QuantLib::Date> d = cube_->dates();
+    Size i = 0;
+
+    auto sensiPnlCalculator = ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, nullptr);
+    Size nbScenario = sensiPnlCalculator->getScenarioNumber();
+    std::cout<<"nbScenario="<<nbScenario<<std::endl;
+
+    ext::shared_ptr<CovarianceCalculator> covCalculator;
+    covCalculator = ext::make_shared<CovarianceCalculator>(period);
+    // sensiPnlCalculator_->populateSensiShifts(cube, deltaKeys, shiftCalc_);
+    // sensiPnlCalculator_->calculateSensiPnl({}, deltaKeys, cube, pnlCalculators_, covCalculator, {},
+    //                                        false, false, false);
+    QuantLib::Matrix mPnL(nbScenario, deltaKeys.size());
+    for (auto it = ids.begin(); it != ids.end(); it++, i++) {
+        for (int j = 0; j < nbScenario; j++) {
+            // Start and end of period relating to current sample
+            Date start = hisScenGen_->startDates()[j];
+            Date end = hisScenGen_->endDates()[j];
+            if (period.contains(start) && period.contains(end)) {
+                QuantLib::Real cubeValue = cube_->get(*it, d[0], j);
+                mPnL[j][i] = cubeValue - cube_->getT0(*it);
+                std::cout<<mPnL[j][i]<<",";
+            }
+        }
+        std::cout<<std::endl;
+    }
+    std::cout<<"MatrixPnL is "<<mPnL.rows()<<"x"<<mPnL.columns()<<std::endl;
+    for (Size col = 0; col < deltaKeys.size(); col++) {
+        for (Size row = col + 1; row < deltaKeys.size(); row++) {
+            RiskFactorKey a = deltaKeys[row];
+            RiskFactorKey b = deltaKeys[col];
+            pnls[std::make_pair(a, b)] = mPnL[row][col];
+            // std::cout<<a<<","<<b<<"="<<mPnL[row][col]<<std::endl;
+        }
+    }
 
     return pnls;
 }

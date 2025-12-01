@@ -54,23 +54,34 @@ void HistoricalSimulationVarReport::createAdditionalReports(
 
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(1);
 
-    // prepare report
-    report->addColumn("Portfolio", string())
-        .addColumn("RiskClass", string())
-        .addColumn("RiskType", string())
-        .addColumn("PLDate1", Date())
-        .addColumn("PLDate2", Date())
-        .addColumn("PLAmount", double(), 6);
+    if(riskFactorBreakdown_){
+        // prepare report
+        report->addColumn("RiskFactor1", string())
+            .addColumn("RiskFactor2", string())
+            .addColumn("PLDate1", Date())
+            .addColumn("PLDate2", Date())
+            .addColumn("PLAmount", double(), 6);
+
+    }else{
+        // prepare report
+        report->addColumn("Portfolio", string())
+            .addColumn("RiskClass", string())
+            .addColumn("RiskType", string())
+            .addColumn("PLDate1", Date())
+            .addColumn("PLDate2", Date())
+            .addColumn("PLAmount", double(), 6);
+
+    }
 }
 
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
-    if (!tradePnl_) {
+    if (!tradePnl_ && !riskFactorBreakdown_) {
         pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
     }else if(riskFactorBreakdown_){
         //The PnL breakdown on risk factors
-        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnl();
+        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnl(period_.value());
     } else {
         tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
     }
@@ -99,6 +110,16 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
             }
         }else if(riskFactorBreakdown_){
             //The PnL breakdown on risk factors
+            for(const auto& r: riskFactorPnls_){
+                report->next();
+                const auto& key = r.first;
+                const Real value = r.second;
+                report->add(ore::data::to_string(key.first));
+                report->add(ore::data::to_string(key.second));
+                report->add(hisScenGen_->startDates()[s]);
+                report->add(hisScenGen_->endDates()[s]);
+                report->add(value);
+            }
         } else {
             report->next();
             report->add(tg->portfolioId());
