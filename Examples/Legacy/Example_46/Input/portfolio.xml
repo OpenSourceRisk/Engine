@@ -31,8 +31,8 @@
               <SubordinatedFee>0.02</SubordinatedFee>
               <EquityKicker>0.25</EquityKicker>
               <BondBasketData>
-                <Trade id="Bond_1">
-                  <TradeType>Bond</TradeType>
+                <SubTrade id="Bond_1">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_1</CounterParty>
                     <NettingSetId/>
@@ -42,9 +42,9 @@
                     <SecurityId>SECURITY_1</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_USD">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_USD">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_2</CounterParty>
                     <NettingSetId/>
@@ -54,9 +54,9 @@
                     <SecurityId>SECURITY_2</SecurityId>
                     <BondNotional>1146900.00</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_Floating">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_Floating">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_3</CounterParty>
                     <NettingSetId/>
@@ -66,9 +66,9 @@
                     <SecurityId>SECURITY_3</SecurityId>
                     <BondNotional>1000000.00</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_Amortizing_FixedAmount">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_Amortizing_FixedAmount">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_4</CounterParty>
                     <NettingSetId/>
@@ -78,9 +78,9 @@
                     <SecurityId>SECURITY_4</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_Amortizing_Percentage_Initial">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_Amortizing_Percentage_Initial">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_5</CounterParty>
                     <NettingSetId/>
@@ -90,9 +90,9 @@
                     <SecurityId>SECURITY_5</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_Amortizing_Percentage_Previous">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_Amortizing_Percentage_Previous">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_6</CounterParty>
                     <NettingSetId/>
@@ -102,9 +102,9 @@
                     <SecurityId>SECURITY_6</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_7">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_7">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_7</CounterParty>
                     <NettingSetId/>
@@ -114,9 +114,9 @@
                     <SecurityId>SECURITY_7</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_8">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_8">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_8</CounterParty>
                     <NettingSetId/>
@@ -126,9 +126,9 @@
                     <SecurityId>SECURITY_8</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_9">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_9">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_9</CounterParty>
                     <NettingSetId/>
@@ -138,9 +138,9 @@
                     <SecurityId>SECURITY_9</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
-                <Trade id="Bond_10">
-                  <TradeType>Bond</TradeType>
+                </SubTrade>
+                <SubTrade id="Bond_10">
+                  <SubTradeType>Bond</SubTradeType>
                   <Envelope>
                     <CounterParty>CPTY_10</CounterParty>
                     <NettingSetId/>
@@ -150,7 +150,7 @@
                     <SecurityId>SECURITY_10</SecurityId>
                     <BondNotional>1000000.000000</BondNotional>
                   </BondData>
-                </Trade>
+                </SubTrade>
               </BondBasketData>
               <CBOTranches>
                 <Tranche>
