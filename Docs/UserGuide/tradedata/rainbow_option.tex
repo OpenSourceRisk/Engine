@@ -1752,7 +1752,7 @@ IF knockedIn == 1 AND worstUnderlyingFinalPrice < StrikePrices[worstUnderlying] 
   fractionalAmount = frac(deliverableAsset);
   fractionalAmount = round(fractionalAmount,4);
   fractionalCashAmount = worstUnderlyingFinalPrice*fractionalAmount;
-  payoff = round(fractionalCashAmount,2);
+  payoff = round(fractionalCashAmount,2)+deliverableAsset;
 ELSE
   IF worstUnderlyingFinalPrice >= BarrierLevels[worstUnderlying] THEN
     payoff = Quantity*(1+max(BonusCoupon, worstPerformance-1));
@@ -1776,10 +1776,10 @@ of the final determination date $T$. The payout for a long put option is as foll
 If a knock-in event was triggered and the Final Reference Price of the Worst Performing Underlying
 is below its Strike Price,
 \begin{equation*}
-  Payout = \text{\lstinline!Quantity!} * S * \text{FractionalAmount}
+  Payout = \text{\lstinline!Quantity!} * S * \text{FractionalAmount} + \text{round}(\text{fractionalCashAmount})
 \end{equation*}
 with Fractional Amount being the fractional share resulting from the calculation of the Deliverable Assets. $K$ being the strike level of the 
-worst underlying performing asset.
+worst underlying performing asset, $S$ that underlying final price.
 \begin{equation*}
   FractionalAmount = \text{\lstinline!Quantity!} / \text{K}
 \end{equation*}
