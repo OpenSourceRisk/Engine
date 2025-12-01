@@ -278,11 +278,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                "ParSensitivityInstrumentBuilder::createParInstruments(): conventions not found for ccy "
                                    << ccy << " and instrument type " << instType);
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
-                    makeInstrument(instType, asof, simMarket, ccy,
-                                   data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
-                                   std::string(), curveName, equityForecastCurveName, term, convention, singleCurve,
-                                   parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                   data.discountCurve, marketConfiguration);
+                    ret = makeInstrument(
+                        instType, asof, simMarket, ccy,
+                        data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency, std::string(),
+                        curveName, equityForecastCurveName, term, convention, singleCurve, parHelperDependencies[key],
+                        instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration);
                     recognised = ret.first != nullptr;
                 } catch (const std::exception& e) {
                     skipped = true;
@@ -350,11 +350,12 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                "ParSensitivityInstrumentBuilder::createParInstruments(): conventions not found for ccy "
                                    << ccy << " and instrument type " << instType);
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
-                    makeInstrument(instType, asof, simMarket, ccy,
-                                   data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
-                                   indexName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
-                                   parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                   data.discountCurve, marketConfiguration);
+                    ret =
+                        makeInstrument(instType, asof, simMarket, ccy,
+                                       data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
+                                       indexName, yieldCurveName, equityForecastCurveName, term, convention,
+                                       singleCurve, parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
+                                       data.discountCurve, marketConfiguration);
                     recognised = ret.first != nullptr;
                 } catch (const std::exception& e) {
                     skipped = true;
