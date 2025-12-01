@@ -81,6 +81,42 @@ using boost::numeric::ublas::element_prod;
 namespace ore {
 namespace analytics {
 
+std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentBuilder::makeInstrument(
+    const std::string& instType, const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<Market>& market,
+    string ccy, string otherCcy, string curveName, string yieldCurveName, string equityForecastCurveName, Period term,
+    const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
+    std::set<ore::analytics::RiskFactorKey>& parHelperDependencies, std::set<std::string>& removeTodaysFixingIndices,
+    const string& expDiscountCurve, const string& marketConfiguration) const {
+    string instType3 = instType.substr(0, 3);
+    if (instType3 == "IRS")
+        return makeSwap(market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
+                        parHelperDependencies, removeTodaysFixingIndices, expDiscountCurve, marketConfiguration);
+    else if (instType3 == "DEP")
+        return makeDeposit(asof, market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention,
+                           marketConfiguration);
+    else if (instType3 == "FRA")
+        return makeFRA(asof, market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention,
+                       marketConfiguration);
+    else if (instType3 == "OIS")
+        return makeOIS(market, ccy, curveName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
+                       parHelperDependencies, removeTodaysFixingIndices, expDiscountCurve, marketConfiguration);
+    else if (instType3 == "XBS")
+        return makeCrossCcyBasisSwap(market, otherCcy, ccy, term, convention, parHelperDependencies,
+                                     removeTodaysFixingIndices, marketConfiguration);
+    else if (instType3 == "FXF")
+        return makeFxForward(market, otherCcy, ccy, term, convention, parHelperDependencies, marketConfiguration);
+    else if (instType3 == "TBS")
+        return makeTenorBasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), term,
+                                  convention, singleCurve, parHelperDependencies, removeTodaysFixingIndices,
+                                  expDiscountCurve, marketConfiguration);
+    else if (instType3 == "BMA")
+        return makeBMABasisSwap(asof, market, ccy, std::string(), std::string(), std::string(), std::string(), term,
+                                convention, singleCurve, parHelperDependencies, removeTodaysFixingIndices,
+                                expDiscountCurve, marketConfiguration);
+    else
+        return std::make_pair(nullptr, Date());
+}
+
 void ParSensitivityInstrumentBuilder::createParInstruments(
     ParSensitivityInstrumentBuilder::Instruments& instruments, const QuantLib::Date& asof,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams,
@@ -166,39 +202,13 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
                     QL_REQUIRE(convention != nullptr,
                                "ParSensitivityInstrumentBuilder::createParInstruments(): convention is empty");
-                    if (instType == "IRS")
-                        ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
-                                       convention, singleCurve, parHelperDependencies[key],
-                                       instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration);
-                    else if (instType == "DEP")
-                        ret = makeDeposit(asof, simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName,
-                                          term, convention, marketConfiguration);
-                    else if (instType == "FRA")
-                        ret = makeFRA(asof, simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
-                                      convention, marketConfiguration);
-                    else if (instType == "OIS")
-                        ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
-                                      convention, singleCurve, parHelperDependencies[key],
-                                      instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration);
-                    else if (instType == "XBS")
-                        ret = makeCrossCcyBasisSwap(
-                            simMarket, data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
-                            ccy, term, convention, parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                            marketConfiguration);
-                    else if (instType == "FXF")
-                        ret = makeFxForward(
-                            simMarket, data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
-                            ccy, term, convention, parHelperDependencies[key], marketConfiguration);
-                    else if (instType == "TBS")
-                        ret = makeTenorBasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
-                                                 parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                                 data.discountCurve, marketConfiguration);
-                    else if (instType == "BMA")
-                        ret = makeBMABasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
-                                               parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                               data.discountCurve, marketConfiguration);
-                    else
-                        recognised = false;
+                    ret =
+                        makeInstrument(instType, asof, simMarket, ccy,
+                                       data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
+                                       indexName, yieldCurveName, equityForecastCurveName, term, convention,
+                                       singleCurve, parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
+                                       data.discountCurve, marketConfiguration);
+                    recognised = ret.first != nullptr;
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError) {
@@ -268,37 +278,12 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                "ParSensitivityInstrumentBuilder::createParInstruments(): conventions not found for ccy "
                                    << ccy << " and instrument type " << instType);
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
-
-                    if (instType == "IRS")
-                        ret = makeSwap(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention,
-                                       singleCurve, parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                       data.discountCurve, marketConfiguration);
-                    else if (instType == "DEP")
-                        ret = makeDeposit(asof, simMarket, ccy, "", curveName, equityForecastCurveName, term,
-                                          convention, marketConfiguration);
-                    else if (instType == "FRA")
-                        ret = makeFRA(asof, simMarket, ccy, "", curveName, equityForecastCurveName, term, convention,
-                                      marketConfiguration);
-                    else if (instType == "OIS")
-                        ret = makeOIS(simMarket, ccy, "", curveName, equityForecastCurveName, term, convention,
-                                      singleCurve, parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                      data.discountCurve, marketConfiguration);
-                    else if (instType == "TBS")
-                        ret = makeTenorBasisSwap(asof, simMarket, ccy, "", "", curveName, "", term, convention,
-                                                 singleCurve, parHelperDependencies[key],
-                                                 instruments.removeTodaysFixingIndices_, data.discountCurve,
-                                                 marketConfiguration);
-                    else if (instType == "XBS")
-                        ret = makeCrossCcyBasisSwap(
-                            simMarket, data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
-                            ccy, term, convention, parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                            marketConfiguration);
-                    else if (instType == "BMA")
-                        ret = makeBMABasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
-                                               parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                               data.discountCurve, marketConfiguration);
-                    else
-                        recognised = false;
+                    makeInstrument(instType, asof, simMarket, ccy,
+                                   data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
+                                   std::string(), curveName, equityForecastCurveName, term, convention, singleCurve,
+                                   parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
+                                   data.discountCurve, marketConfiguration);
+                    recognised = ret.first != nullptr;
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError) {
@@ -365,31 +350,12 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                "ParSensitivityInstrumentBuilder::createParInstruments(): conventions not found for ccy "
                                    << ccy << " and instrument type " << instType);
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
-
-                    if (instType == "IRS")
-                        ret = makeSwap(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
-                                       convention, singleCurve, parHelperDependencies[key],
-                                       instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration);
-                    else if (instType == "DEP")
-                        ret = makeDeposit(asof, simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName,
-                                          term, convention, marketConfiguration);
-                    else if (instType == "FRA")
-                        ret = makeFRA(asof, simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
-                                      convention, marketConfiguration);
-                    else if (instType == "OIS")
-                        ret = makeOIS(simMarket, ccy, indexName, yieldCurveName, equityForecastCurveName, term,
-                                      convention, singleCurve, parHelperDependencies[key],
-                                      instruments.removeTodaysFixingIndices_, data.discountCurve, marketConfiguration);
-                    else if (instType == "TBS")
-                        ret = makeTenorBasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
-                                                 parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                                 data.discountCurve, marketConfiguration);
-                    else if (instType == "BMA")
-                        ret = makeBMABasisSwap(asof, simMarket, ccy, "", "", "", "", term, convention, singleCurve,
-                                               parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
-                                               data.discountCurve, marketConfiguration);
-                    else
-                        recognised = false;
+                    makeInstrument(instType, asof, simMarket, ccy,
+                                   data.otherCurrency.empty() ? simMarketParams->baseCcy() : data.otherCurrency,
+                                   indexName, yieldCurveName, equityForecastCurveName, term, convention, singleCurve,
+                                   parHelperDependencies[key], instruments.removeTodaysFixingIndices_,
+                                   data.discountCurve, marketConfiguration);
+                    recognised = ret.first != nullptr;
                 } catch (const std::exception& e) {
                     skipped = true;
                     if (continueOnError) {
@@ -615,8 +581,8 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                "zero inflation curve "
                                    << indexName << " and instrument type " << instType);
                     QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
-
-                    if (instType == "ZIS") {
+                    string instType3 = instType.substr(0, 3);
+                    if (instType3 == "ZIS") {
                         auto tmp =
                             makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, true,
                                                  parHelperDependencies[key], data.discountCurve, marketConfiguration);
@@ -627,7 +593,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                         Date latestRelevantDate = std::max(helper->maturityDate(), lastCoupon->fixingDate());
                         instruments.yoyInflationPillars_[indexName].push_back((latestRelevantDate - asof) * Days);
                         parHelpers[key] = tmp;
-                    } else if (instType == "YYS") {
+                    } else if (instType3 == "YYS") {
                         auto tmp =
                             makeYoyInflationSwap(simMarket, indexName, term, convention, singleCurve, false,
                                                  parHelperDependencies[key], data.discountCurve, marketConfiguration);
@@ -690,10 +656,11 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                                        << indexName << " and instrument type " << instType);
                         QuantLib::ext::shared_ptr<Convention> convention = conventions->get(conventionsMap[instType]);
                         Period term = data.shiftExpiries[k];
-                        if (instType == "ZIS") {
+                        string instType3 = instType.substr(0, 3);
+                        if (instType3 == "ZIS") {
                             makeYoYCapFloor(instruments, simMarket, indexName, term, strike, convention, singleCurve,
                                             true, data.discountCurve, key, marketConfiguration);
-                        } else if (instType == "YYS") {
+                        } else if (instType3 == "YYS") {
                             makeYoYCapFloor(instruments, simMarket, indexName, term, strike, convention, singleCurve,
                                             false, data.discountCurve, key, marketConfiguration);
                         } else
