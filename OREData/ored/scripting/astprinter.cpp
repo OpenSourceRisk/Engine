@@ -94,8 +94,8 @@ public:
     void visit(FunctionNormalPdfNode& n) override { print("FunctionNormalPdf", n); }
     void visit(FunctionMinNode& n) override { print("FunctionMin", n); }
     void visit(FunctionMaxNode& n) override { print("FunctionMax", n); }
-    void visit(FunctionFractionNode& n) override { print("FunctionFractionNode", n); }
-    void visit(FunctionRoundNode& n) override { print("FunctionRoundNode", n); }
+    void visit(FunctionFractionNode& n) override { print("FunctionFraction", n); }
+    void visit(FunctionRoundNode& n) override { print("FunctionRound", n); }
     void visit(FunctionPowNode& n) override { print("FunctionPow", n); }
     void visit(FunctionBlackNode& n) override { print("FunctionBlack", n); }
     void visit(FunctionDcfNode& n) override { print("FunctionDcf", n); }
