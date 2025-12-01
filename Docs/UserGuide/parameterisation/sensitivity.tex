@@ -341,7 +341,9 @@ Using CapFloors as an example:
 ParConversion Fields:
 
 \begin{itemize}
-\item \textbf{Instruments} a comma separated list of par instrument types, see below for the possible values.
+\item \textbf{Instruments} a comma separated list of par instrument types, see below for the possible values. The
+  3-letter instrument code can be extended by an arbitrary suffix to reference different conventions. For example, you
+  can use FRA1, FRA2 in the instrument list to build FRA instruments with different conventions with ids FRA1, FrA2.
 \item \textbf{DiscountCurve} \textit{optional}: discount curve used for pricing the par instrument.
 \item \textbf{RateComputationPeriod} \textit{optional}: required for OIS CapFloors, sepcify the period of the optionlet.
 \end{itemize}
