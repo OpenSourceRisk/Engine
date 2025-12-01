@@ -310,7 +310,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                            << " was not recognised");
                 }
                 built = true;
-                break;
+
                 if (buildCalibrationInfo) {
                     auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
 
@@ -359,9 +359,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     errors += ", ";
                 errors += message.str();
             }
-            if (built)
-                break;
         }
+        if (built)
+            break;
     }
     QL_REQUIRE(built, "default curve building failed for " << spec.curveConfigID() << ": " << errors);
 }
