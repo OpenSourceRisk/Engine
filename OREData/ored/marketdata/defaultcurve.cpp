@@ -472,19 +472,11 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                << "string so it must be provided in the config for CDS upfront curve " << curveID);
                 runningSpread = config.runningSpread();
             }
-            //Default is ISDA engine but if we use prices then it should be MidPoint
             auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
-                    quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
-                    cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
-                    config.startDate(), cdsConv->lastPeriodDayCounter());
-            if(config.type() == DefaultCurveConfig::Config::Type::Price){
-                tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
                     quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                     cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
                     recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
                     config.startDate(), cdsConv->lastPeriodDayCounter());
-            }
             
             if (tmp->latestDate() > asof) {
                 helpers.push_back(tmp);
