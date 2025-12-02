@@ -163,7 +163,7 @@ boost::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const s
     return calib->model();
 }
 
-Handle<QuantExt::CrossAssetModel> CallableBondLgmCrEngineBuilder::model(const std::string& id, const std::string& ccy,
+Handle<QuantExt::CrossAssetModel> CallableBondCamEngineBuilder::model(const std::string& id, const std::string& ccy,
                                                                         const std::string& creditCurveId,
                                                                         const QuantLib::Date& maturityDate,
                                                                         const bool generateAdditionalResults) {
@@ -275,8 +275,7 @@ Handle<QuantExt::CrossAssetModel> CallableBondLgmCrEngineBuilder::model(const st
     std::vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs = {data};
 
     std::vector<QuantLib::ext::shared_ptr<CrLgmData>> crLgmConfigs = {};
-    bool enableCredit = parseBool(modelParameter("EnableCredit", {}, false, "false"));
-    if (enableCredit) {
+    if (dynamicCreditModelEnabled()) {
 
         Real creditLambda = parseReal(modelParameter("Credit_Reversion", {ccy}));
         vector<Real> creditSigma = parseListOfValues<Real>(modelParameter("Credit_Volatility"), &parseReal);
@@ -421,7 +420,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> CallableBondLgmGridEngineBuil
                       nx);
 }
 
-QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmMcEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamMcEngineBuilder::engineImpl(
     const std::string& id, const std::string& ccy, const std::string& creditCurveId, const std::string& securityId,
     const std::string& referenceCurveId, const std::string& incomeCurveId, const QuantLib::Date& maturityDate) {
 
@@ -465,7 +464,7 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmMcEngineBuilde
 
     // get LGM model
 
-    auto lgm = model(id, ccy, maturityDate, generateAdditionalResults);
+    auto cam = model(id, ccy, creditCurveId, maturityDate, generateAdditionalResults);
     // TODO: do we need that?
     bool spreadOnIncome = true;
     // return engine
@@ -476,7 +475,7 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmMcEngineBuilde
     // Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
 
     return ext::make_shared<QuantExt::McCamCallableBondEngine>(
-        lgm, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
+        cam, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
         parseSequenceType(engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
         parseInteger(engineParameter("Training.Samples", {}, true, std::string())),
         parseInteger(engineParameter("Pricing.Samples", {}, false, "0")),
@@ -501,7 +500,7 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmMcEngineBuilde
         parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 }
 
-QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmAmcEngineBuilder::engineImpl(
+QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamAmcEngineBuilder::engineImpl(
     const std::string& id, const std::string& ccy, const std::string& creditCurveId, const std::string& securityId,
     const std::string& referenceCurveId, const std::string& incomeCurveId, const QuantLib::Date& maturityDate) {
     std::string marketConfig = configuration(ore::data::MarketContext::pricing);
@@ -560,87 +559,6 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmAmcEngineBuild
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
         referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
         generateAdditionalResults, simulationDates_, stickyCloseOutDates_, externalModelIndices,
-        parseBool(engineParameter("MinObsDate", {}, false, "true")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
-        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
-        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
-        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
-        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
-        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
-        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
-        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
-}
-
-QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondLgmCrMcEngineBuilder::engineImpl(
-    const std::string& id, const std::string& ccy, const std::string& creditCurveId, const std::string& securityId,
-    const std::string& referenceCurveId, const std::string& incomeCurveId, const QuantLib::Date& maturityDate) {
-    // get reference curve, default curve, recovery and spread
-
-    std::string marketConfig = configuration(ore::data::MarketContext::pricing);
-
-    // get reference curve, default curve, recovery and spread
-
-    Handle<YieldTermStructure> referenceCurve = market_->yieldCurve(referenceCurveId, marketConfig);
-
-    Handle<DefaultProbabilityTermStructure> defaultCurve;
-    if (!creditCurveId.empty())
-        defaultCurve = securitySpecificCreditCurve(market_, securityId, creditCurveId, marketConfig)->curve();
-
-    Handle<YieldTermStructure> incomeCurve = referenceCurve;
-    if (!incomeCurveId.empty())
-        incomeCurve = market_->yieldCurve(incomeCurveId, marketConfig);
-
-    Handle<Quote> recovery;
-    try {
-        recovery = market_->recoveryRate(securityId, marketConfig);
-    } catch (...) {
-        WLOG("security specific recovery rate not found for security ID "
-             << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
-        if (!creditCurveId.empty())
-            recovery = market_->recoveryRate(creditCurveId, marketConfig);
-    }
-
-    Handle<Quote> discountingSpread;
-    try {
-        discountingSpread = market_->securitySpread(securityId, marketConfig);
-    } catch (...) {
-    }
-
-    // determine whether add results should be generated
-
-    bool generateAdditionalResults = false;
-    auto p = globalParameters_.find("GenerateAdditionalResults");
-    if (p != globalParameters_.end()) {
-        generateAdditionalResults = parseBool(p->second);
-    }
-
-    // get LGM model
-
-    auto cam = model(id, ccy, creditCurveId, maturityDate, generateAdditionalResults);
-    // TODO: do we need that?
-    bool spreadOnIncome = true;
-    // return engine
-    std::vector<Date> simulationDates;      // You need to define or obtain simulationDates appropriately
-    std::vector<Date> stickyCloseOutDates;  // You need to define or obtain stickyCloseOutDates appropriately
-    std::vector<Size> externalModelIndices; // You need to define or obtain externalModelIndices appropriately
-
-    // Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
-
-    return ext::make_shared<QuantExt::McCamCallableBondEngine>(
-        cam,  parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
-        parseSequenceType(engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
-        parseInteger(engineParameter("Training.Samples", {}, true, std::string())),
-        parseInteger(engineParameter("Pricing.Samples", {}, false, "0")),
-        parseInteger(engineParameter("Training.Seed", {}, true, std::string())),
-        parseInteger(engineParameter("Pricing.Seed", {}, false, "42")),
-        parseInteger(engineParameter("Training.BasisFunctionOrder", {}, true, std::string())),
-        parsePolynomType(engineParameter("Training.BasisFunction", {}, true, std::string())),
-        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
-        referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
-        generateAdditionalResults, simulationDates, stickyCloseOutDates, externalModelIndices,
         parseBool(engineParameter("MinObsDate", {}, false, "true")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
