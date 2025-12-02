@@ -733,6 +733,7 @@ models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
+models/crlgmvectorised.hpp
 models/cmscaphelper.hpp
 models/commoditymodel.hpp
 models/commodityschwartzmodel.hpp
@@ -1079,6 +1080,7 @@ utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/mcstats.hpp
 utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp

@@ -327,7 +327,7 @@ private:
         results_.settlementValue = resultUnderlyingSettlementValue_ + resultSettlementValue_;
         results_.additionalResults["underlyingNpv"] = resultUnderlyingNpv_;
         results_.additionalResults["amcCalculator"] = amcCalculator();
-        /*
+        
         std::cout << "  number of cashflows: " << leg_.size() << std::endl;
         std::cout << " number of notionals: " << notionals_.size() << std::endl;
         std::cout << " number of callData: " << callData_.size() << std::endl;
@@ -338,7 +338,7 @@ private:
         std::cout << " final npv: " << resultUnderlyingNpv_ + resultValue_ << std::endl;
         std::cout << " final settlement value: " << resultUnderlyingSettlementValue_ + resultSettlementValue_
                   << std::endl;
-        */
+        
     }
 };
 

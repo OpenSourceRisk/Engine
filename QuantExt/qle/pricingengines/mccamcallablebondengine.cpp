@@ -300,10 +300,12 @@ void McCamCallableBondBaseEngine::calculateModels(
                 auto exerciseFilter = exerciseValueCall < continuationValue;
 
                 pathValueOption = conditionalResult(exerciseFilter, exerciseValueCall * survivalProb, pathValueOption);
-                Size callIdx = callTimes.size() - callTimeIdx;
                 callTimeIdx++;
+                /*
+                Size callIdx = callTimes.size() - callTimeIdx;
+                
                 pathExerciseProbsCall[callIdx] =
-                    conditionalResult(exerciseFilter, RandomVariable(calibrationSamples_, 1.0) / numeraire,
+                    conditionalResult(exerciseFilter, RandomVariable(calibrationSamples_, 1.0) * survivalProb / numeraire,
                                       pathExerciseProbsCall[callIdx]);
                 for (int i = callIdx + 1; i < pathExerciseProbsCall.size(); ++i) {
                     pathExerciseProbsCall[i] = conditionalResult(
@@ -316,6 +318,7 @@ void McCamCallableBondBaseEngine::calculateModels(
                             exerciseFilter, RandomVariable(calibrationSamples_, 0.0), pathExerciseProbsPut[i]);
                     }
                 }
+                */
             }
 
             if (isPutTime) {
@@ -333,18 +336,20 @@ void McCamCallableBondBaseEngine::calculateModels(
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValuePut[counter].train(
-                    polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes,
+                    polynomOrder_, polynomType_, pathValueOption / survivalProb, pathValuesRef, simulationTimes,
                     exerciseValuePut > RandomVariable(calibrationSamples_, 0.0));
                 auto continuationValue = regModelContinuationValuePut[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
                 pathValueOption =
-                    conditionalResult(exerciseValuePut > continuationValue, exerciseValuePut, pathValueOption);
-                Size putIdx = putTimes.size() - putTimeIdx;
+                    conditionalResult(exerciseValuePut > continuationValue && exerciseValuePut > RandomVariable(calibrationSamples_, 0.0), exerciseValuePut * survivalProb, pathValueOption);
+               
                 putTimeIdx++;
 
+                /*
+                 Size putIdx = putTimes.size() - putTimeIdx;
                 pathExerciseProbsPut[putIdx] = conditionalResult(
                     exerciseValuePut > continuationValue && exerciseValuePut > RandomVariable(calibrationSamples_, 0.0),
-                    RandomVariable(calibrationSamples_, 1.0) / numeraire, pathExerciseProbsPut[putIdx]);
+                    RandomVariable(calibrationSamples_, 1.0) * survivalProb / numeraire, pathExerciseProbsPut[putIdx]);
 
                 for (int i = putIdx + 1; i < putTimes.size(); ++i) {
                     pathExerciseProbsPut[i] =
@@ -361,6 +366,7 @@ void McCamCallableBondBaseEngine::calculateModels(
                                               RandomVariable(calibrationSamples_, 0.0), pathExerciseProbsCall[i]);
                     }
                 }
+                    */
             }
         }
 
