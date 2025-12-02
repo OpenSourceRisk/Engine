@@ -982,7 +982,7 @@ string internalIndexName(const string& indexName) {
     // Check if we have an overnight index
     // This covers cases like USD-FedFunds-1D and returns USD-FedFunds
     // (no need to check convention based overnight indices, they are always of the form CCY-INDEX)
-    if (parsePeriod(tokens[2]) == 1 * Days && isOvernightIndex(tmpName)) {
+    if (isOnePeriod(tokens[2]) && parsePeriod(tokens[2]) == 1 * Days && isOvernightIndex(tmpName)) {
         return tmpName;
     }
 
