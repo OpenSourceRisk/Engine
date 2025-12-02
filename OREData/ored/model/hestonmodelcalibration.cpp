@@ -443,11 +443,25 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
             Array newParams(5);
             std::vector<Real> sample = halton.nextSequence().value;
             // FIXME: Expose the parameter ranges for theta, kappa, sigma and rho
-            newParams[0] = 0.0001 + 0.1 * sample[0];                                         // theta
-            newParams[1] = 0.0001 + 20.0 * sample[1];                                        // kappa
-            newParams[2] = std::sqrt(newParams[1] * newParams[0] / (0.5 + 1.0 * sample[2])); // sigma
-            newParams[3] = -0.9 + 1.8 * sample[3];                                           // rho
-            newParams[4] = newParams[0];                                                     // v0
+            // newParams[0] = 0.0001 + 0.1 * sample[0];                                         // theta
+            // newParams[1] = 0.0001 + 20.0 * sample[1];                                        // kappa
+            // newParams[2] = std::sqrt(newParams[1] * newParams[0] / (0.5 + 1.0 * sample[2])); // sigma
+            // newParams[3] = -0.9 + 1.8 * sample[3];                                           // rho
+            // newParams[4] = newParams[0];                                                     // v0
+            // model->setParams(newParams);
+            newParams[0] = 0.0001 + maximumInitialValues_[0] * sample[0];                        // theta
+            newParams[1] = 0.0001 + maximumInitialValues_[1] * sample[1];                        // kappa
+            if (relaxedFellerConstraint_ < 0.01) {
+                newParams[2] = std::sqrt(newParams[1] * newParams[0] / (0.5 + 1.0 * sample[2])); // sigma
+            } else {
+                Real epsilon = relaxedFellerConstraint_ + maximumInitialValues_[2] * sample[2];
+                // 2 kappa theta / sigma^2 = epsilon > feller, sigma^2 = 2 kappa theta / epsilon
+                newParams[2] = std::sqrt(2.0 * newParams[1] * newParams[0] / epsilon);           // sigma
+            }
+            newParams[3] = -maximumInitialValues_[3] + 2 * maximumInitialValues_[3] * sample[3]; // rho
+            // FIXME: equal to theta or random?
+	    //newParams[4] = 0.0001 + maximumInitialValues_[0] * sample[4];                      // v0
+            newParams[4] = newParams[0];                                                         // v0
             model->setParams(newParams);
         }
     } while (restarts-- > 0);

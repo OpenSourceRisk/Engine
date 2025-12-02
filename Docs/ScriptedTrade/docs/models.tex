@@ -75,7 +75,8 @@ wip An example pricing engine configuration looks as follows.
       <Parameter name="HestonInitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter> 
       <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter>                
       <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter>             
-      <Parameter name="HestonCalibrationRestarts">0</Parameter>                    
+      <Parameter name="HestonCalibrationRestarts">0</Parameter>
+      <Parameter name="HestonMaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
       <Parameter name="HestonTolerance">0.001</Parameter>                          
       <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
       <Parameter name="Debug">true</Parameter>
@@ -218,11 +219,16 @@ The engine parameters have the following meaning:
   \item HestonRelaxedFellerConstraint: Constraint on $2\kappa\theta/\sigma^2$ to be used in the calibration, to be chosen
     in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between can be chosen representing
     a somewhat relaxed Feller constraint. \\
-    Dfault: 0.25 
+    Default: 0.25 
   \item HestonCalibrationRestarts: If set to zero, we calibrate all five parameters after an initial guess for $\theta$,
     $\kappa$ and $v_0$. If positive, we perform as many calibrations as specified by ``restarts'' with randomised initial
     values, keeping the best result. \\
     Default: 0
+  \item HestonMaximumInitialValues: When using ``restarts'' above, this comma-separated list specifies the range of the
+    initial values searched, in the order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. For $\theta$, $\kappa$, $\rho$,
+    the specified values are upper limits. For $\sigma$, we rather choose $\epsilon = 2\kappa\theta/\sigma^2$, given $\kappa$
+    and $\theta$, randomly between the relaxed Feller constraint (a value in (0,1]) and the specified upper limit ($>1$). \\
+    Default: $0.1, 20, 3, 0.9, 0.1$
   \item HestonTolerance: Error tolerance of the calibration (root mean squared error of implied black volatilities) where
     we stop the search for best parameters when calibrating with HestonCalibrationRestarts $>0$. \\
     Default: 0.001

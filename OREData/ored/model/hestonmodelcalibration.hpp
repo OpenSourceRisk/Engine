@@ -75,13 +75,14 @@ public:
                            // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
                            const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.9, 0.04},
                            const std::vector<bool>& fixedValues = {false, false, false, false, false},
+                           const std::vector<Real>& maximumInitialValues = {0.1, 20, 3, 0.9, 0.1},
                            Real relaxedFellerConstraint = 1.0, Size restarts = 0, Real tolerance = 0.001,
                            const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                            const bool dontCalibrate = false)
         : indexName_(indexName), process_(process), expiries_(expiries), moneyness_(moneyness),
           varianceTerms_(varianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
-          relaxedFellerConstraint_(relaxedFellerConstraint), restarts_(restarts), tolerance_(tolerance),
-          discretization_(discretization), dontCalibrate_(dontCalibrate) {}
+          maximumInitialValues_(maximumInitialValues), relaxedFellerConstraint_(relaxedFellerConstraint),
+          restarts_(restarts), tolerance_(tolerance), discretization_(discretization), dontCalibrate_(dontCalibrate) {}
 
     ext::shared_ptr<HestonModel> model();
 
@@ -122,6 +123,7 @@ private:
     std::vector<Period> varianceTerms_;
     std::vector<Real> initialValues_;
     std::vector<bool> fixedValues_;
+    std::vector<Real> maximumInitialValues_;
     Real relaxedFellerConstraint_;
     Size restarts_;
     Real tolerance_;
