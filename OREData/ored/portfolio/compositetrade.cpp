@@ -115,7 +115,8 @@ QuantLib::Real CompositeTrade::notional() const {
 }
 
 void CompositeTrade::fromXML(XMLNode* node) {
-    QL_REQUIRE("CompositeTrade" == XMLUtils::getChildValue(node, "TradeType", true),
+    
+    QL_REQUIRE("CompositeTrade" == XMLUtils::getAnyChildValue(node, {"TradeType", "SubTradeType"}, true),
                "Wrong trade type in composite trade builder.");
     Trade::fromXML(node);
     this->id() = XMLUtils::getAttribute(node, "id");
