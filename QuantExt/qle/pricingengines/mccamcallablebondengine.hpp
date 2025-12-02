@@ -234,6 +234,8 @@ public:
 
 protected:
     std::set<Time> getExerciseTimes(const std::vector<CallableBond::CallabilityData>& callData) const;
+    RandomVariable creditRiskDiscountFactor(const size_t timeIdx, const Time t,
+                                            const std::vector<std::vector<RandomVariable>>& pathValues) const;
 };
 
 class McCamCallableBondEngine : public McCamCallableBondBaseEngine, public CallableBond::engine {

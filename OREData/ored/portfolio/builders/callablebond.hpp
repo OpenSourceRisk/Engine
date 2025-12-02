@@ -63,6 +63,17 @@ protected:
                const QuantLib::Date& maturityDate, Args... args);
 };
 
+class CallableBondLgmCrEngineBuilder : public CallableBondEngineBuilder {
+public:
+    explicit CallableBondLgmCrEngineBuilder(const std::string& engine) : CallableBondEngineBuilder("LGM,CR", engine) {}
+
+protected:
+    Handle<QuantExt::CrossAssetModel> model(const std::string& id, const std::string& ccy,
+                                                               const std::string& creditCurveId,
+                                                               const QuantLib::Date& maturityDate,
+                                                               const bool generateAdditionalResults);
+};
+
 class CallableBondLgmFdEngineBuilder : public CallableBondLgmEngineBuilder {
 public:
     CallableBondLgmFdEngineBuilder() : CallableBondLgmEngineBuilder("FD") {}
@@ -84,6 +95,17 @@ protected:
                const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
                const QuantLib::Date& maturityDate) override;
 };
+
+class CallableBondMcBaseEngineBuilder : public CallableBondLgmEngineBuilder {
+    public:
+    CallableBondMcBaseEngineBuilder(const std::string& engine) : CallableBondLgmEngineBuilder(engine) {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine> McEngine(const Handle<QuantExt::CrossAssetModel>& cam,
+                                                                const std::vector<Date>& simulationDates,
+                                                                const std::vector<Date>& stickyCloseOutDates);
+};
+
 
 class CallableBondLgmMcEngineBuilder : public CallableBondLgmEngineBuilder {
 public:
@@ -115,5 +137,19 @@ private:
     const std::vector<Date> simulationDates_;
     const std::vector<Date> stickyCloseOutDates_;
 };
+
+class CallableBondLgmCrMcEngineBuilder : public CallableBondLgmCrEngineBuilder {
+public:
+    CallableBondLgmCrMcEngineBuilder() : CallableBondLgmCrEngineBuilder("MC") {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
+    engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate) override;
+};
+
+
+
 } // namespace data
 } // namespace ore

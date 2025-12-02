@@ -65,6 +65,22 @@ Real getCallPriceAmount(CallableBond::CallabilityData::PriceType priceType, bool
     return priceAmt;
 }
 
+RandomVariable McCamCallableBondBaseEngine::creditRiskDiscountFactor(
+    const size_t timeIdx, const Time t, const std::vector<std::vector<RandomVariable>>& pathValues) const {
+    Size n = pathValues[0][0].size();
+    RandomVariable lgd(n, 1.0 - recoveryRate_->value());
+    RandomVariable S(n, 1.0);
+    if (model_->components(CrossAssetModel::AssetType::CR) > 0) {
+        auto zs = pathValues[timeIdx][model_->pIdx(CrossAssetModel::AssetType::CR, 0, 0)];
+        auto ys = pathValues[timeIdx][model_->pIdx(CrossAssetModel::AssetType::CR, 0, 1)];
+        for (size_t i = 0; i < n; ++i) {
+            auto [s, s_tilde] = model_->crlgm1fS(0, 0, t, t, zs[i], ys[i]);
+            S.set(i, s);
+        }
+    }
+    return pow(S, lgd);
+}
+
 McCamCallableBondBaseEngine::McCamCallableBondBaseEngine(
     const Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
     const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
@@ -155,16 +171,17 @@ RandomVariable McCamCallableBondBaseEngine::cashflowPathValue(
                      discountCurve)[0]
               << " df " << discountCurve->discount(cf.payTime) << std::endl;
     */
-    auto amount =
-        cf.amountCalculator(n, states) /
-        lgmVectorised_[0].numeraire(
+   auto numeraire = lgmVectorised_[0].numeraire(
             cf.payTime, pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], discountCurve);
+    auto amount =
+        cf.amountCalculator(n, states) / numeraire;
+        
 
     if (cf.payCcyIndex > 0) {
         amount *= exp(pathValues[simTimesPayIdx][model_->pIdx(CrossAssetModel::AssetType::FX, cf.payCcyIndex - 1)]);
     }
-
-    return amount * RandomVariable(n, cf.payer ? -1.0 : 1.0);
+    auto survivalProb = creditRiskDiscountFactor(simTimesPayIdx, cf.payTime, pathValues);
+    return amount * survivalProb * RandomVariable(n, cf.payer ? -1.0 : 1.0);
 }
 
 void McCamCallableBondBaseEngine::calculateModels(
@@ -244,11 +261,13 @@ void McCamCallableBondBaseEngine::calculateModels(
                       << pathValueUndDirty[i] * model_->numeraire(0, 0, 0, discountCurve) << std::endl;
         }
         */
+       auto survivalProb = creditRiskDiscountFactor(
+            timeIndex(*t, simulationTimes), *t, pathValues);
         regModelUndDirty[counter] = RegressionModel(
             *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
             regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
             regressionMaxSimTimesEq_, regressionVarGroupMode_);
-        regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef, simulationTimes);
+        regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty / survivalProb, pathValuesRef, simulationTimes);
         if (isExerciseTime) {
             RandomVariable exerciseValue = regModelUndDirty[counter].apply(model_->stateProcess()->initialValues(),
                                                                            pathValuesRef, simulationTimes);
@@ -275,14 +294,14 @@ void McCamCallableBondBaseEngine::calculateModels(
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValueCall[counter].train(
-                    polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes,
+                    polynomOrder_, polynomType_, pathValueOption / survivalProb, pathValuesRef, simulationTimes,
                     exerciseValueCall < RandomVariable(calibrationSamples_, 0.0));
                 auto continuationValue = regModelContinuationValueCall[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
 
                 auto exerciseFilter = exerciseValueCall < continuationValue;
 
-                pathValueOption = conditionalResult(exerciseFilter, exerciseValueCall, pathValueOption);
+                pathValueOption = conditionalResult(exerciseFilter, exerciseValueCall * survivalProb, pathValueOption);
                 Size callIdx = callTimes.size() - callTimeIdx;
                 callTimeIdx++;
                 pathExerciseProbsCall[callIdx] =
@@ -422,7 +441,7 @@ void McCamCallableBondBaseEngine::calculate() const {
                                          "Check reference data and errors from curve building.");
 
     auto effCreditCurve =
-        creditCurve_.empty()
+        creditCurve_.empty() || model_->components(CrossAssetModel::AssetType::CR) > 0
             ? Handle<DefaultProbabilityTermStructure>(
                   QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(today_, 0.0, referenceCurve_->dayCounter()))
             : creditCurve_;
@@ -433,7 +452,7 @@ void McCamCallableBondBaseEngine::calculate() const {
             QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(effIncomeCurve, discountingSpread_));
 
     auto effDiscountCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<EffectiveBondDiscountCurve>(
-        referenceCurve_, creditCurve_, discountingSpread_, recoveryRate_));
+        referenceCurve_, effCreditCurve, discountingSpread_, recoveryRate_));
 
     //std::cout << "built effDiscountCurve" << std::endl;
 
