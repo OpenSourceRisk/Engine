@@ -30,6 +30,7 @@
 #include <qle/pricingengines/amccalculator.hpp>
 #include <qle/pricingengines/mccashflowinfo.hpp>
 #include <qle/pricingengines/mcregressionmodel.hpp>
+#include <qle/utilities/mcstats.hpp>
 
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/instruments/swaption.hpp>
@@ -46,29 +47,6 @@
 #include <boost/serialization/export.hpp>
 
 namespace QuantExt {
-
-// statistics
-
-struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
-    McEngineStats() {
-        other_timer.start();
-        other_timer.stop();
-        path_timer.stop();
-        path_timer.start();
-        calc_timer.start();
-        calc_timer.stop();
-    }
-
-    void reset() {
-        other_timer.stop();
-        path_timer.stop();
-        calc_timer.stop();
-    }
-
-    boost::timer::cpu_timer other_timer;
-    boost::timer::cpu_timer path_timer;
-    boost::timer::cpu_timer calc_timer;
-};
 
 class McMultiLegBaseEngine {
 public:

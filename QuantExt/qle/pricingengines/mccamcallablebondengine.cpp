@@ -370,7 +370,7 @@ void McCamCallableBondBaseEngine::calculateModels(
             *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
             regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
             regressionMaxSimTimesEq_, regressionVarGroupMode_);
-        regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
+        regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption / survivalProb, pathValuesRef, simulationTimes);
 
         --counter;
     }
@@ -421,7 +421,8 @@ void McCamCallableBondBaseEngine::generatePathValues(const std::vector<Real>& si
 }
 
 void McCamCallableBondBaseEngine::calculate() const {
-    
+    McEngineStats::instance().other_timer.start();
+
     today_ = model_->irlgm1f(0)->termStructure()->referenceDate();
     includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
     /*
@@ -697,7 +698,6 @@ void McCamCallableBondBaseEngine::calculate() const {
     simulationTimes.insert(exerciseTimes.begin(), exerciseTimes.end());
     simulationTimes.insert(xvaTimes.begin(), xvaTimes.end());
 
-    // McEngineStats::instance().other_timer.stop();
 
     // build simulation times corresponding to close-out grid for sticky runs (if required)
 
@@ -714,10 +714,10 @@ void McCamCallableBondBaseEngine::calculate() const {
         std::transform(simulationTimes.begin(), simulationTimes.end(),
                        std::back_inserter(simulationTimesWithCloseOutLag), [&l](const Real t) { return l(t); });
     }
-
+    McEngineStats::instance().other_timer.stop();
     // simulate the paths for the calibration
 
-    // McEngineStats::instance().path_timer.resume();
+    McEngineStats::instance().path_timer.start();
 
     QL_REQUIRE(!simulationTimes.empty(),
                "McCamCallableBondBaseEngine::calculate(): no simulation times, this is not expected.");
@@ -751,9 +751,9 @@ void McCamCallableBondBaseEngine::calculate() const {
     generatePathValues(std::vector<Real>(simulationTimes.begin(), simulationTimes.end()), pathValues);
     generatePathValues(simulationTimesWithCloseOutLag, closeOutPathValues);
 
-    // McEngineStats::instance().path_timer.stop();
+    McEngineStats::instance().path_timer.stop();
 
-    // McEngineStats::instance().calc_timer.resume();
+    McEngineStats::instance().calc_timer.start();
 
     // setup the models
 
@@ -795,12 +795,14 @@ void McCamCallableBondBaseEngine::calculate() const {
                         regModelOptionCloseOut, pathValueUndDirtyCloseOut, pathValueUndExIntoCloseOut,
                         pathExercisesCallCloseOut, pathExercisesPutCloseOut);
     }
-
+    
     // set the result value (= underlying value if no exercise is given, otherwise option value)
 
     resultUnderlyingNpv_ = expectation(pathValueUndDirty).at(0) * model_->numeraire(0, 0.0, 0.0, effDiscountCurve);
     resultValue_ = expectation(pathValueOption).at(0) * model_->numeraire(0, 0.0, 0.0, effDiscountCurve);
-
+    McEngineStats::instance().calc_timer.stop();
+    
+    McEngineStats::instance().other_timer.resume();
     auto notionalAccrualCalc = ext::make_shared<QuantExt::CurrentNotionalAccrualsCalculator>(today_, notionals_.front(), leg_,
                                                                     *model_->irlgm1f(0)->termStructure());
 
@@ -857,6 +859,12 @@ void McCamCallableBondBaseEngine::calculate() const {
     resultSettlementValue_ = resultValue_ / effIncomeCurve->discount(settlementDate_) /
                              effCreditCurve->survivalProbability(settlementDate_) *
                              effCreditCurve->survivalProbability(settlementDate_);
+    McEngineStats::instance().other_timer.stop();
+     std::cout << "MC Other Timer       : " << McEngineStats::instance().other_timer.elapsed().wall / 1E9 << " sec" << std::endl;
+    std::cout << "MC Path Timer        : " << McEngineStats::instance().path_timer.elapsed().wall / 1E9 << " sec" << std::endl;
+    std::cout << "MC Calc Timer        : " << McEngineStats::instance().calc_timer.elapsed().wall / 1E9 << " sec" << std::endl;
+
+
 }
 
 QuantLib::ext::shared_ptr<AmcCalculator> McCamCallableBondBaseEngine::amcCalculator() const { return amcCalculator_; }
