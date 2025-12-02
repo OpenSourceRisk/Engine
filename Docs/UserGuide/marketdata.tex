@@ -1,7 +1,7 @@
 %========================================================
 \section{Market Data}\label{sec:market_data}
 %========================================================
-In this section we discuss the market data, which enters into the calibration of OREs risk factor evolution models. 
+In this section we discuss the market data, which enters into the calibration of OREs risk factor evolution models.
 Market data in the {\tt market.txt} file is given in three columns; Date, Quote and Quote value.
 
 \begin{itemize}
@@ -10,7 +10,7 @@ Market data in the {\tt market.txt} file is given in three columns; Date, Quote 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item {\bf Quote}: A generic description that contains Instrument Type
-  and Quote Type, followed by instrument specific descriptions (see 
+  and Quote Type, followed by instrument specific descriptions (see
   \ref{ss:zero_rate} ff.). The base of a quote consists of
   InstType/QuoteType followed by instrument specific information
   separated by slashes "/".
@@ -34,7 +34,7 @@ Allowable values: Any real number.
   IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, CDS\_INDEX, FX\_SPOT, FX\_FWD,
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE, ASSUMED\_RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
-  SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
+  SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND,
   EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR, COMMODITY, COMMODITY\_FWD, COMMODITY\_OPTION} \\
 \hline
   Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, CONV\_CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
@@ -176,13 +176,13 @@ Example:
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \label{ss:fx_forward_rate}
 
-An FX Forward quote is expected in either a ``forward points'' quotation, or an ``outright'' quotation. 
+An FX Forward quote is expected in either a ``forward points'' quotation, or an ``outright'' quotation.
 
 The forward points convention is given by:
 $$
 \mbox{Forward Points} = \frac{\mbox{FX Forward} - \mbox{FX
     Spot}}{\mbox{Conversion Factor}}
-$$ 
+$$
 with conversion factor set to 1.
 
 \begin{table}[H]
@@ -204,7 +204,7 @@ with conversion factor set to 1.
 The forward outright is given by:
 $$
 \mbox{Forward Outright} = \mbox{FX Spot} + \mbox{Forward Points}\times{\mbox{Conversion Factor}}
-$$ 
+$$
 with conversion factor set to 1.
 
 \begin{table}[H]
@@ -255,8 +255,8 @@ Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN
 (Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc. \\
 
 Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from
-today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see 
-\ref{sec:conventions}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2.
+today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see
+\ref{sec:conventions}, and is between 0D and 2D, i.e. ``spot days'' are between 0 and 2.
 
 \medskip
 Example:
@@ -283,9 +283,9 @@ Example:
   \label{tab:fra_quote}
 \end{table}
 FRAs are typically quoted as e.g. 6x9 which means forward start 6M from today, maturity 9M from today, with appropriate
-adjustment of dates. 
+adjustment of dates.
 
-\medskip 
+\medskip
 IMM FRA quotes are represented as follows.
 
 \begin{table}[H]
@@ -667,7 +667,7 @@ Example:
   \label{tab:cdsspread_quote}
 \end{table}
 
-Currently, only par CDS spreads (quote type \lstinline!CREDIT_SPREAD!) are supported. Conventional CDS spreads (quote type \lstinline!CONV_CREDIT_SPREAD!) are not supported at this time. 
+Currently, only par CDS spreads (quote type \lstinline!CREDIT_SPREAD!) are supported. Conventional CDS spreads (quote type \lstinline!CONV_CREDIT_SPREAD!) are not supported at this time.
 As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
@@ -1252,7 +1252,7 @@ Examples:
 		\hline
 		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
         Vol Quote Type  & {\tt DEL}, {\tt ATM} or {\tt MNY} & \makecell[l]{ In this table it is assumed {\tt ATM} is chosen. }\\ \hline
-         \makecell[tl]{Atm Convention}  &  \makecell[tl]{{\tt AtmFwd},  {\tt AtmSpot}, \\ or {\tt AtmDeltaNeutral}}   &  \makecell[tl]{Atm Forward or Atm Spot quote, to be used stand- \\ alone, or when the smile is given by moneyness \\ ({\tt MNY}) quotes. \\ The Delta Neutral Atm to be used as standalone, \\ or when the smile is given by delta ({\tt DEL}) quotes. \\ \\ Note that when {\tt AtmFwd} or {\tt AtmSpot} are used, \\ the string stops here, no further entries "tokens" \\ are required }  \\ \hline
+         \makecell[tl]{Atm Convention}  &  \makecell[tl]{{\tt AtmFwd},  {\tt AtmSpot}, \\ or {\tt AtmDeltaNeutral}}   &  \makecell[tl]{Atm Forward or Atm Spot quote, to be used stand- \\ alone, or when the smile is given by moneyness \\ ({\tt MNY}) quotes. \\ The Delta Neutral Atm to be used as standalone, \\ or when the smile is given by delta ({\tt DEL}) quotes. \\ \\ Note that when {\tt AtmFwd} or {\tt AtmSpot} are used, \\ the string stops here, no further entries ``tokens'' \\ are required }  \\ \hline
         Atm Quote Type  & {\tt DEL}  & When {\tt AtmDeltaNeutral} is used, the quote type must be set to Delta ({\tt DEL}) \\ \hline
         Atm Delta Convention  & {\tt Fwd}  or {\tt Spot}  & When {\tt AtmDeltaNeutral} is used, the Atm delta quote can be  a Spot or Forward quote. \\ \hline
 	\end{tabular}
@@ -1273,9 +1273,9 @@ Examples:
 	\label{tab:comimplvol_quote_mny}
 \end{table}
 
-Volatilities are quoted: 
+Volatilities are quoted:
 \begin{itemize}
-\item as a function of the delta - either the delta neutral at-the-money spot or forward, or for a call or put option with a given delta, or 
+\item as a function of the delta - either the delta neutral at-the-money spot or forward, or for a call or put option with a given delta, or
 \item as a function of strike price - either at-the-money spot or forward, or a  relative strike moneyness level, or else
 \item as a specified real number, corresponding to the absolute strike value.
 \end{itemize}
@@ -1552,14 +1552,14 @@ Examples:
   \label{tab:base_correlation_quote}
 \end{table}
 
-This quote provides the base correlation for a CDS index' equity tranche with the specified detachment point. 
+This quote provides the base correlation for a CDS index' equity tranche with the specified detachment point.
 \medskip
 Example:
 \begin{itemize}
 	\item CDS\_INDEX/BASE\_CORRELATION/2I65BYBD6/5Y/0.03
 \end{itemize}
 
-Typically there are several base correlation quotes per term for several detachment points such as 0.03, 0.07, 0.15. 
+Typically there are several base correlation quotes per term for several detachment points such as 0.03, 0.07, 0.15.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Correlations}
