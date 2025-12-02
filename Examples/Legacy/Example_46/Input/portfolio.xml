@@ -8,8 +8,8 @@
     </Envelope>
     <TotalReturnSwapData>
       <UnderlyingData>
-        <Trade>
-          <TradeType>CBO</TradeType>
+        <SubTrade>
+          <SubTradeType>CBO</SubTradeType>
           <Envelope>
             <CounterParty>CPTY_A</CounterParty>
             <NettingSetId>CPTY_A</NettingSetId>
@@ -192,7 +192,7 @@
               </ScheduleData>
             </CBOStructure>
           </CBOData>
-        </Trade>
+        </SubTrade>
       </UnderlyingData>
       <ReturnData>
         <Payer>true</Payer>
