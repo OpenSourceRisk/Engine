@@ -298,6 +298,7 @@
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
+#include <qle/models/crlgmvectorised.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -634,6 +635,7 @@
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/mcstats.hpp>
 #include <qle/utilities/ratehelpers.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <qle/utilities/scenarioinformation.hpp>
