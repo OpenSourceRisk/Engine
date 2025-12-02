@@ -78,6 +78,7 @@
     <Correlation name="EQ-RIC:.GDAXI&amp;EQ-RIC:.SPX">Correlation/EQ-RIC:.GDAXI&amp;EQ-RIC:.SPX</Correlation> 
     <Correlation name="EQ-RIC:.GDAXI&amp;EQ-RIC:.NDX">Correlation/EQ-RIC:.GDAXI&amp;EQ-RIC:.NDX</Correlation> 
     <Correlation name="EQ-RIC:.SPX&amp;EQ-RIC:.NDX">Correlation/EQ-RIC:.SPX&amp;EQ-RIC:.NDX</Correlation> 
+    <Correlation name="EQ-RIC:.SPX&amp;FX-GENERIC-USD-EUR">Correlation/EQ-RIC:.SPX&amp;FX-GENERIC-USD-EUR</Correlation> 
   </Correlations>
 </TodaysMarket>
 

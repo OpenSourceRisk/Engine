@@ -17,6 +17,7 @@
 */
 
 #include <ored/scripting/models/heston.hpp>
+#include <sstream>
 
 namespace ore {
 namespace data {
@@ -256,8 +257,6 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
                                 const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                 const Matrix& correlation, const Matrix& sqrtCorr,
                                 const std::vector<Size>& eqComIdx) const {
-
-    bool checks = true;
     
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
                                                   std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
@@ -350,7 +349,7 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 	    
 	    Array dWcor = sqrtCorr * p.value[i];
 
-            if (checks) {
+            if (debug_) {
                 for (Size j1 = 0; j1 < dWcor.size(); j1++) {
                     for (Size j2 = 0; j2 < dWcor.size(); j2++)
                         cov[i][j1][j2] += dWcor[j1] * dWcor[j2];
@@ -365,12 +364,12 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 	        // 2-d array of correlated Wiener increments for the Heston subsystem j	      
 	        dw[0] = dWcor[2*j];
 	        dw[1] = dWcor[2*j+1];
-		if (checks)
+		if (debug_)
 		    cov1[j][i] += dw[0] * dw[1];
 		
 	        // Decorrelate the subsystem, 2-d array of independent Wiener increments
 		Array dw_decorrelated = Qinv[j] * dw;
-		if (checks)
+		if (debug_)
 		    cov2[j][i] += dw_decorrelated[0] * dw_decorrelated[1];
 		
 		// The Heston process in QL expects the latter independent increments as input
@@ -390,15 +389,19 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
             for (Size j = 0; j < indices_.size(); ++j) {
 		Size j0 = eqComIdx[j];
                 if (j0 != Null<Size>()) {
-		    // spot process adjustment
+		    // Spot process adjustment
                     Real volIdx = std::sqrt(state[j0][1]);
                     Real volj = std::sqrt(state[j][1]);
-                    Real drift = - correlation[2*j0][2*j] * volIdx * volj * dt; 
-		    state[j][0] *= std::exp(drift);
-		    // variance process adjustment
+                    Real sDrift = - correlation[2*j0][2*j] * volIdx * volj * dt; 
+		    state[j][0] *= std::exp(sDrift);
+		    // Variance process adjustment
 		    Real sigma = model_->hestonProcesses()[j]->sigma();
-		    Real rho = model_->hestonProcesses()[j]->rho();
-		    state[j][1] += drift * sigma * rho; 
+		    Real vDrift = - correlation[2*j0][2*j+1] * sigma * volIdx * volj * dt; 
+		    // Avoid measure drift to push the variance across the boundary.
+		    // This might happen especially when we allow Feller < 1.
+		    // FIXME ?
+		    if (state[j][1] + vDrift > 0)
+		        state[j][1] += vDrift; 
 		}
             }
 
@@ -412,7 +415,7 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 	}
 
         // Check variance process
-        if (checks) {
+        if (debug_) {
             Real tol = 1e-8; // FIXME
             int iMax = int(timeGrid_.size()) - 2;
             for (Size j = 0; j < indices_.size(); ++j) {
@@ -430,14 +433,14 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
         }
     }
 
-    if (checks) {
+    if (debug_) {
         if (countStuck > 0) {
             ALOG("Variance process stuck across " << size() * indices_.size() << " paths: " << countStuck);
         }
 
         // The accuracy of the empirical correlation depends on number of samples and sampling method.
-        // So use a generous tolerance here, anyway just a temporary test.
-        Real tol = 0.01;
+        // So use a generous tolerance here.
+        Real tol = 5.0 / std::sqrt(size());
         for (Size j = 0; j < indices_.size(); ++j) {
             Real r = model_->hestonProcesses()[j]->rho();
             for (Size i = 0; i < timeGrid_.size() - 1; ++i) {
@@ -481,6 +484,19 @@ void Heston::setAdditionalResults() const {
             (calibrationStrikes[i] == Null<Real>() ? "ATMF" : std::to_string(calibrationStrikes[i]));
     }
 
+    for (Size i = 0; i < currencies_.size(); ++i) {
+        if (i > 0) {
+	    std::ostringstream o;
+            o << "fxSpot." << currencies_[i];
+            additionalResults_[o.str()] = fxSpots_[i - 1]->value();
+        }
+        for (auto const& d : effectiveSimulationDates_) {
+	    std::ostringstream o;
+            o << "discount." << currencies_[i] << "." << io::iso_date(d);
+            additionalResults_[o.str()] = curves_[i]->discount(d);
+        }
+    }
+
     for (Size i = 0; i < indices_.size(); ++i) {
         Size timeStep = 0;
         for (auto const& d : effectiveSimulationDates_) {
@@ -504,7 +520,7 @@ void Heston::setAdditionalResults() const {
 
     if (model_->calibration().size() > 0)
         additionalResults_["Heston.calibration"] = model_->calibration();
-    
+
     if (debug_) {
         // copy path data
         MultiAssetHestonPaths paths;

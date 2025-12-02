@@ -212,17 +212,11 @@ void HestonModelCalibration::logCalibration(const std::vector<Real>& moneyness) 
 QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
     DLOG("dontCalibrate: " << dontCalibrate_);
     DLOG("initial values: " << to_string(initialValues_));
+    DLOG("fixed values: " << to_string(fixedValues_));
     DLOG("discretization: " << to_string(discretization_));
 
     results_.clear();
-    if (restarts_ > 0)
-        return model2();
-    else
-        return model1();
-}
-
-QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
-    DLOG("model1 called");
+    QuantLib::ext::shared_ptr<HestonModel> model;
 
     QL_REQUIRE(initialValues_.size() == 5, "5 initial values expected, found " << initialValues_.size());
 
@@ -230,63 +224,117 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     Real kappa = initialValues_[1];
     Real sigma = initialValues_[2];
     Real rho = initialValues_[3];
-    Real v0 = initialValues_[4];
-
-    if (dontCalibrate_) {
+    Real v0 = initialValues_[4];    
+    bool allFixed = fixedValues_[0] && fixedValues_[1] && fixedValues_[2] && fixedValues_[3] && fixedValues_[4];
+    
+    if (dontCalibrate_ || allFixed) {
         auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(
             process_->riskFreeRate(), process_->dividendYield(), process_->stateVariable(), v0, kappa, theta, sigma,
             rho, discretization_);
-        return QuantLib::ext::make_shared<HestonModel>(hestonProcess);
+        model = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
+    } else {
+        if (restarts_ > 0)
+            model = model2();
+        else
+            model = model1();
+    }
+    results_.indexName = indexName_;
+
+    results_.parameters.clear();
+    results_.parameters.push_back(std::make_pair("theta", model->theta()));
+    results_.parameters.push_back(std::make_pair("kappa", model->kappa()));
+    results_.parameters.push_back(std::make_pair("sigma", model->sigma()));
+    results_.parameters.push_back(std::make_pair("rho", model->rho()));
+    results_.parameters.push_back(std::make_pair("v0", model->v0()));
+    Real feller = 2.0 * model->theta() * model->kappa() / pow(model->sigma(), 2);
+    results_.parameters.push_back(std::make_pair("feller", feller));
+
+    DLOG("Model Calibration Results:");
+    DLOG("theta  : " << model->theta());
+    DLOG("kappa  : " << model->kappa());
+    DLOG("sigma  : " << model->sigma());
+    DLOG("rho    : " << model->rho());
+    DLOG("v0     : " << model->v0());
+    DLOG("Feller : " << feller);
+
+    if (feller < 1) {
+        ALOG("Feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
     }
 
-    /**********************************************************************
-     * 1. Calibrate theta, kappa and v0 to the market variance curve
-     *    New initial values for theta and v0 taken from the variance curve
-     **********************************************************************/
+    return model;
+}
 
-    // Compute annualised variances and check no-arbitrage (increasing variance)
-    buildExpectedVariances();
+QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
+    DLOG("model1 called");
 
-    theta = annualisedVariances_.back();
-    v0 = annualisedVariances_.front();
+    Real theta = initialValues_[0];
+    Real kappa = initialValues_[1];
+    Real sigma = initialValues_[2];
+    Real rho = initialValues_[3];
+    Real v0 = initialValues_[4];
 
-    bool fixTheta = true; // FIXME: Keep theta fixed to find reasonable kappa?
-    bool fixKappa = false;
-    bool fixVo = false;
-    HestonVarianceCostFunction cost(varianceTimes_, annualisedVariances_, theta, kappa, v0, fixTheta, fixKappa, fixVo);
-    Constraint constraint = PositiveConstraint();
-    Problem problem(cost, constraint, cost.initialValues());
-    LevenbergMarquardt method;
-    EndCriteria endCriteria(1000, 100, 1e-8, 1e-8, 1e-8);
+    if (varianceTerms_.size() > 0) {
+        try {
+            /**********************************************************************
+             * 1. Calibrate theta, kappa and v0 to the market variance curve
+             *    New initial values for theta and v0 taken from the variance curve
+             **********************************************************************/
 
-    DLOG("variance curve fit, initial: " << problem.currentValue());
-    try {
-        method.minimize(problem, endCriteria);
-    } catch (std::exception& e) {
-        ALOG("variance curve error: " << e.what());
-    }
-    DLOG("variance curve fit, final:   " << problem.currentValue());
+            // Compute annualised variances and check no-arbitrage (increasing variance)
+            buildExpectedVariances();
 
-    Array result = problem.currentValue();
-    for (Size i = 0; i < varianceTimes_.size(); ++i) {
-        DLOG("variance curve: " << varianceTimes_[i] << " " << annualisedVariances_[i] << " "
-                                << cost.annualisedModelVariance(varianceTimes_[i], result));
-    }
+            theta = annualisedVariances_.back();
+            v0 = annualisedVariances_.front();
 
-    /****************************************************************************
-     * 2. Update initial values
-     *    Check that sigma's initial value is valid (Feller), otherwise adjust it
-     ****************************************************************************/
-    theta = result[0];
-    kappa = result[1];
-    v0 = result[2];
-    DLOG("theta, kappa, sigma_max: " << theta << " " << kappa << " " << sqrt(2.0 * kappa * theta));
+            bool fixTheta = true; // Keep theta fixed to find reasonable kappa
+            bool fixKappa = fixedValues_[1];
+            bool fixVo = fixedValues_[4];
+            HestonVarianceCostFunction cost(varianceTimes_, annualisedVariances_, theta, kappa, v0, fixTheta, fixKappa,
+                                            fixVo);
+            Constraint constraint = PositiveConstraint();
+            Problem problem(cost, constraint, cost.initialValues());
+            LevenbergMarquardt method;
+            EndCriteria endCriteria(1000, 100, 1e-8, 1e-8, 1e-8);
 
-    // If initial sigma does not satisfy the feller condition, then modify it
-    // FIXME: If we use the relaxed feller constraint below, should we use a larger starting point?
-    if (2.0 * kappa * theta < sigma * sigma) {
-        sigma = 0.5 * sqrt(2.0 * kappa * theta);
-        WLOG("update sigma to satisfy Feller: " << initialValues_[2] << " -> " << sigma);
+            DLOG("variance curve fit, initial: " << problem.currentValue());
+            try {
+                method.minimize(problem, endCriteria);
+            } catch (std::exception& e) {
+                ALOG("variance curve error: " << e.what());
+            }
+            DLOG("variance curve fit, final:   " << problem.currentValue());
+
+            Array result = problem.currentValue();
+            for (Size i = 0; i < varianceTimes_.size(); ++i) {
+                DLOG("variance curve: " << varianceTimes_[i] << " " << annualisedVariances_[i] << " "
+                                        << cost.annualisedModelVariance(varianceTimes_[i], result));
+            }
+
+            /****************************************************************************
+             * 2. Update initial values
+             *    Check that sigma's initial value is valid (Feller), otherwise adjust it
+             ****************************************************************************/
+            theta = fixedValues_[0] ? initialValues_[0] : result[0];
+            kappa = fixedValues_[1] ? initialValues_[1] : result[1];
+            v0 = fixedValues_[4] ? initialValues_[4] : result[2];
+            DLOG("theta, kappa, sigma_max: " << theta << " " << kappa << " " << sqrt(2.0 * kappa * theta));
+
+            // If initial sigma does not satisfy the (relaxed) feller condition, then modify it
+            if (fixedValues_[2] == false && 2.0 * kappa * theta / (sigma * sigma) < relaxedFellerConstraint_) {
+                sigma = 0.5 * sqrt(2.0 * kappa * theta / relaxedFellerConstraint_);
+                WLOG("update sigma to satisfy Feller: " << initialValues_[2] << " -> " << sigma);
+            }
+
+        } catch (std::exception& e) {
+            ALOG("error adjusting heston initial values: " << e.what() << ", continue with initial values");
+            theta = initialValues_[0];
+            kappa = initialValues_[1];
+            sigma = initialValues_[2];
+            rho = initialValues_[3];
+            v0 = initialValues_[4];
+        }
+    } else {
+        WLOG("no variance terms proided, skip the variance curve fit");
     }
 
     /**********************************************************
@@ -319,22 +367,8 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
         ALOG("heston calibration error: " << e.what());
     }
     DLOG("heston final: " << hestonModel->params());
-    Real feller = 2.0 * hestonModel->params()[0] * hestonModel->params()[1] / pow(hestonModel->params()[2], 2);
-    DLOG("feller: " << feller);
-    if (feller < 1) {
-        ALOG("Feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
-    }
 
     logCalibration(moneyness);
-
-    results_.indexName = indexName_;
-
-    results_.parameters.clear();
-    results_.parameters.push_back(std::make_pair("theta", hestonModel->theta()));
-    results_.parameters.push_back(std::make_pair("kappa", hestonModel->kappa()));
-    results_.parameters.push_back(std::make_pair("sigma", hestonModel->sigma()));
-    results_.parameters.push_back(std::make_pair("rho", hestonModel->rho()));
-    results_.parameters.push_back(std::make_pair("v0", hestonModel->v0()));
 
     return hestonModel;
 }
@@ -354,23 +388,14 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
 
     DLOG("model2 called");
 
-    QL_REQUIRE(initialValues_.size() == 5, "5 initial values expected, found " << initialValues_.size());
-
     Real theta = initialValues_[0];
     Real kappa = initialValues_[1];
     Real sigma = initialValues_[2];
     Real rho = initialValues_[3];
     Real v0 = initialValues_[4];
 
-    if (dontCalibrate_) {
-        auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(
-            process_->riskFreeRate(), process_->dividendYield(), process_->stateVariable(), v0, kappa, theta, sigma,
-            rho, discretization_);
-        return QuantLib::ext::make_shared<HestonModel>(hestonProcess);
-    }
-
-    // FIXME: Move parameters to constructor
     int restarts = restarts_;
+    // FIXME: Move to configuration
     int seed = 42;
 
     Handle<Quote> s0 = process_->stateVariable();
@@ -431,29 +456,8 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
 
     DLOG("best rmse   = " << bestRmse);
     DLOG("best params = " << bestParams);
-    Real feller = 2.0 * bestParams[0] * bestParams[1] / pow(bestParams[2], 2);
-    DLOG("feller: " << feller);
-    if (feller < 1) {
-        ALOG("Feller constraint violated: 2*theta*kappa/sigma^2 = " << feller);
-    }
-
-    DLOG("Model Calibration Results:");
-    DLOG("theta : " << model->theta());
-    DLOG("kappa : " << model->kappa());
-    DLOG("sigma : " << model->sigma());
-    DLOG("rho   : " << model->rho());
-    DLOG("v0    : " << model->v0());
 
     logCalibration(moneyness);
-
-    results_.indexName = indexName_;
-
-    results_.parameters.clear();
-    results_.parameters.push_back(std::make_pair("theta", model->theta()));
-    results_.parameters.push_back(std::make_pair("kappa", model->kappa()));
-    results_.parameters.push_back(std::make_pair("sigma", model->sigma()));
-    results_.parameters.push_back(std::make_pair("rho", model->rho()));
-    results_.parameters.push_back(std::make_pair("v0", model->v0()));
 
     return model;
 }

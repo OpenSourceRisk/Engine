@@ -627,6 +627,21 @@
       <BusinessDayConvention>Modified Following</BusinessDayConvention>
       <OptionTenors>*</OptionTenors>
     </Correlation>
+    <Correlation>
+      <CurveId>EQ-RIC:.SPX&amp;FX-GENERIC-USD-EUR</CurveId>
+      <CurveDescription>Correlation curve for SPX vs USD/EUR</CurveDescription>
+      <CorrelationType>Generic</CorrelationType>
+      <Index1>EQ-RIC:.SPX</Index1>
+      <Index2>FX-GENERIC-USD-EUR</Index2>
+      <Conventions/>
+      <Dimension>ATM</Dimension>
+      <QuoteType>RATE</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>weekends only</Calendar>
+      <BusinessDayConvention>Modified Following</BusinessDayConvention>
+      <OptionTenors>*</OptionTenors>
+    </Correlation>
   </Correlations>
     
 </CurveConfiguration>

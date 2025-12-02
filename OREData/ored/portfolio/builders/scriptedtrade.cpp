@@ -604,7 +604,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         hestonTolerance_ = parseReal(engineParameter("HestonTolerance", getModelEngineQualifiers(), false, "0.001"));
         hestonProcessDiscretization_ =
 	  parseHestonProcessDiscretization(engineParameter("HestonProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
-	addPathsToAdditionalResults_ = parseBool(engineParameter("AddPathsToAdditionalResults", getModelEngineQualifiers(), false, "false"));
+	debug_ = parseBool(engineParameter("Debug", getModelEngineQualifiers(), false, "false"));
     }
 
     if (engineParam_ == "MC") {
@@ -1388,7 +1388,7 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
         modelIndices_, modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_,
-        iborFallbackConfig, "Smile", filteredStrikes, params_, addPathsToAdditionalResults_);
+        iborFallbackConfig, "Smile", filteredStrikes, params_, debug_);
     engineFactory()->modelBuilders().insert(std::make_pair(id, builder));
     engineFactory()->scriptingModels().insert(std::make_pair(id, model_));
     LOG("ScriptedTradeEngineBuilder::buildHeston() done");

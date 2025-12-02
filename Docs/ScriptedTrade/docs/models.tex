@@ -78,7 +78,7 @@ wip An example pricing engine configuration looks as follows.
       <Parameter name="HestonCalibrationRestarts">0</Parameter>                    
       <Parameter name="HestonTolerance">0.001</Parameter>                          
       <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
-      <Parameter name="AddPathsToAdditionalResults">true</Parameter>
+      <Parameter name="Debug">true</Parameter>
     </EngineParameters>
   </Product>
 \end{minted}
@@ -165,7 +165,8 @@ The engine parameters have the following meaning:
 \item Seed [Optional]: The seed for rng in pricing phase. Defaults to 42. Applies to MC only.
 \item TimeStepsPerYear: The number of time steps used to discretise the process. For 0 only the relevant simulation
   times are used. Otherwise at least the given number of step are used in the discretisation grid per year.
-\item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge and Heston models. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
+\item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge and
+  Heston models. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
   forward, $\sigma$ ATMF market vol, $t$ option time to expiry
 \item BootstrapTolerance: tolerance for calibration bootstrap, only applies to model = GaussianCam
 \item IncludePastCashflows [Optional]: if true, LOGPAY() will generate cashflow information for pay dates on or before
@@ -203,15 +204,36 @@ The engine parameters have the following meaning:
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
 \item Heston-specific parameters:
   \begin{itemize}
-  \item CalibrationExpiries: Comma-separated list of option expiry terms, to be used in the model calibration. Default: 3M, 6M
-  \item CalibrationVarianceTerms: Comma-separated list of terms where annualised variances are computed from the provided option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. Default: 1M, 2M, 3M, 6M, 9M, 1Y, 15M, 18M, 21M, 2Y, 5Y, 7Y, 10Y
-  \item HestonInitialValues: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. Defaults: $0.04, 1.0, 0.5, -0.5, 0.04$
-  \item HestonFixedValues: Comma-separated list of booleans to indicate which of the five parameters above shall be kept fixed in the calibration, same order as the parmeters above. Default none fixed, i.e. ``N,N,N,N,N''
-  \item HestonRelaxedFellerConstraint: Constraint on $2\kappa\theta/\sigma^2$ to be used in the calibration, to be chosen in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between can be chosen representing a somewhat relaxed Feller constraint; default 0.25 
-  \item HestonCalibrationRestarts: If set to zero, we calibrate all five parameters after an initial guess for $\theta$, $\kappa$ and $v_0$. If positive, we perform as many calibrations as specified by ``restarts'' with randomised initial values, keeping the best result. Default 0
-  \item HestonTolerance: Error tolerance of the calibration (root mean squared error of implied black volatilities) where we stop the search for best parameters when calibrating with HestonCalibrationRestarts $>0$; default 0.001
-  \item HestonProcessDiscretization: Choice of the QuantLib::HestonProcess discretization (PartialTruncation, FullTruncation, Reflection, NonCentral\-Chi\-SquareVariance, Quadratic\-Exponential, Quadratic\-Exponential\-Martingale, Broadie\-Kaya\-Exact\-SchemeLobatto, Broadie\-Kaya\-Exact\-SchemeLaguerre, BroadieKayaExactSchemeTrapezoidal); default QuadraticExponential
-  \item AddPathsToAdditionalResults: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations across all indices, effective simulation dates and MC samples for each trade; default false
+  \item CalibrationExpiries: Comma-separated list of option expiry terms, to be used in the model calibration. \\
+    Default: 3M, 6M
+  \item CalibrationVarianceTerms: Comma-separated list of terms where annualised variances are computed from the provided
+    option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. \\
+    Default: 1M, 2M, 3M, 6M, 9M, 1Y, 15M, 18M, 21M, 2Y, 5Y, 7Y, 10Y
+  \item HestonInitialValues: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$,
+    $\rho$, $v_0$. \\
+    Default: $0.04, 1.0, 0.5, -0.5, 0.04$
+  \item HestonFixedValues: Comma-separated list of booleans to indicate which of the five parameters above shall be kept
+    fixed in the calibration, same order as the parmeters above. \\
+    Default: none fixed, i.e. ``N,N,N,N,N''
+  \item HestonRelaxedFellerConstraint: Constraint on $2\kappa\theta/\sigma^2$ to be used in the calibration, to be chosen
+    in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between can be chosen representing
+    a somewhat relaxed Feller constraint. \\
+    Dfault: 0.25 
+  \item HestonCalibrationRestarts: If set to zero, we calibrate all five parameters after an initial guess for $\theta$,
+    $\kappa$ and $v_0$. If positive, we perform as many calibrations as specified by ``restarts'' with randomised initial
+    values, keeping the best result. \\
+    Default: 0
+  \item HestonTolerance: Error tolerance of the calibration (root mean squared error of implied black volatilities) where
+    we stop the search for best parameters when calibrating with HestonCalibrationRestarts $>0$. \\
+    Default: 0.001
+  \item HestonProcessDiscretization: Choice of the QuantLib::HestonProcess discretization (PartialTruncation, FullTruncation,
+    Reflection, NonCentral\-Chi\-SquareVariance, Quadratic\-Exponential, Quadratic\-Exponential\-Martingale,
+    Broadie\-Kaya\-Exact\-SchemeLobatto, Broadie\-Kaya\-Exact\-SchemeLaguerre, BroadieKayaExactSchemeTrapezoidal). \\
+    Default: QuadraticExponential
+  \item Debug: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
+    across all indices, effective simulation dates and MC samples for each trade; moreover we perform additional consistency
+    checks during Heston path generation. \\
+    Default: false
   \end{itemize}
 \end{itemize}
 
@@ -393,16 +415,19 @@ For EQ/COM indices denoted in a currency other than base/domestic, the system of
 contain at least one FX index that converts from that foreign into domestic/base currency of the calculation,
 which is also modelled with a Heston process. 
 The change of measure from the foreign equity's currency into domestic currency then causes drift adjustments
-in the foreign equity's Heston process \cite{cesarini_2014},
+in the foreign equity's Heston process \cite{cesarini_2014, stackexchange_40521},
 \begin{align*}
-  \mu(t) &\rightarrow \mu(t) - \rho_{S,X}\:\sqrt{V(t)}\:\sqrt{V_X(t)} \\
-  \kappa\,\theta &\rightarrow \kappa\,\theta - \rho_{S,X}\: \sigma\:\rho\:\sqrt{V(t)}\:\sqrt{V_X(t)} 
+  \mu(t) &\rightarrow \mu(t) - \rho_{SX}\:\sqrt{V(t)}\:\sqrt{V_X(t)} \\
+  \kappa\,\theta &\rightarrow \kappa\,\theta - \rho_{VX}\: \sigma\:\sqrt{V(t)}\:\sqrt{V_X(t)} 
 \end{align*}
-where $\rho_{S,X}$ is the correlation between the EQ/COM spot price process and the FX spot process, and $V_X(t)$
+where $\rho_{SX}$ is the correlation between the EQ/COM spot price process and the FX spot process,
+$\rho_{VX} = \rho_{SX}\,\rho$ the correlation between variance process and FX (see above), and $V_X(t)$
 is the stochastic variance of the FX process. The negative signs of the adjustments are consistent with
-an FX quotation that converts foreign amounts into domestic currency by multiplication, or the exchange rate
-is the value of 1 unit of foreign currency expressed in domestic currency. The inverse quotation would require
-flipping the signs.
+an FX quotation that converts foreign amounts into domestic currency by multiplication (the exchange rate
+is the value of 1 unit of foreign currency expressed in domestic currency). The inverse quotation would require
+flipping the signs. Note that the variance drift adjustment has the potential, depending the sign of correlations,
+to push the variance process towards the boundary $V=0$, especially when working with relaxed Feller constraints
+-- to be controlled in the implementaton of the variance process.
 
 If we set the {\tt FullDynamicFx} parameter in the pricing engine configuration to false, then our FX processes
 are deterministic (zero volatility), and the adjustments vanish.
