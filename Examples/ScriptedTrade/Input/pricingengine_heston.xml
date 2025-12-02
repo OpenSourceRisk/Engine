@@ -74,6 +74,7 @@
       <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter>                <!-- applies to simple calibration, without randomised initial values -->
       <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter>             <!-- in [0,1] -->
       <Parameter name="HestonCalibrationRestarts">0</Parameter>                    <!-- max. number of initial value sets, 0 means simple calibration -->
+      <Parameter name="HestonMaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
       <Parameter name="HestonTolerance">0.001</Parameter>                          <!-- implied vol RMSE where we stop the search -->
       <!-- PartialTruncation,
            FullTruncation,
