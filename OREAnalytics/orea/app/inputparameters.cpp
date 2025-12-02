@@ -1182,6 +1182,15 @@ Date InputParameters::mporDate() {
     return mporDate_;
 }
 
+Date InputParameters::calculateMporDate(QuantLib::Size mporDays) {
+    QL_REQUIRE(asof() != Date(), "Asof date is required for mpor date");
+    if (mporDays_ != Null<Size>() and mporDate_ != Date())
+        WLOG("Previous mpor days: " << mporDays << " and mpor date: " << mporDate_ << " will be overwritten.");
+    mporDays_ = mporDays;
+    mporDate_ = mporCalendar().advance(asof(), mporDays, QuantExt::Days);
+    return mporDate_;
+}
+
 QuantLib::ext::shared_ptr<SimmConfiguration> InputParameters::getSimmConfiguration() {
     QL_REQUIRE(simmBucketMapper() != nullptr,
                "Internal error, load simm bucket mapper before retrieving simmconfiguration");

@@ -112,6 +112,8 @@ public:
     const ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs();
     const ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs();
     const ext::shared_ptr<CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
+    QuantLib::Date mporDate();
+    QuantLib::Date calculateMporDate(QuantLib::Size mporDays);
         
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& stressSimMarketParams() const;
     const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressScenarioData() const;
