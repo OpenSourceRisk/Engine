@@ -71,14 +71,12 @@ RandomVariable McCamCallableBondBaseEngine::creditRiskDiscountFactor(
     RandomVariable lgd(n, 1.0 - recoveryRate_->value());
     RandomVariable S(n, 1.0);
     if (model_->components(CrossAssetModel::AssetType::CR) > 0) {
-        auto zs = pathValues[timeIdx][model_->pIdx(CrossAssetModel::AssetType::CR, 0, 0)];
-        auto ys = pathValues[timeIdx][model_->pIdx(CrossAssetModel::AssetType::CR, 0, 1)];
-        for (size_t i = 0; i < n; ++i) {
-            auto [s, s_tilde] = model_->crlgm1fS(0, 0, t, t, zs[i], ys[i]);
-            S.set(i, s);
-        }
+        auto crz = pathValues[timeIdx][model_->pIdx(CrossAssetModel::AssetType::CR, 0, 0)];
+        auto cry = pathValues[timeIdx][model_->pIdx(CrossAssetModel::AssetType::CR, 0, 1)];
+        auto [s, _] = crlgmVectorised_->StStilde(0, 0, t, t, crz, cry);
+        S = pow(s, lgd);
     }
-    return pow(S, lgd);
+    return S;
 }
 
 McCamCallableBondBaseEngine::McCamCallableBondBaseEngine(
@@ -469,6 +467,9 @@ void McCamCallableBondBaseEngine::calculate() const {
             lgmVectorised_.push_back(LgmVectorised(model_->irlgm1f(i)));
         }
     }
+
+    crlgmVectorised_ = QuantLib::ext::make_shared<CrLgmVectorised>(*model_);
+
     //std::cout << "set up lgm vectorised instances" << std::endl;
     // populate the info to generate the (alive) cashflow amounts
 

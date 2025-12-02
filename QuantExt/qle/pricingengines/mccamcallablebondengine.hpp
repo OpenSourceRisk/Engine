@@ -232,6 +232,7 @@ public:
 
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
+    mutable QuantLib::ext::shared_ptr<CrLgmVectorised> crlgmVectorised_;
 
 protected:
     std::set<Time> getExerciseTimes(const std::vector<CallableBond::CallabilityData>& callData) const;
