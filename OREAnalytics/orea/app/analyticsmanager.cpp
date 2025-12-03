@@ -24,9 +24,6 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-
 #include <ql/errors.hpp>
 
 using namespace std;
