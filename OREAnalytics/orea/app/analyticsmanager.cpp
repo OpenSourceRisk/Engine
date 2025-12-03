@@ -24,6 +24,9 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+
 #include <ql/errors.hpp>
 
 using namespace std;
@@ -270,12 +273,22 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
 
             // attach a suffix only if it does not have one already
             string suffix = "";
-            if (!endsWith(fileName,".csv") && !endsWith(fileName, ".txt"))
-                suffix = ".csv";
             std::string fullFileName = outputPath + "/" + fileName + suffix;
-
-            report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString,
-                           lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end());
+            if (!endsWith(fileName,".csv") && !endsWith(fileName, ".txt") && !endsWith(fileName, ".gz")){
+                suffix = ".csv";
+                fullFileName = outputPath + "/" + fileName + suffix;
+                report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString,
+                            lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end());
+            }else if(endsWith(fileName,".gz")){
+                fullFileName = outputPath + "/" + fileName;
+                report->toZip(fullFileName, sep, commentCharacter, quoteChar, nullString,
+                            lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end());  
+            }else{
+                fullFileName = outputPath + "/" + fileName + suffix;
+                report->toFile(fullFileName, sep, commentCharacter, quoteChar, nullString,
+                            lowerHeaderReportNames.find(reportName) != lowerHeaderReportNames.end());
+            }
+          
             LOG("report " << reportName << " written to " << fullFileName); 
         }
     }
