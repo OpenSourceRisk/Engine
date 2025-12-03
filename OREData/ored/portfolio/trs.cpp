@@ -247,23 +247,37 @@ void TRS::fromXML(XMLNode* node) {
     }
     for (auto const n : underlyingTradeNodes2) {
         underlyingDerivativeId_.push_back(XMLUtils::getChildValue(n, "Id", true));
-        auto t = XMLUtils::getChildNode(n, "Trade");
-        if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
-            if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
-                QL_REQUIRE(underlyingTradeNodes2.size() == 1 && portfolioId_ == "", "Expecting one derivative.");
-                portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
-                QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
-                indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
-                portfolioDeriv_ = false;
+        string tradeType;
+        XMLNode* trade;
+        XMLNode* t = XMLUtils::getChildNode(n, "Trade");
+        if (t) {
+            trade = t;
+            tradeType = XMLUtils::getChildValue(t, "TradeType", true);
+        } else {
+
+            XMLNode* s = XMLUtils::getChildNode(n, "SubTrade");
+            if (s) {
+                trade = s;
+                tradeType = XMLUtils::getChildValue(s, "SubTradeType", true);
             }
         }
-        QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
-        std::string tradeType = XMLUtils::getAnyChildValue(t, {"TradeType", "SubTradeType"}, true);
+        if(trade){
+            if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(trade, "CompositeTradeData")) {
+                if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
+                    QL_REQUIRE(underlyingTradeNodes2.size() == 1 && portfolioId_ == "", "Expecting one derivative.");
+                    portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+                    QL_REQUIRE(portfolioId_ != "", "BasketName must not be empty.");
+                    indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
+                    portfolioDeriv_ = false;
+                }
+            }
+        }
+        QL_REQUIRE(trade != nullptr, "expected 'Trade' or 'SubTrade' node under 'Derivative' node");
         auto u = TradeFactory::instance().build(tradeType);
         QL_REQUIRE(u, "No trade builder found for TRS derivative trade type '"
                           << tradeType << "' when processing underlying trade #" << (underlyingCounter + 1));
         u->id() = this->id() + "_underlying" + ((underlyingTradeNodes.size() + underlyingSubTradeNodes.size() > 1) ? "_" + std::to_string(underlyingCounter++) : "");
-        u->fromXML(t);
+        u->fromXML(trade);
         u->isSubTrade() = true;
         underlying_.push_back(u);
     } 
