@@ -297,7 +297,7 @@ framework for quantitative finance.
       """,
       author           = "Quaternion Risk Management",
       author_email     = "info@quaternion.com",
-      url              = "http://quaternion.com",
+      url              = "http://opensourcerisk.org/",
       license          = codecs.open('LICENSE.txt','r+',
                                      encoding='utf8').read(),
       classifiers      = classifiers,
