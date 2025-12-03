@@ -248,17 +248,14 @@ void TRS::fromXML(XMLNode* node) {
     for (auto const n : underlyingTradeNodes2) {
         underlyingDerivativeId_.push_back(XMLUtils::getChildValue(n, "Id", true));
         string tradeType;
-        XMLNode* trade;
-        XMLNode* t = XMLUtils::getChildNode(n, "Trade");
-        if (t) {
-            trade = t;
-            tradeType = XMLUtils::getChildValue(t, "TradeType", true);
+        XMLNode* trade = XMLUtils::getChildNode(n, "Trade");
+        if (trade) {
+            tradeType = XMLUtils::getChildValue(trade, "TradeType", true);
         } else {
 
-            XMLNode* s = XMLUtils::getChildNode(n, "SubTrade");
-            if (s) {
-                trade = s;
-                tradeType = XMLUtils::getChildValue(s, "SubTradeType", true);
+            trade = XMLUtils::getChildNode(n, "SubTrade");
+            if (trade) {
+                tradeType = XMLUtils::getChildValue(trade, "SubTradeType", true);
             }
         }
         if(trade){
