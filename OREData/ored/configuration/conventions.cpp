@@ -1313,7 +1313,6 @@ void CdsConvention::fromXML(XMLNode* node) {
     strPaysAtDefaultTime_ = XMLUtils::getChildValue(node, "PaysAtDefaultTime", true);
     strUpfrontSettlementDays_ = XMLUtils::getChildValue(node, "UpfrontSettlementDays", false);
     strLastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
-
     build();
 }
 
@@ -1366,6 +1365,8 @@ void InflationSwapConvention::build() {
     adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);
     infCalendar_ = parseCalendar(strInfCalendar_);
     infConvention_ = parseBusinessDayConvention(strInfConvention_);
+    startDelayConvention_ =
+        strStartDelayConvention_.empty() ? Following : parseBusinessDayConvention(strStartDelayConvention_);
     if (publicationRoll_ != PublicationRoll::None) {
         QL_REQUIRE(publicationScheduleData_, "Publication roll is " << publicationRoll_ << " for " << id() <<
             " so expect non-null publication schedule data.");
@@ -1389,7 +1390,9 @@ void InflationSwapConvention::fromXML(XMLNode* node) {
     strAdjustInfObsDates_ = XMLUtils::getChildValue(node, "AdjustInflationObservationDates", true);
     strInfCalendar_ = XMLUtils::getChildValue(node, "InflationCalendar", true);
     strInfConvention_ = XMLUtils::getChildValue(node, "InflationConvention", true);
-
+    startDelay_ = XMLUtils::getChildValueAsInt(node, "StartDelay", false, 0);
+    strStartDelayConvention_ = XMLUtils::getChildValue(node, "StartDelayConvention", false);
+    
     publicationRoll_ = PublicationRoll::None;
     if (XMLNode* n = XMLUtils::getChildNode(node, "PublicationRoll")) {
         publicationRoll_ = parseInflationSwapPublicationRoll(XMLUtils::getNodeValue(n));
@@ -1419,7 +1422,12 @@ XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "AdjustInflationObservationDates", strAdjustInfObsDates_);
     XMLUtils::addChild(doc, node, "InflationCalendar", strInfCalendar_);
     XMLUtils::addChild(doc, node, "InflationConvention", strInfConvention_);
-
+    if (startDelay_ != 0) {
+        XMLUtils::addChild(doc, node, "StartDelay", startDelay_);
+    }
+    if (!strStartDelayConvention_.empty()) {
+        XMLUtils::addChild(doc, node, "StartDelayConvention", strStartDelayConvention_);
+    }
     if (publicationRoll_ != PublicationRoll::None) {
         XMLUtils::addChild(doc, node, "PublicationRoll", to_string(publicationRoll_));
         QL_REQUIRE(publicationScheduleData_, "PublicationRoll is " << publicationRoll_ << " for "
