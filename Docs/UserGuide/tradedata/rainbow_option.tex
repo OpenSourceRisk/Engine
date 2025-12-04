@@ -1752,7 +1752,7 @@ IF knockedIn == 1 AND worstUnderlyingFinalPrice < StrikePrices[worstUnderlying] 
   fractionalAmount = frac(deliverableAsset);
   fractionalAmount = round(fractionalAmount,4);
   fractionalCashAmount = worstUnderlyingFinalPrice*fractionalAmount;
-  payoff = round(fractionalCashAmount,2)+deliverableAsset;
+  payoff = round(fractionalCashAmount,2)+round(deliverableAsset,0);
 ELSE
   IF worstUnderlyingFinalPrice >= BarrierLevels[worstUnderlying] THEN
     payoff = Quantity*(1+max(BonusCoupon, worstPerformance-1));
@@ -1810,6 +1810,7 @@ The meanings and allowable values for the \lstinline!WorstPerformanceRainbowOpti
   \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+      COMM underlyings), this will result in a quanto payoff. The \lstinline!StrikePrices! and \lstinline!BarrierLevels! should be expressed in
+      as amount of CCY1 in CCY2.Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
