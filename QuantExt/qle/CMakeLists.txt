@@ -395,7 +395,6 @@ termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpicurve.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/interpolateddiscountcurve2.cpp
-termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
@@ -1001,7 +1000,6 @@ termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
-termstructures/oiccbasisswaphelper.hpp
 termstructures/oiscapfloorhelper.hpp
 termstructures/oisratehelper.hpp
 termstructures/optionletcurve.hpp
@@ -1074,6 +1072,7 @@ utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/localiborcouponsettings.hpp
 utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp
 utilities/scenarioinformation.hpp

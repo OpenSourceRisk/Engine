@@ -34,10 +34,11 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
     const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg, bool telescopicValueDates,
-    const QuantLib::Pillar::Choice pillarChoice, const std::vector<Natural>& spotFXSettleDaysVec,
-    const std::vector<Calendar>& spotFXSettleCalendarVec, QuantLib::ext::optional<bool> includeSpread,
-    QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
-    QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged)
+    const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate,
+    const std::vector<Natural>& spotFXSettleDaysVec, const std::vector<Calendar>& spotFXSettleCalendarVec,
+    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback,
+    QuantLib::ext::optional<Size> fixingDays, QuantLib::ext::optional<Size> rateCutoff,
+    QuantLib::ext::optional<bool> isAveraged)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
@@ -52,6 +53,8 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     registerWith(index_);
     registerWith(floatDiscount_);
     registerWith(spread_);
+
+    pillarDate_ = customPillarDate;
 
     initializeDates();
 }
@@ -112,7 +115,8 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     maturityDate_ = swap_->maturityDate();
 
     latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {false, false});
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyFixFloatMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {

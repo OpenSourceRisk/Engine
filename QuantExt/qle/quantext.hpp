@@ -557,7 +557,6 @@
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
-#include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oiscapfloorhelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/optionletcurve.hpp>
@@ -630,6 +629,7 @@
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/localiborcouponsettings.hpp>
 #include <qle/utilities/ratehelpers.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <qle/utilities/scenarioinformation.hpp>

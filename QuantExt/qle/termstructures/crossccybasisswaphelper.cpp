@@ -37,10 +37,13 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     QuantLib::ext::optional<Period> spreadTenor, Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing,
     const Calendar& flatCalendar, const Calendar& spreadCalendar, const std::vector<Natural>& spotFXSettleDaysVec,
     const std::vector<Calendar>& spotFXSettleCalendarVec, Size paymentLag, Size flatPaymentLag,
-    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
-    QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged, QuantLib::ext::optional<bool> flatIncludeSpread,
-    QuantLib::ext::optional<Period> flatLookback, QuantLib::ext::optional<Size> flatFixingDays, QuantLib::ext::optional<Size> flatRateCutoff,
-    QuantLib::ext::optional<bool> flatIsAveraged, const bool telescopicValueDates, const QuantLib::Pillar::Choice pillarChoice)
+    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback,
+    QuantLib::ext::optional<Size> fixingDays, QuantLib::ext::optional<Size> rateCutoff,
+    QuantLib::ext::optional<bool> isAveraged, QuantLib::ext::optional<bool> flatIncludeSpread,
+    QuantLib::ext::optional<Period> flatLookback, QuantLib::ext::optional<Size> flatFixingDays,
+    QuantLib::ext::optional<Size> flatRateCutoff, QuantLib::ext::optional<bool> flatIsAveraged,
+    const bool telescopicValueDates, const QuantLib::Pillar::Choice pillarChoice,
+    const QuantLib::Date& customPillarDate)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -99,6 +102,8 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     registerWith(spreadIndex_);
     registerWith(flatDiscountCurve_);
     registerWith(spreadDiscountCurve_);
+
+    pillarDate_ = customPillarDate;
 
     initializeDates();
 }
@@ -167,7 +172,8 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
     latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {!spreadIndexGiven_, !flatIndexGiven_});
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void CrossCcyBasisSwapHelper::setTermStructure(YieldTermStructure* t) {

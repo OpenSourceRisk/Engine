@@ -35,7 +35,7 @@ AverageOISRateHelper::AverageOISRateHelper(
     const Handle<Quote>& onSpread, Natural rateCutoff,
     // Exogenous discount curve
     const Handle<YieldTermStructure>& discountCurve, const bool discountCurveGiven, const bool telescopicValueDates,
-    const QuantLib::Pillar::Choice pillarChoice)
+    const QuantLib::Pillar::Choice pillarChoice, const Date& customPillarDate)
     : RelativeDateRateHelper(fixedRate), spotLagTenor_(spotLagTenor), swapTenor_(swapTenor), fixedTenor_(fixedTenor),
       fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar), fixedConvention_(fixedConvention),
       fixedPaymentAdjustment_(fixedPaymentAdjustment), overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven),
@@ -50,6 +50,8 @@ AverageOISRateHelper::AverageOISRateHelper(
         overnightIndex_ = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(clonedIborIndex);
         overnightIndex_->unregisterWith(termStructureHandle_);
     }
+
+    pillarDate_ = customPillarDate;
 
     registerWith(overnightIndex_);
     registerWith(onSpread_);
@@ -79,7 +81,8 @@ void AverageOISRateHelper::initializeDates() {
 
     maturityDate_ = averageOIS_->maturityDate();
     latestRelevantDate_ = determineLatestRelevantDate(averageOIS_->legs());
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 Real AverageOISRateHelper::impliedQuote() const {
