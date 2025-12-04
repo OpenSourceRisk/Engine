@@ -651,7 +651,6 @@ public:
     bool dryRun() const { return dryRun_; }
     QuantLib::Size mporDays() const { return mporDays_; }
     QuantLib::Date mporDate();
-    QuantLib::Date calculateMporDate(QuantLib::Size mporDays);
     const QuantLib::Calendar mporCalendar() {
         if (mporCalendar_.empty()) {
             QL_REQUIRE(!baseCurrency_.empty(), "mpor calendar or baseCurrency must be provided";);
