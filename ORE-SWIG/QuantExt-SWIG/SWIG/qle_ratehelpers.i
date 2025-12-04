@@ -23,7 +23,6 @@
 %include swap.i
 %include qle_instruments.i
 %include qle_tenorbasisswap.i
-%include qle_oiccbasisswap.i
 
 %{
 using QuantExt::CrossCcyBasisSwapHelper;
@@ -31,7 +30,6 @@ using QuantExt::CrossCcyBasisMtMResetSwapHelper;
 using QuantExt::TenorBasisSwapHelper;
 using QuantExt::SubPeriodsSwapHelper;
 using QuantExt::SubPeriodsCoupon1;
-using QuantExt::OICCBSHelper;
 using QuantExt::BasisTwoSwapHelper;
 using QuantExt::ImmFraRateHelper;
 using QuantExt::CrossCcyFixFloatSwapHelper;
@@ -139,22 +137,6 @@ class BasisTwoSwapHelper : public RateHelper {
                        bool discountCurveGiven = false);
     ext::shared_ptr<VanillaSwap> longSwap();
     ext::shared_ptr<VanillaSwap> shortSwap();
-};
-
-%shared_ptr(OICCBSHelper)
-class OICCBSHelper : public RateHelper {
-  public:
-    OICCBSHelper(QuantLib::Natural settlementDays,
-                    const QuantLib::Period& term,
-                    const ext::shared_ptr<OvernightIndex>& payIndex,
-                    const QuantLib::Period& payTenor,
-                    const ext::shared_ptr<OvernightIndex>& recIndex,
-                    const QuantLib::Period& recTenor,
-                    const QuantLib::Handle<QuantLib::Quote>& spreadQuote,
-                    const QuantLib::Handle<QuantLib::YieldTermStructure>& fixedDiscountCurve,
-                    bool spreadQuoteOnPayLeg,
-                    bool fixedDiscountOnPayLeg);
-    ext::shared_ptr<OvernightIndexedCrossCcyBasisSwap> swap();
 };
 
 %shared_ptr(ImmFraRateHelper)
