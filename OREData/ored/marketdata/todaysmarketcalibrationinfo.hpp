@@ -52,11 +52,13 @@ struct YieldCurveCalibrationInfo {
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
-    // the following are all empty or corresponding to pillarDates, if these were not overwritten manually
+
+    std::vector<std::set<QuantLib::Date>> rateHelperPillarDates;
     std::vector<std::string> mdQuoteLabels;
     std::vector<double> mdQuoteValues;
     std::vector<std::string> rateHelperTypes;
     std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
+    std::vector<double> rateHelperQuoteErrors;
 };
 
 struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
