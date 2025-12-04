@@ -26,6 +26,7 @@
 
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/utilities/log.hpp>
 
@@ -585,11 +586,14 @@ CreditPortfolioSensitivityDecomposition parseCreditPortfolioSensitivityDecomposi
 //! Output operator for CreditPortfolioSensitivityDecomposition
 std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecomposition d);
 
-//! Convert text to QuantLib::Pillar::Choice
+//! Convert text to YieldCurveConfig::PillarChoice
 /*!
 \ingroup utilities
 */
-QuantLib::Pillar::Choice parsePillarChoice(const std::string& s);
+YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s);
+
+//! Output operator for YieldCurveConfig::PillarChoice
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::PillarChoice c);
 
 //! Convert text to QuantExt::McMultiLegBaseEngine::RegressorModel
 /*!
