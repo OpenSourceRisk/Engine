@@ -31,9 +31,9 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! DefaultProbabilityTermStructure based on yield curve
-class SurvivalProbabilityCurveFromYiled : public SurvivalProbabilityStructure {
+class SurvivalProbabilityCurveFromYield : public SurvivalProbabilityStructure {
 public:
-    SurvivalProbabilityCurveFromYiled(const ext::shard_ptr<YieldTermStructure> yieldTermStructure,
+    SurvivalProbabilityCurveFromYield(const QuantLib::Handle<YieldTermStructure> yieldTermStructure,
                                       const QuantLib::Handle<QuantLib::Quote>& rr,
                                       const std::vector<Handle<Quote>>& jumps = std::vector<Handle<Quote>>(),
                                       const std::vector<Date>& jumpDates = std::vector<Date>())
@@ -53,19 +53,17 @@ private:
     //@{
     Probability survivalProbabilityImpl(Time) const override;
     //@}
-    QuantLib::ext::shard_ptr<YieldTermStructure> yieldTermStructure_;
+    QuantLib::Handle<YieldTermStructure> yieldTermStructure_;
     QuantLib::Handle<QuantLib::Quote> rr_;
 };
 
-Date SurvivalProbabilityCurveFromYiled::maxDate() const {
+Date SurvivalProbabilityCurveFromYield::maxDate() const {
     return yieldTermStructure_->maxDate();
 }
 
-Probability SurvivalProbabilityCurveFromYiled::survivalProbabilityImpl(Time t) const {
+Probability SurvivalProbabilityCurveFromYield::survivalProbabilityImpl(Time t) const {
     auto df = yieldTermStructure_->discount(t);
     return std::pow(df, (1.0 - rr_->value()));
 }
 
 } // namespace QuantExt
-
-#endif
