@@ -41,7 +41,8 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveId, const string& curv
 
 void DefaultCurveConfig::populateRequiredIds(const std::string& discountCurveID, const std::string& benchmarkCurveID,
                                              const std::string& sourceCurveID,
-                                             const std::vector<std::string>& multiSectionSourceCurveIds) const {
+                                             const std::vector<std::string>& multiSectionSourceCurveIds,
+                                             const std::string& wrappedYieldCurveID) const {
     if (!discountCurveID.empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurveID)->curveConfigID());
     if (!benchmarkCurveID.empty())
@@ -52,12 +53,15 @@ void DefaultCurveConfig::populateRequiredIds(const std::string& discountCurveID,
         if (!s.empty())
             requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(s)->curveConfigID());
     }
+    if (!wrappedYieldCurveID.empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(wrappedYieldCurveID)->curveConfigID());
 }
 
 void DefaultCurveConfig::populateRequiredIds() const {
     for (auto const& config : configs_) {
         populateRequiredIds(config.second.discountCurveID(), config.second.benchmarkCurveID(),
-                            config.second.sourceCurveID(), config.second.multiSectionSourceCurveIds());
+                            config.second.sourceCurveID(), config.second.multiSectionSourceCurveIds(),
+                            config.second.wrappedYieldCurveID());
     }
 }
 
@@ -147,6 +151,8 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         type_ = Type::TransitionMatrix;
     } else if (type == "Null") {
         type_ = Type::Null;
+    } else if (type == "YieldCurve") {
+        type_ = Type::YieldCurve;
     } else {
         QL_FAIL("Type " << type << " not recognized");
     }
@@ -182,6 +188,10 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
             }
         }
         recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+    } else if (type_ == Type::YieldCurve) {
+        discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
+        recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+        wrappedYieldCurveID_ = XMLUtils::getChildValue(node, "WrappedYieldCurve", true);
     } else {
         discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
         conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
@@ -270,6 +280,12 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Type", "Null");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+    } else if (type_ == Type::YieldCurve) {
+        XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
+        XMLUtils::addChild(doc, node, "Type", "YieldCurve");
+        XMLUtils::addChild(doc, node, "WrappedYieldCurve", wrappedYieldCurveID_);
+        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+        
     } else {
         QL_FAIL("Unknown type in DefaultCurveConfig::toXML()");
     }

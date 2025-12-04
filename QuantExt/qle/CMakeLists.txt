@@ -1053,6 +1053,7 @@ termstructures/strippedoptionletadapter2.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
+termstructures/survivalprobabilitycurvefromyield.hpp
 termstructures/swaptionsabrcube.hpp
 termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
