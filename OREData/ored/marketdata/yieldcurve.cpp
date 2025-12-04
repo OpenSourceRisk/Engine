@@ -676,9 +676,8 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         std::transform(instruments.begin(), instruments.end(), rh.begin(),                                             \
                        [](const RateHelperData& d) { return d.rateHelper; });                                          \
         if (globalBootstrap) {                                                                                         \
-            auto tmp = QuantLib::ext::make_shared<my_curve_2>(                                                         \
-                asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,                                                    \
-                my_curve_2::bootstrap_type(additionalHelpers, additionalDates, additionalPenalties, accuracy));        \
+            auto tmp = QuantLib::ext::make_shared<my_curve_2>(asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,      \
+                                                              my_curve_2::bootstrap_type(accuracy));                   \
             globalBootstrapInstance = &tmp->bootstrap();                                                               \
             yieldts = tmp;                                                                                             \
             yieldts->enableExtrapolation();                                                                            \
