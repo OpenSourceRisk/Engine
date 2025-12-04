@@ -33,9 +33,10 @@ namespace data {
 // convention. In general, we take this simply to be (as of date, Period()). However, for AU CPI for
 // example, this is more complicated and we need to account for this here if the inflation swap conventions provide
 // us with a publication schedule and tell us to roll on that schedule.
-std::pair<QuantLib::Date, QuantLib::Period> getStartAndLag(const QuantLib::Date& asof,
-                                                           const InflationSwapConvention& conv);
-
+std::pair<QuantLib::Date, QuantLib::Period>
+getStartAndLag(const QuantLib::Date& asof, const InflationSwapConvention& conv, const int startDelay = 0,
+               const Calendar& cal = Calendar(),
+               const BusinessDayConvention startDelayConvention = BusinessDayConvention::Unadjusted);
 
 QuantLib::Date getInflationSwapStart(const QuantLib::Date& asof, const InflationSwapConvention& conv);
 

@@ -25,26 +25,33 @@ using QuantLib::Period;
 using QuantLib::Days;
 
 std::pair<QuantLib::Date, QuantLib::Period> getStartAndLag(const QuantLib::Date& asof,
-                                                           const InflationSwapConvention& conv) {
+                                                           const InflationSwapConvention& conv, const int startDelay,
+                                                           const Calendar& cal,
+                                                           const BusinessDayConvention startDelayConvention) {
+
+    Date adjustedAsOf = asof;
+    if (startDelay != 0) {
+        adjustedAsOf = cal.advance(asof, startDelay * Days, startDelayConvention);
+    }
 
     using IPR = InflationSwapConvention::PublicationRoll;
 
     // If no roll schedule, just return (as of, convention's obs lag).
     if (conv.publicationRoll() == IPR::None) {
-        return make_pair(asof, Period());
+        return make_pair(adjustedAsOf, Period());
     }
 
     // If there is a publication roll, call getStart to retrieve the date.
-    Date d = getInflationSwapStart(asof, conv);
+    Date d = getInflationSwapStart(adjustedAsOf, conv);
 
     // Date in inflation period related to the inflation index value.
     Date dateInPeriod = d - Period(conv.index()->frequency());
 
-    // Find period between dateInPeriod and asof. This will be the inflation curve's obsLag.
-    QL_REQUIRE(dateInPeriod < asof, "InflationCurve: expected date in inflation period ("
-                                        << io::iso_date(dateInPeriod) << ") to be before the as of date ("
-                                        << io::iso_date(asof) << ").");
-    Period curveObsLag = (asof - dateInPeriod) * Days;
+    // Find period between dateInPeriod and adjustedAsOf. This will be the inflation curve's obsLag.
+    QL_REQUIRE(dateInPeriod < adjustedAsOf, "InflationCurve: expected date in inflation period ("
+                                                << io::iso_date(dateInPeriod) << ") to be before the as of date ("
+                                                << io::iso_date(adjustedAsOf) << ").");
+    Period curveObsLag = (adjustedAsOf - dateInPeriod) * Days;
 
     return make_pair(d, curveObsLag);
 }
