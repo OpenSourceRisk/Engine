@@ -47,8 +47,8 @@
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
-#include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
+#include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
@@ -83,16 +83,52 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 
+namespace ore {
+namespace data {
+
 namespace {
-/* Helper function to return the key required to look up the map in the YieldCurve ctor */
+
+// Helper function to return the key required to look up the map in the YieldCurve ctor
 string yieldCurveKey(const Currency& curveCcy, const string& curveID, const Date&) {
     ore::data::YieldCurveSpec tempSpec(curveCcy.code(), curveID);
     return tempSpec.name();
 }
-} // namespace
 
-namespace ore {
-namespace data {
+// Helper function to map an ORE pillar choice to QuantLib::Pillar::Choice
+QuantLib::Pillar::Choice pillarChoice(const YieldCurveSegment::PillarChoice c) {
+    if (c == YieldCurveSegment::PillarChoice::MaturityDate ||
+        c == YieldCurveSegment::PillarChoice::StartDateAndMaturityDate) {
+        return QuantLib::Pillar::Choice::MaturityDate;
+    } else if (c == YieldCurveSegment::PillarChoice::LastRelevantDate ||
+               c == YieldCurveSegment::PillarChoice::StartDateAndLastRelevantDate) {
+        return QuantLib::Pillar::Choice::LastRelevantDate;
+    } else if (c == YieldCurveSegment::PillarChoice::StartDate) {
+        return QuantLib::Pillar::Choice::StartDate;
+    } else if (c == YieldCurveSegment::PillarChoice::NoPillar) {
+        // will not be used, return arbitrary value
+        return QuantLib::Pillar::Choice::LastRelevantDate;
+    } else {
+        QL_FAIL("mapToQUantLibPillarChoice(" << static_cast<int>(c) << ") not handled.");
+    }
+}
+
+// Helper function to determine main pillar date in RateHelperData
+QuantLib::Date mainPillarDate(YieldCurveSegment::PillarChoice c, const QuantLib::Date& rateHelperPillarDate) {
+    if (c == YieldCurveSegment::PillarChoice::NoPillar)
+        return Date();
+    return rateHelperPillarDate;
+}
+
+// Helper function to determine add pillar dates in RateHelperData
+std::set<QuantLib::Date> additionalPillarDates(YieldCurveSegment::PillarChoice c,
+                                               const QuantLib::Date& rateHelperStartDate = {}) {
+    if (c == YieldCurveSegment::PillarChoice::StartDateAndMaturityDate ||
+        c == YieldCurveSegment::PillarChoice::StartDateAndLastRelevantDate)
+        return {rateHelperStartDate};
+    return {};
+}
+
+} // namespace
 
 std::ostream& operator<<(std::ostream& os, YieldCurve::InterpolationVariable v) {
     switch (v) {
@@ -445,6 +481,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
     h_.resize(curveSpec_.size());
     calibrationInfo_.resize(curveSpec_.size());
     rateHelperCashflowGenerator_.resize(curveSpec_.size());
+    rateHelperQuoteErrorGenerator_.resize(curveSpec_.size());
 
     // build all curves which do not require a bootstrap, collect indices of curves to be bootstrapped
 
@@ -584,11 +621,17 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     // generate rate helper cashflows (lazily, since we might build multi-curves)
 
                     for (Size i = 0; i < calibrationInfo_[index]->pillarDates.size(); ++i) {
-                        if(rateHelperCashflowGenerator_[index][i]) {
+                        if (rateHelperCashflowGenerator_[index][i]) {
                             calibrationInfo_[index]->rateHelperCashflows.push_back(
                                 rateHelperCashflowGenerator_[index][i]());
-                        } else{
+                        } else {
                             calibrationInfo_[index]->rateHelperCashflows.push_back({});
+                        }
+                        if (rateHelperQuoteErrorGenerator_[index][i]) {
+                            calibrationInfo_[index]->rateHelperQuoteErrors.push_back(
+                                rateHelperQuoteErrorGenerator_[index][i]());
+                        } else {
+                            calibrationInfo_[index]->rateHelperQuoteErrors.push_back(Null<Real>());
                         }
                     }
                 }
@@ -633,8 +676,9 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         std::transform(instruments.begin(), instruments.end(), rh.begin(),                                             \
                        [](const RateHelperData& d) { return d.rateHelper; });                                          \
         if (globalBootstrap) {                                                                                         \
-            auto tmp = QuantLib::ext::make_shared<my_curve_2>(asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,      \
-                                                              my_curve_2::bootstrap_type(accuracy));                   \
+            auto tmp = QuantLib::ext::make_shared<my_curve_2>(                                                         \
+                asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,                                                    \
+                my_curve_2::bootstrap_type(additionalHelpers, additionalDates, additionalPenalties, accuracy));        \
             globalBootstrapInstance = &tmp->bootstrap();                                                               \
             yieldts = tmp;                                                                                             \
             yieldts->enableExtrapolation();                                                                            \
@@ -901,6 +945,7 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
             calibrationInfo_[index]->mdQuoteValues.push_back(instruments[i].mdQuoteValue);
             calibrationInfo_[index]->rateHelperTypes.push_back(instruments[i].rateHelperType);
             rateHelperCashflowGenerator_[index].push_back(instruments[i].cashflowGenerator);
+            rateHelperQuoteErrorGenerator_[index].push_back(instruments[i].quoteErrorGenerator);
         }
     }
 
@@ -1013,11 +1058,8 @@ void YieldCurve::buildZeroCurve(const std::size_t index) {
     // Extract quote strings for wildcard check
     vector<string> quotes;
     quotes.reserve(zeroQuoteIDs.size());
-    std::transform(zeroQuoteIDs.begin(), zeroQuoteIDs.end(),
-                   std::back_inserter(quotes),
-                   [](const std::pair<string, bool>& pair) {
-                       return pair.first;
-                   });
+    std::transform(zeroQuoteIDs.begin(), zeroQuoteIDs.end(), std::back_inserter(quotes),
+                   [](const std::pair<string, bool>& pair) { return pair.first; });
     // Check for wildcard pattern
     auto wildcard = getUniqueWildcard(quotes);
     // Get market data using wildcard or traditional path
@@ -1035,14 +1077,11 @@ void YieldCurve::buildZeroCurve(const std::size_t index) {
     for (const auto& marketQuote : marketData) {
         QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::ZERO,
                    "Market quote not of type zero.");
-        QuantLib::ext::shared_ptr<ZeroQuote> zeroQuote =
-            QuantLib::ext::dynamic_pointer_cast<ZeroQuote>(marketQuote);
+        QuantLib::ext::shared_ptr<ZeroQuote> zeroQuote = QuantLib::ext::dynamic_pointer_cast<ZeroQuote>(marketQuote);
         // If not using wildcard, verify quote is in config list
         if (!wildcard) {
             auto it = std::find_if(zeroQuoteIDs.begin(), zeroQuoteIDs.end(),
-                                   [&](const std::pair<string, bool>& p) {
-                                       return p.first == marketQuote->name();
-                                   });
+                                   [&](const std::pair<string, bool>& p) { return p.first == marketQuote->name(); });
             if (it == zeroQuoteIDs.end())
                 continue;
         }
@@ -1323,9 +1362,7 @@ void YieldCurve::buildDiscountCurve(const std::size_t index) {
         // If not using wildcard, verify quote is in config list
         if (!wildcard) {
             auto it = std::find_if(discountQuoteIDs.begin(), discountQuoteIDs.end(),
-                                   [&](const std::pair<string, bool>& p) {
-                                       return p.first == marketQuote->name();
-                                   });
+                                   [&](const std::pair<string, bool>& p) { return p.first == marketQuote->name(); });
             if (it == discountQuoteIDs.end())
                 continue;
         }
@@ -1560,7 +1597,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                 subFields["segmentType"] = curveSegments_[index][i]->typeID();
                 subFields["segmentNumber"] = std::to_string(i);
                 StructuredMessage(StructuredMessage::Category::Warning, StructuredMessage::Group::Configuration,
-                                  "Entire yield curve segment has been removed", subFields).log();
+                                  "Entire yield curve segment has been removed", subFields)
+                    .log();
             }
         }
 
@@ -2025,8 +2063,6 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
         QuantLib::ext::dynamic_pointer_cast<SimpleYieldCurveSegment>(segment);
     auto depositQuoteIDs = depositSegment->quotes();
 
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "Deposit segment does not support pillar choice " << segment->pillarChoice());
     for (Size i = 0; i < depositQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(depositQuoteIDs[i], asofDate_);
 
@@ -2075,7 +2111,9 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
                     depositConvention->eom(), depositConvention->dayCounter());
             }
             instruments.push_back(
-                {depositHelper, "Deposit", marketQuote->name(), marketQuote->quote()->value(),
+                {depositHelper, mainPillarDate(segment->pillarChoice(), depositHelper->pillarDate()),
+                 additionalPillarDates(segment->pillarChoice(), depositHelper->earliestDate()), "Deposit",
+                 marketQuote->name(), marketQuote->quote()->value(),
                  std::function<std::vector<TradeCashflowReportData>()>{[depositHelper, index, this]() {
                      QL_REQUIRE(!depositHelper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
                                 "YieldCurve::addDeposits(): ibor index has empty forwarding term structure");
@@ -2086,7 +2124,8 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
                              QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, asofDate_)}},
                          {false}, {1.0E6}, currency_[index].code(), {currency_[index].code()}, asofDate_,
                          {*depositHelper->iborCoupon()->iborIndex()->forwardingTermStructure()}, {1.0}, {}, {});
-                 }}});
+                 }},
+                 std::function<double()>{[depositHelper]() { return depositHelper->quoteError(); }}});
         }
     }
 }
@@ -2109,8 +2148,6 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
         QuantLib::ext::dynamic_pointer_cast<SimpleYieldCurveSegment>(segment);
     auto futureQuoteIDs = futureSegment->quotes();
 
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "Future segment does not support pillar choice " << segment->pillarChoice());
     for (Size i = 0; i < futureQuoteIDs.size(); i++) {
         QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(futureQuoteIDs[i], asofDate_);
 
@@ -2148,9 +2185,11 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
 
                 auto helper = QuantLib::ext::make_shared<OvernightIndexFutureRateHelper>(
                     futureQuote->quote(), startDate, endDate, on, Handle<Quote>(),
-                    futureConvention->overnightIndexFutureNettingType());
+                    futureConvention->overnightIndexFutureNettingType(), pillarChoice(segment->pillarChoice()));
                 instruments.push_back(
-                    {helper, "Short OI Future", marketQuote->name(), marketQuote->quote()->value(),
+                    {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "Short OI Future",
+                     marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
                                                                             r = marketQuote->quote()->value(), this]() {
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
@@ -2166,7 +2205,8 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                                                       {*helper->future()->overnightIndex()->forwardingTermStructure(),
                                                        *helper->future()->overnightIndex()->forwardingTermStructure()},
                                                       {1.0, 1.0}, {}, {});
-                     }}});
+                     }},
+                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
 
                 TLOG("adding OI future helper: price=" << futureQuote->quote()->value() << " start=" << startDate
                                                        << " end=" << endDate << " nettingType="
@@ -2193,24 +2233,28 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     continue;
                 }
 
-                auto helper = QuantLib::ext::make_shared<FuturesRateHelper>(futureQuote->quote(), immDate,
-                                                                            futureConvention->index());
+                auto helper = QuantLib::ext::make_shared<FuturesRateHelper>(
+                    futureQuote->quote(), immDate, futureConvention->index(), 0.0, QuantLib::Futures::IMM,
+                    pillarChoice(segment->pillarChoice()));
 
                 instruments.push_back(
-                    {helper, "Short MM Future", marketQuote->name(), marketQuote->quote()->value(),
+                    {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "Short MM Future",
+                     marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
                                                                             r = marketQuote->quote()->value(), this]() {
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0, helper->dayCounter(),
                              helper->earliestDate(), helper->maturityDate())};
-                         Leg m{QuantLib::ext::make_shared<FixedRateCoupon>(
-                             helper->maturityDate(), 1.0, 1.0 - r / 100.0, helper->dayCounter(),
-                             helper->earliestDate(), helper->maturityDate())};
+                         Leg m{QuantLib::ext::make_shared<FixedRateCoupon>(helper->maturityDate(), 1.0, 1.0 - r / 100.0,
+                                                                           helper->dayCounter(), helper->earliestDate(),
+                                                                           helper->maturityDate())};
                          ext::shared_ptr<YieldTermStructure> ts(helper->termStructure(), QuantLib::null_deleter());
                          return getCashflowReportData({l, m}, {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
                                                       {currency_[index].code(), currency_[index].code()}, asofDate_,
                                                       {ts, ts}, {1.0, 1.0}, {}, {});
-                     }}});
+                     }},
+                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
             }
         }
     }
@@ -2252,38 +2296,42 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
                 Size imm1 = immFraQuote->imm1();
                 Size imm2 = immFraQuote->imm2();
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    immFraQuote->quote(), imm1, imm2, fraConvention->index(), fraSegment->pillarChoice());
+                    immFraQuote->quote(), imm1, imm2, fraConvention->index(), pillarChoice(segment->pillarChoice()));
             } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) {
                 QuantLib::ext::shared_ptr<FRAQuote> fraQuote;
                 fraQuote = QuantLib::ext::dynamic_pointer_cast<FRAQuote>(marketQuote);
                 Period periodToStart = fraQuote->fwdStart();
+
                 helper = QuantLib::ext::make_shared<FraRateHelper>(
-                    fraQuote->quote(), periodToStart, fraConvention->index(), fraSegment->pillarChoice());
+                    fraQuote->quote(), periodToStart, fraConvention->index(), pillarChoice(segment->pillarChoice()));
             } else {
                 QL_FAIL("Market quote not of type FRA.");
             }
 
             instruments.push_back(
-                {helper, "FRA", marketQuote->name(), marketQuote->quote()->value(),
-                 std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
-                                                                        r = marketQuote->quote()->value(), this]() {
-                     QL_REQUIRE(!helper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
-                                "YieldCurve::addFras(): ibor index has empty forwarding term structure");
-                     return getCashflowReportData(
-                         {QuantLib::Leg{helper->iborCoupon()},
-                          QuantLib::Leg{
-                              QuantLib::ext::make_shared<FixedRateCoupon>(
-                                  helper->iborCoupon()->date(), 1.0, r, helper->iborCoupon()->dayCounter(),
-                                  helper->iborCoupon()->accrualStartDate(), helper->iborCoupon()->accrualEndDate(),
-                                  helper->iborCoupon()->referencePeriodStart(),
-                                  helper->iborCoupon()->referencePeriodEnd()),
-                          }},
-                         {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
-                         {currency_[index].code(), currency_[index].code()}, asofDate_,
-                         {*helper->iborCoupon()->iborIndex()->forwardingTermStructure(),
-                          *helper->iborCoupon()->iborIndex()->forwardingTermStructure()},
-                         {1.0, 1.0}, {}, {});
-                 }}});
+                {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                 additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "FRA", marketQuote->name(),
+                 marketQuote->quote()->value(),
+                 std::function<std::vector<TradeCashflowReportData>()>{
+                     [helper, index, r = marketQuote->quote()->value(), this]() {
+                         QL_REQUIRE(!helper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
+                                    "YieldCurve::addFras(): ibor index has empty forwarding term structure");
+                         return getCashflowReportData(
+                             {QuantLib::Leg{helper->iborCoupon()},
+                              QuantLib::Leg{
+                                  QuantLib::ext::make_shared<FixedRateCoupon>(
+                                      helper->iborCoupon()->date(), 1.0, r, helper->iborCoupon()->dayCounter(),
+                                      helper->iborCoupon()->accrualStartDate(), helper->iborCoupon()->accrualEndDate(),
+                                      helper->iborCoupon()->referencePeriodStart(),
+                                      helper->iborCoupon()->referencePeriodEnd()),
+                              }},
+                             {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
+                             {currency_[index].code(), currency_[index].code()}, asofDate_,
+                             {*helper->iborCoupon()->iborIndex()->forwardingTermStructure(),
+                              *helper->iborCoupon()->iborIndex()->forwardingTermStructure()},
+                             {1.0, 1.0}, {}, {});
+                     }},
+                 std::function<double()>{[helper]() { return helper->quoteError(); }}});
         }
     }
 }
@@ -2341,24 +2389,23 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
             // Create a swap helper if we do.
             Period oisTenor = oisQuote->term();
             if (brlCdiIndex) {
-                QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-                           "OIS segment for BRL-CDI does not support pillar choice " << segment->pillarChoice());
-                auto oisHelper = QuantLib::ext::make_shared<BRLCdiRateHelper>(oisTenor, oisQuote->quote(), brlCdiIndex,
-                                                                              onIndexGiven, discountCurve_[index],
-                                                                              discountCurveGiven_[index], true);
+                auto oisHelper = QuantLib::ext::make_shared<BRLCdiRateHelper>(
+                    oisTenor, oisQuote->quote(), brlCdiIndex, onIndexGiven, discountCurve_[index],
+                    discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()));
                 instruments.push_back(
-                    {oisHelper, "OIS BRL-CDI", marketQuote->name(), marketQuote->quote()->value(),
-                     std::function<std::vector<TradeCashflowReportData>()>{
-                         [oisHelper, index, this]() {
-                             auto dsc = discountCurveGiven_[index]
-                                            ? *discountCurve_[index]
-                                            : *oisHelper->swap()->iborIndex()->forwardingTermStructure();
-                             return getCashflowReportData(
-                                 {oisHelper->swap()->fixedLeg(), oisHelper->swap()->floatingLeg()}, {false, true},
-                                 {1.0E6, 1.0E6}, currency_[index].code(),
-                                 {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0},
-                                 {}, {});
-                         }}});
+                    {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS BRL-CDI",
+                     marketQuote->name(), marketQuote->quote()->value(),
+                     std::function<std::vector<TradeCashflowReportData>()>{[oisHelper, index, this]() {
+                         auto dsc = discountCurveGiven_[index]
+                                        ? *discountCurve_[index]
+                                        : *oisHelper->swap()->iborIndex()->forwardingTermStructure();
+                         return getCashflowReportData({oisHelper->swap()->fixedLeg(), oisHelper->swap()->floatingLeg()},
+                                                      {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
+                                                      {currency_[index].code(), currency_[index].code()}, asofDate_,
+                                                      {dsc, dsc}, {1.0, 1.0}, {}, {});
+                     }},
+                     std::function<double()>{[oisHelper]() { return oisHelper->quoteError(); }}});
             } else {
                 if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>()) {
                     auto oisHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
@@ -2366,9 +2413,11 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->eom(), oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
-                        discountCurveGiven_[index], true, oisSegment->pillarChoice());
+                        discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()));
                     instruments.push_back(
-                        {oisHelper, "OIS", marketQuote->name(), marketQuote->quote()->value(),
+                        {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
+                         additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS",
+                         marketQuote->name(), marketQuote->quote()->value(),
                          std::function<std::vector<TradeCashflowReportData>()>{[oisHelper, index, this]() {
                              auto dsc = discountCurveGiven_[index]
                                             ? *discountCurve_[index]
@@ -2378,16 +2427,19 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                                  {1.0E6, 1.0E6}, currency_[index].code(),
                                  {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0},
                                  {}, {});
-                         }}});
+                         }},
+                         std::function<double()>{[oisHelper]() { return oisHelper->quoteError(); }}});
                 } else {
                     auto oisHelper = QuantLib::ext::make_shared<QuantExt::DatedOISRateHelper>(
                         oisQuote->startDate(), oisQuote->maturityDate(), oisQuote->quote(), onIndex, onIndexGiven,
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
-                        discountCurveGiven_[index], true, oisSegment->pillarChoice());
+                        discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()));
                     instruments.push_back(
-                        {oisHelper, "OIS Dated", marketQuote->name(), marketQuote->quote()->value(),
+                        {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
+                         additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS Dated",
+                         marketQuote->name(), marketQuote->quote()->value(),
                          std::function<std::vector<TradeCashflowReportData>()>{[oisHelper, index, this]() {
                              auto dsc = discountCurveGiven_[index]
                                             ? *discountCurve_[index]
@@ -2397,7 +2449,8 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                                  {1.0E6, 1.0E6}, currency_[index].code(),
                                  {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0},
                                  {}, {});
-                         }}});
+                         }},
+                         std::function<double()>{[oisHelper]() { return oisHelper->quoteError(); }}});
                 }
             }
         }
@@ -2445,37 +2498,42 @@ void YieldCurve::addSwaps(const std::size_t index, const QuantLib::ext::shared_p
                     swapConvention->fixedCalendar(), swapConvention->fixedDayCounter(),
                     swapConvention->fixedConvention(), Period(swapConvention->floatFrequency()),
                     swapConvention->index(), swapConvention->index()->dayCounter(), discountCurve_[index],
-                    swapConvention->subPeriodsCouponType(), swapSegment->pillarChoice());
-                instruments.push_back({swapHelper, "Subperiod Swap", marketQuote->name(), marketQuote->quote()->value(),
-                                       std::function<std::vector<TradeCashflowReportData>()>{[swapHelper, index,
-                                                                                              this]() {
-                                           auto dsc =
-                                               discountCurveGiven_[index]
-                                                   ? *discountCurve_[index]
-                                                   : *swapHelper->swap()->floatIndex()->forwardingTermStructure();
-                                           return getCashflowReportData(
-                                               {swapHelper->swap()->fixedLeg(), swapHelper->swap()->floatLeg()},
-                                               {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
-                                               {currency_[index].code(), currency_[index].code()}, asofDate_,
-                                               {dsc, dsc}, {1.0, 1.0}, {}, {});
-                                       }}});
+                    swapConvention->subPeriodsCouponType(), pillarChoice(segment->pillarChoice()));
+                instruments.push_back(
+                    {swapHelper, mainPillarDate(segment->pillarChoice(), swapHelper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), swapHelper->earliestDate()), "Subperiod Swap",
+                     marketQuote->name(), marketQuote->quote()->value(),
+                     std::function<std::vector<TradeCashflowReportData>()>{[swapHelper, index, this]() {
+                         auto dsc = discountCurveGiven_[index]
+                                        ? *discountCurve_[index]
+                                        : *swapHelper->swap()->floatIndex()->forwardingTermStructure();
+                         return getCashflowReportData({swapHelper->swap()->fixedLeg(), swapHelper->swap()->floatLeg()},
+                                                      {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
+                                                      {currency_[index].code(), currency_[index].code()}, asofDate_,
+                                                      {dsc, dsc}, {1.0, 1.0}, {}, {});
+                     }},
+                     std::function<double()>{[swapHelper]() { return swapHelper->quoteError(); }}});
             } else {
                 auto swapHelper = QuantLib::ext::make_shared<SwapRateHelper>(
                     swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
                     swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), swapConvention->index(),
-                    Handle<Quote>(), 0 * Days, discountCurve_[index], Null<Natural>(), swapSegment->pillarChoice());
-                instruments.push_back({swapHelper, "Swap", marketQuote->name(), marketQuote->quote()->value(),
-                                       std::function<std::vector<TradeCashflowReportData>()>{[swapHelper, index,
-                                                                                              this]() {
-                                           auto dsc = discountCurveGiven_[index]
-                                                          ? *discountCurve_[index]
-                                                          : *swapHelper->swap()->iborIndex()->forwardingTermStructure();
-                                           return getCashflowReportData(
-                                               {swapHelper->swap()->fixedLeg(), swapHelper->swap()->floatingLeg()},
-                                               {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
-                                               {currency_[index].code(), currency_[index].code()}, asofDate_,
-                                               {dsc, dsc}, {1.0, 1.0}, {}, {});
-                                       }}});
+                    Handle<Quote>(), 0 * Days, discountCurve_[index], Null<Natural>(),
+                    pillarChoice(segment->pillarChoice()));
+                instruments.push_back(
+                    {swapHelper, mainPillarDate(segment->pillarChoice(), swapHelper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), swapHelper->earliestDate()), "Swap",
+                     marketQuote->name(), marketQuote->quote()->value(),
+                     std::function<std::vector<TradeCashflowReportData>()>{[swapHelper, index, this]() {
+                         auto dsc = discountCurveGiven_[index]
+                                        ? *discountCurve_[index]
+                                        : *swapHelper->swap()->iborIndex()->forwardingTermStructure();
+                         return getCashflowReportData(
+                             {swapHelper->swap()->fixedLeg(), swapHelper->swap()->floatingLeg()}, {false, true},
+                             {1.0E6, 1.0E6}, currency_[index].code(),
+                             {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc}, {1.0, 1.0}, {},
+                             {});
+                     }},
+                     std::function<double()>{[swapHelper]() { return swapHelper->quoteError(); }}});
             }
         }
     }
@@ -2554,10 +2612,12 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
                     averageOisConvention->fixedCalendar(), averageOisConvention->fixedConvention(),
                     averageOisConvention->fixedPaymentConvention(), onIndex, onIndexGiven,
                     averageOisConvention->onTenor(), basisQuote->quote(), averageOisConvention->rateCutoff(),
-                    discountCurve_[index], discountCurveGiven_[index], true, segment->pillarChoice());
+                    discountCurve_[index], discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()));
 
                 instruments.push_back(
-                    {helper, "Average OIS", marketQuote->name(), marketQuote->quote()->value(),
+                    {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "Average OIS",
+                     marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{[helper, index, this]() {
                          auto dsc = discountCurveGiven_[index]
                                         ? *discountCurve_[index]
@@ -2568,7 +2628,8 @@ void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::sh
                              {false, true, true}, {1.0E6, 1.0E6, 1.0E6}, currency_[index].code(),
                              {currency_[index].code(), currency_[index].code(), currency_[index].code()}, asofDate_,
                              {dsc, dsc, dsc}, {1.0, 1.0, 1.0}, {}, {});
-                     }}});
+                     }},
+                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
             }
         }
     }
@@ -2652,9 +2713,11 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                 receiveIndexGiven, discountCurveGiven_[index], basisSwapConvention->spreadOnRec(),
                 basisSwapConvention->includeSpread(), basisSwapConvention->payFrequency(),
                 basisSwapConvention->receiveFrequency(), telescopicValueDates,
-                basisSwapConvention->subPeriodsCouponType(), segment->pillarChoice());
+                basisSwapConvention->subPeriodsCouponType(), pillarChoice(segment->pillarChoice()));
 
-            instruments.push_back({helper, "Tenor Basis Swap", marketQuote->name(), marketQuote->quote()->value(),
+            instruments.push_back({helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                                   additionalPillarDates(segment->pillarChoice(), helper->earliestDate()),
+                                   "Tenor Basis Swap", marketQuote->name(), marketQuote->quote()->value(),
 
                                    std::function<std::vector<TradeCashflowReportData>()>{[helper, index, this]() {
                                        QL_REQUIRE(!helper->discountHandle().empty(),
@@ -2665,7 +2728,8 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                                            {1.0E6, 1.0E6}, currency_[index].code(),
                                            {currency_[index].code(), currency_[index].code()}, asofDate_, {dsc, dsc},
                                            {1.0, 1.0}, {}, {});
-                                   }}});
+                                   }},
+                                   std::function<double()>{[helper]() { return helper->quoteError(); }}});
         }
     }
 }
@@ -2747,23 +2811,26 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
                 basisSwapConvention->longFixedDayCounter(), longIndex, longIndexGiven,
                 basisSwapConvention->shortFixedFrequency(), basisSwapConvention->shortFixedConvention(),
                 basisSwapConvention->shortFixedDayCounter(), shortIndex, basisSwapConvention->longMinusShort(),
-                shortIndexGiven, discountCurve_[index], discountCurveGiven_[index], segment->pillarChoice());
+                shortIndexGiven, discountCurve_[index], discountCurveGiven_[index],
+                pillarChoice(segment->pillarChoice()));
 
-            instruments.push_back(
-                {helper, "Tenor Basis Two Swaps", marketQuote->name(), marketQuote->quote()->value(),
-                 std::function<std::vector<TradeCashflowReportData>()>{
-                     [helper, index, this]() {
-                         QL_REQUIRE(!helper->discountHandle().empty(),
-                                    "YieldCurve::addTenorBasisSwap(): discount handle is empty.");
-                         auto dsc = *helper->discountHandle();
-                         return getCashflowReportData(
-                             {helper->longSwap()->fixedLeg(), helper->longSwap()->floatingLeg(),
-                              helper->shortSwap()->fixedLeg(), helper->shortSwap()->floatingLeg()},
-                             {false, true, true, false}, {1.0E6, 1.0E6, 1.0E6, 1.0E6}, currency_[index].code(),
-                             {currency_[index].code(), currency_[index].code(), currency_[index].code(),
-                              currency_[index].code()},
-                             asofDate_, {dsc, dsc, dsc, dsc}, {1.0, 1.0, 1.0, 1.0}, {}, {});
-                     }}});
+            instruments.push_back({helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                                   additionalPillarDates(segment->pillarChoice(), helper->earliestDate()),
+                                   "Tenor Basis Two Swaps", marketQuote->name(), marketQuote->quote()->value(),
+                                   std::function<std::vector<TradeCashflowReportData>()>{[helper, index, this]() {
+                                       QL_REQUIRE(!helper->discountHandle().empty(),
+                                                  "YieldCurve::addTenorBasisSwap(): discount handle is empty.");
+                                       auto dsc = *helper->discountHandle();
+                                       return getCashflowReportData(
+                                           {helper->longSwap()->fixedLeg(), helper->longSwap()->floatingLeg(),
+                                            helper->shortSwap()->fixedLeg(), helper->shortSwap()->floatingLeg()},
+                                           {false, true, true, false}, {1.0E6, 1.0E6, 1.0E6, 1.0E6},
+                                           currency_[index].code(),
+                                           {currency_[index].code(), currency_[index].code(), currency_[index].code(),
+                                            currency_[index].code()},
+                                           asofDate_, {dsc, dsc, dsc, dsc}, {1.0, 1.0, 1.0, 1.0}, {}, {});
+                                   }},
+                                   std::function<double()>{[helper]() { return helper->quoteError(); }}});
         }
     }
 }
@@ -2821,18 +2888,21 @@ void YieldCurve::addBMABasisSwaps(const std::size_t index, const QuantLib::ext::
                 bmaBasisSwapConvention->indexSettlementDays(), bmaBasisSwapConvention->indexPaymentPeriod(),
                 bmaBasisSwapConvention->indexConvention(), tmpIndex, bmaBasisSwapConvention->indexPaymentCalendar(),
                 bmaBasisSwapConvention->indexPaymentConvention(), bmaBasisSwapConvention->indexPaymentLag(),
-                bmaBasisSwapConvention->overnightLockoutDays(), discountCurve_[index], segment->pillarChoice());
+                bmaBasisSwapConvention->overnightLockoutDays(), discountCurve_[index],
+                pillarChoice(segment->pillarChoice()));
             instruments.push_back(
-                {helper, "SIFMA Swap", marketQuote->name(), marketQuote->quote()->value(),
+                {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                 additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "SIFMA Swap",
+                 marketQuote->name(), marketQuote->quote()->value(),
                  std::function<std::vector<TradeCashflowReportData>()>{[helper, index, this]() {
-                     auto dsc = discountCurveGiven_[index]
-                                    ? *discountCurve_[index]
-                                    : *helper->swap()->bmaIndex()->forwardingTermStructure();
+                     auto dsc = discountCurveGiven_[index] ? *discountCurve_[index]
+                                                           : *helper->swap()->bmaIndex()->forwardingTermStructure();
                      return getCashflowReportData({helper->swap()->indexLeg(), helper->swap()->bmaLeg()}, {false, true},
                                                   {1.0E6, 1.0E6}, currency_[index].code(),
                                                   {currency_[index].code(), currency_[index].code()}, asofDate_,
                                                   {dsc, dsc}, {1.0, 1.0}, {}, {});
-                 }}});
+                 }},
+                 std::function<double()>{[helper]() { return helper->quoteError(); }}});
         }
     }
 }
@@ -2896,8 +2966,6 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
     Currency fxSpotSourceCcy = parseCurrency(fxSpotQuote->unitCcy());
     Currency fxSpotTargetCcy = parseCurrency(fxSpotQuote->ccy());
 
-    QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
-               "FX Forward segment does not support pillar choice " << segment->pillarChoice());
     DLOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
 
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
@@ -3042,7 +3110,9 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
             }
 
             instruments.push_back(
-                {fxForwardHelper, "FX Forward", marketQuote->name(), marketQuote->quote()->value(),
+                {fxForwardHelper, mainPillarDate(segment->pillarChoice(), fxForwardHelper->pillarDate()),
+                 additionalPillarDates(segment->pillarChoice(), fxForwardHelper->earliestDate()), "FX Forward",
+                 marketQuote->name(), marketQuote->quote()->value(),
                  std::function<std::vector<TradeCashflowReportData>()>{[fxForwardHelper, knownCurrency,
                                                                         knownDiscountCurve, fxSpotSourceCcy,
                                                                         fxSpotTargetCcy, spotFx, this]() {
@@ -3064,7 +3134,8 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                               forCurve->discount(fxForwardHelper->earliestDate()),
                           1.0},
                          {}, {});
-                 }}});
+                 }},
+                 std::function<double()>{[fxForwardHelper]() { return fxForwardHelper->quoteError(); }}});
         }
     }
 
@@ -3228,27 +3299,29 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
                     basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
                     basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true,
-                    segment->pillarChoice());
+                    pillarChoice(segment->pillarChoice()));
 
                 instruments.push_back(
-                    {helper, "XCCY Swap", marketQuote->name(), marketQuote->quote()->value(),
+                    {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "XCCY Swap",
+                     marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{
                          [helper, fxSpotSourceCcy, fxSpotTargetCcy, fxSpotQuote, fxSpotSettlementDate, flatIndex,
                           flatDiscountCurveGiven, spreadDiscountCurveGiven, flatDiscountCurve, spreadDiscountCurve,
                           this]() {
                              QuantLib::ext::shared_ptr<YieldTermStructure> forCurve, domCurve;
-                             auto bootstrappedCurve = QuantLib::ext::shared_ptr<YieldTermStructure>(
-                                                       helper->termStructure(), null_deleter());
+                             auto bootstrappedCurve =
+                                 QuantLib::ext::shared_ptr<YieldTermStructure>(helper->termStructure(), null_deleter());
                              Size forLegIndex, domLegIndex;
-                             if(flatIndex->currency().code() != fxSpotQuote->unitCcy()) {
+                             if (flatIndex->currency().code() != fxSpotQuote->unitCcy()) {
                                  // flat index is dom
-                                 domCurve = flatDiscountCurveGiven ? *flatDiscountCurve :  bootstrappedCurve;
+                                 domCurve = flatDiscountCurveGiven ? *flatDiscountCurve : bootstrappedCurve;
                                  forCurve = spreadDiscountCurveGiven ? *spreadDiscountCurve : bootstrappedCurve;
                                  domLegIndex = 1;
                                  forLegIndex = 0;
                              } else {
                                  // flat index is for
-                                 forCurve = flatDiscountCurveGiven ? *flatDiscountCurve :  bootstrappedCurve;
+                                 forCurve = flatDiscountCurveGiven ? *flatDiscountCurve : bootstrappedCurve;
                                  domCurve = spreadDiscountCurveGiven ? *spreadDiscountCurve : bootstrappedCurve;
                                  domLegIndex = 0;
                                  forLegIndex = 1;
@@ -3261,7 +3334,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                                       forCurve->discount(fxSpotSettlementDate),
                                   1.0},
                                  {}, {});
-                         }}});
+                         }},
+                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
 
             } else { // the quote is for a cross currency basis swap with a resetting notional
 
@@ -3299,16 +3373,18 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
                     basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
                     basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true,
-                    segment->pillarChoice());
+                    pillarChoice(segment->pillarChoice()));
 
                 instruments.push_back(
-                    {helper, "XCCY Resettable Swap", marketQuote->name(), marketQuote->quote()->value(),
+                    {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "XCCY Resettable Swap",
+                     marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{
                          [helper, foreignCurveGiven, domesticCurveGiven, foreignDiscount, domesticDiscount,
                           foreignIndex, domesticIndex, finalFxSpotQuote, fxSpotSettlementDate, this]() {
                              QuantLib::ext::shared_ptr<YieldTermStructure> forCurve, domCurve;
-                             auto bootstrappedCurve = QuantLib::ext::shared_ptr<YieldTermStructure>(
-                                                       helper->termStructure(), null_deleter());
+                             auto bootstrappedCurve =
+                                 QuantLib::ext::shared_ptr<YieldTermStructure>(helper->termStructure(), null_deleter());
                              forCurve = foreignCurveGiven ? *foreignDiscount : bootstrappedCurve;
                              domCurve = domesticCurveGiven ? *domesticDiscount : bootstrappedCurve;
                              return getCashflowReportData(
@@ -3321,7 +3397,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                                       forCurve->discount(fxSpotSettlementDate),
                                   1.0, 1.0},
                                  {}, {});
-                         }}});
+                         }},
+                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
             }
         }
     }
@@ -3433,27 +3510,30 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    true, segment->pillarChoice(), std::vector<Natural>{fxSettlDays}, std::vector<Calendar>{fxCal},
-                    swapConvention->includeSpread(), swapConvention->lookback(), swapConvention->fixingDays(),
-                    swapConvention->rateCutoff(), swapConvention->isAveraged());
+                    true, pillarChoice(segment->pillarChoice()), QuantLib::Date(), std::vector<Natural>{fxSettlDays},
+                    std::vector<Calendar>{fxCal}, swapConvention->includeSpread(), swapConvention->lookback(),
+                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
                 instruments.push_back(
-                    {helper, "XCCY Fix-Float Swap", marketQuote->name(), marketQuote->quote()->value(),
-                     std::function<std::vector<TradeCashflowReportData>()>{
-                         [helper, floatLegDisc, fxSpotSourceCcy, fxSpotTargetCcy, fxSpotQuote, fxSpotSettlementDate,
-                          this]() {
-                             QuantLib::ext::shared_ptr<YieldTermStructure> forCurve, domCurve;
-                             auto bootstrappedCurve =
-                                 QuantLib::ext::shared_ptr<YieldTermStructure>(helper->termStructure(), null_deleter());
-                             forCurve = *floatLegDisc;
-                             domCurve = bootstrappedCurve;
-                             return getCashflowReportData(
-                                 {helper->swap()->leg(0), helper->swap()->leg(1)}, {true, false}, {1.0E6, 1.0E6},
-                                 fxSpotTargetCcy.code(), {fxSpotTargetCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
-                                 {domCurve, forCurve},
-                                 {1.0, fxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
-                                           forCurve->discount(fxSpotSettlementDate)},
-                                 {}, {});
-                         }}});
+                    {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), helper->earliestDate()), "XCCY Fix-Float Swap",
+                     marketQuote->name(), marketQuote->quote()->value(),
+                     std::function<std::vector<TradeCashflowReportData>()>{[helper, floatLegDisc, fxSpotSourceCcy,
+                                                                            fxSpotTargetCcy, fxSpotQuote,
+                                                                            fxSpotSettlementDate, this]() {
+                         QuantLib::ext::shared_ptr<YieldTermStructure> forCurve, domCurve;
+                         auto bootstrappedCurve =
+                             QuantLib::ext::shared_ptr<YieldTermStructure>(helper->termStructure(), null_deleter());
+                         forCurve = *floatLegDisc;
+                         domCurve = bootstrappedCurve;
+                         return getCashflowReportData(
+                             {helper->swap()->leg(0), helper->swap()->leg(1)}, {true, false}, {1.0E6, 1.0E6},
+                             fxSpotTargetCcy.code(), {fxSpotTargetCcy.code(), fxSpotSourceCcy.code()}, asofDate_,
+                             {domCurve, forCurve},
+                             {1.0, fxSpotQuote->value() * domCurve->discount(fxSpotSettlementDate) /
+                                       forCurve->discount(fxSpotSettlementDate)},
+                             {}, {});
+                     }},
+                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
             } else {
                 bool resetsOnFloatLeg = swapConvention->floatIndexIsResettable();
                 auto helper = QuantLib::ext::make_shared<CrossCcyFixFloatMtMResetSwapHelper>(
@@ -3461,11 +3541,14 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                     swapConvention->settlementCalendar(), swapConvention->settlementConvention(), swapQuote->maturity(),
                     currency_[index], swapConvention->fixedFrequency(), swapConvention->fixedConvention(),
                     swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(),
-                    resetsOnFloatLeg, true, segment->pillarChoice(), std::vector<Natural>{fxSettlDays},
-                    std::vector<Calendar>{fxCal}, swapConvention->includeSpread(), swapConvention->lookback(),
-                    swapConvention->fixingDays(), swapConvention->rateCutoff(), swapConvention->isAveraged());
+                    resetsOnFloatLeg, true, pillarChoice(segment->pillarChoice()), QuantLib::Date(),
+                    std::vector<Natural>{fxSettlDays}, std::vector<Calendar>{fxCal}, swapConvention->includeSpread(),
+                    swapConvention->lookback(), swapConvention->fixingDays(), swapConvention->rateCutoff(),
+                    swapConvention->isAveraged());
                 instruments.push_back(
-                    {helper, "XCCY Fix-Float Resettable Swap", marketQuote->name(), marketQuote->quote()->value(),
+                    {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
+                     additionalPillarDates(segment->pillarChoice(), helper->earliestDate()),
+                     "XCCY Fix-Float Resettable Swap", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{
                          [helper, floatLegDisc, fxSpotSourceCcy, fxSpotTargetCcy, fxSpotQuote, fxSpotSettlementDate,
                           resetsOnFloatLeg, this]() {
@@ -3483,7 +3566,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                                   resetsOnFloatLeg ? fxSpotSourceCcy.code() : fxSpotTargetCcy.code()},
                                  asofDate_, {forCurve, domCurve, resetsOnFloatLeg ? forCurve : domCurve},
                                  {fxConv, 1.0, resetsOnFloatLeg ? fxConv : 1.0}, {}, {});
-                         }}});
+                         }},
+                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
             }
         }
     }
