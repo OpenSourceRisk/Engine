@@ -189,7 +189,6 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         }
         recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
     } else if (type_ == Type::YieldCurve) {
-        discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
         recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
         wrappedYieldCurveID_ = XMLUtils::getChildValue(node, "WrappedYieldCurve", true);
     } else {
