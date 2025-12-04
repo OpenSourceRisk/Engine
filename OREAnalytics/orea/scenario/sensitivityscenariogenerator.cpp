@@ -1361,7 +1361,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         vector<Real> shiftStrikes = data.shiftStrikes;
         // Has an ATM shift been configured?
         bool sensiIsAtm = false;
-        if (shiftStrikes.size() == 1 && shiftStrikes[0] == 0.0 && data.isRelative) {
+        if (shiftStrikes.size() == 1 && shiftStrikes[0] == 0.0) {
             sensiIsAtm = true;
         }
 

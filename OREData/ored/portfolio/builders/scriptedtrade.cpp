@@ -684,7 +684,6 @@ void ScriptedTradeEngineBuilder::populateFixingsMap(
             // all other indices can be handled generically, notice for inf we include the scripting specific
             // suffixes #L, #F in the index name, this is handled in the scripted trade builder when populating the
             // required fixings
-
             if (i.irIborFallback(iborFallbackConfig)) {
                 // well, except ibor fallback indices that we handle here...
                 Size nIbor = 0, nRfr = 0;
