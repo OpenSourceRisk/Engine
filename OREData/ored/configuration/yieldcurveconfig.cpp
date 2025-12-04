@@ -453,8 +453,6 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
     pillarChoice_ = parsePillarChoice(XMLUtils::getChildValue(node, "PillarChoice", false, "LastRelevantDate"));
-    QL_REQUIRE(pillarChoice_ == QuantLib::Pillar::MaturityDate || pillarChoice_ == QuantLib::Pillar::LastRelevantDate,
-               "PillarChoice " << pillarChoice_ << " not supported, expected MaturityDate, LastRelevantDate");
     priority_ = XMLUtils::getChildValueAsInt(node, "Priority", false, 0);
     minDistance_ = XMLUtils::getChildValueAsInt(node, "MinDistance", false, 1);
 }

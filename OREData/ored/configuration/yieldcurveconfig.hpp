@@ -58,6 +58,16 @@ using std::vector;
 */
 class YieldCurveSegment : public XMLSerializable {
 public:
+    //! extended pillar choice
+    enum class PillarChoice {
+        NoPillar,
+        MaturityDate,     // maps to QuantLib::Pillar::Choice value
+        LastRelevantDate, // maps to QuantLib::Pillar::Choice value
+        StartDate,
+        StartDateAndMaturityDate,
+        StartDateAndLastRelevantDate
+    };
+
     //! supported segment types
     enum class Type {
         Zero,
@@ -97,7 +107,7 @@ public:
     // TODO: why typeID?
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
-    const QuantLib::Pillar::Choice pillarChoice() const { return pillarChoice_; }
+    const PillarChoice pillarChoice() const { return pillarChoice_; }
     Size priority() const { return priority_; }
     Size minDistance() const { return minDistance_; }
     const vector<pair<string, bool>>& quotes() const { return quotes_; }
@@ -128,7 +138,7 @@ private:
     Type type_;
     string typeID_;
     string conventionsID_;
-    QuantLib::Pillar::Choice pillarChoice_ = QuantLib::Pillar::LastRelevantDate;
+    PillarChoice pillarChoice_ = PillarChoice::LastRelevantDate;
     Size priority_ = 0;
     Size minDistance_ = 1;
 };
