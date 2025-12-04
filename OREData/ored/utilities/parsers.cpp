@@ -1428,9 +1428,9 @@ std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecom
 YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s) {
     if (s == "NoPillar")
         return YieldCurveSegment::PillarChoice::NoPillar;
-    else if (s == "MaturityDate")
+    else if (s == "MaturityDate" || s == "MaturityPillarDate")
         return YieldCurveSegment::PillarChoice::MaturityDate;
-    else if (s == "LastRelevantDate")
+    else if (s == "LastRelevantDate" || s == "LastRelevantPillarDate")
         return YieldCurveSegment::PillarChoice::LastRelevantDate;
     else if (s == "StartDate")
         return YieldCurveSegment::PillarChoice::StartDate;
@@ -1440,7 +1440,8 @@ YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s) {
         return YieldCurveSegment::PillarChoice::StartDateAndLastRelevantDate;
     else {
         QL_FAIL("PillarChoice '" << s
-                                 << "' not recognized, expected NoPillar, MaturityDate, LastRelevantDate, StartDate, "
+                                 << "' not recognized, expected NoPillar, MaturityDate (or MaturityPillarDate), "
+                                    "LastRelevantDate (or LastRelevantPillarDate), StartDate, "
                                     "StartDateAndMaturityDate, StartDateAndLastRelevantDate");
     }
 }
