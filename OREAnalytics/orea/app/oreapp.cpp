@@ -660,15 +660,7 @@ void OREAppInputParameters::loadParameters() {
     inputPath_ = params_->get("setup", "inputPath");
     std::string outputPath = params_->get("setup", "outputPath");
 
-    // Load calendar adjustments
-    std::string tmp = params_->get("setup", "calendarAdjustment", false);
-    if (tmp != "") {
-        filesystem::path calendarAdjustmentFile = inputPath_ / tmp;
-        LOG("Loading calendar adjustments from file: " << calendarAdjustmentFile);
-        setCalendarAdjustmentFromFile(calendarAdjustmentFile.generic_string());
-    } else {
-        WLOG("Calendar adjustments not found, using defaults");
-    }
+    std::string tmp;
 
     // Load currency configs
     tmp = params_->get("setup", "currencyConfiguration", false);
@@ -697,10 +689,6 @@ void OREAppInputParameters::loadParameters() {
         WLOG("Base currency not set");
     }
 
-    tmp = params_->get("setup", "useMarketDataFixings", false);
-    if (tmp != "")
-        setUseMarketDataFixings(parseBool(tmp));
-
     tmp = params_->get("setup", "dryRun", false);
     if (tmp != "")
         setDryRun(parseBool(tmp));
@@ -709,17 +697,9 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setReportNaString(tmp);
 
-    tmp = params_->get("setup", "eomInflationFixings", false);
-    if (tmp != "")
-        setEomInflationFixings(parseBool(tmp));
-
     tmp = params_->get("setup", "nThreads", false);
     if (tmp != "")
         setThreads(parseInteger(tmp));
-
-    tmp = params_->get("setup", "entireMarket", false);
-    if (tmp != "")
-        setEntireMarket(parseBool(tmp));
 
     tmp = params_->get("setup", "iborFallbackOverride", false);
     if (tmp != "")
@@ -902,48 +882,16 @@ void OREAppInputParameters::loadParameters() {
     /*************
      * NPV
      *************/
-
     tmp = params_->get("npv", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("NPV");
 
-    tmp = params_->get("npv", "additionalResults", false);
-    if (tmp != "")
-        setOutputAdditionalResults(parseBool(tmp));
-
-    tmp = params_->get("npv", "additionalResultsReportPrecision", false);
-    if (tmp != "")
-        setAdditionalResultsReportPrecision(parseInteger(tmp));
-
     /*************
      * CASHFLOW
      *************/
-
     tmp = params_->get("cashflow", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("CASHFLOW");
-
-    tmp = params_->get("cashflow", "includePastCashflows", false);
-    if (tmp != "")
-        setIncludePastCashflows(parseBool(tmp));
-
-    /*************
-     * Curves
-     *************/
-
-    tmp = params_->get("curves", "active", false);
-    if (tmp != "") {
-        bool mkt = parseBool(tmp);
-        setOutputCurves(mkt);
-    }
-
-    tmp = params_->get("curves", "grid", false);
-    if (tmp != "")
-        setCurvesGrid(tmp);
-
-    tmp = params_->get("curves", "configuration", false);
-    if (tmp != "")
-        setCurvesMarketConfig(tmp);
 
     tmp = params_->get("curves", "outputTodaysMarketCalibration", false);
     if (tmp != "")

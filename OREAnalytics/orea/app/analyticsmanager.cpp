@@ -34,8 +34,46 @@ namespace ore {
 namespace analytics {
     
 void AnalyticsManager::initialise() {
-    for (const auto& a : inputs_->analytics()) 
+    
+    // Market Settings
+    inputs_->loadParameter<bool>(&InputParameters::setEntireMarket, "setup", "entireMarket", false, parseBool);
+    inputs_->loadParameter<bool>(&InputParameters::setAllFixings, "setup", "allFixings", false, parseBool);
+    inputs_->loadParameter<bool>(&InputParameters::setEomInflationFixings, "setup", "eomInflationFixings", false, parseBool);
+    inputs_->loadParameter<bool>(&InputParameters::setUseMarketDataFixings, "setup", "useMarketDataFixings", false, parseBool);
+
+
+    
+    inputs_->loadParameterXML<Conventions>(&InputParameters::setConventions, "setup", "conventionsFile");
+    // Load Configurations
+    inputs_->loadParameterXML<CalendarAdjustmentConfig>(&InputParameters::setCalendarAdjustmentPtr, "setup", "calendarAdjustment");
+    inputs_->loadParameterXML<CurrencyConfig>(&InputParameters::setCurrencyConfigPtr, "setup", "currencyConfiguration");
+
+
+    // load all 'setup' parameters here
+    // Additional results might be its own node or part of npv node for backward compatibility
+    inputs_->loadParameter<bool>(&InputParameters::setOutputAdditionalResults, "additionalResults", "active", false,
+                                 parseBool);
+    if (!inputs_->outputAdditionalResults())
+        inputs_->loadParameter<bool>(&InputParameters::setOutputAdditionalResults, "npv", "additionalResults", false,
+                                     parseBool);
+
+    inputs_->loadParameter<size_t>(&InputParameters::setAdditionalResultsReportPrecision, "additionalResults", "additionalResultsReportPrecision", false, parseInteger);
+    // additionalResultsReportPrecision was previously part of npv node, but moved to setup, check npv node for backward compatibility
+    if (!inputs_->additionalResultsReportPrecision())
+        inputs_->loadParameter<size_t>(&InputParameters::setAdditionalResultsReportPrecision, "npv",
+                                       "additionalResultsReportPrecision", false, parseInteger);
+
+    inputs_->loadParameter<bool>(&InputParameters::setIncludePastCashflows, "setup", "includePastCashflows", false, parseBool);
+    // includePastCashflows was previously part of cashflow node, but moved to setup, check npv node for backward compatibility
+    if (!inputs_->includePastCashflows())
+        inputs_->loadParameter<bool>(&InputParameters::setIncludePastCashflows, "cashflow", "includePastCashflows", false,
+                                     parseBool);
+
+
+    // create all the analytics
+    for (const auto& a : inputs_->analytics())
         auto ap = AnalyticFactory::instance().build(a, inputs_, shared_from_this(), true);
+
     initialised_ = true;
 }
 

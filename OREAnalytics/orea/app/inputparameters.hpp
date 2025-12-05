@@ -73,24 +73,56 @@ public:
     virtual ~InputParameters() {} 
         
     //! load and convert an object from a string for the given (analytic, param) pair
-    template <typename T>
+    template <class T>
     bool loadParameter(
-        T& obj, const std::string& analytic, const std::string& param, const bool mandatory = false,
-                       std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
+        T& obj,
+        const std::string& analytic, 
+        const std::string& param, 
+        const bool mandatory = false,
+        std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
         string str = loadParameterString(analytic, param, mandatory);
         if (str.empty() && !mandatory)
             return false;
         return tryParse(str, obj, parser);
     }
 
+    // sets a value in the InputParameters object via a setter function
+    template <class T>
+    void loadParameter(
+        void (InputParameters::*setter)(T),
+        const std::string& analytic, 
+        const std::string& param, 
+        const bool mandatory = false,
+        std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
+        string str = loadParameterString(analytic, param, mandatory);
+        if (str.empty() && !mandatory)
+            return;
+        T obj;
+        tryParse(str, obj, parser);
+        (this->*setter)(obj);
+    }
+
     //! load the XML object from an XML string for the given (analytic, param) pair
-    template <typename T>
+    template <class T>
     bool loadParameterXML(
         QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
         const std::string& param, const bool mandatory = false) {
         string str = loadParameterXMLString(analytic, param, mandatory);
         obj = QuantLib::ext::make_shared<T>();
         obj->fromXMLString(str);
+        return true;
+    }
+
+    template <class T>
+    bool loadParameterXML(
+        void (InputParameters::*setter)(const QuantLib::ext::shared_ptr<T>&), 
+        const std::string& analytic, 
+        const std::string& param,
+        const bool mandatory = false) {
+        string str = loadParameterXMLString(analytic, param, mandatory);
+        QuantLib::ext::shared_ptr<T> obj = QuantLib::ext::make_shared<T>();
+        obj->fromXMLString(str);
+        (this->*setter)(obj);
         return true;
     }
     
@@ -103,6 +135,12 @@ public:
     void setParameter(std::string analytic, std::string parameter, std::string val) { 
         parameters_.set(analytic, parameter, val);
     }
+
+    // setters for backward compatibility, use setParameter directly when possible
+
+    void setOutputCurves(bool b) { setParameter("npv", "outputCurve", to_string(b)); }
+    void setCurvesMarketConfig(const std::string& s) { setParameter("curves", "grid", s); };
+    void setCurvesGrid(const std::string& s) { setParameter("curves", "configuration", s); };
         
      /*********
      * Setters
@@ -187,22 +225,18 @@ public:
     void setMporForward(bool b) { mporForward_ = b; }
     void setMarketDataLoaderOutput(const std::string& s) { marketDataLoaderOutput_ = s; }
     void setMarketDataLoaderInput(const std::string& s) { marketDataLoaderInput_ = s; }
-
-    // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
     void setAdditionalResultsReportPrecision(std::size_t p) { additionalResultsReportPrecision_ = p; }
-    // Setters for cashflows
     void setIncludePastCashflows(bool b) { includePastCashflows_ = b; }
 
     // Setters for curves/markets
-    void setOutputCurves(bool b) { outputCurves_ = b; }
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
     void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
-    void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
-    void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
     void setCalendarAdjustment(const std::string& xml);
+    void setCalendarAdjustmentPtr(const QuantLib::ext::shared_ptr<CalendarAdjustmentConfig>& adjusts);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
     void setCurrencyConfig(const std::string& xml);
+    void setCurrencyConfigPtr(const QuantLib::ext::shared_ptr<CurrencyConfig>& config);
     void setCurrencyConfigFromFile(const std::string& fileName);
 
     // Setters for sensi analytics
@@ -679,11 +713,8 @@ public:
     /****************************
      * Getters for curves/markets
      ****************************/
-    bool outputCurves() const { return outputCurves_; };
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
     std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
-    const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
-    const std::string& curvesGrid() const { return curvesGrid_; }
 
     /*****************************
      * Getters for sensi analytics
@@ -1150,14 +1181,12 @@ protected:
     bool deriveCounterpartyDefaultCurves_ = false;
     std::string additionalMarketDataInput_;
 
+    bool outputAdditionalResults_ = false;
+    QuantLib::Natural additionalResultsReportPrecision_ = 6;
+
     /**************
      * NPV analytic
      *************/
-    bool outputAdditionalResults_ = false;
-    std::size_t additionalResultsReportPrecision_ = 6;
-    bool outputCurves_ = false;
-    std::string curvesMarketConfig_ = Market::defaultConfiguration;
-    std::string curvesGrid_ = "240,1M";
     bool outputTodaysMarketCalibration_ = true;
     std::size_t todaysMarketCalibrationPrecision_ = 8;
 

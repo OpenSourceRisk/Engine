@@ -85,7 +85,6 @@ std::string InputParameters::loadParameterXMLString(const std::string& analytic,
     return loadParameterString(analytic, param, mandatory);
 }
 
-
 const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>&
 InputParameters::curveConfig(const std::string& s) const {
     return curveConfigs_.get(s);
@@ -135,19 +134,19 @@ void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
 
 void InputParameters::setConventions(const std::string& xml) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
-    conventions_->fromXMLString(xml);
     InstrumentConventions::instance().setConventions(conventions_);
+    conventions_->fromXMLString(xml);
 }
 
 void InputParameters::setConventions(const QuantLib::ext::shared_ptr<Conventions>& convs) {
     conventions_ = convs;
-    InstrumentConventions::instance().setConventions(conventions_);
+    InstrumentConventions::instance().setConventions(conventions_, asof_);
 }
     
 void InputParameters::setConventionsFromFile(const std::string& fileName) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
+    InstrumentConventions::instance().setConventions(conventions_, asof_);
     conventions_->fromFile(fileName);
-    InstrumentConventions::instance().setConventions(conventions_);
 }
 
 void InputParameters::setCurveConfigs(const std::string& xml, std::string id) {
@@ -171,6 +170,10 @@ void InputParameters::setCalendarAdjustment(const std::string& xml) {
     calendarAdjustment_->fromXMLString(xml);
 }
 
+void InputParameters::setCalendarAdjustmentPtr(const QuantLib::ext::shared_ptr<CalendarAdjustmentConfig>& adjusts) {
+    calendarAdjustment_ = adjusts;
+}
+
 void InputParameters::setCalendarAdjustmentFromFile(const std::string& fileName) {
     calendarAdjustment_ = QuantLib::ext::make_shared<CalendarAdjustmentConfig>();
     calendarAdjustment_->fromFile(fileName);
@@ -179,6 +182,10 @@ void InputParameters::setCalendarAdjustmentFromFile(const std::string& fileName)
 void InputParameters::setCurrencyConfig(const std::string& xml) {
     currencyConfig_ = QuantLib::ext::make_shared<CurrencyConfig>();
     currencyConfig_->fromXMLString(xml);
+}
+
+void InputParameters::setCurrencyConfigPtr(const QuantLib::ext::shared_ptr<CurrencyConfig>& config) {
+    currencyConfig_ = config;
 }
 
 void InputParameters::setCurrencyConfigFromFile(const std::string& fileName) {

@@ -45,6 +45,14 @@ void PricingAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 
     setGenerateAdditionalResults(true);
+
+    inputs_->loadParameter<bool>(outputCurves_, "curves", "active", false,
+                                 std::function<bool(const string&)>(parseBool));
+    if (!outputCurves_)
+        inputs_->loadParameter<bool>(outputCurves_, "npv", "outputCurves", false,
+                                 std::function<bool(const string&)>(parseBool));
+    inputs_->loadParameter<string>(curvesGrid_, "curves", "grid", false);
+    inputs_->loadParameter<string>(curvesMarketConfig_, "curves", "configuration", false);
 }
 
 void PricingAnalyticImpl::runAnalytic( 
@@ -102,12 +110,12 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "additional_results", addReport);
                 CONSOLE("OK");
             }
-            if (inputs_->outputCurves()) {
+            if (outputCurves_) {
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                DateGrid grid(inputs_->curvesGrid());
-                std::string config = inputs_->curvesMarketConfig();
+                DateGrid grid(curvesGrid_);
+                std::string config = curvesMarketConfig_;
                 ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());

@@ -55,6 +55,9 @@ public:
 private:
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
+    bool outputCurves_ = false;
+    std::string curvesMarketConfig_ = Market::defaultConfiguration;
+    std::string curvesGrid_  = "240,1M";
 
 protected:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
