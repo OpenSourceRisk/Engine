@@ -144,7 +144,6 @@ instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
-instruments/oiccbasisswap.cpp
 instruments/outperformanceoption.cpp
 instruments/pairwisevarianceswap.cpp
 instruments/payment.cpp
@@ -660,7 +659,6 @@ instruments/makeoiscapfloor.hpp
 instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
-instruments/oiccbasisswap.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
 instruments/payment.hpp
