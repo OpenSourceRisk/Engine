@@ -208,7 +208,8 @@ public:
     // Setters for stress testing
     void setStressThreshold(Real r);
     void setStressSimMarketParams(const std::string& xml); 
-    void setStressScenarioData(const std::string& xml); 
+    void setStressScenarioData(const std::string& xml);
+    void setStressScenarioData(const ext::shared_ptr<StressTestScenarioData>& stressScenarioData);
     void setStressPricingEngine(const std::string& xml); 
     void setStressPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for VaR
