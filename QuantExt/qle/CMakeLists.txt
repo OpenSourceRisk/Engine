@@ -329,7 +329,6 @@ pricingengines/numericlgmbgsflexiswapengine.cpp
 pricingengines/numericlgmcallablebondengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
-pricingengines/oiccbasisswapengine.cpp
 pricingengines/pairwisevarianceswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
@@ -898,7 +897,6 @@ pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
-pricingengines/oiccbasisswapengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 pricingengines/tflattice.hpp

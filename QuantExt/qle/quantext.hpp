@@ -217,7 +217,6 @@
 #include <qle/instruments/multiccycompositeinstrument.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/nullinstrument.hpp>
-#include <qle/instruments/oiccbasisswap.hpp>
 #include <qle/instruments/outperformanceoption.hpp>
 #include <qle/instruments/pairwisevarianceswap.hpp>
 #include <qle/instruments/payment.hpp>
@@ -457,7 +456,6 @@
 #include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmflexiswapengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/pairwisevarianceswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/pricingengines/tflattice.hpp>
