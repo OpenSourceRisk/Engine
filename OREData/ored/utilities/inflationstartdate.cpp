@@ -25,13 +25,11 @@ using QuantLib::Period;
 using QuantLib::Days;
 
 std::pair<QuantLib::Date, QuantLib::Period> getStartAndLag(const QuantLib::Date& asof,
-                                                           const InflationSwapConvention& conv, const int startDelay,
-                                                           const Calendar& cal,
-                                                           const BusinessDayConvention startDelayConvention) {
+                                                           const InflationSwapConvention& conv) {
 
     Date adjustedAsOf = asof;
-    if (startDelay != 0) {
-        adjustedAsOf = cal.advance(asof, startDelay * Days, startDelayConvention);
+    if (conv.startDelay() != 0) {
+        adjustedAsOf = conv.fixCalendar().advance(asof, conv.startDelay() * Days, conv.startDelayConvention());
     }
 
     using IPR = InflationSwapConvention::PublicationRoll;
