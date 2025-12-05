@@ -641,6 +641,8 @@ A node with name \lstinline!InflationSwap! is used to store conventions for zero
   <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
   <InflationCalendar>TARGET</InflationCalendar>
   <InflationConvention>MF</InflationConvention>
+  <StartDelay>2</StartDelay>
+  <StartDelayConvention>Following</StartDelayConvention>
 </InflationSwap>
 \end{minted}
 \caption{Inflation swap conventions}
@@ -659,6 +661,8 @@ The meaning of the elements is as follows:
 \item \lstinline!AdjustInflationObservationDates!: Flag indicating whether index observation dates should be adjusted or not.
 \item \lstinline!InflationCalendar!: The calendar for the inflation leg of the swap.
 \item \lstinline!InflationConvention!: The rolling convention for the inflation leg of the swap.
+\item \lstinline!StartDelay!: [Optional] The inflation swap starts n business days after today, defaults to zero if omitted.
+\item \lstinline!StartDelayConvention!: [Optional] BusinessDayConvention to adjust the start day, defaults to Following if omitted.
 
 \item \lstinline!PublicationRoll!:
 This is an optional node taking the values \lstinline!None!, \lstinline!OnPublicationDate! or \lstinline!AfterPublicationDate!. If omitted, the value \lstinline!None! is used. Currently, our only known use case for a value other than \lstinline!None! is for Australian zero coupon inflation indexed swaps (ZCIIS). Here, the index is published quarterly on the last Wednesday of the month following the end of the reference quarter. The start date and maturity date of the market quoted ZCIIS roll to the next quarterly date after the publication date of the index. For example, the AU CPI value for Q3 2020, i.e.\ 1 Jul 2020 to 30 Sep 2020 was released on 28 Oct 2020. On 27 Oct 2020, before the index publication date, the market 5Y ZCIIS would start on 15 Sep 2020 and end on 15 Sep 2025 and reference the Q2 inflation index value. On 29 Oct 2020, after the index publication date, the market 5Y ZCIIS would start on 15 Dec 2020 and end on 15 Dec 2025 and reference the Q3 inflation index value. On the release date, i.e. 28 Oct 2020, the market ZCIIS that is set up is determined by whether the \lstinline!PublicationRoll! value is \lstinline!OnPublicationDate! or \lstinline!AfterPublicationDate!. If it is set to \lstinline!OnPublicationDate!, the swap rolls on this date and hence the market 5Y ZCIIS would start on 15 Dec 2020 and end on 15 Dec 2025 and reference the Q3 inflation index value. If it is set to \lstinline!AfterPublicationDate!, the swap does not roll on the publication date and instead rolls on the next day, and hence the market 5Y ZCIIS would start on 15 Sep 2020 and end on 15 Sep 2025 and reference the Q2 inflation index value. The publication schedule for the index must be provided in the \lstinline!PublicationSchedule! node if \lstinline!PublicationRoll! is not \lstinline!None!. An example of the AU CPI conventions set up is given in Listing \ref{lst:aucpi_inflation_conventions}.
