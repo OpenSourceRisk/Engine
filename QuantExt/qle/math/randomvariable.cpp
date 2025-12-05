@@ -38,7 +38,6 @@
 #include <boost/functional/hash.hpp>
 
 #include <map>
-#include <cmath>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
 // #define ENABLE_RANDOMVARIABLE_STATS
@@ -739,14 +738,14 @@ RandomVariable round(RandomVariable x, const RandomVariable& y) {
     if (!y.deterministic_)
         x.expand();
     if (x.deterministic()){
-        double factor = std::pow(10, y.constantData_);
-        x.constantData_ = std::round(x.constantData_*factor)/factor;
+        QuantLib::Rounding rnd(y.constantData_, QuantLib::Rounding::Closest, 5);
+        x.constantData_ = rnd(x.constantData_);
     }
     else {
         resumeCalcStats();
         for (Size i = 0; i < x.size(); ++i) {
-            double factor = std::pow(10, y[i]);
-            x.data_[i] = std::round(x.data_[i]*factor)/factor;
+            QuantLib::Rounding rnd(y.constantData_, QuantLib::Rounding::Closest, 5);
+            x.data_[i] = rnd(x.constantData_);
         }
         stopCalcStats(x.size());
     }

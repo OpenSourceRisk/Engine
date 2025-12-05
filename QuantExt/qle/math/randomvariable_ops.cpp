@@ -310,11 +310,11 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
 
     // Frac = 19
     grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
-                       const Size node) -> std::vector<RandomVariable> { return {QuantExt::frac(*args[0])}; });
+                       const Size node) -> std::vector<RandomVariable> { return {QuantExt::frac(RandomVariable(1))}; });
 
     // Round = 20
     grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
-                       const Size node) -> std::vector<RandomVariable> { return {QuantExt::round(*args[0], *args[1])}; });
+                       const Size node) -> std::vector<RandomVariable> { return {QuantExt::round(RandomVariable(0),RandomVariable(0))}; });
 
     return grads;
 }
@@ -386,10 +386,10 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     // Frac = 19
-    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     // Round = 20
-    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     return res;
 }
