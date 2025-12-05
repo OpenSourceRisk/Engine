@@ -74,7 +74,7 @@ public:
         
     //! load and convert an object from a string for the given (analytic, param) pair
     template <class T>
-    bool loadParameter(
+    void loadParameter(
         T& obj,
         const std::string& analytic, 
         const std::string& param, 
@@ -82,8 +82,10 @@ public:
         std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
         string str = loadParameterString(analytic, param, mandatory);
         if (str.empty() && !mandatory)
-            return false;
-        return tryParse(str, obj, parser);
+            return;
+        bool b = tryParse(str, obj, parser);
+        if (!b && mandatory)
+			QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + analytic + "," + param + ") parsing failed");
     }
 
     // sets a value in the InputParameters object via a setter function
@@ -98,32 +100,48 @@ public:
         if (str.empty() && !mandatory)
             return;
         T obj;
-        tryParse(str, obj, parser);
+        auto b = tryParse(str, obj, parser);
+        if (!b && mandatory)
+            QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + analytic + "," + param +
+                    ") parsing failed");
         (this->*setter)(obj);
     }
 
     //! load the XML object from an XML string for the given (analytic, param) pair
     template <class T>
-    bool loadParameterXML(
+    void loadParameterXML(
         QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
         const std::string& param, const bool mandatory = false) {
         string str = loadParameterXMLString(analytic, param, mandatory);
+        if (str.empty() && !mandatory)
+            return;
         obj = QuantLib::ext::make_shared<T>();
-        obj->fromXMLString(str);
-        return true;
+        try {
+            obj->fromXMLString(str);
+        } catch (const std::exception&) {
+            if (mandatory)
+				QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
+                						") parsing failed");
+        }
     }
 
     template <class T>
-    bool loadParameterXML(
+    void loadParameterXML(
         void (InputParameters::*setter)(const QuantLib::ext::shared_ptr<T>&), 
         const std::string& analytic, 
         const std::string& param,
         const bool mandatory = false) {
         string str = loadParameterXMLString(analytic, param, mandatory);
+        if (str.empty() && !mandatory)
+            return;
         QuantLib::ext::shared_ptr<T> obj = QuantLib::ext::make_shared<T>();
-        obj->fromXMLString(str);
-        (this->*setter)(obj);
-        return true;
+        try {
+            obj->fromXMLString(str);
+        } catch (const std::exception&) {
+            if (mandatory)
+                QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
+                        ") parsing failed");
+        }
     }
     
     //! virtual function to load a parameter string for the given (analytic, param) pair
