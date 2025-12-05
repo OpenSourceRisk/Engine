@@ -20,6 +20,7 @@
 #include <qle/python_integration/pythonfunctions.hpp>
 
 #include <ql/math/comparison.hpp>
+#include <ql/math/rounding.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 
