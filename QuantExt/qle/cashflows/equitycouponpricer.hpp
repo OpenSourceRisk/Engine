@@ -25,7 +25,10 @@
 #define quantext_equity_coupon_pricer_hpp
 
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
+
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -46,6 +49,8 @@ public:
         Real pastDividends;
         Real forecastDividends;
         Real dividendFactor;
+        // Convexity Adjustment
+        Real convexityAdjustment;
 
         void clear();
     };
@@ -62,6 +67,12 @@ public:
     //@{
     virtual void update() override { notifyObservers(); }
     //@}
+
+    // Convexity adjustment
+    void setEquityVolatility(const Handle<BlackVolTermStructure>& equityVol);
+    void setFxVolatility(const Handle<BlackVolTermStructure>& fxVol);
+    void setCorrelation(const Handle<QuantExt::CorrelationTermStructure>& correlation);
+
 protected:
     const EquityCoupon* coupon_;
     QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
@@ -69,6 +80,12 @@ protected:
     EquityReturnType returnType_;
     Real dividendFactor_;
     AdditionalResultCache additionalResultCache_;
+
+private:
+    // Convexity adjustment
+    Handle<BlackVolTermStructure> equityVolatility_;
+    Handle<BlackVolTermStructure> fxVolatility_;
+    Handle<QuantExt::CorrelationTermStructure> correlation_;
 };
 } // namespace QuantExt
 
