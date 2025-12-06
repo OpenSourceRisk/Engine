@@ -83,10 +83,10 @@ protected:
 
         // Equity convexity adjustment
         if (!equityConvexityAdjustmentInitialised_) {
-            useEquityConvexityAdjustment_ = parseBool(engineParameter("UseConvexityAdjustment", {}, false, "false"));
+            useEquityConvexityAdjustment_ = parseBool(engineParameter("UseEquityConvexityAdjustment", {}, false, "false"));
             if (useEquityConvexityAdjustment_) {
                 std::vector<std::string> pairs =
-                    parseListOfValues(engineParameter("ConvexityAdjustmentCurrencyPairList", {}, false, ""));
+                    parseListOfValues(engineParameter("EquityConvexityAdjustmentCurrencyPairList", {}, false, ""));
                 equityConvexityAdjustmentCurrencyPairs_.insert(pairs.begin(), pairs.end());
                 DLOG("Equity convexity adjustment enabled for currency pairs: "
                      << boost::join(equityConvexityAdjustmentCurrencyPairs_, ","));

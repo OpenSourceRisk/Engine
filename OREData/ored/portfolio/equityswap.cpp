@@ -125,7 +125,7 @@ void EquitySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
 
     if (legCurrency != equityCurrency) {
         auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilder>(
-            engineFactory->builder("CrossCurrencySwap"));
+            engineFactory->builder("Swap"));
 
         if (builder && builder->useEquityConvexityAdjustment()) {
             std::string ccyPair = legCurrency + equityCurrency;
