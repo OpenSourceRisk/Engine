@@ -406,6 +406,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
             c_->discountCurve_.clear();
             c_->multiCurve_.reset();
             c_->rateHelperCashflowGenerator_.clear();
+            c_->rateHelperQuoteErrorGenerator_.clear();
         }
         YieldCurve* c_;
     } cleanUp(this);
