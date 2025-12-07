@@ -31,6 +31,9 @@ void EquityCouponPricer::AdditionalResultCache::clear() {
     pastDividends = Null<Real>();
     forecastDividends = Null<Real>();
     dividendFactor = Null<Real>();
+    equityVolatility = Null<Real>();
+    fxVolatility = Null<Real>();
+    equityFxCorrelation = Null<Real>();
     convexityAdjustment = Null<Real>();
 }
 
@@ -79,6 +82,9 @@ Rate EquityCouponPricer::swapletRate() {
         Real convexityAdjustment = std::exp(sigmaEq * sigmaFx * rho *
                                             equityCurve_->equityForecastCurve()->dayCounter().yearFraction(
                                                 Settings::instance().evaluationDate(), coupon_->fixingEndDate()));
+        additionalResultCache_.equityVolatility = sigmaEq;
+        additionalResultCache_.fxVolatility = sigmaFx;
+        additionalResultCache_.equityFxCorrelation = rho;
         additionalResultCache_.convexityAdjustment = convexityAdjustment;
         additionalResultCache_.endFixing *= convexityAdjustment;
     }

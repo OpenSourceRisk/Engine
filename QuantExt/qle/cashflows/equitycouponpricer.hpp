@@ -50,6 +50,9 @@ public:
         Real forecastDividends;
         Real dividendFactor;
         // Convexity Adjustment
+        Real equityVolatility;
+        Real fxVolatility;
+        Real equityFxCorrelation;
         Real convexityAdjustment;
 
         void clear();
