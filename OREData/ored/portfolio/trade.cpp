@@ -257,15 +257,6 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                         additionalData_["pastDividends[" + legID + "]"] = arc.pastDividends;
                     if (arc.forecastDividends != Null<Real>())
                         additionalData_["forecastDividends[" + legID + "]"] = arc.forecastDividends;
-                    // Convexity Adjustment
-                    if (arc.equityVolatility != Null<Real>())
-                        additionalData_["equityVolatility[" + legID + "]"] = arc.equityVolatility;
-                    if (arc.fxVolatility != Null<Real>())
-                        additionalData_["fxVolatility[" + legID + "]"] = arc.fxVolatility;
-                    if (arc.equityFxCorrelation != Null<Real>())
-                        additionalData_["equityFxCorrelation[" + legID + "]"] = arc.equityFxCorrelation;
-                    if (arc.convexityAdjustment != Null<Real>())
-                        additionalData_["convexityAdjustment[" + legID + "]"] = arc.convexityAdjustment;
                 }
 
                 if (auto cpic = QuantLib::ext::dynamic_pointer_cast<QuantExt::CPICoupon>(flow)) {
@@ -344,6 +335,19 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                 additionalData_["indexingIndex" + label] =
                     index == nullptr ? "na" : IndexNameTranslator::instance().oreName(index->name());
                 additionalData_["indexingMultiplier" + label] = multiplier;
+            }
+            // Convexity adjustment
+            if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
+                auto arc = eqc->pricer()->additionalResultCache();
+                auto label = "[" + legID + "][" + std::to_string(j) + "]";
+                if (arc.equityVolatility != Null<Real>())
+                    additionalData_["equityVolatility" + label] = arc.equityVolatility;
+                if (arc.fxVolatility != Null<Real>())
+                    additionalData_["fxVolatility" + label] = arc.fxVolatility;
+                if (arc.equityFxCorrelation != Null<Real>())
+                    additionalData_["equityFxCorrelation" + label] = arc.equityFxCorrelation;
+                if (arc.convexityAdjustment != Null<Real>())
+                    additionalData_["convexityAdjustment" + label] = arc.convexityAdjustment;
             }
         }
     }
