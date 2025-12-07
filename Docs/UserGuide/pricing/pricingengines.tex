@@ -5282,6 +5282,9 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item SensitivityTemplate [optional]: the sensitivity template to use
+\item UseEquityConvexityAdjustment [optional]: whether convexity adjustment will be used for equity swap, default to \emph{false}
+\item EquityConvexityAdjustmentCurrencyPairList [optional]: the currency pairs that the equity convexity adjustment will apply on. The convexity adjustment multiplier is given by:
+    \[e^{\sigma_{\text{eq}}(t) \cdot \sigma_{\text{fx}}(t) \cdot \text{corr}(\text{eq}, \text{fx}, t) \cdot t}\]
 \end{itemize}
 
 \begin{longlisting}
@@ -5292,6 +5295,8 @@ The parameters have the following meaning:
     <Engine>DiscountingSwapEngine</Engine>
     <EngineParameters>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+		<Parameter name="UseEquityConvexityAdjustment">N</Parameter>
+		<Parameter name="EquityConvexityAdjustmentCurrencyPairList">USDEUR</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
