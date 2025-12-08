@@ -248,6 +248,13 @@
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IsResettable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FloatIndexIsResettable" minOccurs="0" maxOccurs="1"/>
+	  <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
+	  <xs:element type="xs:string" name="Lookback" minOccurs="0" maxOccurs="1"/>
+	  <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+	  <xs:element type="xs:integer" name="RateCutoff" minOccurs="0" maxOccurs="1"/>
+	  <xs:element type="bool" name="IsAveraged" minOccurs="0" maxOccurs="1"/>
+	  <xs:element type="xs:integer" name="FixedPaymentLag" minOccurs="0" maxOccurs="1"/>
+	  <xs:element type="xs:integer" name="FloatPaymentLag" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
