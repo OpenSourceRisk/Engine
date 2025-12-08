@@ -40,14 +40,15 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
     const Handle<Quote>& spread, bool endOfMonth, bool telescopicValueDates, QuantLib::Pillar::Choice pillarChoice,
     QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
-    QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged)
+    QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged, 
+    QuantLib::ext::optional<Natural> fixedPaymentLag, QuantLib::ext::optional<Natural> floatPaymentLag)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
       floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth),
       telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice),
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
-      isAveraged_(isAveraged) {
+      isAveraged_(isAveraged), fixedPaymentLag_(fixedPaymentLag), floatPaymentLag_(floatPaymentLag) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -114,12 +115,14 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
                            DateGeneration::Backward, endOfMonth_);
 
     // Create the swap
-    Natural paymentLag = 0;
+    Natural fixedPaymentLag = fixedPaymentLag_ ? *fixedPaymentLag_ : 0;
+    Natural floatPaymentLag = floatPaymentLag_ ? *floatPaymentLag_ : 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
     swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule, 0.0,
-                                         fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
+                                         fixedDayCount_, paymentConvention_, fixedPaymentLag, paymentCalendar_,
+                                         floatNominal,
                                          index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
-                                         paymentLag, paymentCalendar_, telescopicValueDates_, includeSpread_, lookback_,
+                                         floatPaymentLag, paymentCalendar_, telescopicValueDates_, includeSpread_, lookback_,
                                          fixingDays_, rateCutoff_, isAveraged_));
 
     earliestDate_ = swap_->startDate();

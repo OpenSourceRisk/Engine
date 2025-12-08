@@ -1157,14 +1157,14 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
     const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom,
     const std::string& strIsResettable, const std::string& strFloatIndexIsResettable, const string& strIncludeSpread,
     const string& strLookback, const string& strFixingDays, const string& strRateCutoff,
-    const string& strIsAveraged)
+    const string& strIsAveraged, const string& strFixedPaymentLag, const string& strFloatPaymentLag)
     : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
       strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom), strIsResettable_(strIsResettable),
       strFloatIndexIsResettable_(strFloatIndexIsResettable), strIncludeSpread_(strIncludeSpread),
       strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
-      strIsAveraged_(strIsAveraged) {
+      strIsAveraged_(strIsAveraged), strFixedPaymentLag_(strFixedPaymentLag), strFloatPaymentLag_(strFloatPaymentLag) {
 
     build();
 }
@@ -1191,6 +1191,8 @@ void CrossCcyFixFloatSwapConvention::build() {
         rateCutoff_ = parseInteger(strRateCutoff_);
     if (!strIsAveraged_.empty())
         isAveraged_ = parseBool(strIsAveraged_);
+    fixedPaymentLag_ = strFixedPaymentLag_.empty() ? 0 : lexical_cast<Natural>(strFixedPaymentLag_);
+    floatPaymentLag_ = strFloatPaymentLag_.empty() ? 0 : lexical_cast<Natural>(strFloatPaymentLag_);
 }
 
 void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
@@ -1212,6 +1214,8 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
     strFloatIndexIsResettable_ = XMLUtils::getChildValue(node, "FloatIndexIsResettable", false);
+    strFixedPaymentLag_ = XMLUtils::getChildValue(node, "FixedPaymentLag", false);
+    strFloatPaymentLag_ = XMLUtils::getChildValue(node, "FloatPaymentLag", false);
 
     
     // OIS specific conventions
@@ -1254,6 +1258,10 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "SpreadRateCutoff", strRateCutoff_);
     if (!strIsAveraged_.empty())
         XMLUtils::addChild(doc, node, "SpreadIsAveraged", strIsAveraged_);
+    if (!strFixedPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "FixedPaymentLag", strFixedPaymentLag_);
+    if (!strFloatPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "FloatPaymentLag", strFloatPaymentLag_);
     return node;
 }
 
