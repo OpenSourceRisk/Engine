@@ -50,9 +50,12 @@ CrLgmBuilder::CrLgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& m
     Array alpha(data_->aValues().begin(), data_->aValues().end());
     Array h(data_->hValues().begin(), data_->hValues().end());
 
-    // the currency does not matter here
+    // The currency can matter, when building the CAM model later on
+
+    auto currency = data_->currency().empty() ? USDCurrency() : parseCurrency(data_->currency());
+
     parametrization_ =
-        QuantLib::ext::make_shared<QuantExt::CrLgm1fConstantParametrization>(USDCurrency(), modelDefaultCurve_, alpha[0], h[0], name);
+        QuantLib::ext::make_shared<QuantExt::CrLgm1fConstantParametrization>(currency, modelDefaultCurve_, alpha[0], h[0], name);
 
     LOG("Apply shift horizon and scale");
 

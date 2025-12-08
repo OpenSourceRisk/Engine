@@ -544,8 +544,18 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamAmcEngineBuild
     // get LGM model
     std::vector<Size> externalModelIndices;
     Currency cur = parseCurrency(ccy);
-    QuantLib::Handle<QuantExt::CrossAssetModel> model(getProjectedCrossAssetModel(
-        cam_, {std::make_pair(QuantExt::CrossAssetModel::AssetType::IR, cam_->ccyIndex(cur))}, externalModelIndices));
+
+    std::set<std::pair<QuantExt::CrossAssetModel::AssetType, Size>> selectedModelComponents = {
+        std::make_pair(QuantExt::CrossAssetModel::AssetType::IR, cam_->ccyIndex(cur))};
+
+    if (dynamicCreditModelEnabled()) {
+        std::cout << "Using credit curve " << creditCurveId << std::endl;
+        selectedModelComponents.insert(
+            std::make_pair(QuantExt::CrossAssetModel::AssetType::CR, cam_->crName(creditCurveId)));
+    }
+
+    QuantLib::Handle<QuantExt::CrossAssetModel> model(
+        getProjectedCrossAssetModel(cam_, selectedModelComponents, externalModelIndices));
     return ext::make_shared<QuantExt::McCamCallableBondEngine>(
         model, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
         parseSequenceType(engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
