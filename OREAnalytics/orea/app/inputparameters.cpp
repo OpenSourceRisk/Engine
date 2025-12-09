@@ -743,7 +743,7 @@ void InputParameters::setScenarioReader(const std::string& fileName) {
             scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
                 fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         // If the file does not exist or fails, assume it is a scenario string
         scenarioReader_ = QuantLib::ext::make_shared<ScenarioBufferReader>(
             fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(true));

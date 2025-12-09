@@ -42,9 +42,12 @@ using namespace QuantLib;
 
 class DynamicOptionletVolatilityStructure : public OptionletVolatilityStructure {
 public:
+    //Constructor with the reference date based on the global evaluation date
     DynamicOptionletVolatilityStructure(const QuantLib::ext::shared_ptr<OptionletVolatilityStructure>& source,
                                         Natural settlementDays, const Calendar& calendar,
                                         ReactionToTimeDecay decayMode = ConstantVariance);
+    
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> getSource() { return source_; }
 
 protected:
     //! \name OptionletVolatilityStructure interface

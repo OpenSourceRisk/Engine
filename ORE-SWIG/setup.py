@@ -5,15 +5,19 @@
 """
 
 import os, sys, math, codecs
-from distutils.cmd import Command
-from distutils.command.build_ext import build_ext
-from distutils.command.build import build
-from distutils.ccompiler import get_default_compiler
-try:
-    from setuptools import setup, Extension
-except:
+if sys.version_info < (3,10):
+    from distutils.cmd import Command
+    from distutils.command.build_ext import build_ext
+    from distutils.command.build import build
+    from distutils.ccompiler import get_default_compiler
     from distutils.core import setup, Extension
-from distutils import sysconfig
+    from distutils import sysconfig
+else:
+    from setuptools import Command
+    from setuptools.command.build_ext import build_ext
+    from setuptools.command.build import build
+    from setuptools._distutils.ccompiler import get_default_compiler
+    from setuptools import setup, Extension
 
 class test(Command):
     # Original version of this class posted
@@ -68,22 +72,13 @@ class my_wrap(Command):
         qle_swig_dir = os.path.join("QuantExt-SWIG","SWIG")
         oredata_swig_dir = os.path.join("OREData-SWIG","SWIG")
         orea_swig_dir = os.path.join("OREAnalytics-SWIG","SWIG")
-        if sys.version_info.major >= 3:
-            os.system('swig -python -c++ ' +
-                      '-I%s ' % ql_swig_dir +
-                      '-I%s ' % qle_swig_dir +
-                      '-I%s ' % oredata_swig_dir +
-                      '-I%s ' % orea_swig_dir +
-                      '-o oreanalytics_wrap.cpp ' +
-                      os.path.join("OREAnalytics-SWIG","SWIG","oreanalytics.i"))
-        else:
-            os.system('swig -python -c++ ' +
-                      '-I%s ' % ql_swig_dir +
-                      '-I%s ' % qle_swig_dir +
-                      '-I%s ' % oredata_swig_dir +
-                      '-I%s ' % orea_swig_dir +
-                      '-o oreanalytics_wrap.cpp ' +
-                      os.path.join("OREAnalytics-SWIG","SWIG","oreanalytics.i"))
+        os.system('swig -python -c++ ' +
+                  '-I%s ' % ql_swig_dir +
+                  '-I%s ' % qle_swig_dir +
+                  '-I%s ' % oredata_swig_dir +
+                  '-I%s ' % orea_swig_dir +
+                  '-o oreanalytics_wrap.cpp ' +
+                  os.path.join("OREAnalytics-SWIG","SWIG","oreanalytics.i"))
 
 class my_build(build):
     user_options = build.user_options + [
@@ -264,13 +259,6 @@ class my_build_ext(build_ext):
 
 datafiles  = []
 
-# patch distutils if it can't cope with the "classifiers" or
-# "download_url" keywords
-if sys.version < '2.2.3':
-    from distutils.dist import DistributionMetadata
-    DistributionMetadata.classifiers = None
-    DistributionMetadata.download_url = None
-
 classifiers = [
     'Development Status :: 5 - Production/Stable',
     'Environment :: Console',
@@ -297,7 +285,7 @@ framework for quantitative finance.
       """,
       author           = "Quaternion Risk Management",
       author_email     = "info@quaternion.com",
-      url              = "http://quaternion.com",
+      url              = "http://opensourcerisk.org/",
       license          = codecs.open('LICENSE.txt','r+',
                                      encoding='utf8').read(),
       classifiers      = classifiers,

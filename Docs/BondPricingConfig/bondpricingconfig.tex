@@ -143,7 +143,7 @@ Bond pricing depends on a number of market data inputs
 
 \begin{itemize}
 \item ReferenceCurve: a rate curve determining the baseline discounting curve for bond valuation.
-\item CreditCurve [optional]: a credit curve determining the default probabilty during the lifetime of a bond. This can
+\item CreditCurve [optional]: a credit curve determining the default probability during the lifetime of a bond. This can
   e.g. be
 \begin{itemize}
 \item a CDS curve of the same issuer and seniority as the bond to proxy the credit risk
@@ -154,7 +154,7 @@ Bond pricing depends on a number of market data inputs
 \end{itemize}
 In all cases, the security spread can be used to represent additional credit / liquidity risk, see below.
 \item SecuritySpread [optional]: a single additional discounting spread. This can generally be interpreted as part of
-  the credit risk (generating additional default probabilty) or as part of the baseline discounting (liquidity
+  the credit risk (generating additional default probability) or as part of the baseline discounting (liquidity
   spread). Assumed to be zero if not given. Exception: If a price quote is given and the security spread is configured
   in the security curve config, but no market data is given for the security spread, the security spread is implied from
   the price quote.
@@ -216,7 +216,7 @@ income or vol curve is specified for the bond.
 The credit curve represents the survival probability entering the bond pricing. It also provides a recovery rate that is
 used as a fallback if the recovery rate from the security curve config is not available.
 
-The curve config can either be explicitly set up or ore can auto-generate it. Listing
+The curve config can either be explicitly set up or ORE can auto-generate it. Listing
 \ref{lst:autogen_default_curve_config} shows an auto-generated config for the bond from section \ref{refdata}:
 
 \begin{itemize}
@@ -257,7 +257,7 @@ The curve config can either be explicitly set up or ore can auto-generate it. Li
 
 The security curve config points to additional market data used for bond pricing.
 
-It can be explicitly set up or ore can auto-generate it. Listing \ref{lst:autogen_security_curve_config} shows an
+It can be explicitly set up or ORE can auto-generate it. Listing \ref{lst:autogen_security_curve_config} shows an
 auto-generated config for the bond from section \ref{refdata}:
 
 \begin{itemize}

@@ -232,79 +232,98 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
     const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
     bool built = false;
     std::string errors;
-    for (auto const& config : configs->configs()) {
-        try {
-            recoveryRate_ = Null<Real>();
-            if (!config.second.recoveryRateQuote().empty()) {
-                // handle case where the recovery rate is hardcoded in the curve config
-                if (!tryParseReal(config.second.recoveryRateQuote(), recoveryRate_)) {
-                    Wildcard wc(config.second.recoveryRateQuote());
-                    if (wc.hasWildcard()) {
-                        for (auto const& q : loader.get(wc, asof)) {
-                            if (wc.matches(q->name())) {
-                                QL_REQUIRE(
-                                    recoveryRate_ == Null<Real>() ||
-                                        QuantLib::close_enough(recoveryRate_, q->quote()->value()),
-                                    "There is more than one recovery rate with different values matching the pattern '"
-                                        << wc.pattern() << "', values: " << recoveryRate_ << ", "
-                                        << q->quote()->value());
-                                recoveryRate_ = q->quote()->value();
+    // Try building the curve with each config in turn, until one works
+    // run first all configs with implyDefaultFromMarket false, only if all configurations have failed
+    // we retry CDSSpread and Price configurations that have implyDefaultFromMarket true
+    std::set<size_t> configsWithImplyDefaultFromMarket;
+    for (auto const& implyDefaultFromMarket : {false, true}) {
+        for (auto const& config : configs->configs()) {
+            if (implyDefaultFromMarket && ((config.second.type() != DefaultCurveConfig::Config::Type::SpreadCDS &&
+                                            config.second.type() != DefaultCurveConfig::Config::Type::Price) ||
+                                           !config.second.implyDefaultFromMarket().value_or(false))) {
+                // For the second pass we only want SpreadCDS/Price configs that have
+                // implyDefaultFromMarket set to true
+                continue;
+            }
+            try {
+                recoveryRate_ = Null<Real>();
+                if (!config.second.recoveryRateQuote().empty()) {
+                    // handle case where the recovery rate is hardcoded in the curve config
+                    if (!tryParseReal(config.second.recoveryRateQuote(), recoveryRate_)) {
+                        Wildcard wc(config.second.recoveryRateQuote());
+                        if (wc.hasWildcard()) {
+                            for (auto const& q : loader.get(wc, asof)) {
+                                if (wc.matches(q->name())) {
+                                    QL_REQUIRE(recoveryRate_ == Null<Real>() ||
+                                                   QuantLib::close_enough(recoveryRate_, q->quote()->value()),
+                                               "There is more than one recovery rate with different values matching "
+                                               "the pattern '"
+                                                   << wc.pattern() << "', values: " << recoveryRate_ << ", "
+                                                   << q->quote()->value());
+                                    recoveryRate_ = q->quote()->value();
+                                }
                             }
+                        } else {
+                            QL_REQUIRE(loader.has(config.second.recoveryRateQuote(), asof),
+                                       "There is no market data for the requested recovery rate "
+                                           << config.second.recoveryRateQuote());
+                            recoveryRate_ = loader.get(config.second.recoveryRateQuote(), asof)->quote()->value();
                         }
-                    } else {
-                        QL_REQUIRE(loader.has(config.second.recoveryRateQuote(), asof),
-                                   "There is no market data for the requested recovery rate "
-                                       << config.second.recoveryRateQuote());
-                        recoveryRate_ = loader.get(config.second.recoveryRateQuote(), asof)->quote()->value();
                     }
                 }
+                // Build the default curve of the requested type
+                switch (config.second.type()) {
+                case DefaultCurveConfig::Config::Type::SpreadCDS:
+                case DefaultCurveConfig::Config::Type::ConvSpreadCDS:
+                case DefaultCurveConfig::Config::Type::Price:
+                    buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
+                                  implyDefaultFromMarket);
+                    break;
+                case DefaultCurveConfig::Config::Type::HazardRate:
+                    buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
+                    break;
+                case DefaultCurveConfig::Config::Type::Benchmark:
+                    buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
+                    break;
+                case DefaultCurveConfig::Config::Type::MultiSection:
+                    buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                    break;
+                case DefaultCurveConfig::Config::Type::TransitionMatrix:
+                    buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                    break;
+                case DefaultCurveConfig::Config::Type::Null:
+                    buildNullCurve(configs->curveID(), config.second, asof, spec);
+                    break;
+                default:
+                    QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
+                                                           << " was not recognised");
+                }
+                built = true;
+                break;
+            } catch (exception& e) {
+                std::ostringstream message;
+                message << "build attempt failed for " << configs->curveID() << " using config with priority "
+                        << config.first << ": " << e.what()
+                        << " and implyDefaultFromMarket= " << to_string(implyDefaultFromMarket);
+                DLOG(message.str());
+                if (!errors.empty())
+                    errors += ", ";
+                errors += message.str();
             }
-            // Build the default curve of the requested type
-            switch (config.second.type()) {
-            case DefaultCurveConfig::Config::Type::SpreadCDS:
-            case DefaultCurveConfig::Config::Type::ConvSpreadCDS:
-            case DefaultCurveConfig::Config::Type::Price:
-                buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
-                break;
-            case DefaultCurveConfig::Config::Type::HazardRate:
-                buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
-                break;
-            case DefaultCurveConfig::Config::Type::Benchmark:
-                buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
-                break;
-            case DefaultCurveConfig::Config::Type::MultiSection:
-                buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                break;
-            case DefaultCurveConfig::Config::Type::TransitionMatrix:
-                buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                break;
-            case DefaultCurveConfig::Config::Type::Null:
-                buildNullCurve(configs->curveID(), config.second, asof, spec);
-                break;
-            default:
-                QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
-                                                       << " was not recognised");
-            }
-            built = true;
-            break;
-        } catch (exception& e) {
-            std::ostringstream message;
-            message << "build attempt failed for " << configs->curveID() << " using config with priority "
-                    << config.first << ": " << e.what();
-            DLOG(message.str());
-            if (!errors.empty())
-                errors += ", ";
-            errors += message.str();
         }
+        if (built)
+            break;
     }
     QL_REQUIRE(built, "default curve building failed for " << spec.curveConfigID() << ": " << errors);
 }
 
 void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
                                  const DefaultCurveSpec& spec, const Loader& loader,
-                                 map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
+                                 map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                                 bool implyDefaultFromMarket) {
 
-    LOG("Start building default curve of type SpreadCDS for curve " << curveID);
+    LOG("Start building default curve of type SpreadCDS for curve " << curveID << "and  implyDefaultFromMarket = "
+        << to_string(implyDefaultFromMarket));
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Config::Type::SpreadCDS ||
                config.type() == DefaultCurveConfig::Config::Type::Price ||
@@ -345,7 +364,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     refData.cashSettlementDays = cdsConv->upfrontSettlementDays();
 
     // If the configuration instructs us to imply a default from the market data, we do it here.
-    if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
+    if (implyDefaultFromMarket) {
         if (recoveryRate_ != Null<Real>() && quotes.empty()) {
             // Assume entity is in default, between event determination date and auction date. Build a survival
             // probability curve with value 0.0 tomorrow to approximate this and allow dependent instruments to price.

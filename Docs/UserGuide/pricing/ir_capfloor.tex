@@ -40,7 +40,7 @@ where ``Black/Bachelier'' refers to the well-known pricing formulas \ref{models:
    \item bootstrapped from quoted market volatilities as described in \ref{pricing:ir_capfloor_bootstrap} or
    \item proxied by a another caplet volatility surface as described in \ref{pricing:ir_capfloor_proxying}. This is
      useful if no direct market quotes are available for the underlying index. For example, we might use liquid market
-     quotes to boostrap a volatility surface for backward looking USD-SOFR caplets and use the resuling caplet surface
+     quotes to bootstrap a volatility surface for backward looking USD-SOFR caplets and use the resulting caplet surface
      to proxy caplet volatilities for forward looking USD-SOFR-3M term rates.
    \end{itemize}
 \item $\sigma^2 t_f$ is the accrued variance from $t=0$ to the fixing time $t_f$ of the caplet. The square root of the
@@ -150,9 +150,10 @@ $\sigma_\text{eff}(t_1)$ which can be defined by
 
 and which allows to price an RFR caplet as if it was a standard Ibor caplet with caplet volatility
 $\sigma_\text{eff}(t_1)$ and fixing time $t_1$. We do not use $\sigma_\text{eff}$ to represent caplet volatilities in
-bootstrapped or proxied caplet volatility surfaces for RFR underlyings. We also do not report $\sigma_\text{eff}$ as the
-pricing vol in the cashflow report. Instead we use $\sigma(t_0)$ in all cases (where we set $\sigma(t_0) := \sigma(0)$
-for $t_0 < 0$).
+bootstrapped or proxied caplet volatility surfaces for RFR underlyings. Instead we use $\sigma(t_0)$, where we set
+$\sigma(t_0) := \sigma(0)$ for $t_0 < 0$. However we report $\sigma_\text{eff}$ as ``EffectiveCapVolatility'',
+``EffectiveFloorVolatility'' in the cashflow report, in addition to ``CapVolatility'', ``FloorVolatility'' referring to
+$\sigma(t_0)$.
 
 \subsubsection{Pricing of a SIFMA caplet}
 

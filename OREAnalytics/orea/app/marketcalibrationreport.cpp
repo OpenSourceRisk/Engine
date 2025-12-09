@@ -396,7 +396,7 @@ void MarketCalibrationReportBase::addInflationCurve(const QuantLib::Date& refdat
     if (info == nullptr)
         return;
 
-    const string inflationStr = "inflationCuve";
+    const string inflationStr = "inflationCurve";
 
     // check if we have already processed this curve
     if (checkCalibrations(label, inflationStr, id)) {

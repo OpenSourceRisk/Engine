@@ -75,7 +75,7 @@ Note:
 \item For each CMB index name one needs to maintain bond reference data with ID equal to the index name.
   This reference data is used to project the CMB index fixings as follows: For a future index period (from future date to future date + index tenor), a forward starting bond is constructed using the schedule frequency defined in the reference data and with constant maturity (future date + tenor).
   The forward bond is priced using the reference yield curve and credit curve defined in the reference data.
-  And the bond price is then converted into a bond yield using the bond yield conventions (compounding, frequncy, price type) maintained for that same ID.
+  And the bond price is then converted into a bond yield using the bond yield conventions (compounding, frequency, price type) maintained for that same ID.
   If the conventions are not set up, then default values are used (compounded, annual, clean).
 \item For periods with start dates in the past, historical index fixings need to be provided, as for interest rate indices.
 \item No convexity adjustment is applied here yet, in contrast to CMS index projections.  

@@ -23,10 +23,13 @@
 
 #pragma once
 
-#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/marketdata.hpp>
+
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
+
+#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace data {
@@ -36,15 +39,17 @@ namespace data {
     \ingroup builders
 */
 class FxForwardEngineBuilderBase
-    : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+    : public CachingPricingEngineBuilder<string, const Currency&, const Currency&, const string&> {
 public:
     FxForwardEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"FxForward"}) {}
 
 protected:
-    string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
-        return forCcy.code() + domCcy.code();
+    string keyImpl(const Currency& forCcy, const Currency& domCcy, const std::string& discountCurve) override {
+        return forCcy.code() + domCcy.code() + "_" + discountCurve;
     }
+
+    std::string discountCurve_;
 };
 
 //! Engine Builder for FX Forwards
@@ -56,12 +61,16 @@ public:
     FxForwardEngineBuilder() : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngine") {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        string pair = keyImpl(forCcy, domCcy);
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+                                                        const std::string& discountCurve) override {
+        std::cout << "getting curve '" << discountCurve << "'" << std::endl;
+        string pair = forCcy.code() + domCcy.code();
         return QuantLib::ext::make_shared<QuantExt::DiscountingFxForwardEngine>(
             domCcy, market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)), forCcy,
             market_->discountCurve(forCcy.code(), configuration(MarketContext::pricing)),
-            market_->fxRate(pair, configuration(MarketContext::pricing)));
+            market_->fxRate(pair, configuration(MarketContext::pricing)), QuantLib::Date(), QuantLib::Date(),
+            discountCurve.empty() ? Handle<YieldTermStructure>{}
+                                  : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing)));
     }
 };
 
@@ -75,7 +84,8 @@ public:
           stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+                                                        const std::string& discountCurve) override;
 
 private:
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
@@ -93,7 +103,8 @@ public:
     }
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+                                                        const std::string& discountCurve) override;
 
 private:
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;

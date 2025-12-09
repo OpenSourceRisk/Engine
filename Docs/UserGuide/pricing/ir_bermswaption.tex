@@ -1,4 +1,4 @@
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{Bermudan/American Swaption and non-standard European Swaption}
 \label{pricing:ir_bermswaption}
 
@@ -155,7 +155,7 @@ $n$ volatilities along with a list of $n-1$ times as an additional parameter ``V
 when an external model parameterization should be used.
 
 In case of ``Bootstrap'' the model volatility function will be calibrated to a set of coterminal swaptions. The
-(constant) value given as the paramter ``Volatility'' will be used as the initial guess for the calibration in this
+(constant) value given as the parameter ``Volatility'' will be used as the initial guess for the calibration in this
 case. ``VolatilityTimes'' will be ignored and instead overwritten by a time grid corresponding to the option expiries of
 the coterminal swaption calibration instruments. See below how the coterminal swaptions are constructed.
 
@@ -281,7 +281,7 @@ The coupon amount estimation is done using the LGM discount bond formula
 P(t,T,x) = \frac{P(0,T)}{P(0,t)} e^{ -(H(T)-H(t))x - 0.5 ( H(T)^2 - H(t)^2 ) \zeta(t)}
 \end{equation}
 
-where $x$ is the LGM model state, see \cite{Hagan_LGM}, section 4.1, and $P(0,t)$ is the market zerxo bond with maturity
+where $x$ is the LGM model state, see \cite{Hagan_LGM}, section 4.1, and $P(0,t)$ is the market zero bond with maturity
 $t$ computed on the relevant forwarding curve of the coupon.
 
 The amount of a coupon is estimated once during a rollback and then rolled back to prior exercise dates. The total set of dates used in the rollback comprises
@@ -297,4 +297,3 @@ need to be added as it would for example be the case for a finite difference sol
 
 The numeraire to deflate the values during the rollback is calculated using the ``Pricing'' configuration discount
 curve, usually the cross-OIS curve associated to the VM colalteral currency of the trade to price.
-

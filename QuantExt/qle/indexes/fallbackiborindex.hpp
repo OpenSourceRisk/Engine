@@ -32,6 +32,8 @@
 namespace QuantExt {
 using namespace QuantLib;
 
+class FallbackOvernightIndex;
+
 class FallbackIborIndex : public QuantLib::IborIndex {
 public:
     FallbackIborIndex(const QuantLib::ext::shared_ptr<IborIndex> originalIndex,
@@ -57,6 +59,7 @@ public:
 
 private:
     Rate forecastFixing(const Date& valueDate, const Date& endDate, Time t) const override;
+    friend class FallbackOvernightIndex;
     QuantLib::ext::shared_ptr<IborIndex> originalIndex_;
     QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex_;
     Real spread_;

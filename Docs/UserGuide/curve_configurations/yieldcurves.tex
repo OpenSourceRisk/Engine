@@ -28,7 +28,7 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
 \end{listing}
 
 The meaning of each of the top level elements in Listing \ref{lst:top_level_yc} is given below. If an element is labelled
-as 'Optional', then it may be excluded or included and left blank.
+as `Optional', then it may be excluded or included and left blank.
 \begin{itemize}
 \item CurveId: Unique identifier for the yield curve.
 \item CurveDescription: A description of the yield curve. This field may be left blank.
@@ -207,7 +207,7 @@ a segment defaults to 0 (highest possible priority), the minimum distance defaul
 \item instruments from the start of the second segment with pillar date strictly earlier than $d_1 + 5$, where $d_1$ is
   the maximum pillar date of instruments in the first segment, will be removed
 \item instruments from the end of the second segment with pillar date strictly later than $d_3 - 10$, where $d_3$ is the
-  mininum pillar date of instruments in the third segment, will be removed
+  minimum pillar date of instruments in the third segment, will be removed
 \end{itemize}
 
 
@@ -262,7 +262,7 @@ quote for an Average OIS instrument (a typical example in a USD Overnight Index 
 IRS quote and an OIS-LIBOR basis swap spread quote.  The IDs of these two quotes are stored in the
 \lstinline!CompositeQuote! node. The \lstinline!RateQuote! node holds the ID of the vanilla IRS quote and the
 \lstinline!SpreadQuote! node holds the ID of the OIS-LIBOR basis swap spread quote. The \lstinline!PillarChoice! node
-determines the bootstrap pillars that are used (MaturityDate, LastRelevantDate, if not given 'LastRelevantDate' is the
+determines the bootstrap pillars that are used (MaturityDate, LastRelevantDate, if not given `LastRelevantDate' is the
 default value).
 
 For the \lstinline!Priority! and \lstinline!MinDistance! nodes see the explanation under ``Simple Segment''.
@@ -317,7 +317,7 @@ the receiving side. Similarly, there is a \lstinline!ProjectionCurvePay! node fo
 values are short for receive, and long for pay. These are optional nodes. If they are left blank or omitted, then the projection
 curve is assumed to equal the curve being bootstrapped i.e.\ the current CurveId. However, at least one of the nodes
 needs to be populated to allow the bootstrap to proceed. The \lstinline!PillarChoice! node determines the bootstrap pillars
-that are used (MaturityDate, LastRelevantDate, if not given 'LastRelevantDate' is the default value).
+that are used (MaturityDate, LastRelevantDate, if not given `LastRelevantDate' is the default value).
 
 For the \lstinline!Priority! and \lstinline!MinDistance! nodes see the explanation under ``Simple Segment''.
 
@@ -351,7 +351,7 @@ for FX forward instruments. The \lstinline!DiscountCurve! node holds the CurveId
 in the other currency i.e.\ the currency in the currency pair that is not equal to the currency in Listing
 \ref{lst:top_level_yc}. The \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that is
 looked up in the {\tt market.txt} file. The \lstinline!PillarChoice! node determines the bootstrap pillars that are used
-(MaturityDate, LastRelevantDate, if not given 'LastRelevantDate' is the default value).
+(MaturityDate, LastRelevantDate, if not given `LastRelevantDate' is the default value).
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -712,9 +712,9 @@ build a projection curve for an Ibor index based on a risk free rate and a sprea
 \end{listing}
 
 \subsubsection*{Discount Ratio Segment}
-\label{sec:dicount_ratio_segment}
+\label{sec:discount_ratio_segment}
 
-When the node name is \lstinline!DiscountRatio!, the \lstinline!Type! node has the only allowable value \emph{Dicount
+When the node name is \lstinline!DiscountRatio!, the \lstinline!Type! node has the only allowable value \emph{Discount
 Ratio} and the node has the structure shown in Listing \ref{lst:discount_ratio_segment}. This segment is used to build a
 curve with discount factors $P(0,t)$ from three input curves with discount factors $P_b(0,t)$, $P_n(0,t)$ and $P_d(0,t)$
 (``base'', ``numerator'', ``denominator'' curves) following the equation

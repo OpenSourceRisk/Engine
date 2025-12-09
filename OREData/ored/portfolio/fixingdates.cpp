@@ -57,6 +57,8 @@
 #include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -631,7 +633,32 @@ void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(indexName), c.date());
 }
 
-void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) { c.underlying()->accept(*this); }
+void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) { 
+    c.underlying()->accept(*this);
+    if(market_){
+        Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(IndexNameTranslator::instance().oreName(c.index()->name()));
+        QuantLib::ext::shared_ptr<QuantExt::DynamicOptionletVolatilityStructure> capletVol =
+                                QuantLib::ext::dynamic_pointer_cast<QuantExt::DynamicOptionletVolatilityStructure>(ovs.currentLink());
+        if(capletVol){
+            QuantLib::ext::shared_ptr<OptionletVolatilityStructure> source = capletVol->getSource();
+            QuantLib::ext::shared_ptr<QuantExt::ProxyOptionletVolatility> pov = QuantLib::ext::dynamic_pointer_cast<QuantExt::ProxyOptionletVolatility>(source);
+            if(pov){
+                QuantLib::ext::shared_ptr<QuantLib::IborIndex> baseIndex = pov->getBaseIndex();
+                // Create a window of fixings [min, max_] to cover all potential fixings
+                auto fixingDates = c.underlying()->fixingDates();
+                std::sort(fixingDates.begin(), fixingDates.end());
+                QuantLib::Date minDate = fixingDates.front() > Settings::instance().evaluationDate()?Settings::instance().evaluationDate():fixingDates.front();
+                std::vector<QuantLib::Date> businessDates;
+                for (QuantLib::Date d = minDate; d <= max_; d = d + 1) {
+                    if (baseIndex->fixingCalendar().isBusinessDay(d)) {
+                        businessDates.push_back(d);
+                    }
+                }
+                requiredFixings_.addFixingDates(businessDates, IndexNameTranslator::instance().oreName(baseIndex->name()), c.date());
+            }
+        }
+    }
+}
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(c.index()->name()),
@@ -695,9 +722,10 @@ void FixingDateGetter::visit(QuantExt::SubPeriodsCoupon1& c) {
 
 void FixingDateGetter::visit(IndexedCoupon& c) {
     // the coupon's index might be null if an initial fixing is provided
-    if (c.index())
-        requiredFixings_.addFixingDate(c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()),
-                                       c.date());
+    if (c.index()) {
+        bool isTodaysFixing = Settings::instance().evaluationDate() == c.fixingDate();
+        requiredFixings_.addFixingDate(c.fixingDate(), IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), false, !isTodaysFixing);
+    }
     QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexedCoupon): underlying() is null");
     c.underlying()->accept(*this);
 }
@@ -772,9 +800,11 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
 
 void FixingDateGetter::visit(BondTRSCashFlow& bc) {
     if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_) {
-        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), bc.date());
+        bool startTodaysFixing = Settings::instance().evaluationDate() == bc.fixingStartDate();
+        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), bc.date(), false, !startTodaysFixing);
     }
-    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date());
+    bool endTodaysFixing = Settings::instance().evaluationDate() == bc.fixingEndDate();
+    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date(), false, !endTodaysFixing);
     if (bc.fxIndex()) {
         requiredFixings_.addFixingDate(bc.fxFixingStartDate(),
                                        IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());

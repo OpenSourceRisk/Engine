@@ -800,7 +800,7 @@ void CrossAssetModelBuilder::buildModel() const {
                 if (comData->calibrateSigma())
                     WLOG("CommoditySchwartzModel: skip sigma calibration for name " << comData->name() << " in BOOTSTRAP mode");    
                 QL_REQUIRE( comData->seasonalityParamType() == ParamType::Piecewise,
-                           "CommoditySchwartzModel: Bootstrap calibration implemented only for time dependent seasonaltiy");
+                           "CommoditySchwartzModel: Bootstrap calibration implemented only for time dependent seasonality");
                 // reset to initial params to ensure identical calibration outcomes for identical baskets
                 resetModelParams(CrossAssetModel::AssetType::COM, 2, i, Null<Size>());
                 // calibrate the model.

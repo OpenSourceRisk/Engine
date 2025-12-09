@@ -403,7 +403,6 @@ termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
-termstructures/overnightfallbackcurve.cpp
 termstructures/parametricvolatility.cpp
 termstructures/parametricvolatilitysmilesection.cpp
 termstructures/pricetermstructure.cpp
@@ -426,6 +425,7 @@ termstructures/spreadedsmilesection2.cpp
 termstructures/spreadedsurvivalprobabilitytermstructure.cpp
 termstructures/spreadedswaptionvolatility.cpp
 termstructures/spreadedyoyvolsurface.cpp
+termstructures/strippedoptionlet.cpp
 termstructures/strippedoptionletadapter2.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
@@ -1014,7 +1014,6 @@ termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
-termstructures/overnightfallbackcurve.hpp
 termstructures/parametricvolatility.hpp
 termstructures/parametricvolatilitysmilesection.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
@@ -1047,6 +1046,7 @@ termstructures/spreadedswaptionvolatility.hpp
 termstructures/spreadedyoyvolsurface.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
+termstructures/strippedoptionlet.hpp
 termstructures/strippedoptionletadapter.hpp
 termstructures/strippedoptionletadapter2.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
