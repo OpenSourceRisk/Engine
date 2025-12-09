@@ -450,10 +450,12 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                 std::cout<<"StartDate="<<asof<<"|maturity="<<maturity<<"|Term="<<quote.term<<"|QuoteValue="<<quote.value<<"|DayCounter="<<cdsConv->dayCounter()<<std::endl;
                 Schedule schedule(asof, maturity, quote.term, WeekendsOnly(),  cdsConv->paymentConvention(), cdsConv->paymentConvention(), cdsConv->rule(), false);
+
+                auto convSpread = quote.value;
                 
                 // CDS quoted at conventional spread
-                ext::shared_ptr<CreditDefaultSwap> cdsConvSpread = ext::make_shared<CreditDefaultSwap>(Protection::Buyer, 1, quote.value, schedule, cdsConv->paymentConvention(), cdsConv->dayCounter(), true,
-                        QuantLib::CreditDefaultSwap::atDefault, Date(), QuantLib::ext::shared_ptr<Claim>(), cdsConv->dayCounter());
+                ext::shared_ptr<CreditDefaultSwap> cdsConvSpread = ext::make_shared<CreditDefaultSwap>(Protection::Buyer, 1, convSpread, schedule, cdsConv->paymentConvention(), 
+                    Actual360(), true, QuantLib::CreditDefaultSwap::atDefault, Date(), QuantLib::ext::shared_ptr<Claim>(), Actual360());
 
                 ext::shared_ptr<SimpleQuote> flatRate = ext::make_shared<SimpleQuote>(0.0);
                 Handle<DefaultProbabilityTermStructure> probInit(ext::shared_ptr<DefaultProbabilityTermStructure>(
@@ -478,7 +480,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
                 // Fixed-coupon CDS; ask for fairUpfront
                 ext::shared_ptr<CreditDefaultSwap> conventionalTrade = ext::make_shared<CreditDefaultSwap>(Protection::Buyer, 1, 0.0, fixedCoupon, schedule, cdsConv->paymentConvention(),
-                                        cdsConv->dayCounter(), true, QuantLib::CreditDefaultSwap::atDefault, asof, upfrontSettle);
+                                        Actual360(), true, QuantLib::CreditDefaultSwap::atDefault, asof, upfrontSettle);
 
                 ext::shared_ptr<PricingEngine> engine( new IsdaCdsEngine(prob, 0.4, discountCurve, true));
                 conventionalTrade->setPricingEngine(engine);
@@ -486,7 +488,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 Real npv = conventionalTrade->NPV();
                 Rate pu = conventionalTrade->fairUpfront();
                 Real calc_upfront = pu * 1;
-                Real df = calc_upfront / npv;
                 std::cout<<"calc_upfront="<<calc_upfront<<std::endl;
                 std::cout<<"NPV = "<<npv<<std::endl;
 
@@ -500,7 +501,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
                     calc_upfront, fixedCoupon, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                     cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
+                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
                     config.startDate(), cdsConv->lastPeriodDayCounter());
             
                 if (tmp->latestDate() > asof) {
