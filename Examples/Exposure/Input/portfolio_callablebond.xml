@@ -14,7 +14,7 @@
       </BondData>
     </CallableBondData>
   </Trade>
-  <Trade id="UnderlyingBondTrade">
+  <!--Trade id="UnderlyingBondTrade">
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -25,5 +25,5 @@
       <SecurityId>SECURITY_1_STRIPPED</SecurityId>
       <BondNotional>100000000</BondNotional>
     </BondData>
-  </Trade>
+  </Trade-->
 </Portfolio>

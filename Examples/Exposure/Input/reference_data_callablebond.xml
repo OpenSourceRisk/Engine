@@ -4,8 +4,8 @@
     <Type>CallableBond</Type>
     <CallableBondReferenceData>
       <BondData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>CPTY_A</CreditCurveId>
       <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
@@ -21,7 +21,7 @@
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.10</Rate>
+            <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
@@ -42,7 +42,7 @@
       </BondData>
       <CallData>
         <Styles>
-          <Style>Bermudan</Style>
+          <Style>American</Style>
         </Styles>
         <ScheduleData>
           <Dates>
@@ -55,8 +55,8 @@
         </ScheduleData>
         <Prices>
           <Price>0.0</Price>
-          <Price>0.50</Price>
-          <Price>0.50</Price>
+          <Price>0.0</Price>
+          <Price>1.0</Price>
         </Prices>
         <PriceTypes>
           <PriceType>Clean</PriceType>
@@ -95,8 +95,8 @@
   <ReferenceDatum id="SECURITY_1_STRIPPED">
     <Type>Bond</Type>
     <BondReferenceData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>CPTY_A</CreditCurveId>
       <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
       <Calendar>TARGET</Calendar>
@@ -112,7 +112,7 @@
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.1</Rate>
+            <Rate>0.01</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>

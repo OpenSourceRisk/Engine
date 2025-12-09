@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <PricingEngines>
   <Product type="CallableBond">
-    <Model>LGM</Model>
+    <Model>CAM</Model>
     <ModelParameters>
       <Parameter name="Calibration">Bootstrap</Parameter>
       <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
@@ -13,6 +13,9 @@
       <Parameter name="Tolerance">0.0001</Parameter>
       <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
       <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+      <Parameter name="EnableCredit">false</Parameter>
+      <Parameter name="Credit_Volatility">0.005</Parameter>
+      <Parameter name="Credit_Reversion">0.005</Parameter>
     </ModelParameters>
     <Engine>AMC</Engine>
     <EngineParameters>
@@ -23,7 +26,7 @@
       <Parameter name="Pricing.Seed">17</Parameter>
       <Parameter name="Pricing.Samples">20000</Parameter>
       <Parameter name="Training.BasisFunction">Monomial</Parameter>
-      <Parameter name="Training.BasisFunctionOrder">4</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">3</Parameter>
       <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
       <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
     </EngineParameters>

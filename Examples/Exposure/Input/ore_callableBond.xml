@@ -51,6 +51,8 @@
       <Parameter name="pricingEnginesFile">pricingengine_callablebond.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_callablebond_amc.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
+      <!--Parameter name="cubeFile">cube.csv</Parameter-->
+      <!--Parameter name="aggregationScenarioDataFileName">scenariodata.csv</Parameter-->
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
@@ -61,6 +63,8 @@
       <Parameter name="quantile">0.95</Parameter>
       <Parameter name="calculationType">Symmetric</Parameter>
       <Parameter name="cva">Y</Parameter>
+      <!--Parameter name="rawCubeOutputFile">rawcube.csv</Parameter-->
+      <!--Parameter name="netCubeOutputFile">netcube.csv</Parameter-->
     </Analytic>
   </Analytics>
 </ORE>

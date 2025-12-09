@@ -6,7 +6,7 @@
     <Sequence>Burley2020SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>4096</Samples>
+    <Samples>20000</Samples>
     <DayCounter>A365F</DayCounter>
   </Parameters>
   <CrossAssetModel>
@@ -15,6 +15,9 @@
     <Currencies>
       <Currency>EUR</Currency>
     </Currencies>
+    <CreditNames>
+      <CreditName>CPTY_A</CreditName>
+    </CreditNames>
     <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
       <LGM ccy="default">
@@ -30,13 +33,15 @@
           <Calibrate>N</Calibrate>
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
-          <TimeGrid/>
+          <TimeGrid />
           <InitialValue>0.0</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  3Y, 4Y,  5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 11Y, 12Y, 13Y, 14Y, 15Y, 16Y, 17Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 17Y, 16Y, 15Y, 14Y, 13Y, 12Y, 11y, 10Y, 9Y, 8Y, 7Y, 6Y, 5Y, 4Y, 3Y, 2Y, 1Y</Terms>
-          <Strikes/>
+          <Expiries> 1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y, 11Y, 12Y, 13Y, 14Y, 15Y, 16Y, 17Y,
+            18Y, 19Y</Expiries>
+          <Terms> 19Y, 18Y, 17Y, 16Y, 15Y, 14Y, 13Y, 12Y, 11y, 10Y, 9Y, 8Y, 7Y, 6Y, 5Y, 4Y, 3Y, 2Y,
+            1Y</Terms>
+          <Strikes />
         </CalibrationSwaptions>
         <ParameterTransformation>
           <ShiftHorizon>20.0</ShiftHorizon>
@@ -44,23 +49,27 @@
         </ParameterTransformation>
       </LGM>
     </InterestRateModels>
-    <ForeignExchangeModels>
-      <CrossCcyLGM foreignCcy="default">
-        <DomesticCcy>EUR</DomesticCcy>
-        <CalibrationType>Bootstrap</CalibrationType>
-        <Sigma>
-          <Calibrate>Y</Calibrate>
-          <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
-        </Sigma>
-        <CalibrationOptions>
-          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
-          <Strikes/>
-        </CalibrationOptions>
-      </CrossCcyLGM>
-    </ForeignExchangeModels>
-    <InstantaneousCorrelations/>
+    <CreditModels>
+      <LGM name="CPTY_A">
+        <DomesticCurrency>EUR</DomesticCurrency>
+        <CalibrationType>None</CalibrationType>
+        <Volatility>
+          <Calibrate>N</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid />
+          <InitialValue>0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid />
+          <InitialValue>0.01</InitialValue>
+        </Reversion>
+      </LGM>
+    </CreditModels>
+    <InstantaneousCorrelations />
   </CrossAssetModel>
   <!--
 	This setion determines the composition of the market used for
@@ -98,9 +107,11 @@
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
-      <SimulateSurvivalProbabilities>false</SimulateSurvivalProbabilities>
-      <Names><Name>CPTY_C</Name></Names>
-      <Tenors>6M,1Y,2Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+      <Names>
+        <Name>CPTY_A</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,5Y,10Y,20Y</Tenors>
     </DefaultCurves>
     <SwaptionVolatilities>
       <Simulate>false</Simulate>
@@ -111,7 +122,7 @@
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
     </SwaptionVolatilities>
-    <FxVolatilities/>
+    <FxVolatilities />
     <AggregationScenarioDataCurrencies>
       <Currency>EUR</Currency>
     </AggregationScenarioDataCurrencies>
