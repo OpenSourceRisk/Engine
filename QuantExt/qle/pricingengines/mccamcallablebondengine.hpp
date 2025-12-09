@@ -102,7 +102,10 @@ public:
             const std::array<std::vector<RegressionModel>, 2>& regModelUndDirty,
             const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValueCall,
             const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValuePut,
-            const std::array<std::vector<RegressionModel>, 2>& regModelOption, const Real resultValue,
+            const std::array<std::vector<RegressionModel>, 2>& regModelOption, 
+            const std::array<std::vector<RegressionModel>, 2>& regModelCallExerciseValue,
+            const std::array<std::vector<RegressionModel>, 2>& regModelPutExerciseValue,
+            const Real resultValue,
             const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
             const bool includeTodaysCashflows, const bool includeReferenceDateEvents,
             const ext::shared_ptr<QuantExt::CurrentNotionalAccrualsCalculator>& notionalAccrualCalculator);
@@ -125,6 +128,9 @@ public:
         std::array<std::vector<RegressionModel>, 2> regModelContinuationValueCall_;
         std::array<std::vector<RegressionModel>, 2> regModelContinuationValuePut_;
         std::array<std::vector<RegressionModel>, 2> regModelOption_;
+        std::array<std::vector<RegressionModel>, 2> regModelCallExerciseValue_;
+        std::array<std::vector<RegressionModel>, 2> regModelPutExerciseValue_;
+
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
@@ -202,19 +208,18 @@ public:
                             std::vector<std::vector<RandomVariable>>& pathValues) const;
 
     // the model training logic
-    void calculateModels(Handle<YieldTermStructure> discountCurve, const std::set<Real>& simulationTimes,
-                         const std::set<Real>& exerciseXvaTimes, const std::set<Real> exerciseTimes,
-                         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
-                         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes,
-                         const std::set<Real>& xvaTimes, const std::vector<CashflowInfo>& cashflowInfo,
-                         const std::vector<std::vector<RandomVariable>>& pathValues,
-                         const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-                         std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelContinuationValueCall,
-                         std::vector<RegressionModel>& regModelContinuationValuePut,
-                         std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
-                         RandomVariable& pathValueOption, std::vector<RandomVariable>& pathExerciseProbsCall,
-                         std::vector<RandomVariable>& pathExerciseProbsPut) const;
+    void calculateModels(
+        Handle<YieldTermStructure> discountCurve, const std::set<Real>& simulationTimes,
+        const std::set<Real>& exerciseXvaTimes, const std::set<Real> exerciseTimes,
+        const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
+        const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes, const std::set<Real>& xvaTimes,
+        const std::vector<CashflowInfo>& cashflowInfo, const std::vector<std::vector<RandomVariable>>& pathValues,
+        const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
+        std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelContinuationValueCall,
+        std::vector<RegressionModel>& regModelContinuationValuePut, std::vector<RegressionModel>& regModelOption,
+        std::vector<RegressionModel>& regModelCallExerciseValue, std::vector<RegressionModel>& regModelPutExerciseValue,
+        RandomVariable& pathValueUndDirty, RandomVariable& pathValueOption,
+        std::vector<RandomVariable>& pathExerciseProbsCall, std::vector<RandomVariable>& pathExerciseProbsPut) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
