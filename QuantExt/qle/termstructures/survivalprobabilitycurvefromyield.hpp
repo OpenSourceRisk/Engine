@@ -63,7 +63,7 @@ Date SurvivalProbabilityCurveFromYield::maxDate() const {
 
 Probability SurvivalProbabilityCurveFromYield::survivalProbabilityImpl(Time t) const {
     auto df = yieldTermStructure_->discount(t);
-    return std::pow(df, (1.0 - rr_->value()));
+    return std::pow(df, 1.0 / (1.0 - rr_->value()));
 }
 
 } // namespace QuantExt

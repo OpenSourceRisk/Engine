@@ -274,6 +274,7 @@ void McCamCallableBondBaseEngine::calculateModels(
                 discountCurve);
 
             RandomVariable exerciseValueCall(calibrationSamples_, 0.0);
+            RandomVariable zero(calibrationSamples_, 0.0);
             if (isCallTime) // is call price
             {
                 auto& [_, callData] = *callDataIt;
@@ -293,11 +294,11 @@ void McCamCallableBondBaseEngine::calculateModels(
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValueCall[counter].train(
                     polynomOrder_, polynomType_, pathValueOption / survivalProb, pathValuesRef, simulationTimes,
-                    exerciseValueCall < RandomVariable(calibrationSamples_, 0.0));
+                    exerciseValueCall < itm);
                 auto continuationValue = regModelContinuationValueCall[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
 
-                auto exerciseFilter = exerciseValueCall < continuationValue;
+                auto exerciseFilter = exerciseValueCall < continuationValue && exerciseValueCall < itm;
 
                 pathValueOption = conditionalResult(exerciseFilter, exerciseValueCall * survivalProb, pathValueOption);
                 callTimeIdx++;
@@ -331,17 +332,18 @@ void McCamCallableBondBaseEngine::calculateModels(
                                        notionalAccrualCalc.notional(*t), notionalAccrualCalc.accrual(*t));
                 auto strikePrice = RandomVariable(calibrationSamples_, putPriceAmount) / numeraire;
                 RandomVariable exerciseValuePut = strikePrice - exerciseValue;
+                RandomVariable itm = !callTimes.empty() ? pathValueOption : RandomVariable(calibrationSamples_, 0.0);
                 regModelContinuationValuePut[counter] = RegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValuePut[counter].train(
                     polynomOrder_, polynomType_, pathValueOption / survivalProb, pathValuesRef, simulationTimes,
-                    exerciseValuePut > RandomVariable(calibrationSamples_, 0.0));
+                    exerciseValuePut > itm);
                 auto continuationValue = regModelContinuationValuePut[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
                 pathValueOption =
-                    conditionalResult(exerciseValuePut > continuationValue && exerciseValuePut > RandomVariable(calibrationSamples_, 0.0), exerciseValuePut * survivalProb, pathValueOption);
+                    conditionalResult(exerciseValuePut > continuationValue && exerciseValuePut > itm, exerciseValuePut * survivalProb, pathValueOption);
                
                 putTimeIdx++;
 
