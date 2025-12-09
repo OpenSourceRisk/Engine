@@ -92,8 +92,19 @@ void Heston::generatePaths() const {
         eqComIdx[j] = idx;
     }
 
+    for (Size j = 0; j < n; ++j) {
+        auto process = model_->hestonProcesses()[j];
+        auto d = process->discretization();
+        if (eqComIdx[j] != Null<Size>() && d != HestonProcess::FullTruncation &&
+            d != HestonProcess::PartialTruncation && d != HestonProcess::Reflection) {
+            ALOG("The use of HestonProcess::Discretization "
+                 << d << " is inconsistent with the Euler quanto adjustment for process " << j << ", "
+                 << " use full/partial truncation or reflection schemes with sufficiently large number of time steps.");
+        }
+    }
+
     // correlation matrix business is handled in the MultiAssetHestonProcess class, so we just pass dummies here
-    Matrix correlation(1,1,1), sqrtCorr(1,1,1);
+    Matrix correlation(1, 1, 1), sqrtCorr(1, 1, 1);
 
     populatePathValues(size(), underlyingPaths_,
                        makeMultiPathVariateGenerator(params_.sequenceType, 2 * n, timeGrid_.size() - 1, params_.seed,
@@ -106,13 +117,13 @@ void Heston::generatePaths() const {
                                                          params_.trainingSeed, params_.sobolOrdering,
                                                          params_.sobolDirectionIntegers),
                            correlation, sqrtCorr, eqComIdx);
+        }
+
+        setAdditionalResults();
+
+        DLOG("Heston::generatePaths() done");
     }
 
-    setAdditionalResults();
-
-    DLOG("Heston::generatePaths() done");
-}
-  
 void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                                 const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                 const Matrix& correlation, const Matrix& sqrtCorr,
