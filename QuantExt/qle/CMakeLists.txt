@@ -340,6 +340,8 @@ processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+processes/quantohestonprocess.cpp
+processes/multiassetquantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
@@ -912,6 +914,8 @@ processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+processes/quantohestonprocess.hpp
+processes/multiassetquantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp

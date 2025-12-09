@@ -56,26 +56,31 @@
       <!-- default parameters-->
       <Parameter name="Engine">MC</Parameter>
       <Parameter name="Samples">10000</Parameter>
-      <Parameter name="StateGridPoints">100</Parameter>
+      <Parameter name="SalvagingAlgorithm">None</Parameter>
+      <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
+      <Parameter name="StateGridPoints">24</Parameter>
       <Parameter name="RegressionOrder">2</Parameter>
-      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="TimeStepsPerYear">100</Parameter>
       <!-- asset class specific choices -->
       <Parameter name="Engine_SingleAssetOption(EQ)">MC</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>
       
-      <!-- Heston spcific -->
+      <!-- Heston specific -->
 
       <Parameter name="CalibrationMoneyness">-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0</Parameter>
       <Parameter name="CalibrationExpiries">3M</Parameter>
       <Parameter name="CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y, 15M, 18M, 21M, 2Y, 5Y, 7Y, 10Y</Parameter>
-      <Parameter name="HestonInitialValues">0.04, 1.0, 0.1, -0.5, 0.04</Parameter> <!-- ordering: theta, kappa, sigma, rho, v0 -->
-      <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter>                <!-- applies to simple calibration, without randomised initial values -->
-      <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter>             <!-- in [0,1] -->
-      <Parameter name="HestonCalibrationRestarts">0</Parameter>                    <!-- max. number of initial value sets, 0 means simple calibration -->
+      <!-- ordering: theta, kappa, sigma, rho, v0 -->
+      <!--<Parameter name="HestonInitialValues">0.04, 1.0, 0.000001, -0.5, 0.04</Parameter>-->
+      <Parameter name="HestonInitialValues">0.04, 2.0, 0.5, -0.7, 0.04</Parameter>
+      <!--<Parameter name="HestonFixedValues">Y,Y,Y,Y,Y</Parameter>-->           
+      <Parameter name="HestonFixedValues">N,N,N,N,N</Parameter>               
+      <Parameter name="HestonRelaxedFellerConstraint">0.2</Parameter>
+      <Parameter name="HestonCalibrationRestarts">0</Parameter>      
       <Parameter name="HestonMaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
-      <Parameter name="HestonTolerance">0.001</Parameter>                          <!-- implied vol RMSE where we stop the search -->
+      <Parameter name="HestonTolerance">0.001</Parameter>            
       <!-- PartialTruncation,
            FullTruncation,
            Reflection,
@@ -85,7 +90,8 @@
            BroadieKayaExactSchemeLobatto,
            BroadieKayaExactSchemeLaguerre,
            BroadieKayaExactSchemeTrapezoidal -->
-      <Parameter name="HestonProcessDiscretization">QuadraticExponentialMartingale</Parameter>
+      <!--<Parameter name="HestonProcessDiscretization">QuadraticExponentialMartingale</Parameter>-->
+      <Parameter name="HestonProcessDiscretization">Reflection</Parameter>
       <Parameter name="Debug">true</Parameter>
     </EngineParameters>
   </Product>

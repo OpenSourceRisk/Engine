@@ -54,8 +54,6 @@ private:
                             const Matrix& correlation, const Matrix& sqrtCorr,
                             const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
- 
-    void generateSingleAssetPaths() const; 
 };
 
 

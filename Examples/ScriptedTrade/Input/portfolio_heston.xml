@@ -73,7 +73,7 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-  
+
   <!--
   <Trade id="3:EquityOptionDAX">
     <TradeType>ScriptedTrade</TradeType>
@@ -123,6 +123,7 @@
   -->
 
   <!-- Analytic pricer -->
+  <!--
   <Trade id="EquityBarrierOptionAnalytic">
     <TradeType>EquityBarrierOption</TradeType>
     <Envelope>
@@ -159,6 +160,7 @@
       <Quantity>1000</Quantity>
     </EquityBarrierOptionData>
   </Trade>  
+  -->
   
   <!-- Equity Barrier Option as scripted trade with daily observations -->
   <Trade id="EquityBarrierOption">
@@ -288,8 +290,8 @@
 	<Index>
           <Name>Underlyings</Name>
           <Values>
-            <Value>EQ-RIC:.STOXX50E</Value>
-            <Value>EQ-RIC:.GDAXI</Value>
+	    <Value>EQ-RIC:.STOXX50E</Value>
+	    <Value>EQ-RIC:.GDAXI</Value>
             <Value>EQ-RIC:.SPX</Value>
           </Values>
 	</Index>
@@ -297,7 +299,7 @@
           <Name>Weights</Name>
           <Values>
             <Value>1.0</Value>
-            <Value>0.25</Value>
+	    <Value>0.25</Value>
             <Value>1.0</Value>
           </Values>
 	</Number>
