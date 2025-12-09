@@ -2367,6 +2367,16 @@
              <xs:attribute type="xs:string" name="id"/>
             </xs:complexType>
            </xs:element>
+		   <xs:element name="Trade">
+            <xs:complexType>
+             <xs:sequence>
+              <xs:element type="oreTradeType" name="TradeType"/>
+              <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+              <xs:group ref="oreTradeData"/>
+             </xs:sequence>
+             <xs:attribute type="xs:string" name="id"/>
+            </xs:complexType>
+           </xs:element>
           </xs:sequence>
          </xs:complexType>
         </xs:element>
@@ -2374,6 +2384,16 @@
          <xs:complexType>
            <xs:sequence>
             <xs:element type="oreTradeType" name="SubTradeType"/>
+            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+            <xs:group ref="oreTradeData"/>
+            </xs:sequence>
+          <xs:attribute type="xs:string" name="id"/>
+         </xs:complexType>
+        </xs:element>
+		<xs:element name="Trade">
+         <xs:complexType>
+           <xs:sequence>
+            <xs:element type="oreTradeType" name="TradeType"/>
             <xs:element type="envelope" name="Envelope" minOccurs="0"/>
             <xs:group ref="oreTradeData"/>
             </xs:sequence>
@@ -2590,6 +2610,16 @@
         <xs:complexType>
           <xs:all>
             <xs:element type="oreTradeType" name="SubTradeType"/>
+            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+            <xs:element type="bondData" name="BondData" maxOccurs="1" minOccurs="0"/>
+          </xs:all>
+          <xs:attribute type="xs:string" name="id"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Trade" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="oreTradeType" name="TradeType"/>
             <xs:element type="envelope" name="Envelope" minOccurs="0"/>
             <xs:element type="bondData" name="BondData" maxOccurs="1" minOccurs="0"/>
           </xs:all>
@@ -3032,6 +3062,16 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="oreTradeType" name="SubTradeType"/>
+            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+            <xs:group ref="oreTradeData"/>
+          </xs:sequence>
+          <xs:attribute type="xs:string" name="id"/>
+        </xs:complexType>
+      </xs:element>
+	  <xs:element name="Trade" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="oreTradeType" name="TradeType"/>
             <xs:element type="envelope" name="Envelope" minOccurs="0"/>
             <xs:group ref="oreTradeData"/>
           </xs:sequence>
