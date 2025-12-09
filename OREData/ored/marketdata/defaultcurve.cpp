@@ -36,6 +36,9 @@
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/pricingengines/credit/isdacdsengine.hpp>
+#include <ql/pricingengines/credit/midpointcdsengine.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <algorithm>
 #include <set>
@@ -444,12 +447,67 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                             "date strictly after T + 1.");
                     continue;
                 };
-                helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
-                    quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA,
-                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
-                runningSpread = config.runningSpread();
-                helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
+                auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                std::cout<<"StartDate="<<asof<<"|maturity="<<maturity<<"|Term="<<quote.term<<"|QuoteValue="<<quote.value<<"|DayCounter="<<cdsConv->dayCounter()<<std::endl;
+                Schedule schedule(asof, maturity, quote.term, WeekendsOnly(),  cdsConv->paymentConvention(), cdsConv->paymentConvention(), cdsConv->rule(), false);
+                
+                // CDS quoted at conventional spread
+                ext::shared_ptr<CreditDefaultSwap> cdsConvSpread = ext::make_shared<CreditDefaultSwap>(Protection::Buyer, 1, quote.value, schedule, cdsConv->paymentConvention(), cdsConv->dayCounter(), true,
+                        QuantLib::CreditDefaultSwap::atDefault, Date(), QuantLib::ext::shared_ptr<Claim>(), cdsConv->dayCounter());
+
+                ext::shared_ptr<SimpleQuote> flatRate = ext::make_shared<SimpleQuote>(0.0);
+                Handle<DefaultProbabilityTermStructure> probInit(ext::shared_ptr<DefaultProbabilityTermStructure>(
+                        new FlatHazardRate(0, NullCalendar(), Handle<Quote>(flatRate), Actual365Fixed())
+                    )
+                );
+                auto dummyYTS = Handle<YieldTermStructure>(ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
+
+                ext::shared_ptr<PricingEngine> engineInit( new MidPointCdsEngine(probInit, 0.4, dummyYTS));
+                cdsConvSpread->setPricingEngine(engineInit);
+
+                // Flat hazard implied by conventional spread (ISDA model)
+                Real h = cdsConvSpread->impliedHazardRate(0.0, discountCurve, Actual365Fixed(), 0.4, 1e-12, CreditDefaultSwap::ISDA);
+                Handle<DefaultProbabilityTermStructure> prob(
+                    boost::shared_ptr<DefaultProbabilityTermStructure>(
+                        new FlatHazardRate(0, WeekendsOnly(), h, Actual365Fixed())
+                    )
+                );
+
+                Rate fixedCoupon = 100 / 10000.0;
+                Date upfrontSettle = WeekendsOnly().advance(asof, 3*Days);
+
+                // Fixed-coupon CDS; ask for fairUpfront
+                ext::shared_ptr<CreditDefaultSwap> conventionalTrade = ext::make_shared<CreditDefaultSwap>(Protection::Buyer, 1, 0.0, fixedCoupon, schedule, cdsConv->paymentConvention(),
+                                        cdsConv->dayCounter(), true, QuantLib::CreditDefaultSwap::atDefault, asof, upfrontSettle);
+
+                ext::shared_ptr<PricingEngine> engine( new IsdaCdsEngine(prob, 0.4, discountCurve, true));
+                conventionalTrade->setPricingEngine(engine);
+
+                Real npv = conventionalTrade->NPV();
+                Rate pu = conventionalTrade->fairUpfront();
+                Real calc_upfront = pu * 1;
+                Real df = calc_upfront / npv;
+                std::cout<<"calc_upfront="<<calc_upfront<<std::endl;
+                std::cout<<"NPV = "<<npv<<std::endl;
+
+                // helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
+                //     quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
+                //     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA,
+                //     cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
+                // runningSpread = config.runningSpread();
+                // helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
+
+                auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
+                    calc_upfront, fixedCoupon, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
+                    cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
+                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
+                    config.startDate(), cdsConv->lastPeriodDayCounter());
+            
+                if (tmp->latestDate() > asof) {
+                    helpers.push_back(tmp);
+                }
+                helperQuoteTerms[tmp->latestDate()] = quote.term;
+                std::cout<<"AfterHelpers"<<std::endl;
             } catch (exception& e) {
                 if (quote.term == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
@@ -567,6 +625,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         for (Size i = 0; i < helpers.size(); ++i) {
             if (helpers[i]->latestDate() > asof) {
                 Date pillarDate = helpers[i]->pillarDate();
+                std::cout<<"PillarDate="<<pillarDate<<"|";
                 Probability sp = tmp->survivalProbability(pillarDate);
 
                 // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a
