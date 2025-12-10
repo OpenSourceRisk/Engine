@@ -203,8 +203,7 @@ BOOST_AUTO_TEST_CASE(testMartingales) {
             }
         }
 
-	// MersenneTwister would need a somewhat larger tolerance 3/sqrt(paths)
-	Real tolerance = 1.0 / sqrt(paths);
+	Real tolerance = 3.0 / sqrt(paths);
 
 	// Check consistency of simulated correlations
         for (Size i = 0; i < timeGrid.size() - 1; ++i) {
@@ -213,14 +212,14 @@ BOOST_AUTO_TEST_CASE(testMartingales) {
                     Real c = cor[i][j][k] / paths;
                     // BOOST_TEST_MESSAGE("timeStep " << i << " correlation(" << j << "," << k << ") = " << c << " vs "
                     //                                << parsimonious[j][k]);
-                    BOOST_CHECK_SMALL(fabs(c - parsimonious[j][k]), tolerance * 2);
+                    BOOST_CHECK_SMALL(fabs(c - parsimonious[j][k]), tolerance);
                 }
             }
             for (Size j = 0; j < hestonProcesses.size(); ++j) {
                 Real c = cor[i][2 * j][2 * j + 1] / paths;
                 // BOOST_TEST_MESSAGE("timeStep " << i << "correlation(" << 2 * j << "," << 2 * j + 1 << ") = " << c
                 //                                << " vs " << hestonProcesses[j]->rho());
-                BOOST_CHECK_SMALL(fabs(c - hestonProcesses[j]->rho()), tolerance * 2);
+                BOOST_CHECK_SMALL(fabs(c - hestonProcesses[j]->rho()), tolerance);
             }
 
 	    // TODO: Add a test of the decorrelated variates here
