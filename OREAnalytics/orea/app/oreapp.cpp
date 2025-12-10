@@ -1307,11 +1307,48 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setMcVarSeed(parseInteger(tmp));
 
+        tmp = params_->get("parametricVar", "mporDays", false);
+        if (tmp != "")
+            setMporDays(static_cast<Size>(parseInteger(tmp)));
+
+        tmp = params_->get("parametricVar", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
+
+        tmp = params_->get("parametricVar", "mporOverlappingPeriods", false);
+        if (tmp != "")
+            setMporOverlappingPeriods(parseBool(tmp));
+
         tmp = params_->get("parametricVar", "covarianceInputFile", false);
-        QL_REQUIRE(tmp != "", "covarianceInputFile not provided");
-        std::string covFile = (inputPath_ / tmp).generic_string();
-        LOG("Load Covariance Data from file " << covFile);
-        setCovarianceDataFromFile(covFile);
+        if (tmp != ""){
+            std::string covFile = (inputPath_ / tmp).generic_string();
+            LOG("Load Covariance Data from file " << covFile);
+            setCovarianceDataFromFile(covFile);
+        }
+
+        tmp = params_->get("parametricVar", "historicalPeriod", false);
+        if (tmp != "")
+            setBenchmarkVarPeriod(tmp);
+
+        tmp = params_->get("parametricVar", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        }
+
+        tmp = params_->get("parametricVar", "simulationConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+        }
+
+        tmp = params_->get("parametricVar", "scenarioFile", false);
+        if (tmp != "") {
+            std::string scenarioFile = (inputPath_ / tmp).generic_string();
+            setScenarioReader(scenarioFile);
+        }
 
         tmp = params_->get("parametricVar", "sensitivityInputFile", false);
         QL_REQUIRE(tmp != "", "sensitivityInputFile not provided");
