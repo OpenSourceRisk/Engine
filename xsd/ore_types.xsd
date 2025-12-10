@@ -352,6 +352,7 @@
       <xs:enumeration value="30/360"/>
       <xs:enumeration value="30/360 US"/>
       <xs:enumeration value="30/360 (US)"/>
+      <xs:enumeration value="30/360 NASD"/>
       <xs:enumeration value="30U/360"/>
       <xs:enumeration value="30US/360"/>
       <xs:enumeration value="30/360 (Bond Basis)"/>
