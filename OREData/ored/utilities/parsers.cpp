@@ -235,7 +235,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 US", Thirty360(Thirty360::USA)},
                                         {"30/360 (US)", Thirty360(Thirty360::USA)},
-                                        {"30/360 NASD", Thirty360(Thirty360::USA)},
+                                        {"30/360 NASD", Thirty360(Thirty360::NASD)},
                                         {"30U/360", Thirty360(Thirty360::USA)},
                                         {"30US/360", Thirty360(Thirty360::USA)},
                                         {"30/360 (Bond Basis)", Thirty360(Thirty360::BondBasis)},
