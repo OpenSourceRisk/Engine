@@ -44,19 +44,6 @@ struct HestonData {
     Real rho;
 };
 
-std::vector<HestonData> equityHestonData = {
-    {0.04, 2.0, 0.04, 1e-4, 0.0}, // BS
-    {0.04, 2.0, 0.04, 0.3, -0.7}, // Feller > 1
-    {0.04, 2.0, 0.04, 0.5, -0.7}, // Feller < 1
-    {0.04, 2.0, 0.04, 0.5, +0.7}  // Feller < 1
-};
-
-std::vector<HestonData> fxHestonData = {
-    {0.02, 1.0, 0.02, 1e-4, 0.0}, // BS
-    {0.02, 1.0, 0.02, 0.1, +0.4}, // Feller > 1
-    {0.02, 1.0, 0.02, 0.3, +0.4}  // Feller < 1
-};
-
 struct QuantoHestonData {
     HestonProcess::Discretization disc;
     Size steps;
@@ -65,22 +52,6 @@ struct QuantoHestonData {
     Size fxCase;     // 0-3, see above
     Size process;    // 0: QuantoHeston, 1: MultiAssetQuantoHeston, 2: MultiAssetQuantoHeston reversed
 };
-
-std::vector<QuantoHestonData> testData = {
-    {HestonProcess::FullTruncation,       60, 0.0, 0, 0, 0},
-    {HestonProcess::PartialTruncation,    60, 0.0, 0, 0, 0},
-    {HestonProcess::Reflection,           60, 0.0, 0, 0, 0},
-    {HestonProcess::QuadraticExponential, 60, 0.0, 0, 0, 0},
-    {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 0},
-    {HestonProcess::PartialTruncation,    60, 0.8, 1, 1, 0},
-    {HestonProcess::Reflection,           60, 0.8, 1, 1, 0},
-    {HestonProcess::QuadraticExponential, 60, 0.8, 1, 1, 0},
-    {HestonProcess::FullTruncation,       60, 0.8, 2, 2, 0},
-    {HestonProcess::QuadraticExponential, 60, 0.8, 2, 2, 0},
-    {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 1},
-    {HestonProcess::FullTruncation,       60, 0.8, 2, 2, 1},
-    {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 2},
-    {HestonProcess::FullTruncation,       60, 0.8, 2, 2, 2}};
 
 } // namespace
 
@@ -91,6 +62,36 @@ BOOST_AUTO_TEST_SUITE(QuantoHestonProcessTest)
 BOOST_AUTO_TEST_CASE(testMartingales) {
 
     BOOST_TEST_MESSAGE("Testing Quanto Heston Martingales");
+
+    std::vector<HestonData> equityHestonData = {
+        {0.04, 2.0, 0.04, 1e-4, 0.0}, // BS
+        {0.04, 2.0, 0.04, 0.3, -0.7}, // Feller > 1
+        {0.04, 2.0, 0.04, 0.5, -0.7}, // Feller < 1
+        {0.04, 2.0, 0.04, 0.5, +0.7}  // Feller < 1
+    };
+
+    std::vector<HestonData> fxHestonData = {
+        {0.02, 1.0, 0.02, 1e-4, 0.0}, // BS
+        {0.02, 1.0, 0.02, 0.1, +0.4}, // Feller > 1
+        {0.02, 1.0, 0.02, 0.3, +0.4}  // Feller < 1
+    };
+
+    std::vector<QuantoHestonData> testData = {
+        {HestonProcess::FullTruncation,       60, 0.0, 0, 0, 0},
+	{HestonProcess::PartialTruncation,    60, 0.0, 0, 0, 0},
+        {HestonProcess::Reflection,           60, 0.0, 0, 0, 0},
+	{HestonProcess::QuadraticExponential, 60, 0.0, 0, 0, 0},
+        {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 0},
+	{HestonProcess::PartialTruncation,    60, 0.8, 1, 1, 0},
+        {HestonProcess::Reflection,           60, 0.8, 1, 1, 0},
+	{HestonProcess::QuadraticExponential, 60, 0.8, 1, 1, 0},
+        {HestonProcess::FullTruncation,       60, 0.8, 2, 2, 0},
+	{HestonProcess::QuadraticExponential, 60, 0.8, 2, 2, 0},
+        {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 1},
+	{HestonProcess::FullTruncation,       60, 0.8, 2, 2, 1},
+        {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 2},
+	{HestonProcess::FullTruncation,       60, 0.8, 2, 2, 2}
+    };
 
     Date today(8, December, 2025);
     Settings::instance().evaluationDate() = today;

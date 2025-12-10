@@ -444,9 +444,9 @@ $\rho_{VX} = \rho_{SX}\,\rho$ the correlation between variance process and FX (s
 is the stochastic variance of the FX process. The negative signs of the adjustments are consistent with
 an FX quotation that converts foreign amounts into domestic currency by multiplication (the exchange rate
 is the value of 1 unit of foreign currency expressed in domestic currency). The inverse quotation would require
-flipping the signs. Note that the variance drift adjustment has the potential, depending the sign of correlations,
+flipping the signs. Note that the variance drift adjustment has the potential, depending on the sign of correlations,
 to push the variance process towards the boundary $V=0$, especially when working with relaxed Feller constraints
--- to be controlled in the implementaton of the variance process.
+-- to be controlled in the implementation of the variance process.
 
 If we set the {\tt FullDynamicFx} parameter in the pricing engine configuration to false, then our FX processes
 are deterministic (zero volatility), and the adjustments vanish.
