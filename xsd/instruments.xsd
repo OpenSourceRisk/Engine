@@ -2354,9 +2354,10 @@
     <xs:sequence>
       <xs:choice maxOccurs="unbounded">
         <xs:element name="Derivative">
-         <xs:complexType>
+		 <xs:complexType>
           <xs:sequence>
            <xs:element type="xs:string" name="Id"/>
+		   <xs:choice>
            <xs:element name="SubTrade">
             <xs:complexType>
              <xs:sequence>
@@ -2377,7 +2378,8 @@
              <xs:attribute type="xs:string" name="id"/>
             </xs:complexType>
            </xs:element>
-          </xs:sequence>
+		   </xs:choice>
+		  </xs:sequence>
          </xs:complexType>
         </xs:element>
         <xs:element name="SubTrade">
@@ -2605,7 +2607,9 @@
   </xs:complexType>
 
   <xs:complexType name="cboBondBasketData">
-    <xs:sequence>
+    
+	<xs:sequence>
+	<xs:choice maxOccurs="unbounded">
       <xs:element name="SubTrade" maxOccurs="unbounded">
         <xs:complexType>
           <xs:all>
@@ -2626,6 +2630,7 @@
           <xs:attribute type="xs:string" name="id"/>
         </xs:complexType>
       </xs:element>
+	</xs:choice>
     </xs:sequence>
   </xs:complexType>
 
@@ -3058,6 +3063,7 @@
 
   <xs:complexType name="compositeTradeComponents">
     <xs:sequence>
+	<xs:choice maxOccurs="unbounded">
       <xs:element name="SubTrade" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
@@ -3078,6 +3084,7 @@
           <xs:attribute type="xs:string" name="id"/>
         </xs:complexType>
       </xs:element>
+	  </xs:choice>
     </xs:sequence>
   </xs:complexType>
 
