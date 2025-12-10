@@ -4,41 +4,41 @@
     <Type>CallableBond</Type>
     <CallableBondReferenceData>
       <BondData>
-      <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>CPTY_A</CreditCurveId>
-      <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
-      <SettlementDays>2</SettlementDays>
-      <Calendar>TARGET</Calendar>
-      <IssueDate>20110215</IssueDate>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>1</Notional>
-        </Notionals>
-        <DayCounter>ActActISMA</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.02</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>20110225</StartDate>
-            <EndDate>20310225</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
+        <IssuerId>CPTY_A</IssuerId>
+        <CreditCurveId>CPTY_A</CreditCurveId>
+        <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
+        <SettlementDays>2</SettlementDays>
+        <Calendar>TARGET</Calendar>
+        <IssueDate>20110215</IssueDate>
+        <LegData>
+          <LegType>Fixed</LegType>
+          <Payer>false</Payer>
+          <Currency>EUR</Currency>
+          <Notionals>
+            <Notional>1</Notional>
+          </Notionals>
+          <DayCounter>ActActISMA</DayCounter>
+          <PaymentConvention>F</PaymentConvention>
+          <FixedLegData>
+            <Rates>
+              <Rate>0.01</Rate>
+            </Rates>
+          </FixedLegData>
+          <ScheduleData>
+            <Rules>
+              <StartDate>20110225</StartDate>
+              <EndDate>20260225</EndDate>
+              <Tenor>1Y</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
+            </Rules>
+          </ScheduleData>
+        </LegData>
       </BondData>
       <CallData>
         <Styles>
@@ -48,14 +48,14 @@
           <Dates>
             <Dates>
               <Date>2020-10-25</Date>
+              <Date>2022-10-25</Date>
               <Date>2025-10-25</Date>
-              <Date>2030-10-25</Date>
             </Dates>
           </Dates>
         </ScheduleData>
         <Prices>
-          <Price>0.0</Price>
-          <Price>0.0</Price>
+          <Price>1.0</Price>
+          <Price>0.1</Price>
           <Price>1.0</Price>
         </Prices>
         <PriceTypes>
@@ -92,44 +92,188 @@
       </PutData-->
     </CallableBondReferenceData>
   </ReferenceDatum>
-  <ReferenceDatum id="SECURITY_1_STRIPPED">
-    <Type>Bond</Type>
-    <BondReferenceData>
-      <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>CPTY_A</CreditCurveId>
-      <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
-      <SettlementDays>2</SettlementDays>
-      <Calendar>TARGET</Calendar>
-      <IssueDate>20110215</IssueDate>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>1</Notional>
-        </Notionals>
-        <DayCounter>ActActISMA</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.01</Rate>
-          </Rates>
-        </FixedLegData>
+  <ReferenceDatum id="SECURITY_neverCalled">
+    <Type>CallableBond</Type>
+    <CallableBondReferenceData>
+      <BondData>
+        <IssuerId>CPTY_A</IssuerId>
+        <CreditCurveId>CPTY_A</CreditCurveId>
+        <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
+        <SettlementDays>2</SettlementDays>
+        <Calendar>TARGET</Calendar>
+        <IssueDate>20110215</IssueDate>
+        <LegData>
+          <LegType>Fixed</LegType>
+          <Payer>false</Payer>
+          <Currency>EUR</Currency>
+          <Notionals>
+            <Notional>1</Notional>
+          </Notionals>
+          <DayCounter>ActActISMA</DayCounter>
+          <PaymentConvention>F</PaymentConvention>
+          <FixedLegData>
+            <Rates>
+              <Rate>0.01</Rate>
+            </Rates>
+          </FixedLegData>
+          <ScheduleData>
+            <Rules>
+              <StartDate>20110225</StartDate>
+              <EndDate>20260225</EndDate>
+              <Tenor>1Y</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
+            </Rules>
+          </ScheduleData>
+        </LegData>
+      </BondData>
+      <CallData>
+        <Styles>
+          <Style>American</Style>
+        </Styles>
         <ScheduleData>
-          <Rules>
-            <StartDate>20110225</StartDate>
-            <EndDate>20310225</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
+          <Dates>
+            <Dates>
+              <Date>2020-10-25</Date>
+              <Date>2022-10-25</Date>
+              <Date>2025-10-25</Date>
+            </Dates>
+          </Dates>
         </ScheduleData>
-      </LegData>
-    </BondReferenceData>
+        <Prices>
+          <Price>2.0</Price>
+          <Price>2.0</Price>
+          <Price>2.0</Price>
+        </Prices>
+        <PriceTypes>
+          <PriceType>Clean</PriceType>
+        </PriceTypes>
+        <IncludeAccruals>
+          <IncludeAccrual>true</IncludeAccrual>
+        </IncludeAccruals>
+      </CallData>
+      <!--PutData>
+        <Styles>
+          <Style>American</Style>
+        </Styles>
+        <ScheduleData>
+          <Dates>
+            <Dates>
+              <Date>2020-10-25</Date>
+              <Date>2025-10-25</Date>
+              <Date>2030-10-25</Date>
+            </Dates>
+          </Dates>
+        </ScheduleData>
+        <Prices>
+          <Price>1.0</Price>
+          <Price>1.0</Price>
+          <Price>1.0</Price>
+        </Prices>
+        <PriceTypes>
+          <PriceType>Clean</PriceType>
+        </PriceTypes>
+        <IncludeAccruals>
+          <IncludeAccrual>true</IncludeAccrual>
+        </IncludeAccruals>
+      </PutData-->
+    </CallableBondReferenceData>
+  </ReferenceDatum>
+  <ReferenceDatum id="SECURITY_putcall">
+    <Type>CallableBond</Type>
+    <CallableBondReferenceData>
+      <BondData>
+        <IssuerId>CPTY_A</IssuerId>
+        <CreditCurveId>CPTY_A</CreditCurveId>
+        <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
+        <SettlementDays>2</SettlementDays>
+        <Calendar>TARGET</Calendar>
+        <IssueDate>20110215</IssueDate>
+        <LegData>
+          <LegType>Fixed</LegType>
+          <Payer>false</Payer>
+          <Currency>EUR</Currency>
+          <Notionals>
+            <Notional>1</Notional>
+          </Notionals>
+          <DayCounter>ActActISMA</DayCounter>
+          <PaymentConvention>F</PaymentConvention>
+          <FixedLegData>
+            <Rates>
+              <Rate>0.01</Rate>
+            </Rates>
+          </FixedLegData>
+          <ScheduleData>
+            <Rules>
+              <StartDate>20110225</StartDate>
+              <EndDate>20260225</EndDate>
+              <Tenor>1Y</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
+            </Rules>
+          </ScheduleData>
+        </LegData>
+      </BondData>
+      <CallData>
+        <Styles>
+          <Style>American</Style>
+        </Styles>
+        <ScheduleData>
+          <Dates>
+            <Dates>
+              <Date>2020-10-25</Date>
+              <Date>2022-10-25</Date>
+              <Date>2025-10-25</Date>
+            </Dates>
+          </Dates>
+        </ScheduleData>
+        <Prices>
+          <Price>1.2</Price>
+          <Price>1.0</Price>
+          <Price>1.0</Price>
+        </Prices>
+        <PriceTypes>
+          <PriceType>Clean</PriceType>
+        </PriceTypes>
+        <IncludeAccruals>
+          <IncludeAccrual>true</IncludeAccrual>
+        </IncludeAccruals>
+      </CallData>
+      <PutData>
+        <Styles>
+          <Style>American</Style>
+        </Styles>
+        <ScheduleData>
+          <Dates>
+            <Dates>
+              <Date>2020-10-25</Date>
+              <Date>2022-10-25</Date>
+              <Date>2025-10-25</Date>
+            </Dates>
+          </Dates>
+        </ScheduleData>
+        <Prices>
+          <Price>1.0</Price>
+          <Price>2.0</Price>
+          <Price>1.0</Price>
+        </Prices>
+        <PriceTypes>
+          <PriceType>Clean</PriceType>
+        </PriceTypes>
+        <IncludeAccruals>
+          <IncludeAccrual>true</IncludeAccrual>
+        </IncludeAccruals>
+      </PutData>
+    </CallableBondReferenceData>
   </ReferenceDatum>
 </ReferenceData>

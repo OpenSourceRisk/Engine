@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <Simulation>
   <Parameters>
-    <Grid>200,1M</Grid>
+    <Grid>300,2W</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>Burley2020SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>20000</Samples>
+    <Samples>4096</Samples>
     <DayCounter>A365F</DayCounter>
   </Parameters>
   <CrossAssetModel>
@@ -58,14 +58,14 @@
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Constant</ParamType>
           <TimeGrid />
-          <InitialValue>0.01</InitialValue>
+          <InitialValue>0.005</InitialValue>
         </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid />
-          <InitialValue>0.01</InitialValue>
+          <InitialValue>0.005</InitialValue>
         </Reversion>
       </LGM>
     </CreditModels>
@@ -107,7 +107,7 @@
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
-      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+      <SimulateSurvivalProbabilities>false</SimulateSurvivalProbabilities>
       <Names>
         <Name>CPTY_A</Name>
       </Names>
