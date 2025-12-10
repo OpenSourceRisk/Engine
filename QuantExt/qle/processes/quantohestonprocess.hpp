@@ -30,8 +30,8 @@ using namespace QuantLib;
 /*! The stadard Heston process implements
   \f[
   \begin{array}{rcl}
-  dS(t, S)  &=& \mu S dt + \sqrt{v} S dW_1 \\
-  dv(t, S)  &=& \kappa (\theta - v) dt + \sigma \sqrt{v} dW_2 \\
+  dS(t, S)  &=& \mu S dt + \sqrt{V} S dW_1 \\
+  dV(t, S)  &=& \kappa (\theta - V) dt + \sigma \sqrt{V} dW_2 \\
   dW_1 dW_2 &=& \rho dt
   \end{array}
   \f]
@@ -41,13 +41,13 @@ using namespace QuantLib;
 
   \f[
   \begin{align*}
-  \mu(t) &\rightarrow \mu(t) - \rho_{SX}\:\sqrt{V(t)}\:\sqrt{V_X(t)} \	\
-  \theta &\rightarrow \theta - 1/\kappa\: \rho_{VX}\: \sigma\:\sqrt{V(t)}\:\sqrt{V_X(t)
+  \mu &\rightarrow \mu - \rho_{SX}\:\sqrt{V}\:\sqrt{V_X} \\
+  \theta &\rightarrow \theta - 1/\kappa\: \rho_{VX}\: \sigma\:\sqrt{V}\:\sqrt{V_X}
   \end{align*}
   \f]
 
   The (constant) correlations \rho_{SX} and \rho_{VX} are passed to the constructor,
-  the FX process volatility \sqrt{V_X(t)} (possibly constant, determinstic, local or
+  the FX process volatility \sqrt{V_X} (possibly constant, determinstic, local or
   stochastic) that is "external" to this Heston system, needs to be updated before
   evolve is called.
 
@@ -78,6 +78,14 @@ using namespace QuantLib;
   SE-VX: rho_spot * rho_x
   SX-VE: rho_spot * rho_e
   VX-VE: rho_spot * rho_e * rho_x
+
+  \warning The drift adjustment is added to the Heston evolution over each time interval.
+  This is consistent only with the simple Euler (full/partial truncation or reflection)
+  schemes in the Heston process, and needs sufficiently large number of time steps.
+  The other HestonProcess schemes (QE etc) can be used at own risk, but we actually need
+  a new "large-step" scheme similar to QE that incorporates the quanto drift component
+  proportional to sqrt(V). The evolve method allows all schemes. In case of the non-Euler
+  schemes it enforces positive variance by reflection.  
 */
   
 class QuantoHestonProcess : public StochasticProcess {

@@ -244,6 +244,14 @@ Array MultiAssetQuantoHestonProcess::evolve(Time t0, const Array& x0, Time dt, c
 	// Combine evolutions and add adjustments to the equity system
         evolution[2 * i] = hestonEvolution[0] * std::exp(a[2 * i] * dt);
         evolution[2 * i + 1] = hestonEvolution[1] + a[2 * i + 1] * dt;
+
+	// Ensure that quanto-adjusted variance processes remain non-negative when using QE etc
+        if (evolution[2 * i + 1] < 0 &&
+	    processes_[i]->discretization() != HestonProcess::Reflection &&
+            processes_[i]->discretization() != HestonProcess::FullTruncation &&
+            processes_[i]->discretization() != HestonProcess::PartialTruncation ) {
+	    evolution[2 * i + 1] = 0.0;
+        }
     }
     return evolution;
 }

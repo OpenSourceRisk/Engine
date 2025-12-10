@@ -41,6 +41,14 @@ using namespace QuantLib;
   As a third parameter we pass the matrix of spot-spot correlations. The full parsimonious correlation
   matrix is built internally at construction, with spot-variance and variance-variance cross correlations
   computed using the partial independence assumption.
+
+  \warning The drift adjustment is added to the Heston evolution over each time interval.
+  This is consistent only with the simple Euler (full/partial truncation or reflection)
+  schemes in the Heston process, and needs sufficiently large number of time steps.
+  The other HestonProcess schemes (QE etc) can be used at own risk, but we actually need
+  a new "large-step" scheme similar to QE that incorporates the quanto drift component
+  proportional to sqrt(V). The evolve method allows all schemes. In case of the non-Euler
+  schemes it enforces positive variance by reflection.
 */
   
 class MultiAssetQuantoHestonProcess : public StochasticProcess {

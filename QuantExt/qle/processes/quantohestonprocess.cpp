@@ -192,7 +192,13 @@ Array QuantoHestonProcess::evolve(Time t0, const Array& x0, Time dt, const Array
     evolution[2] = fxEvolution[0];
     evolution[3] = fxEvolution[1];
 
+    // Ensure that quanto-adjusted variance processes remain non-negative when using QE etc
+    if (evolution[1] < 0 && process_->discretization() != HestonProcess::Reflection &&
+        process_->discretization() != HestonProcess::FullTruncation &&
+        process_->discretization() != HestonProcess::PartialTruncation) {
+        evolution[1] = 0.0;
+    }
+
     return evolution;
 }
-
 }
