@@ -29,7 +29,8 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcFxForwardEngineBuilder::engineImpl(const Currency& forCcy,
-                                                                          const Currency& domCcy) {
+                                                                                  const Currency& domCcy,
+                                                                                  const std::string& discountCurve) {
 
     QL_REQUIRE(domCcy != forCcy, "CamAmcFxForwardEngineBuilder: domCcy = forCcy = " << domCcy.code());
 
@@ -76,7 +77,8 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFxForwardEngineBuilder::engineImp
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgFxForwardEngineBuilder::engineImpl(const Currency& forCcy,
-                                                                                 const Currency& domCcy) {
+                                                                                 const Currency& domCcy,
+                                                                                 const std::string& discountCurve) {
 
     QL_REQUIRE(domCcy != forCcy, "AmcCgFxForwardEngineBuilder: domCcy = forCcy = " << domCcy.code());
 
