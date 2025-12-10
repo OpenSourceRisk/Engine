@@ -130,8 +130,15 @@ void MarketRiskReport::initialise() {
     // save a sensi pnl calculator
     if (hisScenGen_) {
         // Build the filtered historical scenario generator
-        hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
-            timePeriods(), hisScenGen_);
+        if(requireRiskFactorPnl_){
+            hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorRiskFactorKeys>(
+                        timePeriods(), hisScenGen_);
+            hisScenGen_->setRiskFactorBreakdown(true);
+        }else{
+            hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
+                    timePeriods(), hisScenGen_);
+        }
+        
 
         if (fullRevalArgs_ && fullRevalArgs_->simMarket_)
             hisScenGen_->baseScenario() = fullRevalArgs_->simMarket_->baseScenario();

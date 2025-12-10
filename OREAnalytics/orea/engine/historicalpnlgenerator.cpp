@@ -113,9 +113,26 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         simMarket_->reset();
         simMarket_->scenarioGenerator() = hisScenGen_;
         hisScenGen_->baseScenario() = simMarket_->baseScenario();
-        valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
+        ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
+        std::vector<RiskFactorKey> deltaKeys = sc->keys(); 
+        if(hisScenGen_->isRiskFactorBreakdown()){
+             //Maybe <key,Cube>
+            for(auto const& key: deltaKeys){
+                //Check if filtered
+                //If so, check if that is risk key generator ~ then proceed
+                //currentkey_ = this_key
+                // valuationEngine_->resetProgress()??
+                // ext::shared_ptr<NPVCube> newCube;
+                hisScenGen_->setCurrentKey(key);
+                std::cout<<"CurrentKey = "<<ore::to_string(key.name)<<":"<<key.index<<std::endl;
+                valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
+                                        nullptr, nullptr, {}, dryRun_);
+                mapCube_[key] = cube_;
+            }
+        }else{
+            valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
-
+        }
     } else {
         MultiThreadedValuationEngine engine(
             nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
@@ -234,20 +251,19 @@ RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::T
     RiskFactorPnLStore pnls;
     ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();//->next(hisScenGen_->baseScenario()->asof());
     std::vector<RiskFactorKey> deltaKeys = sc->keys();
+
     std::set<std::string> ids = cube_->ids();
     std::vector<QuantLib::Date> d = cube_->dates();
     Size i = 0;
 
     auto sensiPnlCalculator = ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, nullptr);
     Size nbScenario = sensiPnlCalculator->getScenarioNumber();
-    std::cout<<"nbScenario="<<nbScenario<<std::endl;
 
     ext::shared_ptr<CovarianceCalculator> covCalculator;
     covCalculator = ext::make_shared<CovarianceCalculator>(period);
-    // sensiPnlCalculator_->populateSensiShifts(cube, deltaKeys, shiftCalc_);
-    // sensiPnlCalculator_->calculateSensiPnl({}, deltaKeys, cube, pnlCalculators_, covCalculator, {},
-    //                                        false, false, false);
+
     QuantLib::Matrix mPnL(nbScenario, deltaKeys.size());
+    int k = 0;
     for (auto it = ids.begin(); it != ids.end(); it++, i++) {
         for (int j = 0; j < nbScenario; j++) {
             // Start and end of period relating to current sample
@@ -259,18 +275,10 @@ RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::T
                 std::cout<<mPnL[j][i]<<",";
             }
         }
+        k++;
         std::cout<<std::endl;
     }
-    std::cout<<"MatrixPnL is "<<mPnL.rows()<<"x"<<mPnL.columns()<<std::endl;
-    for (Size col = 0; col < deltaKeys.size(); col++) {
-        for (Size row = col + 1; row < deltaKeys.size(); row++) {
-            RiskFactorKey a = deltaKeys[row];
-            RiskFactorKey b = deltaKeys[col];
-            pnls[std::make_pair(a, b)] = mPnL[row][col];
-            // std::cout<<a<<","<<b<<"="<<mPnL[row][col]<<std::endl;
-        }
-    }
-
+    std::cout<<"k="<<k<<std::endl;
     return pnls;
 }
 

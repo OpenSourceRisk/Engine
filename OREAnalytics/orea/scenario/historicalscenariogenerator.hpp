@@ -86,7 +86,8 @@ public:
         //! string prepended to label of all scenarios generated
         const std::string& labelPrefix = "",
         //! indicates if the generated sceanrios will be absolute or difference
-        const bool generateDifferenceScenarios = false);
+        const bool generateDifferenceScenarios = false,
+        const bool riskFactorBreakdown = false);
 
     //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scneario
     HistoricalScenarioGenerator(
@@ -101,7 +102,8 @@ public:
         //! string prepended to label of all scenarios generated
         const std::string& labelPrefix = "",
         //! indicates if the generated sceanrios will be absolute or difference
-        const bool generateDifferenceScenarios = false);
+        const bool generateDifferenceScenarios = false,
+        const bool riskFactorBreakdown = false);
 
     //! Set base scenario, this also defines the asof date
     QuantLib::ext::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
@@ -130,6 +132,8 @@ public:
         If Mpor > 1 than the scenarios will overlap.
     */
     QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+
+    QuantLib::ext::shared_ptr<Scenario> nextKey(const Date& d, const RiskFactorKey& key);
 
     //! Return the calculation details of the last generated scenario */
     const std::vector<HistoricalScenarioCalculationDetails>& lastHistoricalScenarioCalculationDetails() const;
@@ -170,6 +174,10 @@ public:
     void setGenerateDifferenceScenarios(const bool b) { generateDifferenceScenarios_ = b; }
     const bool generateDifferenceScenarios() const { return generateDifferenceScenarios_; }
 
+    void setRiskFactorBreakdown(const bool b) { riskFactorBreakdown_ = b; }
+    bool isRiskFactorBreakdown() const {return riskFactorBreakdown_; }
+    virtual void setCurrentKey(const RiskFactorKey& k);
+
 protected:
     // to be managed in derived classes, if next is overwritten
     Size i_;
@@ -201,6 +209,8 @@ private:
     QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
     std::string labelPrefix_;
     bool generateDifferenceScenarios_ = false;
+    bool riskFactorBreakdown_ = false;
+    RiskFactorKey currentKey_;
 };
 
 //! Historical scenario generator generating random scenarios, for testing purposes
@@ -275,14 +285,20 @@ private:
     QuantLib::Size i_orig_;
 };
 // Historical scenario generator based on risk factors
-class RiskFactorBreakDownHistoricalScenarioGenerator : public HistoricalScenarioGenerator{
+class HistoricalScenarioGeneratorRiskFactorKeys : public HistoricalScenarioGenerator {
 public:
-    RiskFactorBreakDownHistoricalScenarioGenerator(const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen);
-
+    HistoricalScenarioGeneratorRiskFactorKeys(const std::vector<ore::data::TimePeriod>& filter,
+                                              const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen,
+                                              const RiskFactorKey& currentKey = RiskFactorKey());
     void reset() override;
     QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+    void setCurrentKey(const RiskFactorKey& k) override { currentKey_ = k;}
+
 private:
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> gen_;
+    RiskFactorKey currentKey_;
+    std::vector<bool> isRelevantScenario_;
+    QuantLib::Size i_orig_;
 };
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
