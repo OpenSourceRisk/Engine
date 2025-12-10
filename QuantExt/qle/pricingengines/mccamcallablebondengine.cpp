@@ -294,7 +294,7 @@ void McCamCallableBondBaseEngine::calculateModels(
                     getCallPriceAmount(callData->priceType, callData->includeAccrual, callData->price,
                                        notionalAccrualCalc.notional(*t), notionalAccrualCalc.accrual(*t));
                 auto exerciseValueCall =
-                    RandomVariable(calibrationSamples_, callPriceAmount) / numeraire - pathValueUndDirty / survivalProb;
+                    RandomVariable(calibrationSamples_, callPriceAmount) / numeraire;
 
                 regModelCallExerciseValue[counter] = RegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
@@ -305,9 +305,7 @@ void McCamCallableBondBaseEngine::calculateModels(
                     polynomOrder_, polynomType_, exerciseValueCall, pathValuesRef, simulationTimes);
 
                 auto exerciseValueCallRegressed = regModelCallExerciseValue[counter].apply(
-                    model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
-                
-                RandomVariable itm = !putTimes.empty() ? pathValueOption : RandomVariable(calibrationSamples_, 0.0);
+                    model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes) - exerciseValue;
 
                 regModelContinuationValueCall[counter] = RegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
@@ -315,11 +313,16 @@ void McCamCallableBondBaseEngine::calculateModels(
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValueCall[counter].train(
                     polynomOrder_, polynomType_, pathValueOption / survivalProb, pathValuesRef, simulationTimes,
-                    exerciseValueCallRegressed < itm);
+                    exerciseValueCallRegressed < zero);
                 auto continuationValue = regModelContinuationValueCall[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
 
-                auto exerciseFilter = exerciseValueCallRegressed < continuationValue && exerciseValueCallRegressed < itm;
+                auto exerciseFilter = exerciseValueCallRegressed < continuationValue;
+                if (putTimes.empty()) {
+                    exerciseFilter = exerciseFilter && exerciseValueCallRegressed <zero;
+                }
+                
+
                 pathValueOption = conditionalResult(exerciseFilter, exerciseValueCallRegressed * survivalProb, pathValueOption);
                 callTimeIdx++;
                 /*
@@ -351,19 +354,35 @@ void McCamCallableBondBaseEngine::calculateModels(
                     getCallPriceAmount(putData->priceType, putData->includeAccrual, putData->price,
                                        notionalAccrualCalc.notional(*t), notionalAccrualCalc.accrual(*t));
                 auto strikePrice = RandomVariable(calibrationSamples_, putPriceAmount) / numeraire;
-                RandomVariable exerciseValuePut = strikePrice - exerciseValue;
-                RandomVariable itm = !callTimes.empty() ? pathValueOption : RandomVariable(calibrationSamples_, 0.0);
+
+                regModelPutExerciseValue[counter] = RegressionModel(
+                    *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                        regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
+                        regressionMaxSimTimesEq_, regressionVarGroupMode_);
+
+                regModelPutExerciseValue[counter].train(
+                    polynomOrder_, polynomType_, strikePrice, pathValuesRef, simulationTimes);
+
+                auto exerciseValuePutRegressed = regModelPutExerciseValue[counter].apply(
+                    model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes) - exerciseValue;
+
                 regModelContinuationValuePut[counter] = RegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
                 regModelContinuationValuePut[counter].train(
                     polynomOrder_, polynomType_, pathValueOption / survivalProb, pathValuesRef, simulationTimes,
-                    exerciseValuePut > itm);
+                    exerciseValuePutRegressed > zero);
                 auto continuationValue = regModelContinuationValuePut[counter].apply(
                     model_->stateProcess()->initialValues(), pathValuesRef, simulationTimes);
-                pathValueOption =
-                    conditionalResult(exerciseValuePut > continuationValue && exerciseValuePut > itm, exerciseValuePut * survivalProb, pathValueOption);
+                
+                auto exerciseFilter = exerciseValuePutRegressed > continuationValue;
+                if (callTimes.empty()) {
+                    exerciseFilter = exerciseFilter && exerciseValuePutRegressed > zero;
+                }
+                
+                    pathValueOption =
+                    conditionalResult(exerciseFilter, exerciseValuePutRegressed * survivalProb, pathValueOption);
                
                 putTimeIdx++;
 
@@ -907,7 +926,7 @@ void McCamCallableBondBaseEngine::calculate() const {
 
 QuantLib::ext::shared_ptr<AmcCalculator> McCamCallableBondBaseEngine::amcCalculator() const { return amcCalculator_; }
 
-McCamCallableBondBaseEngine::CallableBondAmcCalculator::CallableBondAmcCalculator(
+McCamCallableBondBaseEngine::CallableBondAmcCalculator::CallableBondAmcCalculator( 
     const std::vector<Size>& externalModelIndices, const std::set<Real>& exerciseXvaTimes,
     const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
     const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
@@ -1028,7 +1047,7 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
                 regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
             if (isCallEvent) {
-                RandomVariable exerciseValue = regModelCallExerciseValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
+                RandomVariable exerciseValue = regModelCallExerciseValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_) - underlyingValue;
 
                 RandomVariable continuationValueCall =
                     regModelContinuationValueCall_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
@@ -1041,7 +1060,7 @@ std::vector<QuantExt::RandomVariable> McCamCallableBondBaseEngine::CallableBondA
                 RandomVariable continuationValuePut =
                     regModelContinuationValuePut_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
-                RandomVariable exerciseValue = regModelPutExerciseValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
+                RandomVariable exerciseValue = regModelPutExerciseValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_) - underlyingValue;
                 putPrices[counter + 1] = exerciseValue + underlyingValue;
                 exercisedPut_[counter + 1] = !wasExercisedPut && exerciseValue > continuationValuePut;
                 wasExercisedPut = wasExercisedPut || exercisedPut_[counter + 1];
