@@ -83,7 +83,7 @@ void Parameters::fromXML(XMLNode* node) {
 
     XMLNode* setupNode = XMLUtils::getChildNode(node, "Setup");
     QL_REQUIRE(setupNode, "node Setup not found in parameter file");
-    map<string, ext::any> setupMap;
+    map<string, QuantLib::ext::any> setupMap;
     for (XMLNode* child = XMLUtils::getChildNode(setupNode); child; child = XMLUtils::getNextSibling(child)) {
         string key = XMLUtils::getAttribute(child, "name");
         string value = XMLUtils::getNodeValue(child);
@@ -93,7 +93,7 @@ void Parameters::fromXML(XMLNode* node) {
 
     XMLNode* loggingNode = XMLUtils::getChildNode(node, "Logging");
     if (loggingNode) {
-        map<string, ext::any> loggingMap;
+        map<string, QuantLib::ext::any> loggingMap;
         for (XMLNode* child = XMLUtils::getChildNode(loggingNode); child; child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "name");
             string value = XMLUtils::getNodeValue(child);
@@ -104,7 +104,7 @@ void Parameters::fromXML(XMLNode* node) {
 
     XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
     if (marketsNode) {
-        map<string, ext::any> marketsMap;
+        map<string, QuantLib::ext::any> marketsMap;
         for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child; child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "name");
             string value = XMLUtils::getNodeValue(child);
@@ -117,7 +117,7 @@ void Parameters::fromXML(XMLNode* node) {
     if (analyticsNode) {
         for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child; child = XMLUtils::getNextSibling(child)) {
             string groupName = XMLUtils::getAttribute(child, "type");
-            map<string, ext::any> analyticsMap;
+            map<string, QuantLib::ext::any> analyticsMap;
             for (XMLNode* paramNode = XMLUtils::getChildNode(child); paramNode;
                  paramNode = XMLUtils::getNextSibling(paramNode)) {
                 string key = XMLUtils::getAttribute(paramNode, "name");
@@ -139,7 +139,7 @@ void Parameters::log() {
     LOG("Parameters:");
     for (auto p : data_)
         for (auto pp : p.second) {
-            auto val = ext::any_cast<string>(&pp.second);
+            auto val = QuantLib::ext::any_cast<string>(&pp.second);
             if (val)
                 LOG("group = " << p.first << " : " << pp.first << " = " << *val);
         }
