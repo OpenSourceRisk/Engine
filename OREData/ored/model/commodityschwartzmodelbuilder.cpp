@@ -104,7 +104,7 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
                                                                                                     seasonalityValues_a[0],
                                                                                                     data->driftFreeState());
     else
-        QL_FAIL("interpolation type not supported for Equity");
+        QL_FAIL("interpolation type not supported for commodity");
 
 
 

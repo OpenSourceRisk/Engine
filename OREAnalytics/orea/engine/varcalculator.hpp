@@ -42,10 +42,12 @@ public:
 class VarReport : public MarketRiskReport {
 public:
     VarReport(const std::string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
-              const std::string& portfolioFilter, const vector<Real>& p, QuantLib::ext::optional<ore::data::TimePeriod> period,
+              const std::string& portfolioFilter, const vector<Real>& p,
+              QuantLib::ext::optional<ore::data::TimePeriod> period,
               const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
               std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
-              const bool breakdown = false, const bool tradePnl = false, const bool riskFactorBreakdown = false);
+              const bool breakdown = false, const bool useAtParCouponsCurves = true,
+              const bool useAtParCouponsTrades = true, const bool tradePnl = false, const bool riskFactorBreakdown = false);
 
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     virtual void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports){};

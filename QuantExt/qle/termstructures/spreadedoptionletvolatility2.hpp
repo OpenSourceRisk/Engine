@@ -56,6 +56,11 @@ protected:
     Volatility volatilityImpl(Time optionTime, Rate strike) const override;
     void performCalculations() const override;
 
+    const Handle<OptionletVolatilityStructure>& baseVol() const { return baseVol_; }
+    const std::vector<Real>& strikes() const { return strikes_; }
+    const std::vector<Real>& optionTimes() const { return optionTimes_; }
+    const Matrix& volSpreadValues() const { return volSpreadValues_; }
+
 private:
     Handle<OptionletVolatilityStructure> baseVol_;
     std::vector<Date> optionDates_;
@@ -66,4 +71,34 @@ private:
     mutable Matrix volSpreadValues_;
     mutable Interpolation2D volSpreadInterpolation_;
 };
+
+class AtmAdjustedSpreadedOptionletVolatility2 : public SpreadedOptionletVolatility2 {
+public:
+    AtmAdjustedSpreadedOptionletVolatility2(const Handle<OptionletVolatilityStructure>& baseVol,
+                                            const std::vector<Date>& optionDates, const std::vector<Real>& strikes,
+                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+                                            const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
+                                            const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
+                                            const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
+                                            const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days,
+                                            Real scalingFactor = 1.0);
+    void update() override;
+    void deepUpdate() override;
+
+protected:
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(const QuantLib::Date& fixingDate) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
+    Volatility volatilityImpl(Time optionTime, Rate strike) const override;
+    void performCalculations() const override;
+
+private:
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> baseIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> targetIndex_;
+    QuantLib::Period baseRateComputationPeriod_;
+    QuantLib::Period targetRateComputationPeriod_;
+    Real scalingFactor_;
+    //
+    mutable std::map<Time, QuantLib::ext::shared_ptr<SmileSection>> smileSectionCache_;
+};
+
 } // namespace QuantExt

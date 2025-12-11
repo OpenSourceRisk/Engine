@@ -102,7 +102,7 @@ The model parameters have the following meaning:
   ``Hagan'', parameter label may contain product tag and model ccy.
 \item IrReversion [Optional]: ir reversion value, parameter label may contain product tag and ccy.
 \item InfModelType [Optional]: defaults to ``DK''. For the GaussianCam model two flavours of inflation models are
-  avaiable, Dodgson-Kainth (``DK'') and Jarrow-Yildrim (``JY''). This parameter selects the flavour to use. Only applies
+  available, Dodgson-Kainth (``DK'') and Jarrow-Yildrim (``JY''). This parameter selects the flavour to use. Only applies
   to model = GaussianCam
 \item InfDkVolatility [Optional]: the volatility of the INF DK model, defaults to $0.0050$, parameter label may contain
   product tag and inf index name
@@ -395,7 +395,7 @@ falls back to ATMF, meaning that ATMF instruments (coterminals for IR) are used 
     </Script>
 \end{minted}
 
-The node CalibrationSpec can have one subnode Calibration per Index occuring in the script. For each index a list of
+The node CalibrationSpec can have one subnode Calibration per Index occurring in the script. For each index a list of
 calibration strikes can be specified. The list should start with the most important calibration strike and continue with
 strikes of decreasing importance. In the example (which could be a typcial setup for barrier option) the most important
 strike is given by the Strike variable and a secondary strike is given by the KnockOutLevel.

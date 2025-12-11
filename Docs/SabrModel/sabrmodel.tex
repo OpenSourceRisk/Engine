@@ -72,10 +72,10 @@ with
 \item $\alpha$ the initial value of $\sigma$
 \item $\beta \in [0,1]$ the exponent for the forward
 \item $\nu > 0$ the volatilitiy of $\sigma$
-\item $\rho$ the correlation between forward and volatility, given as a constant, instantaneous corelation between the driving Wiener processes
+\item $\rho$ the correlation between forward and volatility, given as a constant, instantaneous correlation between the driving Wiener processes
 \end{itemize}
 
-The latter $4$ parameters are referred to as the "SABR parameters" of the model.
+The latter $4$ parameters are referred to as the ``SABR parameters'' of the model.
 
 \subsection{Resolution}
 
@@ -112,7 +112,7 @@ Hagan2002Normal& $[-d, \infty)$ & Normal Volatility \\
 Hagan2002NormalZeroBeta & $(-\infty, \infty)$ & Normal Volatility  \\
 Antonov2015FreeBoundaryNormal & $(-\infty, \infty)$ & Premium \\
 KienitzLawsonSwaynePde & $[-d, \infty)$ & Premium \\
-FlochKennedy & $[-d, \infty)$ & Shifted Lognormal Volaility \\
+FlochKennedy & $[-d, \infty)$ & Shifted Lognormal Volatility \\
 \end{tabular}
 \caption{Strike domains and preferred output types.}
 \end{center}
@@ -187,7 +187,7 @@ Here, $\epsilon_1 = 10^{-7}$, $\epsilon_2 = 1 - 10^{-4}$, $m_v = 0.02$, $m_\nu =
 forward atm rate, $d$ the displacement here.
 
 The optimization is run from user provided initial SABR parameters. If the target function $T$ on this first run is
-below an user provided "early exit" error threshold $t_A$, i.e.
+below an user provided ``early exit'' error threshold $t_A$, i.e.
 
 $$
 T(x) < t_A
@@ -212,7 +212,7 @@ $$
 T(x_b) < t_B
 $$
 
-the solution $x_b$ is accepted. Otherwise the calibration is marked as "unsuccessful". After all market points have been
+the solution $x_b$ is accepted. Otherwise the calibration is marked as ``unsuccessful''. After all market points have been
 calibrated we have either a 1D array (cap volatilities) or a 2D matrix (swaption volatilities) of calibrated SABR
 parameters with possibly missing entries from unsuccessful calibrations. As a last step, these missing values are
 interpolated linearly (1D case) or using Laplace Interpolation in 2D where the x and y axis are indexed by the option
@@ -255,7 +255,7 @@ for swaption volatility surfaces. In both cases the {\em Input} volatility type 
 \end{minted}
 
 The displacement $d$ applied in the SABR {\em model} formulation is either read from the input market quotes, or can be
-overriden with
+overridden with
 
 \begin{minted}[fontsize=\footnotesize]{xml}
       <ModelShift>0.0</ModelShift>
@@ -301,13 +301,13 @@ options or individually for the array of option expiries (caps), matrix of swapt
       </Parameters>
 \end{minted}
 
-The "Calibration" field is used to distinguish
+The ``Calibration'' field is used to distinguish
 
 \begin{itemize}
-\item "Fixed": fixed values that are not calibrated, but prescribed by the user resp. set to a value corresponding to
+\item ``Fixed'': fixed values that are not calibrated, but prescribed by the user resp. set to a value corresponding to
   the model flavour (e.g. $\beta=0$ for Hagan2002NormalZeroBeta and Antonov2015FreeBoundaryNormal).
-\item "Implied": if $\alpha$ is implied from atm market volatility
-\item "Calibrated": takes part in optimization
+\item ``Implied'': if $\alpha$ is implied from atm market volatility
+\item ``Calibrated'': takes part in optimization
 \end{itemize}
 
 It follows a Calibration section with the maximum number of calibration attempts $N$, the early exit error threshold
@@ -321,7 +321,7 @@ $t_A$ and the maximum acceptable error threshold $t_B$:
       </Calibration>
 \end{minted}
 
-Finally, the {\em output} volatility type and displacement $d$ can be overriden. By default, input volatility type and
+Finally, the {\em output} volatility type and displacement $d$ can be overridden. By default, input volatility type and
 displacement is used. In the case of swaptions an override would look like this
 
 \begin{minted}[fontsize=\footnotesize]{xml}

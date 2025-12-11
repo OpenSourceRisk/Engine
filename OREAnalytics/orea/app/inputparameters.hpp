@@ -132,6 +132,8 @@ public:
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
+    void setUseAtParCouponsCurves(bool b) { useAtParCouponsCurves_ = b; }
+    void setUseAtParCouponsTrades(bool b) { useAtParCouponsTrades_ = b; }
     void setEnrichIndexFixings(bool b) { enrichIndexFixings_ = b; }
     void setIgnoreFixingLead(Size i) { ignoreFixingLead_ = i; }
     void setIgnoreFixingLag(Size i) { ignoreFixingLag_ = i; }
@@ -610,6 +612,8 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
+    bool useAtParCouponsCurves() const { return useAtParCouponsCurves_; }
+    bool useAtParCouponsTrades() const { return useAtParCouponsTrades_; }
     bool enrichIndexFixings() const { return enrichIndexFixings_; }
     Size ignoreFixingLead() const { return ignoreFixingLead_; }
     Size ignoreFixingLag() const { return ignoreFixingLag_; }
@@ -1102,6 +1106,8 @@ protected:
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    bool useAtParCouponsCurves_ = true;
+    bool useAtParCouponsTrades_ = true;
     bool enrichIndexFixings_ = false;
     Size ignoreFixingLead_ = 0;
     Size ignoreFixingLag_ = 0;

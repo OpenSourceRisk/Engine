@@ -548,7 +548,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         QuantLib::ext::make_shared<VanillaInstrument>(qlInstrument, multiplier, additionalInstruments, additionalMultipliers);
 
     // axdd required fixings
-    auto fdg = QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_);
+    auto fdg = QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_, engineFactory->market(), maturity_);
     for (auto const& l : legs_)
         addToRequiredFixings(l, fdg);
 
