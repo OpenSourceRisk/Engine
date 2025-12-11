@@ -37,7 +37,8 @@ public:
 
     virtual void populateLoader(
         const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-        const std::set<QuantLib::Date>& loaderDates) override{
+        const std::set<QuantLib::Date>& loaderDates, const bool entireMarket = false, const bool allFixings = false,
+        const bool eomInflationFixings = false) override {
         
         ore::data::InMemoryLoader loader;
         

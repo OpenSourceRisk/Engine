@@ -85,7 +85,9 @@ class Parameters {
     void fromFile(const std::string& name);
     bool hasGroup(const std::string& groupName) const;
     bool has(const std::string& groupName, const std::string& paramName) const;
-    std::string get(const std::string& groupName, const std::string& paramName) const;
+    ext::any get(const std::string& groupName, const std::string& paramName) const;
+    std::string getString(const std::string& groupName, const std::string& paramName) const;
+    template <class T> T getParameter(const string& groupName, const string& paramName, bool fail = true);
     //TODO: add this function to ORE, then add here
     //void add(const std::string& groupName, const std::string& paramName, const std::string& paramValue);
 };
@@ -406,11 +408,13 @@ public:
     MarketDataLoader(const ext::shared_ptr<InputParameters>& inputs, ext::shared_ptr<MarketDataLoaderImpl> impl)
         : inputs_(inputs), impl_(impl);
 
-     virtual void populateLoader(const std::vector<ext::shared_ptr<TodaysMarketParameters>>& todaysMarketParameters,
-        const std::set<Date>& loaderDates);
+     virtual void populateLoader(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+        const std::set<QuantLib::Date>& loaderDates, const bool entireMarket = false, const bool allFixings = false,
+        const bool eomInflationFixings = false);
 
-     virtual void populateLoader(const ext::shared_ptr<TodaysMarketParameters>& todaysMarketParameters,
-        const std::set<Date>& loaderDates);
+     virtual void populateLoader(const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
+                   const std::set<QuantLib::Date>& loaderDates, const bool entireMarket = false,
+                   const bool allFixings = false, const bool eomInflationFixings = false);
 };
 
 %shared_ptr(AnalyticsManager)

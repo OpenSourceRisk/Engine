@@ -41,10 +41,11 @@ public:
                                  const std::map<std::string, std::string>& equities) override;
     
     void retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-        const ore::analytics::QuoteMap& quotes,
+        const ore::analytics::QuoteMap& quotes, const bool entireMarket,
         const QuantLib::Date& marketDate) override;        
     
     void retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+        const bool allFixings,
         ore::analytics::FixingMap fixings = {},
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) override;
 

@@ -80,6 +80,16 @@ public:
         const std::string& param, 
         const bool mandatory = false,
         std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
+
+        // first check if we have a parameter of correct type stored in the Parameters object
+        if (parameters_.hasGroup(analytic) && parameters_.has(analytic, param)) {
+            try {
+                obj = parameters_.getParameter<T>(analytic, param, false);
+            } catch (...) {
+            }
+		}
+
+        // else check for a string and load correctly
         string str = loadParameterString(analytic, param, mandatory);
         if (str.empty() && !mandatory)
             return;
@@ -112,6 +122,16 @@ public:
     void loadParameterXML(
         QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
         const std::string& param, const bool mandatory = false) {
+
+        // first check if we have a parameter of correct type stored in the Parameters object
+        if (parameters_.hasGroup(analytic) && parameters_.has(analytic, param)) {
+            try {            
+                obj = parameters_.getParameter<QuantLib::ext::shared_ptr<T>>(analytic, param, false);
+            } catch (...) {
+            }
+        }
+
+        // else check for a string and load from XML
         string str = loadParameterXMLString(analytic, param, mandatory);
         if (str.empty() && !mandatory)
             return;
@@ -226,10 +246,9 @@ public:
     void setMporPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
-    void setEntireMarket(bool b) { entireMarket_ = b; }
-    void setAllFixings(bool b) { allFixings_ = b; }
-    void setEomInflationFixings(bool b) { eomInflationFixings_ = b; }
-    void setUseMarketDataFixings(bool b) { useMarketDataFixings_ = b; }
+    void setEntireMarket(bool b) { parameters_.set("setup", "entireMarket", b); }
+    void setAllFixings(bool b) { parameters_.set("setup", "allFixings", b); }
+    void setEomInflationFixings(bool b) { parameters_.set("setup", "eomInflationFixings", b); }
     void setIborFallbackOverride(bool b) { iborFallbackOverride_ = b; }
     void setReportNaString(const std::string& s) { reportNaString_ = s; }
     void setCsvQuoteChar(const char& c){ csvQuoteChar_ = c; }
@@ -689,10 +708,6 @@ public:
 
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
-    bool entireMarket() const { return entireMarket_; }
-    bool allFixings() const { return allFixings_; }
-    bool eomInflationFixings() const { return eomInflationFixings_; }
-    bool useMarketDataFixings() const { return useMarketDataFixings_; }
     bool iborFallbackOverride() const { return iborFallbackOverride_; }
     const std::string& reportNaString() const { return reportNaString_; }
     char csvCommentCharacter() const { return csvCommentCharacter_; }
@@ -1176,11 +1191,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_, useCounterpartyOriginalPortfolio_, mporPortfolio_;
     QuantLib::Size maxRetries_ = 7;
     QuantLib::Size nThreads_ = 1;
-   
-    bool entireMarket_ = false; 
-    bool allFixings_ = false; 
-    bool eomInflationFixings_ = true;
-    bool useMarketDataFixings_ = true;
+
     bool iborFallbackOverride_ = false;
     char csvCommentCharacter_ = '#';
     char csvEolChar_ = '\n';

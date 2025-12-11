@@ -75,7 +75,7 @@ bool checkString(const std::string& obj) { return true; }
 std::string InputParameters::loadParameterString(const std::string& analytic, const std::string& param,
                                                          bool mandatory) {
     if (parameters_.has(analytic, param))
-        return parameters_.get(analytic, param, mandatory);
+        return parameters_.getString(analytic, param, mandatory);
     else
         return std::string();
 }
@@ -957,48 +957,48 @@ void InputParameters::setMeanReversionOutputFileName(const std::string& s) { mea
 
 OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
-    npvOutputFileName_ = params->get("npv", "outputFileName", false);
-    cashflowOutputFileName_ = params->get("cashflow", "outputFileName", false);
-    curvesOutputFileName_ = params->get("curves", "outputFileName", false);
-    scenarioDumpFileName_ = params->get("simulation", "scenariodump", false);
-    scenarioOutputName_ = params->get("scenario", "scenarioOutputFile", false);
+    npvOutputFileName_ = params->getString("npv", "outputFileName", false);
+    cashflowOutputFileName_ = params->getString("cashflow", "outputFileName", false);
+    curvesOutputFileName_ = params->getString("curves", "outputFileName", false);
+    scenarioDumpFileName_ = params->getString("simulation", "scenariodump", false);
+    scenarioOutputName_ = params->getString("scenario", "scenarioOutputFile", false);
     if (scenarioOutputName_.empty())
-        scenarioOutputName_ = params->get("scenarioGeneration", "scenarioOutputFile", false);
-    cubeFileName_ = params->get("simulation", "cubeFile", false);
-    mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
-    rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);
-    netCubeFileName_ = params->get("xva", "netCubeOutputFile", false);
-    timeAveragedNettedExposureFileName_ = params->get("xva", "timeAveragedNettedExposureOutputFile", false);
-    dimEvolutionFileName_ = params->get("xva", "dimEvolutionFile", false);    
-    std::string tmp = params->get("xva", "dimRegressionFiles", false);
+        scenarioOutputName_ = params->getString("scenarioGeneration", "scenarioOutputFile", false);
+    cubeFileName_ = params->getString("simulation", "cubeFile", false);
+    mktCubeFileName_ = params->getString("simulation", "aggregationScenarioDataFileName", false);
+    rawCubeFileName_ = params->getString("xva", "rawCubeOutputFile", false);
+    netCubeFileName_ = params->getString("xva", "netCubeOutputFile", false);
+    timeAveragedNettedExposureFileName_ = params->getString("xva", "timeAveragedNettedExposureOutputFile", false);
+    dimEvolutionFileName_ = params->getString("xva", "dimEvolutionFile", false);    
+    std::string tmp = params->getString("xva", "dimRegressionFiles", false);
     if (tmp != "")
         dimRegressionFileNames_ = parseListOfValues(tmp);
-    sensitivityFileName_ = params->get("sensitivity", "sensitivityOutputFile", false);    
-    parSensitivityFileName_ = params->get("sensitivity", "parSensitivityOutputFile", false);    
-    jacobiFileName_ = params->get("sensitivity", "jacobiOutputFile", false);    
-    jacobiInverseFileName_ = params->get("sensitivity", "jacobiInverseOutputFile", false);    
-    sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
-    stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
-    stressTestCashflowFileName_ = params->get("stress", "scenarioCashflowOutputFile", false);
-    stressZeroScenarioDataFileName_ = params->get("stress", "stressZeroScenarioDataFile", false);
-    xvaStressTestFileName_ = params->get("xvaStress", "scenarioOutputFile", false);
-    sensitivityStressTestFileName_ = params->get("sensitivityStress", "scenarioOutputFile", false);
-    varFileName_ = params->get("parametricVar", "outputFile", false);
+    sensitivityFileName_ = params->getString("sensitivity", "sensitivityOutputFile", false);    
+    parSensitivityFileName_ = params->getString("sensitivity", "parSensitivityOutputFile", false);    
+    jacobiFileName_ = params->getString("sensitivity", "jacobiOutputFile", false);    
+    jacobiInverseFileName_ = params->getString("sensitivity", "jacobiInverseOutputFile", false);    
+    sensitivityScenarioFileName_ = params->getString("sensitivity", "scenarioOutputFile", false);    
+    stressTestFileName_ = params->getString("stress", "scenarioOutputFile", false);
+    stressTestCashflowFileName_ = params->getString("stress", "scenarioCashflowOutputFile", false);
+    stressZeroScenarioDataFileName_ = params->getString("stress", "stressZeroScenarioDataFile", false);
+    xvaStressTestFileName_ = params->getString("xvaStress", "scenarioOutputFile", false);
+    sensitivityStressTestFileName_ = params->getString("sensitivityStress", "scenarioOutputFile", false);
+    varFileName_ = params->getString("parametricVar", "outputFile", false);
     if (varFileName_.empty())
-        varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
-    parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
-    parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
-    parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
-    pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
-    parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
-    correlationOutputFileName_ = params->get("correlation", "outputFileName", false);
-    pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
-    riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
-    marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
-    calibrationOutputFileName_ = params->get("calibration", "outputFile", false);
-    zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
-    xvaSensiJacobiFileName_ = params->get("xvaSensitivity", "jacobiOutputFile", false);    
-    xvaSensiJacobiInverseFileName_ = params->get("xvaSensitivity", "jacobiInverseOutputFile", false);    
+        varFileName_ = params->getString("historicalSimulationVar", "outputFile", false);
+    parConversionOutputFileName_ = params->getString("zeroToParSensiConversion", "outputFile", false);
+    parConversionJacobiFileName_ = params->getString("zeroToParSensiConversion", "jacobiOutputFile", false);
+    parConversionJacobiInverseFileName_ = params->getString("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
+    pnlOutputFileName_ = params->getString("pnl", "outputFileName", false);
+    parStressTestConversionFile_ = params->getString("parStressConversion", "stressZeroScenarioDataFile", false);
+    correlationOutputFileName_ = params->getString("correlation", "outputFileName", false);
+    pnlExplainOutputFileName_ = params->getString("pnlExplain", "outputFileName", false);
+    riskFactorsOutputFileName_ = params->getString("portfolioDetails", "riskFactorFileName", false);
+    marketObjectsOutputFileName_ = params->getString("portfolioDetails", "marketObjectFileName", false);
+    calibrationOutputFileName_ = params->getString("calibration", "outputFile", false);
+    zeroToParShiftFile_ = params->getString("zeroToParShift", "parShiftsFile", false);
+    xvaSensiJacobiFileName_ = params->getString("xvaSensitivity", "jacobiOutputFile", false);    
+    xvaSensiJacobiInverseFileName_ = params->getString("xvaSensitivity", "jacobiInverseOutputFile", false);    
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
     fileNameMap_["cashflow"] = cashflowOutputFileName_;
@@ -1035,7 +1035,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["xva_sensi_jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["parshifts"] = zeroToParShiftFile_;
     vector<Size> dimOutputGridPoints;
-    tmp = params->get("xva", "dimOutputGridPoints", false);
+    tmp = params->getString("xva", "dimOutputGridPoints", false);
     if (tmp != "")
         dimOutputGridPoints = parseListOfValues<Size>(tmp, parseInteger);
     QL_REQUIRE(dimOutputGridPoints.size() == dimRegressionFileNames_.size(),
@@ -1044,12 +1044,12 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     for (Size i = 0; i < dimRegressionFileNames_.size(); ++i)
         fileNameMap_["dim_regression_" + std::to_string(i)] = dimRegressionFileNames_[i];
 
-    tmp = params->get("xva", "creditMigrationTimeSteps", false);
+    tmp = params->getString("xva", "creditMigrationTimeSteps", false);
     if (tmp != "") {
         auto ts = parseListOfValues<Size>(tmp, &parseInteger);
         for (auto const& t : ts) {
             fileNameMap_["credit_migration_" + std::to_string(t)] =
-                params->get("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
+                params->getString("xva", "creditMigrationOutputFiles") + "_" + std::to_string(t);
         }
     }
 

@@ -36,12 +36,9 @@ namespace analytics {
 void AnalyticsManager::initialise() {
     
     // Market Settings
-    inputs_->loadParameter<bool>(&InputParameters::setEntireMarket, "setup", "entireMarket", false, parseBool);
-    inputs_->loadParameter<bool>(&InputParameters::setAllFixings, "setup", "allFixings", false, parseBool);
-    inputs_->loadParameter<bool>(&InputParameters::setEomInflationFixings, "setup", "eomInflationFixings", false, parseBool);
-    inputs_->loadParameter<bool>(&InputParameters::setUseMarketDataFixings, "setup", "useMarketDataFixings", false, parseBool);
-
-
+    inputs_->loadParameter<bool>(params_.entireMarket, "setup", "entireMarket", false, parseBool);
+    inputs_->loadParameter<bool>(params_.allFixings, "setup", "allFixings", false, parseBool);
+    inputs_->loadParameter<bool>(params_.eomInflationFixings, "setup", "eomInflationFixings", false, parseBool);
     
     inputs_->loadParameterXML<Conventions>(&InputParameters::setConventions, "setup", "conventionsFile");
     // Load Configurations
@@ -160,7 +157,7 @@ void AnalyticsManager::runAnalytics(
 
         LOG("AnalyticsManager::runAnalytics: populate loader for dates: " << to_string(marketDates));
 
-        marketDataLoader_->populateLoader(tmps, marketDates);
+        marketDataLoader_->populateLoader(tmps, marketDates, params_.entireMarket, params_.allFixings, params_.eomInflationFixings);
 
         QuantLib::ext::shared_ptr<InMemoryReport> mdReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -171,7 +168,7 @@ void AnalyticsManager::runAnalytics(
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
-                             marketDataLoader_->quotes()[inputs_->asof()], !inputs_->entireMarket());
+                             marketDataLoader_->quotes()[inputs_->asof()], !params_.entireMarket);
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeFixings(*fixingReport, marketDataLoader_->loader());
         ore::analytics::ReportWriter(inputs_->reportNaString())

@@ -31,25 +31,26 @@ void MarketDataInMemoryLoaderImpl::loadCorporateActionData(QuantLib::ext::shared
 }
 
 void MarketDataInMemoryLoaderImpl::retrieveMarketData(
-    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
     const map<Date, set<string>>& quotes,
+    const bool entireMarket,
     const Date& relabelDate) {        
 
-    if (inputs_->entireMarket()) {
+    if (entireMarket) {
         loadDataFromBuffers(*loader, marketData_, std::vector<std::string>(), inputs_->implyTodaysFixings());
     } else {
-        QL_FAIL("MarketDataInMemoryLoaderImpl::retrieveMarketData() requires inputs_->entireMarket()");
+        QL_FAIL("MarketDataInMemoryLoaderImpl::retrieveMarketData() requires entireMarket");
     }
 }
 
 void MarketDataInMemoryLoaderImpl::retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-        map<string, RequiredFixings::FixingDates> fixings,
+        const bool allFixings, map<string, RequiredFixings::FixingDates> fixings,
         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap) {
     
-    if (inputs_->allFixings()) {
+    if (allFixings) {
         loadDataFromBuffers(*loader, std::vector<std::string>(), fixingData_, inputs_->implyTodaysFixings());
     } else {
-        QL_FAIL("MarketDataInMemoryLoaderImpl::retrieveFixings() requires inputs_->allFixings()");
+        QL_FAIL("MarketDataInMemoryLoaderImpl::retrieveFixings() requires allFixings");
     }
 
     for (const auto& fp : lastAvailableFixingLookupMap) {

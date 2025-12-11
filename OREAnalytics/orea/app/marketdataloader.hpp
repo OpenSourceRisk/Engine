@@ -51,11 +51,12 @@ public:
 
     //! retrieve market data
     virtual void retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
-        const QuoteMap& quotes,
-                                    const QuantLib::Date& requestDate = QuantLib::Date()) = 0;
+        const QuoteMap& quotes, const bool entireMarket,
+        const QuantLib::Date& requestDate = QuantLib::Date()) = 0;
 
     //! retrieve fixings
-    virtual void retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, FixingMap fixings = {}, 
+    virtual void retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+        const bool allFixings, FixingMap fixings = {}, 
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap = {}) = 0;
 };
 
@@ -71,19 +72,22 @@ public:
         marketdata and fixing services
     */
     virtual void populateLoader(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-        const std::set<QuantLib::Date>& loaderDates);
+        const std::set<QuantLib::Date>& loaderDates, const bool entireMarket = false, const bool allFixings = false,
+        const bool eomInflationFixings = false);
     
     virtual void populateLoader(
         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
-        const std::set<QuantLib::Date>& loaderDates) {
+                   const std::set<QuantLib::Date>& loaderDates, const bool entireMarket = false,
+                   const bool allFixings = false, const bool eomInflationFixings = false) {
         std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
         tmps.push_back(todaysMarketParameters);
-        populateLoader(tmps, loaderDates);
+        populateLoader(tmps, loaderDates, entireMarket, allFixings, eomInflationFixings);
     }
 
-    virtual void
-    populateFixings(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-                    const std::set<QuantLib::Date>& loaderDates = {});
+    virtual void populateFixings(
+        const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+        const std::set<QuantLib::Date>& loaderDates = {}, const bool entireMarket = false, 
+        const bool allFixings = false, const bool eomInflationFixings = false);
 
     virtual void addRelevantFixings(const std::pair<std::string, RequiredFixings::FixingDates>& fixing,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);
