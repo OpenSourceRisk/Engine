@@ -332,6 +332,7 @@ private:
         McCamCallableBondBaseEngine::calculate();
         results_.value = resultTotalNpv_;
         results_.settlementValue = resultSettlementValue_;
+        results_.additionalResults = additionalResults_;
         results_.additionalResults["amcCalculator"] = amcCalculator();        
     }
 };
