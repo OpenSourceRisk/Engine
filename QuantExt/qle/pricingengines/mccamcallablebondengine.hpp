@@ -198,10 +198,8 @@ public:
     mutable QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator_;
 
     // results, these are read from derived engines
-    mutable Real resultUnderlyingNpv_, resultValue_;
-    mutable Real resultUnderlyingSettlementValue_, resultSettlementValue_;
-    mutable std::vector<Real> callProbs_;
-    mutable std::vector<Real> putProbs_;
+    mutable Real resultUnderlyingNpv_, resultOptionValue_, resultTotalNpv_;
+    mutable Real resultUnderlyingSettlementValue_, resultSettlementValue_, resultOptionSettlementValue_;
     static constexpr Real tinyTime = 1E-10;
     // generate the mc path values of the model process
     void generatePathValues(const std::vector<Real>& simulationTimes,
@@ -218,8 +216,11 @@ public:
         std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelContinuationValueCall,
         std::vector<RegressionModel>& regModelContinuationValuePut, std::vector<RegressionModel>& regModelOption,
         std::vector<RegressionModel>& regModelCallExerciseValue, std::vector<RegressionModel>& regModelPutExerciseValue,
-        RandomVariable& pathValueUndDirty, RandomVariable& pathValueOption,
-        std::vector<RandomVariable>& pathExerciseProbsCall, std::vector<RandomVariable>& pathExerciseProbsPut) const;
+        RandomVariable& pathValueUndDirty, RandomVariable& pathValueOption) const;
+
+    void generateExerciseDates(std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
+                               std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes,
+                               std::set<Real>& exerciseTimes) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
@@ -238,6 +239,7 @@ public:
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
     mutable QuantLib::ext::shared_ptr<CrLgmVectorised> crlgmVectorised_;
+    mutable std::map<std::string, QuantLib::ext::any> additionalResults_;
 
 protected:
     std::set<Time> getExerciseTimes(const std::vector<CallableBond::CallabilityData>& callData) const;
@@ -328,22 +330,9 @@ private:
         settlementDate_ = arguments_.settlementDate;
         includeTodaysCashflows_ = false;
         McCamCallableBondBaseEngine::calculate();
-        results_.value = resultUnderlyingNpv_ + resultValue_;
-        results_.settlementValue = resultUnderlyingSettlementValue_ + resultSettlementValue_;
-        results_.additionalResults["underlyingNpv"] = resultUnderlyingNpv_;
-        results_.additionalResults["amcCalculator"] = amcCalculator();
-        
-        std::cout << "  number of cashflows: " << leg_.size() << std::endl;
-        std::cout << " number of notionals: " << notionals_.size() << std::endl;
-        std::cout << " number of callData: " << callData_.size() << std::endl;
-        std::cout << " number of putData: " << putData_.size() << std::endl;
-        std::cout << "  result value: " << resultValue_ << std::endl;
-        std::cout << "  result underlying npv: " << resultUnderlyingNpv_ << std::endl;
-        std::cout << " underlying settlement value: " << resultUnderlyingSettlementValue_ << std::endl;
-        std::cout << " final npv: " << resultUnderlyingNpv_ + resultValue_ << std::endl;
-        std::cout << " final settlement value: " << resultUnderlyingSettlementValue_ + resultSettlementValue_
-                  << std::endl;
-        
+        results_.value = resultTotalNpv_;
+        results_.settlementValue = resultSettlementValue_;
+        results_.additionalResults["amcCalculator"] = amcCalculator();        
     }
 };
 
