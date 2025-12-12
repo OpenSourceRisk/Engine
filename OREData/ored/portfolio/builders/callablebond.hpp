@@ -65,7 +65,7 @@ protected:
 
 class CallableBondCamEngineBuilder : public CallableBondEngineBuilder {
 public:
-    explicit CallableBondCamEngineBuilder(const std::string& engine) : CallableBondEngineBuilder("CAM", engine) {}
+    explicit CallableBondCamEngineBuilder(const std::string& engine) : CallableBondEngineBuilder("CrossAssetModel", engine) {}
 
 protected:
     bool dynamicCreditModelEnabled() const {

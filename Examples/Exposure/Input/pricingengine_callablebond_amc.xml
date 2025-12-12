@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <PricingEngines>
   <Product type="CallableBond">
-    <Model>CAM</Model>
+    <Model>CrossAssetModel</Model>
     <ModelParameters>
       <Parameter name="Calibration">Bootstrap</Parameter>
       <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
