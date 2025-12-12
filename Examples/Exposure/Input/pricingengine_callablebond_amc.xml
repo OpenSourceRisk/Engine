@@ -13,7 +13,7 @@
       <Parameter name="Tolerance">0.0001</Parameter>
       <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
       <Parameter name="SensitivityTemplate">IR_FD</Parameter>
-      <Parameter name="EnableCredit">false</Parameter>
+      <Parameter name="EnableCredit">true</Parameter>
       <Parameter name="Credit_Volatility">0.005</Parameter>
       <Parameter name="Credit_Reversion">0.005</Parameter>
     </ModelParameters>

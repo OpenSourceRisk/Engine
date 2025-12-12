@@ -3,52 +3,65 @@
   <Trade id="CallableBondTrade">
     <TradeType>CallableBond</TradeType>
     <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
     </Envelope>
     <CallableBondData>
       <BondData>
-        <SecurityId>SECURITY_1</SecurityId>
+        <SecurityId>SECURITY_CALL</SecurityId>
         <BondNotional>100000000</BondNotional>
       </BondData>
     </CallableBondData>
   </Trade>
-  <Trade id="CallableBondTradeNeverCalled">
-    <TradeType>CallableBond</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <CallableBondData>
-      <BondData>
-        <SecurityId>SECURITY_neverCalled</SecurityId>
-        <BondNotional>100000000</BondNotional>
-      </BondData>
-    </CallableBondData>
-  </Trade>
-  <Trade id="CallableBondTradePutCall">
-    <TradeType>CallableBond</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <CallableBondData>
-      <BondData>
-        <SecurityId>SECURITY_putcall</SecurityId>
-        <BondNotional>100000000</BondNotional>
-      </BondData>
-    </CallableBondData>
-  </Trade>
-  
 
+  <Trade id="CallableBondNoCall">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_NOCALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+  <Trade id="CallableBondCertainCall">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_CERTAINCALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+  <Trade id="PutCallBondTrade">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_PUTCALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
   <!--Trade id="UnderlyingBondTrade">
     <TradeType>Bond</TradeType>
     <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <BondData>
