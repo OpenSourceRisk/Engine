@@ -549,7 +549,6 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamAmcEngineBuild
         std::make_pair(QuantExt::CrossAssetModel::AssetType::IR, cam_->ccyIndex(cur))};
 
     if (dynamicCreditModelEnabled()) {
-        std::cout << "Using credit curve " << creditCurveId << std::endl;
         selectedModelComponents.insert(
             std::make_pair(QuantExt::CrossAssetModel::AssetType::CR, cam_->crName(creditCurveId)));
     }
