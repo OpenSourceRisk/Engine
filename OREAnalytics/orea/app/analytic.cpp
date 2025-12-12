@@ -226,11 +226,7 @@ void Analytic::setUp() {
        we built it against a dummy market using the portfolio analyser, so that
        we can ask the portfolio for its required fixings in the market data loader
        and also enrich the index fixings here (if desired). */
-    bool fixings = false;
-    if (auto mgr = analyticsManager_.lock())
-        fixings = mgr->commonParameters().allFixings; 
-
-    if (!portfolio_->empty() && !fixings) {
+    if (!portfolio_->empty() && !inputs()->allFixings()) {
         if (!portfolio_->isBuilt()) {
             PortfolioAnalyser(portfolio_, inputs_->pricingEngine(), inputs_->baseCurrency(),
                               configurations().curveConfig, inputs_->refDataManager(), inputs_->iborFallbackConfig());

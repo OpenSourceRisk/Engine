@@ -36,9 +36,17 @@ namespace analytics {
 class AnalyticsManager : public QuantLib::ext::enable_shared_from_this<AnalyticsManager> {
 public:
     struct CommonParameters {
-        bool entireMarket = false;
-        bool allFixings = false;
-        bool eomInflationFixings = true;
+        std::string baseCurrency;
+        QuantLib::Date asofDate;
+        std::string configurationFile;
+        std::string marketConfiguration;
+        std::string outputPath;
+        bool writeOutputToSubfolder;
+        bool updateMarketData;
+        bool fullOutputReport;
+        bool npvCubeOutput;
+        bool mktCubeOutput;
+        bool stressTestOutput;
     };
 
     AnalyticsManager( //! Container for the inputs required by the standard analytics

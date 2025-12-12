@@ -70,6 +70,32 @@ InputParameters::InputParameters() {
     loadParameters();
 }
 
+void InputParameters::loadParameters() {
+    loadParameterXML<Conventions>(conventions_, "setup", "conventionsFile");
+    // Load Configurations
+    loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment");
+    loadParameterXML<CurrencyConfig>(currencyConfig_, "setup", "currencyConfiguration");
+
+    // load all 'setup' parameters here
+    // Additional results might be its own node or part of npv node for backward compatibility
+    loadParameter<bool>(outputAdditionalResults_, "additionalResults", "active", false, parseBool);
+    if (!outputAdditionalResults_)
+        loadParameter<bool>(outputAdditionalResults_, "npv", "additionalResults", false, parseBool);
+
+    loadParameter<Natural>(additionalResultsReportPrecision_, "additionalResults", "additionalResultsReportPrecision", false, parseInteger);
+    // additionalResultsReportPrecision was previously part of npv node, but moved to setup, check npv node for backward
+    // compatibility
+    if (!additionalResultsReportPrecision_)
+        loadParameter<Natural>(additionalResultsReportPrecision_, "npv", "additionalResultsReportPrecision", false,
+                              parseInteger);
+
+    loadParameter<bool>(includePastCashflows_, "setup", "includePastCashflows", false, parseBool);
+    // includePastCashflows was previously part of cashflow node, but moved to setup, check npv node for backward
+    // compatibility
+    if (!includePastCashflows_)
+        loadParameter<bool>(includePastCashflows_, "cashflow", "includePastCashflows", false, parseBool);
+}
+
 bool checkString(const std::string& obj) { return true; }
 
 std::string InputParameters::loadParameterString(const std::string& analytic, const std::string& param,
@@ -83,6 +109,12 @@ std::string InputParameters::loadParameterString(const std::string& analytic, co
 std::string InputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
                                                     bool mandatory) {
     return loadParameterString(analytic, param, mandatory);
+}
+
+
+ const std::string& InputParameters::marketConfig(const std::string& context) {
+    auto it = marketConfigs_.find(context);
+    return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
 }
 
 const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>&

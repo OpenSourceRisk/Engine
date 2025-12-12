@@ -181,8 +181,7 @@ void MarketDataLoader::addRelevantFixings(
 
 void MarketDataLoader::populateFixings(
     const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-    const std::set<QuantLib::Date>& loaderDates,
-    const bool entireMarket, const bool allFixings, const bool eomInflationFixings) {
+    const std::set<QuantLib::Date>& loaderDates) {
     LOG("Asking portfolio for its required fixings");
     FixingMap portfolioFixings;
     std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>> lastAvailableFixingLookupMap;
@@ -204,13 +203,13 @@ void MarketDataLoader::populateFixings(
                                 inputs_->curveConfigs().get());
     }
 
-    if (eomInflationFixings) {
+    if (inputs_->eomInflationFixings()) {
         LOG("Adjust inflation fixing dates to the end of the month before the request");
         amendInflationFixingDates(fixings_);
     }
 
-    if ((allFixings || fixings_.size() > 0) && impl_)
-        impl()->retrieveFixings(loader_, allFixings, fixings_, lastAvailableFixingLookupMap);
+    if ((inputs_->allFixings() || fixings_.size() > 0) && impl_)
+        impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
 
     applyFixings(loader_->loadFixings());
         
@@ -240,8 +239,7 @@ void MarketDataLoader::populateFixings(
 
 void MarketDataLoader::populateLoader(
     const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-    const std::set<QuantLib::Date>& loaderDates, const bool entireMarket, const bool allFixings,
-    const bool eomInflationFixings) {
+    const std::set<QuantLib::Date>& loaderDates) {
 
     // create a loader if doesn't already exist
     if (!loader_)
@@ -276,7 +274,7 @@ void MarketDataLoader::populateLoader(
     // apply dividends now
     applyDividends(loader_->loadDividends());
 
-    populateFixings(todaysMarketParameters, loaderDates, entireMarket, allFixings, eomInflationFixings);
+    populateFixings(todaysMarketParameters, loaderDates);
 
     LOG("Adding the loaded fixings to the IndexManager");
     LOG("Fixings size = " << ore::data::to_string(fixings_.size()));
@@ -304,7 +302,7 @@ void MarketDataLoader::populateLoader(
 
         // Get the relevant market data loader for the pricing call
         if (impl_)
-            impl()->retrieveMarketData(loader_, quoteMap, entireMarket, d);
+            impl()->retrieveMarketData(loader_, quoteMap, d);
 
         quotes_[d] = quotes;
     }

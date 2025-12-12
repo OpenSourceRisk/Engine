@@ -33,39 +33,7 @@ using ore::data::InMemoryReport;
 namespace ore {
 namespace analytics {
     
-void AnalyticsManager::initialise() {
-    
-    // Market Settings
-    inputs_->loadParameter<bool>(params_.entireMarket, "setup", "entireMarket", false, parseBool);
-    inputs_->loadParameter<bool>(params_.allFixings, "setup", "allFixings", false, parseBool);
-    inputs_->loadParameter<bool>(params_.eomInflationFixings, "setup", "eomInflationFixings", false, parseBool);
-    
-    inputs_->loadParameterXML<Conventions>(&InputParameters::setConventions, "setup", "conventionsFile");
-    // Load Configurations
-    inputs_->loadParameterXML<CalendarAdjustmentConfig>(&InputParameters::setCalendarAdjustmentPtr, "setup", "calendarAdjustment");
-    inputs_->loadParameterXML<CurrencyConfig>(&InputParameters::setCurrencyConfigPtr, "setup", "currencyConfiguration");
-
-
-    // load all 'setup' parameters here
-    // Additional results might be its own node or part of npv node for backward compatibility
-    inputs_->loadParameter<bool>(&InputParameters::setOutputAdditionalResults, "additionalResults", "active", false,
-                                 parseBool);
-    if (!inputs_->outputAdditionalResults())
-        inputs_->loadParameter<bool>(&InputParameters::setOutputAdditionalResults, "npv", "additionalResults", false,
-                                     parseBool);
-
-    inputs_->loadParameter<size_t>(&InputParameters::setAdditionalResultsReportPrecision, "additionalResults", "additionalResultsReportPrecision", false, parseInteger);
-    // additionalResultsReportPrecision was previously part of npv node, but moved to setup, check npv node for backward compatibility
-    if (!inputs_->additionalResultsReportPrecision())
-        inputs_->loadParameter<size_t>(&InputParameters::setAdditionalResultsReportPrecision, "npv",
-                                       "additionalResultsReportPrecision", false, parseInteger);
-
-    inputs_->loadParameter<bool>(&InputParameters::setIncludePastCashflows, "setup", "includePastCashflows", false, parseBool);
-    // includePastCashflows was previously part of cashflow node, but moved to setup, check npv node for backward compatibility
-    if (!inputs_->includePastCashflows())
-        inputs_->loadParameter<bool>(&InputParameters::setIncludePastCashflows, "cashflow", "includePastCashflows", false,
-                                     parseBool);
-
+void AnalyticsManager::initialise() {  
 
     // create all the analytics
     for (const auto& a : inputs_->analytics())
@@ -157,7 +125,7 @@ void AnalyticsManager::runAnalytics(
 
         LOG("AnalyticsManager::runAnalytics: populate loader for dates: " << to_string(marketDates));
 
-        marketDataLoader_->populateLoader(tmps, marketDates, params_.entireMarket, params_.allFixings, params_.eomInflationFixings);
+        marketDataLoader_->populateLoader(tmps, marketDates);
 
         QuantLib::ext::shared_ptr<InMemoryReport> mdReport =
             QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -168,7 +136,7 @@ void AnalyticsManager::runAnalytics(
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
-                             marketDataLoader_->quotes()[inputs_->asof()], !params_.entireMarket);
+                             marketDataLoader_->quotes()[inputs_->asof()], !inputs_->entireMarket());
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeFixings(*fixingReport, marketDataLoader_->loader());
         ore::analytics::ReportWriter(inputs_->reportNaString())

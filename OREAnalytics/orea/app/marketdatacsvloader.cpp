@@ -36,12 +36,11 @@ void MarketDataCsvLoaderImpl::loadCorporateActionData(QuantLib::ext::shared_ptr<
 }
 
 void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-                                                 const map<Date, set<string>>& quotes, const bool entireMarket,
-                                                 const Date& requestDate) {
+                                                 const map<Date, set<string>>& quotes, const Date& requestDate) {
     std::set<Wildcard> wildcards;
     std::set<std::string> names;
 
-    if (!entireMarket) {
+    if (!inputs_->entireMarket()) {
         if (auto q = quotes.find(requestDate); q != quotes.end()) {
             for (auto const& tmp : q->second) {
                 Wildcard wc(tmp);
@@ -54,7 +53,7 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr
     }
 
     for (const auto& md : csvLoader_->loadQuotes(requestDate)) {
-        if (!entireMarket) {
+        if (!inputs_->entireMarket()) {
             if (names.find(md->name()) != names.end() ||
                 std::any_of(wildcards.begin(), wildcards.end(),
                             [&md](const Wildcard& w) { return w.matches(md->name()); }))
@@ -66,12 +65,12 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr
 }
 
 void MarketDataCsvLoaderImpl::retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-        const bool allFixings, ore::analytics::FixingMap fixings,
+        ore::analytics::FixingMap fixings,
         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap) {
-    LOG("MarketDataCsvLoader::retrieveFixings called: all fixings = " << to_string(allFixings));
+    LOG("MarketDataCsvLoader::retrieveFixings called: all fixings ? " << (inputs_->allFixings() ? "Y" : "N"));
 
     for (const auto& f : csvLoader_->loadFixings()) {
-        if (!allFixings) {
+        if (!inputs_->allFixings()) {
             if (auto n = fixings.find(f.name); n != fixings.end()) {
                 if (n->second.data().find(f.date) != n->second.data().end())
                     loader->addFixing(f.date, f.name, f.fixing);

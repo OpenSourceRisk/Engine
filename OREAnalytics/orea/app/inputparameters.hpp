@@ -246,9 +246,10 @@ public:
     void setMporPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
-    void setEntireMarket(bool b) { parameters_.set("setup", "entireMarket", b); }
-    void setAllFixings(bool b) { parameters_.set("setup", "allFixings", b); }
-    void setEomInflationFixings(bool b) { parameters_.set("setup", "eomInflationFixings", b); }
+    void setEntireMarket(bool b) { entireMarket_ = b; }
+    void setAllFixings(bool b) { allFixings_ = b; }
+    void setEomInflationFixings(bool b) { eomInflationFixings_ = b; }
+    void setUseMarketDataFixings(bool b) { useMarketDataFixings_ = b; }
     void setIborFallbackOverride(bool b) { iborFallbackOverride_ = b; }
     void setReportNaString(const std::string& s) { reportNaString_ = s; }
     void setCsvQuoteChar(const char& c){ csvQuoteChar_ = c; }
@@ -708,6 +709,10 @@ public:
 
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
+    bool entireMarket() const { return entireMarket_; }
+    bool allFixings() const { return allFixings_; }
+    bool eomInflationFixings() const { return eomInflationFixings_; }
+    bool useMarketDataFixings() const { return useMarketDataFixings_; }
     bool iborFallbackOverride() const { return iborFallbackOverride_; }
     const std::string& reportNaString() const { return reportNaString_; }
     char csvCommentCharacter() const { return csvCommentCharacter_; }
@@ -1136,7 +1141,7 @@ public:
      *************************************/
     const std::set<std::string>& analytics() const { return analytics_; }
 
-    virtual void loadParameters(){}
+    virtual void loadParameters();
     virtual void writeOutParameters(){}
 
 protected:
@@ -1192,6 +1197,10 @@ protected:
     QuantLib::Size maxRetries_ = 7;
     QuantLib::Size nThreads_ = 1;
 
+    bool entireMarket_ = false;
+    bool allFixings_ = false;
+    bool eomInflationFixings_ = true;
+    bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
     char csvCommentCharacter_ = '#';
     char csvEolChar_ = '\n';
@@ -1556,10 +1565,6 @@ protected:
     bool riskFactorLevel_ = false; 
 };
 
-inline const std::string& InputParameters::marketConfig(const std::string& context) {
-    auto it = marketConfigs_.find(context);
-    return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
-}
 std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);
     
 //! Traditional ORE input via ore.xml and various files, output into files
