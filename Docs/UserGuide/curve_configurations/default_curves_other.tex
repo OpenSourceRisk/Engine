@@ -130,3 +130,53 @@ The meaning of each node is as follows:
 \caption{Multi-Section default curve}
 \label{lst:defaultcurve_multisection}
 \end{longlisting}
+
+\subsubsection{Default Curve from YieldCurve}\label{ss:default_curve_from_yield_curve}
+
+ 
+Default curves can be set up as a wrapper around a yield curve as shown in listing
+\ref{lst:defaultcurve_from_yield}. A typical use case is to back out from a funding spread curve. 
+
+If $P(0,t)$ denotes the discount factor of the given yield curve the resulting default term structures has survival probabilities
+
+\begin{equation}
+S(t) = \left( P(0,t)\right) ^ { 1/(1-R) }
+\end{equation}
+
+on the given pillar times. Her, $R$ is the specified recovery rate.
+
+The meaning of each node is as follows:
+
+\begin{itemize}
+\item CurveId: The curve id.
+\item CurveDescription: The curve description.
+\item Currency: The currency of the curve.
+\item Type: Must be set to YieldCurve.
+\item DayCounter: The day counter used to convert dates to times.
+\item RecoveryRate [optional]: The recovery rate for the resulting default curve. Defaults to zero. The recovery rate
+  can be a market quote as usual or also a fixed numeric value for this curve type.
+\item WrappedYieldCurve: The yield curve to wrap.
+\item Extrapolation [Optional]: If set to true, the curve is extrapoalted beyond the last pillar. Defaults to true.
+\end{itemize}
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <DefaultCurve>
+			<CurveId>FundingCurveCreditCurve</CurveId>
+			<Currency>EUR</Currency>
+			<CurveDescription>Issuer funding spread curve as credit curve</CurveDescription>
+			<Configurations>
+				<Configuration priority="0">
+					<Type>YieldCurve</Type>
+					<DayCounter>Actual/360</DayCounter>
+					<RecoveryRate>RECOVERY_RATE/RATE/CPTY_C/SR/EUR</RecoveryRate>
+					<WrappedYieldCurve>Yield/EUR/FundingCurve</WrappedYieldCurve>
+					<Extrapolation>true</Extrapolation>
+				</Configuration>
+			</Configurations>
+		</DefaultCurve>
+\end{minted}
+\caption{Benchmark default curve}
+\label{lst:defaultcurve_from_yield}
+\end{longlisting}
