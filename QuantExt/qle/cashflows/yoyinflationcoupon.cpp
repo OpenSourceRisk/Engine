@@ -205,6 +205,11 @@ yoyInflationLeg& yoyInflationLeg::withInflationNotional(bool addInflationNotiona
     return *this;
 }
 
+yoyInflationLeg& yoyInflationLeg::withPaymentDates(const std::vector<QuantLib::Date>& paymentDates) {
+    paymentDates_ = paymentDates;
+    return *this;
+}
+
 yoyInflationLeg::operator Leg() const {
 
     Size n = schedule_.size() - 1;

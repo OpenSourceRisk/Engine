@@ -55,14 +55,15 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
         for (std::size_t j = 0; j < i; ++j) {
             auto p2 = ore::data::to_string(irDeltaTerms[j]);
             boost::algorithm::to_lower(p2);
-            irDeltaCorrelations_(i, j) = irDeltaCorrelations_(j, i) =
-                simmConfiguration_->correlation(CrifRecord::RiskType::IRCurve, "USD", p1, std::string(),
-                                                CrifRecord::RiskType::IRCurve, "USD", p2, std::string());
+            irDeltaCorrelations_(i, j) = irDeltaCorrelations_(j, i) = simmConfiguration_->correlation(
+                CrifRecord::RiskType::IRCurve, "USD", std::string(), p1, std::string(), CrifRecord::RiskType::IRCurve,
+                "USD", std::string(), p2, std::string(), std::string());
         }
     }
 
     irGamma_ = simmConfiguration_->correlation(CrifRecord::RiskType::IRCurve, "USD", std::string(), std::string(),
-                                               CrifRecord::RiskType::IRCurve, "GBP", std::string(), std::string());
+                                               std::string(), CrifRecord::RiskType::IRCurve, "GBP", std::string(),
+                                               std::string(), std::string(), std::string());
 
     irVegaRw_ = simmConfiguration_->weight(CrifRecord::RiskType::IRVol, std::string("USD"));
 
@@ -76,9 +77,9 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
         for (std::size_t j = 0; j < i; ++j) {
             auto p2 = ore::data::to_string(irVegaTerms[j]);
             boost::algorithm::to_lower(p2);
-            irVegaCorrelations_(i, j) = irVegaCorrelations_(j, i) =
-                simmConfiguration_->correlation(CrifRecord::RiskType::IRVol, "USD", p1, std::string(),
-                                                CrifRecord::RiskType::IRVol, "USD", p2, std::string());
+            irVegaCorrelations_(i, j) = irVegaCorrelations_(j, i) = simmConfiguration_->correlation(
+                CrifRecord::RiskType::IRVol, "USD", std::string(), p1, std::string(), CrifRecord::RiskType::IRVol,
+                "USD", std::string(), p2, std::string(), std::string());
         }
     }
 
@@ -101,8 +102,8 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
     fxHvr_ = simmConfiguration_->historicalVolatilityRatio(CrifRecord::RiskType::FXVol);
 
     fxCorr_ = simmConfiguration_->correlation(CrifRecord::RiskType::FX, "GBP", std::string(), std::string(),
-                                              CrifRecord::RiskType::FX, "GBP", std::string(), std::string(),
-                                              std::string("USD"));
+                                              std::string(), CrifRecord::RiskType::FX, "GBP", std::string(),
+                                              std::string(), std::string(), std::string("USD"));
 
     fxVegaCorrelations_ = Matrix(fxVegaTerms.size(), fxVegaTerms.size(), 0.0);
     for (std::size_t i = 0; i < fxVegaTerms.size(); ++i) {
@@ -112,9 +113,9 @@ SimpleDynamicSimm::SimpleDynamicSimm(const std::size_t n, const std::vector<std:
         for (std::size_t j = 0; j < i; ++j) {
             auto p2 = ore::data::to_string(fxVegaTerms[j]);
             boost::algorithm::to_lower(p2);
-            fxVegaCorrelations_(i, j) = fxVegaCorrelations_(j, i) =
-                simmConfiguration_->correlation(CrifRecord::RiskType::FXVol, "USD", p1, std::string(),
-                                                CrifRecord::RiskType::FXVol, "USD", p2, std::string());
+            fxVegaCorrelations_(i, j) = fxVegaCorrelations_(j, i) = simmConfiguration_->correlation(
+                CrifRecord::RiskType::FXVol, "USD", std::string(), p1, std::string(), CrifRecord::RiskType::FXVol,
+                "USD", std::string(), p2, std::string(), std::string());
         }
     }
 

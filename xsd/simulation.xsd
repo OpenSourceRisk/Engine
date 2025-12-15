@@ -350,6 +350,7 @@
       <xs:complexType>
         <xs:all>
           <xs:element type="bool" name="Calibrate"/>
+		  <xs:element type="volatilityTypeType" name="VolatilityType" minOccurs="0"/>
           <xs:element type="paramTypeType" name="ParamType"/>
           <xs:element type="xs:string" name="TimeGrid"/>
           <!-- FIXME: comma delimited list -->
@@ -374,6 +375,7 @@
       <xs:complexType>
         <xs:all>
           <xs:element type="bool" name="Calibrate"/>
+		  <xs:element type="reversionTypeType" name="ReversionType" minOccurs="0"/>
           <xs:element type="paramTypeType" name="ParamType"/>
           <xs:element type="xs:string" name="TimeGrid"/>
           <xs:element name="InitialValue" maxOccurs="1" minOccurs="1">
@@ -413,6 +415,7 @@
   <xs:attribute type="currencyCodeWithDefault" name="ccy"/>
   <!-- FIXME: currency not ccy -->
   <xs:attribute type="xs:string" name="index"/>
+  <xs:attribute type="xs:string" name="key"/>
   </xs:complexType>
   
   <xs:complexType name="volatilityParameter">

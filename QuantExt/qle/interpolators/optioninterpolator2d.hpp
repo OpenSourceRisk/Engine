@@ -199,7 +199,7 @@ void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>&
 
     // Populate expiry info. (Except interpolation obj members)
     for (Size i = 0; i < dates.size(); i++) {
-        vector<Date>::iterator found = find(expiries_.begin(), expiries_.end(), dates[i]);
+        auto found = find(expiries_.begin(), expiries_.end(), dates[i]);
         QL_REQUIRE(found != expiries_.end(), "Date should already be loaded" << dates[i]);
         Size ii;
         ii = distance(expiries_.begin(), found); // index of expiry
@@ -215,8 +215,7 @@ void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>&
         } else {
             // expiry found => add if strike not found
             Real tmpStrike = strikes[i];
-            vector<Real>::iterator fnd =
-                find_if(strikes_[ii].begin(), strikes_[ii].end(), CloseEnoughComparator(tmpStrike));
+            auto fnd = find_if(strikes_[ii].begin(), strikes_[ii].end(), CloseEnoughComparator(tmpStrike));
             if (fnd == strikes_[ii].end()) {
                 // add strike/var pairs if strike not found for this expiry
                 strikes_[ii].push_back(strikes[i]);
@@ -240,7 +239,7 @@ void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>&
             tmpPairs[j] = pair<Real, Real>(strikes_[i][j], values_[i][j]);
         }
         sort(tmpPairs.begin(), tmpPairs.end()); // sorts according to first. (strikes)
-        for (vector<pair<Real, Real> >::iterator it = tmpPairs.begin(); it != tmpPairs.end(); it++) {
+        for (auto it = tmpPairs.begin(); it != tmpPairs.end(); it++) {
             sortedStrikes.push_back(it->first);
             sortedVals.push_back(it->second);
         }

@@ -39,7 +39,8 @@ namespace analytics {
 std::pair<std::set<std::string>, std::set<std::string>>
 applySimmExemptions(ore::data::Portfolio& portfolio,
                     const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
-                    const std::set<ore::analytics::CrifRecord::Regulation>& simmExemptionOverrides = {});
+                    const std::set<ore::analytics::CrifRecord::Regulation>& simmExemptionOverrides = {},
+                    const bool useAtParCoupons = true);
 
 } // namespace analytics
 } // namespace ore

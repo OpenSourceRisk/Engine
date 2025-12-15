@@ -83,13 +83,13 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
 
     QuantLib::ext::shared_ptr<BondIndex> bondIndex;
 
-    auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactoryOverride->referenceData());
-
     BondIndexBuilder bondIndexBuilder;
 
     Real bondNotional = bondData_.bondNotional();
 
     try {
+
+        auto bondType = getBondReferenceDatumType(bondData_.securityId(), engineFactoryOverride->referenceData());
 
         if (bondType.empty() || bondType == BondReferenceDatum::TYPE) {
 
@@ -123,6 +123,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         // try to fill some fields for trade matching purposes although the trade build itself failed already
         npvCurrency_ = fundingLegData_.currency();
         notionalCurrency_ = bondData_.currency();
+        notional_ = 1.0;
         for (auto const& d : bondData_.coupons()) {
             try {
                 auto s = makeSchedule(d.schedule());

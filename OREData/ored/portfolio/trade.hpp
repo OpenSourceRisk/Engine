@@ -23,19 +23,20 @@
 
 #pragma once
 
+#include <ored/portfolio/cashflowutils.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
-#include <ored/portfolio/tradefactory.hpp> // just convenience so that client code needs to include trade.hpp only
-
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
+#include <ql/cashflow.hpp>
 
 namespace ore {
 namespace data {
@@ -43,34 +44,6 @@ using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 using QuantLib::Date;
 using std::string;
-
-struct TradeCashflowReportData {
-    QuantLib::Size cashflowNo;
-    QuantLib::Size legNo;
-    QuantLib::Date payDate;
-    std::string flowType;
-    double amount;
-    std::string currency;
-    double coupon;
-    double accrual;
-    QuantLib::Date accrualStartDate;
-    QuantLib::Date accrualEndDate;
-    double accruedAmount;
-    QuantLib::Date fixingDate;
-    double fixingValue;
-    double notional;
-    double discountFactor;
-    double presentValue;
-    double fxRateLocalBase;
-    double presentValueBase;
-    std::string baseCurrency;
-    double floorStrike;
-    double capStrike;
-    double floorVolatility;
-    double capVolatility;
-    double effectiveFloorVolatility;
-    double effectiveCapVolatility;
-};
 
 //! Trade base class
 /*! Instrument interface to pricing and risk applications
@@ -192,7 +165,7 @@ public:
     const string& maturityType() const { return maturityType_; }
 
     virtual bool isExpired(const Date& d) const {
-        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        QuantLib::ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
         if(lastRelevantDate_!=Null<Date>()){
             return QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred(d, inc);
         }else{

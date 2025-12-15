@@ -84,23 +84,25 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator,
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams, const std::string& configuration,
+    const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+    const std::string& configuration,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
     const bool useSpreadedTermStructures, const bool cacheSimData,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter,
     const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
-    const bool handlePseudoCurrenciesTodaysMarket,
-    const bool handlePseudoCurrenciesSimMarket, const bool recalibrateModels,
-    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
-                                                                   const std::vector<QuantLib::Date>&,
-                                                                   const QuantLib::Size)>& cubeFactory,
+    const bool handlePseudoCurrenciesTodaysMarket, const bool handlePseudoCurrenciesSimMarket,
+    const bool recalibrateModels,
+    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
+        const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
+        cubeFactory,
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
         const QuantLib::Date&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>& nettingSetCubeFactory,
-    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
-                                                                   const std::vector<QuantLib::Date>&,
-                                                                   const QuantLib::Size)>& cptyCubeFactory,
-    const std::string& context, const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario)
+    const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
+        const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>&
+        cptyCubeFactory,
+    const std::string& context, const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario,
+    const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
     : nThreads_(nThreads), today_(today), dateGrid_(dateGrid), nSamples_(nSamples), loader_(loader),
       scenarioGenerator_(scenarioGenerator), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configuration_(configuration), simMarketData_(simMarketData),
@@ -109,7 +111,8 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
       handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), recalibrateModels_(recalibrateModels),
       cubeFactory_(cubeFactory), nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory),
-      context_(context), offsetScenario_(offSetScenario){
+      context_(context), offsetScenario_(offSetScenario), useAtParCouponsCurves_(useAtParCouponsCurves),
+      useAtParCouponsTrades_(useAtParCouponsTrades) {
 
     QL_REQUIRE(nThreads_ != 0, "MultiThreadedValuationEngine: nThreads must be > 0");
 
@@ -169,14 +172,14 @@ void MultiThreadedValuationEngine::buildCube(
 
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
         today_, todaysMarketParams_, loader_, curveConfigs_, true, true, true, referenceData_, false,
-        iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
+        iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_, useAtParCouponsCurves_);
 
     auto engineFactory = QuantLib::ext::make_shared<ore::data::EngineFactory>(
         engineData_, initMarket,
         std::map<ore::data::MarketContext, string>{{ore::data::MarketContext::pricing, configuration_}}, referenceData_,
         iborFallbackConfig_);
 
-    portfolio->build(engineFactory, context_, true);
+    portfolio->build(engineFactory, context_, true, useAtParCouponsTrades_);
 
     for (auto const& [tid, t] : portfolio->trades()) {
         TLOG("got npv for " << tid << ": " << std::setprecision(12) << t->instrument()->NPV() << " "
@@ -349,9 +352,10 @@ void MultiThreadedValuationEngine::buildCube(
 
                 // build todays market using cloned market data
 
-                QuantLib::ext::shared_ptr<ore::data::Market> initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
-                    today_, todaysMarketParams_, loaders[id], curveConfigs_, true, true, true, referenceData_, false,
-                    iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_);
+                QuantLib::ext::shared_ptr<ore::data::Market> initMarket =
+                    QuantLib::ext::make_shared<ore::data::TodaysMarket>(
+                        today_, todaysMarketParams_, loaders[id], curveConfigs_, true, true, true, referenceData_,
+                        false, iborFallbackConfig_, false, handlePseudoCurrenciesTodaysMarket_, useAtParCouponsCurves_);
 
                 // build sim market
 
@@ -383,7 +387,7 @@ void MultiThreadedValuationEngine::buildCube(
                     engineData_, simMarket, std::map<ore::data::MarketContext, string>(), referenceData_,
                     iborFallbackConfig_);
 
-                portfolio->build(engineFactory, context_, true);
+                portfolio->build(engineFactory, context_, true, useAtParCouponsTrades_);
 
                 // build valuation engine
 

@@ -1,0 +1,18 @@
+
+FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION}
+
+ARG WHEEL_ARCH
+ARG WHEEL_IMAGE
+
+ENV PATH="/venv/bin:$PATH"
+
+ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH}"
+ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
+ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
+ENV CIBW_BEFORE_BUILD="chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && ORE-SWIG/Wheels-gitlab/before_all_linux.sh"
+
+WORKDIR /builds/qs/oreplus/ore
+RUN cibuildwheel --output-dir wheelhouse ORE-SWIG
+
+COPY wheelhouse /wheelhouse
+

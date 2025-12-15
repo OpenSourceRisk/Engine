@@ -25,6 +25,9 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/utilities/localiborcouponsettings.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 
@@ -127,7 +130,7 @@ void Portfolio::removeMatured(const Date& asof) {
 }
 
 void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const std::string& context,
-                      const bool emitStructuredError) {
+                      const bool emitStructuredError, const bool useAtParCoupons) {
     LOG("Building Portfolio of size " << trades_.size() << " for context = '" << context << "'");
     auto trade = trades_.begin();
     Size initialSize = trades_.size();
@@ -137,7 +140,7 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         std::string tradeType = trade->second->tradeType();
         boost::timer::cpu_timer timer;
         auto [ft, success] = buildTrade((*trade).second, engineFactory, context, ignoreTradeBuildFail(),
-                                        buildFailedTrades(), emitStructuredError);
+                                        buildFailedTrades(), emitStructuredError, useAtParCoupons);
         if (success) {
             ++trade;
         } else if (ft) {
@@ -303,10 +306,11 @@ Portfolio::underlyingIndices(AssetClass assetClass,
     return std::set<std::string>();
 }
 
-std::pair<QuantLib::ext::shared_ptr<Trade>, bool> buildTrade(QuantLib::ext::shared_ptr<Trade>& trade,
-                                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                                     const std::string& context, const bool ignoreTradeBuildFail,
-                                                     const bool buildFailedTrades, const bool emitStructuredError) {
+std::pair<QuantLib::ext::shared_ptr<Trade>, bool>
+buildTrade(QuantLib::ext::shared_ptr<Trade>& trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+           const std::string& context, const bool ignoreTradeBuildFail, const bool buildFailedTrades,
+           const bool emitStructuredError, const bool useAtParCoupons) {
+    QuantExt::LocalIborCouponSettings lset(useAtParCoupons);
     try {
         trade->reset();
         trade->build(engineFactory);

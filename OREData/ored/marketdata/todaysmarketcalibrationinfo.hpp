@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/portfolio/cashflowutils.hpp>
+
 #include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
@@ -50,6 +52,11 @@ struct YieldCurveCalibrationInfo {
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
+    // the following are all empty or corresponding to pillarDates, if these were not overwritten manually
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
+    std::vector<std::string> rateHelperTypes;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
 };
 
 struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
@@ -79,6 +86,10 @@ struct InflationCurveCalibrationInfo {
     QuantLib::Date baseDate;
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> times;
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
+    std::vector<std::string> rateHelperTypes;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
 };
 
 struct ZeroInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {

@@ -127,6 +127,8 @@ public:
     void setBuildFailedTrades(bool b);
     void setObservationModel(const std::string& s);
     void setImplyTodaysFixings(bool b);
+    void setUseAtParCouponsCurves(bool b);
+    void setUseAtParCouponsTrades(bool b);
     void setMarketConfig(const std::string& config, const std::string& context); 
     void setResultsPath(boost::filesystem::path resultsPath);
     void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);
@@ -206,7 +208,8 @@ public:
     // Setters for stress testing
     void setStressThreshold(Real r);
     void setStressSimMarketParams(const std::string& xml); 
-    void setStressScenarioData(const std::string& xml); 
+    void setStressScenarioData(const std::string& xml);
+    void setStressScenarioData(const ext::shared_ptr<StressTestScenarioData>& stressScenarioData);
     void setStressPricingEngine(const std::string& xml); 
     void setStressPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for VaR

@@ -16,8 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
 #include <qle/termstructures/spreadedsmilesection2.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
@@ -103,6 +105,76 @@ void SpreadedOptionletVolatility2::update() {
 
 void SpreadedOptionletVolatility2::deepUpdate() {
     baseVol_->update();
+    update();
+}
+
+AtmAdjustedSpreadedOptionletVolatility2::AtmAdjustedSpreadedOptionletVolatility2(
+    const Handle<OptionletVolatilityStructure>& baseVol,
+    const std::vector<Date>& optionDates, const std::vector<Real>& strikes,
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& baseIndex,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& targetIndex,
+    const QuantLib::Period& baseRateComputationPeriod,
+    const QuantLib::Period& targetRateComputationPeriod,
+    Real scalingFactor)
+    : SpreadedOptionletVolatility2(baseVol, optionDates, strikes, volSpreads),
+      baseIndex_(baseIndex), targetIndex_(targetIndex),
+      baseRateComputationPeriod_(baseRateComputationPeriod),
+      targetRateComputationPeriod_(targetRateComputationPeriod),
+      scalingFactor_(scalingFactor) {
+      registerWith(baseVol);
+      registerWith(baseIndex_);
+      registerWith(targetIndex_);
+}
+
+QuantLib::ext::shared_ptr<SmileSection> AtmAdjustedSpreadedOptionletVolatility2::smileSectionImpl(
+    const QuantLib::Date& fixingDate) const {
+    calculate();
+
+    Real baseAtmLevel = ProxyOptionletVolatility::getAtmLevel(fixingDate, baseIndex_, baseRateComputationPeriod_);
+    Real targetAtmLevel = ProxyOptionletVolatility::getAtmLevel(fixingDate, targetIndex_, targetRateComputationPeriod_);
+
+    Real t = timeFromReference(fixingDate);
+    if (smileSectionCache_.find(t) == smileSectionCache_.end()) {
+        auto atmAdjustedStrikes = strikes();
+        for (Size k = 0; k < strikes().size(); ++k) {
+            atmAdjustedStrikes[k] += baseAtmLevel - targetAtmLevel;
+        }
+        Interpolation2D volSpreadInterpolation = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
+            optionTimes().begin(), optionTimes().end(), atmAdjustedStrikes.begin(), atmAdjustedStrikes.end(), volSpreadValues()));
+        volSpreadInterpolation.enableExtrapolation();
+        std::vector<Real> volSpreads(atmAdjustedStrikes.size());
+        for (Size k = 0; k < atmAdjustedStrikes.size(); ++k) {
+            volSpreads[k] = volSpreadInterpolation(t, atmAdjustedStrikes[k]);
+        }
+        smileSectionCache_[t] = QuantLib::ext::make_shared<SpreadedSmileSection2>(
+            baseVol()->smileSection(t), volSpreads, atmAdjustedStrikes);
+    }
+    return smileSectionCache_[t];
+}
+
+QuantLib::ext::shared_ptr<SmileSection> AtmAdjustedSpreadedOptionletVolatility2::smileSectionImpl(Time optionTime) const {
+    // imply a fixing date from the optionTime
+    Date fixingDate = lowerDate(optionTime, referenceDate(), dayCounter());
+    return smileSectionImpl(fixingDate);
+}
+
+Volatility AtmAdjustedSpreadedOptionletVolatility2::volatilityImpl(Time optionTime, Rate strike) const {
+    return smileSectionImpl(optionTime)->volatility(strike) * scalingFactor_;
+}
+
+void AtmAdjustedSpreadedOptionletVolatility2::performCalculations() const {
+    SpreadedOptionletVolatility2::performCalculations();
+    smileSectionCache_.clear();
+}
+
+void AtmAdjustedSpreadedOptionletVolatility2::update() {
+    SpreadedOptionletVolatility2::update();
+    LazyObject::update();
+}
+
+void AtmAdjustedSpreadedOptionletVolatility2::deepUpdate() {
+    SpreadedOptionletVolatility2::update();
     update();
 }
 

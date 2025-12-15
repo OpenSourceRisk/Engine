@@ -59,11 +59,13 @@ public:
         \param npvDate
                Discount to this date. If not given the npv date
                is set to the evaluation date
+        \param discountCurve
+               optional discounting curve (in npv currency)
     */
     DiscountingFxForwardEngine(const Currency& ccy1, const Handle<YieldTermStructure>& currency1Discountcurve,
                                const Currency& ccy2, const Handle<YieldTermStructure>& currency2Discountcurve,
                                const Handle<Quote>& spotFX, const Date& settlementDate = Date(),
-                               const Date& npvDate = Date());
+                               const Date& npvDate = Date(), const Handle<YieldTermStructure>& discountCurve = {});
 
     void calculate() const override;
 
@@ -85,6 +87,7 @@ private:
     QuantLib::ext::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;
     Date npvDate_;
+    Handle<YieldTermStructure> discountCurve_;
 };
 } // namespace QuantExt
 

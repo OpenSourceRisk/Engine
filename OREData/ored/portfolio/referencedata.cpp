@@ -599,6 +599,7 @@ void CreditReferenceDatum::fromXML(XMLNode* node) {
                               XMLUtils::getChildValue(innerNode, "EntityType", false) == "Corp")
                                  ? "Corporate"
                                  : XMLUtils::getChildValue(innerNode, "EntityType", false);
+    creditData_.primaryPriceType = XMLUtils::getChildValue(innerNode, "PrimaryPriceType", false);
 }
 
 XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) const {
@@ -616,6 +617,8 @@ XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, creditNode, "PredecessorImplementationDate",
                            to_string(creditData_.predecessorImplementationDate));
     XMLUtils::addChild(doc, creditNode, "EntityType", creditData_.entityType);
+    if(creditData_.primaryPriceType != string())
+        XMLUtils::addChild(doc, creditNode, "PrimaryPriceType", creditData_.primaryPriceType);
     return node;
 }
 
