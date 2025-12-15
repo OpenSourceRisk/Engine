@@ -386,7 +386,7 @@ void McCamCallableBondBaseEngine::generatePathValues(const std::vector<Real>& si
 }
 
 void McCamCallableBondBaseEngine::calculate() const {
-    McEngineStats::instance().other_timer.start();
+    McEngineStats::instance().other_timer.resume();
 
     today_ = model_->irlgm1f(0)->termStructure()->referenceDate();
     includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
@@ -512,7 +512,7 @@ void McCamCallableBondBaseEngine::calculate() const {
     McEngineStats::instance().other_timer.stop();
     // simulate the paths for the calibration
 
-    McEngineStats::instance().path_timer.start();
+    McEngineStats::instance().path_timer.resume();
 
     QL_REQUIRE(!simulationTimes.empty(),
                "McCamCallableBondBaseEngine::calculate(): no simulation times, this is not expected.");
@@ -548,7 +548,7 @@ void McCamCallableBondBaseEngine::calculate() const {
 
     McEngineStats::instance().path_timer.stop();
 
-    McEngineStats::instance().calc_timer.start();
+    McEngineStats::instance().calc_timer.resume();
 
     // setup the models
 
