@@ -409,12 +409,10 @@ public:
         : inputs_(inputs), impl_(impl);
 
      virtual void populateLoader(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
-        const std::set<QuantLib::Date>& loaderDates, const bool entireMarket = false, const bool allFixings = false,
-        const bool eomInflationFixings = false);
+        const std::set<QuantLib::Date>& loaderDates);
 
      virtual void populateLoader(const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
-                   const std::set<QuantLib::Date>& loaderDates, const bool entireMarket = false,
-                   const bool allFixings = false, const bool eomInflationFixings = false);
+                   const std::set<QuantLib::Date>& loaderDates);
 };
 
 %shared_ptr(AnalyticsManager)
