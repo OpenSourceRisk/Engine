@@ -20,6 +20,7 @@
 
 #include <ored/model/crlgmbuilder.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <ql/currencies/america.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>

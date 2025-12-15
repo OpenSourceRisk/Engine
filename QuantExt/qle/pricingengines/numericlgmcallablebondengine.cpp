@@ -141,7 +141,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
     // 6 set up functions accrualFraction(t), notional(t)
 
-    QuantExt::CurrentNotionalAccrualsCalculator notionalAccrualCalc(
+    QuantExt::CallableBondNotionalAndAccrualCalculator notionalAccrualCalc(
         today, instrArgs_->notionals.front(), instrArgs_->cashflows,
         solver_->model()->parametrization()->termStructure().currentLink());
 

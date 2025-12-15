@@ -33,9 +33,9 @@
 
 namespace QuantExt {
 
-class CurrentNotionalAccrualsCalculator {
+class CallableBondNotionalAndAccrualCalculator {
 public:
-    CurrentNotionalAccrualsCalculator(const QuantLib::Date& today, const QuantLib::Real initialNotional,
+    CallableBondNotionalAndAccrualCalculator(const QuantLib::Date& today, const QuantLib::Real initialNotional,
                                       const QuantLib::Leg& leg,
                                       const QuantLib::ext::shared_ptr<QuantLib::TermStructure>& ts)
         : notionals_({initialNotional}) {

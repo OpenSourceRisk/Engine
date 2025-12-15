@@ -108,7 +108,7 @@ public:
             const Real resultValue,
             const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
             const bool includeTodaysCashflows, const bool includeReferenceDateEvents,
-            const ext::shared_ptr<QuantExt::CurrentNotionalAccrualsCalculator>& notionalAccrualCalculator);
+            const ext::shared_ptr<QuantExt::CallableBondNotionalAndAccrualCalculator>& notionalAccrualCalculator);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable>
@@ -142,7 +142,7 @@ public:
 
         std::vector<Filter> exercisedCall_;
         std::vector<Filter> exercisedPut_;
-        ext::shared_ptr<QuantExt::CurrentNotionalAccrualsCalculator> notionalAccrualCalculator_;
+        ext::shared_ptr<QuantExt::CallableBondNotionalAndAccrualCalculator> notionalAccrualCalculator_;
         // used for serialisation of amc trianing
         friend class boost::serialization::access;
         template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -156,6 +156,7 @@ public:
     bool exerciseIntoIncludeSameDayFlows_ = true;
     mutable Currency currency_;
     mutable Date settlementDate_;
+    mutable ext::shared_ptr<QuantExt::CallableBondNotionalAndAccrualCalculator> notionalAccrualCalculator_;
     // data members
     Handle<CrossAssetModel> model_;
     SequenceType calibrationPathGenerator_, pricingPathGenerator_;
@@ -329,6 +330,8 @@ private:
         putData_ = arguments_.putData;
         settlementDate_ = arguments_.settlementDate;
         includeTodaysCashflows_ = false;
+        notionalAccrualCalculator_ = ext::make_shared<QuantExt::CallableBondNotionalAndAccrualCalculator>(
+            today_, notionals_.front(), leg_, *model_->irlgm1f(0)->termStructure());
         McCamCallableBondBaseEngine::calculate();
         results_.value = resultTotalNpv_;
         results_.settlementValue = resultSettlementValue_;
