@@ -58,9 +58,11 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
                "HistoricalScenarioGenerator: Require returnConfig, internal error, please contact dev");
     setDates();
 }
+
 void HistoricalScenarioGenerator::setCurrentKey(const RiskFactorKey& k){
     currentKey_ = k;
 }
+
 void HistoricalScenarioGenerator::setDates() {
     // construct the vectors of start and end dates
     for (Size i = 0; i < historicalScenarioLoader_->numScenarios();) {
@@ -129,7 +131,6 @@ Real HistoricalScenarioGenerator::adjustedPrice(RiskFactorKey key, Date d, Real 
     return price;
 }
 
-
 QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
 
     if(currentKey_ != RiskFactorKey()){
@@ -149,10 +150,6 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
     // loop over all keys
     calculationDetails_.resize(baseScenario_->keys().size());
     Size calcDetailsCounter = 0;
-
-    if (generateDifferenceScenarios_)
-        scen = getDifferenceScenario(s1, s2, d, 1.0); 
-
     for (auto const& key : baseScenario_->keys()) {
 
         if (!s1->has(key) || !s2->has(key))
