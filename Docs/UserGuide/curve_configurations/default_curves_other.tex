@@ -29,7 +29,7 @@ The interpolation is backward flat in the hazard rate. The meaning of each node 
 \item DayCounter: The day counter used to convert dates to times.
 \item RecoveryRate [optional]: The recovery rate for the resulting default curve. Defaults to zero. The recovery rate
   can be a market quote as usual or also a fixed numeric value for this curve type.
-\item BenchmarkCurve: The benchmark yield curve, typically this is the standard Ibor curve in the currence
+\item BenchmarkCurve: The benchmark yield curve, typically this is the standard Ibor curve in the currency
   (e.g. EUR-EURIBOR-6M, USD-Libor-3M, ...)
 \item SourceCurve: The all-in discounting curve.
 \item Pillars: The pillars on which to match the source curve
@@ -133,7 +133,6 @@ The meaning of each node is as follows:
 
 \subsubsection{Default Curve from YieldCurve}\label{ss:default_curve_from_yield_curve}
 
- 
 Default curves can be set up as a wrapper around a yield curve as shown in listing
 \ref{lst:defaultcurve_from_yield}. A typical use case is to back out from a funding spread curve. 
 
@@ -143,7 +142,7 @@ If $P(0,t)$ denotes the discount factor of the given yield curve the resulting d
 S(t) = \left( P(0,t)\right) ^ { 1/(1-R) }
 \end{equation}
 
-on the given pillar times. Her, $R$ is the specified recovery rate.
+on the given pillar times, where $R$ is the specified recovery rate.
 
 The meaning of each node is as follows:
 
@@ -156,7 +155,7 @@ The meaning of each node is as follows:
 \item RecoveryRate [optional]: The recovery rate for the resulting default curve. Defaults to zero. The recovery rate
   can be a market quote as usual or also a fixed numeric value for this curve type.
 \item WrappedYieldCurve: The yield curve to wrap.
-\item Extrapolation [Optional]: If set to true, the curve is extrapoalted beyond the last pillar. Defaults to true.
+\item Extrapolation [Optional]: If set to true, the curve is extrapolated beyond the last pillar. Defaults to true.
 \end{itemize}
 
 \begin{longlisting}
@@ -177,6 +176,6 @@ The meaning of each node is as follows:
 			</Configurations>
 		</DefaultCurve>
 \end{minted}
-\caption{Benchmark default curve}
+\caption{Default curve from yield curve}
 \label{lst:defaultcurve_from_yield}
 \end{longlisting}
