@@ -197,7 +197,11 @@ void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
 
         reports->add(histPnLReport);
 
-        analytic()->addReport(label_, "historical_PnL", histPnLReport);
+        if(inputs_->riskFactorBreakdown()){
+            analytic()->addReport(label_, "riskFactor_PnL", histPnLReport);
+        }else{
+            analytic()->addReport(label_, "historical_PnL", histPnLReport);
+        }
 }
 
 } // namespace analytics

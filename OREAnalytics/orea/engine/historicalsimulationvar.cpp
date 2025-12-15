@@ -58,8 +58,7 @@ void HistoricalSimulationVarReport::createAdditionalReports(
 
     if(riskFactorBreakdown_){
         // prepare report
-        report->addColumn("RiskFactor1", string())
-            .addColumn("RiskFactor2", string())
+        report->addColumn("RiskFactor", string())
             .addColumn("PLDate1", Date())
             .addColumn("PLDate2", Date())
             .addColumn("PLAmount", double(), 6);
@@ -116,8 +115,8 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
                 report->next();
                 const auto& key = r.first;
                 const Real value = r.second;
-                report->add(ore::data::to_string(key.first));
-                report->add(ore::data::to_string(key.second));
+                report->add(ore::data::to_string(key));
+                // report->add(ore::data::to_string(key.second));
                 report->add(hisScenGen_->startDates()[s]);
                 report->add(hisScenGen_->endDates()[s]);
                 report->add(value);

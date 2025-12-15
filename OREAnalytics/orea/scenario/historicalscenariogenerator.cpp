@@ -129,7 +129,12 @@ Real HistoricalScenarioGenerator::adjustedPrice(RiskFactorKey key, Date d, Real 
     return price;
 }
 
+
 QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
+
+    if(currentKey_ != RiskFactorKey()){
+        return nextKey(d, currentKey_);
+    }
 
     QL_REQUIRE(baseScenario_ != nullptr, "HistoricalScenarioGenerator: base scenario not set");
 
@@ -402,51 +407,6 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates
     return gen_->next(d);
 }
 
-HistoricalScenarioGeneratorRiskFactorKeys::HistoricalScenarioGeneratorRiskFactorKeys(
-    const std::vector<TimePeriod>& filter, const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen, const RiskFactorKey& currentKey)
-    : HistoricalScenarioGenerator(*gen),
-      gen_(gen), currentKey_(currentKey), i_orig_(0) {
-
-    // set base scenario    
-    auto zpScen = QuantLib::ext::dynamic_pointer_cast<ZeroToParScenarioGenerator>(gen);
-    if (zpScen)
-        baseScenario_ = zpScen->baseScenario();
-    else
-        baseScenario_ = gen->baseScenario();
-
-    for (auto const& f : filter) {
-        // Check that backtest and benchmark periods are covered by the historical scenario generator
-        Date minDate = *std::min_element(f.startDates().begin(), f.startDates().end());
-        Date maxDate = *std::max_element(f.endDates().begin(), f.endDates().end());
-         
-        QL_REQUIRE(startDates_.front() <= minDate && maxDate <= endDates_.back(),
-             "The backtesting period " << f << " is not covered by the historical scenario generator: Required dates = ["
-             << ore::data::to_string(minDate) << "," << ore::data::to_string(maxDate)
-             << "], Covered dates = [" << startDates_.front() << "," << endDates_.back() << "]");
-    }
-
-    // filter start / end dates on relevant scenarios
-
-    isRelevantScenario_ = std::vector<bool>(gen->numScenarios(), false);
-
-    std::vector<Date> newStartDates, newEndDates;
-
-    for (Size i = 0; i < startDates_.size(); ++i) {
-        isRelevantScenario_[i] = false;
-        for (auto const& f : filter) {
-            if (f.contains(startDates_[i]) && f.contains(endDates_[i]))
-                isRelevantScenario_[i] = true;
-        }
-        if (isRelevantScenario_[i]) {
-            newStartDates.push_back(startDates_[i]);
-            newEndDates.push_back(endDates_[i]);
-        }
-    }
-
-    startDates_ = newStartDates;
-    endDates_ = newEndDates;
-}
-
 QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::nextKey(const Date& d, const RiskFactorKey& key) {
 
     QL_REQUIRE(baseScenario_ != nullptr, "HistoricalScenarioGenerator: base scenario not set");
@@ -527,24 +487,6 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::nextKey(const D
     return scen;
 }
 
-void HistoricalScenarioGeneratorRiskFactorKeys::reset() {
-    gen_->reset();
-    HistoricalScenarioGenerator::reset();
-    i_orig_ = 0;
-}
-
-QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorRiskFactorKeys::next(const Date& d) {
-    if(currentKey_ == RiskFactorKey()){
-        return HistoricalScenarioGenerator::next(d);
-    }
-    // while (i_orig_ < gen_->numScenarios() && !isRelevantScenario_[i_orig_]){
-    //     nextKey(d, currentKey_);
-    //     ++i_orig_;
-    // }
-    ++i_orig_;
-    return nextKey(d, currentKey_);
-}
-
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
     const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
@@ -554,7 +496,7 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
 
     hsr->load(simParams, marketParams);
 
-    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(false);
     
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
         QuantLib::ext::make_shared<HistoricalScenarioLoader>(hsr, period.startDates().front(),

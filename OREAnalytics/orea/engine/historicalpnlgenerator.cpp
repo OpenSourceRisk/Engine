@@ -113,23 +113,14 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         simMarket_->reset();
         simMarket_->scenarioGenerator() = hisScenGen_;
         hisScenGen_->baseScenario() = simMarket_->baseScenario();
-        ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
-        std::vector<RiskFactorKey> deltaKeys = sc->keys(); 
         if(hisScenGen_->isRiskFactorBreakdown()){
-             //Maybe <key,Cube>
+            ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
+            std::vector<RiskFactorKey> deltaKeys = sc->keys(); 
             for(auto const& key: deltaKeys){
-                //Check if filtered
-                //If so, check if that is risk key generator ~ then proceed
-                //currentkey_ = this_key
-                // valuationEngine_->resetProgress()??
-                // ext::shared_ptr<NPVCube> newCube;
                 hisScenGen_->setCurrentKey(key);
                 ext::shared_ptr<NPVCube> newCube = ext::make_shared<InMemoryCubeOpt<double>>(simMarket_->asofDate(), portfolio_->ids(),
                     vector<Date>(1, simMarket_->asofDate()), hisScenGen_->numScenarios());
-                // auto newValuationEngine = QuantLib::ext::make_shared<ValuationEngine>(simMarket_->asofDate(), grid, simMarket_, modelBuilders);
 
-                // ext::shared_ptr<NPVCube> newCube = cube_->clone();
-                std::cout<<"CurrentKey = "<<ore::to_string(key.keytype)<<":"<<ore::to_string(key.name)<<":"<<key.index<<std::endl;
                 valuationEngine_->buildCube(portfolio_, newCube, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                         nullptr, nullptr, {}, dryRun_);
                 mapCube_[key] = newCube;
@@ -254,36 +245,36 @@ RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::T
 
     // Create result with enough space
     RiskFactorPnLStore pnls;
-    ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();//->next(hisScenGen_->baseScenario()->asof());
-    std::vector<RiskFactorKey> deltaKeys = sc->keys();
-
-    std::set<std::string> ids = cube_->ids();
-    std::vector<QuantLib::Date> d = cube_->dates();
-    Size i = 0;
-
-    auto sensiPnlCalculator = ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, nullptr);
-    Size nbScenario = sensiPnlCalculator->getScenarioNumber();
-
-    ext::shared_ptr<CovarianceCalculator> covCalculator;
-    covCalculator = ext::make_shared<CovarianceCalculator>(period);
-
-    QuantLib::Matrix mPnL(nbScenario, deltaKeys.size());
-    int k = 0;
-    for (auto it = ids.begin(); it != ids.end(); it++, i++) {
-        for (int j = 0; j < nbScenario; j++) {
-            // Start and end of period relating to current sample
-            Date start = hisScenGen_->startDates()[j];
-            Date end = hisScenGen_->endDates()[j];
+    // If risk factor breakdown map is empty, nothing to compute
+    if (mapCube_.empty()) {
+        DLOG("riskFactorLevelPnl: mapCube_ is empty; returning empty result");
+        return pnls;
+    }
+    // Aggregate PnL per risk factor over scenarios in the given period
+    for (const auto& kv : mapCube_) {
+        const RiskFactorKey& rfKey = kv.first;
+        const ext::shared_ptr<NPVCube>& rfCube = kv.second;
+        // Each per-key cube has a single date (asof), index is 0
+        Size dateIdx = 0;
+        Real totalPnl = 0.0;
+        // Iterate scenarios
+        for (Size s = 0; s < rfCube->samples(); ++s) {
+            Date start = hisScenGen_->startDates()[s];
+            Date end = hisScenGen_->endDates()[s];
             if (period.contains(start) && period.contains(end)) {
-                QuantLib::Real cubeValue = cube_->get(*it, d[0], j);
-                mPnL[j][i] = cubeValue - cube_->getT0(*it);
-                std::cout<<mPnL[j][i]<<",";
+                // Sum across all trades
+                Size tradeCount = portfolio_->size();
+                for (Size i = 0; i < tradeCount; ++i) {
+                    totalPnl += rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
+                }
             }
         }
-        k++;
-        std::cout<<std::endl;
+        // Store aggregated value keyed by (riskFactor, riskFactor)
+        if(totalPnl!=0){
+            std::cout<<ore::to_string(rfKey)<<"=>"<<totalPnl<<std::endl;
+            pnls[rfKey] = totalPnl;
+        }    
     }
-    std::cout<<"k="<<k<<std::endl;
     return pnls;
 }
 

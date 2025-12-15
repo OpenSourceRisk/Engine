@@ -284,22 +284,6 @@ private:
     std::vector<bool> isRelevantScenario_;
     QuantLib::Size i_orig_;
 };
-// Historical scenario generator based on risk factors
-class HistoricalScenarioGeneratorRiskFactorKeys : public HistoricalScenarioGenerator {
-public:
-    HistoricalScenarioGeneratorRiskFactorKeys(const std::vector<ore::data::TimePeriod>& filter,
-                                              const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen,
-                                              const RiskFactorKey& currentKey = RiskFactorKey());
-    void reset() override;
-    QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
-    void setCurrentKey(const RiskFactorKey& k) override { currentKey_ = k;}
-
-private:
-    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> gen_;
-    RiskFactorKey currentKey_;
-    std::vector<bool> isRelevantScenario_;
-    QuantLib::Size i_orig_;
-};
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
     const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,
