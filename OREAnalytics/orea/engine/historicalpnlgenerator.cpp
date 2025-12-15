@@ -124,10 +124,15 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                 // valuationEngine_->resetProgress()??
                 // ext::shared_ptr<NPVCube> newCube;
                 hisScenGen_->setCurrentKey(key);
-                std::cout<<"CurrentKey = "<<ore::to_string(key.name)<<":"<<key.index<<std::endl;
-                valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
+                ext::shared_ptr<NPVCube> newCube = ext::make_shared<InMemoryCubeOpt<double>>(simMarket_->asofDate(), portfolio_->ids(),
+                    vector<Date>(1, simMarket_->asofDate()), hisScenGen_->numScenarios());
+                // auto newValuationEngine = QuantLib::ext::make_shared<ValuationEngine>(simMarket_->asofDate(), grid, simMarket_, modelBuilders);
+
+                // ext::shared_ptr<NPVCube> newCube = cube_->clone();
+                std::cout<<"CurrentKey = "<<ore::to_string(key.keytype)<<":"<<ore::to_string(key.name)<<":"<<key.index<<std::endl;
+                valuationEngine_->buildCube(portfolio_, newCube, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                         nullptr, nullptr, {}, dryRun_);
-                mapCube_[key] = cube_;
+                mapCube_[key] = newCube;
             }
         }else{
             valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,

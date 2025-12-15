@@ -406,8 +406,6 @@ HistoricalScenarioGeneratorRiskFactorKeys::HistoricalScenarioGeneratorRiskFactor
     const std::vector<TimePeriod>& filter, const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen, const RiskFactorKey& currentKey)
     : HistoricalScenarioGenerator(*gen),
       gen_(gen), currentKey_(currentKey), i_orig_(0) {
-    
-    gen->setRiskFactorBreakdown(true);
 
     // set base scenario    
     auto zpScen = QuantLib::ext::dynamic_pointer_cast<ZeroToParScenarioGenerator>(gen);
@@ -526,7 +524,6 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::nextKey(const D
     scen->label(label);
 
     // return it.
-    ++i_;
     return scen;
 }
 
@@ -540,6 +537,11 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorRiskFactorKeys::n
     if(currentKey_ == RiskFactorKey()){
         return HistoricalScenarioGenerator::next(d);
     }
+    // while (i_orig_ < gen_->numScenarios() && !isRelevantScenario_[i_orig_]){
+    //     nextKey(d, currentKey_);
+    //     ++i_orig_;
+    // }
+    ++i_orig_;
     return nextKey(d, currentKey_);
 }
 
