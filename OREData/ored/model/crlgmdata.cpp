@@ -50,7 +50,7 @@ void CrLgmData::fromXML(XMLNode* node) {
         }
     }
     
-    currencyStr_ = XMLUtils::getChildValue(node, "DomesticCurrency", false, "");
+    currencyStr_ = XMLUtils::getChildValue(node, "Currency", false, "");
 
     LgmData::fromXML(node);
 }
@@ -65,7 +65,7 @@ XMLNode* CrLgmData::toXML(XMLDocument& doc) const {
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Terms", optionTerms());
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Strikes", optionStrikes());
     if (!currencyStr_.empty()) {
-        XMLUtils::addChild(doc, node, "DomesticCurrency", currencyStr_);
+        XMLUtils::addChild(doc, node, "Currency", currencyStr_);
     }
     return node;
 }

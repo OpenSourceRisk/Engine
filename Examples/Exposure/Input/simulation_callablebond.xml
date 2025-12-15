@@ -51,7 +51,7 @@
     </InterestRateModels>
     <CreditModels>
       <LGM name="CPTY_A">
-        <DomesticCurrency>EUR</DomesticCurrency>
+        <Currency>EUR</Currency>
         <CalibrationType>None</CalibrationType>
         <Volatility>
           <Calibrate>N</Calibrate>
