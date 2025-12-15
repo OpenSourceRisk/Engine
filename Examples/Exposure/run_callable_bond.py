@@ -12,7 +12,7 @@ print("+--------------------------------------------------+")
 
 # Legacy example 6
 
-oreex.run("Input/ore_callablebond.xml")
+oreex.run("Input/ore_callable_bond.xml")
 
 oreex.setup_plot("exposure_callable_bond")
 oreex.plot("callable_bond/exposure_trade_CallableBondNoCall.csv", 2, 3, 'b', "EPE NeverCall")
