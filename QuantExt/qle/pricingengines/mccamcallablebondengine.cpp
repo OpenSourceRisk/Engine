@@ -550,12 +550,12 @@ void McCamCallableBondBaseEngine::calculate() const {
 
     // setup the models
 
-    std::vector<RegressionModel> regModelUndDirty(exerciseXvaTimes.size());              // available on xva times
-    std::vector<RegressionModel> regModelContinuationValueCall(exerciseXvaTimes.size()); // available on ex times
-    std::vector<RegressionModel> regModelContinuationValuePut(exerciseXvaTimes.size());  // available on ex times
-    std::vector<RegressionModel> regModelOption(exerciseXvaTimes.size());            // available on xva and ex times
-    std::vector<RegressionModel> regModelCallExerciseValue(exerciseXvaTimes.size()); // available on xva and ex times
-    std::vector<RegressionModel> regModelPutExerciseValue(exerciseXvaTimes.size());  // available on xva and ex times
+    std::vector<RegressionModel> regModelUndDirty(exerciseXvaTimes.size());              
+    std::vector<RegressionModel> regModelContinuationValueCall(exerciseXvaTimes.size()); 
+    std::vector<RegressionModel> regModelContinuationValuePut(exerciseXvaTimes.size()); 
+    std::vector<RegressionModel> regModelOption(exerciseXvaTimes.size());            
+    std::vector<RegressionModel> regModelCallExerciseValue(exerciseXvaTimes.size()); 
+    std::vector<RegressionModel> regModelPutExerciseValue(exerciseXvaTimes.size()); 
     RandomVariable pathValueUndDirty(calibrationSamples_);
     RandomVariable pathValueOption(calibrationSamples_);
 
