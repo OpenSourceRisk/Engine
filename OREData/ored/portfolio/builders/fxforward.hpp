@@ -63,7 +63,6 @@ public:
 protected:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
                                                         const std::string& discountCurve) override {
-        std::cout << "getting curve '" << discountCurve << "'" << std::endl;
         string pair = forCcy.code() + domCcy.code();
         return QuantLib::ext::make_shared<QuantExt::DiscountingFxForwardEngine>(
             domCcy, market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)), forCcy,
