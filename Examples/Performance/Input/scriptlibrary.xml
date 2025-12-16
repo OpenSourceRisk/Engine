@@ -468,111 +468,79 @@
     <Name>GenericBarrierOption</Name>
     <ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>
     <Script>
-      <Code><![CDATA[
+      <![CDATA[
         REQUIRE PayoffType == 0 OR PayoffType == 1;
-        REQUIRE SIZE(Underlyings) == SIZE(TransatlanticBarrierType);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels) / SIZE(Underlyings);
+        REQUIRE TransatlanticBarrierType >= 0 AND TransatlanticBarrierType <= 4;
+        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels);
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebates);
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebateCurrencies);
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebatePayTimes);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierStrictComparison);
-        REQUIRE ExpiryDate >= BarrierMonitoringDates[SIZE(BarrierMonitoringDates)];
-      
+
         NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;
-        NUMBER Exercised, Triggered, TransatlanticTriggered;
-        NUMBER U, i, k, d, currentNotional, levelIndex;
-      
+        NUMBER U, i, d, currentNotional;
+
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
-      
+
+          U = Underlying(BarrierMonitoringDates[d]);
+
           FOR i IN (1, SIZE(BarrierTypes), 1) DO
-      
-            FOR k IN (1, SIZE(Underlyings), 1) DO
-              U = Underlyings[k](BarrierMonitoringDates[d]);
-      
-              levelIndex = ((k - 1) * SIZE(BarrierTypes)) + i;            
-              IF {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 AND BarrierTypes[i] == 1 AND U < BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 ADN BarrierTypes[i] == 2 AND U > BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN
-                IF KnockedOut == 0 THEN
-                  KnockedIn = 1;
-                  Triggered = 1;
-                END;
-              END;
-        
-              IF {{BarrierStrictComparison[i] == 0 OR BarrierStrictComparison[i] == 1} AND BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR
-                {{BarrierStrictComparison[i] == 0 OR BarrierStrictComparison[i] == 1} AND BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 3 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 4 AND U >= BarrierLevels[levelIndex]} THEN
-                IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN
-                  IF KnockedOut == 0 THEN
-                    IF BarrierRebatePayTimes[i] == 0 THEN
-                      rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );
-                    ELSE
-                      rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
-                    END;
-                  END;
-                  KnockedOut = 1;
-                  Triggered = 1;
-                END;
-              END;
-      
+
+            IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[i]} OR
+               {BarrierTypes[i] == 2 AND U >= BarrierLevels[i]} THEN
+	       IF KnockedOut == 0 THEN
+                 KnockedIn = 1;
+	       END;
             END;
-      
+
+            IF {BarrierTypes[i] == 3 AND U < BarrierLevels[i]} OR
+               {BarrierTypes[i] == 4 AND U > BarrierLevels[i]} THEN
+               IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN
+                 IF KnockedOut == 0 THEN
+                   IF BarrierRebatePayTimes[i] == 0 THEN
+                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );
+                   ELSE
+                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
+                   END;
+                 END;
+                 KnockedOut = 1;
+               END;
+            END;
+
           END;
-      
+
         END;
-      
+
         Active = 1;
         FOR i IN (1, SIZE(BarrierTypes),1) DO
           IF BarrierTypes[i] == 1 OR BarrierTypes[i] == 2 THEN
             Active = 0;
           END;
         END;
-      
+
         Active = max(Active, KnockedIn) * (1 - KnockedOut);
-      
-      	IF BarrierRebate != 0 THEN
-      	    rebate = (1 - Active) * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );
-      	END;
-      
-      	TransatlanticActive = 1;
-      	TransatlanticTriggered = 0;
-        FOR k IN (1, SIZE(Underlyings), 1) DO
-          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;
-          IF { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } THEN
-            TransatlanticActive = 0;
-      	    TransatlanticTriggered = 1;
-          END;
+
+	IF BarrierRebate != 0 THEN
+	  rebate = (1 - Active) * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );
+	END;
+
+	TransatlanticActive = 1;
+        IF { TransatlanticBarrierType == 1 AND Underlying(ExpiryDate) >= TransatlanticBarrierLevel  } OR
+           { TransatlanticBarrierType == 2 AND Underlying(ExpiryDate) <= TransatlanticBarrierLevel  } OR
+           { TransatlanticBarrierType == 3 AND Underlying(ExpiryDate) < TransatlanticBarrierLevel } OR
+           { TransatlanticBarrierType == 4 AND Underlying(ExpiryDate) > TransatlanticBarrierLevel } THEN
+          TransatlanticActive = 0;
         END;
-      
-      	rebate = rebate + Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
-      
-        IF PayoffType == 0 AND SIZE(Underlyings) == 1 THEN
-      	    value = Active * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
+
+	rebate = rebate + Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
+
+        IF PayoffType == 0 THEN
+	  value = Active * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
                   rebate;
-      	ELSE
-      	    value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
+	ELSE
+	  value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
                   rebate;
-      	END;
-      
-        IF value > 0 THEN
-          Exercised = 1;
-        END;
-      
+	END;
+
         IF PayoffType == 0 THEN
           currentNotional = Quantity * Strike;
         ELSE
@@ -596,298 +564,85 @@
         </Calibration>
       </CalibrationSpec>
     </Script>
-    <Script purpose="FD">
-      <Code><![CDATA[
-        REQUIRE PayoffType == 0 OR PayoffType == 1;
-        REQUIRE SIZE(Underlyings) == SIZE(TransatlanticBarrierType);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels) / SIZE(Underlyings);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebates);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebateCurrencies);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebatePayTimes);
-        REQUIRE ExpiryDate >= BarrierMonitoringDates[SIZE(BarrierMonitoringDates)];
-      
-        NUMBER V, V_V, V_NA, V_KI, V_KO, V_KIKO, V_KOKI;
-        NUMBER R, R_V, R_NA, R_KI, R_KO, R_KIKO, R_KOKI, rebate;
-        NUMBER U, i, k, d, currentNotional, TransatlanticActive, IsKnockedIn, IsKnockedOut, levelIndex;
-      
-        IF PayoffType == 0 AND SIZE(Underlyings) == 1 THEN
-          V = PAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency );
-        ELSE
-          V = PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency );
-        END;
-      
-        TransatlanticActive = 1;
-        FOR k IN (1, SIZE(Underlyings), 1) DO
-          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;
-          IF { {TransatlanticBarrierStrictComparison[k] == 0 OR TransatlanticBarrierStrictComparison[k] == 2} AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR
-            { {TransatlanticBarrierStrictComparison[k] == 0 OR TransatlanticBarrierStrictComparison[k] == 2} AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR
-            { {TransatlanticBarrierStrictComparison[k] == 0 OR TransatlanticBarrierStrictComparison[k] == 1} AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR
-            { {TransatlanticBarrierStrictComparison[k] == 0 OR TransatlanticBarrierStrictComparison[k] == 1} AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } THEN
-              TransatlanticActive = 0;
-          END;
-        END;
-      
-        IF TransatlanticActive == 0 THEN
-          V = PAY( LongShort * TransatlanticBarrierRebate, ExpiryDate, SettlementDate, TransatlanticBarrierRebateCurrency );
-        END;
-      
-        V_V = V;
-        V_NA = V;
-        V_KI = V * 0;
-        V_KO = V * 0;
-        V_KIKO = V * 0;
-        V_KOKI = V * 0;
-      
-        R = PAY( LongShort * BarrierRebate, ExpiryDate, SettlementDate, BarrierRebateCurrency);
-        R_V = R;
-        R_NA = R;
-        R_KI = R * 0;
-        R_KO = R * 0;
-        R_KIKO = R * 0;
-        R_KOKI = R * 0;
-      
-        FOR i IN (1, SIZE(BarrierTypes), 1) DO
-          IF BarrierTypes[i] == 1 OR BarrierTypes[i] == 2 THEN
-            V_V = V_V * 0;
-      	      R_V = R_V * 0;
-          END;
-        END;
-      
-        FOR d IN (SIZE(BarrierMonitoringDates), 1, -1) DO
-      
-          V_V = NPV(V_V, BarrierMonitoringDates[d]);
-          V_NA = NPV(V_NA, BarrierMonitoringDates[d]);
-          V_KI = NPV(V_KI, BarrierMonitoringDates[d]);
-          V_KO = NPV(V_KO, BarrierMonitoringDates[d]);
-          V_KIKO = NPV(V_KIKO, BarrierMonitoringDates[d]);
-          V_KOKI = NPV(V_KOKI, BarrierMonitoringDates[d]);
-          R_V = NPV(R_V, BarrierMonitoringDates[d]);
-          R_NA = NPV(R_NA, BarrierMonitoringDates[d]);
-          R_KI = NPV(R_KI, BarrierMonitoringDates[d]);
-          R_KO = NPV(R_KO, BarrierMonitoringDates[d]);
-          R_KIKO = NPV(R_KIKO, BarrierMonitoringDates[d]);
-          R_KOKI = NPV(R_KOKI, BarrierMonitoringDates[d]);
-      	    rebate = NPV(rebate, BarrierMonitoringDates[d]);
-      
-          FOR i IN (1, SIZE(BarrierTypes), 1) DO
-      
-            IsKnockedIn = 0;
-            IsKnockedOut = 0;
-            FOR k IN (1, SIZE(Underlyings), 1) DO
-              U = Underlyings[k](BarrierMonitoringDates[d]);
-              levelIndex = ((k - 1) * SIZE(BarrierTypes)) + i;
-              IF {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 AND BarrierTypes[i] == 1 AND U < BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 AND BarrierTypes[i] == 2 AND U > BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN
-                IsKnockedIn = 1;
-              END;
-              IF {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 AND BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 AND BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 3 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 4 AND U >= BarrierLevels[levelIndex]} THEN
-                IsKnockedOut = 1;
-              END;
-
-            END;
-      
-         IF {IsKnockedIn == 1} THEN
-           V_KIKO = V_KO + V_KIKO + V_KOKI;
-           V_KOKI = V_KOKI * 0;
-           V_KI = V_NA + V_KI;
-           V_KO = V_KO * 0;
-           V_NA = V_NA * 0;
-           V_V = V_KI;
-           IF KikoType == 2 THEN
-             V_V = V_V + V_KIKO;
-           END;
-           R_KIKO = R_KO + R_KIKO + R_KOKI;
-           R_KOKI = R_KOKI * 0;
-           R_KI = R_NA + R_KI;
-           R_KO = R_KO * 0;
-           R_NA = R_NA * 0;
-           R_V = R_KI;
-           IF KikoType == 2 THEN
-             R_V = R_V + R_KIKO;
-           END;
-         END;
-      
-         IF {IsKnockedOut == 1} THEN
-           V_KOKI = V_KI + V_KOKI + V_KIKO;
-           V_KIKO = V_KIKO * 0;
-           V_KO = V_NA + V_KO;
-           V_KI = V_KI * 0;
-           V_NA = V_NA * 0;
-           IF KikoType == 1 OR KikoType == 2 THEN
-             V_V = V_V * 0;
-           END;
-           R_KOKI = R_KI + R_KOKI + R_KIKO;
-           R_KIKO = R_KIKO * 0;
-           R_KO = R_NA + R_KO;
-           R_KI = R_KI * 0;
-           R_NA = R_NA * 0;
-           IF KikoType == 1 OR KikoType == 2 THEN
-             R_V = R_V * 0;
-           END;
-           IF BarrierRebatePayTimes[i] == 0 THEN
-             rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );
-           ELSE
-             rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
-           END;
-         END;     
-        END;    
-      END;
-      
-      rebate = NPV(rebate, TODAY);
-      R_V = NPV(R_V, TODAY);
-      V_V = NPV(V_V, TODAY);
-      
-      
-     rebate = rebate + ( PAY( LongShort * BarrierRebate, TODAY, SettlementDate, BarrierRebateCurrency ) - R_V );
-     value = V_V + rebate;
-      
-      IF PayoffType == 0 THEN
-        currentNotional = Quantity * Strike;
-      ELSE
-        currentNotional = Amount;
-      END;
-        ]]></Code>
-      <NPV>value</NPV>
-      <Results>
-        <Result>currentNotional</Result>
-        <Result rename="notionalCurrency">PayCurrency</Result>
-      </Results>
-      <CalibrationSpec>
-        <Calibration>
-          <Index>Underlying</Index>
-          <Strikes>
-            <Strike>Strike</Strike>
-            <Strike>BarrierLevels</Strike>
-          </Strikes>
-        </Calibration>
-      </CalibrationSpec>
-    </Script>
     <Script purpose="AMC">
       <Code><![CDATA[
         REQUIRE PayoffType == 0 OR PayoffType == 1;
-        REQUIRE SIZE(Underlyings) == SIZE(TransatlanticBarrierType);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels) / SIZE(Underlyings);
+        REQUIRE TransatlanticBarrierType >= 0 AND TransatlanticBarrierType <= 4;
+        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels);
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebates);
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebateCurrencies);
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebatePayTimes);
-        REQUIRE SIZE(BarrierTypes) == SIZE(BarrierStrictComparison);
-        REQUIRE ExpiryDate >= BarrierMonitoringDates[SIZE(BarrierMonitoringDates)];
+
         NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];
         NUMBER KnockedInTimes[SIZE(BarrierMonitoringDates)], KnockedOutTimes[SIZE(BarrierMonitoringDates)];
-        NUMBER RebatePayments[SIZE(BarrierMonitoringDates)];
         NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;
-        NUMBER OptionAfterKI; ActiveAfterKI;
-        NUMBER transatlanticRebate, exerciseValue;
-        NUMBER Exercised, Triggered, TransatlanticTriggered;
-        NUMBER U, i, k, d, currentNotional, levelIndex;
-        
-      
+        NUMBER rebateCondKI, activeCondKI, optionCondKI;
+        NUMBER U, i, d, currentNotional;
+
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
-      
+
+          U = Underlying(BarrierMonitoringDates[d]);
+
           FOR i IN (1, SIZE(BarrierTypes), 1) DO
-      
-            FOR k IN (1, SIZE(Underlyings), 1) DO
-              U = Underlyings[k](BarrierMonitoringDates[d]);
-      
-              levelIndex = ((k - 1) * SIZE(BarrierTypes)) + i;            
-              IF {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 0 AND BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 AND BarrierTypes[i] == 1 AND U < BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 1 ADN BarrierTypes[i] == 2 AND U > BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 1 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN
-                IF KnockedOut == 0 THEN
-                  KnockedIn = 1;
-                  Triggered = 1;
-                END;
-              END;
-        
-              IF {{BarrierStrictComparison[i] == 0 OR BarrierStrictComparison[i] == 1} AND BarrierTypes[i] == 3 AND U < BarrierLevels[levelIndex]} OR
-                {{BarrierStrictComparison[i] == 0 OR BarrierStrictComparison[i] == 1} AND BarrierTypes[i] == 4 AND U > BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 3 AND U <= BarrierLevels[levelIndex]} OR
-                {BarrierStrictComparison[i] == 2 AND BarrierTypes[i] == 4 AND U >= BarrierLevels[levelIndex]} THEN
-                IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN
-                  IF KnockedOut == 0 THEN
-                    IF BarrierRebatePayTimes[i] == 0 THEN
-                      rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );
-                    ELSE
-                      rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
-                    END;
-                  END;
-                  KnockedOut = 1;
-                  Triggered = 1;
-                END;
-              END;
+
+            IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[i]} OR
+               {BarrierTypes[i] == 2 AND U >= BarrierLevels[i]} THEN
+	       IF KnockedOut == 0 THEN
+                 KnockedIn = 1;
+	       END;
             END;
+
+            IF {BarrierTypes[i] == 3 AND U < BarrierLevels[i]} OR
+               {BarrierTypes[i] == 4 AND U > BarrierLevels[i]} THEN
+               IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN
+                 IF KnockedOut == 0 THEN
+                   IF BarrierRebatePayTimes[i] == 0 THEN
+                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );
+                   ELSE
+                     rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
+                   END;
+                 END;
+                 KnockedOut = 1;
+               END;
+            END;
+
           END;
           KnockedInTimes[d] = KnockedIn;
           KnockedOutTimes[d] = KnockedOut;
         END;
-      
+
         Active = 1;
         FOR i IN (1, SIZE(BarrierTypes),1) DO
           IF BarrierTypes[i] == 1 OR BarrierTypes[i] == 2 THEN
             Active = 0;
           END;
         END;
-        
+        activeCondKI = (1 - KnockedOut);
         Active = max(Active, KnockedIn) * (1 - KnockedOut);
-        ActiveAfterKI = (1 - KnockedOut);
-      	IF BarrierRebate != 0 THEN
-      	    rebate = (1 - Active) * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );
-      	END;
-      
-      	TransatlanticActive = 1;
-      	TransatlanticTriggered = 0;
-        FOR k IN (1, SIZE(Underlyings), 1) DO
-          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;
-          IF { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 0 AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 1 AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 2 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k]  } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) <= TransatlanticBarrierLevel[k] } OR
-            { TransatlanticBarrierStrictComparison[k] == 2 AND TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k] } THEN
-            TransatlanticActive = 0;
-      	    TransatlanticTriggered = 1;
-          END;
-        END;
-      
-        transatlanticRebate = Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
-        OptionAfterKI = ActiveAfterKI * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
 
-        IF PayoffType == 0 AND SIZE(Underlyings) == 1 THEN
-      	    exerciseValue = Active * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency );
-            OptionAfterKI = OptionAfterKI + ActiveAfterKI * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlyings[1](ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency );
-      	ELSE
-      	    exerciseValue = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency );
-            OptionAfterKI = OptionAfterKI + ActiveAfterKI * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency );
-      	END;
-      
-        value = exerciseValue + rebate + transatlanticRebate;
+	IF BarrierRebate != 0 THEN
+	  rebate = (1 - Active) * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );
+    rebateCondKI = (1 - activeCondKI) * PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency );
+	END;
 
-        IF value > 0 THEN
-          Exercised = 1;
+	TransatlanticActive = 1;
+        IF { TransatlanticBarrierType == 1 AND Underlying(ExpiryDate) >= TransatlanticBarrierLevel  } OR
+           { TransatlanticBarrierType == 2 AND Underlying(ExpiryDate) <= TransatlanticBarrierLevel  } OR
+           { TransatlanticBarrierType == 3 AND Underlying(ExpiryDate) < TransatlanticBarrierLevel } OR
+           { TransatlanticBarrierType == 4 AND Underlying(ExpiryDate) > TransatlanticBarrierLevel } THEN
+          TransatlanticActive = 0;
         END;
-      
+
+	rebate = rebate + Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
+  rebateCondKI = rebateCondKI + activeCondKI * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
+        IF PayoffType == 0 THEN
+	  value = Active * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
+                  rebate;
+	ELSE
+	  value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
+                  rebate;
+	END;
+
         IF PayoffType == 0 THEN
           currentNotional = Quantity * Strike;
         ELSE
@@ -900,12 +655,12 @@
               s = SIZE(BarrierMonitoringDates);
             END;
             IF KnockoutTimes[s] == 1 THEN
-              _AMC_SimDates[i] = 0;
+              _AMC_NPV[i] = 0;
             ELSE
               IF KnockInTimes[s] == 1 THEN
-                _AMC_SimDates[i]  = NPVMEM(OptionAfterKI, _AMC_SimDates[i], ExpiryDate, i,  KnockInTimes[s] == 1 AND KnockOutTimes[s] == 0 );
+                _AMC_NPV[i]  = NPVMEM(OptionAfterKI, _AMC_SimDates[i], ExpiryDate, i,  KnockInTimes[s] == 1 AND KnockOutTimes[s] == 0 );
               ELSE
-                _AMC_SimDates[i]  = NPVMEM(value, _AMC_SimDates[i], ExpiryDate, SIZE(_AMC_Simdates) + i, KnockInTimes[s] == 0 AND KnockOutTimes[s] == 0);
+                _AMC_NPV[i]  = NPVMEM(value, _AMC_SimDates[i], ExpiryDate, SIZE(_AMC_Simdates) + i, KnockInTimes[s] == 0 AND KnockOutTimes[s] == 0);
               END;
             END;
         END;

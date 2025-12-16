@@ -8,7 +8,7 @@
     <Parameters>
        <DayCounter>ACT/365</DayCounter>
       <Discretization>Exact</Discretization>
-      <Grid>81,3M</Grid>
+      <Grid>100,1W</Grid>
       <!--<Grid>242,1M</Grid>-->
       <Calendar>EUR,USD</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>

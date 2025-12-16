@@ -46,7 +46,7 @@
       <Parameter name="amc">Y</Parameter>
       <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
       <Parameter name="amcCg">Disabled</Parameter>
-      <Parameter name="amcTradeTypes">FxGenericBarrierOption,ScriptedTrade</Parameter>
+      <Parameter name="amcTradeTypes">FxGenericBarrierOption</Parameter>
       <Parameter name="simulationConfigFile">simulation_barriers.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine_barriers.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_barriers.xml</Parameter>
