@@ -3316,6 +3316,8 @@ void OREAppInputParameters::loadParameters() {
     for (auto a : analytics())
         LOG("analytic: " << a);
 
+    InputParameters::loadParameters();
+
     LOG("buildInputParameters done");
 }
 
