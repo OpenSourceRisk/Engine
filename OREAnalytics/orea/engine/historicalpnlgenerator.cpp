@@ -126,7 +126,8 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                                         nullptr, nullptr, {}, dryRun_);
                 mapCube_[key] = newCube;
             }
-            //Run for Full report
+            //Run for Full report - Remove risk factor key
+            hisScenGen_->setCurrentKey(RiskFactorKey());
             valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
         }else{

@@ -198,11 +198,13 @@ void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
         QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 
         reports->add(histPnLReport);
+        analytic()->addReport(label_, "historical_PnL", histPnLReport);
 
         if(riskFactorBreakdown_){
-            analytic()->addReport(label_, "riskFactor_PnL", histPnLReport);
-        }else{
-            analytic()->addReport(label_, "historical_PnL", histPnLReport);
+            QuantLib::ext::shared_ptr<InMemoryReport> histPnLRFReport =
+                QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+            reports->add(histPnLRFReport);
+            analytic()->addReport(label_, "riskFactor_PnL", histPnLRFReport);
         }
 }
 
