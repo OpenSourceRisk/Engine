@@ -26,13 +26,14 @@
 #include <ored/model/assetmodelbuilderbase.hpp>
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <ql/models/equity/hestonmodel.hpp>
+#include <ql/models/equity/piecewisetimedependenthestonmodel.hpp>
 
 namespace ore {
 namespace data {
 
 using namespace QuantLib;
 
-/*! This class provides two Heston Model calibration approaches
+/*! This class provides three Heston Model calibration approaches
 
    1) Variance curve fit followed by usual calibration
 
@@ -61,32 +62,40 @@ using namespace QuantLib;
       (again any subset of parameters can be kept fixed). The best barameter set is kept.
       This method is used when argument restarts > 0.
 
+   3) If we need to calibrate to multiple expiries, we optionally run a subsequent bootstrap, i.e.
+      calibration with time-dependent Heston parameters
+
  */
 class HestonModelCalibration {
 public:
-    HestonModelCalibration(const std::string& indexName, const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                           const std::vector<Period>& expiries = {3 * Months, 6 * Months, 1 * Years, 2 * Years,
-                                                                  3 * Years, 5 * Years},
-                           const std::vector<Real>& moneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
-                           const std::vector<Period>& varianceTerms = {1 * Months, 2 * Months, 3 * Months, 6 * Months,
-                                                                       9 * Months, 1 * Years, 15 * Months, 18 * Months,
-                                                                       21 * Months, 2 * Years, 4 * Years, 5 * Years,
-                                                                       6 * Years, 7 * Years, 10 * Years},
-                           // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
-                           const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.9, 0.04},
-                           const std::vector<bool>& fixedValues = {false, false, false, false, false},
-                           const std::vector<Real>& maximumInitialValues = {0.1, 20, 3, 0.9, 0.1},
-                           Real relaxedFellerConstraint = 1.0, Size restarts = 0, Real tolerance = 0.001,
-                           const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
-                           const bool dontCalibrate = false)
-        : indexName_(indexName), process_(process), expiries_(expiries), moneyness_(moneyness),
-          varianceTerms_(varianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
-          maximumInitialValues_(maximumInitialValues), relaxedFellerConstraint_(relaxedFellerConstraint),
-          restarts_(restarts), tolerance_(tolerance), discretization_(discretization), dontCalibrate_(dontCalibrate) {}
+    HestonModelCalibration(
+        const std::string& indexName, const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+        const std::set<Date>& effectiveSimulationDates,
+        const std::vector<Period>& expiries = {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years},
+        const std::vector<Real>& moneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
+        const std::vector<Period>& varianceTerms = {1 * Months, 2 * Months, 3 * Months, 6 * Months, 9 * Months,
+                                                    1 * Years, 15 * Months, 18 * Months, 21 * Months, 2 * Years,
+                                                    4 * Years, 5 * Years, 6 * Years, 7 * Years, 10 * Years},
+        // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
+        const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.9, 0.04},
+        const std::vector<bool>& fixedValues = {false, false, false, false, false},
+        const std::vector<Real>& maximumInitialValues = {0.1, 20, 3, 0.9, 0.1}, Real relaxedFellerConstraint = 1.0,
+        Size restarts = 0, Real tolerance = 0.001, const std::string& calibrationMethod = "ConstantBestFit",
+        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
+        const bool dontCalibrate = false)
+        : indexName_(indexName), process_(process), effectiveSimulationDates_(effectiveSimulationDates),
+          expiries_(expiries), moneyness_(moneyness), varianceTerms_(varianceTerms), initialValues_(initialValues),
+          fixedValues_(fixedValues), maximumInitialValues_(maximumInitialValues),
+          relaxedFellerConstraint_(relaxedFellerConstraint), restarts_(restarts), tolerance_(tolerance),
+          calibrationMethod_(calibrationMethod), discretization_(discretization), dontCalibrate_(dontCalibrate) {}
 
     ext::shared_ptr<HestonModel> model();
 
+    // Piecewise calibration on top of best fit with constant parameters
+    ext::shared_ptr<PiecewiseTimeDependentHestonModel> ptdModel(const ext::shared_ptr<HestonModel>& m);
+
     const AssetModelCalibrationResults& results() const { return results_; }
+    const AssetModelCalibrationResults& piecewiseResults() const { return piecewiseResults_; }
 
 private:
     class VarianceCalculator : public GeneralisedReplicatingVarianceSwapEngine {
@@ -110,16 +119,20 @@ private:
     // Randomised initial values, calibrate the model repeatedly and keep best result  
     ext::shared_ptr<HestonModel> model2();
 
-    std::vector<Real> buildHelpers(const QuantLib::ext::shared_ptr<PricingEngine>& engine);
+    void buildHelpers(const QuantLib::ext::shared_ptr<PricingEngine>& engine);
     void buildExpectedVariances();
-    void logCalibration(const std::vector<Real>& m);
+    void logCalibration(AssetModelCalibrationResults& results);
     Real getRMSE();
   
     // Inputs
     std::string indexName_;
     ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    std::set<Date> effectiveSimulationDates_;
     std::vector<Period> expiries_;
+    std::vector<Date> expiryDates_;
     std::vector<Real> moneyness_;
+    std::vector<Real> strikes_; // expiryDates * moneyness
+    std::vector<Real> weights_; // expiryDates * moneyness
     std::vector<Period> varianceTerms_;
     std::vector<Real> initialValues_;
     std::vector<bool> fixedValues_;
@@ -127,6 +140,9 @@ private:
     Real relaxedFellerConstraint_;
     Size restarts_;
     Real tolerance_;
+    std::string calibrationMethod_;
+    Period minimumPiecewiseCalibrationExpiry_ = 1*Months;
+    Period minimumPiecewiseCalibrationStepSize_ = 1*Months;
     HestonProcess::Discretization discretization_;
     bool dontCalibrate_;
 
@@ -134,7 +150,7 @@ private:
     std::vector<ext::shared_ptr<CalibrationHelper>> helpers_;
     std::vector<Time> varianceTimes_;
     std::vector<Real> annualisedVariances_;
-    AssetModelCalibrationResults results_;
+    AssetModelCalibrationResults results_, piecewiseResults_;
 };
 
 class RelaxedFellerConstraint : public Constraint {

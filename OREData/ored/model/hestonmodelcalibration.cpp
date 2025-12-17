@@ -34,9 +34,7 @@
 #include <ql/models/equity/hestonmodelhelper.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/analytichestonengine.hpp>
-#include <ql/pricingengines/vanilla/analyticpdfhestonengine.hpp>
 #include <ql/pricingengines/vanilla/analyticptdhestonengine.hpp>
-#include <ql/pricingengines/vanilla/coshestonengine.hpp>
 #include <ql/pricingengines/vanilla/exponentialfittinghestonengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/pricingengines/vanilla/fdhestonvanillaengine.hpp>
@@ -62,8 +60,6 @@ namespace data {
         cf = sum_{i=1}^n (f(t_i) - V_i)^2
 
   with time grid t_i and market variances V_i, i=1,...,n
-  and three parameters a b c,
-
 */
 class HestonVarianceCostFunction : public CostFunction {
 public:
@@ -116,44 +112,66 @@ private:
     std::vector<bool> fixed_;
 };
 
-std::vector<Real> HestonModelCalibration::buildHelpers(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
+void HestonModelCalibration::buildHelpers(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
+
     Handle<Quote> s0 = process_->stateVariable();
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
     Handle<YieldTermStructure> dts = process_->dividendYield();
     Handle<BlackVolTermStructure> vts = process_->blackVolatility();
-    std::vector<Real> moneyness = moneyness_.size() > 0 ? moneyness_ : std::vector<Real>(1, 0.0);
-    QL_REQUIRE(expiries_.size() > 0, "no option expiries given");
+    QL_REQUIRE(moneyness_.size() > 0, "non-zero moneyness vector size required");
     DayCounter dc = vts->dayCounter();
-    Calendar cal = vts->calendar();
+    // The NullCalendar is needed below to convert Periods in Days into Dates
+    Calendar cal = NullCalendar(); 
+    Date refDate = yts->referenceDate();
+    
+    expiryDates_.clear();
+    if (expiries_.size() > 0) {
+        // explicit expiries provided: use these to compile expiry date vector
+        for (auto e : expiries_)
+            expiryDates_.push_back(cal.advance(refDate, e));
+    } else {
+        // explicit expiries missing: use effective simulation dates
+        // FIXME: This may need to be cut down, e.g. imagine daily observation/simulation dates in a barrier option
+        for (auto d : effectiveSimulationDates_)
+            if (d > refDate)
+                expiryDates_.push_back(d);
+    }
 
     // FIXME: Expose the error type ?
     // BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError;
     // BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::PriceError;
     BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::ImpliedVolError;
+    // FIXME: Make this a script engine parameter ?
+    Real premiumThreshold = 0.0; 
     helpers_.clear();
-
-    for (const auto& optionMaturity : expiries_) {
-
-        DLOG("option expiry " << optionMaturity);
-        Date mat = cal.advance(yts->referenceDate(), optionMaturity);
-        const Time tau = dc.yearFraction(yts->referenceDate(), mat);
-        // FIXME: Check that we have forward prices consistent with the option surface (put-call partiy)
+    weights_.clear();
+    strikes_.clear();
+    // for (const auto& optionMaturity : expiries_) {
+    for (const auto& mat : expiryDates_) {
+        Period period = (mat - refDate) * Days;
+	// double check that this will be interpreted correctly by the HestonModelHelper
+	Date date = cal.advance(refDate, period);
+	QL_REQUIRE(mat == date, "date mismatch " << io::iso_date(mat) << " vs " << io::iso_date(date));
+	const Time tau = dc.yearFraction(yts->referenceDate(), mat);
+        DLOG("option expiry " << tau);
+        // FIXME: Check that we have forward prices consistent with the option surface
+	// i.e. that dts has been build from options using put-call parity. 
         const Real fwdPrice = atmForward(s0->value(), yts, dts, tau);
         const Real atmVol = std::max(1e-4, vts->blackVol(tau, fwdPrice));
         DLOG("atm: strike " << fwdPrice << " vol " << atmVol);
-
-        for (const auto& m : moneyness) {
+        for (const auto& m : moneyness_) {
             const Real strikePrice = fwdPrice * std::exp(-m * atmVol * std::sqrt(tau));
             Handle<Quote> vol(QuantLib::ext::make_shared<SimpleQuote>(vts->blackVol(mat, strikePrice, true)));
-            auto helper = QuantLib::ext::make_shared<HestonModelHelper>(optionMaturity, cal, s0, strikePrice, vol, yts,
+            auto helper = QuantLib::ext::make_shared<HestonModelHelper>(period, cal, s0, strikePrice, vol, yts,
                                                                         dts, errorType);
             helper->setPricingEngine(engine);
             helpers_.push_back(helper);
-            DLOG("added helper: strike " << strikePrice << " vol " << vol->value());
+	    strikes_.push_back(strikePrice);
+            weights_.push_back(helper->marketValue() > premiumThreshold ? 1.0 : 0.0);
+            DLOG("added helper: expiry " << tau << " strike " << strikePrice << " vol " << vol->value() << " price "
+                                         << helper->marketValue() << " weight " << weights_.back());
         }
     }
-
-    return moneyness;
 }
 
 void HestonModelCalibration::buildExpectedVariances() {
@@ -180,33 +198,34 @@ void HestonModelCalibration::buildExpectedVariances() {
     }
 }
 
-void HestonModelCalibration::logCalibration(const std::vector<Real>& moneyness) {
-    results_.rmse = 0;
+void HestonModelCalibration::logCalibration(AssetModelCalibrationResults& results) {
+    results.clear();
     Size count = 0;
-    DLOG("helperCount,expiry,moneyness,error,marketValue,modelValue,diffValue,marketVol,modelVol");
+    DLOG("helperCount,expiry,moneyness,strike,error,marketValue,modelValue,diffValue,marketVol,modelVol");
     for (Size j = 0; j < expiries_.size(); j++) {
-        for (Size k = 0; k < moneyness.size(); k++) {
+        for (Size k = 0; k < moneyness_.size(); k++) {
             auto option = QuantLib::ext::dynamic_pointer_cast<BlackCalibrationHelper>(helpers_[count]);
             const Real err = option->calibrationError();
-            results_.rmse += err * err;
+            results.rmse += err * err;
 	    AssetModelCalibrationResults::InstrumentResults result;
             result.expiry = expiries_[j];
             result.moneyness = moneyness_[k];
+            result.strike = strikes_[moneyness_.size() * j + k];
             result.marketValue = option->marketValue();
             result.modelValue = option->modelValue();
             result.marketVol = option->volatility()->value();
             result.modelVol =
                 option->impliedVolatility(result.modelValue, 1e-8, 1000, 1e-4, 3.0); // FIXME: expose parameters?
-            DLOG(++count << "/" << helpers_.size() << "," << result.expiry << "," << result.moneyness << "," << err
-                         << "," << result.marketValue << "," << result.modelValue << ","
+            DLOG(++count << "/" << helpers_.size() << "," << result.expiry << "," << result.moneyness << ","
+                         << result.strike << "," << err << "," << result.marketValue << "," << result.modelValue << ","
                          << result.modelValue - result.marketValue << "," << result.marketVol << "," << result.modelVol
                          << "," << result.marketVol - result.modelVol);
-            results_.data.push_back(result);
+            results.data.push_back(result);
         }
     }
-    results_.rmse = sqrt(results_.rmse / helpers_.size());
+    results.rmse = sqrt(results.rmse / helpers_.size());
 
-    DLOG("rmse: " << results_.rmse);
+    DLOG("rmse: " << results.rmse);
 }
 
 QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
@@ -240,14 +259,14 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
     }
     results_.indexName = indexName_;
 
-    results_.parameters.clear();
-    results_.parameters.push_back(std::make_pair("theta", model->theta()));
-    results_.parameters.push_back(std::make_pair("kappa", model->kappa()));
-    results_.parameters.push_back(std::make_pair("sigma", model->sigma()));
-    results_.parameters.push_back(std::make_pair("rho", model->rho()));
-    results_.parameters.push_back(std::make_pair("v0", model->v0()));
+    results_.constantParameters.clear();
+    results_.constantParameters.push_back(std::make_pair("theta", model->theta()));
+    results_.constantParameters.push_back(std::make_pair("kappa", model->kappa()));
+    results_.constantParameters.push_back(std::make_pair("sigma", model->sigma()));
+    results_.constantParameters.push_back(std::make_pair("rho", model->rho()));
+    results_.constantParameters.push_back(std::make_pair("v0", model->v0()));
     Real feller = 2.0 * model->theta() * model->kappa() / pow(model->sigma(), 2);
-    results_.parameters.push_back(std::make_pair("feller", feller));
+    results_.constantParameters.push_back(std::make_pair("feller", feller));
 
     DLOG("Model Calibration Results:");
     DLOG("theta  : " << model->theta());
@@ -358,7 +377,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     EndCriteria hestonEndCriteria(400, 40, 1.0e-8, 1.0e-8, 1.0e-8);
     std::vector<Real> weights;
 
-    std::vector<Real> moneyness = buildHelpers(hestonEngine);
+    buildHelpers(hestonEngine);
 
     DLOG("heston initial: " << hestonModel->params());
     try {
@@ -368,7 +387,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
     }
     DLOG("heston final: " << hestonModel->params());
 
-    logCalibration(moneyness);
+    logCalibration(results_);
 
     return hestonModel;
 }
@@ -414,7 +433,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     LevenbergMarquardt method;
     EndCriteria hestonEndCriteria(400, 40, 1.0e-8, 1.0e-8, 1.0e-8);
 
-    std::vector<Real> moneyness = buildHelpers(hestonEngine);
+    buildHelpers(hestonEngine);
 
     Array bestParams(5);
     Real bestRmse = QL_MAX_REAL;
@@ -471,9 +490,180 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     DLOG("best rmse   = " << bestRmse);
     DLOG("best params = " << bestParams);
 
-    logCalibration(moneyness);
+    logCalibration(results_);
 
     return model;
+}
+
+ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdModel(const ext::shared_ptr<HestonModel>& m) {
+
+    DLOG("HestonModelCalibration::ptdModel called");
+
+    Handle<Quote> s0 = process_->stateVariable();
+    Handle<YieldTermStructure> yts = process_->riskFreeRate();
+    Handle<YieldTermStructure> dts = process_->dividendYield();
+
+    std::vector<Real> times;
+    for (auto d : expiryDates_) {
+        Real t = yts->timeFromReference(d);
+        if (t > 0.0)
+            times.push_back(t);
+    }
+    // This inserts t = 0
+    TimeGrid timeGrid(times.begin(), times.end());
+
+    DLOG("times:    size " << times.size() << " start " << times.front() << " end " << times.back());
+    DLOG("timeGrid: size " << timeGrid.size() << " start " << timeGrid.front() << " end " << timeGrid.back());
+
+    // Piecewise parameters, with previous best fit of constant parameters as initial values
+    PiecewiseConstantParameter ptdTheta(times, PositiveConstraint());
+    PiecewiseConstantParameter ptdKappa(times, PositiveConstraint());
+    PiecewiseConstantParameter ptdSigma(times, PositiveConstraint());
+    PiecewiseConstantParameter ptdRho(times, BoundaryConstraint(-1.0, 1.0));
+    for (Size i = 0; i <= times.size(); ++i) {
+        ptdTheta.setParam(i, m->theta());
+        ptdKappa.setParam(i, m->kappa());
+        ptdSigma.setParam(i, m->sigma());
+        ptdRho.setParam(i, m->rho());
+    }
+
+    DLOG("PiecewiseConstantParameters initialised");
+
+    boost::shared_ptr<PiecewiseTimeDependentHestonModel> ptdModel =
+        boost::make_shared<PiecewiseTimeDependentHestonModel>(yts, dts, s0, m->v0(), ptdTheta, ptdKappa,
+                                                              ptdSigma, ptdRho, timeGrid);
+    boost::shared_ptr<PricingEngine> ptdEngine = boost::make_shared<AnalyticPTDHestonEngine>(
+        boost::static_pointer_cast<PiecewiseTimeDependentHestonModel>(ptdModel));
+
+    DLOG("Piecewise Heston Model and Engine constructed");
+
+    for (Size i = 0; i < helpers_.size(); ++i) {
+        auto h = ext::dynamic_pointer_cast<HestonModelHelper>(helpers_[i]);
+	QL_REQUIRE(h, "cast to HestonModelHelper failed for i=" << i); 
+	h->setPricingEngine(ptdEngine);
+    }
+
+    DLOG("Helpers updated");
+
+    LevenbergMarquardt method;
+    EndCriteria endCriteria(5000, 100, 1E-8, 1E-8, 1E-8);
+    // FIXME: Force relaxed Feller constraint with time-dependent sigma on each segment ?
+    Constraint constraint = Constraint(); 
+
+    if (calibrationMethod_ == "PiecewiseBootstrap") {
+        // Bootstrap piecewise parameters (sigma and rho) on each smile section's helpers.
+        // Parameters theta, kappa and v0 are not changed and constant through time.
+        DLOG("PiecewiseBootstrap selected");
+        for (Size i = 0; i < times.size(); ++i) {
+	    DLOG("expiry time " << i << ": " << times[i]);
+            std::vector<boost::shared_ptr<CalibrationHelper>> localHelper;
+            std::vector<Real> localWeights;
+            Size nonZeroInstr = 0;
+            for (Size k = 0; k < moneyness_.size(); ++k) {
+	        Size idx = moneyness_.size() * i + k;
+                QL_REQUIRE(idx < helpers_.size(), "index " << idx << " out of range");
+	        localHelper.push_back(helpers_[idx]);
+		auto helper = QuantLib::ext::dynamic_pointer_cast<HestonModelHelper>(helpers_[idx]);
+		QL_REQUIRE(helper, "dynamic cast to HestonModelHelper failed");
+                DLOG("time[" << i << "]=" << times[i] << " strike[" << k << "]=" << strikes_[idx] << " maturity "
+                             << helper->maturity());
+                localWeights.push_back(weights_[idx]);
+                if (!close_enough(localWeights.back(), 0.0))
+		    ++nonZeroInstr;
+            }
+            // Calibrate sigma / rho only
+            std::vector<bool> fixed(1 + 4 * (times.size() + 1), true);
+            fixed[i + (times.size() + 1) * 2] = false; // sigma
+            fixed[i + (times.size() + 1) * 3] = false; // rho
+            if (nonZeroInstr >= 2) {
+                DLOG("calibrate smile section at time " << times[i]);
+                ptdModel->calibrate(localHelper, method, endCriteria, constraint, localWeights, fixed);
+            } else {
+                ALOG("not enough helpers to calibrate sigma/rho");
+            }
+        }
+        DLOG("PiecewiseBootstrap done");
+    } else if (calibrationMethod_ == "PiecewiseBestFit") {
+        DLOG("PiecewiseBestFit selected");
+        // Apply a single best fit across all helpers to find the optimal piecewise parameters
+        // We fix theta, kappa and v0, i.e. all except sigma and rho, as above.
+        std::vector<bool> fixed(1 + 4 * (times.size() + 1), true);
+        for (Size i = 0; i < times.size(); ++i) {
+            // vary sigma and rho only, as above
+            fixed[i + (times.size() + 1) * 2] = false; // sigma
+            fixed[i + (times.size() + 1) * 3] = false; // rho
+	}
+        // std::vector<bool> fixed(1 + 4 * (times.size() + 1), false);
+        // for (Size i = 0; i <= times.size(); ++i) {
+        //     // fix theta and kappa
+        //     fixed[i + (times.size() + 1) * 0] = true; // theta
+        //     fixed[i + (times.size() + 1) * 1] = true; // kappa
+        //     // fixed[i + (times.size() + 1) * 2] = false; // sigma
+        //     // fixed[i + (times.size() + 1) * 3] = false; // rho
+        // }
+        ptdModel->calibrate(helpers_, method, endCriteria, constraint, weights_, fixed);
+	DLOG("PiecewiseBestFit done");
+    } else {
+        QL_FAIL("unknown calibration method \"" << calibrationMethod_ << "\"");
+    }
+
+    // log to a separate result structure, keep constant parameters results
+    logCalibration(piecewiseResults_);
+
+    DLOG("Piecewise Model Calibration Results: " << ptdModel->params().size());
+
+    std::vector<Real> theta(times.size() + 1, 0.0);
+    std::vector<Real> kappa(times.size() + 1, 0.0);
+    std::vector<Real> sigma(times.size() + 1, 0.0);
+    std::vector<Real> rho(times.size() + 1, 0.0);
+    std::vector<Real> feller(times.size() + 1, 0.0);
+    for (Size i = 0; i <= times.size(); ++i) {
+        Real time = i == 0 ? 0.0 : times[i];
+        theta[i] = ptdModel->theta(time + QL_EPSILON);
+        kappa[i] = ptdModel->kappa(time + QL_EPSILON);
+        sigma[i] = ptdModel->sigma(time + QL_EPSILON);
+        rho[i] = ptdModel->rho(time + QL_EPSILON);
+	feller[i] = 2.0 * theta[i] * kappa[i] / pow(sigma[i], 2);
+        if (feller[i] < 1) {
+            ALOG("Feller constraint 2*theta*kappa/sigma^2 violated at time " << time << ": " << feller[i]);
+        }
+    }
+    Real v0 = ptdModel->v0();
+
+    for (Size i = 0; i <= times.size(); ++i) {
+        Real tp = i == 0 ? 0.0 : times[i - 1];
+        Real tc = i == times.size() ? tp + 1.0 : times[i];
+        for (Size j = 0; j < 4; ++j) {
+            Real time = tp + (tc - tp) * j / 4;
+            DLOG("Heston parameters " << time
+		 << " theta " << ptdModel->theta(time + QL_EPSILON)
+		 << " kappa " << ptdModel->kappa(time + QL_EPSILON)
+		 << " sigma " << ptdModel->sigma(time + QL_EPSILON)
+		 << " rho " << ptdModel->rho(time + QL_EPSILON));
+	    if (i == times.size() && j == 1)
+	        break;
+        }
+    }
+
+    piecewiseResults_.indexName = indexName_;
+    piecewiseResults_.piecewiseParameters.clear();
+    piecewiseResults_.piecewiseParameters.push_back(std::make_pair("times", to_string(times)));
+    piecewiseResults_.piecewiseParameters.push_back(std::make_pair("theta", to_string(theta)));
+    piecewiseResults_.piecewiseParameters.push_back(std::make_pair("kappa", to_string(kappa)));
+    piecewiseResults_.piecewiseParameters.push_back(std::make_pair("sigma", to_string(sigma)));
+    piecewiseResults_.piecewiseParameters.push_back(std::make_pair("rho", to_string(rho)));
+    piecewiseResults_.piecewiseParameters.push_back(std::make_pair("v0", to_string(v0)));
+    piecewiseResults_.piecewiseParameters.push_back(std::make_pair("feller", to_string(feller)));
+
+    DLOG("times  : " << to_string(times));
+    DLOG("theta  : " << to_string(theta));
+    DLOG("kappa  : " << to_string(kappa));
+    DLOG("sigma  : " << to_string(sigma));
+    DLOG("rho    : " << to_string(rho));
+    DLOG("v0     : " << to_string(v0));
+    DLOG("Feller : " << to_string(feller));
+
+    return ptdModel;
 }
 
 } // namespace data

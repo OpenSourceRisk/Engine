@@ -604,6 +604,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         hestonMaximumInitialValues_ =
 	  parseListOfValues<Real>(engineParameter("HestonMaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"), &parseReal);
         hestonTolerance_ = parseReal(engineParameter("HestonTolerance", getModelEngineQualifiers(), false, "0.001"));
+        hestonCalibrationMethod_ = engineParameter("HestonCalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
         hestonProcessDiscretization_ =
 	  parseHestonProcessDiscretization(engineParameter("HestonProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
 	debug_ = parseBool(engineParameter("Debug", getModelEngineQualifiers(), false, "false"));
@@ -1384,7 +1385,7 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
     auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
         modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationExpiries_,
         calibrationMoneyness_, calibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
-        hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_,
+        hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_, hestonCalibrationMethod_,
         hestonProcessDiscretization_, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
@@ -1402,7 +1403,7 @@ void ScriptedTradeEngineBuilder::buildFdHeston(
     auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
         modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationExpiries_,
         calibrationMoneyness_, calibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
-        hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_,
+        hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_, hestonCalibrationMethod_,
         hestonProcessDiscretization_, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,

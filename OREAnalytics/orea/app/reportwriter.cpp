@@ -2942,7 +2942,7 @@ void ReportWriter::writeModelCalibrationReport(ore::data::Report& report, const 
     report.addColumn("TradeID", string())
         .addColumn("Index", string())
         .addColumn("Name", string())
-        .addColumn("Value", double(), 6);
+        .addColumn("Value", string());
 
     for (const auto& [id, trade] : portfolio->trades()) {
         const auto& additionalResults = trade->instrument()->additionalResults();
@@ -2951,19 +2951,30 @@ void ReportWriter::writeModelCalibrationReport(ore::data::Report& report, const 
             const std::vector<AssetModelCalibrationResults>& results =
                 QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
             for (const auto& result : results) {
-                Size n = result.parameters.size();
-		DLOG("paramters: " << n);
-                for (Size i = 0; i < n; ++i)
-                    report.next()
-                        .add(id)
-                        .add(result.indexName)
-                        .add(result.parameters[i].first)
-                        .add(result.parameters[i].second);
+                if (result.constantParameters.size() > 0) {
+                    Size n = result.constantParameters.size();
+                    DLOG("constant paramters: " << n);
+                    for (Size i = 0; i < n; ++i)
+                        report.next()
+                            .add(id)
+                            .add(result.indexName)
+                            .add(result.constantParameters[i].first)
+                            .add(to_string(result.constantParameters[i].second));
+                } else if (result.piecewiseParameters.size() > 0) {
+                    Size n = result.piecewiseParameters.size();
+		    DLOG("piecewise paramters: " << n);
+                    for (Size i = 0; i < n; ++i)
+                        report.next()
+                            .add(id)
+                            .add(result.indexName)
+                            .add(result.piecewiseParameters[i].first)
+			    .add(result.piecewiseParameters[i].second);
+                }
                 report.next()
 		  .add(id)
 		  .add(result.indexName)
 		  .add("Error")
-		  .add(result.rmse);
+		  .add(to_string(result.rmse));
             }
         }
     }

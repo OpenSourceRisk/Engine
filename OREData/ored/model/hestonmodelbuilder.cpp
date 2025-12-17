@@ -29,6 +29,7 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/hestonprocess.hpp>
+#include <qle/processes/ptdhestonprocess.hpp>
 #include <ql/processes/hestonslvprocess.hpp>
 
 #include <ql/math/optimization/differentialevolution.hpp>
@@ -56,14 +57,15 @@ HestonModelBuilder::HestonModelBuilder(
     // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
     const std::vector<Real>& initialValues, const std::vector<bool>& fixedValues,
     const std::vector<Real>& maximumInitialValues, Real relaxedFellerConstraint, Size calibrationRestarts,
-    Real tolerance, const HestonProcess::Discretization& discretization, const std::string& referenceCalibrationGrid,
-    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
+    Real tolerance, const::std::string& calibrationMethod, const HestonProcess::Discretization& discretization,
+    const std::string& referenceCalibrationGrid, const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
     : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
       indices_(indices), calibrationExpiries_(calibrationExpiries), calibrationMoneyness_(calibrationMoneyness),
       calibrationVarianceTerms_(calibrationVarianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
       maximumInitialValues_(maximumInitialValues), relaxedFellerConstraint_(relaxedFellerConstraint),
-      calibrationRestarts_(calibrationRestarts), tolerance_(tolerance), discretization_(discretization),
-      referenceCalibrationGrid_(referenceCalibrationGrid), dontCalibrate_(dontCalibrate) {}
+      calibrationRestarts_(calibrationRestarts), tolerance_(tolerance), calibrationMethod_(calibrationMethod),
+      discretization_(discretization), referenceCalibrationGrid_(referenceCalibrationGrid),
+      dontCalibrate_(dontCalibrate) {}
 
 std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::getCalibratedProcesses() const {
 
@@ -84,14 +86,26 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
 
         DLOG("Create Heston process for " << indices_[i]);
 
-        HestonModelCalibration hmc(indices_[i], processes_[i], calibrationExpiries_, calibrationMoneyness_,
-                                   calibrationVarianceTerms_, initialValues_, fixedValues_, maximumInitialValues_,
-                                   relaxedFellerConstraint_, calibrationRestarts_, tolerance_, discretization_,
-                                   dontCalibrate_);
+        HestonModelCalibration hmc(indices_[i], processes_[i], effectiveSimulationDates_, calibrationExpiries_,
+                                   calibrationMoneyness_, calibrationVarianceTerms_, initialValues_, fixedValues_,
+                                   maximumInitialValues_, relaxedFellerConstraint_, calibrationRestarts_, tolerance_,
+                                   calibrationMethod_, discretization_, dontCalibrate_);
 
-        processes.push_back(hmc.model()->process());
+	DLOG("Build a Heston Model with constant parameters");
+	auto model = hmc.model();
 
-	calibrationResults_.push_back(hmc.results());
+	if (calibrationMethod_ == "ConstantBestFit") {  
+	    DLOG("Heston Model with constant parameters is all we need");
+	    processes.push_back(model->process());
+	    calibrationResults_.push_back(hmc.results());
+	} else {
+	    DLOG("Build a Heston Model with piecewise constant parameters");
+	    auto ptdModel = hmc.ptdModel(model);
+	    auto ptdProcess = ext::make_shared<PiecewiseTimeDependentHestonProcess>(ptdModel, discretization_);
+	    processes.push_back(model->process());
+	    //processes.push_back(ptdProcess);
+	    calibrationResults_.push_back(hmc.piecewiseResults());
+	}
     }
 
     return processes;

@@ -35,19 +35,22 @@ struct AssetModelCalibrationResults {
     struct InstrumentResults {
         Period expiry;
         Real moneyness;
+        Real strike;
         Real marketValue;
         Real modelValue;
         Real marketVol;
         Real modelVol;
     };
     std::string indexName;
-    std::vector<std::pair<std::string,Real>> parameters;
+    std::vector<std::pair<std::string,Real>> constantParameters;
+    std::vector<std::pair<std::string,std::string>> piecewiseParameters;
     Real rmse;
     std::vector<InstrumentResults> data;
 
     void clear() {
         indexName = "";
-        parameters.clear();
+        constantParameters.clear();
+        piecewiseParameters.clear();
         rmse = 0.0;
         data.clear();
     }
