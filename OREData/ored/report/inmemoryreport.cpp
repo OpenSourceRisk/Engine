@@ -28,6 +28,12 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/filesystem.hpp>
 
+#include <boost/iostreams/device/file_descriptor.hpp>
+#ifdef ORE_USE_ZLIB
+#include <boost/iostreams/filter/gzip.hpp>
+#endif
+#include <boost/iostreams/filtering_stream.hpp>
+
 #include <fstream>
 
 namespace ore {
@@ -195,6 +201,79 @@ void InMemoryReport::toFile(const string& filename, const char sep, const bool c
     }
 
     cReport.end();
+}
+
+bool use_compression(const std::string& filename) {
+#ifdef ORE_USE_ZLIB
+    // assume compression for all filenames that do not end with csv or txt
+
+    std::string extension = boost::filesystem::path(filename).extension().string();
+    return extension != ".csv" && extension != ".txt";
+#else
+    return false;
+#endif
+}
+
+void InMemoryReport::toZip(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
+                            const string& nullString, bool lowerHeader) {
+
+    bool gzip = use_compression(filename);
+    std::ofstream out1(filename, gzip ? (std::ios::binary | std::ios::out) : std::ios::out);
+    boost::iostreams::filtering_stream<boost::iostreams::output> out;
+#ifdef ORE_USE_ZLIB
+    if (gzip)
+        out.push(boost::iostreams::gzip_compressor(/*boost::iostreams::gzip_params(9)*/));
+#endif
+    out.push(out1);
+
+    for (Size i = 0; i < headers_.size(); ++i) {
+        if (i > 0)
+            out << sep;
+
+        std::string h = headers_[i];
+        if (lowerHeader)
+            std::transform(h.begin(), h.end(), h.begin(), ::tolower);
+        out << quoteChar << h << quoteChar;
+    }
+    out << "\n";
+
+    Size numColumns = columns();
+    if (numColumns > 0) {
+        for (Size cacheIndex = 0; cacheIndex < files_.size(); ++cacheIndex) {
+            const auto& data = cache(cacheIndex);
+            Size numRows = data[0].size();
+
+            for (Size row = 0; row < numRows; ++row) {
+                for (Size col = 0; col < numColumns; ++col) {
+                    if (col > 0)
+                        out << sep;
+
+                    const ReportType& val = data[col][row];
+                    if (val.empty())
+                        out << nullString;
+                    else
+                        out << quoteChar << val << quoteChar;
+                }
+                out << "\n";
+            }
+        }
+
+        Size numRows = data_[0].size();
+        for (Size row = 0; row < numRows; ++row) {
+            for (Size col = 0; col < numColumns; ++col) {
+                if (col > 0)
+                    out << sep;
+
+                const ReportType& val = data_[col][row];
+                if (val.empty())
+                    out << nullString;
+                else
+                    out << quoteChar << val << quoteChar;
+            }
+            out << "\n";
+        }
+    }
+    out.flush();
 }
 
 } // namespace data
