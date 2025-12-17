@@ -81,6 +81,8 @@ void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr
     if (!tradePnl_ && !riskFactorBreakdown_) {
         pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
     }else if(riskFactorBreakdown_){
+        //Full PnL report
+        pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
         //The PnL breakdown on risk factors
         riskFactorPnls_ = histPnlGen_->riskFactorLevelPnl(period_.value());
     } else {

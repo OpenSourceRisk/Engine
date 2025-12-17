@@ -114,6 +114,7 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         simMarket_->scenarioGenerator() = hisScenGen_;
         hisScenGen_->baseScenario() = simMarket_->baseScenario();
         if(hisScenGen_->isRiskFactorBreakdown()){
+            //Run for RiskFactor PnL Breakdown
             ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
             std::vector<RiskFactorKey> deltaKeys = sc->keys(); 
             for(auto const& key: deltaKeys){
@@ -125,6 +126,9 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                                         nullptr, nullptr, {}, dryRun_);
                 mapCube_[key] = newCube;
             }
+            //Run for Full report
+            valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
+                                    nullptr, nullptr, {}, dryRun_);
         }else{
             valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
@@ -262,8 +266,8 @@ RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::T
             Date start = hisScenGen_->startDates()[s];
             Date end = hisScenGen_->endDates()[s];
             if (period.contains(start) && period.contains(end)) {
-                // Sum across all trades
-                Size tradeCount = portfolio_->size();
+                // Sum across all trades (use cube dimension, not portfolio_)
+                Size tradeCount = rfCube->numIds();
                 for (Size i = 0; i < tradeCount; ++i) {
                     totalPnl += rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
                 }
@@ -271,7 +275,6 @@ RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::T
         }
         // Store aggregated value keyed by (riskFactor, riskFactor)
         if(totalPnl!=0){
-            std::cout<<ore::to_string(rfKey)<<"=>"<<totalPnl<<std::endl;
             pnls[rfKey] = totalPnl;
         }    
     }

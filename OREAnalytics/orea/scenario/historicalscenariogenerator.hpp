@@ -133,7 +133,7 @@ public:
     */
     QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
 
-    QuantLib::ext::shared_ptr<Scenario> nextKey(const Date& d, const RiskFactorKey& key);
+    QuantLib::ext::shared_ptr<Scenario> nextKey(const Date& d, const RiskFactorKey& key, QuantLib::ext::shared_ptr<Scenario>& scen);
 
     //! Return the calculation details of the last generated scenario */
     const std::vector<HistoricalScenarioCalculationDetails>& lastHistoricalScenarioCalculationDetails() const;
@@ -290,7 +290,7 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
     Calendar calendar, Size mporDays, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
     const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam,
-    const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const bool overlapping = true);
+    const QuantLib::ext::shared_ptr<ReturnConfiguration>& returnConfiguration, const bool overlapping = true, const bool riskFactorKey = false);
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>
 buildHistoricalScenarioGenerator(const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,

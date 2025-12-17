@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input/HistSimVar</Parameter>
     <Parameter name="outputPath">Output/HistSimVar</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">255</Parameter>
+    <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
     <Parameter name="fixingDataFile">fixings.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -36,10 +36,10 @@
       <Parameter name="mporOverlappingPeriods">true</Parameter>
       <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
       <Parameter name="includeExpectedShortfall">Y</Parameter>
-      <Parameter name="breakdown">Y</Parameter>
+      <!--<Parameter name="breakdown">Y</Parameter>-->
       <Parameter name="tradePnl">N</Parameter>
-      <Parameter name="riskFactorBreakdown">Y</Parameter>
-      <Parameter name="allowPartialScenarios">Y</Parameter>
+      <!--<Parameter name="riskFactorBreakdown">Y</Parameter>
+      <Parameter name="allowPartialScenarios">Y</Parameter>-->
       <!--<Parameter name="portfolioFilter">PF1</Parameter>-->
       <Parameter name="outputFile">var.csv</Parameter>
     </Analytic>

@@ -147,6 +147,8 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
 void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
     VarAnalyticImpl::setUpConfigurations();
     analytic()->configurations().simMarketParams = inputs_->histVarSimMarketParams();
+    inputs_->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false,
+                                 std::function<bool(const string&)>(parseBool));
 }
 
 void HistoricalSimulationVarAnalyticImpl::setVarReport(
@@ -164,7 +166,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     auto scenarios = buildHistoricalScenarioGenerator(
         inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
         analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-        defaultReturnConfig, inputs_->mporOverlappingPeriods());
+        defaultReturnConfig, inputs_->mporOverlappingPeriods(), riskFactorBreakdown_);
 
     if (inputs_->outputHistoricalScenarios())
         ore::analytics::ReportWriter().writeHistoricalScenarios(
@@ -185,7 +187,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
         benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown(),
-        inputs_->includeExpectedShortfall(), inputs_->tradePnl(), inputs_->riskFactorBreakdown(), inputs_->useAtParCouponsCurves(),
+        inputs_->includeExpectedShortfall(), inputs_->tradePnl(), riskFactorBreakdown_, inputs_->useAtParCouponsCurves(),
         inputs_->useAtParCouponsTrades());
 }
 
@@ -197,7 +199,7 @@ void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
 
         reports->add(histPnLReport);
 
-        if(inputs_->riskFactorBreakdown()){
+        if(riskFactorBreakdown_){
             analytic()->addReport(label_, "riskFactor_PnL", histPnLReport);
         }else{
             analytic()->addReport(label_, "historical_PnL", histPnLReport);
