@@ -468,7 +468,7 @@
     <Name>GenericBarrierOption</Name>
     <ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>
     <Script>
-      <![CDATA[
+      <Code><![CDATA[
         REQUIRE PayoffType == 0 OR PayoffType == 1;
         REQUIRE TransatlanticBarrierType >= 0 AND TransatlanticBarrierType <= 4;
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierLevels);
@@ -477,7 +477,7 @@
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebatePayTimes);
 
         NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;
-        NUMBER U, i, d, currentNotional;
+        NUMBER U, i, d, s, currentNotional;
 
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
 
@@ -577,7 +577,7 @@
         NUMBER KnockedInTimes[SIZE(BarrierMonitoringDates)], KnockedOutTimes[SIZE(BarrierMonitoringDates)];
         NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;
         NUMBER rebateCondKI, activeCondKI, optionCondKI;
-        NUMBER U, i, d, currentNotional;
+        NUMBER U, i, d, s, currentNotional;
 
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
 
@@ -636,11 +636,15 @@
 	rebate = rebate + Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
   rebateCondKI = rebateCondKI + activeCondKI * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
         IF PayoffType == 0 THEN
-	  value = Active * TransatlanticActive * PAY( LongShort * Quantity * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
+	  value = Active * TransatlanticActive * PAY( LongShort * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
                   rebate;
+    optionCondKI = activeCondKI * TransatlanticActive * PAY( LongShort  * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
+                  rebateCondKI;
 	ELSE
 	  value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
                   rebate;
+    optionCondKI = activeCondKI * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
+                  rebateCondKI;
 	END;
 
         IF PayoffType == 0 THEN
@@ -649,24 +653,30 @@
           currentNotional = Amount;
         END;
 
-        FOR i IN(SIZE(_AMC_SimDates), 1, -1) DO
-            s = DATEINDEX(BarrierMonitoringDates, _AMC_SimDates[i], GEQ);
-            IF s > SIZE(BarrierMonitoringDates) THEN
-              s = SIZE(BarrierMonitoringDates);
-            END;
-            IF KnockoutTimes[s] == 1 THEN
+        FOR i IN (1, SIZE(_AMC_SimDates), 1) DO
+          s = DATEINDEX(_AMC_SimDates[i], BarrierMonitoringDates, GEQ);
+          IF s > SIZE(BarrierMonitoringDates) THEN
+            s = SIZE(BarrierMonitoringDates);
+          END;
+          IF BarrierMonitoringDates[s] > _AMC_SimDates[i] THEN
+            _AMC_NPV[i] = Quantity* exp(NPVMEM(ln(value+1), _AMC_SimDates[i], i))-1;
+          ELSE
+            IF KnockedOutTimes[s] == 1 THEN
               _AMC_NPV[i] = 0;
             ELSE
-              IF KnockInTimes[s] == 1 THEN
-                _AMC_NPV[i]  = NPVMEM(OptionAfterKI, _AMC_SimDates[i], ExpiryDate, i,  KnockInTimes[s] == 1 AND KnockOutTimes[s] == 0 );
+              IF KnockedInTimes[s] == 1 THEN
+                _AMC_NPV[i]  = Quantity * exp(NPVMEM(ln(optionCondKI + 1), _AMC_SimDates[i], i,  KnockedInTimes[s] == 1 AND KnockedOutTimes[s] == 0 )) - 1;
               ELSE
-                _AMC_NPV[i]  = NPVMEM(value, _AMC_SimDates[i], ExpiryDate, SIZE(_AMC_Simdates) + i, KnockInTimes[s] == 0 AND KnockOutTimes[s] == 0);
+                _AMC_NPV[i]  = Quantity * exp(NPVMEM(ln(value + 1), _AMC_SimDates[i], SIZE(_AMC_SimDates) + i,  KnockedInTimes[s] == 0 AND KnockedOutTimes[s] == 0 )) - 1;
               END;
             END;
+          END;
         END;
+        
+        value = Quantity  * value;
         ]]></Code>
       <NPV>value</NPV>
-      <NewSchedules>
+      <!--NewSchedules>
         <NewSchedule>
           <Name>MonitorAndSimDates</Name>
           <Operation>Join</Operation>
@@ -675,7 +685,7 @@
             <Schedule>BarrierMonitoringDates</Schedule>
           </Schedules>
         </NewSchedule>
-      </NewSchedules>
+      </NewSchedules-->
     </Script>
   </Script>
 </ScriptLibrary>
