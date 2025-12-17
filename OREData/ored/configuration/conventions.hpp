@@ -115,7 +115,13 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type);
 class Conventions : public XMLSerializable {
 public:
     //! Default constructor
-    Conventions() {}
+    Conventions(const QuantLib::ext::shared_ptr<Conventions>& conventionsOverride = nullptr) {}
+
+    /*! add an override to the conventions */
+    void setConventionsOverride(const QuantLib::ext::shared_ptr<Conventions>& conventionsOverride) {
+		boost::unique_lock<boost::shared_mutex> lock(mutex_);
+		conventionsOverride_ = conventionsOverride;
+	}
 
     /*! Returns the convention if found and throws if not */
     QuantLib::ext::shared_ptr<Convention> get(const string& id) const;
@@ -157,6 +163,7 @@ private:
     mutable map<string, std::pair<string, string>> unparsed_;
     mutable std::set<string> used_;
     mutable boost::shared_mutex mutex_;
+    QuantLib::ext::shared_ptr<Conventions> conventionsOverride_;
 };
 
 //! Singleton to hold conventions
