@@ -74,6 +74,17 @@ void handle_rapidxml_parse_error(const rapidxml::parse_error& e) {
 XMLDocument::XMLDocument() : _doc(new rapidxml::xml_document<char>()), _buffer(NULL) {}
 
 XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_document<char>()), _buffer(NULL) {
+    fromFile(fileName);
+}
+
+XMLDocument::~XMLDocument() {
+    if (_buffer != NULL)
+        delete[] _buffer;
+    if (_doc != NULL)
+        delete _doc;
+}
+
+void XMLDocument::fromFile(const string& fileName) {
     // Need to load the entire file into memory to pass to doc.parse().
     ifstream t(fileName.c_str());
     QL_REQUIRE(t.is_open(), "Failed to open file " << fileName);
@@ -90,13 +101,6 @@ XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_docume
     } catch (const rapidxml::parse_error& pe) {
         handle_rapidxml_parse_error(pe);
     }
-}
-
-XMLDocument::~XMLDocument() {
-    if (_buffer != NULL)
-        delete[] _buffer;
-    if (_doc != NULL)
-        delete _doc;
 }
 
 void XMLDocument::fromXMLString(const string& xmlString) {
