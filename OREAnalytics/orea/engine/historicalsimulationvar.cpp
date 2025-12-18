@@ -81,7 +81,11 @@ void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr
         pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
     }else if(riskFactorBreakdown_){
         //Full PnL report
-        pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
+        if(!tradePnl_){
+            pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
+        }else{
+            tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
+        }      
         //The PnL breakdown on risk factors
         riskFactorPnls_ = histPnlGen_->riskFactorLevelPnl(period_.value());
     } else {
@@ -110,7 +114,7 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
                 report->add(hisScenGen_->startDates()[s]);
                 report->add(hisScenGen_->endDates()[s]);
                 report->add(tradePnls_[s][t.second]);
-            }
+            }          
         } else {
             report->next();
             report->add(tg->portfolioId());
@@ -119,18 +123,18 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
             report->add(hisScenGen_->startDates()[s]);
             report->add(hisScenGen_->endDates()[s]);
             report->add(pnls_.at(s));
-            if(riskFactorBreakdown_){
-                //The PnL breakdown on risk factors
-                QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
-                for(const auto& r: riskFactorPnls_){
-                    report2->next();
-                    const auto& key = r.first;
-                    const Real value = r.second;
-                    report2->add(ore::data::to_string(key));
-                    report2->add(hisScenGen_->startDates()[s]);
-                    report2->add(hisScenGen_->endDates()[s]);
-                    report2->add(value);
-                }
+        }
+        if(riskFactorBreakdown_){
+            //The PnL breakdown on risk factors
+            QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
+            for(const auto& r: riskFactorPnls_){
+                report2->next();
+                const auto& key = r.first;
+                const Real value = r.second;
+                report2->add(ore::data::to_string(key));
+                report2->add(hisScenGen_->startDates()[s]);
+                report2->add(hisScenGen_->endDates()[s]);
+                report2->add(value);
             }
         }
     }
