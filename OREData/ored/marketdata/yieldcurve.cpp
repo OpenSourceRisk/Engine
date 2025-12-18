@@ -2185,10 +2185,12 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
 
                 // Create a MM future helper
                 QL_REQUIRE(
-                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM,
-                    "For MM Futures only 'IMM' is allowed as the date generation rule, check the future convention '"
+                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM ||
+                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::SecondThursday,
+                    "For MM Futures only 'IMM' or 'SecondThursday' are allowed as date generation rules, check the future convention '"
                         << segment->conventionsID() << "'");
-                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear());
+                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
+                                                     futureConvention->dateGenerationRule());
 
                 if (immDate < asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
@@ -2197,8 +2199,13 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     continue;
                 }
 
+                // Determine the futures type for validation
+                Futures::Type futuresType = (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM)
+                                            ? Futures::IMM
+                                            : Futures::Custom;
+
                 auto helper = QuantLib::ext::make_shared<FuturesRateHelper>(futureQuote->quote(), immDate,
-                                                                            futureConvention->index());
+                                                                            futureConvention->index(), 0.0, futuresType);
 
                 instruments.push_back(
                     {helper, "Short MM Future", marketQuote->name(), marketQuote->quote()->value(),

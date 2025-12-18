@@ -332,10 +332,26 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
     return std::make_pair(startDate, endDate);
 }
 
-Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear) { 
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                           FutureConvention::DateGenerationRule rule) { 
     Date refDate(1, expiryMonth, expiryYear);
-    Date immDate = IMM::nextDate(refDate, false);
-    return immDate;
+    
+    if (rule == FutureConvention::DateGenerationRule::IMM) {
+        return IMM::nextDate(refDate, false);  // Third Wednesday
+    } else if (rule == FutureConvention::DateGenerationRule::SecondThursday) {
+        // Calculate second Thursday of the month
+        // Find the first Thursday
+        Weekday targetWeekday = Thursday;
+        Integer dayOfWeek = refDate.weekday();
+        Integer daysToThursday = (targetWeekday - dayOfWeek + 7) % 7;
+        Date firstThursday = refDate + daysToThursday * Days;
+        
+        // Add 7 days to get second Thursday
+        Date secondThursday = firstThursday + 7 * Days;
+        return secondThursday;
+    } else {
+        QL_FAIL("getMmFutureExpiryDate: DateGenerationRule '" << rule << "' not supported for MM Futures");
+    }
 }
 
 std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows) {
