@@ -2361,7 +2361,7 @@
 		 <xs:complexType>
           <xs:sequence>
            <xs:element type="xs:string" name="Id"/>
-           <xs:element name="Trade">
+           <xs:element ref="subTradeGroup">
             <xs:complexType>
              <xs:sequence>
               <xs:element type="oreTradeType" name="TradeType"/>
