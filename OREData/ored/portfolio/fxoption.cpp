@@ -178,7 +178,7 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxForward");
             auto fxBuilder = QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
             QL_REQUIRE(fxBuilder, "FxOption::build(): internal error: could not cast to FxForwardEngineBuilderBase");
-            qlinstr->setPricingEngine(fxBuilder->engine(boughtCcy,soldCcy));
+            qlinstr->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy, {}));
             auto configuration = fxBuilder->configuration(MarketContext::pricing);
 
             maturity_ = expiryDate_;

@@ -63,12 +63,12 @@ void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory
         QL_REQUIRE(builder, "No builder found for " << tradeType_);
         QuantLib::ext::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
             QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
-        instNear_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
+        instNear_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy, {}));
         setSensitivityTemplate(*fxBuilder);
         addProductModelEngine(*fxBuilder);
         instFar_.reset(
             new QuantExt::FxForward(farBoughtAmount_, nearSoldCcy, farSoldAmount_, nearBoughtCcy, farDate, false));
-        instFar_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
+        instFar_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy, {}));
 
         DLOG("FxSwap::build(): Near NPV = " << instNear_->NPV());
         DLOG("FxSwap::build(): Far NPV = " << instFar_->NPV());

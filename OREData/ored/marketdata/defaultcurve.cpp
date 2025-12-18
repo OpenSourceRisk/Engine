@@ -553,8 +553,8 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                     cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
                     recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
-                    config.startDate(), cdsConv->lastPeriodDayCounter());
-            
+                    config.startDate(), cdsConv->lastPeriodDayCounter());        
+
             if (tmp->latestDate() > asof) {
                 helpers.push_back(tmp);
             }

@@ -115,7 +115,13 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type);
 class Conventions : public XMLSerializable {
 public:
     //! Default constructor
-    Conventions() {}
+    Conventions(const QuantLib::ext::shared_ptr<Conventions>& conventionsOverride = nullptr) {}
+
+    /*! add an override to the conventions */
+    void setConventionsOverride(const QuantLib::ext::shared_ptr<Conventions>& conventionsOverride) {
+		boost::unique_lock<boost::shared_mutex> lock(mutex_);
+		conventionsOverride_ = conventionsOverride;
+	}
 
     /*! Returns the convention if found and throws if not */
     QuantLib::ext::shared_ptr<Convention> get(const string& id) const;
@@ -157,6 +163,7 @@ private:
     mutable map<string, std::pair<string, string>> unparsed_;
     mutable std::set<string> used_;
     mutable boost::shared_mutex mutex_;
+    QuantLib::ext::shared_ptr<Conventions> conventionsOverride_;
 };
 
 //! Singleton to hold conventions
@@ -1157,7 +1164,7 @@ public:
     InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
                             const string& strDayCounter, const string& strIndex, const string& strInterpolated,
                             const string& strObservationLag, const string& strAdjustInfObsDates,
-                            const string& strInfCalendar, const string& strInfConvention,
+                            const string& strInfCalendar, const string& strInfConvention, 
                             PublicationRoll publicationRoll = PublicationRoll::None,
                             const QuantLib::ext::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
 
@@ -1173,6 +1180,8 @@ public:
     BusinessDayConvention infConvention() const { return infConvention_; }
     PublicationRoll publicationRoll() const { return publicationRoll_; }
     const Schedule& publicationSchedule() const { return publicationSchedule_; }
+    int startDelay() const { return startDelay_; }
+    BusinessDayConvention startDelayConvention() const { return startDelayConvention_; }    
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
@@ -1189,6 +1198,8 @@ private:
     Calendar infCalendar_;
     BusinessDayConvention infConvention_;
     Schedule publicationSchedule_;
+    int startDelay_ = 0;
+    BusinessDayConvention startDelayConvention_ = BusinessDayConvention::Following;
 
     // Store the inputs
     string strFixCalendar_;
@@ -1200,6 +1211,8 @@ private:
     string strAdjustInfObsDates_;
     string strInfCalendar_;
     string strInfConvention_;
+    string strStartDelayConvention_;
+    
     PublicationRoll publicationRoll_;
     QuantLib::ext::shared_ptr<ScheduleData> publicationScheduleData_;
 };
