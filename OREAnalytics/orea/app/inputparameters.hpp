@@ -89,6 +89,8 @@ public:
         QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
         const std::string& param, const bool mandatory = false) {
         string str = loadParameterXMLString(analytic, param, mandatory);
+        if (str.empty() && !mandatory)
+            return false;
         obj = QuantLib::ext::make_shared<T>();
         obj->fromXMLString(str);
         return true;
@@ -1074,7 +1076,7 @@ public:
      *************************************/
     const std::set<std::string>& analytics() const { return analytics_; }
 
-    virtual void loadParameters(){}
+    virtual void loadParameters();
     virtual void writeOutParameters(){}
 
 protected:

@@ -2156,11 +2156,15 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->future()->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0,
                              helper->future()->overnightIndex()->dayCounter(), helper->future()->valueDate(),
-                             helper->future()->maturityDate())};
+                             helper->future()->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->future()->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->future()->valueDate())};
                          Leg m{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->future()->maturityDate(), 1.0, 1.0 - r / 100.0,
                              helper->future()->overnightIndex()->dayCounter(), helper->future()->valueDate(),
-                             helper->future()->maturityDate())};
+                             helper->future()->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->future()->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->future()->valueDate())};
                          return getCashflowReportData({l, m}, {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
                                                       {currency_[index].code(), currency_[index].code()}, asofDate_,
                                                       {*helper->future()->overnightIndex()->forwardingTermStructure(),
@@ -2202,10 +2206,14 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                                                                             r = marketQuote->quote()->value(), this]() {
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0, helper->dayCounter(),
-                             helper->earliestDate(), helper->maturityDate())};
+                             helper->earliestDate(), helper->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->earliestDate())};
                          Leg m{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->maturityDate(), 1.0, 1.0 - r / 100.0, helper->dayCounter(),
-                             helper->earliestDate(), helper->maturityDate())};
+                             helper->earliestDate(), helper->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->maturityDate()),
+                             QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->earliestDate())};
                          ext::shared_ptr<YieldTermStructure> ts(helper->termStructure(), QuantLib::null_deleter());
                          return getCashflowReportData({l, m}, {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
                                                       {currency_[index].code(), currency_[index].code()}, asofDate_,
