@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<Portfolio>
+    <Trade id="generic_fx_barrier_option_raw">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+       <CounterParty>CPTY_A</CounterParty>
+            <NettingSetId>CPTY_A</NettingSetId>
+    </Envelope>
+    <GenericBarrierOptionData>
+      <!-- 0 = Vanilla, 1 = CashOrNothing -->
+      <PayoffType type="number">0</PayoffType>
+      <!-- 0 = none, 1 = DonwIn, 2 = UpIn, 3 = DownOut, 4 = UpOut -->
+      <TransatlanticBarrierType type="number">0</TransatlanticBarrierType>
+      <TransatlanticBarrierRebate type="number">0</TransatlanticBarrierRebate>
+      <TransatlanticBarrierRebateCurrency type="currency">USD</TransatlanticBarrierRebateCurrency>
+      
+      <LongShort type="longShort">Long</LongShort>
+      <PutCall type="optionType">Call</PutCall>
+      <!-- required for PayoffType = Vanilla only -->
+      <Quantity type="number">100000000</Quantity>
+      <Strike type="number">1.2</Strike>
+      <!-- required for PayoffType = CashOrNothing only -->
+      <Amount type="number">0.0</Amount>
+      <PayCurrency type="currency">USD</PayCurrency>
+      <ExpiryDate type="event">2023-02-01</ExpiryDate>
+      <SettlementDate type="event">2023-02-03</SettlementDate>
+      <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+      <BarrierMonitoringDates type="event">
+        <ScheduleData>
+          <Rules>
+            <StartDate>2022-02-01</StartDate>
+            <EndDate>2023-02-01</EndDate>
+            <Tenor>1D</Tenor>
+            <Calendar>TGT,US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </BarrierMonitoringDates>
+      <BarrierTypes type="barrierType">
+        <Value>DownOut</Value>
+      </BarrierTypes>
+      <BarrierLevels type="number">
+        <Value>1.05</Value>
+      </BarrierLevels>
+      <!-- out rebates (only if no in barriers are present) -->
+      <BarrierRebates type="number">
+        <Value>0.0</Value>
+      </BarrierRebates>
+      <BarrierRebateCurrencies type="currency">
+        <Value>USD</Value>
+      </BarrierRebateCurrencies>
+      <!-- 0 = atHit, 1 = atExpiry (for out barriers only) -->
+      <BarrierRebatePayTimes type="number">
+        <Value>1</Value>
+      </BarrierRebatePayTimes>
+      <!-- rebate if at least one in barrier is present -->
+      <BarrierRebate type="number">0.0</BarrierRebate>
+      <BarrierRebateCurrency type="currency">USD</BarrierRebateCurrency>
+      <!-- 1 = KoAlways, 2 = KoBeforeKi, 3 = KoAfterKi -->
+      <KikoType type="number">1</KikoType>
+    </GenericBarrierOptionData>
+</Trade>
+</Portfolio>
