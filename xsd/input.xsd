@@ -25,7 +25,7 @@
 
   <xs:element type="portfolio" name="Portfolio"/>
 
-  <xs:element type="trade" name="Trade"/>
+  <!-- <xs:element type="trade" name="Trade"/> -->
 
   <xs:complexType name="portfolio">
     <xs:sequence>
