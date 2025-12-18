@@ -104,7 +104,7 @@ QuantLib::Settlement::Type parseSettlementType(const std::string& s);
 QuantLib::Exercise::Type parseExerciseType(const std::string& s);
 QuantLib::Option::Type parseOptionType(const std::string& s);
 QuantLib::Date parseDate(const std::string& s);
-QuantLib::Date calculateMporDate(QuantLib::Size& mporDays, std::string mporCalendar = "US");
+QuantLib::Date calculateMporDate(QuantLib::Size& mporDays, QuantLib::Date asOf = QuantLib::Date(), std::string mporCalendar = "US");
 
 %template(StringCalMap) std::map<std::string, Calendar>;
 
