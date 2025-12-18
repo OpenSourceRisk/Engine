@@ -2351,8 +2351,8 @@
   </xs:complexType>
 
 <xs:element name="subTradeGroup" abstract="true"/>
-<xs:element name="Trade" type="tradeType" substitutionGroup="subTradeGroup"/>
-<xs:element name="SubTrade" type="tradeType" substitutionGroup="subTradeGroup"/>
+<xs:element name="Trade" substitutionGroup="subTradeGroup"/>
+<xs:element name="SubTrade" substitutionGroup="subTradeGroup"/>
 
   <xs:complexType name="trsUnderlyingData">
     <xs:sequence>
