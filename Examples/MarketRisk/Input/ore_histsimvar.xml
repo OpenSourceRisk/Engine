@@ -29,7 +29,7 @@
     <Analytic type="historicalSimulationVar">
       <Parameter name="active">Y</Parameter>
       <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>g
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="historicalPeriod">2017-01-17,2019-12-30</Parameter>
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">USD</Parameter>
