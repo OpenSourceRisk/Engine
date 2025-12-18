@@ -436,8 +436,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
         euii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
 
-    vector<Date> datesZCII = {asof_,
-                              asof_ + 1 * Years,
+    vector<Date> datesZCII = {asof_ + 1 * Years,
                               asof_ + 2 * Years,
                               asof_ + 3 * Years,
                               asof_ + 4 * Years,
@@ -451,7 +450,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
                               asof_ + 15 * Years,
                               asof_ + 20 * Years};
 
-    vector<Rate> ratesZCII = {2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
+    vector<Rate> ratesZCII = {2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
                               3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108};
 
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
