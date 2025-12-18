@@ -413,6 +413,8 @@ void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
+    if (inputs_->mporConventions() && inputs_->mporDate() != Date())
+        InstrumentConventions::instance().setConventions(inputs_->mporConventions(), inputs_->mporDate());
 
     if (inputs_->currencyConfigs() != nullptr)
         inputs_->currencyConfigs()->addCurrencies();
@@ -751,6 +753,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("setup", "implyTodaysFixings", false);
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
+
+    tmp = params_->get("setup", "fixingCutOffDate", false);
+    if (tmp != "")
+        setFixingCutOffDate(ore::data::parseDate(tmp));
 
     tmp = params_->get("setup", "useAtParCouponsCurves", false);
     if (tmp != "")

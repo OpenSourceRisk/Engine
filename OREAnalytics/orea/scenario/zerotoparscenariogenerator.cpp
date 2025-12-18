@@ -33,32 +33,41 @@ ZeroToParScenarioGenerator::ZeroToParScenarioGenerator(
     : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->returnConfiguration(),
                                   hsg->adjFactors(), hsg->labelPrefix(), hsg->generateDifferenceScenarios()) {
 
-    baseScenario_ = hsg->baseScenario();
+    auto bs = hsg->baseScenario();
     shiftConverter_ = QuantLib::ext::make_shared<ZeroToParShiftConverter>(parInstruments, simMarket);
     auto baseValues = shiftConverter_->baseValues();
     
-    // build a base par scenario off the zero base scenario, and update with the calculated par rates
-    baseParScenario_ = baseScenario_->clone();
+    // build a base and base par scenario off the zero base scenario, and update with the calculated par rates
+    // base scenario must be the minimum of the simulation (hsg baseScenario) and sensitivity configuration
+    baseScenario_ = QuantLib::ext::make_shared<SimpleScenario>(bs->asof(), bs->label(), bs->getNumeraire());
+    baseParScenario_ = QuantLib::ext::make_shared<SimpleScenario>(bs->asof(), bs->label(), bs->getNumeraire());
     baseParScenario_->setPar(true);
-    for (const auto& kv : baseValues)
-        baseParScenario_->add(kv.first, kv.second);
+    for (const auto& kv : baseValues) {
+        if (bs->has(kv.first)) {
+            baseScenario_->add(kv.first, bs->get(kv.first));
+            baseParScenario_->add(kv.first, kv.second);
+        }
+    }
 }
 
 QuantLib::ext::shared_ptr<Scenario> ZeroToParScenarioGenerator::next(const Date& d) {
     auto zeroScenario = HistoricalScenarioGenerator::next(d);
 
     // create a par scenario to hold the par shifts
-    QuantLib::ext::shared_ptr<Scenario> parScenario =
-        addDifferenceToScenario(baseScenario_, zeroScenario, d, baseScenario_->getNumeraire());
+    QuantLib::ext::shared_ptr<Scenario> parScenario = QuantLib::ext::make_shared<SimpleScenario>(
+        baseScenario_->asof(), baseScenario_->label(), baseScenario_->getNumeraire());
     parScenario->setPar(true);
+    parScenario->label(zeroScenario->label());
 
     // get the par shifts and update the par scenario
     auto parShifts = shiftConverter_->parShifts(zeroScenario);
     auto baseRates = shiftConverter_->baseValues();
 
     for (const auto& kv : parShifts) {
-        auto base = baseRates[kv.first];
-        parScenario->add(kv.first, base + kv.second);
+        if (baseScenario_->has(kv.first)) {
+            auto base = baseRates[kv.first];
+            parScenario->add(kv.first, base + kv.second);
+        }
     }
 
     return parScenario;
