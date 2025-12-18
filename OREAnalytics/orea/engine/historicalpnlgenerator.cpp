@@ -128,12 +128,9 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
             }
             //Run for Full report - Remove risk factor key
             hisScenGen_->setCurrentKey(RiskFactorKey());
-            valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
-                                    nullptr, nullptr, {}, dryRun_);
-        }else{
-            valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
-                                    nullptr, nullptr, {}, dryRun_);
         }
+        valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
+                                    nullptr, nullptr, {}, dryRun_);
     } else {
         MultiThreadedValuationEngine engine(
             nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
