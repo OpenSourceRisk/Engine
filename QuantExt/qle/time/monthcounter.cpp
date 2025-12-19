@@ -18,18 +18,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/time/daycounters/actualactual.hpp>
 #include <qle/time/yearcounter.hpp>
 
 using QuantLib::Date;
 using QuantLib::Time;
 
 namespace QuantExt {
-namespace {
-    QuantLib::DayCounter underlyingDCF = QuantLib::ActualActual(QuantLib::ActualActual::ISDA);
-}
 
-Time YearCounter::Impl::yearFraction(const Date& d1, const Date& d2, const Date&, const Date&) const {
+Time MonthCounter::Impl::yearFraction(const Date& d1, const Date& d2, const Date&, const Date&) const {
     int years =0;
     int months = 0;
     years = d2.year() - d1.year();
