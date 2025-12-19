@@ -401,6 +401,7 @@
       <xs:enumeration value="Actual/364"/>
       <xs:enumeration value="Act/364"/>
       <xs:enumeration value="ACT/364"/>
+      <xs:enumeration value="Month"/>
     </xs:restriction>
   </xs:simpleType>
 
