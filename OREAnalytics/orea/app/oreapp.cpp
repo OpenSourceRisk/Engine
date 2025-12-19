@@ -1420,10 +1420,6 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("historicalSimulationVar", "outputHistoricalScenarios", false);
         if (tmp != "")
             setOutputHistoricalScenarios(parseBool(tmp));
-
-        tmp = params_->get("historicalSimulationVar", "allowPartialScenarios", false);
-        if (tmp == "Y")
-            setAllowPartialScenarios(true);
         
     }
 

@@ -149,6 +149,9 @@ void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = inputs_->histVarSimMarketParams();
     inputs_->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false,
                                  std::function<bool(const string&)>(parseBool));
+    if(riskFactorBreakdown_){
+        allowPartialScenarios_ = true;
+    }
 }
 
 void HistoricalSimulationVarAnalyticImpl::setVarReport(
@@ -173,11 +176,10 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
             scenarios->scenarioLoader(),
             QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "var_histscenarios.csv").string(), ',',
                                               false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
-
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true, false, false,
-        inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig());
+        allowPartialScenarios_, inputs_->iborFallbackConfig());
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
 

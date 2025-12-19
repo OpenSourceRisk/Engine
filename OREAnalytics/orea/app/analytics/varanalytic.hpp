@@ -93,7 +93,8 @@ public:
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;
     void addAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
-    bool riskFactorBreakdown_;
+    bool riskFactorBreakdown_ = false;
+    bool allowPartialScenarios_ = false;
 };
 
 class HistoricalSimulationVarAnalytic : public VarAnalytic {
