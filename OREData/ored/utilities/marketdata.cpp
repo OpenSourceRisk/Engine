@@ -333,22 +333,13 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
 }
 
 Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
-                           FutureConvention::DateGenerationRule rule) { 
+                           FutureConvention::DateGenerationRule rule) {
     Date refDate(1, expiryMonth, expiryYear);
-    
+
     if (rule == FutureConvention::DateGenerationRule::IMM) {
         return IMM::nextDate(refDate, false);  // Third Wednesday
     } else if (rule == FutureConvention::DateGenerationRule::SecondThursday) {
-        // Calculate second Thursday of the month
-        // Find the first Thursday
-        Weekday targetWeekday = Thursday;
-        Integer dayOfWeek = refDate.weekday();
-        Integer daysToThursday = (targetWeekday - dayOfWeek + 7) % 7;
-        Date firstThursday = refDate + daysToThursday * Days;
-        
-        // Add 7 days to get second Thursday
-        Date secondThursday = firstThursday + 7 * Days;
-        return secondThursday;
+        return Date::nthWeekday(2, Thursday, refDate.month(), refDate.year());
     } else {
         QL_FAIL("getMmFutureExpiryDate: DateGenerationRule '" << rule << "' not supported for MM Futures");
     }
