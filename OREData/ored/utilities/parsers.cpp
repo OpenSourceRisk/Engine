@@ -472,6 +472,13 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
     }
 }
 
+QuantLib::Date calculateMporDate(QuantLib::Size& mporDays, QuantLib::Date asOf, std::string mporCalendar) {
+    QuantLib::Calendar mporCal = parseCalendar(mporCalendar);
+    if (asOf == Date())
+        asOf = Settings::instance().evaluationDate();
+    return mporCal.advance(asOf, mporDays, QuantExt::Days);
+}
+
 Exercise::Type parseExerciseType(const std::string& s) {
     static map<string, Exercise::Type> m = {
         {"European", Exercise::European},
