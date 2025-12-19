@@ -472,7 +472,7 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
     }
 }
 
-QuantLib::Date calculateMporDate(QuantLib::Size& mporDays, QuantLib::Date asOf, std::string mporCalendar) {
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf, std::string mporCalendar) {
     QuantLib::Calendar mporCal = parseCalendar(mporCalendar);
     if (asOf == Date())
         asOf = Settings::instance().evaluationDate();
