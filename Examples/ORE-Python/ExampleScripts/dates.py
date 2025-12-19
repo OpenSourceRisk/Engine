@@ -46,3 +46,13 @@ print("advance start date by", tenorString)
 print("startDate", startDate.to_date())
 print("endDate  ", endDate.to_date())
 print('---------------------------')
+
+mporDays = 3
+
+print(startDate)
+print(ore.calculateMporDate(mporDays))
+print(ore.calculateMporDate(mporDays, startDate))
+print(ore.calculateMporDate(mporDays, startDate, calendarString))
+
+print(ore.calculateMporDate(mporDays).to_date())
+      
