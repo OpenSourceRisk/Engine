@@ -20,6 +20,7 @@
 #include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
 
 using namespace QuantLib;
 
@@ -39,13 +40,22 @@ ZeroToParScenarioGenerator::ZeroToParScenarioGenerator(
     
     // build a base and base par scenario off the zero base scenario, and update with the calculated par rates
     // base scenario must be the minimum of the simulation (hsg baseScenario) and sensitivity configuration
+
     baseScenario_ = QuantLib::ext::make_shared<SimpleScenario>(bs->asof(), bs->label(), bs->getNumeraire());
     baseParScenario_ = QuantLib::ext::make_shared<SimpleScenario>(bs->asof(), bs->label(), bs->getNumeraire());
     baseParScenario_->setPar(true);
-    for (const auto& kv : baseValues) {
-        if (bs->has(kv.first)) {
-            baseScenario_->add(kv.first, bs->get(kv.first));
-            baseParScenario_->add(kv.first, kv.second);
+    for (auto& k : bs->keys()) {
+        auto bv = bs->get(k);
+        if (ParSensitivityAnalysis::isParType(k.keytype)) {
+            auto it = baseValues.find(k);
+            if (it != baseValues.end()) {
+                // found in par rates
+                baseScenario_->add(k, bv);
+                baseParScenario_->add(k, it->second);
+            }
+        } else {
+            baseScenario_->add(k, bv);
+            baseParScenario_->add(k, bv);
         }
     }
 }
@@ -54,10 +64,10 @@ QuantLib::ext::shared_ptr<Scenario> ZeroToParScenarioGenerator::next(const Date&
     auto zeroScenario = HistoricalScenarioGenerator::next(d);
 
     // create a par scenario to hold the par shifts
-    QuantLib::ext::shared_ptr<Scenario> parScenario = QuantLib::ext::make_shared<SimpleScenario>(
-        baseScenario_->asof(), baseScenario_->label(), baseScenario_->getNumeraire());
+    QuantLib::ext::shared_ptr<Scenario> parScenario =
+        addDifferenceToScenario(baseScenario_, zeroScenario, d, baseScenario_->getNumeraire(), true);
     parScenario->setPar(true);
-    parScenario->label(zeroScenario->label());
+    parScenario->label(to_string(d));
 
     // get the par shifts and update the par scenario
     auto parShifts = shiftConverter_->parShifts(zeroScenario);
