@@ -30,6 +30,7 @@
 
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/time/monthcounter.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -283,7 +284,8 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A364", QuantLib::Actual364()},
                                         {"Actual/364", Actual364()},
                                         {"Act/364", Actual364()},
-                                        {"ACT/364", Actual364()}};
+                                        {"ACT/364", Actual364()}, 
+                                        {"Month", MonthCounter()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
