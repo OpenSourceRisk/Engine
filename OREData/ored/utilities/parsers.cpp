@@ -1028,8 +1028,10 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
         return FutureConvention::DateGenerationRule::IMM;
     else if (s == "FirstDayOfMonth")
         return FutureConvention::DateGenerationRule::FirstDayOfMonth;
+    else if (s == "SecondThursday")
+        return FutureConvention::DateGenerationRule::SecondThursday;
     else {
-        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM' or 'FirstDayOfMonth'");
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth', or 'SecondThursday'");
     }
 }
 
@@ -1038,6 +1040,8 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
         return os << "IMM";
     else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
         return os << "FirstDayOfMonth";
+    else if (t == FutureConvention::DateGenerationRule::SecondThursday)
+        return os << "SecondThursday";
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
