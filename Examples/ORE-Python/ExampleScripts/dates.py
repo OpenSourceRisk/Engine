@@ -50,7 +50,7 @@ print('---------------------------')
 mporDays = 3
 
 print(startDate)
-print(ore.calculateMporDate(mporDays))
+#print(ore.calculateMporDate(mporDays))
 print(ore.calculateMporDate(mporDays, startDate))
 print(ore.calculateMporDate(mporDays, startDate, calendarString))
 
