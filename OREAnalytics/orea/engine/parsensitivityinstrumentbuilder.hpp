@@ -58,8 +58,6 @@ public:
         std::map<ore::analytics::RiskFactorKey, std::set<ore::analytics::RiskFactorKey>> parHelperDependencies_;
         // ql index names for which we want to remove today's fixing for the purpose of the par sensi calculation
         std::set<std::string> removeTodaysFixingIndices_;
-        // a vector of keys for which we can build par instruments
-        std::vector<RiskFactorKey> parKeys_;
     };
 
     ParSensitivityInstrumentBuilder() = default;

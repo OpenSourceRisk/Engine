@@ -175,7 +175,7 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
             SensitivityScenarioData::CurveShiftParData data =
                 *QuantLib::ext::dynamic_pointer_cast<SensitivityScenarioData::CurveShiftParData>(c.second);
             LOG("ParSensitivityAnalysis: Discount curve ccy=" << ccy);
-            Size  n_ten = data.shiftTenors.size();
+            Size n_ten = data.shiftTenors.size();
             QL_REQUIRE(data.parInstruments.size() == n_ten,
                        "ParSensitivityInstrumentBuilder::createParInstruments(): number of tenors does not match "
                        "number of discount curve par instruments, "
