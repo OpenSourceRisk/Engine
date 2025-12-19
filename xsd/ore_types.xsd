@@ -774,6 +774,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="IMM"/>
       <xs:enumeration value="FirstDayOfMonth"/>
+      <xs:enumeration value="SecondThursday"/>
     </xs:restriction>
   </xs:simpleType>
 
