@@ -18,7 +18,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/time/yearcounter.hpp>
+#include <qle/time/monthcounter.hpp>
 
 using QuantLib::Date;
 using QuantLib::Time;
