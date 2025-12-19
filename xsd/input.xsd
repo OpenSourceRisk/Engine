@@ -25,7 +25,30 @@
 
   <xs:element type="portfolio" name="Portfolio"/>
 
-  <!-- <xs:element type="trade" name="Trade"/> -->
+<xs:element name="subTradeGroup" abstract="true"/>
+<xs:element name="Trade" type="trade" substitutionGroup="subTradeGroup"/>
+<xs:element name="SubTrade" type="subTrade" substitutionGroup="subTradeGroup"/>
+
+
+  <xs:complexType name="trade">
+    <xs:sequence>
+      <xs:element type="oreTradeType" name="TradeType"/>
+      <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+      <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
+      <xs:group ref="oreTradeData" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="subTrade">
+    <xs:sequence>
+      <xs:element type="oreTradeType" name="SubTradeType"/>
+      <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+      <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
+      <xs:group ref="oreTradeData" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
 
   <xs:complexType name="portfolio">
     <xs:sequence>
