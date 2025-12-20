@@ -390,7 +390,7 @@ struct TestData : ore::test::OreaTopLevelFixture {
     TestData(Date referenceDate, QuantLib::ext::shared_ptr<DateGrid> dateGrid, bool withCloseOutGrid = false, bool mporStickyDate = false, Size samples=1, Size seed=5){
         // Init market
         BOOST_TEST_MESSAGE("Setting initial market ...");
-        this->initMarket_ = QuantLib::ext::make_shared<TestMarket>(referenceDate, false, false);
+        this->initMarket_ = QuantLib::ext::make_shared<TestMarket>(referenceDate);
         BOOST_TEST_MESSAGE("Setting initial market done!");
 
         BOOST_TEST_MESSAGE("Building CAM ...");

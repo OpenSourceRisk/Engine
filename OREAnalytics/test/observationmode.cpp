@@ -169,7 +169,7 @@ void simulation(string dateGridString, bool checkFixings) {
     ccys.push_back("JPY");
 
     // Init market
-    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today, false, false);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
     QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(testUnregister) {
     simulation("10,1Y", true);
 }
 
-BOOST_AUTO_TEST_CASE(testDefer, *boost::unit_test::disabled()) {
+BOOST_AUTO_TEST_CASE(testDefer) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Defer);
     setConventions();
 

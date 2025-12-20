@@ -100,7 +100,7 @@ struct TestData {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Build test market
-        market = QuantLib::ext::make_shared<TestMarket>(referenceDate, false, false);
+        market = QuantLib::ext::make_shared<TestMarket>(referenceDate);
 
         // Build IR configurations
         CalibrationType calibrationType = CalibrationType::Bootstrap;

@@ -63,7 +63,7 @@ namespace testsuite {
 */
 class TestMarket : public ore::data::MarketImpl {
 public:
-    TestMarket(Date asof, bool swapVolCube = false, bool incYoYInf = true);
+    TestMarket(Date asof, bool swapVolCube = false);
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward);
