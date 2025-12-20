@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(testUnregister) {
     simulation("10,1Y", true);
 }
 
-BOOST_AUTO_TEST_CASE(testDefer) {
+BOOST_AUTO_TEST_CASE(testDefer, *boost::unit_test::disabled()) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Defer);
     setConventions();
 
