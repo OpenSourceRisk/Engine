@@ -21,7 +21,11 @@
     \ingroup processes
 */
 
+#ifndef quantext_multiassetquantohestonprocess_hpp
+#define quantext_multiassetquantohestonprocess_hpp
+
 #include <ql/processes/hestonprocess.hpp>
+#include <qle/processes/ptdhestonprocess.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -57,12 +61,15 @@ public:
 				  const std::vector<Size>& fxProcessIndices,
 				  const Matrix& spotCorrelation);
 
+    MultiAssetQuantoHestonProcess(const std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>>& processes,
+				  const std::vector<Size>& fxProcessIndices,
+				  const Matrix& spotCorrelation);
+
     Size size() const override;
     Size factors() const override;
     Array initialValues() const override;
     Matrix diffusion(Time t, const Array& x) const override;
     Array apply(const Array& x0, const Array& dx) const override;
-    Array driftAdjustment(Time t, const Array& x) const;
     Array drift(Time t, const Array& x) const override;
     Array evolve(Time t0, const Array& x0, Time dt, const Array& dw) const override;
 
@@ -75,16 +82,40 @@ public:
     Matrix sqrtCorrelation() { return sqrtCorrelation_; }
 
 private:
-    Matrix decorrelationMatrix(const QuantLib::ext::shared_ptr<HestonProcess>& p) const;
-  
+    //! Updates correlations (Salvaging) if required
+    bool checkCorrelations(Matrix& C);
+    Matrix decorrelationMatrix(const Real& rho, const HestonProcess::Discretization& discretization) const;
+    // Adjustment with constant parameter Heston processes
+    Array driftAdjustment(Time t, const Array& x) const;
+    // Adjustment with piecewise constant time-dependent Heston parameters, evaluate at segment midpoint
+    Array ptdDriftAdjustment(Time tm, const Array& x) const;
+    // Find the index of the next grid point with grid_[idx] > t
+    Size locate(Time t) const;
+
+    Size size_; // Dimensions of the resulting stochastic process, 2 * models
+    Size models_; // number of input processes resp. models
     std::vector<QuantLib::ext::shared_ptr<HestonProcess>> processes_;
+    std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>> ptdProcesses_;
     std::vector<Size> fxProcessIndices_;
     Matrix spotCorrelation_;
+    Array initialValues_;
+
+    // constant paramter processes
     Matrix correlation_;
     Matrix sqrtCorrelation_;
     bool salvaging_;
     std::vector<Real> eigenvalues_;
     std::vector<Matrix> decorrelationMatrices_;
+
+    // piecewise processes
+    bool isPTD_;
+    TimeGrid grid_;
+    Size segments_; // number of piecewise segments, grid_.size() - 1
+    std::vector<Matrix> ptdCorrelations_;
+    std::vector<Matrix> ptdSqrtCorrelations_;
+    std::vector<std::vector<Matrix>> ptdDecorrelationMatrices_;
 };
 
 } // namespace QuantExt
+
+#endif

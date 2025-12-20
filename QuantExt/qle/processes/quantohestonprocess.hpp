@@ -21,6 +21,9 @@
     \ingroup processes
 */
 
+#ifndef quantext_quantohestonprocess_hpp
+#define quantext_quantohestonprocess_hpp
+
 #include <ql/processes/hestonprocess.hpp>
 
 namespace QuantExt {
@@ -123,3 +126,5 @@ private:
 };
 
 } // namespace QuantExt
+
+#endif

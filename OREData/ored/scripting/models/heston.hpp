@@ -28,13 +28,7 @@ namespace ore {
 namespace data {
 
 /*!
-  Path generation for multiple assets using the Heston model
-
-  TODO:
-  - Check foreign currency drift adjustment
-  - Check materiality of variance paths dropping to zero when the Feller constraint is violated
-  - Compare terminal spot price distribution in MC vs analytical, with and without Feller violation 
-  
+  Path generation for multiple assets using the Heston model  
 */
 class Heston final : public AssetModel {
 public:

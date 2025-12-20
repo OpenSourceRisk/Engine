@@ -65,7 +65,13 @@ HestonModelBuilder::HestonModelBuilder(
       maximumInitialValues_(maximumInitialValues), relaxedFellerConstraint_(relaxedFellerConstraint),
       calibrationRestarts_(calibrationRestarts), tolerance_(tolerance), calibrationMethod_(calibrationMethod),
       discretization_(discretization), referenceCalibrationGrid_(referenceCalibrationGrid),
-      dontCalibrate_(dontCalibrate) {}
+      dontCalibrate_(dontCalibrate) {
+
+    if (calibrationMethod_ == "ConstantBestFit")
+        processType_ = AssetModelWrapper::ProcessType::Heston;
+    else
+        processType_ = AssetModelWrapper::ProcessType::PiecewiseHeston;
+}
 
 std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::getCalibratedProcesses() const {
 
@@ -95,18 +101,19 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
 	auto model = hmc.model();
 
 	if (calibrationMethod_ == "ConstantBestFit") {  
-	    DLOG("Heston Model with constant parameters is all we need");
 	    processes.push_back(model->process());
 	    calibrationResults_.push_back(hmc.results());
 	} else {
-	    DLOG("Build a Heston Model with piecewise constant parameters");
+	    DLOG("Build a Heston Model with piecewise constant parameters on top of the constant parameters model");
 	    auto ptdModel = hmc.ptdModel(model);
 	    auto ptdProcess = ext::make_shared<PiecewiseTimeDependentHestonProcess>(ptdModel, discretization_);
-	    processes.push_back(model->process());
-	    //processes.push_back(ptdProcess);
+	    // processes.push_back(model->process());
+	    processes.push_back(ptdProcess);
 	    calibrationResults_.push_back(hmc.piecewiseResults());
 	}
     }
+
+    DLOG("Number of Heston processes built: " << processes_.size());
 
     return processes;
 }
@@ -147,7 +154,7 @@ std::vector<std::vector<std::pair<Real, Real>>> HestonModelBuilder::getVolTimesS
 }
 
 AssetModelWrapper::ProcessType HestonModelBuilder::processType() const {
-    return AssetModelWrapper::ProcessType::Heston;
+    return processType_;
 }
 
 } // namespace data

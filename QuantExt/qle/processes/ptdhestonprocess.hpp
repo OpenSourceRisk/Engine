@@ -21,10 +21,12 @@
     \ingroup processes
 */
 
+#ifndef quantext_ptdhestonprocess_hpp
+#define quantext_ptdhestonprocess_hpp
+
 #include <ql/models/equity/piecewisetimedependenthestonmodel.hpp>
 #include <ql/processes/hestonprocess.hpp>
 #include <ql/quotes/simplequote.hpp>
-
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -67,3 +69,6 @@ private:
 };  
 
 } // namespace QuantExt
+
+
+#endif

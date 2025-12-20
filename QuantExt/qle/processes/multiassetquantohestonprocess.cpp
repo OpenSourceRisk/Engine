@@ -23,6 +23,8 @@
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
 
+#include <iostream>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -30,11 +32,18 @@ namespace QuantExt {
 MultiAssetQuantoHestonProcess::MultiAssetQuantoHestonProcess(
     const std::vector<QuantLib::ext::shared_ptr<HestonProcess>>& processes, const std::vector<Size>& fxProcessIndices,
     const Matrix& spotCorrelation)
-    : processes_(processes), fxProcessIndices_(fxProcessIndices), spotCorrelation_(spotCorrelation) {
+    : size_(2 * processes.size()), models_(processes.size()), processes_(processes),
+      fxProcessIndices_(fxProcessIndices), spotCorrelation_(spotCorrelation), initialValues_(size_, 0.0),
+      isPTD_(false), segments_(1) {
 
     QL_REQUIRE(processes.size() > 0, "empty processes vector in MultiAssetQuantoHestonProcess");
     QL_REQUIRE(processes.size() == fxProcessIndices.size(), "vector size mismatch in MultiAssetQuantoHestonProcess");
     QL_REQUIRE(processes.size() == spotCorrelation.rows(), "matrix size mismatch in MultiAssetQuantoHestonProcess");
+
+    for (Size i = 0; i < processes_.size(); ++i) {
+        initialValues_[2 * i] = processes_[i]->initialValues()[0];
+        initialValues_[2 * i + 1] = processes_[i]->initialValues()[1];
+    }
 
     // Build the parsimonious correlation matrix, expanding the spot-spot correlation matrix following
     //    Dimitroff, Lorenz, Szimayer: A Parsimonious Multi-Asset Heston Model,
@@ -49,8 +58,7 @@ MultiAssetQuantoHestonProcess::MultiAssetQuantoHestonProcess(
     // C_i = (          )    C_ij = r_ij * (                  )
     //       (r_i,  1   )                  ( r_i,   r_i * r_j )
     
-    Size dim = 2 * processes_.size();
-    correlation_ = Matrix(dim, dim, 0.0);
+    correlation_ = Matrix(size_, size_, 0.0);
     for (Size i = 0; i < processes_.size(); ++i) {
         Real ri = processes_[i]->rho();
         for (Size j = 0; j < processes_.size(); ++j) {
@@ -70,22 +78,8 @@ MultiAssetQuantoHestonProcess::MultiAssetQuantoHestonProcess(
         }
     }
 
-    // Ensure positive semi-definite, but without normalisation
-    SymmetricSchurDecomposition jd(correlation_);
-    salvaging_ = false;
-    for (Size k = 0; k < correlation_.rows(); ++k) {
-        if (jd.eigenvalues()[k] < -1E-16)
-            salvaging_ = true;
-    }
-    if (salvaging_) {
-        Matrix diagonal(correlation_.rows(), correlation_.rows(), 0.0);
-        for (Size k = 0; k < jd.eigenvalues().size(); ++k) {
-            eigenvalues_[k] = jd.eigenvalues()[k];
-            diagonal[k][k] = std::max<Real>(jd.eigenvalues()[k], 0.0);
-        }
-        correlation_ = jd.eigenvectors() * diagonal * transpose(jd.eigenvectors());
-    }
-
+    salvaging_ = checkCorrelations(correlation_);
+    
     // Used to generate correlated variates based on the parsimonious large correlation matrix
     sqrtCorrelation_ = CholeskyDecomposition(correlation_, true);
 
@@ -105,28 +99,127 @@ MultiAssetQuantoHestonProcess::MultiAssetQuantoHestonProcess(
     }
 
     // Used below to pass decorrelated spot/variance variates into the Heston processes,
-    // such that the Heston processes recover the correlated external variates. 
-    for (Size i = 0; i < processes_.size(); ++i)
-        decorrelationMatrices_.push_back(decorrelationMatrix(processes_[i]));
+    // such that the Heston processes recover the correlated external variates.
+    decorrelationMatrices_.clear();
+    decorrelationMatrices_ = std::vector<Matrix>(processes_.size());
+    for (Size i = 0; i < processes_.size(); ++i) {
+        Real r = processes_[i]->rho();
+        decorrelationMatrices_[i] = decorrelationMatrix(r, processes_[i]->discretization());
+    }
 }
 
-Size MultiAssetQuantoHestonProcess::size() const { return 2 * processes_.size(); }
+MultiAssetQuantoHestonProcess::MultiAssetQuantoHestonProcess(
+    const std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>>& processes,
+    const std::vector<Size>& fxProcessIndices, const Matrix& spotCorrelation)
+    : size_(2 * processes.size()), models_(processes.size()), ptdProcesses_(processes),
+      fxProcessIndices_(fxProcessIndices), spotCorrelation_(spotCorrelation), initialValues_(size_, 0.0), isPTD_(true) {
 
-Size MultiAssetQuantoHestonProcess::factors() const { return 2 * processes_.size(); }
+    QL_REQUIRE(processes.size() > 0, "MultiAssetQuantoHestonProcess called with empty processes vector");
+    QL_REQUIRE(processes.size() == fxProcessIndices.size(), "vector size mismatch in MultiAssetQuantoHestonProcess");
+    QL_REQUIRE(processes.size() == spotCorrelation.rows(), "matrix size mismatch in MultiAssetQuantoHestonProcess");
 
-Matrix MultiAssetQuantoHestonProcess::decorrelationMatrix(const QuantLib::ext::shared_ptr<HestonProcess>& p) const {
-    // QuantLib's Heston::evolve uses dW(correlated) = Q * dW(independent)
-    // with matrix
-    // QL = [ [ 1, 0 ], [ r, sqrt(1 - r^2) ] ] resp.
-    // QU = [ [ sqrt(1 - r^2), r ], [ 0, 1 ] ],
-    // depending on the chosen discretization method, to convert independent variates into correlated variates.
-    // Since we generate correlated variates for the multi-asset Heston model we need to decorrelate each
-    // Heston subsystem before passing variates into the Heston::evolve method, i.e. using the inverse of Q.
+    grid_ = ptdProcesses_.front()->model()->timeGrid();
+    QL_REQUIRE(grid_.size() > 1, "MultiAssetQuantoHestonProcess expects at least two time grid point");
+    for (auto p : ptdProcesses_) {
+        QL_REQUIRE(grid_.size() == p->model()->timeGrid().size(),
+                   "time grid sizes do not match in MultiAssetQuantoHestonProcess ctor");
+        for (Size k = 1; k < grid_.size(); ++k) {
+            QL_REQUIRE(close_enough(grid_[k], p->model()->timeGrid()[k]),
+                       "time grids do not match in MultiAssetQuantoHestonProcess ctor");
+        }
+    }
+    // Recall that the grid starts with t = 0, so we need to cover grid_.size() - 1 segments    
+    segments_ = grid_.size() - 1;
+
+    for (Size i = 0; i < ptdProcesses_.size(); ++i) {
+        initialValues_[2 * i] = ptdProcesses_[i]->initialValues()[0];
+        initialValues_[2 * i + 1] = ptdProcesses_[i]->initialValues()[1];
+    }
+    
+    ptdCorrelations_.clear();
+    ptdSqrtCorrelations_.clear();
+    ptdDecorrelationMatrices_.clear();
+
+    std::vector<bool> sal(segments_, false);
+    ptdCorrelations_ = std::vector<Matrix>(segments_, Matrix(size_, size_, 0.0));
+    ptdSqrtCorrelations_ = std::vector<Matrix>(segments_);
+    ptdDecorrelationMatrices_ = std::vector<std::vector<Matrix>>(segments_, std::vector<Matrix>(models_));
+
+    for (Size k = 0; k < segments_; ++k) {
+        // Like the AnalyticPTDHestonEngine we set t to the segment's mid point, to stay away from jump dates
+        Real t = 0.5 * (grid_[k+1] + grid_[k]);
+
+	Matrix& C = ptdCorrelations_[k];
+
+	for (Size i = 0; i < ptdProcesses_.size(); ++i) {
+	   Real ri = ptdProcesses_[i]->model()->rho(t);
+	   for (Size j = 0; j < ptdProcesses_.size(); ++j) {
+	       if (i == j) {
+		   C[2 * i][2 * i] = 1.0;
+		   C[2 * i][2 * i + 1] = ri;
+		   C[2 * i + 1][2 * i] = ri;
+		   C[2 * i + 1][2 * i + 1] = 1.0;
+	       } else {
+		   Real rij = spotCorrelation_[i][j];
+		   Real rj = ptdProcesses_[j]->model()->rho(t);
+		   C[2 * i][2 * j] = rij;
+		   C[2 * i][2 * j + 1] = rij * rj;
+		   C[2 * i + 1][2 * j] = rij * ri;
+		   C[2 * i + 1][2 * j + 1] = rij * ri * rj;
+	       }
+	   }
+	}
+	if (checkCorrelations(C))
+  	    salvaging_ = true;
+
+        ptdSqrtCorrelations_[k] = CholeskyDecomposition(C, true);
+
+	// Consistency checks
+	Matrix sqrtCorrSquared = ptdSqrtCorrelations_[k] * transpose(ptdSqrtCorrelations_[k]);
+	for (Size i = 0; i < size_; ++i) {
+	    for (Size j = 0; j < size_; ++j) {
+	        // FIXME: tolerances?
+	        QL_REQUIRE(fabs(ptdCorrelations_[k][i][j] - ptdCorrelations_[k][j][i]) < 1e-9,
+			   "correlation matrix not symmetric for i=" << i << ", j=" << j << ": "
+			   << std::setprecision(6) << ptdCorrelations_[k][i][j] << " vs " << ptdCorrelations_[k][j][i]);
+		QL_REQUIRE(fabs(ptdCorrelations_[k][i][j] - sqrtCorrSquared[i][j]) < 1e-6,
+			   "correlation matrix square root problem for i=" << i << ", j=" << j << ": "
+			   << std::setprecision(6) << ptdCorrelations_[k][i][j] << " vs " << sqrtCorrSquared[i][j]);
+	    }
+	}
+
+        for (Size i = 0; i < ptdProcesses_.size(); ++i) {
+	    Real r = ptdProcesses_[i]->model()->rho(t);
+            ptdDecorrelationMatrices_[k][i] = decorrelationMatrix(r, ptdProcesses_[i]->discretization());
+        }	
+    }
+}
+
+bool MultiAssetQuantoHestonProcess::checkCorrelations(Matrix& C) {
+    // Ensure positive semi-definite, but without normalisation
+    SymmetricSchurDecomposition jd(C);
+    bool updated = false;
+    for (Size k = 0; k < C.rows(); ++k) {
+        if (jd.eigenvalues()[k] < -1E-16)
+            updated = true;
+    }
+    if (updated) {
+        Matrix diagonal(C.rows(), C.rows(), 0.0);
+        for (Size k = 0; k < jd.eigenvalues().size(); ++k) {
+            eigenvalues_[k] = jd.eigenvalues()[k];
+            diagonal[k][k] = std::max<Real>(jd.eigenvalues()[k], 0.0);
+        }
+        C = jd.eigenvectors() * diagonal * transpose(jd.eigenvectors());
+    }
+    return updated;
+}
+
+Matrix MultiAssetQuantoHestonProcess::decorrelationMatrix(const Real& r, const HestonProcess::Discretization& discretization) const {
     Matrix Q(2, 2, 0.0);
     Matrix Qinv(2, 2, 0.0);
-    Real r = p->rho();
-    if (p->discretization() == HestonProcess::FullTruncation ||
-        p->discretization() == HestonProcess::PartialTruncation || p->discretization() == HestonProcess::Reflection) {
+    if (discretization == HestonProcess::FullTruncation ||
+        discretization == HestonProcess::PartialTruncation ||
+	discretization == HestonProcess::Reflection) {
         // QuantLib uses lower triangular decomposition, QL
         Q[0][0] = 1.0;
         Q[0][1] = 0.0;
@@ -148,7 +241,8 @@ Matrix MultiAssetQuantoHestonProcess::decorrelationMatrix(const QuantLib::ext::s
         Qinv[1][1] = 1;
     }
 
-    // Double check with numerical inversion
+    // double check with numerical inversion
+
     Matrix Qi = inverse(Q);
     for (Size i = 0; i < 2; ++i) {
         for (Size j = 0; j < 2; ++j) {
@@ -158,31 +252,28 @@ Matrix MultiAssetQuantoHestonProcess::decorrelationMatrix(const QuantLib::ext::s
 
     return Qinv;
 }
+  
+Size MultiAssetQuantoHestonProcess::size() const { return size_; }
 
-Array MultiAssetQuantoHestonProcess::initialValues() const {
-    Array ret(size());
-    for (Size i = 0; i < processes_.size(); ++i) {
-        ret[2 * i] = processes_[i]->initialValues()[0];
-        ret[2 * i + 1] = processes_[i]->initialValues()[1];
-    }
-    return ret;
-}
+Size MultiAssetQuantoHestonProcess::factors() const { return size_; }
+
+Array MultiAssetQuantoHestonProcess::initialValues() const { return initialValues_; }
 
 Matrix MultiAssetQuantoHestonProcess::diffusion(Time t, const Array& x) const {
     QL_FAIL("QuantoHestonProcess::diffusion not implemented");
-    Matrix m(size(), size(), 0.0);
+    Matrix m(size_, size_, 0.0);
     return m;
 }
 
 Array MultiAssetQuantoHestonProcess::drift(Time t, const Array& x) const {
     QL_FAIL("MultiAssetQuantoHestonProcess::drift not implemented");
-    Array drift(size(), 0.0);
+    Array drift(size_, 0.0);
     return drift;
 }
 
 Array MultiAssetQuantoHestonProcess::apply(const Array& x0, const Array& dx) const {
-    Array ret(size(), 0.0);
-    for (Size i = 0; i < processes_.size(); ++i) {
+    Array ret(size_, 0.0);
+    for (Size i = 0; i < models_; ++i) {
         ret[2 * i] = x0[2 * i] * std::exp(dx[2 * i]);
         ret[2 * i + 1] = x0[2 * i] + dx[2 * i + 1];
     }
@@ -191,7 +282,7 @@ Array MultiAssetQuantoHestonProcess::apply(const Array& x0, const Array& dx) con
 
 Array MultiAssetQuantoHestonProcess::driftAdjustment(Time t, const Array& x) const {
     Array adjustment(size(), 0.0);
-    for (Size i = 0; i < processes_.size(); ++i) {
+    for (Size i = 0; i < models_; ++i) {
         if (fxProcessIndices_[i] == Null<Size>())
             continue;
         Size j = fxProcessIndices_[i];
@@ -211,12 +302,59 @@ Array MultiAssetQuantoHestonProcess::driftAdjustment(Time t, const Array& x) con
     return adjustment;
 }
 
+Array MultiAssetQuantoHestonProcess::ptdDriftAdjustment(Time tm, const Array& x) const {
+    Array adjustment(size(), 0.0);
+    for (Size i = 0; i < models_; ++i) {
+        if (fxProcessIndices_[i] == Null<Size>())
+            continue;
+        Size j = fxProcessIndices_[i];
+        auto fxProcess = ptdProcesses_[j];
+        auto eqProcess = ptdProcesses_[i];
+        const Real eqVol = (x[2 * i + 1] > 0.0) ? std::sqrt(x[2 * i + 1])
+                           : (eqProcess->discretization() == HestonProcess::Reflection)
+                               ? Real(-std::sqrt(-x[2 * i + 1]))
+                               : 0.0;
+        const Real fxVol = (x[2 * j + 1] > 0.0) ? std::sqrt(x[2 * j + 1])
+                           : (fxProcess->discretization() == HestonProcess::Reflection)
+                               ? Real(-std::sqrt(-x[2 * j + 1]))
+                               : 0.0;
+        adjustment[2 * i] = -spotCorrelation_[i][j] * fxVol * eqVol;
+        adjustment[2 * i + 1] = -spotCorrelation_[i][j] * eqProcess->model()->rho(tm) * eqProcess->model()->sigma(tm) * fxVol * eqVol;
+    }
+    return adjustment;
+}
+  
+Size MultiAssetQuantoHestonProcess::locate(Time t) const {
+    QL_REQUIRE(t <= grid_.back() && t >= grid_.front(),
+	       "time t " << t << " out of range [" << grid_.front() << ", " << grid_.back()
+	       << " in MultiAssetQuantoHestonProcess::locate");
+    // Locate the segment that contains time t: idx is the index of the closest grid point larger than t
+    // We add QL_EPSILON here to ensure that t=0 is within the first segment
+    Size idx = std::lower_bound(grid_.begin(), grid_.end(), t + QL_EPSILON) - grid_.begin();
+    QL_REQUIRE(idx >= 1 && idx < grid_.size(),
+               "next index " << idx << " out of range in MultiAssetQuantoHestonProcess::locate for t=" << t);
+    return idx;
+}
+
 Array MultiAssetQuantoHestonProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
 
-    Array a = driftAdjustment(t0, x0);
+    // Index of the closest grid point larger than t
+    Size idx = isPTD_ ? locate(t0) : 1;
+    // k0 is the index for picking up the correlation matrices relevant for this segment
+    Size k0 = idx - 1;
+    // mid point of the segment that contains t0
+    Real t1 = grid_[idx - 1];
+    Real t2 = grid_[idx];
+    Real tm = 0.5 * (t1 + t2);
 
-    // turn vector of independent dw's into correlated dw's
-    Array dW_correlated = sqrtCorrelation_ * dw;
+    // if (isPTD_)
+    //     std::cout << "evolve: t0=" << t0 << " tm=" << tm << " t1=" << t1 << " t2=" << t2 << std::endl;
+
+    Array a = isPTD_ ? ptdDriftAdjustment(tm, x0) : driftAdjustment(t0, x0);
+
+    // turn array of independent dw's into correlated dw's, using the current sqrt correlation matrix
+    Matrix SM = isPTD_ ? ptdSqrtCorrelations_[k0] : sqrtCorrelation_;
+    Array dW_correlated = SM * dw;
 
     Array x0_heston(2, 0.0);
     Array dW_heston_correlated(2, 0.0);
@@ -226,7 +364,7 @@ Array MultiAssetQuantoHestonProcess::evolve(Time t0, const Array& x0, Time dt, c
     // adjusted evolution
     Array evolution(size());
 
-    for (Size i = 0; i < processes_.size(); ++i) {
+    for (Size i = 0; i < models_; ++i) {
         // split state into 2d states of individual Heston processes
         x0_heston[0] = x0[2 * i];
         x0_heston[1] = x0[2 * i + 1];
@@ -235,22 +373,26 @@ Array MultiAssetQuantoHestonProcess::evolve(Time t0, const Array& x0, Time dt, c
         dW_heston_correlated[0] = dW_correlated[2 * i];
         dW_heston_correlated[1] = dW_correlated[2 * i + 1];
 
-	// decorrelate equity sub-systems
-        dW_heston_decorrelated = decorrelationMatrices_[i] * dW_heston_correlated;
+	// decorrelate equity sub-systems, using the current decorrelation matrix
+        Matrix DM = isPTD_ ? ptdDecorrelationMatrices_[k0][i] : decorrelationMatrices_[i];
+        dW_heston_decorrelated = DM * dW_heston_correlated;
 
-	// QuantLib Heston evolution
-        hestonEvolution = processes_[i]->evolve(t0, x0_heston, dt, dW_heston_decorrelated);
+        // QuantLib Heston evolution
+        hestonEvolution = isPTD_ ? ptdProcesses_[i]->evolve(t0, x0_heston, dt, dW_heston_decorrelated)
+                                 : processes_[i]->evolve(t0, x0_heston, dt, dW_heston_decorrelated);
 
-	// Combine evolutions and add adjustments to the equity system
+        // Combine evolutions and add adjustments to the equity system
         evolution[2 * i] = hestonEvolution[0] * std::exp(a[2 * i] * dt);
         evolution[2 * i + 1] = hestonEvolution[1] + a[2 * i + 1] * dt;
 
 	// Ensure that quanto-adjusted variance processes remain non-negative when using QE etc
+        HestonProcess::Discretization discretization =
+            isPTD_ ? ptdProcesses_[i]->discretization() : processes_[i]->discretization();
         if (evolution[2 * i + 1] < 0 &&
-	    processes_[i]->discretization() != HestonProcess::Reflection &&
-            processes_[i]->discretization() != HestonProcess::FullTruncation &&
-            processes_[i]->discretization() != HestonProcess::PartialTruncation ) {
-	    evolution[2 * i + 1] = 0.0;
+	    discretization != HestonProcess::Reflection &&
+            discretization != HestonProcess::FullTruncation &&
+	    discretization != HestonProcess::PartialTruncation) {
+            evolution[2 * i + 1] = 0.0;
         }
     }
     return evolution;

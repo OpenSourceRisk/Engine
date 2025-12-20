@@ -61,6 +61,8 @@ AssetModel::AssetModel(
       curves_(curves), fxSpots_(fxSpots), payCcys_(payCcys), model_(model), correlations_(correlations),
       calibration_(calibration), calibrationStrikes_(calibrationStrikes), debug_(debug) {
 
+    DLOG("AssetModel ctor called");
+  
     // check inputs
 
     QL_REQUIRE(!model_.empty(), "model is empty");
@@ -95,6 +97,8 @@ AssetModel::AssetModel(
 
     // FD only: for one (or no) underlying, everything works as usual
 
+    DLOG("AssetModel ctor almost done");
+	
     if (type_ == Type::MC || model_->processes().size() <= 1)
         return;
 
@@ -138,6 +142,8 @@ AssetModel::AssetModel(
 
 void AssetModel::performCalculations() const {
 
+    DLOG("AssetModel::performCalculations called");
+
     QL_REQUIRE(!inTrainingPhase_, "AssetModel::performCalculations(): state inTrainingPhase should be false, this was "
                                   "not resetted appropriately.");
 
@@ -167,10 +173,15 @@ void AssetModel::performCalculations() const {
 
     // do the model specific calculations
 
+    DLOG("AssetModel::performCalculations, calling performModelCalculations");
+
     performModelCalculations();
+
+    DLOG("AssetModel::performCalculations done");
 }
 
 void AssetModel::initUnderlyingPathsMc() const {
+    DLOG("AssetModel::initUnderlyingPathsMc() called");
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
         if (trainingSamples() != Null<Size>())
@@ -180,8 +191,13 @@ void AssetModel::initUnderlyingPathsMc() const {
 }
 
 void AssetModel::setReferenceDateValuesMc() const {
+    DLOG("AssetModel::setReferenceDateValuesMc() called");
     for (Size l = 0; l < indices_.size(); ++l) {
-        underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
+        DLOG("AssetModel::setReferenceDateValuesMc() index " << indices_[l].name() << ", dates " << effectiveSimulationDates_.size());
+	DLOG("paths indices: " << underlyingPaths_[*effectiveSimulationDates_.begin()].size());
+	DLOG("rv size: " << underlyingPaths_[*effectiveSimulationDates_.begin()][l].size());
+	DLOG("initial value: " << initialValue(l));
+	underlyingPaths_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
         if (trainingSamples() != Null<Size>()) {
             underlyingPathsTraining_[*effectiveSimulationDates_.begin()][l].setAll(initialValue(l));
         }

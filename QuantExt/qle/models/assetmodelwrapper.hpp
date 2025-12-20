@@ -27,6 +27,8 @@
 #include <ql/processes/hestonprocess.hpp>
 #include <ql/timegrid.hpp>
 
+#include <qle/processes/ptdhestonprocess.hpp>
+
 namespace QuantExt {
 
 using namespace QuantLib;
@@ -61,7 +63,7 @@ struct AssetModelCalibrationResults {
    only happens when relevant market data has changed */
 class AssetModelWrapper : public Observer, public Observable {
 public:
-    enum class ProcessType { None, BlackScholes, LocalVol, Heston };
+  enum class ProcessType { None, BlackScholes, LocalVol, Heston, PiecewiseHeston };
     AssetModelWrapper();
     AssetModelWrapper(const ProcessType processType,
                       const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
@@ -75,6 +77,7 @@ public:
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>&
     generalizedBlackScholesProcesses() const;
     const std::vector<QuantLib::ext::shared_ptr<HestonProcess>>& hestonProcesses() const;
+    const std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>>& ptdHestonProcesses() const;
 
     ProcessType processType() const;
 
@@ -86,6 +89,7 @@ private:
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> processes_;
     std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> generalizedBlackScholesProcesses_;
     std::vector<QuantLib::ext::shared_ptr<HestonProcess>> hestonProcesses_;
+    std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>> ptdHestonProcesses_;
     std::set<Date> effectiveSimulationDates_;
     TimeGrid discretisationTimeGrid_;
     std::vector<AssetModelCalibrationResults> calibration_;

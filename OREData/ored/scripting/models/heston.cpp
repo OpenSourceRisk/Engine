@@ -35,19 +35,41 @@ void Heston::performModelCalculations() const {
 }
 
 Real Heston::initialValue(const Size indexNo) const {
-    return model_->hestonProcesses()[indexNo]->s0()->value();
+    if (model_->processType() == AssetModelWrapper::ProcessType::Heston)
+        return model_->hestonProcesses()[indexNo]->s0()->value();
+    else if (model_->processType() == AssetModelWrapper::ProcessType::PiecewiseHeston)
+        return model_->ptdHestonProcesses()[indexNo]->model()->s0();
+    else {
+        QL_FAIL("process type " << static_cast<int>(model_->processType()) << " not covered");
+    }
 }
 
 Real Heston::atmForward(const Size indexNo, const Real t) const {
-    return ore::data::atmForward(model_->hestonProcesses()[indexNo]->s0()->value(),
-                                 model_->hestonProcesses()[indexNo]->riskFreeRate(),
-                                 model_->hestonProcesses()[indexNo]->dividendYield(), t);
+    if (model_->processType() == AssetModelWrapper::ProcessType::Heston)
+        return ore::data::atmForward(model_->hestonProcesses()[indexNo]->s0()->value(),
+                                     model_->hestonProcesses()[indexNo]->riskFreeRate(),
+                                     model_->hestonProcesses()[indexNo]->dividendYield(), t);
+    else if (model_->processType() == AssetModelWrapper::ProcessType::PiecewiseHeston)
+        return ore::data::atmForward(model_->ptdHestonProcesses()[indexNo]->model()->s0(),
+                                     model_->ptdHestonProcesses()[indexNo]->model()->riskFreeRate(),
+                                     model_->ptdHestonProcesses()[indexNo]->model()->dividendYield(), t);
+    else {
+        QL_FAIL("process type " << static_cast<int>(model_->processType()) << " not covered");
+    }
 }
 
 Real Heston::compoundingFactor(const Size indexNo, const Date& d1, const Date& d2) const {
-    const auto& p = model_->hestonProcesses().at(indexNo);
-    return p->dividendYield()->discount(d1) / p->dividendYield()->discount(d2) /
-           (p->riskFreeRate()->discount(d1) / p->riskFreeRate()->discount(d2));
+    if (model_->processType() == AssetModelWrapper::ProcessType::Heston) {
+        const auto& p = model_->hestonProcesses().at(indexNo);
+        return p->dividendYield()->discount(d1) / p->dividendYield()->discount(d2) /
+               (p->riskFreeRate()->discount(d1) / p->riskFreeRate()->discount(d2));
+    } else if (model_->processType() == AssetModelWrapper::ProcessType::PiecewiseHeston) {
+        const auto& p = model_->ptdHestonProcesses().at(indexNo);
+        return p->model()->dividendYield()->discount(d1) / p->model()->dividendYield()->discount(d2) /
+               (p->model()->riskFreeRate()->discount(d1) / p->model()->riskFreeRate()->discount(d2));
+    } else {
+        QL_FAIL("process type " << static_cast<int>(model_->processType()) << " not covered");
+    }
 }
 
 void Heston::performCalculationsMc() const {
@@ -65,14 +87,9 @@ void Heston::performCalculationsFd() const {
 
 void Heston::generatePaths() const {
 
-    if (indices_.size() == 1) {
-        DLOG("Heston::generatePaths() called for single index:");
-        DLOG(indices_.front());
-    } else {
-        DLOG("Heston::generatePaths() called for " << indices_.size() << " indices:");
-        for (auto i : indices_) {
-            DLOG(i);
-	}
+    DLOG("Heston::generatePaths() called for " << indices_.size() << " indices:");
+    for (auto i : indices_) {
+        DLOG(i);
     }
 
     // Precompute index for drift adjustment for eq / com indices that are not in base ccy
@@ -92,6 +109,7 @@ void Heston::generatePaths() const {
         eqComIdx[j] = idx;
     }
 
+    /*
     for (Size j = 0; j < n; ++j) {
         auto process = model_->hestonProcesses()[j];
         auto d = process->discretization();
@@ -102,7 +120,8 @@ void Heston::generatePaths() const {
                  << " use full/partial truncation or reflection schemes with sufficiently large number of time steps.");
         }
     }
-
+    */
+    
     // correlation matrix business is handled in the MultiAssetHestonProcess class, so we just pass dummies here
     Matrix correlation(1, 1, 1), sqrtCorr(1, 1, 1);
 
@@ -117,12 +136,10 @@ void Heston::generatePaths() const {
                                                          params_.trainingSeed, params_.sobolOrdering,
                                                          params_.sobolDirectionIntegers),
                            correlation, sqrtCorr, eqComIdx);
-        }
-
-        setAdditionalResults();
-
-        DLOG("Heston::generatePaths() done");
     }
+
+    setAdditionalResults();
+}
 
 void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
                                 const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
@@ -141,7 +158,17 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
     }
     
     Matrix C = getCorrelation();
-    auto quantoProcess = QuantLib::ext::make_shared<MultiAssetQuantoHestonProcess>(model_->hestonProcesses(), eqComIdx, C);
+
+    QuantLib::ext::shared_ptr<MultiAssetQuantoHestonProcess> quantoProcess;
+    if (model_->processType() == AssetModelWrapper::ProcessType::Heston)
+        quantoProcess =
+            QuantLib::ext::make_shared<MultiAssetQuantoHestonProcess>(model_->hestonProcesses(), eqComIdx, C);
+    else if (model_->processType() == AssetModelWrapper::ProcessType::PiecewiseHeston)
+        quantoProcess =
+            QuantLib::ext::make_shared<MultiAssetQuantoHestonProcess>(model_->ptdHestonProcesses(), eqComIdx, C);
+    else {
+        QL_FAIL("process type " << static_cast<int>(model_->processType()) << " not covered by the Heston class");
+    }
 
     Array initialState = quantoProcess->initialValues(); // [ spot0, var0, spot1, var1, ... ], array length 2 * indices_.size()
 
@@ -209,14 +236,6 @@ void Heston::setAdditionalResults() const {
             additionalResults_["Heston.Forward_" + indices_[i].name() + "_" + ore::data::to_string(d)] = forward;
             ++timeStep;
         }
-    }
-
-    for (Size i = 0; i < indices_.size(); ++i) {
-        additionalResults_["Heston.theta_" + indices_[i].name()] = model_->hestonProcesses()[i]->theta();
-        additionalResults_["Heston.kappa_" + indices_[i].name()] = model_->hestonProcesses()[i]->kappa();
-        additionalResults_["Heston.sigma_" + indices_[i].name()] = model_->hestonProcesses()[i]->sigma();
-        additionalResults_["Heston.rho_" + indices_[i].name()] = model_->hestonProcesses()[i]->rho();
-        additionalResults_["Heston.v0_" + indices_[i].name()] = model_->hestonProcesses()[i]->v0();
     }
     
     for (Size i = 0; i < indices_.size(); ++i)

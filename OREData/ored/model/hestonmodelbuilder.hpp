@@ -105,6 +105,7 @@ private:
     HestonProcess::Discretization discretization_;
     std::string referenceCalibrationGrid_;
     bool dontCalibrate_;
+    mutable AssetModelWrapper::ProcessType processType_;
 };
 
 } // namespace data

@@ -503,13 +503,15 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
     Handle<YieldTermStructure> yts = process_->riskFreeRate();
     Handle<YieldTermStructure> dts = process_->dividendYield();
 
+    // The times vector corresponds to the calibration option expiries
     std::vector<Real> times;
     for (auto d : expiryDates_) {
         Real t = yts->timeFromReference(d);
         if (t > 0.0)
             times.push_back(t);
     }
-    // This inserts t = 0
+
+    // TimeGrid inserts the t = 0 point
     TimeGrid timeGrid(times.begin(), times.end());
 
     DLOG("times:    size " << times.size() << " start " << times.front() << " end " << times.back());
@@ -520,6 +522,19 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
     PiecewiseConstantParameter ptdKappa(times, PositiveConstraint());
     PiecewiseConstantParameter ptdSigma(times, PositiveConstraint());
     PiecewiseConstantParameter ptdRho(times, BoundaryConstraint(-1.0, 1.0));
+
+    // The PiecewiseConstantParameter's array has an additional point
+    // times: 0  <  t(0)  <  t(1)  <  t(2)  <  ....  <  t(n)
+    // params:      a(0)     a(1)     a(2)    ....      a(n)     a(n+1)
+    //
+    // Evaluation of the PiecewiseConstantParameter:
+    // p(t) = a(0)   for t < t(0)
+    //        a(1)   for t(0) <= t < t(1)
+    //        a(2)   for t(1) <= t < t(2)
+    //        ...
+    //        a(n)   for t(n-1) <= t < t(n)
+    //        a(n+1) for t(n) <= t
+    
     for (Size i = 0; i <= times.size(); ++i) {
         ptdTheta.setParam(i, m->theta());
         ptdKappa.setParam(i, m->kappa());
@@ -565,16 +580,17 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
 	        localHelper.push_back(helpers_[idx]);
 		auto helper = QuantLib::ext::dynamic_pointer_cast<HestonModelHelper>(helpers_[idx]);
 		QL_REQUIRE(helper, "dynamic cast to HestonModelHelper failed");
-                DLOG("time[" << i << "]=" << times[i] << " strike[" << k << "]=" << strikes_[idx] << " maturity "
-                             << helper->maturity());
+                DLOG("time[" << i << "]=" << times[i]
+		     << " strike[" << k << "]=" << strikes_[idx]
+		     << " maturity " << helper->maturity());
                 localWeights.push_back(weights_[idx]);
                 if (!close_enough(localWeights.back(), 0.0))
 		    ++nonZeroInstr;
             }
             // Calibrate sigma / rho only
             std::vector<bool> fixed(1 + 4 * (times.size() + 1), true);
-            fixed[i + (times.size() + 1) * 2] = false; // sigma
-            fixed[i + (times.size() + 1) * 3] = false; // rho
+            fixed[i + (times.size() + 1) * 2] = false; // vary sigma
+            fixed[i + (times.size() + 1) * 3] = false; // vary rho
             if (nonZeroInstr >= 2) {
                 DLOG("calibrate smile section at time " << times[i]);
                 ptdModel->calibrate(localHelper, method, endCriteria, constraint, localWeights, fixed);
@@ -590,8 +606,8 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
         std::vector<bool> fixed(1 + 4 * (times.size() + 1), true);
         for (Size i = 0; i < times.size(); ++i) {
             // vary sigma and rho only, as above
-            fixed[i + (times.size() + 1) * 2] = false; // sigma
-            fixed[i + (times.size() + 1) * 3] = false; // rho
+            fixed[i + (times.size() + 1) * 2] = false; // vary sigma
+            fixed[i + (times.size() + 1) * 3] = false; // vary rho
 	}
         // std::vector<bool> fixed(1 + 4 * (times.size() + 1), false);
         // for (Size i = 0; i <= times.size(); ++i) {
@@ -610,14 +626,14 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
     // log to a separate result structure, keep constant parameters results
     logCalibration(piecewiseResults_);
 
-    DLOG("Piecewise Model Calibration Results: " << ptdModel->params().size());
+    std::vector<Real> theta(times.size(), 0.0);
+    std::vector<Real> kappa(times.size(), 0.0);
+    std::vector<Real> sigma(times.size(), 0.0);
+    std::vector<Real> rho(times.size(), 0.0);
+    std::vector<Real> feller(times.size(), 0.0);
 
-    std::vector<Real> theta(times.size() + 1, 0.0);
-    std::vector<Real> kappa(times.size() + 1, 0.0);
-    std::vector<Real> sigma(times.size() + 1, 0.0);
-    std::vector<Real> rho(times.size() + 1, 0.0);
-    std::vector<Real> feller(times.size() + 1, 0.0);
-    for (Size i = 0; i <= times.size(); ++i) {
+    Real dt = times.size() == 1 ? times.back() : times.back() - times[times.size() - 2];
+    for (Size i = 0; i < times.size(); ++i) {
         Real time = i == 0 ? 0.0 : times[i];
         theta[i] = ptdModel->theta(time + QL_EPSILON);
         kappa[i] = ptdModel->kappa(time + QL_EPSILON);
@@ -627,23 +643,28 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
         if (feller[i] < 1) {
             ALOG("Feller constraint 2*theta*kappa/sigma^2 violated at time " << time << ": " << feller[i]);
         }
-    }
-    Real v0 = ptdModel->v0();
 
-    for (Size i = 0; i <= times.size(); ++i) {
         Real tp = i == 0 ? 0.0 : times[i - 1];
-        Real tc = i == times.size() ? tp + 1.0 : times[i];
-        for (Size j = 0; j < 4; ++j) {
+        Real tc = i == times.size() - 1? tp + dt : times[i];
+	// just a few steps between time grid points and a few beyond the upper end
+	for (Size j = 0; j < 4; ++j) {
             Real time = tp + (tc - tp) * j / 4;
-            DLOG("Heston parameters " << time
+            DLOG("PTD Heston at " << time << ":" 
 		 << " theta " << ptdModel->theta(time + QL_EPSILON)
 		 << " kappa " << ptdModel->kappa(time + QL_EPSILON)
 		 << " sigma " << ptdModel->sigma(time + QL_EPSILON)
 		 << " rho " << ptdModel->rho(time + QL_EPSILON));
-	    if (i == times.size() && j == 1)
-	        break;
         }
     }
+    Real v0 = ptdModel->v0();
+
+    DLOG("times  : " << to_string(times));
+    DLOG("theta  : " << to_string(theta));
+    DLOG("kappa  : " << to_string(kappa));
+    DLOG("sigma  : " << to_string(sigma));
+    DLOG("rho    : " << to_string(rho));
+    DLOG("v0     : " << to_string(v0));
+    DLOG("Feller : " << to_string(feller));
 
     piecewiseResults_.indexName = indexName_;
     piecewiseResults_.piecewiseParameters.clear();
@@ -655,14 +676,22 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
     piecewiseResults_.piecewiseParameters.push_back(std::make_pair("v0", to_string(v0)));
     piecewiseResults_.piecewiseParameters.push_back(std::make_pair("feller", to_string(feller)));
 
-    DLOG("times  : " << to_string(times));
-    DLOG("theta  : " << to_string(theta));
-    DLOG("kappa  : " << to_string(kappa));
-    DLOG("sigma  : " << to_string(sigma));
-    DLOG("rho    : " << to_string(rho));
-    DLOG("v0     : " << to_string(v0));
-    DLOG("Feller : " << to_string(feller));
-
+    std::vector<Real> times2(3);
+    times2[0] = 1;
+    times2[1] = 2;
+    times2[2] = 3;
+    PiecewiseConstantParameter pcp(times2);
+    pcp.setParam(0, 1.0);
+    pcp.setParam(1, 2.0);
+    pcp.setParam(2, 3.0);
+    pcp.setParam(3, 0.0);
+    for (Size i = 0; i <= 60; ++i) {
+      Real t = 5.0 * i / 60;
+      DLOG("PCP " << i << " " << t << " " << pcp(t-QL_EPSILON));
+      DLOG("PCP " << i << " " << t << " " << pcp(t));
+      DLOG("PCP " << i << " " << t << " " << pcp(t+QL_EPSILON));
+    }
+    
     return ptdModel;
 }
 
