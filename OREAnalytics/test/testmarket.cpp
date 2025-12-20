@@ -207,7 +207,7 @@ parRateCurve(const Date& asof, const vector<QuantLib::ext::shared_ptr<QuantExt::
 } // namespace
 
 
-TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
+TestMarket::TestMarket(Date asof, bool swapVolCube, bool incYoYInf) : MarketImpl(false) {
 
     TestConfigurationObjects::setConventions();
     
@@ -460,9 +460,12 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
         makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii,
                                yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
 
-    yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] =
-         makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi,
-                               yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
+    if (incYoYInf)
+    {
+        yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeYoYInflationIndex(
+            "UKRPI", datesZCII, ratesZCII, yi,
+            yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
+    }
 
     cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
         flatCpiVolSurface(0.05);

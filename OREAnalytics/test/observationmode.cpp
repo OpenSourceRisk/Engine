@@ -169,7 +169,7 @@ void simulation(string dateGridString, bool checkFixings) {
     ccys.push_back("JPY");
 
     // Init market
-    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today, false, false);
 
     // build scenario sim market parameters
     QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
