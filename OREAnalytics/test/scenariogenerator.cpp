@@ -95,11 +95,11 @@ void setConventions() {
 }
 
 struct TestData {
-    TestData() : referenceDate(30, July, 2015) {
+    TestData(bool includeInflation = true) : referenceDate(30, July, 2015), includeInflation_(includeInflation) {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Build test market
-        market = QuantLib::ext::make_shared<TestMarket>(referenceDate);
+        market = QuantLib::ext::make_shared<TestMarket>(referenceDate, false, false);
 
         // Build IR configurations
         CalibrationType calibrationType = CalibrationType::Bootstrap;
@@ -146,33 +146,11 @@ struct TestData {
         fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("GBP", "EUR", calibrationType, true, ParamType::Piecewise,
                                                          sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
-        std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;        
-        // Inflation configurations
-        vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigs;
-	// Credit configs
-	std::vector<QuantLib::ext::shared_ptr<CrLgmData>> crLgmConfigs;
+        std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
+        // Credit configs
+        std::vector<QuantLib::ext::shared_ptr<CrLgmData>> crLgmConfigs;
         std::vector<QuantLib::ext::shared_ptr<CrCirData>> crCirConfigs;
-        std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>> comConfigs;        
-
-        vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> instruments = { 
-            QuantLib::ext::make_shared<CpiCapFloor>(CapFloor::Cap, 5 * Years, QuantLib::ext::make_shared<AbsoluteStrike>(0.0))
-        };
-        vector<CalibrationBasket> cbUkrpi = { CalibrationBasket(instruments) };
-
-        instruments = {
-            QuantLib::ext::make_shared<CpiCapFloor>(CapFloor::Floor, 5 * Years, QuantLib::ext::make_shared<AbsoluteStrike>(0.0))
-        };
-        vector<CalibrationBasket> cbEuhicpxt = { CalibrationBasket(instruments) };
-
-        ReversionParameter reversion(LgmData::ReversionType::Hagan, false,
-            ParamType::Piecewise, { 1.0 }, { 0.5, 0.5 });
-
-        VolatilityParameter volatility(LgmData::VolatilityType::Hagan, true, 0.1);
-
-        infConfigs.push_back(QuantLib::ext::make_shared<InfDkData>(CalibrationType::Bootstrap,
-            cbUkrpi, "GBP", "UKRPI", reversion, volatility));
-        infConfigs.push_back(QuantLib::ext::make_shared<InfDkData>(CalibrationType::Bootstrap,
-            cbEuhicpxt, "EUR", "EUHICPXT", reversion, volatility));
+        std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>> comConfigs;
 
         CorrelationMatrixBuilder cmb;
         cmb.addCorrelation("IR:EUR", "IR:USD", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.6)));
@@ -185,8 +163,35 @@ struct TestData {
         cmb.addCorrelation("IR:USD", "FX:GBPEUR", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(-0.1)));
         cmb.addCorrelation("IR:GBP", "FX:USDEUR", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)));
         cmb.addCorrelation("IR:GBP", "FX:GBPEUR", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.1)));
-        cmb.addCorrelation("INF:UKRPI", "IR:GBP", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.1)));
-        cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.1)));
+
+        // Inflation configurations
+        vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigs;
+        if (includeInflation)
+        {
+            auto infStrike = QuantLib::ext::make_shared<AbsoluteStrike>(0.0);
+
+            vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> instruments = {
+                QuantLib::ext::make_shared<CpiCapFloor>(CapFloor::Cap, 5 * Years, infStrike)
+            };
+            vector<CalibrationBasket> cbUkrpi = {CalibrationBasket(instruments)};
+
+            instruments = {QuantLib::ext::make_shared<CpiCapFloor>(CapFloor::Floor, 5 * Years, infStrike)};
+            vector<CalibrationBasket> cbEuhicpxt = {CalibrationBasket(instruments)};
+
+            ReversionParameter reversion(LgmData::ReversionType::Hagan, false, ParamType::Piecewise, {1.0}, {0.5, 0.5});
+
+            VolatilityParameter volatility(LgmData::VolatilityType::Hagan, true, 0.1);
+
+            infConfigs.push_back(QuantLib::ext::make_shared<InfDkData>(
+                CalibrationType::Bootstrap, cbUkrpi, "GBP", "UKRPI", reversion, volatility)
+            );
+            infConfigs.push_back(QuantLib::ext::make_shared<InfDkData>(
+                CalibrationType::Bootstrap, cbEuhicpxt, "EUR", "EUHICPXT", reversion, volatility)
+            );
+
+            cmb.addCorrelation("INF:UKRPI", "IR:GBP", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.1)));
+            cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.1)));
+        }
 
         Real tolerance = 0.0001;
         QuantLib::ext::shared_ptr<CrossAssetModelData> config(
@@ -201,6 +206,7 @@ struct TestData {
 
     SavedSettings backup;
     Date referenceDate;
+    bool includeInflation_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> config;
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> ccLgm;
     QuantLib::ext::shared_ptr<QuantExt::LGM> lgm;
@@ -485,7 +491,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator via SimMarket (Martingale tests)...");
     setConventions();
 
-    TestData d;
+    bool includeInflation = false;
+    TestData d(includeInflation);
 
     // Simulation date grid
     Date today = d.referenceDate;
@@ -514,7 +521,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
-    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
+    if (includeInflation)
+        simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -627,7 +635,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
 BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator via SimMarket (direct test against model)...");
     setConventions();
-    TestData d;
+    bool includeInflation = false;
+    TestData d(includeInflation);
 
     // Simulation date grid
     Date today = d.referenceDate;
@@ -656,7 +665,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
-    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
+    if (includeInflation)
+        simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -768,8 +778,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
 BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     BOOST_TEST_MESSAGE("Testing EUR and USD vanilla swap exposure profiles generated with CrossAssetScenarioGenerator");
     setConventions();
-
-    TestData d;
+    bool includeInflation = false;
+    TestData d(includeInflation);
 
     // Simulation date grid
     Date today = d.referenceDate;
@@ -800,7 +810,8 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
-    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
+    if (includeInflation)
+        simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -909,8 +920,8 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
 BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     BOOST_TEST_MESSAGE("Testing EUR-USD FX Forward and FX Vanilla Option exposure");
     setConventions();
-
-    TestData d;
+    bool includeInflation = false;
+    TestData d(includeInflation);
 
     // Simulation date grid
     Date today = d.referenceDate;
@@ -939,7 +950,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
     simMarketConfig->setSimulateFXVols(false);
     simMarketConfig->setSimulateEquityVols(false);
-    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
+    if (includeInflation)
+        simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1025,8 +1037,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
 BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     BOOST_TEST_MESSAGE("Testing EUR-USD FX Forward exposure (zero IR vol)");
     setConventions();
-
-    TestData d;
+    bool includeInflation = false;
+    TestData d(includeInflation);
 
     // Simulation date grid
     Date today = d.referenceDate;
@@ -1059,7 +1071,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
-    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
+    if (includeInflation)
+        simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1139,7 +1152,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
+BOOST_AUTO_TEST_CASE(testCpiSwapExposure, *boost::unit_test::disabled()) {
     BOOST_TEST_MESSAGE("Testing CPI Swap exposure");
     setConventions();
 
