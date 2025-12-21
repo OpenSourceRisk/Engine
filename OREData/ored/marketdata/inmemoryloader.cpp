@@ -193,7 +193,8 @@ template <class Archive> void InMemoryLoader::serialize(Archive& ar, const unsig
 template void InMemoryLoader::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void InMemoryLoader::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 
-void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings) {
+void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings,
+          Date fixingCutOffDate) {
     LOG("MemoryLoader started");
 
     Date today = QuantLib::Settings::instance().evaluationDate();
@@ -223,7 +224,8 @@ void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, boo
                 }
             } else {
                 // process fixings
-                if (date < today || (date == today && !implyTodaysFixings))
+                if (date < today || (date == today && !implyTodaysFixings) ||
+                    (fixingCutOffDate != Date() && date <= fixingCutOffDate))
                     loader.addFixing(date, key, value);
             }
         }
@@ -239,9 +241,9 @@ std::set<QuantLib::Date> InMemoryLoader::asofDates() const {
 }
 
 void loadDataFromBuffers(InMemoryLoader& loader, const std::vector<std::string>& marketData,
-                         const std::vector<std::string>& fixingData, bool implyTodaysFixings) {
-    load(loader, marketData, true, implyTodaysFixings);
-    load(loader, fixingData, false, implyTodaysFixings);
+                         const std::vector<std::string>& fixingData, bool implyTodaysFixings, Date fixingCutOffDate) {
+    load(loader, marketData, true, implyTodaysFixings, fixingCutOffDate);
+    load(loader, fixingData, false, implyTodaysFixings, fixingCutOffDate);
 }
 
 } // namespace data

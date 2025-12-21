@@ -135,7 +135,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
             t0SimMarket->scenarioGenerator() = sgen;
 
             // use difference scenarios for par sensi pnl explain
-            zeroScenarios->setGenerateDifferenceScenarios(t0SimMarket->useSpreadedTermStructures());
+            zeroScenarios->setGenerateDifferenceScenarios(true);
             
             QL_REQUIRE(parSensiAnalysis, "Par Sensi Analysis required");
             auto parScenarios = QuantLib::ext::make_shared<ZeroToParScenarioGenerator>(zeroScenarios, t0SimMarket,

@@ -134,6 +134,7 @@ public:
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
+    void setFixingCutOffDate(Date d) { fixingCutOffDate_ = d; }
     void setUseAtParCouponsCurves(bool b) { useAtParCouponsCurves_ = b; }
     void setUseAtParCouponsTrades(bool b) { useAtParCouponsTrades_ = b; }
     void setEnrichIndexFixings(bool b) { enrichIndexFixings_ = b; }
@@ -153,6 +154,8 @@ public:
     void setConventions(const std::string& xml);
     void setConventions(const QuantLib::ext::shared_ptr<Conventions>& convs);
     void setConventionsFromFile(const std::string& fileName);
+    void setMporConventions(const std::string& xml);
+    void setMporConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setBaselTrafficLightConfig(const std::string& xml);
@@ -613,6 +616,7 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
+    Date fixingCutOffDate() const { return fixingCutOffDate_; }
     bool useAtParCouponsCurves() const { return useAtParCouponsCurves_; }
     bool useAtParCouponsTrades() const { return useAtParCouponsTrades_; }
     bool enrichIndexFixings() const { return enrichIndexFixings_; }
@@ -622,6 +626,7 @@ public:
     const std::string& marketConfig(const std::string& context);
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& mporConventions() const { return mporConventions_; }
     const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
     const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const { return baselTrafficLightConfig_; }
     
@@ -1106,6 +1111,7 @@ protected:
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    Date fixingCutOffDate_;
     bool useAtParCouponsCurves_ = true;
     bool useAtParCouponsTrades_ = true;
     bool enrichIndexFixings_ = false;
@@ -1119,7 +1125,7 @@ protected:
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData> baselTrafficLightConfig_;
-    QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
+    QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_, mporConventions_;
     QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     CurveConfigurationsManager curveConfigs_;
     QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig> calendarAdjustment_;

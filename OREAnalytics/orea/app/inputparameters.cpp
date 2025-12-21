@@ -169,6 +169,18 @@ void InputParameters::setConventionsFromFile(const std::string& fileName) {
     InstrumentConventions::instance().setConventions(conventions_);
 }
 
+void InputParameters::setMporConventions(const std::string& xml) {
+    mporConventions_ = QuantLib::ext::make_shared<Conventions>();
+    mporConventions_->fromXMLString(xml);
+    InstrumentConventions::instance().setConventions(mporConventions_, mporDate());
+}
+
+void InputParameters::setMporConventionsFromFile(const std::string& fileName) {
+    mporConventions_ = QuantLib::ext::make_shared<Conventions>();
+    mporConventions_->fromFile(fileName);
+    InstrumentConventions::instance().setConventions(mporConventions_, mporDate());
+}
+
 void InputParameters::setCurveConfigs(const std::string& xml, std::string id) {
     auto curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfig->fromXMLString(xml);
