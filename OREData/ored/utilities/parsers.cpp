@@ -32,6 +32,7 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/models/assetmodelwrapper.hpp>
+#include <qle/time/monthcounter.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -237,6 +238,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 US", Thirty360(Thirty360::USA)},
                                         {"30/360 (US)", Thirty360(Thirty360::USA)},
+                                        {"30/360 NASD", Thirty360(Thirty360::NASD)},
                                         {"30U/360", Thirty360(Thirty360::USA)},
                                         {"30US/360", Thirty360(Thirty360::USA)},
                                         {"30/360 (Bond Basis)", Thirty360(Thirty360::BondBasis)},
@@ -284,7 +286,8 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A364", QuantLib::Actual364()},
                                         {"Actual/364", Actual364()},
                                         {"Act/364", Actual364()},
-                                        {"ACT/364", Actual364()}};
+                                        {"ACT/364", Actual364()}, 
+                                        {"Month", MonthCounter()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -469,6 +472,13 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
     } else {
         QL_FAIL("Settlement method \"" << s << "\" not recognized");
     }
+}
+
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf, std::string mporCalendar) {
+    QuantLib::Calendar mporCal = parseCalendar(mporCalendar);
+    if (asOf == Date())
+        asOf = Settings::instance().evaluationDate();
+    return mporCal.advance(asOf, mporDays, QuantExt::Days);
 }
 
 Exercise::Type parseExerciseType(const std::string& s) {
@@ -1026,8 +1036,10 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
         return FutureConvention::DateGenerationRule::IMM;
     else if (s == "FirstDayOfMonth")
         return FutureConvention::DateGenerationRule::FirstDayOfMonth;
+    else if (s == "SecondThursday")
+        return FutureConvention::DateGenerationRule::SecondThursday;
     else {
-        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM' or 'FirstDayOfMonth'");
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth', or 'SecondThursday'");
     }
 }
 
@@ -1036,6 +1048,8 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
         return os << "IMM";
     else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
         return os << "FirstDayOfMonth";
+    else if (t == FutureConvention::DateGenerationRule::SecondThursday)
+        return os << "SecondThursday";
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
