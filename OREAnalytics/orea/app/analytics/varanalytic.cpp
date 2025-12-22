@@ -147,8 +147,10 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
 void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
     VarAnalyticImpl::setUpConfigurations();
     analytic()->configurations().simMarketParams = inputs_->histVarSimMarketParams();
-    inputs_->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false,
-                                 std::function<bool(const string&)>(parseBool));
+    // ORE Swig does not handle that yet
+    // inputs_->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false,
+    //                              std::function<bool(const string&)>(parseBool));
+    riskFactorBreakdown_ = inputs_->riskFactorBreakdown();
     if(riskFactorBreakdown_){
         allowPartialScenarios_ = true;
     }
