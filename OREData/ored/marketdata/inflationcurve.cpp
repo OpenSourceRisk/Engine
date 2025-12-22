@@ -281,7 +281,6 @@ InflationCurve::CurveBuildResults
                         zcq->quote(), convention->observationLag(), maturity, convention->fixCalendar(),
                         convention->fixConvention(), convention->dayCounter(), index, observationInterpolation,
                         nominalTs, swapStart);
-                instrument->unregisterWith(Settings::instance().evaluationDate());
                 helpers.push_back(instrument);
             }
         }

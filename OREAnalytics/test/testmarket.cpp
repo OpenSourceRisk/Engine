@@ -578,8 +578,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(new ZeroCouponInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts));
-        anInstrument->unregisterWith(Settings::instance().evaluationDate());
+            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts, asof_));
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
@@ -592,7 +591,6 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     pCPIts->recalculate();
     cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
     cpiTS->enableExtrapolation(true);
-    cpiTS->unregisterWith(Settings::instance().evaluationDate());
     return Handle<ZeroInflationIndex>(parseZeroInflationIndex(index, Handle<ZeroInflationTermStructure>(cpiTS)));
 }
 
@@ -607,7 +605,7 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         QL_DEPRECATED_DISABLE_WARNING
         QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(new YearOnYearInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts));
+            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts, asof_));
         QL_DEPRECATED_ENABLE_WARNING
         instruments.push_back(anInstrument);
     };
