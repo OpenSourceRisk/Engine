@@ -158,7 +158,7 @@ private:
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
     QuantLib::ext::shared_ptr<NPVCube> cube_;
     QuantLib::ext::shared_ptr<ValuationEngine> valuationEngine_;
-    std::unordered_map<RiskFactorKey, ext::shared_ptr<NPVCube>> mapCube_;
+    std::map<RiskFactorKey, ext::shared_ptr<NPVCube>> mapCube_;
 
     // additional parameters needed for multi-threaded ctor
     QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;

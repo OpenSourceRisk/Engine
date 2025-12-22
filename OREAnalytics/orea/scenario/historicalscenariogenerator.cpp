@@ -143,14 +143,15 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
     QL_REQUIRE(d >= baseScenario_->asof(), "Cannot generate a scenario in the past");
     QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, !generateDifferenceScenarios_, false, std::string(), 1.0);
 
-    // loop over all keys
-    // calculationDetails_.resize(baseScenario_->keys().size());
-    // Size calcDetailsCounter = 0;
+    // loop over one key or all keys
+    calcDetailsCounter_ = 0;
     if(currentKey_!=RiskFactorKey()){
         return nextKey(d, currentKey_, scen);
     }else{
         for (auto const& key : baseScenario_->keys()) {
+            // std::cout<<"RiskFactorKey="<<key<<std::endl;
             nextKey(d, key, scen);
+            calcDetailsCounter_++;
         }
     }  
 
@@ -361,12 +362,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::nextKey(const D
     QuantLib::ext::shared_ptr<Scenario> s1 = scens.first;
     QuantLib::ext::shared_ptr<Scenario> s2 = scens.second;
 
-    // build the scenarios
-    // QL_REQUIRE(d >= baseScenario_->asof(), "Cannot generate a scenario in the past");
-    // QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, !generateDifferenceScenarios_, false, std::string(), 1.0);
-
     calculationDetails_.resize(baseScenario_->keys().size());
-    Size calcDetailsCounter = 0;
 
     if (generateDifferenceScenarios_)
         scen = getDifferenceScenario(s1, s2, d, 1.0); 
@@ -404,24 +400,23 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::nextKey(const D
 
         auto returnType = returnConfiguration_->returnType(key);
         // Populate calculation details
-        calculationDetails_[calcDetailsCounter].baseValue = base;
-        calculationDetails_[calcDetailsCounter].scenarioValue1 = v1;
-        calculationDetails_[calcDetailsCounter].scenarioValue2 = v2;
-        calculationDetails_[calcDetailsCounter].returnType = returnType.type;
-        calculationDetails_[calcDetailsCounter].displacement = returnType.displacement;
-        calculationDetails_[calcDetailsCounter].scaling = scaling;
-        calculationDetails_[calcDetailsCounter].returnValue = returnVal;
-        calculationDetails_[calcDetailsCounter].scenarioValue = value;
-        calculationDetails_[calcDetailsCounter].adjustmentFactor1 =
+        calculationDetails_[calcDetailsCounter_].baseValue = base;
+        calculationDetails_[calcDetailsCounter_].scenarioValue1 = v1;
+        calculationDetails_[calcDetailsCounter_].scenarioValue2 = v2;
+        calculationDetails_[calcDetailsCounter_].returnType = returnType.type;
+        calculationDetails_[calcDetailsCounter_].displacement = returnType.displacement;
+        calculationDetails_[calcDetailsCounter_].scaling = scaling;
+        calculationDetails_[calcDetailsCounter_].returnValue = returnVal;
+        calculationDetails_[calcDetailsCounter_].scenarioValue = value;
+        calculationDetails_[calcDetailsCounter_].adjustmentFactor1 =
             adjFactors_ ? adjFactors_->getFactor(key.name, s1->asof()) : 1.0;
-        calculationDetails_[calcDetailsCounter].adjustmentFactor2 =
+        calculationDetails_[calcDetailsCounter_].adjustmentFactor2 =
             adjFactors_ ? adjFactors_->getFactor(key.name, s2->asof()) : 1.0;
     }
     // Populate calculation details
-    calculationDetails_[calcDetailsCounter].scenarioDate1 = s1->asof();
-    calculationDetails_[calcDetailsCounter].scenarioDate2 = s2->asof();
-    calculationDetails_[calcDetailsCounter].key = key;
-    ++calcDetailsCounter;
+    calculationDetails_[calcDetailsCounter_].scenarioDate1 = s1->asof();
+    calculationDetails_[calcDetailsCounter_].scenarioDate2 = s2->asof();
+    calculationDetails_[calcDetailsCounter_].key = key;
 
     // Label the scenario
     string label = labelPrefix_ + ore::data::to_string(io::iso_date(s1->asof())) + "_" +

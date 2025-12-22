@@ -181,6 +181,7 @@ public:
 protected:
     // to be managed in derived classes, if next is overwritten
     Size i_;
+    Size calcDetailsCounter_ = 0;
 
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> historicalScenarioLoader_;
     std::vector<QuantLib::Date> startDates_, endDates_;
