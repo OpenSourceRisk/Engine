@@ -207,7 +207,7 @@ parRateCurve(const Date& asof, const vector<QuantLib::ext::shared_ptr<QuantExt::
 } // namespace
 
 
-TestMarket::TestMarket(Date asof, bool swapVolCube, bool remove1YrInf) : MarketImpl(false) {
+TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     TestConfigurationObjects::setConventions();
     
@@ -452,12 +452,6 @@ TestMarket::TestMarket(Date asof, bool swapVolCube, bool remove1YrInf) : MarketI
 
     vector<Rate> ratesZCII = {2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
                               3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108};
-
-    if (remove1YrInf)
-    {
-        datesZCII.erase(datesZCII.begin());
-        ratesZCII.erase(ratesZCII.begin());
-    }
 
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
         makeZeroInflationIndex("EUHICPXT", datesZCII, ratesZCII, euii,
