@@ -281,6 +281,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     // Loop over all the risk groups
     riskGroups_->reset();
     Size currentRiskGroup = 0;
+    bool runRiskFactorBreakdown = true;
     while (ext::shared_ptr<MarketRiskGroupBase> riskGroup = riskGroups_->next()) {
         LOG("[progress] Processing RiskGroup " << ++currentRiskGroup << " out of " << riskGroups_->size()
                                                   << ") = " << riskGroup);
@@ -299,7 +300,9 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
         // If doing a full revaluation backtest, generate the cube under this filter
         if (fullReval_) {
             if (generateCube(riskGroup)) {
-                histPnlGen_->generateCube(filter);
+                histPnlGen_->generateCube(filter, runRiskFactorBreakdown);
+                // Assume (All, All, All) case ois run first and only needs to be run once
+                runRiskFactorBreakdown = false;
                 if (fullRevalArgs_->writeCube_) {
                     CubeWriter writer(cubeFilePath(riskGroup));
                     writer.write(histPnlGen_->cube(), {});
