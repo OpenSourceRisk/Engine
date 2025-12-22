@@ -85,7 +85,7 @@ public:
         the scenarios provided by the historical scenario generator. The historical
         scenarios will have the given \p filter applied.
     */
-    void generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter);
+    void generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter, const bool runRiskFactorBreakdown = false);
 
     /*! Return a vector of historical portfolio P&L values restricted to scenarios
         falling in \p period and restricted to the given \p tradeIds. The P&L values

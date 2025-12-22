@@ -62,6 +62,9 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
 void HistoricalScenarioGenerator::setCurrentKey(const RiskFactorKey& k){
     currentKey_ = k;
 }
+void HistoricalScenarioGenerator::setIterator(const Size& k){
+    i_ = k;
+}
 
 void HistoricalScenarioGenerator::setDates() {
     // construct the vectors of start and end dates
@@ -146,19 +149,15 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
     // loop over one key or all keys
     calcDetailsCounter_ = 0;
     if(currentKey_!=RiskFactorKey()){
-        return nextKey(d, currentKey_, scen);
+        auto testScen = nextKey(d, currentKey_, scen);
+        ++i_;
+        return testScen;
     }else{
         for (auto const& key : baseScenario_->keys()) {
-            // std::cout<<"RiskFactorKey="<<key<<std::endl;
             nextKey(d, key, scen);
             calcDetailsCounter_++;
         }
-    }  
-
-    // Label the scenario
-    string label = labelPrefix_ + ore::data::to_string(io::iso_date(s1->asof())) + "_" +
-        ore::data::to_string(io::iso_date(s2->asof()));
-    scen->label(label);
+    }
 
     // return it.
     ++i_;
@@ -447,8 +446,11 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
                                                              period.endDates().front(), calendar);
 
     // Create the historical scenario generator
+    // Propagate risk factor breakdown to the generator; use absolute scenarios by default
     return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, returnConfiguration,
-                                                                   calendar, adjFactors, mporDays, overlapping, "hs_");
+                                                                   calendar, adjFactors, mporDays, overlapping, "hs_",
+                                                                   false, /* generateDifferenceScenarios */
+                                                                   riskFactorKey /* treat flag as risk factor breakdown */);
 }
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>

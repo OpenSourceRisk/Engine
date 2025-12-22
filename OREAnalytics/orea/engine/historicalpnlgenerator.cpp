@@ -95,7 +95,7 @@ HistoricalPnlGenerator::HistoricalPnlGenerator(
           return {QuantLib::ext::make_shared<NPVCalculator>(baseCurrency)};
       }) {}
 
-void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter) {
+void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter, const bool runRiskFactorBreakdown) {
 
     DLOG("Filling historical P&L cube for " << portfolio_->size() << " trades and " << hisScenGen_->numScenarios()
                                             << " scenarios.");
@@ -113,12 +113,18 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         simMarket_->reset();
         simMarket_->scenarioGenerator() = hisScenGen_;
         hisScenGen_->baseScenario() = simMarket_->baseScenario();
-        if(hisScenGen_->isRiskFactorBreakdown()){
+        if(hisScenGen_->isRiskFactorBreakdown() && runRiskFactorBreakdown){
             //Run for RiskFactor PnL Breakdown
             ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
-            std::vector<RiskFactorKey> deltaKeys = sc->keys(); 
+            std::vector<RiskFactorKey> deltaKeys = sc->keys();
             for(auto const& key: deltaKeys){
+                // If we already have a non-empty shared_ptr for this key, skip rebuilding
+                auto it = mapCube_.find(key);
+                if (it != mapCube_.end() && it->second) {
+                    continue;
+                }
                 hisScenGen_->setCurrentKey(key);
+                hisScenGen_->setIterator(0);
                 ext::shared_ptr<NPVCube> newCube = ext::make_shared<InMemoryCubeOpt<double>>(simMarket_->asofDate(), portfolio_->ids(),
                     vector<Date>(1, simMarket_->asofDate()), hisScenGen_->numScenarios());
 
@@ -126,8 +132,9 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                                         nullptr, nullptr, {}, dryRun_);
                 mapCube_[key] = newCube;
             }
-            //Run for Full report - Remove risk factor key
+            //Run for Full report - Remove risk factor key - reset counter
             hisScenGen_->setCurrentKey(RiskFactorKey());
+            hisScenGen_->setIterator(0);
         }
         valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
@@ -264,10 +271,10 @@ RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::T
             Date start = hisScenGen_->startDates()[s];
             Date end = hisScenGen_->endDates()[s];
             if (period.contains(start) && period.contains(end)) {
-                // Sum across all trades (use cube dimension, not portfolio_)
+                // Sum across all trades (use cube dimension, not portfoligenerateCubeo_)
                 Size tradeCount = rfCube->numIds();
                 for (Size i = 0; i < tradeCount; ++i) {
-                    totalPnl += rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
+                    totalPnl = rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
                 }
             }
         }
