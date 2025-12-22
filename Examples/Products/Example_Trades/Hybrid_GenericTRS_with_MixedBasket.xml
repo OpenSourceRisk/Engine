@@ -12,8 +12,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>EquityPosition</SubTradeType>
+                <Trade>
+                    <TradeType>EquityPosition</TradeType>
                     <EquityPositionData>
                         <Quantity>1000</Quantity>
                         <Underlying>
@@ -29,9 +29,9 @@
                             <IdentifierType>RIC</IdentifierType>
                         </Underlying>
                     </EquityPositionData>
-                </SubTrade>
-                <SubTrade>
-                    <SubTradeType>EquityOptionPosition</SubTradeType>
+                </Trade>
+                <Trade>
+                    <TradeType>EquityOptionPosition</TradeType>
                     <EquityOptionPositionData>
                         <Quantity>1000</Quantity>
                         <Underlying>
@@ -71,7 +71,7 @@
                             <Strike>3400</Strike>
                         </Underlying>
                     </EquityOptionPositionData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>
