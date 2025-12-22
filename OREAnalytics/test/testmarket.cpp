@@ -583,7 +583,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
         // Remove the helper's observation of the inflation index. This has the effect that the 
         // PiecewiseZeroInflationCurve created below will also not observe the index. It will only get recalculated 
         // if the initial market quotes change or if the initial nominal yield curve changes. Observation of the index 
-        // was interfering with scneario generation. The PiecewiseZeroInflationCurve was getting recalculated on the 
+        // was interfering with scenario generation. The PiecewiseZeroInflationCurve was getting recalculated on the 
         // first time grid date t_1 i.e. was not using the t_0 calculated curve.
         anInstrument->unregisterWithAll();
         anInstrument->registerWith(yts);
@@ -617,6 +617,22 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
         QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(new YearOnYearInflationSwapHelper(
             quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts, asof_));
         QL_DEPRECATED_ENABLE_WARNING
+
+        // Remove the helper's observation of the inflation index. This has the effect that the
+        // PiecewiseYoYInflationCurve created below will also not observe the index. It will only get recalculated
+        // if the initial market quotes change or if the initial nominal yield curve changes.
+        // Note: QuantLib needs a change so that if swap start is provided in the helper above then updateDates_ on 
+        //       the RelativeDateBootstrapHelper should be false and hence the helper does not observe Settings 
+        //       evaluationDate. Without this fix, the unregister here does this also.
+        // These changes are needed to allow ObservationModeTest/testDefer to pass. Without them 
+        // YearOnYearInflationSwapHelper::initializeDates() gets called due to evaluation date changes, the yyiis_ 
+        // member gets reassigned but the original value is still in the deferredObervers_. The testDefer test then 
+        // crashes when deferredObserver->update(); is called in ObservableSettings::enableUpdates() with 
+        // deferredObserver null.
+        anInstrument->unregisterWithAll();
+        anInstrument->registerWith(yts);
+        anInstrument->registerWith(quote);
+
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
