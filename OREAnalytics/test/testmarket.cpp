@@ -579,6 +579,16 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(new ZeroCouponInflationSwapHelper(
             quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts, asof_));
+
+        // Remove the helper's observation of the inflation index. This has the effect that the 
+        // PiecewiseZeroInflationCurve created below will also not observe the index. It will only get recalculated 
+        // if the initial market quotes change or if the initial nominal yield curve changes. Observation of the index 
+        // was interfering with scneario generation. The PiecewiseZeroInflationCurve was getting recalculated on the 
+        // first time grid date t_1 i.e. was not using the t_0 calculated curve.
+        anInstrument->unregisterWithAll();
+        anInstrument->registerWith(yts);
+        anInstrument->registerWith(quote);
+
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
