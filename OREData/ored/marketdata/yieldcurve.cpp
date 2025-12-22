@@ -2153,6 +2153,8 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     {helper, "Short OI Future", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
                                                                             r = marketQuote->quote()->value(), this]() {
+                         // Add notional cashflows for benchmarking purposes. These are not actual paid flows
+                         // in real trades, but help with reconciliation in calibration reports.
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->future()->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0,
                              helper->future()->overnightIndex()->dayCounter(), helper->future()->valueDate(),
@@ -2185,10 +2187,12 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
 
                 // Create a MM future helper
                 QL_REQUIRE(
-                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM,
-                    "For MM Futures only 'IMM' is allowed as the date generation rule, check the future convention '"
+                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM ||
+                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::SecondThursday,
+                    "For MM Futures only 'IMM' or 'SecondThursday' are allowed as date generation rules, check the future convention '"
                         << segment->conventionsID() << "'");
-                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear());
+                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
+                                                     futureConvention->dateGenerationRule());
 
                 if (immDate < asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
@@ -2197,13 +2201,20 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     continue;
                 }
 
+                // Determine the futures type for validation
+                Futures::Type futuresType = (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM)
+                                            ? Futures::IMM
+                                            : Futures::Custom;
+
                 auto helper = QuantLib::ext::make_shared<FuturesRateHelper>(futureQuote->quote(), immDate,
-                                                                            futureConvention->index());
+                                                                            futureConvention->index(), 0.0, futuresType);
 
                 instruments.push_back(
                     {helper, "Short MM Future", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
                                                                             r = marketQuote->quote()->value(), this]() {
+                         // Add notional cashflows for benchmarking purposes. These are not actual paid flows
+                         // in real trades, but help with reconciliation in calibration reports.
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0, helper->dayCounter(),
                              helper->earliestDate(), helper->maturityDate()),
@@ -2277,14 +2288,20 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
                                                                         r = marketQuote->quote()->value(), this]() {
                      QL_REQUIRE(!helper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
                                 "YieldCurve::addFras(): ibor index has empty forwarding term structure");
+                     // Add notional cashflows for benchmarking purposes. These are not actual paid flows
+                     // in real trades, but help with reconciliation in calibration reports.
                      return getCashflowReportData(
-                         {QuantLib::Leg{helper->iborCoupon()},
+                         {QuantLib::Leg{helper->iborCoupon(),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->iborCoupon()->date()),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->iborCoupon()->accrualStartDate())},
                           QuantLib::Leg{
                               QuantLib::ext::make_shared<FixedRateCoupon>(
                                   helper->iborCoupon()->date(), 1.0, r, helper->iborCoupon()->dayCounter(),
                                   helper->iborCoupon()->accrualStartDate(), helper->iborCoupon()->accrualEndDate(),
                                   helper->iborCoupon()->referencePeriodStart(),
                                   helper->iborCoupon()->referencePeriodEnd()),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->iborCoupon()->date()),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->iborCoupon()->accrualStartDate())
                           }},
                          {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
                          {currency_[index].code(), currency_[index].code()}, asofDate_,

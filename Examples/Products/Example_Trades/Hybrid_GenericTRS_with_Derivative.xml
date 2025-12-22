@@ -18,8 +18,8 @@
             <UnderlyingData>
                 <Derivative>
                     <Id>DERIV:TEST1</Id>
-                    <Trade>
-                        <TradeType>EquityPosition</TradeType>
+                    <SubTrade>
+                        <SubTradeType>EquityPosition</SubTradeType>
                         <EquityPositionData>
                             <Quantity>7006.0</Quantity>
                             <Underlying>
@@ -28,12 +28,12 @@
                                 <IdentifierType>RIC</IdentifierType>
                             </Underlying>
                         </EquityPositionData>
-                    </Trade>
+                    </SubTrade>
                 </Derivative>
                 <Derivative>
                     <Id>DERIV:TEST2</Id>
-                    <Trade>
-                        <TradeType>EquityPosition</TradeType>
+                    <SubTrade>
+                        <SubTradeType>EquityPosition</SubTradeType>
                         <EquityPositionData>
                             <Quantity>25904.0</Quantity>
                             <Underlying>
@@ -42,12 +42,12 @@
                                 <IdentifierType>RIC</IdentifierType>
                             </Underlying>
                         </EquityPositionData>
-                    </Trade>
+                    </SubTrade>
                 </Derivative>
                 <Derivative>
                     <Id>DERIV:TEST3</Id>
-                    <Trade>
-                        <TradeType>EquityPosition</TradeType>
+                    <SubTrade>
+                        <SubTradeType>EquityPosition</SubTradeType>
                         <EquityPositionData>
                             <Quantity>-89658.0</Quantity>
                             <Underlying>
@@ -56,12 +56,12 @@
                                 <IdentifierType>RIC</IdentifierType>
                             </Underlying>
                         </EquityPositionData>
-                    </Trade>
+                    </SubTrade>
                 </Derivative>
                 <Derivative>
                     <Id>DERIV:TEST4</Id>
-                    <Trade id="CashSWAP_USD.CASH">
-                        <TradeType>Swap</TradeType>
+                    <SubTrade id="CashSWAP_USD.CASH">
+                        <SubTradeType>Swap</SubTradeType>
                         <SwapData>
                             <LegData>
                                 <Payer>true</Payer>
@@ -74,7 +74,7 @@
                                 </CashflowData>
                             </LegData>
                         </SwapData>
-                    </Trade>
+                    </SubTrade>
                 </Derivative>
             </UnderlyingData>
             <ReturnData>

@@ -110,7 +110,8 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
                                               QuantLib::Period tenor, FutureConvention::DateGenerationRule rule,
                                               const QuantLib::Calendar& calendar);
 
-Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                           FutureConvention::DateGenerationRule rule = FutureConvention::DateGenerationRule::IMM);
 
 /*! convert the creditCurveId into the internal name for the index tranche credit curve*/
 std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate);
