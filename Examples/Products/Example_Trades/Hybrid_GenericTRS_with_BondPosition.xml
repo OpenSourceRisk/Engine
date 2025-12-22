@@ -12,8 +12,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>BondPosition</SubTradeType>
+                <Trade>
+                    <TradeType>BondPosition</TradeType>
                     <BondBasketData>
                         <Quantity>1000</Quantity>
                         <!-- Identifier is optional when Underlying bonds are defined -->
@@ -31,7 +31,7 @@
                             <Weight>0.5</Weight>
                         </Underlying>
                     </BondBasketData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <!-- the return leg definition -->
             <ReturnData>
