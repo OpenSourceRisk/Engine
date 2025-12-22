@@ -131,6 +131,7 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                 valuationEngine_->buildCube(portfolio_, newCube, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                         nullptr, nullptr, {}, dryRun_);
                 mapCube_[key] = newCube;
+                hisScenGen_->reset();
             }
             //Run for Full report - Remove risk factor key - reset counter
             hisScenGen_->setCurrentKey(RiskFactorKey());
@@ -248,42 +249,41 @@ TradePnlStore HistoricalPnlGenerator::tradeLevelPnl(const set<pair<string, Size>
 
 TradePnlStore HistoricalPnlGenerator::tradeLevelPnl() const { return tradeLevelPnl(timePeriod()); }
 
-using RiskFactorPnLStore = HistoricalPnlGenerator::RiskFactorPnLStore;
-
-RiskFactorPnLStore HistoricalPnlGenerator::riskFactorLevelPnl(const ore::data::TimePeriod& period) const {
-
-    // Create result with enough space
-    RiskFactorPnLStore pnls;
-    // If risk factor breakdown map is empty, nothing to compute
+using RiskFactorPnLSeries = HistoricalPnlGenerator::RiskFactorPnLSeries;
+RiskFactorPnLSeries HistoricalPnlGenerator::riskFactorLevelPnlSeries(const ore::data::TimePeriod& period) const {
+    RiskFactorPnLSeries series;
     if (mapCube_.empty()) {
-        DLOG("riskFactorLevelPnl: mapCube_ is empty; returning empty result");
-        return pnls;
+        DLOG("riskFactorLevelPnlSeries: mapCube_ is empty; returning empty result");
+        return series;
     }
-    // Aggregate PnL per risk factor over scenarios in the given period
-    for (const auto& kv : mapCube_) {
-        const RiskFactorKey& rfKey = kv.first;
-        const ext::shared_ptr<NPVCube>& rfCube = kv.second;
-        // Each per-key cube has a single date (asof), index is 0
-        Size dateIdx = 0;
-        Real totalPnl = 0.0;
-        // Iterate scenarios
-        for (Size s = 0; s < rfCube->samples(); ++s) {
-            Date start = hisScenGen_->startDates()[s];
-            Date end = hisScenGen_->endDates()[s];
-            if (period.contains(start) && period.contains(end)) {
-                // Sum across all trades (use cube dimension, not portfoligenerateCubeo_)
-                Size tradeCount = rfCube->numIds();
-                for (Size i = 0; i < tradeCount; ++i) {
-                    totalPnl = rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
-                }
-            }
+
+    // Build per-scenario maps for scenarios within the period
+    // Determine how many scenarios we have from any cube in the map
+    Size samples = mapCube_.begin()->second->samples();
+    series.resize(samples);
+
+    Size dateIdx = 0; // risk factor cubes have a single date at asof
+    for (Size s = 0; s < samples; ++s) {
+        Date start = hisScenGen_->startDates()[s];
+        Date end = hisScenGen_->endDates()[s];
+        if (!(period.contains(start) && period.contains(end))) {
+            continue; // leave this scenario's map empty
         }
-        // Store aggregated value keyed by (riskFactor, riskFactor)
-        if(totalPnl!=0){
-            pnls[rfKey] = totalPnl;
-        }    
+        // Sum PnL across trades for each risk factor at scenario s
+        for (const auto& kv : mapCube_) {
+            const RiskFactorKey& rfKey = kv.first;
+            const ext::shared_ptr<NPVCube>& rfCube = kv.second;
+            Real pnl = 0.0;
+            Size tradeCount = rfCube->numIds();
+            for (Size i = 0; i < tradeCount; ++i) {
+                pnl += rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
+            }
+            if (pnl != 0.0)
+                series[s][rfKey] = pnl;
+        }
     }
-    return pnls;
+
+    return series;
 }
 
 const QuantLib::ext::shared_ptr<NPVCube>& HistoricalPnlGenerator::cube() const { return cube_; }

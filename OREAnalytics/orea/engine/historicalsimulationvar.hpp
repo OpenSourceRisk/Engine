@@ -100,7 +100,7 @@ protected:
 private:
     std::vector<QuantLib::Real> pnls_;
     ore::analytics::TradePnLStore tradePnls_;
-    ore::analytics::RiskFactorPnLStore riskFactorPnls_;
+    ore::analytics::HistoricalPnlGenerator::RiskFactorPnLSeries riskFactorPnls_;
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;

@@ -149,9 +149,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
     // loop over one key or all keys
     calcDetailsCounter_ = 0;
     if(currentKey_!=RiskFactorKey()){
-        auto testScen = nextKey(d, currentKey_, scen);
-        ++i_;
-        return testScen;
+        nextKey(d, currentKey_, scen);
     }else{
         for (auto const& key : baseScenario_->keys()) {
             nextKey(d, key, scen);

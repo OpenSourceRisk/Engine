@@ -112,7 +112,6 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
 
         auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
 
-        //bool risk factor
         auto scenarios = buildHistoricalScenarioGenerator(
             inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
             analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
