@@ -170,7 +170,8 @@ public:
         : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngineDeltaGamma") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy,
+                                                                const std::string& discountCurve) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -178,7 +179,7 @@ protected:
         bool linearInZero = parseBool(engineParameter("LinearInZero", {}, false, "True")); // FIXME: Add to pricing engine parameters?
         bool applySimmExemptions = parseBool(engineParameter("ApplySimmExemptions", {}, false, "false"));
 
-        string pair = keyImpl(forCcy, domCcy);
+        string pair = forCcy.code() + domCcy.code();
         Handle<YieldTermStructure> domCcyCurve =
             market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing));
         Handle<YieldTermStructure> forCcyCurve =

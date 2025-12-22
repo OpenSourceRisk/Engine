@@ -12,8 +12,8 @@
         </Envelope>
         <ContractForDifferenceData>
             <UnderlyingData>
-                <Trade>
-                    <TradeType>EquityPosition</TradeType>
+                <SubTrade>
+                    <SubTradeType>EquityPosition</SubTradeType>
                     <EquityPositionData>
                         <Quantity>1000</Quantity>
                         <Underlying>
@@ -23,7 +23,7 @@
                             <IdentifierType>RIC</IdentifierType>
                         </Underlying>
                     </EquityPositionData>
-                </Trade>
+                </SubTrade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>

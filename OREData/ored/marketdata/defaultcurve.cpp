@@ -428,7 +428,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 }
             }
         }
-    }else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
+    /*}else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
         refData.type = "ConvSpreadCDS";
         // Currently same than SpreadCDS
         for (auto quote : quotes) {
@@ -460,7 +460,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                                                                           << ", with error: " << e.what());
                 }
             }
-        }
+        }*/
     }else {
         refData.type = "Upfront";
         for (auto quote : quotes) {
@@ -475,7 +475,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
             auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
                 quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
+                recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
                 config.startDate(), cdsConv->lastPeriodDayCounter());
             if (tmp->latestDate() > asof) {
                 helpers.push_back(tmp);

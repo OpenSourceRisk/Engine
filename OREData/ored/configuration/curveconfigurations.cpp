@@ -47,6 +47,7 @@ void addMinimalCurves(const char* nodeName, const map<string, QuantLib::ext::sha
 
 void CurveConfigurations::addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const {
     const auto& ct = parseCurveConfigurationType(nodeName);
+
     const auto& it = configs_.find(ct);
     if (it != configs_.end()) {
         XMLNode* node = doc.allocNode(nodeName);
@@ -142,15 +143,18 @@ void CurveConfigurations::parseNode(const CurveSpec::CurveType& type, const stri
                 config->fromXMLString(itc->second);
                 configs_[type][curveId] = config;
                 unparsed_.at(type).erase(curveId);
-            } catch (std::exception& ex) {
+            }
+            catch (std::exception& ex) {
                 string err = "Curve config " + curveId + " under node '" + to_string(type) + "' was requested, but could not be parsed.";
                 StructuredCurveErrorMessage(curveId, err, ex.what()).log();
                 QL_FAIL(err);
             }
-        } else
-            QL_FAIL("Could not find curveId " << curveId << " of type " << type << " in unparsed curve configurations");
-    } else
-        QL_FAIL("Could not find CurveType " << type << " in unparsed curve configurations");
+        }
+ else
+     QL_FAIL("Could not find curveId " << curveId << " of type " << type << " in unparsed curve configurations");
+    }
+ else
+     QL_FAIL("Could not find CurveType " << type << " in unparsed curve configurations");
 }
 
 void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& curveId,
@@ -159,12 +163,14 @@ void CurveConfigurations::add(const CurveSpec::CurveType& type, const string& cu
 }
 
 bool CurveConfigurations::has(const CurveSpec::CurveType& type, const string& curveId) const {
-    return (configs_.count(type) > 0 && configs_.at(type).count(curveId) > 0) ||
-           (unparsed_.count(type) > 0 && unparsed_.at(type).count(curveId) > 0);
+    return (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) ||
+        (configs_.count(type) > 0 && configs_.at(type).count(curveId) > 0) ||
+        (unparsed_.count(type) > 0 && unparsed_.at(type).count(curveId) > 0);
 }
 
 const QuantLib::ext::shared_ptr<CurveConfig>& CurveConfigurations::get(const CurveSpec::CurveType& type,
-    const string& curveId) const {
+                                                                       const string& curveId) const {
+
     const auto& it = configs_.find(type);
     if (it != configs_.end()) {
         const auto& itc = it->second.find(curveId);
@@ -172,6 +178,15 @@ const QuantLib::ext::shared_ptr<CurveConfig>& CurveConfigurations::get(const Cur
             return itc->second;
         }
     }
+
+    // check if is in the overrides first, and then add to configs_ if so
+    if (curveConfigOverride_ && curveConfigOverride_->has(type, curveId)) {
+        auto cc = curveConfigOverride_->get(type, curveId);
+        configs_[type][curveId] = cc;
+        return configs_.at(type).at(curveId);
+    }
+
+    // next check the unparsed configs
     parseNode(type, curveId);
     return configs_.at(type).at(curveId);
 }
@@ -783,7 +798,16 @@ void CurveConfigurations::addAdditionalCurveConfigs(const CurveConfigurations& c
     }
 }
 
+void CurveConfigurationsManager::setOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
+    override_ = curveConfigOverride;
+    for (auto& it : configs_) {
+		it.second->setCurveConfigOverride(override_);
+	}
+}
+
 void CurveConfigurationsManager::add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id) {
+    if (override_)
+        config->setCurveConfigOverride(override_);
     configs_[id] = config;
 }
 
