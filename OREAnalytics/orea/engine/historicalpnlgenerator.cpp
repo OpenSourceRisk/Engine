@@ -269,7 +269,8 @@ RiskFactorPnLSeries HistoricalPnlGenerator::riskFactorLevelPnlSeries(const ore::
         if (!(period.contains(start) && period.contains(end))) {
             continue; // leave this scenario's map empty
         }
-        // Sum PnL across trades for each risk factor at scenario s
+        // Aggregate PnL across trades and collapse duplicates by risk factor name
+        std::unordered_map<std::string, std::pair<RiskFactorKey, Real>> byName;
         for (const auto& kv : mapCube_) {
             const RiskFactorKey& rfKey = kv.first;
             const ext::shared_ptr<NPVCube>& rfCube = kv.second;
@@ -278,9 +279,19 @@ RiskFactorPnLSeries HistoricalPnlGenerator::riskFactorLevelPnlSeries(const ore::
             for (Size i = 0; i < tradeCount; ++i) {
                 pnl += rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
             }
-            if (pnl != 0.0)
-                series[s][rfKey] = pnl;
+            if (pnl == 0.0)
+                continue;
+            auto it = byName.find(rfKey.name);
+            if (it == byName.end()) {
+                byName.emplace(rfKey.name, std::make_pair(rfKey, pnl));
+            } else {
+                it->second.second += pnl;
+            }
         }
+        // Write one entry per risk factor name into the scenario map
+        for (const auto& e : byName) {
+            series[s].emplace(e.second.first, e.second.second);
+        }  
     }
 
     return series;
