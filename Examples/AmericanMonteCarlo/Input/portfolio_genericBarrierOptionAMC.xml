@@ -22,14 +22,14 @@
       <!-- required for PayoffType = CashOrNothing only -->
       <Amount type="number">0.0</Amount>
       <PayCurrency type="currency">USD</PayCurrency>
-      <ExpiryDate type="event">2023-02-01</ExpiryDate>
-      <SettlementDate type="event">2023-02-03</SettlementDate>
+      <ExpiryDate type="event">2022-04-01</ExpiryDate>
+      <SettlementDate type="event">2022-04-03</SettlementDate>
       <Underlying type="index">FX-ECB-EUR-USD</Underlying>
       <BarrierMonitoringDates type="event">
         <ScheduleData>
           <Rules>
-            <StartDate>2022-02-01</StartDate>
-            <EndDate>2023-02-01</EndDate>
+            <StartDate>2022-03-01</StartDate>
+            <EndDate>2022-04-01</EndDate>
             <Tenor>1D</Tenor>
             <Calendar>TGT,US</Calendar>
             <Convention>F</Convention>
@@ -43,23 +43,28 @@
       </BarrierMonitoringDates>
       <BarrierTypes type="barrierType">
         <Value>DownOut</Value>
+        <Value>UpIn</Value>
       </BarrierTypes>
       <BarrierLevels type="number">
-        <Value>1.05</Value>
+        <Value>1.06</Value>
+        <Value>1.50</Value>
       </BarrierLevels>
       <!-- out rebates (only if no in barriers are present) -->
       <BarrierRebates type="number">
-        <Value>0.0</Value>
+        <Value>5000000.0</Value>
+        <Value>300.</Value>
       </BarrierRebates>
       <BarrierRebateCurrencies type="currency">
+        <Value>USD</Value>
         <Value>USD</Value>
       </BarrierRebateCurrencies>
       <!-- 0 = atHit, 1 = atExpiry (for out barriers only) -->
       <BarrierRebatePayTimes type="number">
-        <Value>1</Value>
+        <Value>0</Value>
+        <Value>0</Value>
       </BarrierRebatePayTimes>
       <!-- rebate if at least one in barrier is present -->
-      <BarrierRebate type="number">0.0</BarrierRebate>
+      <BarrierRebate type="number">200.0</BarrierRebate>
       <BarrierRebateCurrency type="currency">USD</BarrierRebateCurrency>
       <!-- 1 = KoAlways, 2 = KoBeforeKi, 3 = KoAfterKi -->
       <KikoType type="number">1</KikoType>
