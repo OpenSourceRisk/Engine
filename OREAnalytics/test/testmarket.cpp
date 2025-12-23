@@ -436,8 +436,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
         euii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
 
-    vector<Date> datesZCII = {asof_,
-                              asof_ + 1 * Years,
+    vector<Date> datesZCII = {asof_ + 1 * Years,
                               asof_ + 2 * Years,
                               asof_ + 3 * Years,
                               asof_ + 4 * Years,
@@ -451,7 +450,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
                               asof_ + 15 * Years,
                               asof_ + 20 * Years};
 
-    vector<Rate> ratesZCII = {2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
+    vector<Rate> ratesZCII = {2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
                               3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108};
 
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
@@ -579,8 +578,17 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(new ZeroCouponInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts));
-        anInstrument->unregisterWith(Settings::instance().evaluationDate());
+            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts, asof_));
+
+        // Remove the helper's observation of the inflation index. This has the effect that the 
+        // PiecewiseZeroInflationCurve created below will also not observe the index. It will only get recalculated 
+        // if the initial market quotes change or if the initial nominal yield curve changes. Observation of the index 
+        // was interfering with scenario generation. The PiecewiseZeroInflationCurve was getting recalculated on the 
+        // first time grid date t_1 i.e. was not using the t_0 calculated curve.
+        anInstrument->unregisterWithAll();
+        anInstrument->registerWith(yts);
+        anInstrument->registerWith(quote);
+
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
@@ -593,7 +601,6 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     pCPIts->recalculate();
     cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
     cpiTS->enableExtrapolation(true);
-    cpiTS->unregisterWith(Settings::instance().evaluationDate());
     return Handle<ZeroInflationIndex>(parseZeroInflationIndex(index, Handle<ZeroInflationTermStructure>(cpiTS)));
 }
 
@@ -608,8 +615,24 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         QL_DEPRECATED_DISABLE_WARNING
         QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(new YearOnYearInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts));
+            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts, asof_));
         QL_DEPRECATED_ENABLE_WARNING
+
+        // Remove the helper's observation of the inflation index. This has the effect that the
+        // PiecewiseYoYInflationCurve created below will also not observe the index. It will only get recalculated
+        // if the initial market quotes change or if the initial nominal yield curve changes.
+        // Note: QuantLib needs a change so that if swap start is provided in the helper above then updateDates_ on 
+        //       the RelativeDateBootstrapHelper should be false and hence the helper does not observe Settings 
+        //       evaluationDate. Without this fix, the unregister here does this also.
+        // These changes are needed to allow ObservationModeTest/testDefer to pass. Without them 
+        // YearOnYearInflationSwapHelper::initializeDates() gets called due to evaluation date changes, the yyiis_ 
+        // member gets reassigned but the original value is still in the deferredObervers_. The testDefer test then 
+        // crashes when deferredObserver->update(); is called in ObservableSettings::enableUpdates() with 
+        // deferredObserver null.
+        anInstrument->unregisterWithAll();
+        anInstrument->registerWith(yts);
+        anInstrument->registerWith(quote);
+
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
