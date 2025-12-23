@@ -633,6 +633,15 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
     std::vector<Real> feller(times.size(), 0.0);
 
     Real dt = times.size() == 1 ? times.back() : times.back() - times[times.size() - 2];
+    // Note:
+    // - If there are N expiry times > 0, then we have N material optimization parameters, the last (additional)
+    //   piecewise parameter is not used. Why is this parameter array length = number of times + 1 ?
+    // - Below we loop over n times, from t(0)=0, ..., t(n-1), i.e. the starting points of each piecewise segment.
+    //   Evaluation of a piecewise parameter at these starting points yields the segment's parameter value.
+    // - Adding QL_EPSILON is just an extra safety measure, to ensure we evaluate within the segment. In fact, the
+    //   piecewise parameter does that correctly already.
+    // - See the Analytical PTD Heston engine: Klaus is especially careful, avoids jump times and evaluates the
+    //   parameters at segment mid points only. 
     for (Size i = 0; i < times.size(); ++i) {
         Real time = i == 0 ? 0.0 : times[i];
         theta[i] = ptdModel->theta(time + QL_EPSILON);
