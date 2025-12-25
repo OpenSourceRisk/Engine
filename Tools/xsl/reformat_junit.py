@@ -137,7 +137,8 @@ def parseXML(input_file):
     print(f" reformatted {input_file} to {out_path}")
 
 if __name__ == "__main__":
-    inputs = ["xunit_orea.xml", "xunit_ored.xml", "xunit_qle.xml", "xunit_ql.xml"]
+    inputs = ["xunit_orea.xml", "xunit_ored.xml", "xunit_qle.xml", "xunit_ql.xml", "xunit_orep_analytics.xml", "xunit_orep_marketrisk.xml", "xunit_orep_proxy.xml", "xunit_orep_simm.xml"]
     
     for p in inputs:
-        parseXML(p)
+        if os.path.exists(p):
+            parseXML(p)
