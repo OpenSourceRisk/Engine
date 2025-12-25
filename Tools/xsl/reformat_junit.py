@@ -81,7 +81,7 @@ def writeJUnit(path_out, suites):
 
     for top_name, cases in suites.items():
         tests = len(cases)
-        failures = sum(1 for c in cases if c.status == 'failure')
+        failures = sum(1 for c in cases if c.status == 'failure' or c.status == 'error')
         errors = sum(1 for c in cases if c.status == 'error')
         time_sum = sum(c.time_sec for c in cases)
         total_tests += tests
