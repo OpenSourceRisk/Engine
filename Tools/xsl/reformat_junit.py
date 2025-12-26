@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 from typing import Dict, List
+import argparse
 
 
 class TestCaseResult:
@@ -131,13 +132,20 @@ def writeJUnit(path_out, suites):
 def parseXML(input_file):
     suites = extract_suites(input_file)
     base = os.path.splitext(os.path.basename(input_file))[0]
-    file_name = base.split("_")[1]
+    parts = base.split("_")
+    if len(parts) == 3:
+        file_name = parts[1] + "_" + parts[2]
+    else:
+        file_name = parts[1]
     out_path = f"{file_name}_junit.xml"
     writeJUnit(out_path, suites)
     print(f" reformatted {input_file} to {out_path}")
 
 if __name__ == "__main__":
-    inputs = ["xunit_orea.xml", "xunit_ored.xml", "xunit_qle.xml", "xunit_ql.xml", "xunit_orep_analytics.xml", "xunit_orep_marketrisk.xml", "xunit_orep_proxy.xml", "xunit_orep_simm.xml"]
+    argparser = argparse.ArgumentParser(description='Convert to Junit')
+    argparser.add_argument('--file', help='The file to convert')
+    main_args = argparser.parse_args()
+    input_file = main_args.file
     
     for p in inputs:
         if os.path.exists(p):
