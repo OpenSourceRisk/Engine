@@ -147,6 +147,5 @@ if __name__ == "__main__":
     main_args = argparser.parse_args()
     input_file = main_args.file
     
-    for p in inputs:
-        if os.path.exists(p):
-            parseXML(p)
+    if os.path.exists(input_file):
+        parseXML(input_file)
