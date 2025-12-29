@@ -127,7 +127,7 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
         if (riskFactorBreakdown_) {
             // The PnL breakdown on risk factors per scenario
             QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
-            if (s < riskFactorPnls_.size()) {
+            if (s < riskFactorPnls_.size() && countRF_ < 1) {
                 for (const auto& r : riskFactorPnls_[s]) {
                     report2->next();
                     const auto& key = r.first;
@@ -140,6 +140,7 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
             }
         }
     }
+    countRF_++;
 }
 
 void HistoricalSimulationVarReport::writeHeader(const ext::shared_ptr<Report>& report) const {

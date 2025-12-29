@@ -104,6 +104,7 @@ private:
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
     bool riskFactorBreakdown_ = false;
+    int countRF_ = 0;
 };
 
 } // namespace analytics
