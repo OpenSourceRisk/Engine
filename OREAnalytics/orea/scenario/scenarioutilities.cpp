@@ -188,10 +188,11 @@ QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::s
 QuantLib::ext::shared_ptr<Scenario> addDifferenceToScenario(const QuantLib::ext::shared_ptr<Scenario>& s,
                                                             const QuantLib::ext::shared_ptr<Scenario>& d,
                                                             const QuantLib::Date& targetScenarioAsOf,
-                                                            const QuantLib::Real targetScenarioNumeraire) {
+                                                            const QuantLib::Real targetScenarioNumeraire,
+                                                            const bool allowAdditionalKeysInD) {
 
     QL_REQUIRE(!d->isAbsolute(), "addDifferenceToScenario(): second argument must be difference scenario");
-    QL_REQUIRE(checkKeyDifferences(s, d, false),
+    QL_REQUIRE(checkKeyDifferences(s, d, allowAdditionalKeysInD),
                "addDifferenceToScenario(): scenario key sets are not compatible. Check log for details.");
 
     QuantLib::Date asof = targetScenarioAsOf;

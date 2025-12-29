@@ -2153,6 +2153,8 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     {helper, "Short OI Future", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
                                                                             r = marketQuote->quote()->value(), this]() {
+                         // Add notional cashflows for benchmarking purposes. These are not actual paid flows
+                         // in real trades, but help with reconciliation in calibration reports.
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->future()->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0,
                              helper->future()->overnightIndex()->dayCounter(), helper->future()->valueDate(),
@@ -2211,6 +2213,8 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                     {helper, "Short MM Future", marketQuote->name(), marketQuote->quote()->value(),
                      std::function<std::vector<TradeCashflowReportData>()>{[helper, index,
                                                                             r = marketQuote->quote()->value(), this]() {
+                         // Add notional cashflows for benchmarking purposes. These are not actual paid flows
+                         // in real trades, but help with reconciliation in calibration reports.
                          Leg l{QuantLib::ext::make_shared<FixedRateCoupon>(
                              helper->maturityDate(), 1.0, 1.0 - helper->impliedQuote() / 100.0, helper->dayCounter(),
                              helper->earliestDate(), helper->maturityDate()),
@@ -2284,14 +2288,20 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
                                                                         r = marketQuote->quote()->value(), this]() {
                      QL_REQUIRE(!helper->iborCoupon()->iborIndex()->forwardingTermStructure().empty(),
                                 "YieldCurve::addFras(): ibor index has empty forwarding term structure");
+                     // Add notional cashflows for benchmarking purposes. These are not actual paid flows
+                     // in real trades, but help with reconciliation in calibration reports.
                      return getCashflowReportData(
-                         {QuantLib::Leg{helper->iborCoupon()},
+                         {QuantLib::Leg{helper->iborCoupon(),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->iborCoupon()->date()),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->iborCoupon()->accrualStartDate())},
                           QuantLib::Leg{
                               QuantLib::ext::make_shared<FixedRateCoupon>(
                                   helper->iborCoupon()->date(), 1.0, r, helper->iborCoupon()->dayCounter(),
                                   helper->iborCoupon()->accrualStartDate(), helper->iborCoupon()->accrualEndDate(),
                                   helper->iborCoupon()->referencePeriodStart(),
                                   helper->iborCoupon()->referencePeriodEnd()),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(1.0, helper->iborCoupon()->date()),
+                              QuantLib::ext::make_shared<SimpleCashFlow>(-1.0, helper->iborCoupon()->accrualStartDate())
                           }},
                          {false, true}, {1.0E6, 1.0E6}, currency_[index].code(),
                          {currency_[index].code(), currency_[index].code()}, asofDate_,

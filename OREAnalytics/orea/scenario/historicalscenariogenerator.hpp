@@ -100,7 +100,7 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! string prepended to label of all scenarios generated
         const std::string& labelPrefix = "",
-        //! indicates if the generated sceanrios will be absolute or difference
+        //! indicates if the generated scenarios will be absolute or difference
         const bool generateDifferenceScenarios = false);
 
     //! Set base scenario, this also defines the asof date
