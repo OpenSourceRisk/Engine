@@ -48,15 +48,15 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcTradeTypes">FxOption,ScriptedTrade</Parameter>
-      <Parameter name="simulationConfigFile">simulation_fxtarf.xml</Parameter>
+      <Parameter name="amcTradeTypes">FxOption,ScriptedTrade,FxGenericBarrierOption</Parameter>
+      <Parameter name="simulationConfigFile">simulation_barrier.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine_fxoption.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_fxoption_amc.xml</Parameter>
       <Parameter name="baseCurrency">USD</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.csv</Parameter>
-      <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
-      <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv</Parameter>
+      <Parameter name="aggregationScenarioDataDump">scenariodataDump.csv</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>

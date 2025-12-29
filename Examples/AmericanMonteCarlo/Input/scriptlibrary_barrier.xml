@@ -594,47 +594,52 @@
         REQUIRE SIZE(BarrierTypes) == SIZE(BarrierRebatePayTimes);
 
         NUMBER _AMC_NPV[SIZE(_AMC_SimDates)];
-        NUMBER KnockedInTimes[SIZE(_AMC_SimDates)], KnockedOutTimes[SIZE(_AMC_SimDates)];
+        NUMBER KnockedInTimes[SIZE(_AMC_SimDates)], KnockedOutTimes[SIZE(_AMC_SimDates)], rebates[SIZE(_AMC_SimDates)];
         NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;
         NUMBER rebateAfterKI, valueAfterKI;
-        NUMBER U, i, d, s, j, u, currentNotional;
-        NUMBER rebates[SIZE(_AMC_SimDates)];
+        NUMBER U, i, d, s, j, simDateIdx, currentNotional;
         
-        FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
-          U = Underlying(BarrierMonitoringDates[d]);
-         
-          FOR i IN (1, SIZE(BarrierTypes), 1) DO
-            IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[i]} OR
-               {BarrierTypes[i] == 2 AND U >= BarrierLevels[i]} THEN
-	            IF KnockedOut == 0 THEN
-                KnockedIn = 1;
-	            END;
-            END;
-            IF {BarrierTypes[i] == 3 AND U < BarrierLevels[i]} OR
-               {BarrierTypes[i] == 4 AND U > BarrierLevels[i]} THEN
-              IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN
+        simDateIdx = 1;
+        FOR s IN (1, SIZE(MonitorAndSimDates), 1) DO
+          d = DATEINDEX(MonitorAndSimDates[s], BarrierMonitoringDates, EQ);
+          IF d > 0 AND MonitorAndSimDates[s] <= SettlementDate THEN
+            U = Underlying(BarrierMonitoringDates[d]);
+          
+            FOR i IN (1, SIZE(BarrierTypes), 1) DO
+              IF {BarrierTypes[i] == 1 AND U <= BarrierLevels[i]} OR
+                {BarrierTypes[i] == 2 AND U >= BarrierLevels[i]} THEN
                 IF KnockedOut == 0 THEN
-                  s = DATEINDEX(BarrierMonitoringDates[d], _AMC_SimDates, GEQ);
-                  IF BarrierRebatePayTimes[i] == 0 THEN
-                    rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );
-                  ELSE
-                    rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
-                  END;
-                  FOR j IN (1, SIZE(_AMC_SimDates), -1) DO
-                    IF {BarrierRebatePayTimes[i] == 0  AND _AMC_SimDates[j] == BarrierMonitoringDates[d]} OR 
-                        {_AMC_SimDates[j] >= BarrierMonitoringDates[d] AND _AMC_SimDates[j] <= SettlementDate} THEN
-                      rebates[j] = rebate;
+                  KnockedIn = 1;
+                END;
+              END;
+              IF {BarrierTypes[i] == 3 AND U < BarrierLevels[i]} OR
+                {BarrierTypes[i] == 4 AND U > BarrierLevels[i]} THEN
+                IF KikoType == 1 OR { KikoType == 2 AND KnockedIn == 0 } OR { KikoType == 3 AND KnockedIn == 1 } THEN
+                  IF KnockedOut == 0 THEN
+                    s = DATEINDEX(BarrierMonitoringDates[d], _AMC_SimDates, GEQ);
+                    IF BarrierRebatePayTimes[i] == 0 THEN
+                      rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], BarrierMonitoringDates[d], BarrierRebateCurrencies[i] );
+                    ELSE
+                      rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
+                    END;
+                    FOR j IN (1, SIZE(_AMC_SimDates), 1) DO
+                      IF {BarrierRebatePayTimes[i] == 0  AND _AMC_SimDates[j] == BarrierMonitoringDates[d]} OR 
+                          {BarrierRebatePayTimes[i] == 1 AND _AMC_SimDates[j] >= BarrierMonitoringDates[d]} THEN
+                        rebates[j] = rebate;
+                      END;
                     END;
                   END;
+                  KnockedOut = 1;
                 END;
-                KnockedOut = 1;
               END;
             END;
           END;
-          KnockedInTimes[d] = KnockedIn;
-          KnockedOutTimes[d] = KnockedOut;
+          IF {d == 0 OR _AMC_SimDates[simDateIdx] == BarrierMonitoringDates[d]} AND {MonitorAndSimDates[s] <= SettlementDate} THEN
+            KnockedInTimes[simDateIdx] = KnockedIn;
+            KnockedOutTimes[simDateIdx] = KnockedOut;
+            simDateIdx = simDateIdx + 1;
+          END;
         END;
-        
         
         Active = 1;
         FOR i IN (1, SIZE(BarrierTypes),1) DO
@@ -658,6 +663,7 @@
 
 	      rebate = rebate + Active * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
         rebateAfterKI = rebateAfterKI + (1 - KnockedOut) * (1 - TransatlanticActive) * PAY( TransatlanticBarrierRebate, SettlementDate, SettlementDate, TransatlanticBarrierRebateCurrency );
+        
         IF PayoffType == 0 THEN
 	        value = Active * TransatlanticActive * Quantity * PAY( LongShort * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) + rebate;
           valueAfterKI = (1 - KnockedOut) * TransatlanticActive * Quantity *PAY( LongShort  * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
@@ -675,28 +681,23 @@
         END;
 
         FOR i IN (1, SIZE(_AMC_SimDates), 1) DO
-          s = min(DATEINDEX(_AMC_SimDates[i], BarrierMonitoringDates, GEQ), SIZE(BarrierMonitoringDates));
-          IF s == 1 AND BarrierMonitoringDates[s] > _AMC_SimDates[i] THEN
-            _AMC_NPV[i] = max(NPVMEM(value, _AMC_SimDates[i], i), 0.0);
-          ELSE
-            IF BarrierMonitoringDates[s] > _AMC_SimDates[i] THEN
-              s = s - 1;
-            END;
-            IF KnockedOutTimes[s] == 1 THEN
-              IF BarrierRebate != 0 AND _AMC_SimDates[i] < SettlementDate THEN
-                _AMC_NPV[i] = PAY( LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency);
+          IF _AMC_SimDates[i] < SettlementDate THEN
+            IF KnockedOutTimes[i] == 1 THEN
+              IF BarrierRebate != 0 THEN
+                _AMC_NPV[i] = PAY(LongShort * BarrierRebate, SettlementDate, SettlementDate, BarrierRebateCurrency);
               ELSE
                 _AMC_NPV[i] = rebates[i];
               END;
             ELSE
-              IF KnockedInTimes[s] == 1 THEN
-                _AMC_NPV[i]  = max(NPVMEM(valueAfterKI, _AMC_SimDates[i], SIZE(_AMC_SimDates) + i,  KnockedInTimes[s] == 1 AND KnockedOutTimes[s] == 0 ), 0);
+              IF KnockedInTimes[i] == 1 THEN
+                _AMC_NPV[i]  = max(NPVMEM(valueAfterKI, _AMC_SimDates[i], SIZE(_AMC_SimDates) + i,  KnockedInTimes[i] == 1 AND KnockedOutTimes[i] == 0 ), 0);
               ELSE
-                _AMC_NPV[i]  = max(NPVMEM(value, _AMC_SimDates[i], 2 * SIZE(_AMC_SimDates) + i,  KnockedInTimes[s] == 0 AND KnockedOutTimes[s] == 0 ), 0);
+                _AMC_NPV[i]  = max(NPVMEM(value, _AMC_SimDates[i], 2 * SIZE(_AMC_SimDates) + i,  KnockedInTimes[i] == 0 AND KnockedOutTimes[i] == 0 ), 0);
               END;
             END;
           END;
         END; 
+
         ]]></Code>
       <NPV>value</NPV>
       <Results>
@@ -705,7 +706,7 @@
         <Result>Active</Result>
         <Results>currentNotional</Results>
       </Results>
-      <!--NewSchedules>
+      <NewSchedules>
         <NewSchedule>
           <Name>MonitorAndSimDates</Name>
           <Operation>Join</Operation>
@@ -714,7 +715,7 @@
             <Schedule>BarrierMonitoringDates</Schedule>
           </Schedules>
         </NewSchedule>
-      </NewSchedules-->
+      </NewSchedules>
     </Script>
   </Script>
 </ScriptLibrary>

@@ -35,9 +35,8 @@
       <Parameter name="TrainingSequenceType">SobolBrownianBridge</Parameter>
       <Parameter name="PolynomType">Monomial</Parameter>
       <Parameter name="SobolOrdering">Steps</Parameter>
-      <Parameter name="Interactive">false</Parameter>
       <Parameter name="TrainingSamples">10000</Parameter>
-      <Parameter name="TrainingSeed">43</Parameter>
+      <Parameter name="TrainingSeed">42</Parameter>
     </EngineParameters>
   </Product>
   <Product type="FxOption">
@@ -57,6 +56,30 @@
       <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
       <Parameter name="MinObsDate">true</Parameter>
       <Parameter name="RegressionOnExerciseOnly">true</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Swap">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+      <Parameter name="RegressorModel">Lagged</Parameter>
+      <Parameter name="CashflowGeneration.OnCpnMaxSimTimes">32</Parameter>
+      <Parameter name="CashflowGeneration.OnCpnAddSimTimesCutoff">1Y</Parameter>
+      <Parameter name="Regression.MaxSimTimesIR">8</Parameter>
+      <Parameter name="Regression.VarGroupMode">Trivial</Parameter>
     </EngineParameters>
   </Product>
 </PricingEngines>
