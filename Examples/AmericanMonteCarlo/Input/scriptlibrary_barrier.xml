@@ -669,9 +669,9 @@
           valueAfterKI = (1 - KnockedOut) * TransatlanticActive * Quantity *PAY( LongShort  * max(0, PutCall * (Underlying(ExpiryDate) - Strike)), ExpiryDate, SettlementDate, PayCurrency ) +
                   rebateAfterKI;
 	      ELSE
-	        value = Active * TransatlanticActive * Quantity *  PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
+	        value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
                   rebate;
-          valueAfterKI = (1 - KnockedOut) * TransatlanticActive * Quantity * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
+          valueAfterKI = (1 - KnockedOut) * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +
                   rebateAfterKI;
 	      END;
         IF PayoffType == 0 THEN
