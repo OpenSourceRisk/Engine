@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2022-01-31</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/genericBarrierOptionAMC</Parameter>
+    <Parameter name="outputPath">Output/generic_barrier_option</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
@@ -13,7 +13,7 @@
     <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio_genericBarrierOptionAMC.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_genericbarrieroption.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
     <Parameter name="scriptLibrary">scriptlibrary_barrier.xml</Parameter>
   </Setup>
@@ -30,10 +30,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">USD</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
-    </Analytic>
-    <Analytic type="additionalResults">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">additional_results.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
     </Analytic>
     <Analytic type="cashflow">
       <Parameter name="active">Y</Parameter>
@@ -48,15 +45,15 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcTradeTypes">FxOption,ScriptedTrade,FxGenericBarrierOption</Parameter>
+      <Parameter name="amcTradeTypes">ScriptedTrade,FxGenericBarrierOption</Parameter>
       <Parameter name="simulationConfigFile">simulation_barrier.xml</Parameter>
-      <Parameter name="pricingEnginesFile">pricingengine_fxoption.xml</Parameter>
-      <Parameter name="amcPricingEnginesFile">pricingengine_fxoption_amc.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine_barrier.xml</Parameter>
+      <Parameter name="amcPricingEnginesFile">pricingengine_barrier_amc.xml</Parameter>
       <Parameter name="baseCurrency">USD</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="cubeFile">cube.csv</Parameter>
+      <!--Parameter name="cubeFile">cube.csv</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv</Parameter>
-      <Parameter name="aggregationScenarioDataDump">scenariodataDump.csv</Parameter>
+      <Parameter name="aggregationScenarioDataDump">scenariodataDump.csv</Parameter-->
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>

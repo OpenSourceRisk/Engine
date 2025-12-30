@@ -8,7 +8,7 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>1000</Samples>
+    <Samples>10000</Samples>
     <!-- <CloseOutLag>0D</CloseOutLag> -->
     <!-- <MporMode>StickyDate</MporMode> -->
   </Parameters>
