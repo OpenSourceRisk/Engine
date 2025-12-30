@@ -623,8 +623,8 @@
                       rebate = PAY( LongShort * BarrierRebates[i], BarrierMonitoringDates[d], SettlementDate, BarrierRebateCurrencies[i] );
                     END;
                     FOR j IN (1, SIZE(_AMC_SimDates), 1) DO
-                      IF {BarrierRebatePayTimes[i] == 0  AND _AMC_SimDates[j] == BarrierMonitoringDates[d]} OR 
-                          {BarrierRebatePayTimes[i] == 1 AND _AMC_SimDates[j] >= BarrierMonitoringDates[d]} THEN
+                      IF {BarrierRebatePayTimes[i] == 0 AND _AMC_SimDates[j] == BarrierMonitoringDates[d]} OR 
+                         {BarrierRebatePayTimes[i] == 1 AND _AMC_SimDates[j] >= SettlementDate AND _AMC_SimDates[j] >= BarrierMonitoringDates[d]} THEN
                         rebates[j] = rebate;
                       END;
                     END;
