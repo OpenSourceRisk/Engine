@@ -611,6 +611,13 @@ enum MporCashFlowMode { Unspecified, NonePay, BothPay, WePay, TheyPay };
 */
 MporCashFlowMode parseMporCashFlowMode(const std::string& s);
 
+//! Return Mpor Date given Mpor days and Mpor Calendar
+/*!
+\ingroup utilities
+*/
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf = QuantLib::Date(),
+                                 std::string mporCalendar = "US");
+
 //! Write MporCashFlowMode to stream
 /*!
 \ingroup utilities

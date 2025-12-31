@@ -413,6 +413,8 @@ void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
+    if (inputs_->mporConventions() && inputs_->mporDate() != Date())
+        InstrumentConventions::instance().setConventions(inputs_->mporConventions(), inputs_->mporDate());
 
     if (inputs_->currencyConfigs() != nullptr)
         inputs_->currencyConfigs()->addCurrencies();
@@ -640,6 +642,8 @@ std::string OREAppInputParameters::loadParameterString(const std::string& analyt
 std::string OREAppInputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
     bool mandatory) {
     string filename = loadParameterString(analytic, param, mandatory);
+    if (filename.empty())
+        return filename;
     filesystem::path filepath = inputPath_ / filename;
     XMLDocument doc(filepath.generic_string());
     return doc.toString();
@@ -751,6 +755,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("setup", "implyTodaysFixings", false);
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
+
+    tmp = params_->get("setup", "fixingCutOffDate", false);
+    if (tmp != "")
+        setFixingCutOffDate(ore::data::parseDate(tmp));
 
     tmp = params_->get("setup", "useAtParCouponsCurves", false);
     if (tmp != "")
@@ -3315,6 +3323,8 @@ void OREAppInputParameters::loadParameters() {
     LOG("analytics: " << analytics().size());
     for (auto a : analytics())
         LOG("analytic: " << a);
+
+    InputParameters::loadParameters();
 
     LOG("buildInputParameters done");
 }
