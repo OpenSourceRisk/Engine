@@ -57,13 +57,13 @@ public:
         const Date& maturityDate,
         //! Strike
         const Real& strike,
-        // Payment Date
+        //! Payment Date
         const Date& payDate = Date(),
-        // Payment Currency
+        //! Payment Currency
         const Currency payCcy = Currency(),
-        // FX Index used for fx conversion
+        //! FX Index used for fx conversion
         const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
-        // Fixing Date for a fx conversion if paymentCurrency != currency
+        //! Fixing Date for a fx conversion if paymentCurrency != currency
         const Date& fixingDate = Date());
     //! \name Instrument interface
     //@{

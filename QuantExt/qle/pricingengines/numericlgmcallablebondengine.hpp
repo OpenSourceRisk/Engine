@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file fdlgmcallablebondengine.hpp */
+/*! \file numericlgmcallablebondengine.hpp */
 
 #pragma once
 

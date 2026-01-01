@@ -39,7 +39,7 @@ namespace QuantExt {
     to the correct fx forward legs. The evaluation date is the
     reference date of either discounting curve (which must be equal).
 
-            \ingroup engines
+    \ingroup engines
 */
 class DiscountingFxForwardEngine : public FxForward::engine {
 public:
@@ -51,9 +51,7 @@ public:
                The market spot rate quote, given as units of ccy1
                for one unit of ccy2. The spot rate must be given
                w.r.t. a settlement equal to the npv date.
-        \param includeSettlementDateFlows, settlementDate
-               If includeSettlementDateFlows is true (false), cashflows
-               on the settlementDate are (not) included in the NPV.
+        \param settlementDate
                If not given the settlement date is set to the
                npv date.
         \param npvDate

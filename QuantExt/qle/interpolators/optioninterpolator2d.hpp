@@ -66,7 +66,6 @@ protected:
 };
 
 //! Option surface interpolator
-//!  \ingroup interpolators
 template <class InterpolatorStrike, class InterpolatorExpiry>
 class OptionInterpolator2d : public OptionInterpolatorBase {
 

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file hwcpiecewisearametrization.hpp
+/*! \file hwpiecewiseparametrization.hpp
     \brief Hull White n factor parametrization with piecewise constant reversion and vol
     \ingroup models
 */

@@ -54,7 +54,7 @@ public:
                 const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
                 const bool isLong, const Real bondNotional = 1.0, const Real dv01 = Null<Real>());
 
-    //! \Name Instrument interface
+    //! \name Instrument interface
     //@{
     bool isExpired() const override;
     void setupArguments(PricingEngine::arguments*) const override;

@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scenario/scenario.hpp
+/*! \file qle/termstructures/scenario.hpp
     \brief Scenario class
-    \ingroup scenario
+    \ingroup termstructures
 */
 
 #pragma once
@@ -45,8 +45,6 @@ using QuantLib::Size;
 using std::string;
 
 //! Data types stored in the scenario class
-/*! \ingroup scenario
- */
 class RiskFactorKey {
 public:
     //! Risk Factor types
@@ -128,8 +126,6 @@ inline bool operator!=(const RiskFactorKey& lhs, const RiskFactorKey& rhs) { ret
 
   This base class provides the interface to add and retrieve data to and from a scenario.
   Concrete simple and memory optimized "compact" scenario classes are derived from this.
-
-  \ingroup scenario
 */
 class Scenario {
 public:
