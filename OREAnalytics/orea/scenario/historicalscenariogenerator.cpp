@@ -340,6 +340,11 @@ void HistoricalScenarioGeneratorWithFilteredDates::reset() {
 }
 
 QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates::next(const Date& d) {
+
+    // Access and propagate the current key from the underlying generator
+    auto key = this->getCurrentKey();
+    gen_->setCurrentKey(key);
+
     while (i_orig_ < gen_->numScenarios() && !isRelevantScenario_[i_orig_]) {
         gen_->next(d);
         ++i_orig_;

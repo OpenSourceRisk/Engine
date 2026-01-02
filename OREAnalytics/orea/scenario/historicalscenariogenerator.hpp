@@ -177,6 +177,7 @@ public:
     void setRiskFactorBreakdown(const bool b) { riskFactorBreakdown_ = b; }
     bool isRiskFactorBreakdown() const {return riskFactorBreakdown_; }
     virtual void setCurrentKey(const RiskFactorKey& k);
+    RiskFactorKey getCurrentKey() const { return currentKey_;}
     virtual void setIterator(const Size& k);
 
 protected:
