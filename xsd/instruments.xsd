@@ -134,6 +134,7 @@
       <xs:element type="averageStrikeBasketOptionData" name="AverageStrikeBasketOptionData"/>
       <xs:element type="lookbackCallBasketOptionData" name="LookbackCallBasketOptionData"/>
       <xs:element type="lookbackPutBasketOptionData" name="LookbackPutBasketOptionData"/>
+      <xs:element type="bestOfAirbagData" name="BestOfAirbagData"/>
       <xs:element type="worstOfBasketSwapData" name="WorstOfBasketSwapData"/>
       <xs:element type="worstOfBasketSwapData2" name="FxWorstOfBasketSwapData"/>
       <xs:element type="worstOfBasketSwapData2" name="EquityWorstOfBasketSwapData"/>
@@ -3958,6 +3959,23 @@
       <xs:element type="stFreeStyleNumber" name="Strike"/>
       <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
       <xs:element type="stFreeStyleNumberVector" name="Weights"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="bestOfAirbagData">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleNumberVector" name="InitialPrices"/>
+      <xs:element type="stFreeStyleNumberVector" name="StrikePrices"/>
+      <xs:element type="stFreeStyleNumber" name="BonusCoupon"/>
+      <xs:element type="stFreeStyleNumber" name="Quantity"/>
+      <xs:element type="stFreeStyleNumber" name="Premium"/>
+      <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationSchedule"/>
+      <xs:element type="stFreeStyleEvent" name="ObservationDate"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
