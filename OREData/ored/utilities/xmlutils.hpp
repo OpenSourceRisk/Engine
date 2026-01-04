@@ -128,7 +128,6 @@ public:
 class XMLUtils {
 public:
     static void checkNode(XMLNode* n, const string& expectedName);
-    static void checkAnyNode(XMLNode* n, const vector<string> expectedName);
 
     static XMLNode* addChild(XMLDocument& doc, XMLNode* n, const string& name);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value);
@@ -197,7 +196,6 @@ public:
 
     // If mandatory == true, we throw if the node is not present, otherwise we return a default vale.
     static string getChildValue(XMLNode* node, const string& name, bool mandatory = false, const string& defaultValue = string());
-    static string getAnyChildValue(XMLNode* node, const vector<string> names, bool mandatory = false, const string& defaultValue = string());
     static Real getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory = false, double defaultValue = 0.0);
     static int getChildValueAsInt(XMLNode* node, const string& name, bool mandatory = false, int defaultValue = 0);
     static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false, bool defaultValue = true);

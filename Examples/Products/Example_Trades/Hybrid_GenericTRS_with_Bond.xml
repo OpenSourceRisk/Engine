@@ -14,13 +14,13 @@
             <!-- a trade defining the underlying on which the return is computed -->
             <!-- this can have types Bond, ConvertibleBond, EquityPosition -->
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>Bond</SubTradeType>
+                <Trade>
+                    <TradeType>Bond</TradeType>
                     <BondData>
                         <SecurityId>ISIN:IE00BH3SQ895</SecurityId>
                         <BondNotional>1000000.00</BondNotional>
                     </BondData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <!-- the return leg definition -->
             <ReturnData>
