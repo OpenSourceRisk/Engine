@@ -60,7 +60,7 @@ AverageOISRateHelper::AverageOISRateHelper(
 void AverageOISRateHelper::initializeDates() {
 
     averageOIS_ = MakeAverageOIS(swapTenor_, overnightIndex_, onTenor_,
-                                 quote().empty() || !quote().isValid() ? 0.0 : quote()->value(), fixedTenor_,
+                                 quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fixedTenor_,
                                  fixedDayCounter_, spotLagTenor_)
                       .withFixedCalendar(fixedCalendar_)
                       .withFixedConvention(fixedConvention_)

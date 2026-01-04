@@ -128,7 +128,7 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     Natural paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
     swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule,
-                                         quote().empty() || !quote().isValid() ? 0.0 : quote()->value(), fixedDayCount_,
+                                         quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fixedDayCount_,
                                          paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
                                          index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
                                          paymentLag, paymentCalendar_, telescopicValueDates_, includeSpread_, lookback_,

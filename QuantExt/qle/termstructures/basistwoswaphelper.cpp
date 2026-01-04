@@ -76,7 +76,7 @@ void BasisTwoSwapHelper::initializeDates() {
        Null, you get an exception because the discountRelinkableHandle_
        is initially empty. */
     longSwap_ = MakeVanillaSwap(swapTenor_, longIndex_,
-                                quote().empty() || !quote().isValid() || !longMinusShort_ ? 0.0 : quote()->value())
+                                quote().empty() || !quote()->isValid() || !longMinusShort_ ? 0.0 : quote()->value())
                     .withDiscountingTermStructure(discountRelinkableHandle_)
                     .withFixedLegDayCount(longFixedDayCount_)
                     .withFixedLegTenor(Period(longFixedFrequency_))
@@ -86,7 +86,7 @@ void BasisTwoSwapHelper::initializeDates() {
                     .withFloatingLegCalendar(calendar_);
 
     shortSwap_ = MakeVanillaSwap(swapTenor_, shortIndex_,
-                                 quote().empty() || !quote().isValid() || longMinusShort_ ? 0.0 : quote()->value())
+                                 quote().empty() || !quote()->isValid() || longMinusShort_ ? 0.0 : quote()->value())
                      .withDiscountingTermStructure(discountRelinkableHandle_)
                      .withFixedLegDayCount(shortFixedDayCount_)
                      .withFixedLegTenor(Period(shortFixedFrequency_))

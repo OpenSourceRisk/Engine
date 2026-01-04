@@ -97,7 +97,7 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     }
 
     swap_ = QuantLib::ext::make_shared<CrossCcyFixFloatMtMResetSwap>(
-        nominal, fixedCurrency_, fixedSchedule, quote().empty() || !quote().isValid() ? 0.0 : quote()->value(),
+        nominal, fixedCurrency_, fixedSchedule, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(),
         fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_,
         floatSpread, paymentConvention_, paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_, true, includeSpread_,
         lookback_, fixingDays_, rateCutoff_, isAveraged_);

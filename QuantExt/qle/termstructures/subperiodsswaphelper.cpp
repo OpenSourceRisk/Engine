@@ -60,7 +60,7 @@ void SubPeriodsSwapHelper::initializeDates() {
 
     swap_ = QuantLib::ext::shared_ptr<SubPeriodsSwap>(new SubPeriodsSwap(
         effectiveDate, 1.0, swapTenor_, true, fixedTenor_,
-        quote().empty() || !quote().isValid() ? 0.0 : quote()->value(), fixedCalendar_, fixedDayCount_,
+        quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fixedCalendar_, fixedDayCount_,
         fixedConvention_, floatPayTenor_, iborIndex_, floatDayCount_, DateGeneration::Backward, type_));
 
     QuantLib::ext::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
