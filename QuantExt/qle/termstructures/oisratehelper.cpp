@@ -58,7 +58,7 @@ void OISRateHelper::initializeDates() {
 
     Calendar paymentCalendar_ = overnightIndex_->fixingCalendar();
 
-    swap_ = MakeOIS(swapTenor_, overnightIndex_, quote().empty() ? 0.0 : quote()->value())
+    swap_ = MakeOIS(swapTenor_, overnightIndex_, quote().empty() || !quote().isValid() ? 0.0 : quote()->value())
                 .withSettlementDays(settlementDays_)
                 .withFixedLegDayCount(fixedDayCounter_)
                 .withEndOfMonth(endOfMonth_)
@@ -164,7 +164,7 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
     registerWith(overnightIndex_);
     registerWith(discountHandle_);
 
-    swap_ = MakeOIS(Period(), overnightIndex_, quote().empty() ? 0.0 : quote()->value())
+    swap_ = MakeOIS(Period(), overnightIndex_, quote().empty() || !quote().isValid() ? 0.0 : quote()->value())
                 .withEffectiveDate(startDate)
                 .withTerminationDate(endDate)
                 .withFixedLegDayCount(fixedDayCounter_)

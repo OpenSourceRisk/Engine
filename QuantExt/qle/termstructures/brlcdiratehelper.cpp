@@ -64,8 +64,8 @@ void BRLCdiRateHelper::initializeDates() {
 
     // Create the BRL CDI swap
     swap_ = QuantLib::ext::make_shared<BRLCdiSwap>(OvernightIndexedSwap::Payer, 1.0, startDate, endDate,
-                                                   quote().empty() ? 0.01 : quote()->value(), brlCdiIndex_, 0.0,
-                                                   telescopicValueDates_);
+                                                   quote().empty() || !quote().isValid() ? 0.01 : quote()->value(),
+                                                   brlCdiIndex_, 0.0, telescopicValueDates_);
 
     // Set the pricing engine
     swap_->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));

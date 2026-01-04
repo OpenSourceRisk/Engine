@@ -138,8 +138,9 @@ void TenorBasisSwapHelper::initializeDates() {
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
     swap_ = QuantLib::ext::make_shared<TenorBasisSwap>(
-        effectiveDate, 1.0, swapTenor_, payIndex_, quote().empty() || spreadOnRec_ ? 0.0 : quote()->value(),
-        payFrequency_, receiveIndex_, quote().empty() || !spreadOnRec_ ? 0.0 : quote()->value(), recFrequency_,
+        effectiveDate, 1.0, swapTenor_, payIndex_,
+        quote().empty() || !quote().isValid() || spreadOnRec_ ? 0.0 : quote()->value(), payFrequency_, receiveIndex_,
+        quote().empty() || !quote().isValid() || !spreadOnRec_ ? 0.0 : quote()->value(), recFrequency_,
         DateGeneration::Backward, includeSpread_, spreadOnRec_, type_, telescopicValueDates_);
 
     auto engine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_);
