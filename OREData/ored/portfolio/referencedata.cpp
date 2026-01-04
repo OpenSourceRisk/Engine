@@ -517,11 +517,11 @@ void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
         QL_REQUIRE(componentsNode, "No Components node");
 
         auto portfolio = QuantLib::ext::make_shared<Portfolio>();
-        auto c = XMLUtils::getChildrenNodes(componentsNode, "Trade");
+        auto c = XMLUtils::getAnyChildrenNodes(componentsNode, {"Trade", "SubTrade"});
         int k = 0;
         for (auto const n : c) {
 
-            string tradeType = XMLUtils::getChildValue(n, "TradeType", true);
+            string tradeType = XMLUtils::getAnyChildValue(n, {"TradeType", "SubTradeType"}, true);
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "") {
                 id = std::to_string(k);

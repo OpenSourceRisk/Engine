@@ -472,6 +472,15 @@ vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
     return res;
 }
 
+vector<XMLNode*> XMLUtils::getAnyChildrenNodes(XMLNode* node, const std::vector<string>& names) {
+    vector<XMLNode*> res;
+    for (auto const& n : names) {
+        auto tmp = getChildrenNodes(node, n);
+        res.insert(res.end(), tmp.begin(), tmp.end());
+    }
+    return res;
+}
+
 vector<XMLNode*> XMLUtils::getChildrenNodesWithAttributes(XMLNode* parent, const string& names, const string& name,
                                                           const string& attrName, vector<string>& attrs,
                                                           bool mandatory) {
