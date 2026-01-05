@@ -12,8 +12,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>ForwardBond</SubTradeType>
+                <Trade>
+                    <TradeType>ForwardBond</TradeType>
                     <ForwardBondData>
                         <BondData>
                             <SecurityId>ISIN:IE00BH3SQ895</SecurityId>
@@ -26,7 +26,7 @@
                         </SettlementData>
                         <LongInForward>true</LongInForward>
                     </ForwardBondData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <!-- the return leg definition -->
             <ReturnData>

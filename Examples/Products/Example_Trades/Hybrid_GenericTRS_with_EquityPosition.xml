@@ -14,8 +14,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>EquityPosition</SubTradeType>
+                <Trade>
+                    <TradeType>EquityPosition</TradeType>
                     <EquityPositionData>
                         <Quantity>18101.486</Quantity>
                         <Underlying>
@@ -24,7 +24,7 @@
                             <IdentifierType>FIGI</IdentifierType>
                         </Underlying>
                     </EquityPositionData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>

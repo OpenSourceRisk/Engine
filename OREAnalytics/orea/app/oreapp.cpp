@@ -1373,6 +1373,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->getString("historicalSimulationVar", "outputHistoricalScenarios", false);
         if (tmp != "")
             setOutputHistoricalScenarios(parseBool(tmp));
+        
+        tmp = params_->get("historicalSimulationVar", "riskFactorBreakdown", false);
+        if (tmp != "")
+            setRiskFactorBreakdown(parseBool(tmp));
+        
     }
 
     /*************

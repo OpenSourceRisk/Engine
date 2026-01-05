@@ -10,8 +10,8 @@
       <Currency>USD</Currency>
       <NotionalCalculation>Sum</NotionalCalculation>
       <Components>
-        <SubTrade>
-          <SubTradeType>EquitySwap</SubTradeType>
+        <Trade>
+          <TradeType>EquitySwap</TradeType>
           <EquitySwapData>
             <LegData>
               <Payer>true</Payer>
@@ -67,9 +67,9 @@
               </ScheduleData>
             </LegData>
           </EquitySwapData>
-        </SubTrade>
-        <SubTrade>
-          <SubTradeType>EquitySwap</SubTradeType>
+        </Trade>
+        <Trade>
+          <TradeType>EquitySwap</TradeType>
           <EquitySwapData>
             <LegData>
               <Payer>true</Payer>
@@ -125,7 +125,7 @@
               </ScheduleData>
             </LegData>
           </EquitySwapData>
-        </SubTrade>
+        </Trade>
       </Components>
     </CompositeTradeData>
   </Trade>

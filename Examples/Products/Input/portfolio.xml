@@ -5581,8 +5581,8 @@
         </Envelope>
         <ContractForDifferenceData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>EquityPosition</SubTradeType>
+                <Trade>
+                    <TradeType>EquityPosition</TradeType>
                     <EquityPositionData>
                         <Quantity>1000</Quantity>
                         <Underlying>
@@ -5592,7 +5592,7 @@
                             <IdentifierType>RIC</IdentifierType>
                         </Underlying>
                     </EquityPositionData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>
@@ -5628,8 +5628,8 @@
             <Currency>USD</Currency>
             <NotionalCalculation>Mean</NotionalCalculation>
             <Components>
-                <SubTrade>
-                    <SubTradeType>EquityOption</SubTradeType>
+                <Trade>
+                    <TradeType>EquityOption</TradeType>
                     <EquityOptionData>
                         <OptionData>
                             <LongShort>Long</LongShort>
@@ -5645,9 +5645,9 @@
                         <Strike>2147.56</Strike>
                         <Quantity>775</Quantity>
                     </EquityOptionData>
-                </SubTrade>
-                <SubTrade>
-                    <SubTradeType>EquityOption</SubTradeType>
+                </Trade>
+                <Trade>
+                    <TradeType>EquityOption</TradeType>
                     <EquityOptionData>
                         <OptionData>
                             <LongShort>Short</LongShort>
@@ -5663,7 +5663,7 @@
                         <Strike>2147.56</Strike>
                         <Quantity>775</Quantity>
                     </EquityOptionData>
-                </SubTrade>
+                </Trade>
             </Components>
         </CompositeTradeData>
     </Trade>
@@ -5683,13 +5683,13 @@
             <!-- a trade defining the underlying on which the return is computed -->
             <!-- this can have types Bond, ConvertibleBond, EquityPosition -->
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>Bond</SubTradeType>
+                <Trade>
+                    <TradeType>Bond</TradeType>
                     <BondData>
                         <SecurityId>ISIN:IE00BH3SQ895</SecurityId>
                         <BondNotional>1000000.00</BondNotional>
                     </BondData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <!-- the return leg definition -->
             <ReturnData>
@@ -5777,8 +5777,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>ForwardBond</SubTradeType>
+                <Trade>
+                    <TradeType>ForwardBond</TradeType>
                     <ForwardBondData>
                         <BondData>
                             <SecurityId>ISIN:IE00BH3SQ895</SecurityId>
@@ -5791,7 +5791,7 @@
                         </SettlementData>
                         <LongInForward>true</LongInForward>
                     </ForwardBondData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <!-- the return leg definition -->
             <ReturnData>
@@ -5857,8 +5857,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>BondPosition</SubTradeType>
+                <Trade>
+                    <TradeType>BondPosition</TradeType>
                     <BondBasketData>
                         <Quantity>1000</Quantity>
                         <!-- Identifier is optional when Underlying bonds are defined -->
@@ -5876,7 +5876,7 @@
                             <Weight>0.5</Weight>
                         </Underlying>
                     </BondBasketData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <!-- the return leg definition -->
             <ReturnData>
@@ -5946,15 +5946,15 @@
 		<TotalReturnSwapData>
 			<!-- a trade defining the underlying on which the return is computed -->
 			<UnderlyingData>
-				<SubTrade>
-					<SubTradeType>ConvertibleBond</SubTradeType>
+				<Trade>
+					<TradeType>ConvertibleBond</TradeType>
 					<ConvertibleBondData>
 						<BondData>
 							<SecurityId>ISIN:US682189AS48</SecurityId>
 							<BondNotional>1000000.00</BondNotional>
 						</BondData>
 					</ConvertibleBondData>
-				</SubTrade>
+				</Trade>
 			</UnderlyingData>
 			<!-- the return leg definition -->
 			<ReturnData>
@@ -6048,8 +6048,8 @@
             <UnderlyingData>
                 <Derivative>
                     <Id>DERIV:TEST1</Id>
-                    <SubTrade>
-                        <SubTradeType>EquityPosition</SubTradeType>
+                    <Trade>
+                        <TradeType>EquityPosition</TradeType>
                         <EquityPositionData>
                             <Quantity>7006.0</Quantity>
                             <Underlying>
@@ -6058,12 +6058,12 @@
                                 <IdentifierType>RIC</IdentifierType>
                             </Underlying>
                         </EquityPositionData>
-                    </SubTrade>
+                    </Trade>
                 </Derivative>
                 <Derivative>
                     <Id>DERIV:TEST2</Id>
-                    <SubTrade>
-                        <SubTradeType>EquityPosition</SubTradeType>
+                    <Trade>
+                        <TradeType>EquityPosition</TradeType>
                         <EquityPositionData>
                             <Quantity>25904.0</Quantity>
                             <Underlying>
@@ -6072,12 +6072,12 @@
                                 <IdentifierType>RIC</IdentifierType>
                             </Underlying>
                         </EquityPositionData>
-                    </SubTrade>
+                    </Trade>
                 </Derivative>
                 <Derivative>
                     <Id>DERIV:TEST3</Id>
-                    <SubTrade>
-                        <SubTradeType>EquityPosition</SubTradeType>
+                    <Trade>
+                        <TradeType>EquityPosition</TradeType>
                         <EquityPositionData>
                             <Quantity>-89658.0</Quantity>
                             <Underlying>
@@ -6086,12 +6086,12 @@
                                 <IdentifierType>RIC</IdentifierType>
                             </Underlying>
                         </EquityPositionData>
-                    </SubTrade>
+                    </Trade>
                 </Derivative>
                 <Derivative>
                     <Id>DERIV:TEST4</Id>
-                    <SubTrade id="CashSWAP_USD.CASH">
-                        <SubTradeType>Swap</SubTradeType>
+                    <Trade id="CashSWAP_USD.CASH">
+                        <TradeType>Swap</TradeType>
                         <SwapData>
                             <LegData>
                                 <Payer>true</Payer>
@@ -6104,7 +6104,7 @@
                                 </CashflowData>
                             </LegData>
                         </SwapData>
-                    </SubTrade>
+                    </Trade>
                 </Derivative>
             </UnderlyingData>
             <ReturnData>
@@ -6138,8 +6138,8 @@
             <!-- a trade defining the underlying on which the return is computed -->
             <!-- this can have types Bond, ConvertibleBond, EquityPosition, EquityOptionPosition -->
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>EquityOptionPosition</SubTradeType>
+                <Trade>
+                    <TradeType>EquityOptionPosition</TradeType>
                     <EquityOptionPositionData>
                         <!-- basket price = quantity x sum_i ( weight_i x equityOptionPrice_i x fx_i ) -->
                         <Quantity>1000</Quantity>
@@ -6184,7 +6184,7 @@
                         <!-- option #3 -->
                         <!-- ... -->
                     </EquityOptionPositionData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>
@@ -6292,8 +6292,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>EquityPosition</SubTradeType>
+                <Trade>
+                    <TradeType>EquityPosition</TradeType>
                     <EquityPositionData>
                         <Quantity>18101.486</Quantity>
                         <Underlying>
@@ -6302,7 +6302,7 @@
                             <IdentifierType>FIGI</IdentifierType>
                         </Underlying>
                     </EquityPositionData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>
@@ -6363,8 +6363,8 @@
         </Envelope>
         <TotalReturnSwapData>
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>EquityPosition</SubTradeType>
+                <Trade>
+                    <TradeType>EquityPosition</TradeType>
                     <EquityPositionData>
                         <Quantity>1000</Quantity>
                         <Underlying>
@@ -6380,9 +6380,9 @@
                             <IdentifierType>RIC</IdentifierType>
                         </Underlying>
                     </EquityPositionData>
-                </SubTrade>
-                <SubTrade>
-                    <SubTradeType>EquityOptionPosition</SubTradeType>
+                </Trade>
+                <Trade>
+                    <TradeType>EquityOptionPosition</TradeType>
                     <EquityOptionPositionData>
                         <Quantity>1000</Quantity>
                         <Underlying>
@@ -6422,7 +6422,7 @@
                             <Strike>3400</Strike>
                         </Underlying>
                     </EquityOptionPositionData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>

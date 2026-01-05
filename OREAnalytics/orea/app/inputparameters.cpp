@@ -87,9 +87,6 @@ void InputParameters::loadParameters() {
     if (refDataManager_ && rdmOverride)
         refDataManager_->setRDMOverride(rdmOverride);
 
-}
-
-void InputParameters::loadParameters() {
     loadParameterXML<Conventions>(conventions_, "setup", "conventionsFile");
     // Load Configurations
     loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment");

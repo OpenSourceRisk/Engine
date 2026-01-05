@@ -14,8 +14,8 @@
             <!-- a trade defining the underlying on which the return is computed -->
             <!-- this can have types Bond, ConvertibleBond, EquityPosition, EquityOptionPosition -->
             <UnderlyingData>
-                <SubTrade>
-                    <SubTradeType>EquityOptionPosition</SubTradeType>
+                <Trade>
+                    <TradeType>EquityOptionPosition</TradeType>
                     <EquityOptionPositionData>
                         <!-- basket price = quantity x sum_i ( weight_i x equityOptionPrice_i x fx_i ) -->
                         <Quantity>1000</Quantity>
@@ -60,7 +60,7 @@
                         <!-- option #3 -->
                         <!-- ... -->
                     </EquityOptionPositionData>
-                </SubTrade>
+                </Trade>
             </UnderlyingData>
             <ReturnData>
                 <Payer>false</Payer>

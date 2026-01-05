@@ -264,21 +264,11 @@ void BondBasket::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "BondBasketData");
     bonds_.clear();
-
     for (XMLNode* child = XMLUtils::getChildNode(node, "Trade"); child; child = XMLUtils::getNextSibling(child)) {
         string id = XMLUtils::getAttribute(child, "id");
         auto bonddata = QuantLib::ext::make_shared<ore::data::Bond>();
         bonddata->fromXML(child);
         bonddata->id() = id;
-        bonddata->isSubTrade() = true;
-        bonds_.push_back(bonddata);
-    }
-    for (XMLNode* child = XMLUtils::getChildNode(node, "SubTrade"); child; child = XMLUtils::getNextSibling(child)) {
-        string id = XMLUtils::getAttribute(child, "id");
-        auto bonddata = QuantLib::ext::make_shared<ore::data::Bond>();
-        bonddata->fromXML(child);
-        bonddata->id() = id;
-        bonddata->isSubTrade() = true;
         bonds_.push_back(bonddata);
     }
 }
