@@ -103,7 +103,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  = ./pages \
                          ../orea \
-			 ../test
+                         ../test
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.docs \
                          *.hpp \

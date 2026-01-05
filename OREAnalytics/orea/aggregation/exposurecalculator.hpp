@@ -69,7 +69,9 @@ public:
         //! Flag to indicate exposure evaluation with dynamic credit
         const bool multiPath,
         //! Flag to indicate flipped xva calculation
-        const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues_ = false,
+        const bool flipViewXVA,
+        //! Use close-out values for exposure profiles
+        const bool exposureProfilesUseCloseOutValues = false,
         //! Continue with the calculation if possible when there is an error
         bool continueOnError = false,
         //! use double precision cube

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/portfoliodetailsanalytic.hpp
+/*! \file orea/app/analytics/portfoliodetailsanalytic.hpp
     \brief Pricing Analytic
 */
 

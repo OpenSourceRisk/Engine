@@ -18,7 +18,7 @@
 
 /*! \file aggregation/creditsimulationparameters.hpp
     \brief Credit simulation parameter class
-    \ingroup engine
+    \ingroup analytics
 */
 
 #pragma once

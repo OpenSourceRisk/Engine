@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytics/analyticsfactory.hpp
+/*! \file orea/app/analytics/analyticfactory.hpp
     \brief Analytics Factory
     \ingroup analytics
 */

@@ -32,3 +32,15 @@
 /*! \defgroup analytics Analytics
     Grouping of all analytic related classes, functions and files
 */
+
+/*! \defgroup app Application
+    Grouping of all top level application related classes, functions and files
+*/
+
+/*! \defgroup engine Engines
+    Grouping of all analytics engine related classes, functions and files
+*/
+
+/*! \defgroup tests Tests
+    Grouping of all test suite related classes, functions and files
+*/

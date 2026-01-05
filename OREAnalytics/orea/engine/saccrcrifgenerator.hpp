@@ -3,7 +3,7 @@
   All rights reserved.
 */
 
-/*! \file orepcapital/orea/saccrcrifgenerator.hpp
+/*! \file orea/engine/saccrcrifgenerator.hpp
     \brief Class that generates a SA-CCR CRIF report
  */
 

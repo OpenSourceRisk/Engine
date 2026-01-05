@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytics/scenariogeneratorsanalytic.hpp
-    \brief ORE Scenario Generator Analytics
+/*! \file orea/app/analytics/scenariogenerationanalytic.hpp
+    \brief ORE Scenario Generation Analytics
 */
 
 #pragma once
