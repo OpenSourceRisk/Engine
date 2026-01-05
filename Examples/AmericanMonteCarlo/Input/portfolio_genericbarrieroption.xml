@@ -11,12 +11,16 @@
       <PayoffType type="number">0</PayoffType>
       <!-- 0 = none, 1 = DonwIn, 2 = UpIn, 3 = DownOut, 4 = UpOut -->
       <TransatlanticBarrierType type="barrierType">
-        <Value>DownOut</Value>
+        <Value>UpOut</Value>
       </TransatlanticBarrierType>
-      <TransatlanticBarrierLevel type="number"><Value>1.1</Value></TransatlanticBarrierLevel>
+      <TransatlanticBarrierLevel type="number">
+        <Value>1.1</Value>
+      </TransatlanticBarrierLevel>
       <TransatlanticBarrierRebate type="number">50000</TransatlanticBarrierRebate>
       <TransatlanticBarrierRebateCurrency type="currency">USD</TransatlanticBarrierRebateCurrency>
-      <TransatlanticBarrierStrictComparison type="number"><Value>0</Value></TransatlanticBarrierStrictComparison>
+      <TransatlanticBarrierStrictComparison type="number">
+        <Value>0</Value>
+      </TransatlanticBarrierStrictComparison>
       <LongShort type="longShort">Long</LongShort>
       <PutCall type="optionType">Call</PutCall>
       <!-- required for PayoffType = Vanilla only -->
@@ -46,7 +50,10 @@
           </Rules>
         </ScheduleData>
       </BarrierMonitoringDates>
-      <BarrierStrictComparison type="number"><Value>0</Value><Value>0</Value></BarrierStrictComparison>
+      <BarrierStrictComparison type="number">
+        <Value>0</Value>
+        <Value>0</Value>
+      </BarrierStrictComparison>
       <BarrierTypes type="barrierType">
         <Value>UpOut</Value>
         <Value>DownIn</Value>
