@@ -797,6 +797,9 @@ void BasicReferenceDataManager::check(const string& type, const string& id, cons
 }
 
 bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) {
+    if (rdmOverride_ && rdmOverride_->hasData(type, id, asof)) 
+        return true;
+
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();
@@ -808,6 +811,10 @@ bool BasicReferenceDataManager::hasData(const string& type, const string& id, co
 
 QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
                                                                      const QuantLib::Date& asof) {
+
+    if (rdmOverride_ && rdmOverride_->hasData(type, id, asof)) 
+		return rdmOverride_->getData(type, id, asof);
+
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();

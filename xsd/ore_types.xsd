@@ -352,6 +352,7 @@
       <xs:enumeration value="30/360"/>
       <xs:enumeration value="30/360 US"/>
       <xs:enumeration value="30/360 (US)"/>
+      <xs:enumeration value="30/360 NASD"/>
       <xs:enumeration value="30U/360"/>
       <xs:enumeration value="30US/360"/>
       <xs:enumeration value="30/360 (Bond Basis)"/>
@@ -400,6 +401,7 @@
       <xs:enumeration value="Actual/364"/>
       <xs:enumeration value="Act/364"/>
       <xs:enumeration value="ACT/364"/>
+      <xs:enumeration value="Month"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -772,6 +774,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="IMM"/>
       <xs:enumeration value="FirstDayOfMonth"/>
+      <xs:enumeration value="SecondThursday"/>
     </xs:restriction>
   </xs:simpleType>
 

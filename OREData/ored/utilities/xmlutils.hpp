@@ -80,6 +80,9 @@ public:
 
     //! save the XML Document to the given file.
     void toFile(const string& filename) const;
+        
+    //! load an xml doc from the given file.
+    void fromFile(const string& filename);
 
     //! return the XML Document as a string.
     std::string toString() const;

@@ -14,7 +14,19 @@ else()
     SET(COMPONENTS_CONDITIONAL "")
 endif()
 
-find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log filesystem OPTIONAL_COMPONENTS system chrono)
+if(MSVC)
+	add_compile_definitions(BOOST_IOSTREAMS_NO_LIB)
+endif()
+
+if(ORE_USE_ZLIB)
+    find_package(ZLIB REQUIRED)
+endif()
+
+if(MSVC AND ORE_USE_ZLIB)
+    LIST(APPEND COMPONENT_LIST zlib)
+endif()
+
+find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log filesystem OPTIONAL_COMPONENTS system chrono iostreams)
 
 
 include_directories(${Boost_INCLUDE_DIRS})

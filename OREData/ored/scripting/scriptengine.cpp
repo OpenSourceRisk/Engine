@@ -68,6 +68,8 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<FunctionNormalPdfNode>,
                   public Visitor<FunctionMinNode>,
                   public Visitor<FunctionMaxNode>,
+                  public Visitor<FunctionFractionNode>,
+                  public Visitor<FunctionRoundNode>,
                   public Visitor<FunctionPowNode>,
                   public Visitor<FunctionBlackNode>,
                   public Visitor<FunctionDcfNode>,
@@ -235,6 +237,8 @@ public:
     void visit(FunctionNormalPdfNode& n) override { unaryOp<ValueType>(n, "normalPdf", normalPdf); }
     void visit(FunctionMinNode& n) override { binaryOp<ValueType>(n, "min", min); }
     void visit(FunctionMaxNode& n) override { binaryOp<ValueType>(n, "max", max); }
+    void visit(FunctionFractionNode& n) override { unaryOp<ValueType>(n, "frac", frac); }
+    void visit(FunctionRoundNode& n) override { binaryOp<ValueType>(n, "round", round); }
     void visit(FunctionPowNode& n) override { binaryOp<ValueType>(n, "pow", pow); }
 
     // condition nodes
