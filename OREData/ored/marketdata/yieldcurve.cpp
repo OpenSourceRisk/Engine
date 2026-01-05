@@ -1512,6 +1512,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         /* If we have two instruments with identical pillar dates wthin a segment, remove the earlier one */
 
+        // TODO do we want an option (in the segment config) to turn that check off and keep both instruments?
+
         for (Size i = 0; i < curveSegments_[index].size(); ++i) {
             for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
                 if (std::next(it, 1) != instrumentsPerSegment[i].end() &&
@@ -1526,6 +1528,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
         }
 
         /* Determine min and max pillar date in each segment */
+
+        // TODO those should take into account the main pillar dates as well as the additional pillar dates
 
         std::vector<std::pair<Date, Date>> minMaxDatePerSegment(curveSegments_[index].size(),
                                                                 std::make_pair(Date::maxDate(), Date::minDate()));
@@ -2110,6 +2114,7 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
                     hQuote, depositTerm, fwdStartDays, depositConvention->calendar(), depositConvention->convention(),
                     depositConvention->eom(), depositConvention->dayCounter());
             }
+
             instruments.push_back(
                 {depositHelper, mainPillarDate(segment->pillarChoice(), depositHelper->pillarDate()),
                  additionalPillarDates(segment->pillarChoice(), depositHelper->earliestDate()), "Deposit",

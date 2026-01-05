@@ -48,11 +48,13 @@ struct YieldCurveCalibrationInfo {
     std::string dayCounter;
     std::string currency;
 
+    // these are all curve pillar dates used for interpolation
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
 
+    // a rate helper can have 0...n pillar dates associated to it in general
     std::vector<std::set<QuantLib::Date>> rateHelperPillarDates;
     std::vector<std::string> mdQuoteLabels;
     std::vector<double> mdQuoteValues;

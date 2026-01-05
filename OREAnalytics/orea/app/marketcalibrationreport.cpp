@@ -224,6 +224,8 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
     addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
     addRowReport(type, id, "currency", "", "", "", info->currency);
 
+    // TODO, add the mdQuoteLabel, mdQuoteValue, calibrationError if one of the rateHelperPillarDates
+    // matches the curve pillar date, add mdquote, calibration error only once per rate helper)
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
         std::string key1 = to_string(info->pillarDates[i]);
         addRowReport(type, id, "time", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
@@ -235,9 +237,15 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
         if (!iborIndex.empty())
             addRowReport(type, id, "forwardRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
                          "", iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
-        if (!info->mdQuoteLabels.empty())
+        if (!info->mdQuoteLabels.empty()) {
             addRowReport(type, id, "mdQuote", key1, info->mdQuoteLabels.at(i), "", info->mdQuoteValues.at(i));
+            addRowReport(type, id, "calibrationError", key1, info->mdQuoteLabels.at(i), "",
+                         info->rateHelperQuoteErrors.at(i));
+        }
     }
+
+    // TODO any rate helpers that were not added to the report above, should be added now for result types
+    // mdQuoteValue, calibrationError
 
     // fitted bond curve results
     auto y = QuantLib::ext::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
