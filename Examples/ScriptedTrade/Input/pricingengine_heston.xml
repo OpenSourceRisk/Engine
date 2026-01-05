@@ -54,7 +54,7 @@
       <Parameter name="Interactive">false</Parameter>
       <Parameter name="BootstrapTolerance">0.1</Parameter>
       <!-- default parameters-->
-      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Engine">FD</Parameter>
       <Parameter name="Samples">10000</Parameter>
       <Parameter name="SalvagingAlgorithm">None</Parameter>
       <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
