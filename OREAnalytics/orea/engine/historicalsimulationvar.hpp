@@ -74,7 +74,8 @@ public:
                                   QuantLib::ext::optional<ore::data::TimePeriod> period,
                                   const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
                                   std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false,
-                                  const bool includeExpectedShortfall = false, const bool tradePnl = false,
+                                  const bool includeExpectedShortfall = false,
+                                  const bool tradePnl = false, const bool riskFactorBreakdown = false,
                                   const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true);
 
     void createAdditionalReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
@@ -99,8 +100,11 @@ protected:
 private:
     std::vector<QuantLib::Real> pnls_;
     ore::analytics::TradePnLStore tradePnls_;
+    ore::analytics::HistoricalPnlGenerator::RiskFactorPnLSeries riskFactorPnls_;
     bool includeExpectedShortfall_ = false;
     bool tradePnl_ = false;
+    bool riskFactorBreakdown_ = false;
+    int countRF_ = 0;
 };
 
 } // namespace analytics
