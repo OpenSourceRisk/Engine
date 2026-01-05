@@ -2100,11 +2100,11 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
                 }
                 depositHelper = QuantLib::ext::make_shared<DepositRateHelper>(
                     hQuote, depositTerm, fwdStartDays, index->fixingCalendar(), index->businessDayConvention(),
-                    index->endOfMonth(), index->dayCounter());
+                    index->endOfMonth(), index->dayCounter(), pillarChoice(segment->pillarChoice()));
             } else {
                 depositHelper = QuantLib::ext::make_shared<DepositRateHelper>(
                     hQuote, depositTerm, fwdStartDays, depositConvention->calendar(), depositConvention->convention(),
-                    depositConvention->eom(), depositConvention->dayCounter());
+                    depositConvention->eom(), depositConvention->dayCounter(), pillarChoice(segment->pillarChoice()));
             }
 
             instruments.push_back(
@@ -3120,14 +3120,14 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                 }
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
                     qlFXForwardQuote, spotFx, earliestDate, fxFwdQuoteDate(fxForwardQuote->term()),
-                    isFxBaseCurrencyCollateralCurrency, knownDiscountCurve);
+                    isFxBaseCurrencyCollateralCurrency, knownDiscountCurve, pillarChoice(segment->pillarChoice()));
             } else {
                 Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
                 Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
                     qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(),
                     fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
-                    knownDiscountCurve);
+                    knownDiscountCurve, Calendar(), pillarChoice(segment->pillarChoice()));
             }
 
             instruments.push_back(
