@@ -19,6 +19,18 @@
 #include <ored/scripting/models/heston.hpp>
 #include <qle/processes/quantohestonprocess.hpp>
 #include <qle/processes/multiassetquantohestonprocess.hpp>
+#include <qle/methods/fdmblackscholesmesher.hpp>
+#include <qle/methods/fdmblackscholesop.hpp>
+#include <qle/methods/fdmhestonop.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmblackscholesmesher.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmblackscholesmultistrikemesher.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmhestonvariancemesher.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmmeshercomposite.hpp>
+#include <ql/methods/finitedifferences/operators/fdmlinearoplayout.hpp>
+#include <ql/methods/finitedifferences/operators/fdmhestonop.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmhestonsolver.hpp>
+#include <ql/methods/finitedifferences/stepconditions/fdmstepconditioncomposite.hpp>
+#include <ql/methods/finitedifferences/utilities/fdminnervaluecalculator.hpp>
 #include <sstream>
 
 namespace ore {
@@ -81,8 +93,114 @@ void Heston::performCalculationsMc() const {
 }
 
 void Heston::performCalculationsFd() const {
-    // TODO, see localvol.cpp for a template
-    QL_FAIL("Heston::performCalculationsFd() not implemented");
+    DLOG("Heston::performCalculationsFd() called");
+    QL_REQUIRE(model_->hestonProcesses().size() == 1, "a single Heston process with constant parameters is expected");
+    auto process = model_->hestonProcesses()[0];
+    
+    // 0c if we only have one effective sim date (today), we set the underlying values = spot
+
+    if (effectiveSimulationDates_.size() == 1) {
+        underlyingValues_ = RandomVariable(size(), model_->generalizedBlackScholesProcesses()[0]->x0());
+        return;
+    }
+
+    // 1a set the calibration strikes
+
+    std::vector<Real> calibrationStrikes = getCalibrationStrikes();
+
+    // 1b set up the critical points for the mesher, same as for BS with local vol
+
+    std::vector<std::vector<std::tuple<Real, Real, bool>>> cPoints;
+    for (Size i = 0; i < indices_.size(); ++i) {
+        cPoints.push_back(std::vector<std::tuple<Real, Real, bool>>());
+        auto f = calibrationStrikes_.find(indices_[i].name());
+        if (f != calibrationStrikes_.end()) {
+            for (Size j = 0; j < std::min(f->second.size(), params_.mesherMaxConcentratingPoints); ++j) {
+                cPoints.back().push_back(
+                    QuantLib::ext::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
+                TLOG("added critical point at strike " << f->second[j] << " with concentration "
+                                                       << params_.mesherConcentration);
+            }
+        }
+    }
+
+    // 2 set up mesher if we do not have one already or if we want to rebuild it every time
+
+    const Time maturity = timeGrid_.back();
+
+    if (mesher_ == nullptr || !params_.staticMesher) {
+
+        // variance mesher
+        const Size vGrid = 50; // FIXME: Add a "VarianceStateGridPoints" parameter
+        const Size tGridMin = 5;
+        const Size tGridAvgSteps = std::max(tGridMin, timeGrid_.size() / 50);
+        const ext::shared_ptr<FdmHestonVarianceMesher> vMesher =
+            ext::make_shared<FdmHestonVarianceMesher>(vGrid, process, maturity, tGridAvgSteps);
+
+        // equity mesher
+        const Size xGrid = 24; // FIXME: use StateGridPoints parameter
+        ext::shared_ptr<QuantExt::FdmBlackScholesMesher> equityMesher;
+        auto processHelper = QuantExt::FdmBlackScholesMesher::processHelper(
+            process->s0(), process->dividendYield(), process->riskFreeRate(), vMesher->volaEstimate());
+        QL_REQUIRE(calibrationStrikes.size() > 0, "empty calibration strikes");
+        Real strike = calibrationStrikes[0] == Null<Real>() ? atmForward(0, timeGrid_.back()) : calibrationStrikes[0];
+        equityMesher = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
+            xGrid, processHelper, maturity, strike, Null<Real>(), Null<Real>(), params_.mesherEpsilon,
+            params_.mesherScaling, cPoints[0]);
+
+        mesher_ = ext::make_shared<FdmMesherComposite>(equityMesher, vMesher);
+    }
+
+    // 3 set up operator using atmf vol and without discounting, floor forward variances at zero
+
+    // FIXME: Keep this in analogy to the BS local vol case
+    QuantLib::ext::shared_ptr<QuantExt::FdmQuantoHelper> quantoHelper;
+    if (applyQuantoAdjustment_) {
+        Real quantoCorr = quantoCorrelationMultiplier_ * getCorrelation()[0][1];
+        quantoHelper = QuantLib::ext::make_shared<QuantExt::FdmQuantoHelper>(
+            *curves_[quantoTargetCcyIndex_], *curves_[quantoSourceCcyIndex_],
+            *model_->generalizedBlackScholesProcesses()[1]->blackVolatility(), quantoCorr, Null<Real>(),
+            model_->generalizedBlackScholesProcesses()[1]->x0(), false, true);
+    }
+
+    // FIXME
+    // Modify QuantExt:FdmHestonOp in analogy to QuantExt::FdmBlackScholesOp
+    operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(
+        mesher_, process, quantoHelper);
+
+    // FIXME
+    // Should we try to use FdmHestonSolver (as in fdhestonvanillaengine, i.e with
+    // calculator, step conditions, boundaries, solver desc, ...) instead of using the
+    // FdmBackwardSolver directly?
+    // FdmHestonSolver uses FdmBackwardSolver internally adding bicubic spline interpolation, etc.
+    std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>> boundaries;
+    ext::shared_ptr<FdmStepConditionComposite> stepCondition = nullptr;
+    //const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Douglas();
+    const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Hundsdorfer();
+
+    solver_ = QuantLib::ext::make_shared<FdmBackwardSolver>(operator_, boundaries, stepCondition, schemeDesc);
+
+    // Size tGrid = timeGrid_.size();
+    // Size dampingSteps = 0;
+    // ext::shared_ptr<FdmInnerValueCalculator> calculator = nullptr;    
+    // FdmSolverDesc solverDesc = { mesher_, boundaries, stepConditions,
+    // 				 calculator, maturity,
+    // 				 tGrid, dampingSteps };
+    // auto solver = ext::make_shared<FdmHestonSolver>(
+    //                 Handle<HestonProcess>(process),
+    //                 solverDesc, schemeDesc,
+    //                 Handle<FdmQuantoHelper>(quantoHelper));
+    
+    // 5 fill random variable with underlying values, these are valid for all times
+    
+    auto locations = mesher_->locations(0);
+    underlyingValues_ = exp(RandomVariable(locations));
+
+    // 6 set additional results
+
+    setAdditionalResults();
+
+    DLOG("Heston::performCalculationsFd() done");
 }
 
 void Heston::generatePaths() const {
@@ -244,7 +362,7 @@ void Heston::setAdditionalResults() const {
     if (model_->calibration().size() > 0)
         additionalResults_["Heston.calibration"] = model_->calibration();
 
-    if (debug_) {
+    if (debug_ && type_ == Model::Type::MC) {
         // copy path data
         MultiAssetHestonPaths paths;
         paths.samples = size();

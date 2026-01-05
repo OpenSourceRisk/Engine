@@ -179,6 +179,7 @@ methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmhestonop.cpp
 methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
 methods/irdeltaparconverter.cpp
@@ -716,6 +717,7 @@ methods/fdmblackscholesmesher.hpp
 methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmhestonop.hpp
 methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
 methods/irdeltaparconverter.hpp
