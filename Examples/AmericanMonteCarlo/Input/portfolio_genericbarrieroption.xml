@@ -10,8 +10,8 @@
       <!-- 0 = Vanilla, 1 = CashOrNothing -->
       <PayoffType type="number">0</PayoffType>
       <!-- 0 = none, 1 = DonwIn, 2 = UpIn, 3 = DownOut, 4 = UpOut -->
-      <TransatlanticBarrierType type="number">
-        <Value>4</Value>
+      <TransatlanticBarrierType type="barrierType">
+        <Value>DownOut</Value>
       </TransatlanticBarrierType>
       <TransatlanticBarrierLevel type="number"><Value>1.1</Value></TransatlanticBarrierLevel>
       <TransatlanticBarrierRebate type="number">50000</TransatlanticBarrierRebate>

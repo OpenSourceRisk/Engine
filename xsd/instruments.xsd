@@ -4571,10 +4571,11 @@
   <xs:complexType name="genericBarrierOptionDataRaw">
     <xs:all>
       <xs:element type="stFreeStyleNumber" name="PayoffType"/>
-      <xs:element type="stFreeStyleBarrierType" name="TransatlanticBarrierType"/>
-      <xs:element type="stFreeStyleNumber" name="TransatlanticBarrierLevel"/>
+      <xs:element type="stFreeStyleBarrierTypeVector" name="TransatlanticBarrierType"/>
+      <xs:element type="stFreeStyleNumberVector" name="TransatlanticBarrierLevel"/>
       <xs:element type="stFreeStyleNumber" name="TransatlanticBarrierRebate"/>
       <xs:element type="stFreeStyleCurrency" name="TransatlanticBarrierRebateCurrency"/>
+      <xs:element type="stFreeStyleNumberVector" name="TransatlanticBarrierStrictComparison"/>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleOptionType" name="PutCall"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
@@ -4583,11 +4584,12 @@
       <xs:element type="stFreeStyleCurrency" name="PayCurrency"/>
       <xs:element type="stFreeStyleEvent" name="ExpiryDate"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
-      <xs:element type="stFreeStyleIndex" name="Underlying"/>
+      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
       <xs:element type="stFreeStyleEventSchedule" name="BarrierMonitoringDates"/>
       <xs:element type="stFreeStyleBarrierTypeVector" name="BarrierTypes"/>
       <xs:element type="stFreeStyleNumberVector" name="BarrierLevels"/>
       <xs:element type="stFreeStyleNumberVector" name="BarrierRebates"/>
+      <xs:element type="stFreeStyleNumberVector" name="BarrierStrictComparison"/>
       <xs:element type="stFreeStyleCurrencyVector" name="BarrierRebateCurrencies"/>
       <xs:element type="stFreeStyleNumberVector" name="BarrierRebatePayTimes"/>
       <xs:element type="stFreeStyleNumber" name="BarrierRebate"/>
