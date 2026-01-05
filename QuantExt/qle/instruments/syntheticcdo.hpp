@@ -101,7 +101,7 @@ using namespace QuantLib;
   The pricing algorithm allows for varying notional amounts and
   default termstructures of the underlyings.
 
-  \ingroup credit
+  \ingroup instruments
 
   \todo Investigate and fix cases \f$ E_{i+1} < E_i. \f$
 */

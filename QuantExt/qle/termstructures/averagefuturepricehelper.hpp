@@ -57,6 +57,9 @@ public:
         \param dailyExpiryOffset If set to \c Null<Natural>(), this is ignored. If set to a positive integer, it is 
                                  the number of business days on the \c index calendar to offset each daily expiry date 
                                  on each pricing date.
+        \param offPeakPowerData  Optional data for off-peak power averaging futures. Contains the Holiday calendar 
+                                 number of offpeak hours on a workday. Used to compute the average hourly price from 
+                                 the daily price fixings.
     */
     AverageFuturePriceHelper(const QuantLib::Handle<QuantLib::Quote>& price,
         const QuantLib::ext::shared_ptr<CommodityIndex>& index,

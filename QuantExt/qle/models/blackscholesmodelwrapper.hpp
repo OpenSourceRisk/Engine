@@ -18,7 +18,7 @@
 
 /*! \file models/blackscholesmodelwrapper.hpp
     \brief wrapper around a vector of BS processes
-    \ingroup utilities
+    \ingroup models
 */
 
 #pragma once

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/engine/simpleim.hpp
+/*! \file orea/engine/simpledynamicsimm.hpp
     \brief simple im model for dynamic im calculations
 */
 
