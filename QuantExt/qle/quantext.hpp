@@ -619,6 +619,7 @@
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
+#include <qle/time/monthcounter.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/barrier.hpp>
 #include <qle/utilities/cashflows.hpp>

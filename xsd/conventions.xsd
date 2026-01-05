@@ -293,6 +293,8 @@
       <xs:element type="businessDayConvention" name="InflationConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="publicationRoll" name="PublicationRoll" minOccurs="0" maxOccurs="1"/>
       <xs:element type="scheduleData" name="PublicationSchedule" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="StartDelay" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="StartDelayConvention" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

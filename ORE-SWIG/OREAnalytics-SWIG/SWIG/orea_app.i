@@ -112,6 +112,7 @@ public:
     const ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs();
     const ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs();
     const ext::shared_ptr<CurveConfigurations>& curveConfig(const std::string& s = std::string()) const;
+    QuantLib::Date mporDate();
         
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& stressSimMarketParams() const;
     const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressScenarioData() const;
@@ -127,6 +128,7 @@ public:
     void setBuildFailedTrades(bool b);
     void setObservationModel(const std::string& s);
     void setImplyTodaysFixings(bool b);
+    void setFixingCutOffDate(Date d);
     void setUseAtParCouponsCurves(bool b);
     void setUseAtParCouponsTrades(bool b);
     void setMarketConfig(const std::string& config, const std::string& context); 
@@ -141,6 +143,9 @@ public:
     void setConventions(const std::string& xml);
     void setConventionsFromFile(const std::string& fileName);
     void setConventions(const ext::shared_ptr<Conventions>& convs);
+    void setMporConventions(const std::string& xml);
+    void setMporConventionsFromFile(const std::string& fileName);
+    void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml, std::string id = std::string());
@@ -208,7 +213,8 @@ public:
     // Setters for stress testing
     void setStressThreshold(Real r);
     void setStressSimMarketParams(const std::string& xml); 
-    void setStressScenarioData(const std::string& xml); 
+    void setStressScenarioData(const std::string& xml);
+    void setStressScenarioData(const ext::shared_ptr<StressTestScenarioData>& stressScenarioData);
     void setStressPricingEngine(const std::string& xml); 
     void setStressPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for VaR

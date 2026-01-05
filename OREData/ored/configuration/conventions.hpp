@@ -115,7 +115,13 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type);
 class Conventions : public XMLSerializable {
 public:
     //! Default constructor
-    Conventions() {}
+    Conventions(const QuantLib::ext::shared_ptr<Conventions>& conventionsOverride = nullptr) {}
+
+    /*! add an override to the conventions */
+    void setConventionsOverride(const QuantLib::ext::shared_ptr<Conventions>& conventionsOverride) {
+		boost::unique_lock<boost::shared_mutex> lock(mutex_);
+		conventionsOverride_ = conventionsOverride;
+	}
 
     /*! Returns the convention if found and throws if not */
     QuantLib::ext::shared_ptr<Convention> get(const string& id) const;
@@ -129,7 +135,7 @@ public:
 
     /*! Get all conventions of a given type */
     std::set<QuantLib::ext::shared_ptr<Convention>> get(const Convention::Type& type) const;
-    
+
     /*! Find a convention for an FX pair */
     QuantLib::ext::shared_ptr<Convention> getFxConvention(const string& ccy1, const string& ccy2) const;
 
@@ -157,6 +163,7 @@ private:
     mutable map<string, std::pair<string, string>> unparsed_;
     mutable std::set<string> used_;
     mutable boost::shared_mutex mutex_;
+    QuantLib::ext::shared_ptr<Conventions> conventionsOverride_;
 };
 
 //! Singleton to hold conventions
@@ -305,7 +312,7 @@ private:
  */
 class FutureConvention : public Convention {
 public:
-    enum class DateGenerationRule { IMM, FirstDayOfMonth };
+    enum class DateGenerationRule { IMM, FirstDayOfMonth, SecondThursday };
     //! \name Constructors
     //@{
     //! Default constructor
@@ -649,7 +656,7 @@ public:
     //! Detailed constructor
     TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                              const string& receiveFrequency = "", const string& payFrequency = "",
-                             const string& spreadOnRec = "", const string& includeSpread = "", 
+                             const string& spreadOnRec = "", const string& includeSpread = "",
                              const string& subPeriodsCouponType = "");
     //@}
 
@@ -1173,6 +1180,8 @@ public:
     BusinessDayConvention infConvention() const { return infConvention_; }
     PublicationRoll publicationRoll() const { return publicationRoll_; }
     const Schedule& publicationSchedule() const { return publicationSchedule_; }
+    int startDelay() const { return startDelay_; }
+    BusinessDayConvention startDelayConvention() const { return startDelayConvention_; }
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
@@ -1189,6 +1198,8 @@ private:
     Calendar infCalendar_;
     BusinessDayConvention infConvention_;
     Schedule publicationSchedule_;
+    int startDelay_ = 0;
+    BusinessDayConvention startDelayConvention_ = BusinessDayConvention::Following;
 
     // Store the inputs
     string strFixCalendar_;
@@ -1200,6 +1211,8 @@ private:
     string strAdjustInfObsDates_;
     string strInfCalendar_;
     string strInfConvention_;
+    string strStartDelayConvention_;
+
     PublicationRoll publicationRoll_;
     QuantLib::ext::shared_ptr<ScheduleData> publicationScheduleData_;
 };
@@ -1395,7 +1408,7 @@ public:
         CalendarDaysBefore(const std::string& calendarDaysBefore) : calendarDaysBefore_(calendarDaysBefore) {}
         std::string calendarDaysBefore_;
     };
-    
+
     struct BusinessDaysBefore {
         BusinessDaysBefore(const std::string& daysBefore) : businessDaysBefore_(daysBefore) {}
         std::string businessDaysBefore_;
@@ -1457,7 +1470,7 @@ public:
     };
     //@}
 
-    /*! Class to hold averaging information when \c isAveraging_ is \c true. It is generally needed 
+    /*! Class to hold averaging information when \c isAveraging_ is \c true. It is generally needed
         in the CommodityFutureConvention when referenced in piecewise price curve construction.
     */
     class AveragingData : public XMLSerializable {
@@ -1514,7 +1527,7 @@ public:
         void build();
     };
 
-    //! Class to store conventions for creating an off peak power index 
+    //! Class to store conventions for creating an off peak power index
     class OffPeakPowerIndexData : public XMLSerializable {
     public:
         //! Constructor.
@@ -1630,7 +1643,7 @@ public:
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
-    
+
     //! Business days before based constructor
     CommodityFutureConvention(const std::string& id, const BusinessDaysAfter& businessDaysAfter,
                               const std::string& contractFrequency, const std::string& calendar,
@@ -1717,7 +1730,7 @@ private:
     QuantLib::Month oneContractMonth_;
     QuantLib::Integer offsetDays_;
     QuantLib::BusinessDayConvention bdc_;
-    
+
 
     std::string strDayOfMonth_;
     std::string strNth_;
@@ -1743,9 +1756,9 @@ private:
     QuantLib::Natural hoursPerDay_;
     QuantLib::ext::optional<OffPeakPowerIndexData> offPeakPowerIndexData_;
     std::string indexName_;
-    
+
     std::string strOptionContractFrequency_;
-    
+
     OptionAnchorType optionAnchorType_;
     std::string strOptionExpiryOffset_;
     std::string strOptionExpiryDay_;
@@ -1753,7 +1766,7 @@ private:
     std::string strOptionWeekday_;
     std::string strOptionCalendarDaysBefore_;
     std::string strOptionMinBusinessDaysBefore_;
-    
+
     QuantLib::Frequency optionContractFrequency_;
     QuantLib::Natural optionExpiryOffset_;
     QuantLib::Natural optionNth_;
@@ -1764,8 +1777,8 @@ private:
 
     std::set<QuantLib::Month> validContractMonths_;
     std::string savingsTime_;
-    // If its averaging Future but the front month is spot averaged and 
-    // balance of the month price is the average price of the remaining 
+    // If its averaging Future but the front month is spot averaged and
+    // balance of the month price is the average price of the remaining
     // future days in contract
     bool balanceOfTheMonth_;
     std::string balanceOfTheMonthPricingCalendarStr_;

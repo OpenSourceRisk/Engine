@@ -413,6 +413,8 @@ void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
+    if (inputs_->mporConventions() && inputs_->mporDate() != Date())
+        InstrumentConventions::instance().setConventions(inputs_->mporConventions(), inputs_->mporDate());
 
     if (inputs_->currencyConfigs() != nullptr)
         inputs_->currencyConfigs()->addCurrencies();
@@ -640,6 +642,8 @@ std::string OREAppInputParameters::loadParameterString(const std::string& analyt
 std::string OREAppInputParameters::loadParameterXMLString(const std::string& analytic, const std::string& param,
     bool mandatory) {
     string filename = loadParameterString(analytic, param, mandatory);
+    if (filename.empty())
+        return filename;
     filesystem::path filepath = inputPath_ / filename;
     XMLDocument doc(filepath.generic_string());
     return doc.toString();
@@ -751,6 +755,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("setup", "implyTodaysFixings", false);
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
+
+    tmp = params_->get("setup", "fixingCutOffDate", false);
+    if (tmp != "")
+        setFixingCutOffDate(ore::data::parseDate(tmp));
 
     tmp = params_->get("setup", "useAtParCouponsCurves", false);
     if (tmp != "")
@@ -1307,11 +1315,48 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setMcVarSeed(parseInteger(tmp));
 
+        tmp = params_->get("parametricVar", "mporDays", false);
+        if (tmp != "")
+            setMporDays(static_cast<Size>(parseInteger(tmp)));
+
+        tmp = params_->get("parametricVar", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
+
+        tmp = params_->get("parametricVar", "mporOverlappingPeriods", false);
+        if (tmp != "")
+            setMporOverlappingPeriods(parseBool(tmp));
+
         tmp = params_->get("parametricVar", "covarianceInputFile", false);
-        QL_REQUIRE(tmp != "", "covarianceInputFile not provided");
-        std::string covFile = (inputPath_ / tmp).generic_string();
-        LOG("Load Covariance Data from file " << covFile);
-        setCovarianceDataFromFile(covFile);
+        if (tmp != ""){
+            std::string covFile = (inputPath_ / tmp).generic_string();
+            LOG("Load Covariance Data from file " << covFile);
+            setCovarianceDataFromFile(covFile);
+        }
+
+        tmp = params_->get("parametricVar", "historicalPeriod", false);
+        if (tmp != "")
+            setBenchmarkVarPeriod(tmp);
+
+        tmp = params_->get("parametricVar", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setSensiScenarioDataFromFile(file);
+        }
+
+        tmp = params_->get("parametricVar", "simulationConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath_ / tmp).generic_string();
+            LOG("Loading sensitivity scenario sim market parameters from file" << file);
+            setSensiSimMarketParamsFromFile(file);
+        }
+
+        tmp = params_->get("parametricVar", "scenarioFile", false);
+        if (tmp != "") {
+            std::string scenarioFile = (inputPath_ / tmp).generic_string();
+            setScenarioReader(scenarioFile);
+        }
 
         tmp = params_->get("parametricVar", "sensitivityInputFile", false);
         QL_REQUIRE(tmp != "", "sensitivityInputFile not provided");
@@ -3278,6 +3323,8 @@ void OREAppInputParameters::loadParameters() {
     LOG("analytics: " << analytics().size());
     for (auto a : analytics())
         LOG("analytic: " << a);
+
+    InputParameters::loadParameters();
 
     LOG("buildInputParameters done");
 }
