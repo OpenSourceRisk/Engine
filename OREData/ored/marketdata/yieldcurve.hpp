@@ -202,9 +202,9 @@ private:
 
     map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;
 
-    std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, const MultiCurveBootstrapContributor*>
-    buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
-                        const vector<RateHelperData>& instruments);
+    QuantLib::ext::shared_ptr<YieldTermStructure> buildPiecewiseCurve(const std::size_t index,
+                                                                      const std::size_t mixedInterpolationSize,
+                                                                      const vector<RateHelperData>& instruments);
 
     QuantLib::ext::shared_ptr<YieldTermStructure>
     flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::shared_ptr<YieldTermStructure>& yieldts,

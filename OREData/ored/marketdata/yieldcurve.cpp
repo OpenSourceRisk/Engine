@@ -679,7 +679,6 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         if (globalBootstrap) {                                                                                         \
             auto tmp = QuantLib::ext::make_shared<my_curve_2>(asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,      \
                                                               my_curve_2::bootstrap_type(accuracy));                   \
-            globalBootstrapInstance = &tmp->bootstrap();                                                               \
             yieldts = tmp;                                                                                             \
             yieldts->enableExtrapolation();                                                                            \
         } else {                                                                                                       \
@@ -690,7 +689,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         }                                                                                                              \
     }
 
-std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, const MultiCurveBootstrapContributor*>
+QuantLib::ext::shared_ptr<YieldTermStructure>
 YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
                                 const vector<RateHelperData>& instruments) {
 
@@ -704,7 +703,6 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
     Size dontThrowSteps = curveConfig_[index]->bootstrapConfig().dontThrowSteps();
     bool globalBootstrap = curveConfig_[index]->bootstrapConfig().global();
 
-    const MultiCurveBootstrapContributor* globalBootstrapInstance = nullptr;
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
 
     switch (interpolationVariable_[index]) {
@@ -949,7 +947,7 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
         }
     }
 
-    return std::make_pair(yieldts, globalBootstrapInstance);
+    return yieldts;
 }
 
 QuantLib::ext::shared_ptr<YieldTermStructure>
@@ -1446,7 +1444,6 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> yieldTermStructures;
     std::vector<std::string> curveSpecNames;
-    std::vector<const QuantLib::MultiCurveBootstrapContributor*> multiCurveBootstrapContributors;
     std::vector<std::vector<RateHelperData>> instrumentSets;
     std::vector<Size> mixedInterpolationSizes;
 
@@ -1638,11 +1635,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
             return x.rateHelper->pillarDate() < y.rateHelper->pillarDate();
         });
 
-        auto [yieldts, contr] = buildPiecewiseCurve(index, mixedInterpolationSize, instruments);
-
-        yieldTermStructures.push_back(yieldts);
+        yieldTermStructures.push_back(buildPiecewiseCurve(index, mixedInterpolationSize, instruments));
         curveSpecNames.push_back(curveSpec_[index]->name());
-        multiCurveBootstrapContributors.push_back(contr);
         instrumentSets.push_back(instruments);
         mixedInterpolationSizes.push_back(mixedInterpolationSize);
 
@@ -1653,14 +1647,10 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
     // if we have more than one curve to build, set up the multicurve bootstrapper
 
     if (yieldTermStructures.size() > 1) {
-        multiCurve_ = ext::make_shared<MultiCurve>(ext::make_shared<MultiCurveBootstrap>(maxAccuracy));
+        multiCurve_ = ext::make_shared<MultiCurve>(maxAccuracy);
         for (Size i = 0; i < yieldTermStructures.size(); ++i) {
-            QL_REQUIRE(
-                multiCurveBootstrapContributors[i],
-                "All curves in a cycle must use global bootstrap, please adjust the BootstrapConfig of these curves.");
-            // we can disregard the returned external handle
-            multiCurve_->addCurve(requiredYieldCurveHandles_[curveSpecNames[i]], yieldTermStructures[i],
-                                  multiCurveBootstrapContributors[i]);
+            yieldTermStructures[i] = *multiCurve_->addBootstrappedCurve(requiredYieldCurveHandles_[curveSpecNames[i]],
+                                                                        std::move(yieldTermStructures[i]));
         }
     } else {
         /* we link the handle to the yts to keep the yts alive for the scope of this YieldCurve instance, because we
@@ -1670,9 +1660,11 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
     // flatten the piecewise curves
 
+    Size i = 0;
     for (auto const index : indices) {
-        p_[index] = flattenPiecewiseCurve(index, yieldTermStructures[index], mixedInterpolationSizes[index],
-                                          instrumentSets[index]);
+        p_[index] = flattenPiecewiseCurve(index, yieldTermStructures[i], mixedInterpolationSizes[i],
+                                          instrumentSets[i]);
+        ++i;
     }
 }
 
