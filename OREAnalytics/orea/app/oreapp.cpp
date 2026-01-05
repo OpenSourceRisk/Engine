@@ -735,7 +735,7 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
 
-    tmp = params_->get("setup", "fixingCutOffDate", false);
+    tmp = params_->getString("setup", "fixingCutOffDate", false);
     if (tmp != "")
         setFixingCutOffDate(ore::data::parseDate(tmp));
 
