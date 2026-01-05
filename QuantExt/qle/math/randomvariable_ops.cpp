@@ -310,11 +310,11 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
 
     // Frac = 19
     grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
-                       const Size node) -> std::vector<RandomVariable> { return {QuantExt::frac(RandomVariable(size, 1.0))}; });
+                       const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 1.0)}; });
 
     // Round = 20
     grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
-                       const Size node) -> std::vector<RandomVariable> { return {QuantExt::round(RandomVariable(size, 0.0), RandomVariable(size, 0.0))}; });
+                       const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 0.0), RandomVariable(size, 0.0)}; });
 
     return grads;
 }
