@@ -206,32 +206,33 @@ The engine parameters have the following meaning:
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
 \item Heston-specific parameters:
   \begin{itemize}
-  \item CalibrationExpiries: Comma-separated list of option expiry terms, will be used for Heston model calibration if provided.
+  \item HestonCalibrationExpiries [Optional]: Comma-separated list of option expiry terms, will be used for Heston model calibration if provided.
     Otherwise we use the effective simulation dates to determine calibration option expiries. \\
     Default: empty list
-  \item CalibrationVarianceTerms: Comma-separated list of terms where annualised variances are computed from the provided
+  \item CalibrationVarianceTerms [Optional]: Comma-separated list of terms where annualised variances are computed from the provided
     option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. \\
-    Can be left blank which means we skip this step of generating initial guesses.
-  \item HestonInitialValues: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$,
+    Can be left blank which means we skip this step of generating initial guesses. \\
+    Default: empty list
+  \item HestonInitialValues [Optional]: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$,
     $\rho$, $v_0$. \\
     Default: $0.04, 1.0, 0.5, -0.5, 0.04$
-  \item HestonFixedValues: Comma-separated list of booleans to indicate which of the five parameters above shall be kept
+  \item HestonFixedValues [Optional]: Comma-separated list of booleans to indicate which of the five parameters above shall be kept
     fixed in the ``ConstantBestFit'' calibration (see below), same order as the parmeters above. \\
     Default: none fixed, i.e. ``N,N,N,N,N''
-  \item HestonRelaxedFellerConstraint: Constraint on $2\kappa\theta/\sigma^2$ to be used in the ``ConstantBestFit''
+  \item HestonRelaxedFellerConstraint [Optional]: Constraint on $2\kappa\theta/\sigma^2$ to be used in the ``ConstantBestFit''
     calibration, to be chosen in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between
     can be chosen representing a somewhat relaxed Feller constraint. \\
     Default: 0.25 
-  \item HestonCalibrationRestarts: Applies to the ``ConstantBestFit'' method below; if set to zero, we calibrate the Heston
+  \item HestonCalibrationRestarts [Optional]: Applies to the ``ConstantBestFit'' method below; if set to zero, we calibrate the Heston
     parameters once (except for fixed parameters, see above), starting from the initial values/guesses; if positive,
     we perform as many calibrations as specified by ``restarts'' with randomised initial values, keeping the best result. \\
     Default: 0
-  \item HestonMaximumInitialValues: When using ``restarts'' above, this comma-separated list specifies the range of the
+  \item HestonMaximumInitialValues [Optional]: When using ``restarts'' above, this comma-separated list specifies the range of the
     initial values searched, in the order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. For $\theta$, $\kappa$, $\rho$,
     the specified values are upper limits. For $\sigma$, we rather choose $\epsilon = 2\kappa\theta/\sigma^2$, given $\kappa$
     and $\theta$, randomly between the relaxed Feller constraint (a value in (0,1]) and the specified upper limit ($>1$). \\
     Default: $0.1, 20, 3, 0.9, 0.1$
-  \item HestonTolerance: Error tolerance of the calibration (root mean squared error of implied black volatilities) where
+  \item HestonTolerance [Optional]: Error tolerance of the calibration (root mean squared error of implied black volatilities) where
     we stop the search for best parameters when calibrating with HestonCalibrationRestarts $>0$. \\
     Default: 0.001
   \item HestonCalibrationMethod: Choices are ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
@@ -242,11 +243,11 @@ The engine parameters have the following meaning:
     ``PiecewiseBootstrap'' is a variation of the former approach with a sequence of calibrations with piecewise constant
     $\sigma(t)$ and $\rho(t)$, where each calibration in the sequence optimises one expiry or smile section at a time. \\
     Default: ``ConstantBestFit''
-  \item HestonProcessDiscretization: Choice of the QuantLib::HestonProcess discretization (PartialTruncation, FullTruncation,
+  \item HestonProcessDiscretization [Optional]: Choice of the QuantLib::HestonProcess discretization (PartialTruncation, FullTruncation,
     Reflection, NonCentral\-Chi\-SquareVariance, Quadratic\-Exponential, Quadratic\-Exponential\-Martingale,
     Broadie\-Kaya\-Exact\-SchemeLobatto, Broadie\-Kaya\-Exact\-SchemeLaguerre, BroadieKayaExactSchemeTrapezoidal). \\
     Default: QuadraticExponential
-  \item Debug: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
+  \item Debug [Optional]: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
     across all indices, effective simulation dates and MC samples for each trade; moreover we perform additional consistency
     checks during Heston path generation. \\
     Default: false
