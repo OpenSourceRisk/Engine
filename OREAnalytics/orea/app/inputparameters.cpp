@@ -67,7 +67,26 @@ vector<string> getFileNames(const string& fileString, const std::filesystem::pat
 InputParameters::InputParameters() {
     iborFallbackConfig_ = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
     simmBucketMapper_ = QuantLib::ext::make_shared<SimmBucketMapperBase>();
-    loadParameters();
+}
+
+void InputParameters::loadParameters() {
+
+    // load Override parameters
+    QuantLib::ext::shared_ptr<CurveConfigurations> ccOverride;
+    loadParameterXML<CurveConfigurations>(ccOverride, "setup", "curveConfigOverride");
+    if (ccOverride)
+        curveConfigs_.setOverride(ccOverride);
+
+    QuantLib::ext::shared_ptr<Conventions> conventionsOverride;
+    loadParameterXML<Conventions>(conventionsOverride, "setup", "conventionsOverride");
+    if (conventions_ && conventionsOverride)
+        conventions_->setConventionsOverride(conventionsOverride);
+
+    QuantLib::ext::shared_ptr<BasicReferenceDataManager> rdmOverride;
+    loadParameterXML<BasicReferenceDataManager>(rdmOverride, "setup", "referenceDataOverride");
+    if (refDataManager_ && rdmOverride)
+        refDataManager_->setRDMOverride(rdmOverride);
+
 }
 
 bool checkString(const std::string& obj) { return true; }
@@ -148,6 +167,18 @@ void InputParameters::setConventionsFromFile(const std::string& fileName) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
     conventions_->fromFile(fileName);
     InstrumentConventions::instance().setConventions(conventions_);
+}
+
+void InputParameters::setMporConventions(const std::string& xml) {
+    mporConventions_ = QuantLib::ext::make_shared<Conventions>();
+    mporConventions_->fromXMLString(xml);
+    InstrumentConventions::instance().setConventions(mporConventions_, mporDate());
+}
+
+void InputParameters::setMporConventionsFromFile(const std::string& fileName) {
+    mporConventions_ = QuantLib::ext::make_shared<Conventions>();
+    mporConventions_->fromFile(fileName);
+    InstrumentConventions::instance().setConventions(mporConventions_, mporDate());
 }
 
 void InputParameters::setCurveConfigs(const std::string& xml, std::string id) {

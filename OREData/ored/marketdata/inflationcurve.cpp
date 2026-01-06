@@ -307,7 +307,12 @@ InflationCurve::CurveBuildResults
                     zcq->quote(), convention->observationLag(), maturity, convention->fixCalendar(),
                     convention->fixConvention(), convention->dayCounter(), index, observationInterpolation, nominalTs,
                     swapStart);
-                instrument->unregisterWith(Settings::instance().evaluationDate());
+
+                // Unregister with inflation index. See PR #326 on github for details.
+                instrument->unregisterWithAll();
+                instrument->registerWith(nominalTs);
+                instrument->registerWith(zcq->quote());
+
                 helpers.push_back(instrument);
                 results.pillarDates.push_back(instrument->pillarDate());
                 results.mdQuoteLabels.push_back(md->name());
@@ -413,7 +418,12 @@ InflationCurve::CurveBuildResults
             auto instrument = QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
                 quote, convention->observationLag(), maturity, convention->fixCalendar(), convention->fixConvention(),
                 convention->dayCounter(), index, nominalTs, swapStart);
-            instrument->unregisterWith(Settings::instance().evaluationDate());
+
+            // Unregister with inflation index (and evaluationDate). See PR #326 on github for details.
+            instrument->unregisterWithAll();
+            instrument->registerWith(nominalTs);
+            instrument->registerWith(quote);
+
             results.pillarDates.push_back(instrument->pillarDate());
             helpers.push_back(instrument);
             results.mdQuoteLabels.push_back(md->name());

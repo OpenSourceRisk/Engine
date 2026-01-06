@@ -2824,6 +2824,14 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         }
     }
 
+    if (conventionsOverride_ && conventionsOverride_->has(id)) {
+		DLOG("Convention '" << id << "' found in override map.");
+		auto convention = conventionsOverride_->get(id);
+		add(convention);
+		used_.insert(id);
+		return convention;
+	}
+
     std::string type, unparsed;
     {
         boost::unique_lock<boost::shared_mutex> lock(mutex_);
@@ -2932,6 +2940,7 @@ pair<bool, QuantLib::ext::shared_ptr<Convention>> Conventions::get(const string&
 
 std::set<QuantLib::ext::shared_ptr<Convention>> Conventions::get(const Convention::Type& type) const {
     std::set<QuantLib::ext::shared_ptr<Convention>> result;
+
     std::set<std::string> unparsedIds;
     std::string typeStr = ore::data::to_string(type);
     {
@@ -2950,6 +2959,7 @@ std::set<QuantLib::ext::shared_ptr<Convention>> Conventions::get(const Conventio
     for (auto const& id : unparsedIds) {
         result.insert(get(id));
     }
+
     return result;
 }
 

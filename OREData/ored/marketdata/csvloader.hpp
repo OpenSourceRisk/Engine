@@ -49,8 +49,8 @@ public:
         const string& fixingFilename,
         //! Enable/disable implying today's fixings
         bool implyTodaysFixings = false,
-	//! Load fixings up to this date
-	Date fixingCutOffDate = Date());
+        //! Load fixings up to this date
+        Date fixingCutOffDate = Date());
 
     CSVLoader( //! Quote file name
         const vector<string>& marketFiles,
@@ -58,8 +58,8 @@ public:
         const vector<string>& fixingFiles,
         //! Enable/disable implying today's fixings
         bool implyTodaysFixings = false,
-	//! Load fixings up to this date
-	Date fixingCutOffDate = Date());
+        //! Load fixings up to this date
+        Date fixingCutOffDate = Date());
 
     CSVLoader( //! Quote file name
         const string& marketFilename,
@@ -69,8 +69,8 @@ public:
         const string& dividendFilename,
         //! Enable/disable implying today's fixings
         bool implyTodaysFixings = false,
-	//! Load fixings up to this date
-	Date fixingCutOffDate = Date());
+        //! Load fixings up to this date
+        Date fixingCutOffDate = Date());
 
     CSVLoader( //! Quote file name
         const vector<string>& marketFiles,
@@ -80,8 +80,8 @@ public:
         const vector<string>& dividendFiles,
         //! Enable/disable implying today's fixings
         bool implyTodaysFixings = false,
-	//! Load fixings up to this date
-	Date fixingCutOffDate = Date());
+        //! Load fixings up to this date
+        Date fixingCutOffDate = Date());
 
     std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
