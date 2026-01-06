@@ -636,8 +636,10 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     calibrationInfo_[index]->mdQuoteLabels.push_back(r.mdQuoteLabel);
                     calibrationInfo_[index]->mdQuoteValues.push_back(r.mdQuoteValue);
                     calibrationInfo_[index]->rateHelperTypes.push_back(r.rateHelperType);
-                    calibrationInfo_[index]->rateHelperCashflows.push_back(r.cashflowGenerator());
-                    calibrationInfo_[index]->rateHelperQuoteErrors.push_back(r.quoteErrorGenerator());
+                    if (r.cashflowGenerator)
+                        calibrationInfo_[index]->rateHelperCashflows.push_back(r.cashflowGenerator());
+                    if (r.quoteErrorGenerator)
+                        calibrationInfo_[index]->rateHelperQuoteErrors.push_back(r.quoteErrorGenerator());
                 }
             }
 
@@ -2331,7 +2333,8 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
                          {*helper->iborCoupon()->iborIndex()->forwardingTermStructure(),
                           *helper->iborCoupon()->iborIndex()->forwardingTermStructure()},
                          {1.0, 1.0}, {}, {});
-                 }}});
+                 }},
+                 std::function<double()>{[helper]() { return helper->quoteError(); }}});
         }
     }
 }
