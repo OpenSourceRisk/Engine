@@ -2,6 +2,8 @@
 Created on Mon Oct 7 18:33:39 2019
 
 @author: cantaro86
+
+source: https://github.com/cantaro86/Financial-Models-Numerical-Methods
 """
 
 import numpy as np

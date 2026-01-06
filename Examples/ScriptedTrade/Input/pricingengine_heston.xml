@@ -60,7 +60,7 @@
       <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
       <Parameter name="StateGridPoints">24</Parameter>
       <Parameter name="RegressionOrder">2</Parameter>
-      <Parameter name="TimeStepsPerYear">100</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
       <!-- asset class specific choices -->
       <Parameter name="Engine_SingleAssetOption(EQ)">MC</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
@@ -91,8 +91,8 @@
            BroadieKayaExactSchemeLobatto,
            BroadieKayaExactSchemeLaguerre,
            BroadieKayaExactSchemeTrapezoidal -->
-      <!--<Parameter name="HestonProcessDiscretization">QuadraticExponentialMartingale</Parameter>-->
-      <Parameter name="HestonProcessDiscretization">Reflection</Parameter>
+      <Parameter name="HestonProcessDiscretization">QuadraticExponentialMartingale</Parameter>
+      <!--<Parameter name="HestonProcessDiscretization">Reflection</Parameter>-->
       <Parameter name="Debug">true</Parameter>
     </EngineParameters>
   </Product>
