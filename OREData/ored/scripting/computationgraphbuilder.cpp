@@ -81,6 +81,8 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<FunctionNormalPdfNode>,
                   public Visitor<FunctionMinNode>,
                   public Visitor<FunctionMaxNode>,
+                  public Visitor<FunctionFractionNode>,
+                  public Visitor<FunctionRoundNode>,
                   public Visitor<FunctionPowNode>,
                   public Visitor<FunctionBlackNode>,
                   public Visitor<FunctionDcfNode>,
@@ -338,6 +340,14 @@ public:
 
     void visit(FunctionMaxNode& n) override {
         binaryOp<ValueType>(n, "max", max, [this](std::size_t a, std::size_t b) { return cg_max(this->g_, a, b); });
+    }
+
+    void visit(FunctionFractionNode& n) override {
+        unaryOp<ValueType>(n, "frac", frac, [this](std::size_t a) { return cg_frac(this->g_, a); });
+    }
+
+    void visit(FunctionRoundNode& n) override {
+        binaryOp<ValueType>(n, "round", round, [this](std::size_t a, std::size_t b) { return cg_round(this->g_, a, b); });
     }
 
     void visit(FunctionPowNode& n) override {

@@ -143,6 +143,7 @@
       <xs:element type="worstPerformanceRainbowOption03Data" name="WorstPerformanceRainbowOption03Data"/>
       <xs:element type="worstPerformanceRainbowOption04Data" name="WorstPerformanceRainbowOption04Data"/>
       <xs:element type="worstPerformanceRainbowOption05Data" name="WorstPerformanceRainbowOption05Data"/>
+      <xs:element type="worstPerformanceRainbowOption06Data" name="WorstPerformanceRainbowOption06Data"/>
       <xs:element type="bestOfAssetOrCashRainbowOptionData" name="BestOfAssetOrCashRainbowOptionData"/>
       <xs:element type="worstOfAssetOrCashRainbowOptionData" name="WorstOfAssetOrCashRainbowOptionData"/>
       <xs:element type="minRainbowOptionData" name="MinRainbowOptionData"/>
@@ -4124,6 +4125,23 @@
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleBarrierType" name="BarrierType"/>
       <xs:element type="stFreeStyleNumber" name="BarrierLevel"/>
+      <xs:element type="stFreeStyleEvent" name="ObservationDate"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="worstPerformanceRainbowOption06Data">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleNumberVector" name="InitialPrices"/>
+      <xs:element type="stFreeStyleNumberVector" name="StrikePrices"/>
+      <xs:element type="stFreeStyleNumberVector" name="BarrierLevels"/>
+      <xs:element type="stFreeStyleNumberVector" name="KnockInPrices"/>
+      <xs:element type="stFreeStyleNumber" name="BonusCoupon"/>
+      <xs:element type="stFreeStyleNumber" name="Quantity"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationSchedule"/>
       <xs:element type="stFreeStyleEvent" name="ObservationDate"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
