@@ -435,7 +435,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         }
     }else if(config.type() == DefaultCurveConfig::Config::Type::ConvSpreadCDS){
         refData.type = "ConvSpreadCDS";
-        // Currently same than SpreadCDS
         for (auto quote : quotes) {
             try {
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
@@ -484,7 +483,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     )
                 );
 
-                Rate fixedCoupon = 100 / 10000.0;
+                Rate fixedCoupon = config.runningSpread() == QuantLib::Null<Real>() ? 100 / 10000.0 : config.runningSpread();
 
                 // Fixed-coupon CDS; ask for fairUpfront
                 Date upfrontSettle = cdsConv->calendar().advance(asof, cdsConv->upfrontSettlementDays() * Days);
@@ -496,31 +495,13 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 ext::shared_ptr<PricingEngine> engine(new IsdaCdsEngine(dProb, recoveryRate_, discountCurve));
                 fixedCpnTrade->setPricingEngine(engine);
 
-                // Upfront helper (ISDA) — we’ll ask it for implied fair upfront
-                // Date upfrontSettle = cdsConv->calendar().advance(asof, cdsConv->upfrontSettlementDays() * Days);
-                // QuantLib::RelinkableHandle<QuantLib::DefaultProbabilityTermStructure> prob;
-                // auto flatHazard = QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(0, cdsConv->calendar(), h, Actual365Fixed());
-                // prob.linkTo(flatHazard);
-                // auto upfrontHelper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
-                //     /*upfront*/ Rate(0.0), fixedCoupon, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
-                //     cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), Actual360(), recoveryRate_,
-                //     discountCurve, CreditDefaultSwap::ISDA, cdsConv->upfrontSettlementDays(),
-                //     cdsConv->settlesAccrual(), ppt, Date());
-
-                // Wire the flat hazard to the helper so its internal CDS uses it
-                // upfrontHelper->setTermStructure(prob.currentLink().get());
-
-                // Real npv = fixedCpnTrade->NPV();
                 // Real fairSpreadClean = fixedCpnTrade->fairSpreadClean();
                 Rate calcUpfront = fixedCpnTrade->fairUpfront();
-                // Compare NPV against PV of upfront (discounted to asof)
-                // Real df = discountCurve->discount(upfrontSettle);
-                // Real pvUpfront = calcUpfront * df * fixedCpnTrade->notional();
 
                 auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
                     calcUpfront, fixedCoupon, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                     cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::ISDA, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
+                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
                     config.startDate(), cdsConv->lastPeriodDayCounter());
             
                 if (tmp->latestDate() > asof) {
