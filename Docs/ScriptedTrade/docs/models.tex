@@ -209,7 +209,7 @@ The engine parameters have the following meaning:
   \item HestonCalibrationExpiries [Optional]: Comma-separated list of option expiry terms, will be used for Heston model calibration if provided.
     Otherwise we use the effective simulation dates to determine calibration option expiries. \\
     Default: empty list
-  \item CalibrationVarianceTerms [Optional]: Comma-separated list of terms where annualised variances are computed from the provided
+  \item HestonCalibrationVarianceTerms [Optional]: Comma-separated list of terms where annualised variances are computed from the provided
     option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. \\
     Can be left blank which means we skip this step of generating initial guesses. \\
     Default: empty list
@@ -236,7 +236,7 @@ The engine parameters have the following meaning:
     we stop the search for best parameters when calibrating with HestonCalibrationRestarts $>0$. \\
     Default: 0.001
   \item HestonCalibrationMethod: Choices are ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
-    ``ConstantBestFit'' means calibaration of the Heston model with constant parameters only, possibly with restarts (see above); \\
+    ``ConstantBestFit'' means calibration of the Heston model with constant parameters only, possibly with restarts (see above); \\
     ``PiecewiseBestFit'' means running the former first, followed by a calibration with piecewise constant $\sigma(t)$ and $\rho(t)$
     Heston parameters for more flexibility in matching several expiries, the other parameters are kept fixed at the previous
     ``ConstantBestFit'' results; \\
