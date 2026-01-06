@@ -188,6 +188,14 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
     // NormalPdf = 18
     ops.push_back(
         [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::normalPdf(*args[0]); });
+    
+    // Frac = 19
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::frac(*args[0]); });
+    
+    // Round = 29
+    ops.push_back(
+        [](const std::vector<const RandomVariable*>& args, const Size node) { return QuantExt::round(*args[0], *args[1]); });
 
     return ops;
 }
@@ -300,11 +308,25 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
     grads.push_back([](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
                        const Size node) -> std::vector<RandomVariable> { return {-(*args[0]) * *v}; });
 
+    // Frac = 19
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 1.0)}; });
+
+    // Round = 20
+    grads.push_back([size](const std::vector<const RandomVariable*>& args, const RandomVariable* v,
+                       const Size node) -> std::vector<RandomVariable> { return {RandomVariable(size, 0.0), RandomVariable(size, 0.0)}; });
+
     return grads;
 }
 
 std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirements() {
     std::vector<RandomVariableOpNodeRequirements> res;
+    /*
+    Each op is a function f(x1,...,xn) args. If the value is needed, we set the value to true.
+    The vector represents x1,...,xn and the second element of the pair f(vector<xi>)
+    Note: It is used for optimization, i.e. values that are not needed are deleted early. If everything is set to true, that will increase the memory footprint unnecessarily. 
+    And if something is set to false that is actually required later on to calculate a gradient, a run time error about an uninitilized randomvariable
+     */
 
     // None = 0
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
@@ -360,8 +382,14 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     // NormalCdf = 17
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), false); });
 
-    // NormalCdf = 18
+    // NormalPdf = 18
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
+
+    // Frac = 19
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
+
+    // Round = 20
+    res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, false), false); });
 
     return res;
 }

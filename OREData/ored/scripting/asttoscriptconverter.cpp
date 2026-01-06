@@ -43,6 +43,8 @@ class ASTToScriptConverter : public AcyclicVisitor,
                              public Visitor<FunctionNormalPdfNode>,
                              public Visitor<FunctionMinNode>,
                              public Visitor<FunctionMaxNode>,
+                             public Visitor<FunctionFractionNode>,
+                             public Visitor<FunctionRoundNode>,
                              public Visitor<FunctionPowNode>,
                              public Visitor<FunctionBlackNode>,
                              public Visitor<FunctionDcfNode>,
@@ -165,6 +167,19 @@ public:
         n.args[1]->accept(*this);
         auto right = script;
         script = "max(" + left + ", " + right + ")";
+    }
+
+    void visit(FunctionFractionNode& n) override {
+        n.args[0]->accept(*this);
+        script = "frac(" + script + ")";
+    }
+
+    void visit(FunctionRoundNode& n) override {
+        n.args[0]->accept(*this);
+        auto left = script;
+        n.args[1]->accept(*this);
+        auto right = script;
+        script = "round(" + left + ", " + right + ")";
     }
 
     void visit(FunctionPowNode& n) override {
