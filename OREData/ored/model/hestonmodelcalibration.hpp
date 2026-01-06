@@ -76,13 +76,15 @@ public:
                            const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.9, 0.04},
                            const std::vector<bool>& fixedValues = {false, false, false, false, false},
                            const std::vector<Real>& maximumInitialValues = {0.1, 20, 3, 0.9, 0.1},
-                           Real relaxedFellerConstraint = 1.0, Size restarts = 0, Real tolerance = 0.001,
+                           Real relaxedFellerConstraint = 1.0, Size maxCalibrationAttempts = 0, Real earlyExitThreshold = 0.005,
+			   Real maxAcceptableError = 0.05,
                            const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                            const bool dontCalibrate = false)
         : indexName_(indexName), process_(process), expiries_(expiries), moneyness_(moneyness),
           varianceTerms_(varianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
           maximumInitialValues_(maximumInitialValues), relaxedFellerConstraint_(relaxedFellerConstraint),
-          restarts_(restarts), tolerance_(tolerance), discretization_(discretization), dontCalibrate_(dontCalibrate) {}
+          maxCalibrationAttempts_(maxCalibrationAttempts), earlyExitThreshold_(earlyExitThreshold), maxAcceptableError_(maxAcceptableError),
+	  discretization_(discretization), dontCalibrate_(dontCalibrate) {}
 
     ext::shared_ptr<HestonModel> model();
 
@@ -125,8 +127,9 @@ private:
     std::vector<bool> fixedValues_;
     std::vector<Real> maximumInitialValues_;
     Real relaxedFellerConstraint_;
-    Size restarts_;
-    Real tolerance_;
+    Size maxCalibrationAttempts_;
+    Real earlyExitThreshold_;
+    Real maxAcceptableError_;
     HestonProcess::Discretization discretization_;
     bool dontCalibrate_;
 

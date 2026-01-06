@@ -52,7 +52,8 @@ public:
                        const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.5, 0.04},
                        const std::vector<bool>& fixedValues = {false, false, false, false, false},
                        const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 10.0, 0.9, 0.1},
-                       Real relaxedFellerConstraint = 1.0, Size calibrationRestarts = 50, Real tolerance = 0.001,
+                       Real relaxedFellerConstraint = 1.0,
+		       Size maxCalibrationAttempts = 50, Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
                        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
                        const Handle<YieldTermStructure>& baseCurve = {});
@@ -69,15 +70,16 @@ public:
                        const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.5, 0.04},
                        const std::vector<bool>& fixedValues = {false, false, false, false, false},
                        const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 3.0, 0.9, 0.1},
-                       Real relaxedFellerConstraint = 1.0, Size calibrationRestarts = 50, Real tolerance = 0.001,
-                       const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
+                       Real relaxedFellerConstraint = 1.0,
+		       Size maxCalibrationAttempts = 50, Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
+		       const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
                        const Handle<YieldTermStructure>& baseCurve = {})
         : HestonModelBuilder(indices, std::vector<Handle<YieldTermStructure>>{curve},
                              std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
                              addDates, timeStepsPerYear, calibrationExpiries, calibrationMoneyness,
                              calibrationVarianceTerms, initialValues, fixedValues, maximumInitialValues,
-                             relaxedFellerConstraint, calibrationRestarts, tolerance, discretization,
+                             relaxedFellerConstraint, maxCalibrationAttempts, earlyExitThreshold, maxAcceptableError, discretization,
                              referenceCalibrationGrid, dontCalibrate, baseCurve) {}
 
     std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
@@ -97,8 +99,9 @@ private:
     std::vector<bool> fixedValues_;
     std::vector<Real> maximumInitialValues_;
     Real relaxedFellerConstraint_;
-    Size calibrationRestarts_;
-    Real tolerance_;
+    Size maxCalibrationAttempts_;
+    Real earlyExitThreshold_;
+    Real maxAcceptableError_;
     HestonProcess::Discretization discretization_;
     std::string referenceCalibrationGrid_;
     bool dontCalibrate_;
