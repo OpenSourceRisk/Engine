@@ -8,10 +8,11 @@ def copy_existing_output(output_dir, expected_dir):
         print("One of the directories does not exist.")
         return
 
-    for file in output_dir.iterdir():
+    for file in output_dir.rglob('*'):
         if file.is_file():
-            target = expected_dir / file.name
-            if target.exists():
+            rel = file.relative_to(output_dir)
+            target = expected_dir / rel
+            if target.exists() and target.is_file():
                 shutil.copy2(file, target)
                 print(f"Copied {file.name} to ExpectedOutput")
             else:
