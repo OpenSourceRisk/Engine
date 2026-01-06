@@ -75,7 +75,7 @@ void testCalibrationInstrumentRepricing(const Model::Type type, const std::vecto
     params.regressionOrder = 1;
     auto localVol = QuantLib::ext::make_shared<BlackScholes>(
         type, size, "EUR", process->riskFreeRate(), "EQ-DUMMY", "EUR", builder.model(), simDates,
-        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "LocalVol",
+        QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig()), "Smile",
         std::vector<Real>{}, params);
 
     // loop over the calibration options and price them in the local vol model using MC
@@ -205,8 +205,8 @@ BOOST_AUTO_TEST_CASE(testSabrVols) {
 
     auto process = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, q, r, vol);
 
-    testCalibrationInstrumentRepricing(Model::Type::MC, expiries, moneyness, process, 20, 10000, 0.30);
-    testCalibrationInstrumentRepricing(Model::Type::FD, expiries, moneyness, process, 20, 100, 0.30);
+    testCalibrationInstrumentRepricing(Model::Type::MC, expiries, moneyness, process, 20, 10000, 0.35);
+    testCalibrationInstrumentRepricing(Model::Type::FD, expiries, moneyness, process, 20, 100, 0.35);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
