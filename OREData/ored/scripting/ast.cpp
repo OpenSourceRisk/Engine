@@ -157,6 +157,22 @@ void FunctionMinNode::accept(AcyclicVisitor& v) {
         ASTNode::accept(v);
 }
 
+void FunctionFractionNode::accept(AcyclicVisitor& v) {
+    auto v1 = dynamic_cast<Visitor<FunctionFractionNode>*>(&v);
+    if (v1 != nullptr)
+        v1->visit(*this);
+    else
+        ASTNode::accept(v);
+}
+
+void FunctionRoundNode::accept(AcyclicVisitor& v) {
+    auto v1 = dynamic_cast<Visitor<FunctionRoundNode>*>(&v);
+    if (v1 != nullptr)
+        v1->visit(*this);
+    else
+        ASTNode::accept(v);
+}
+
 void FunctionPowNode::accept(AcyclicVisitor& v) {
     auto v1 = dynamic_cast<Visitor<FunctionPowNode>*>(&v);
     if (v1 != nullptr)

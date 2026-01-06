@@ -210,7 +210,7 @@ parRateCurve(const Date& asof, const vector<QuantLib::ext::shared_ptr<QuantExt::
 TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     TestConfigurationObjects::setConventions();
-    
+
     asof_ = asof;
 
     // build discount
@@ -356,7 +356,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")] =
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
     recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer0")] =
-        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0)); 
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
 
@@ -384,7 +384,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     cdsVols_[make_pair(Market::defaultConfiguration, "dc")] =
         Handle<QuantExt::CreditVolCurve>(QuantLib::ext::make_shared<QuantExt::CreditVolCurveWrapper>(flatRateFxv(0.12)));
-    
+
     Handle<IborIndex> hGBP(ore::data::parseIborIndex(
         "GBP-LIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]));
     // FIXME: We have defined that above already
@@ -392,7 +392,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
 
     // Some test cases need a different definition of UKRPI index, curve and vol structure
     // We there fore added the new UKROi as UKRP1 and keep the "original" below.
-    
+
     // build inflation indices
     auto zeroIndex = Handle<ZeroInflationIndex>(QuantLib::ext::make_shared<UKRPI>(flatZeroInflationCurve(0.02, 0.01)));
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = zeroIndex;
@@ -436,23 +436,12 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
         euii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
 
-    vector<Date> datesZCII = {asof_,
-                              asof_ + 1 * Years,
-                              asof_ + 2 * Years,
-                              asof_ + 3 * Years,
-                              asof_ + 4 * Years,
-                              asof_ + 5 * Years,
-                              asof_ + 6 * Years,
-                              asof_ + 7 * Years,
-                              asof_ + 8 * Years,
-                              asof_ + 9 * Years,
-                              asof_ + 10 * Years,
-                              asof_ + 12 * Years,
-                              asof_ + 15 * Years,
+    vector<Date> datesZCII = {asof_ + 1 * Years, asof_ + 2 * Years,  asof_ + 3 * Years,  asof_ + 4 * Years,
+                              asof_ + 5 * Years, asof_ + 6 * Years,  asof_ + 7 * Years,  asof_ + 8 * Years,
+                              asof_ + 9 * Years, asof_ + 10 * Years, asof_ + 12 * Years, asof_ + 15 * Years,
                               asof_ + 20 * Years};
 
-    vector<Rate> ratesZCII = {2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
-                              3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108};
+    vector<Rate> ratesZCII = {2.9425, 2.975, 2.983, 3.0, 3.01, 3.008, 3.009, 3.013, 3.0445, 3.044, 3.09, 3.109, 3.108};
 
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
         makeZeroInflationIndex("EUHICPXT", datesZCII, ratesZCII, euii,
@@ -555,7 +544,7 @@ Handle<CPICapFloorTermPriceSurface> TestMarket::flatRateCps(Handle<ZeroInflation
                 cPrice, fPrice));
     return Handle<CPICapFloorTermPriceSurface>(ts);
 }
-    
+
 Handle<QuantLib::CPIVolatilitySurface> TestMarket::flatCpiVolSurface(Volatility v) {
     Natural settleDays = 0;
     Calendar cal = TARGET();
@@ -578,9 +567,19 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     vector<QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>>> instruments;
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
-        QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(new ZeroCouponInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts));
-        anInstrument->unregisterWith(Settings::instance().evaluationDate());
+        QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
+            new ZeroCouponInflationSwapHelper(quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing,
+                                              ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts, asof_));
+
+        // Remove the helper's observation of the inflation index. This has the effect that the
+        // PiecewiseZeroInflationCurve created below will also not observe the index. It will only get recalculated
+        // if the initial market quotes change or if the initial nominal yield curve changes. Observation of the index
+        // was interfering with scenario generation. The PiecewiseZeroInflationCurve was getting recalculated on the
+        // first time grid date t_1 i.e. was not using the t_0 calculated curve.
+        anInstrument->unregisterWithAll();
+        anInstrument->registerWith(yts);
+        anInstrument->registerWith(quote);
+
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
@@ -607,9 +606,25 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         QL_DEPRECATED_DISABLE_WARNING
-        QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(new YearOnYearInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts));
+        QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(
+            new YearOnYearInflationSwapHelper(quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing,
+                                              ActualActual(ActualActual::ISDA), ii, yts, asof_));
         QL_DEPRECATED_ENABLE_WARNING
+
+        // Remove the helper's observation of the inflation index. This has the effect that the
+        // PiecewiseYoYInflationCurve created below will also not observe the index. It will only get recalculated
+        // if the initial market quotes change or if the initial nominal yield curve changes.
+        // Note: QuantLib needs a change so that if swap start is provided in the helper above then updateDates_ on
+        //       the RelativeDateBootstrapHelper should be false and hence the helper does not observe Settings
+        //       evaluationDate. Without this fix, the unregister here does this also.
+        // These changes are needed to allow ObservationModeTest/testDefer to pass. Without them
+        // YearOnYearInflationSwapHelper::initializeDates() gets called due to evaluation date changes, the yyiis_
+        // member gets reassigned but the original value is still in the deferredObervers_. The testDefer test then
+        // crashes when deferredObserver->update(); is called in ObservableSettings::enableUpdates() with
+        // deferredObserver null.
+        anInstrument->unregisterWithAll();
+        anInstrument->registerWith(yts);
+        anInstrument->registerWith(quote);
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
@@ -702,7 +717,7 @@ TestMarketParCurves::TestMarketParCurves(const Date& asof) : MarketImpl(false) {
         vector<Real> parRates(parInst.size(), parRate);
         createDiscountCurve(ccy, parInst, parTenor, parRates);
     }
-        
+
     // add fx rates
     // add fx rates
     std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
@@ -1127,7 +1142,7 @@ void TestMarketParCurves::createZeroInflationIndex(const string& idxName, const 
             yieldCurve(YieldCurveType::Discount, ccy, Market::defaultConfiguration)));
     }
     QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-    
+
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, conv->observationLag(), zii->frequency(), zii);
     zeroCurve = QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(
         new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, conv->observationLag(), zii->frequency(), conv->dayCounter(), instruments));
@@ -1784,7 +1799,7 @@ TestConfigurationObjects::setupSensitivityScenarioData(bool hasSwapVolCube, bool
     return sensiData;
 };
 
-    
+
 QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfigurationObjects::setupSimMarketData2() {
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData(
         new ore::analytics::ScenarioSimMarketParameters());

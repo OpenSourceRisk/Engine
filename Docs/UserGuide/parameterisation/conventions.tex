@@ -140,11 +140,12 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
 \item Index: The underlying index of the futures, this is either a MM (i.e. Ibor) index like e.g. EUR-EURIBOR-3M or an
   overnight index like e.g. USD-SOFR.
 \item DateGenerationRule [Optional]: This should be set to `IMM' when the start and end dates of the future are
-  following the IMM date logic or `FirstDayOfMonth' when the start and end date are the first day of a month. If not
-  given this field defaults to `IMM'.
+  following the IMM date logic, `FirstDayOfMonth' when the start and end date are the first day of a month, or
+  `SecondThursday' when the expiry date is the second Thursday of the month. If not given this field defaults to `IMM'.
   \begin{itemize}
-  \item For MM futures only `IMM' is allowed and the expiry date is determined as the next 3rd Wednesday of the expiry
-    month of a future.
+  \item For MM futures `IMM' or `SecondThursday' are allowed. The expiry date for `IMM' is determined as the next 3rd
+    Wednesday of the expiry month of a future. The expiry date for `SecondThursday' is determined as the 2nd Thursday
+    of the expiry month (e.g. used for AUD-BBSW-3M futures).
   \item For an overnight index future `IMM' means that the end date of the future is set to the 3rd Wednesday of the
     expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
     `IMM' applies to SOFR-3M futures for example. `FirstDayOfMonth' on the other hand means that the end date of the
@@ -163,8 +164,9 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
   are averaging the daily overnight fixings over the calculation period of the future.
 \end{itemize}
 
-Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_sofr_3m},
-\ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M, SOFR-3M and SOFR-1M future conventions.
+Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_aud_bbsw_3m},
+\ref{lst:future_conventions_sofr_3m}, \ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M, AUD-BBSW-3M,
+SOFR-3M and SOFR-1M future conventions.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -190,6 +192,19 @@ Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_so
 \end{minted}
 \caption{Euribor 3M MM Future conventions}
 \label{lst:future_conventions_euribor_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id>AUD-BBSW-3M-FUTURES-CONVENTIONS</Id>
+  <Index>AUD-BBSW-3M</Index>
+  <DateGenerationRule>SecondThursday</DateGenerationRule>
+</Future>
+\end{minted}
+\caption{AUD BBSW 3M MM Future conventions (Second Thursday expiry)}
+\label{lst:future_conventions_aud_bbsw_3m}
 \end{listing}
 
 \begin{listing}[H]

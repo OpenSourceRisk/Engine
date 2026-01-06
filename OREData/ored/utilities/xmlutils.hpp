@@ -80,6 +80,9 @@ public:
 
     //! save the XML Document to the given file.
     void toFile(const string& filename) const;
+        
+    //! load an xml doc from the given file.
+    void fromFile(const string& filename);
 
     //! return the XML Document as a string.
     std::string toString() const;
@@ -249,6 +252,7 @@ public:
     //! Returns all the children with a given name
     // To get all children, set name equal to ""
     static vector<XMLNode*> getChildrenNodes(XMLNode* node, const string& name);
+    static vector<XMLNode*> getAnyChildrenNodes(XMLNode* node, const std::vector<string>& names);
 
     static vector<XMLNode*> getChildrenNodesWithAttributes(XMLNode* node, const string& names, const string& name,
                                                            const string& attrName, vector<string>& attrs,
