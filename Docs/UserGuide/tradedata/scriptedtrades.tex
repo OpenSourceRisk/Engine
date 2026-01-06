@@ -2625,7 +2625,7 @@ The script referenced in the trade above is shown in Listing \ref{lst:best_of_ai
   IF {worstUnderlyingFinalPrice < StrikePrices[worstUnderlying]} THEN
     deliverableAsset = Quantity/StrikePrices[worstUnderlying];
     roundAmount = round(deliverableAsset,0);
-    payoff = worstUnderlyingFinalPrice * roundAmount;
+    payoff = worstUnderlyingFinalPrice * roundAmount - Quantity;
   ELSE
     payoff = Quantity*max(BonusCoupon, worstPerformance - 1);
   END;
