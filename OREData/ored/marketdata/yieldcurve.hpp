@@ -165,8 +165,7 @@ private:
     std::vector<RelinkableHandle<YieldTermStructure>> h_;
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> p_;
     std::vector<QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> calibrationInfo_;
-    std::vector<std::vector<std::function<std::vector<TradeCashflowReportData>()>>> rateHelperCashflowGenerator_;
-    std::vector<std::vector<std::function<double()>>> rateHelperQuoteErrorGenerator_;
+    std::vector<std::vector<RateHelperData>> rateHelperData_;
 
     void buildBootstrappedCurve(const std::set<std::size_t>& indices);
 

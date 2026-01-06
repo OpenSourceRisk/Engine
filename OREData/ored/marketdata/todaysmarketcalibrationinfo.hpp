@@ -63,10 +63,6 @@ struct YieldCurveCalibrationInfo {
     std::vector<double> rateHelperQuoteErrors;
 };
 
-struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
-    // ... add instrument types?
-};
-
 struct FittedBondCurveCalibrationInfo : public YieldCurveCalibrationInfo {
     std::string fittingMethod;
     std::vector<double> solution;

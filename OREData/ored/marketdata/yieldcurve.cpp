@@ -405,8 +405,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
             c_->requiredYieldCurveHandles_.clear();
             c_->discountCurve_.clear();
             c_->multiCurve_.reset();
-            c_->rateHelperCashflowGenerator_.clear();
-            c_->rateHelperQuoteErrorGenerator_.clear();
+            c_->rateHelperData_.clear();
         }
         YieldCurve* c_;
     } cleanUp(this);
@@ -481,8 +480,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
     p_.resize(curveSpec_.size());
     h_.resize(curveSpec_.size());
     calibrationInfo_.resize(curveSpec_.size());
-    rateHelperCashflowGenerator_.resize(curveSpec_.size());
-    rateHelperQuoteErrorGenerator_.resize(curveSpec_.size());
+    rateHelperData_.resize(curveSpec_.size());
 
     // build all curves which do not require a bootstrap, collect indices of curves to be bootstrapped
 
@@ -577,33 +575,44 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
 
             if (buildCalibrationInfo_) {
 
-                bool overwrittenPillarDates = false;
+                calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
 
-                if (calibrationInfo_[index] == nullptr)
-                    calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
+                // try to get the pillar dates from the report config
 
                 try {
                     ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigYieldCurves(),
                                                             curveConfig_.back()->reportConfig());
                     std::vector<Date> pillarDates = *rc.pillarDates();
                     if (!pillarDates.empty()) {
-                        calibrationInfo_[index]->pillarDates.clear();
-                        for (auto const& pd : pillarDates)
-                            calibrationInfo_[index]->pillarDates.push_back(pd);
-                        overwrittenPillarDates = true;
+                        std::copy(pillarDates.begin(), pillarDates.end(),
+                                  std::back_inserter(calibrationInfo_[index]->pillarDates));
                     }
                 } catch (...) {
                     DLOG("Report configuration for yield curves not set - using predefined/default pillar dates.");
                 }
 
-                calibrationInfo_[index]->dayCounter = zeroDayCounter_[index].name();
-                calibrationInfo_[index]->currency = currency_[index].code();
+                // if the report config does not provide pillar dates, extract them from the curve interpolation points
+
+                if (calibrationInfo_[index]->pillarDates.empty()) {
+                    std::set<Date> pillarDates;
+                    for (auto const& r : rateHelperData_[index]) {
+                        if (r.mainPillarDate != Date())
+                            pillarDates.insert(r.mainPillarDate);
+                        pillarDates.insert(r.addPillarDates.begin(), r.addPillarDates.end());
+                    }
+                    std::copy(pillarDates.begin(), pillarDates.end(),
+                              std::back_inserter(calibrationInfo_[index]->pillarDates));
+                }
+
+                // if still empty, use default pillar dates
 
                 if (calibrationInfo_[index]->pillarDates.empty()) {
                     for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
                         calibrationInfo_[index]->pillarDates.push_back(asofDate_ + p);
-                    overwrittenPillarDates = true;
                 }
+
+                // populate zero rates, discount factors and times
+
                 for (auto const& d : calibrationInfo_[index]->pillarDates) {
                     calibrationInfo_[index]->zeroRates.push_back(
                         p_[index]->zeroRate(d, zeroDayCounter_[index], Continuous));
@@ -611,50 +620,25 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     calibrationInfo_[index]->times.push_back(p_[index]->timeFromReference(d));
                 }
 
-                // if pillar dates != instrument dates we can not populate instrument specific info
+                // set dc and ccy
 
-                if (overwrittenPillarDates) {
-                    calibrationInfo_[index]->mdQuoteLabels.clear();
-                    calibrationInfo_[index]->mdQuoteValues.clear();
-                    calibrationInfo_[index]->rateHelperTypes.clear();
-                } else {
+                calibrationInfo_[index]->dayCounter = zeroDayCounter_[index].name();
+                calibrationInfo_[index]->currency = currency_[index].code();
 
-                    // generate rate helper cashflows (lazily, since we might build multi-curves)
+                // set rate helper info
 
-                    for (Size i = 0; i < calibrationInfo_[index]->pillarDates.size(); ++i) {
-                        if (rateHelperCashflowGenerator_[index][i]) {
-                            calibrationInfo_[index]->rateHelperCashflows.push_back(
-                                rateHelperCashflowGenerator_[index][i]());
-                        } else {
-                            calibrationInfo_[index]->rateHelperCashflows.push_back({});
-                        }
-                        if (rateHelperQuoteErrorGenerator_[index][i]) {
-                            calibrationInfo_[index]->rateHelperQuoteErrors.push_back(
-                                rateHelperQuoteErrorGenerator_[index][i]());
-                        } else {
-                            calibrationInfo_[index]->rateHelperQuoteErrors.push_back(Null<Real>());
-                        }
-                    }
+                for (auto const& r : rateHelperData_[index]) {
+                    std::set<Date> pillarDates;
+                    if (r.mainPillarDate != Date())
+                        pillarDates.insert(r.mainPillarDate);
+                    pillarDates.insert(r.addPillarDates.begin(), r.addPillarDates.end());
+                    calibrationInfo_[index]->rateHelperPillarDates.push_back(pillarDates);
+                    calibrationInfo_[index]->mdQuoteLabels.push_back(r.mdQuoteLabel);
+                    calibrationInfo_[index]->mdQuoteValues.push_back(r.mdQuoteValue);
+                    calibrationInfo_[index]->rateHelperTypes.push_back(r.rateHelperType);
+                    calibrationInfo_[index]->rateHelperCashflows.push_back(r.cashflowGenerator());
+                    calibrationInfo_[index]->rateHelperQuoteErrors.push_back(r.quoteErrorGenerator());
                 }
-
-                // check validity of calibration info
-
-                QL_REQUIRE(calibrationInfo_[index]->mdQuoteLabels.empty() ||
-                               calibrationInfo_[index]->mdQuoteLabels.size() ==
-                                   calibrationInfo_[index]->pillarDates.size(),
-                           "YieldCurve: calibration info for "
-                               << curveSpec_[index]->name() << " invalid: mdQuoteLabels size ("
-                               << calibrationInfo_[index]->mdQuoteLabels.size() << ") does not match pillarDates size ("
-                               << calibrationInfo_[index]->pillarDates.size() << ")");
-                QL_REQUIRE(calibrationInfo_[index]->mdQuoteLabels.size() ==
-                                   calibrationInfo_[index]->mdQuoteValues.size() &&
-                               calibrationInfo_[index]->mdQuoteLabels.size() ==
-                                   calibrationInfo_[index]->rateHelperTypes.size(),
-                           "YieldCurve:: calibration info for "
-                               << curveSpec_[index]->name() << " invalid: mdQuoteLabels size ("
-                               << calibrationInfo_[index]->mdQuoteLabels.size() << "), mdQuoteValues size ("
-                               << calibrationInfo_[index]->mdQuoteValues.size() << "), rateHelperTypes size ("
-                               << calibrationInfo_[index]->rateHelperTypes.size() << ") is inconsistent.");
             }
 
         } catch (const std::exception& e) {
@@ -933,17 +917,12 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
         QL_FAIL("Interpolation variable not recognised.");
     }
 
-    // init calibration info and set pillar dates from instruments
+    // save rate helper data if we build calibration info later from that
 
     if (buildCalibrationInfo_) {
-        calibrationInfo_[index] = QuantLib::ext::make_shared<PiecewiseYieldCurveCalibrationInfo>();
+
         for (Size i = 0; i < instruments.size(); ++i) {
-            calibrationInfo_[index]->pillarDates.push_back(instruments[i].rateHelper->pillarDate());
-            calibrationInfo_[index]->mdQuoteLabels.push_back(instruments[i].mdQuoteLabel);
-            calibrationInfo_[index]->mdQuoteValues.push_back(instruments[i].mdQuoteValue);
-            calibrationInfo_[index]->rateHelperTypes.push_back(instruments[i].rateHelperType);
-            rateHelperCashflowGenerator_[index].push_back(instruments[i].cashflowGenerator);
-            rateHelperQuoteErrorGenerator_[index].push_back(instruments[i].quoteErrorGenerator);
+            rateHelperData_[index].push_back(instruments[i]);
         }
     }
 
