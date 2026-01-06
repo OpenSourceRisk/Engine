@@ -28,6 +28,7 @@
       <Parameter name="EnableCredit">false</Parameter>
       <Parameter name="Credit_Volatility">0.005</Parameter>
       <Parameter name="Credit_Reversion">0.005</Parameter>
+      <Parameter name="ExerciseTimeStepsPerYear">24</Parameter>
     </ModelParameters>
     <Engine>MC</Engine>
     <EngineParameters>

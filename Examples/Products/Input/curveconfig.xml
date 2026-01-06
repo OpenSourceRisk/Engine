@@ -482,7 +482,7 @@
 	</CDSVolatilities>
 	<DefaultCurves>
 		<DefaultCurve>
-			<CurveId>FundingCurveCreditCurve</CurveId>
+			<CurveId>FundingCurveAsCreditCurve</CurveId>
 			<Currency>EUR</Currency>
 			<CurveDescription>Issuer funding spread curve as credit curve</CurveDescription>
 			<Configurations>
@@ -490,7 +490,7 @@
 					<Type>YieldCurve</Type>
 					<DayCounter>Actual/360</DayCounter>
 					<RecoveryRate>RECOVERY_RATE/RATE/CPTY_C/SR/EUR</RecoveryRate>
-					<WrappedYieldCurve>Yield/EUR/FundingCurve</WrappedYieldCurve>
+					<ReinterpretedYieldCurve>Yield/EUR/FundingCurve</ReinterpretedYieldCurve>
 					<Extrapolation>true</Extrapolation>
 				</Configuration>
 			</Configurations>

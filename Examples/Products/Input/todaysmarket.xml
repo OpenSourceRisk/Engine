@@ -368,7 +368,7 @@
                 <DefaultCurve name="RED:9J26DD|SNRFOR|USD|XR14">Default/USD/RED:9J26DD|SNRFOR|USD|XR14</DefaultCurve>
                 <DefaultCurve name="RED:GL6652|SNRFOR|USD|XR14">Default/USD/RED:GL6652|SNRFOR|USD|XR14</DefaultCurve>
                 <DefaultCurve name="RED:UZDD52|SNRFOR|USD|XR14">Default/USD/RED:UZDD52|SNRFOR|USD|XR14</DefaultCurve>
-		<DefaultCurve name="FundingCurveCreditCurve">Default/EUR/FundingCurveCreditCurve</DefaultCurve>
+		<DefaultCurve name="FundingCurveAsCreditCurve">Default/EUR/FundingCurveAsCreditCurve</DefaultCurve>
 	</DefaultCurves>
 	<YYInflationCapFloorVolatilities id="default">
 		<YYInflationCapFloorVolatility name="AUCPI">InflationCapFloorVolatility/AUCPI/AUCPI_YY_CF_VOL</YYInflationCapFloorVolatility>

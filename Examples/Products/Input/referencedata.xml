@@ -968,7 +968,7 @@
       <CallableBondReferenceData>
         <BondData>
           <IssuerId>CPTY_C</IssuerId>
-          <CreditCurveId>FundingCurveCreditCurve</CreditCurveId>
+          <CreditCurveId>FundingCurveAsCreditCurve</CreditCurveId>
           <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
           <SettlementDays>2</SettlementDays>
           <Calendar>TARGET</Calendar>
@@ -1035,7 +1035,7 @@
       <CallableBondReferenceData>
         <BondData>
           <IssuerId>CPTY_C</IssuerId>
-          <CreditCurveId>FundingCurveCreditCurve</CreditCurveId>
+          <CreditCurveId>FundingCurveAsCreditCurve</CreditCurveId>
           <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
           <SettlementDays>2</SettlementDays>
           <Calendar>TARGET</Calendar>
@@ -1102,7 +1102,7 @@
       <CallableBondReferenceData>
         <BondData>
           <IssuerId>CPTY_C</IssuerId>
-          <CreditCurveId>FundingCurveCreditCurve</CreditCurveId>
+          <CreditCurveId>FundingCurveAsCreditCurve</CreditCurveId>
           <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
           <SettlementDays>2</SettlementDays>
           <Calendar>TARGET</Calendar>
@@ -1193,7 +1193,7 @@
       <Type>Bond</Type>
       <BondReferenceData>
         <IssuerId>CPTY_C</IssuerId>
-        <CreditCurveId>FundingCurveCreditCurve</CreditCurveId>
+        <CreditCurveId>FundingCurveAsCreditCurve</CreditCurveId>
         <ReferenceCurveId>EUR-EURIBOR-3M</ReferenceCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>

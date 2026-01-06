@@ -42,7 +42,7 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveId, const string& curv
 void DefaultCurveConfig::populateRequiredIds(const std::string& discountCurveID, const std::string& benchmarkCurveID,
                                              const std::string& sourceCurveID,
                                              const std::vector<std::string>& multiSectionSourceCurveIds,
-                                             const std::string& wrappedYieldCurveID) const {
+                                             const std::string& reinterpretedYieldCurveID) const {
     if (!discountCurveID.empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurveID)->curveConfigID());
     if (!benchmarkCurveID.empty())
@@ -53,15 +53,15 @@ void DefaultCurveConfig::populateRequiredIds(const std::string& discountCurveID,
         if (!s.empty())
             requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(s)->curveConfigID());
     }
-    if (!wrappedYieldCurveID.empty())
-        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(wrappedYieldCurveID)->curveConfigID());
+    if (!reinterpretedYieldCurveID.empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(reinterpretedYieldCurveID)->curveConfigID());
 }
 
 void DefaultCurveConfig::populateRequiredIds() const {
     for (auto const& config : configs_) {
         populateRequiredIds(config.second.discountCurveID(), config.second.benchmarkCurveID(),
                             config.second.sourceCurveID(), config.second.multiSectionSourceCurveIds(),
-                            config.second.wrappedYieldCurveID());
+                            config.second.reinterpretedYieldCurveID());
     }
 }
 
@@ -193,7 +193,7 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
     } else if (type_ == Type::YieldCurve) {
         discountCurveID_ = conventionID_ = "";
         recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
-        wrappedYieldCurveID_ = XMLUtils::getChildValue(node, "WrappedYieldCurve", true);
+        reinterpretedYieldCurveID_ = XMLUtils::getChildValue(node, "ReinterpretedYieldCurve", true);
     } else {
         discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
         conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
@@ -287,7 +287,7 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
     } else if (type_ == Type::YieldCurve) {
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLUtils::addChild(doc, node, "Type", "YieldCurve");
-        XMLUtils::addChild(doc, node, "WrappedYieldCurve", wrappedYieldCurveID_);
+        XMLUtils::addChild(doc, node, "ReinterpretedYieldCurve", reinterpretedYieldCurveID_);
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
         
     } else {

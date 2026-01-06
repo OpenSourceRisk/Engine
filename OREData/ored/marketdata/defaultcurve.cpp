@@ -832,8 +832,8 @@ void DefaultCurve::buildYieldCurveAsDefaultCurve(const std::string& curveID, con
                                                  map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
     LOG("Start building default curve from yield curve for " << curveID);
 
-    auto it = yieldCurves.find(config.wrappedYieldCurveID());
-    QL_REQUIRE(it != yieldCurves.end(), "The yield curve, " << config.wrappedYieldCurveID()
+    auto it = yieldCurves.find(config.reinterpretedYieldCurveID());
+    QL_REQUIRE(it != yieldCurves.end(), "The yield curve, " << config.reinterpretedYieldCurveID()
                                                             << ", required in the building of the curve, "
                                                             << spec.name() << ", was not found.");
     QuantLib::ext::shared_ptr<YieldCurve> yieldCurve = it->second;
@@ -842,7 +842,7 @@ void DefaultCurve::buildYieldCurveAsDefaultCurve(const std::string& curveID, con
 
     curve_ = QuantLib::ext::make_shared<QuantExt::CreditCurve>(
         Handle<DefaultProbabilityTermStructure>(QuantLib::ext::make_shared<QuantExt::SurvivalProbabilityCurveFromYield>(
-            yieldCurve->handle(config.wrappedYieldCurveID()),
+            yieldCurve->handle(config.reinterpretedYieldCurveID()),
             Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(recoveryRate_)))));
 
     LOG("Finished building default curve from yield curve for " << curveID);

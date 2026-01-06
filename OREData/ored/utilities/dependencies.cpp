@@ -399,6 +399,14 @@ void addMarketObjectDependencies(map<string, map<ore::data::MarketObject, set<st
                                 c, InflationCapFloorVolatilityCurveConfig::Type::YY))
                             cId = cc->curveID();
                         break;
+                    
+                    }
+                    case MarketObject::DefaultCurve: {
+                        std::string nameStrippedSec = creditCurveNameFromSecuritySpecificCreditCurveName(c);
+                        if (curveConfigs->hasDefaultCurveConfig(nameStrippedSec)) {
+                            cId = nameStrippedSec;
+                        }
+                        break;
                     }
                     default:
                         continue;

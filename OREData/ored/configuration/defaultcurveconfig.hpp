@@ -95,7 +95,7 @@ public:
         const bool allowNegativeRates() const { return allowNegativeRates_; }
         const string& initialState() const { return initialState_; }
         const vector<string>& states() const { return states_; }
-        const string& wrappedYieldCurveID() const { return wrappedYieldCurveID_; }
+        const string& reinterpretedYieldCurveID() const { return reinterpretedYieldCurveID_; }
        //@}
 
         //! \name Setters
@@ -118,7 +118,7 @@ public:
         QuantLib::Period& indexTerm() { return indexTerm_; }
         QuantLib::ext::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
         bool& allowNegativeRates() { return allowNegativeRates_; }
-        std::string& wrappedYieldCurveID() { return wrappedYieldCurveID_; }
+        std::string& reinterpretedYieldCurveID() { return reinterpretedYieldCurveID_; }
         //@}
 
     private:
@@ -143,7 +143,7 @@ public:
         vector<string> multiSectionSwitchDates_;
         string initialState_;
         vector<string> states_;
-        string wrappedYieldCurveID_;
+        string reinterpretedYieldCurveID_;
         /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this
             behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.
 

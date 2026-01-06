@@ -465,14 +465,14 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamMcEngineBuilde
     // get LGM model
 
     auto cam = model(id, ccy, creditCurveId, maturityDate, generateAdditionalResults);
-    // TODO: do we need that?
-    bool spreadOnIncome = true;
+    bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
+    
     // return engine
     std::vector<Date> simulationDates;      // You need to define or obtain simulationDates appropriately
     std::vector<Date> stickyCloseOutDates;  // You need to define or obtain stickyCloseOutDates appropriately
     std::vector<Size> externalModelIndices; // You need to define or obtain externalModelIndices appropriately
 
-    // Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
+    Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
 
     return ext::make_shared<QuantExt::McCamCallableBondEngine>(
         cam, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
@@ -486,6 +486,7 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamMcEngineBuilde
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
         referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
+        americanExerciseTimeStepsPerYear,
         generateAdditionalResults, simulationDates, stickyCloseOutDates, externalModelIndices,
         parseBool(engineParameter("MinObsDate", {}, false, "true")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
@@ -540,7 +541,8 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamAmcEngineBuild
     if (p != globalParameters_.end()) {
         generateAdditionalResults = parseBool(p->second);
     }
-    bool spreadOnIncome = true;
+    bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "true"));
+    Size americanExerciseTimeStepsPerYear = parseInteger(modelParameter("ExerciseTimeStepsPerYear", {}, false, "0"));
     // get LGM model
     std::vector<Size> externalModelIndices;
     Currency cur = parseCurrency(ccy);
@@ -567,6 +569,7 @@ QuantLib::ext::shared_ptr<QuantExt::PricingEngine> CallableBondCamAmcEngineBuild
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
         referenceCurve, discountingSpread, defaultCurve, incomeCurve, recovery, spreadOnIncome,
+        americanExerciseTimeStepsPerYear,
         generateAdditionalResults, simulationDates_, stickyCloseOutDates_, externalModelIndices,
         parseBool(engineParameter("MinObsDate", {}, false, "true")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),

@@ -22,20 +22,6 @@
 
 #pragma once
 
-#include <ql/indexes/interestrateindex.hpp>
-#include <ql/instruments/swaption.hpp>
-#include <ql/methods/montecarlo/lsmbasissystem.hpp>
-#include <qle/instruments/callablebond.hpp>
-#include <qle/instruments/multilegoption.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/crossassetmodel.hpp>
-#include <qle/models/lgmvectorised.hpp>
-#include <qle/models/crlgmvectorised.hpp>
-#include <qle/pricingengines/mccashflowinfo.hpp>
-#include <qle/pricingengines/mcmultilegbaseengine.hpp>
-#include <qle/pricingengines/mcregressionmodel.hpp>
-// #include <boost/archive/binary_iarchive.hpp>
-// #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -43,20 +29,24 @@
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/vector.hpp>
+#include <ql/indexes/interestrateindex.hpp>
+#include <ql/instruments/swaption.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
+#include <qle/instruments/callablebond.hpp>
+#include <qle/instruments/multilegoption.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/crlgmvectorised.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/lgmvectorised.hpp>
+#include <qle/pricingengines/mccashflowinfo.hpp>
+#include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/pricingengines/mcregressionmodel.hpp>
 #include <qle/utilities/callablebond.hpp>
+
 namespace QuantExt {
 
 class McCamCallableBondBaseEngine {
 public:
-    // protected:
-    /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
-        are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
-        input to AmcCalculator::simulatePath().
-
-        Current limitations:
-        - the parameter minimalObsDate is ignored, the corresponding optimization is not implemented yet
-        - pricingSamples are ignored, the npv from the training phase is used alway
-    */
     McCamCallableBondBaseEngine(
         const Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
         const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
@@ -69,7 +59,8 @@ public:
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true,
-        const bool generateAdditionalResults = true, const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const Size americanExerciseTimeStepsPerYear = 24, const bool generateAdditionalResults = true,
+        const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
@@ -84,8 +75,6 @@ public:
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
-
-    void setAmericanExerciseInterval(const Size obsPerYear) { americanExerciseInterval_ = obsPerYear; }
 
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
     QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
@@ -102,10 +91,9 @@ public:
             const std::array<std::vector<RegressionModel>, 2>& regModelUndDirty,
             const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValueCall,
             const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValuePut,
-            const std::array<std::vector<RegressionModel>, 2>& regModelOption, 
+            const std::array<std::vector<RegressionModel>, 2>& regModelOption,
             const std::array<std::vector<RegressionModel>, 2>& regModelCallExerciseValue,
-            const std::array<std::vector<RegressionModel>, 2>& regModelPutExerciseValue,
-            const Real resultValue,
+            const std::array<std::vector<RegressionModel>, 2>& regModelPutExerciseValue, const Real resultValue,
             const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
             const bool includeTodaysCashflows, const bool includeReferenceDateEvents,
             const ext::shared_ptr<QuantExt::CallableBondNotionalAndAccrualCalculator>& notionalAccrualCalculator);
@@ -173,6 +161,7 @@ public:
     Handle<QuantLib::Quote> recoveryRate_;
 
     bool spreadOnIncome_;
+    Size americanExerciseTimeStepsPerYear_;
     bool generateAdditionalResults_;
 
     std::vector<Date> simulationDates_;
@@ -189,7 +178,6 @@ public:
     Size regressionMaxSimTimesFx_;
     Size regressionMaxSimTimesEq_;
     RegressionModel::VarGroupMode regressionVarGroupMode_;
-    Size americanExerciseInterval_ = 24;
 
     // set from global settings
     mutable bool includeTodaysCashflows_;
@@ -262,7 +250,8 @@ public:
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true,
-        const bool generateAdditionalResults = true, const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const Size americanExerciseTimeStepsPerYear = 24, const bool generateAdditionalResults = true,
+        const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
@@ -271,17 +260,17 @@ public:
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
         const RegressionModel::VarGroupMode regressionVarGroupMode = RegressionModel::VarGroupMode::Global)
-        : McCamCallableBondEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
-                                      std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
-                                      std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
-                                  calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
-                                  calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                                  referenceCurve, discountingSpread, creditCurve, incomeCurve, recoveryRate,
-                                  spreadOnIncome, generateAdditionalResults, simulationDates, stickyCloseOutDates,
-                                  externalModelIndices, minimalObsDate, regressorModel, regressionVarianceCutoff,
-                                  recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun, cfOnCpnMaxSimTimes,
-                                  cfOnCpnAddSimTimesCutoff, regressionMaxSimTimesIr, regressionMaxSimTimesFx,
-                                  regressionMaxSimTimesEq, regressionVarGroupMode) {};
+        : McCamCallableBondEngine(
+              Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+                  std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
+                  std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
+              calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples, calibrationSeed,
+              pricingSeed, polynomOrder, polynomType, ordering, directionIntegers, referenceCurve, discountingSpread,
+              creditCurve, incomeCurve, recoveryRate, spreadOnIncome, americanExerciseTimeStepsPerYear,
+              generateAdditionalResults, simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
+              regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun,
+              cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff, regressionMaxSimTimesIr, regressionMaxSimTimesFx,
+              regressionMaxSimTimesEq, regressionVarGroupMode) {};
 
     McCamCallableBondEngine(
         const Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
@@ -295,7 +284,8 @@ public:
             Handle<QuantLib::DefaultProbabilityTermStructure>(),
         const Handle<QuantLib::YieldTermStructure>& incomeCurve = Handle<QuantLib::YieldTermStructure>(),
         const Handle<QuantLib::Quote>& recoveryRate = Handle<QuantLib::Quote>(), const bool spreadOnIncome = true,
-        const bool generateAdditionalResults = true, const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const Size americanExerciseTimeStepsPerYear = 24, const bool generateAdditionalResults = true,
+        const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
@@ -304,14 +294,15 @@ public:
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
         const RegressionModel::VarGroupMode regressionVarGroupMode = RegressionModel::VarGroupMode::Global)
-        : McCamCallableBondBaseEngine(
-              model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
-              calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers, referenceCurve,
-              discountingSpread, creditCurve, incomeCurve, recoveryRate, spreadOnIncome, generateAdditionalResults,
-              simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate, regressorModel,
-              regressionVarianceCutoff, recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun,
-              cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff, regressionMaxSimTimesIr, regressionMaxSimTimesFx,
-              regressionMaxSimTimesEq, regressionVarGroupMode) {
+        : McCamCallableBondBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples,
+                                      pricingSamples, calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering,
+                                      directionIntegers, referenceCurve, discountingSpread, creditCurve, incomeCurve,
+                                      recoveryRate, spreadOnIncome, americanExerciseTimeStepsPerYear,
+                                      generateAdditionalResults, simulationDates, stickyCloseOutDates,
+                                      externalModelIndices, minimalObsDate, regressorModel, regressionVarianceCutoff,
+                                      recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun,
+                                      cfOnCpnMaxSimTimes, cfOnCpnAddSimTimesCutoff, regressionMaxSimTimesIr,
+                                      regressionMaxSimTimesFx, regressionMaxSimTimesEq, regressionVarGroupMode) {
         registerWith(model);
         registerWith(referenceCurve);
         registerWith(discountingSpread);
@@ -322,7 +313,7 @@ public:
 
 private:
     void calculate() const override {
-        //std::cout << "Calculate McCamCallableBondEngine" << std::endl;
+        // std::cout << "Calculate McCamCallableBondEngine" << std::endl;
         leg_ = arguments_.cashflows;
         currency_ = model_->irlgm1f(0)->currency();
         notionals_ = arguments_.notionals;
@@ -336,7 +327,7 @@ private:
         results_.value = resultTotalNpv_;
         results_.settlementValue = resultSettlementValue_;
         results_.additionalResults = additionalResults_;
-        results_.additionalResults["amcCalculator"] = amcCalculator();        
+        results_.additionalResults["amcCalculator"] = amcCalculator();
     }
 };
 

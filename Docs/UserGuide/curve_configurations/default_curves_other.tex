@@ -134,8 +134,7 @@ The meaning of each node is as follows:
 \subsubsection{Default Curve from YieldCurve}\label{ss:default_curve_from_yield_curve}
 
 Default curves can be set up as a wrapper around a yield curve as shown in listing
-\ref{lst:defaultcurve_from_yield}. A typical use case is to back out from a funding spread curve. 
-
+\ref{lst:defaultcurve_from_yield}. A typical use case is reinterpret a funding spread curve as default curve for use in appropriate pricers.
 If $P(0,t)$ denotes the discount factor of the given yield curve the resulting default term structures has survival probabilities
 
 \begin{equation}
@@ -162,7 +161,7 @@ The meaning of each node is as follows:
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
     <DefaultCurve>
-			<CurveId>FundingCurveCreditCurve</CurveId>
+			<CurveId>FundingCurveAsCrediCurve</CurveId>
 			<Currency>EUR</Currency>
 			<CurveDescription>Issuer funding spread curve as credit curve</CurveDescription>
 			<Configurations>
@@ -170,7 +169,7 @@ The meaning of each node is as follows:
 					<Type>YieldCurve</Type>
 					<DayCounter>Actual/360</DayCounter>
 					<RecoveryRate>RECOVERY_RATE/RATE/CPTY_C/SR/EUR</RecoveryRate>
-					<WrappedYieldCurve>Yield/EUR/FundingCurve</WrappedYieldCurve>
+					<ReinterpretedYieldCurve>Yield/EUR/FundingCurve</ReinterpretedYieldCurve>
 					<Extrapolation>true</Extrapolation>
 				</Configuration>
 			</Configurations>

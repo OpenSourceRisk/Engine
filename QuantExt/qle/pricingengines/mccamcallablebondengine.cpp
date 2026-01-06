@@ -88,7 +88,7 @@ McCamCallableBondBaseEngine::McCamCallableBondBaseEngine(
     const Handle<QuantLib::Quote>& discountingSpread,
     const Handle<QuantLib::DefaultProbabilityTermStructure>& creditCurve,
     const Handle<QuantLib::YieldTermStructure>& incomeCurve, const Handle<QuantLib::Quote>& recoveryRate,
-    const bool spreadOnIncome, const bool generateAdditionalResults, const std::vector<Date>& simulationDates,
+    const bool spreadOnIncome, const Size americanExerciseTimeStepsPerYear, const bool generateAdditionalResults, const std::vector<Date>& simulationDates,
     const std::vector<Date>& stickyCloseOutDates, const std::vector<Size>& externalModelIndices,
     const bool minimalObsDate, const RegressionModel::RegressorModel regressorModel,
     const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
@@ -100,7 +100,7 @@ McCamCallableBondBaseEngine::McCamCallableBondBaseEngine(
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
       directionIntegers_(directionIntegers), referenceCurve_(referenceCurve), discountingSpread_(discountingSpread),
       creditCurve_(creditCurve), incomeCurve_(incomeCurve), recoveryRate_(recoveryRate),
-      spreadOnIncome_(spreadOnIncome), generateAdditionalResults_(generateAdditionalResults),
+      spreadOnIncome_(spreadOnIncome), americanExerciseTimeStepsPerYear_(americanExerciseTimeStepsPerYear),  generateAdditionalResults_(generateAdditionalResults),
       simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates),
       externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate), regressorModel_(regressorModel),
       regressionVarianceCutoff_(regressionVarianceCutoff),
@@ -689,13 +689,12 @@ void McCamCallableBondBaseEngine::generateExerciseDates(
 
     QL_REQUIRE(!events.times().empty(), "McCamCallableBondEngine: internal error, times are empty");
 
-    Size effectiveTimeStepsPerYear = americanExerciseInterval_;
 
     TimeGrid grid;
-    if (effectiveTimeStepsPerYear == 0) {
+    if (americanExerciseTimeStepsPerYear_ == 0) {
         grid = TimeGrid(events.times().begin(), events.times().end());
     } else {
-        Size steps = std::max<Size>(std::lround(effectiveTimeStepsPerYear * (*events.times().rbegin()) + 0.5), 1);
+        Size steps = std::max<Size>(std::lround(americanExerciseTimeStepsPerYear_ * (*events.times().rbegin()) + 0.5), 1);
         grid = TimeGrid(events.times().begin(), events.times().end(), steps);
     }
     events.finalise(grid);
