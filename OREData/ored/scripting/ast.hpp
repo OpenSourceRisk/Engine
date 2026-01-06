@@ -129,6 +129,16 @@ struct FunctionMinNode : public ASTNode {
     void accept(AcyclicVisitor&) override;
 };
 
+struct FunctionFractionNode : public ASTNode {
+    FunctionFractionNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 1, 1) {}
+    void accept(AcyclicVisitor&) override;
+};
+
+struct FunctionRoundNode : public ASTNode {
+    FunctionRoundNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
+    void accept(AcyclicVisitor&) override;
+};
+
 struct FunctionPowNode : public ASTNode {
     FunctionPowNode(const std::vector<ASTNodePtr>& args) : ASTNode(args, 2, 2) {}
     void accept(AcyclicVisitor&) override;

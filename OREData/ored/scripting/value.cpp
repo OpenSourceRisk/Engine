@@ -179,6 +179,11 @@ ValueType max(const ValueType& x, const ValueType& y) {
         BinaryOp([](const RandomVariable& x, const RandomVariable& y) -> RandomVariable { return max(x, y); }), x, y);
 }
 
+ValueType round(const ValueType& x, const ValueType& y) {
+    return boost::apply_visitor(
+        BinaryOp([](const RandomVariable& x, const RandomVariable& y) -> RandomVariable { return round(x, y); }), x, y);
+}
+
 ValueType pow(const ValueType& x, const ValueType& y) {
     return boost::apply_visitor(
         BinaryOp([](const RandomVariable& x, const RandomVariable& y) -> RandomVariable { return pow(x, y); }), x, y);
@@ -208,6 +213,10 @@ ValueType normalCdf(const ValueType& x) {
 
 ValueType normalPdf(const ValueType& x) {
     return boost::apply_visitor(UnaryOp([](const RandomVariable& x) -> RandomVariable { return normalPdf(x); }), x);
+}
+
+ValueType frac(const ValueType& x) {
+    return boost::apply_visitor(UnaryOp([](const RandomVariable& x) -> RandomVariable { return frac(x); }), x);
 }
 
 ValueType typeSafeAssign(ValueType& x, const ValueType& y) { return boost::apply_visitor(Assignment(), x, y); }

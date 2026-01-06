@@ -1416,8 +1416,8 @@ void OREAppInputParameters::loadParameters() {
             setVarBreakDown(parseBool(tmp));
 
         tmp = params_->get("historicalSimulationVar", "tradePnl", false);
-            if (tmp != "")
-                setTradePnl(parseBool(tmp));
+        if (tmp != "")
+            setTradePnl(parseBool(tmp));
 
         tmp = params_->get("historicalSimulationVar", "portfolioFilter", false);
         if (tmp != "")
@@ -1426,6 +1426,11 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("historicalSimulationVar", "outputHistoricalScenarios", false);
         if (tmp != "")
             setOutputHistoricalScenarios(parseBool(tmp));
+        
+        tmp = params_->get("historicalSimulationVar", "riskFactorBreakdown", false);
+        if (tmp != "")
+            setRiskFactorBreakdown(parseBool(tmp));
+        
     }
 
     /*************
