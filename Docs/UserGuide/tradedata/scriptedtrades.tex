@@ -2266,7 +2266,7 @@ Allowable values: A date.
 
 % we only have a scripted trade representation for this at the moment
 
-A  Lapse Hedge Swap is represente a {\em scripted trades}, refer to Section
+A  Lapse Hedge Swap is represented as a {\em scripted trades}, refer to Section
 \ref{app:scriptedtrade} for an introduction.
 
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -2542,6 +2542,136 @@ The meanings and allowable values in the \lstinline!LapseHedgeSwapData! node bel
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[event] \lstinline!ExerciseDates!: Bermudan exercise dates \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
+
+\subsubsection{Best of Airbag}
+
+% we only have a scripted trade representation for this at the moment
+
+A  Best of Airbag is represented as a {\em scripted trades}, refer to Section
+\ref{app:scriptedtrade} for an introduction.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="EQ_BestOfAirbag">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <BestOfAirbagData>
+    <LongShort type="longShort">Long</LongShort>
+    <Quantity type="number">200000</Quantity>
+    <Underlyings type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings>
+    <Premium type="number">291264</Premium>
+    <PremiumDate type="event">2020-03-11</PremiumDate>
+    <InitialPrices type="number">
+      <Value>5455.60</Value>
+      <Value>500</Value>
+    </InitialPrices>
+    <StrikePrices type="number">
+      <Value>5600</Value>
+      <Value>550</Value>
+    </StrikePrices>
+    <BonusCoupon type="number">0.1430</BonusCoupon>
+    <ObservationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-03-11</StartDate>
+          <EndDate>2020-09-04</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>USD</Calendar>
+          <Convention>ModifiedFollowing</Convention>
+          <TermConvention>ModifiedFollowing</TermConvention>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ObservationSchedule>
+    <ObservationDate type="event">2020-09-04</ObservationDate>
+    <SettlementDate type="event">2020-09-11</SettlementDate>
+    <PayCcy type="currency">EUR</PayCcy>
+  </BestOfAirbagData>
+</Trade>
+\end{minted}
+
+The script referenced in the trade above is shown in Listing \ref{lst:best_of_airbag}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+  REQUIRE SIZE(Underlyings) == SIZE(InitialPrices) AND SIZE(Underlyings) == SIZE(StrikePrices);
+  REQUIRE ObservationDate <= SettlementDate;
+
+  NUMBER indexInitial, indexFinal, performance;
+  NUMBER worstPerformance, payoff, premium, u, worstUnderlying, worstUnderlyingFinalPrice;
+  NUMBER deliverableAsset, roundAmount;
+  
+  worstUnderlying = 1;
+
+  FOR u IN (1, SIZE(Underlyings), 1) DO
+    indexInitial = InitialPrices[u];
+    indexFinal = Underlyings[u](ObservationDate);
+    performance = indexFinal / indexInitial;
+
+    IF {u == 1} OR {performance < worstPerformance} THEN
+      worstPerformance = performance;
+      worstUnderlyingFinalPrice = indexFinal;
+      worstUnderlying = u;
+    END;
+  END;
+
+  IF {worstUnderlyingFinalPrice < StrikePrices[worstUnderlying]} THEN
+    deliverableAsset = Quantity/StrikePrices[worstUnderlying];
+    roundAmount = round(deliverableAsset,0);
+    payoff = worstUnderlyingFinalPrice * roundAmount;
+  ELSE
+    payoff = Quantity*max(BonusCoupon, worstPerformance - 1);
+  END;
+
+  payoff = LOGPAY(payoff, ObservationDate, SettlementDate, PayCcy, 1, Payoff);
+  
+  premium = LOGPAY(Premium, PremiumDate, PremiumDate,
+                    PayCcy, 0, Premium);
+
+  Option = LongShort * (payoff-premium);
+\end{minted}
+\caption{Payoff script for a Best of Airbag.}
+\label{lst:best_of_airbag}
+\end{listing}
+
+The meanings and allowable values in the \lstinline!BestOfAirbagData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Quantity!: A quantity multiplier applied to the payoff. \\
+  Allowable values: Any number.
+  \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each basket underlying. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!Premium!: Total option premium amount in terms of the \emph{PayCcy} \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item{}[event] \lstinline!PremiumDate!: The premium payment date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!StrikePrices!: The strike prices used within the calculation agent. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!BonusCoupon!: A percentage. \\
+  Allowable values: Any number.
+  \item{}[event] \lstinline!ObservationSchedule!: The schedule defining the observation dates for determining price lock-ins. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!ObservationDate!: The date on which the final levels of the assets are determined. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!SettlementDate!: The settlement date for the payoff. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. The \lstinline!StrikePrices! and \lstinline!BarrierLevels! should be expressed in
+      as amount of CCY1 in CCY2.Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
 \end{itemize}
 
 \clearpage
