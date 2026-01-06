@@ -4176,10 +4176,8 @@
       <xs:element type="stFreeStyleNumber" name="FixedRateII"/>
       <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
       <xs:element type="stFreeStyleNumberVector" name="StrikePrices"/>
-      <xs:element type="stFreeStyleNumberVector" name="KnockOutPrices"/>
       <xs:element type="stFreeStyleNumber" name="Premium"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
-      <xs:element type="stFreeStyleNumber" name="Strike"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleNumberVector" name="TriggerLevels"/>
       <xs:element type="stFreeStyleEventSchedule" name="DeterminationDates"/>
