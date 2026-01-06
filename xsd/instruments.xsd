@@ -4149,7 +4149,24 @@
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
-  
+
+  <xs:complexType name="worstPerformanceRainbowOption06Data">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleNumberVector" name="InitialPrices"/>
+      <xs:element type="stFreeStyleNumberVector" name="StrikePrices"/>
+      <xs:element type="stFreeStyleNumberVector" name="BarrierLevels"/>
+      <xs:element type="stFreeStyleNumberVector" name="KnockInPrices"/>
+      <xs:element type="stFreeStyleNumber" name="BonusCoupon"/>
+      <xs:element type="stFreeStyleNumber" name="Quantity"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationSchedule"/>
+      <xs:element type="stFreeStyleEvent" name="ObservationDate"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="worstPerformanceRainbowOption07Data">
     <xs:all>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
@@ -4165,23 +4182,7 @@
       <xs:element type="stFreeStyleNumber" name="Strike"/>
       <xs:element type="stFreeStyleNumber" name="Quantity"/>
       <xs:element type="stFreeStyleNumberVector" name="TriggerLevels"/>
-      <xs:element type="stFreeStyleEvent" name="DeterminationDates"/>
-      <xs:element type="stFreeStyleEvent" name="ObservationSchedule"/>
-      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
-      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
-    </xs:all>
-  </xs:complexType>
-
-  <xs:complexType name="worstPerformanceRainbowOption06Data">
-    <xs:all>
-      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
-      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
-      <xs:element type="stFreeStyleNumberVector" name="InitialPrices"/>
-      <xs:element type="stFreeStyleNumberVector" name="StrikePrices"/>
-      <xs:element type="stFreeStyleNumberVector" name="BarrierLevels"/>
-      <xs:element type="stFreeStyleNumberVector" name="KnockInPrices"/>
-      <xs:element type="stFreeStyleNumber" name="BonusCoupon"/>
-      <xs:element type="stFreeStyleNumber" name="Quantity"/>
+      <xs:element type="stFreeStyleEventSchedule" name="DeterminationDates"/>
       <xs:element type="stFreeStyleEventSchedule" name="ObservationSchedule"/>
       <xs:element type="stFreeStyleEvent" name="ObservationDate"/>
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
