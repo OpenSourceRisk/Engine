@@ -35,7 +35,7 @@ for file in *.py; do
             echo "<<<<<<<<<<<<<<<"
             echo "Actual Output:"
             echo ">>>>>>>>>>>>>>>"
-            cat "$output_file""
+            cat "$output_file"
             echo "<<<<<<<<<<<<<<<"
             status+=$output_status
         fi
