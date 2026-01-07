@@ -641,8 +641,12 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     calibrationInfo_[index]->rateHelperTypes.push_back(r.rateHelperType);
                     if (r.cashflowGenerator)
                         calibrationInfo_[index]->rateHelperCashflows.push_back(r.cashflowGenerator());
+                    else
+                        calibrationInfo_[index]->rateHelperCashflows.push_back({});
                     if (r.quoteErrorGenerator)
                         calibrationInfo_[index]->rateHelperQuoteErrors.push_back(r.quoteErrorGenerator());
+                    else
+                        calibrationInfo_[index]->rateHelperQuoteErrors.push_back({});
                 }
 
                 // temp until MarketCalibrationReport::addYieldCurveImpl() is updated:
