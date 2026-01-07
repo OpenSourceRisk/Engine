@@ -29,6 +29,14 @@ for file in *.py; do
             echo "The output matches the expected output."
         else
             echo "The output differs from the expected output for $file_name."
+            echo "Expected Output:"
+            echo ">>>>>>>>>>>>>>>"
+            cat "$expected_dir/$file_name.txt"
+            echo "<<<<<<<<<<<<<<<"
+            echo "Actual Output:"
+            echo ">>>>>>>>>>>>>>>"
+            cat "$output_file""
+            echo "<<<<<<<<<<<<<<<"
             status+=$output_status
         fi
 
