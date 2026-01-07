@@ -651,7 +651,6 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
 
                 // temp until MarketCalibrationReport::addYieldCurveImpl() is updated:
                 if (!rateHelperPillars) {
-                    std::cerr << "clearing rh info for " << boost::join(curveSpecNames,",") << std::endl;
                     calibrationInfo_[index]->rateHelperPillarDates.clear();
                     calibrationInfo_[index]->mdQuoteLabels.clear();
                     calibrationInfo_[index]->mdQuoteValues.clear();
