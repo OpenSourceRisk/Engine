@@ -374,7 +374,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
 
     Real rmse = getRMSE();
     if (rmse > maxAcceptableError_) {
-        std::string msg = "calibration error " + to_string(rmse) + " exceeds maximum acceptable error " +
+        std::string msg = "Heston calibration error " + to_string(rmse) + " exceeds maximum acceptable error " +
                           to_string(maxAcceptableError_);
         StructuredModelWarningMessage("Failed to calibrate Heston model", msg, indexName_).log();
     }
@@ -484,7 +484,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
 
     // FIXME: pass and use continueOnError flag
     if (bestRmse > maxAcceptableError_) {
-        std::string msg = "calibration error " + to_string(bestRmse) + " exceeds maximum acceptable error " +
+        std::string msg = "Heston calibration error " + to_string(bestRmse) + " exceeds maximum acceptable error " +
                           to_string(maxAcceptableError_);
         StructuredModelWarningMessage("Failed to calibrate Heston model", msg, indexName_).log();
     }
