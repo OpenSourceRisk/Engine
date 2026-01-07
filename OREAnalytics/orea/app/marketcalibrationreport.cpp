@@ -224,10 +224,9 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
     addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
     addRowReport(type, id, "currency", "", "", "", info->currency);
 
-    // TODO, add the mdQuoteLabel, mdQuoteValue, calibrationError if one of the rateHelperPillarDates
-    // matches the curve pillar date, add mdquote, calibration error only once per rate helper)
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
-        std::string key1 = to_string(info->pillarDates[i]);
+        Date pillarDate = info->pillarDates[i];
+        std::string key1 = to_string(pillarDate);
         addRowReport(type, id, "time", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
                      info->times.at(i));
         addRowReport(type, id, "zeroRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
@@ -237,15 +236,35 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
         if (!iborIndex.empty())
             addRowReport(type, id, "forwardRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
                          "", iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
-        if (!info->mdQuoteLabels.empty()) {
+        // add rate helper md quote info and error if one of its pillar dates matches the curve interpolation pillar
+        for (Size j = 0; j < info->rateHelperPillarDates.size(); ++j) {
+            if (auto it =
+                    std::find(info->rateHelperPillarDates[j].begin(), info->rateHelperPillarDates[j].end(), pillarDate);
+                it != info->rateHelperPillarDates[j].end()) {
+                addRowReport(type, id, "mdQuote", key1, info->mdQuoteLabels.at(j), "", info->mdQuoteValues.at(j));
+                addRowReport(type, id, "calibrationError", key1, info->mdQuoteLabels.at(j), "",
+                             info->rateHelperQuoteErrors.at(j));
+            }
+        }
+    }
+
+    /* add md quote info and error for rate helpers that are not covered above, i.e. those without a pillar date or a pilar date not
+       matching one of the report pillar dates */
+    for (Size i = 0; i < info->rateHelperPillarDates.size(); ++i) {
+        if (auto it = std::find_if(info->pillarDates.begin(), info->pillarDates.end(),
+                                   [info, i](const Date& d) {
+                                       return info->rateHelperPillarDates[i].find(d) !=
+                                              info->rateHelperPillarDates[i].end();
+                                   });
+            it == info->pillarDates.end()) {
+            std::string key1 = info->rateHelperPillarDates[i].empty()
+                                   ? "no-pillar"
+                                   : to_string(*info->rateHelperPillarDates[i].rbegin());
             addRowReport(type, id, "mdQuote", key1, info->mdQuoteLabels.at(i), "", info->mdQuoteValues.at(i));
             addRowReport(type, id, "calibrationError", key1, info->mdQuoteLabels.at(i), "",
                          info->rateHelperQuoteErrors.at(i));
         }
     }
-
-    // TODO any rate helpers that were not added to the report above, should be added now for result types
-    // mdQuoteValue, calibrationError
 
     // fitted bond curve results
     auto y = QuantLib::ext::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
@@ -271,12 +290,12 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
 
     // cashflow results
     if (!info->rateHelperCashflows.empty()) {
-        for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        for (Size i = 0; i < info->rateHelperPillarDates.size(); ++i) {
             for (auto const& d : info->rateHelperCashflows[i]) {
                 report_cashflows_->next()
                     .add(type)
                     .add(id)
-                    .add(info->pillarDates[i])
+                    .add(info->rateHelperPillarDates[i].empty() ? Date() : *info->rateHelperPillarDates[i].rbegin())
                     .add(info->rateHelperTypes[i])
                     .add(info->mdQuoteLabels[i])
                     .add(d.cashflowNo)
