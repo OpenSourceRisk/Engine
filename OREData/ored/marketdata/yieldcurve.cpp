@@ -577,6 +577,8 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
 
                 calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
 
+                bool rateHelperPillars = false;
+
                 // try to get the pillar dates from the report config
 
                 try {
@@ -602,6 +604,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     }
                     std::copy(pillarDates.begin(), pillarDates.end(),
                               std::back_inserter(calibrationInfo_[index]->pillarDates));
+                    rateHelperPillars = !pillarDates.empty();
                 }
 
                 // if still empty, use default pillar dates
@@ -641,6 +644,18 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     if (r.quoteErrorGenerator)
                         calibrationInfo_[index]->rateHelperQuoteErrors.push_back(r.quoteErrorGenerator());
                 }
+
+                // temp until MarketCalibrationReport::addYieldCurveImpl() is updated:
+                if (!rateHelperPillars) {
+                    std::cerr << "clearing rh info for " << boost::join(curveSpecNames,",") << std::endl;
+                    calibrationInfo_[index]->rateHelperPillarDates.clear();
+                    calibrationInfo_[index]->mdQuoteLabels.clear();
+                    calibrationInfo_[index]->mdQuoteValues.clear();
+                    calibrationInfo_[index]->rateHelperTypes.clear();
+                    calibrationInfo_[index]->rateHelperCashflows.clear();
+                    calibrationInfo_[index]->rateHelperQuoteErrors.clear();
+                }
+                // end temp code
             }
 
         } catch (const std::exception& e) {
