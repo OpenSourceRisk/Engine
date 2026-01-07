@@ -193,7 +193,7 @@ private:
     void populateRequiredIds(const std::string& discountCurveID, const std::string& benchmarkCurveID,
                              const std::string& sourceCurveID,
                              const std::vector<std::string>& multiSectionSourceCurveIds,
-                             const std::string& wrappedYieldCurveID) const;
+                             const std::string& reinterpretedYieldCurveID) const;
     std::string currency_;
     std::map<int, Config> configs_;
 };
