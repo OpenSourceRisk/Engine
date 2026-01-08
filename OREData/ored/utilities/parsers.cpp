@@ -1601,27 +1601,27 @@ std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::DuplicatePil
     }
 }
 
-QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s) {
+QuantExt::McRegressionModel::RegressorModel parseRegressorModel(const std::string& s) {
     if (s == "Simple")
-        return McMultiLegBaseEngine::RegressorModel::Simple;
+        return McRegressionModel::RegressorModel::Simple;
     else if (s == "Lagged")
-        return McMultiLegBaseEngine::RegressorModel::Lagged;
+        return McRegressionModel::RegressorModel::Lagged;
     else if (s == "LaggedIR")
-        return McMultiLegBaseEngine::RegressorModel::LaggedIR;
+        return McRegressionModel::RegressorModel::LaggedIR;
     else if (s == "LaggedFX")
-        return McMultiLegBaseEngine::RegressorModel::LaggedFX;
+        return McRegressionModel::RegressorModel::LaggedFX;
     else if (s == "LaggedEQ")
-        return McMultiLegBaseEngine::RegressorModel::LaggedEQ;
+        return McRegressionModel::RegressorModel::LaggedEQ;
     else {
         QL_FAIL("RegressorModel '" << s << "' not recognized, expected Simple, Lagged, LaggedIR, LaggedFX, LaggedEQ");
     }
 }
 
-QuantExt::McMultiLegBaseEngine::VarGroupMode parseVarGroupMode(const std::string& s) {
+QuantExt::McRegressionModel::VarGroupMode parseVarGroupMode(const std::string& s) {
     if (s == "Global")
-        return McMultiLegBaseEngine::VarGroupMode::Global;
+        return McRegressionModel::VarGroupMode::Global;
     else if (s == "Trivial")
-        return McMultiLegBaseEngine::VarGroupMode::Trivial;
+        return McRegressionModel::VarGroupMode::Trivial;
     else {
         QL_FAIL("VarGroupMode '" << s << "' not recognized, expected Global, Trivial");
     }

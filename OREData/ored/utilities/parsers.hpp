@@ -36,7 +36,7 @@
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
-#include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/pricingengines/mcregressionmodel.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 #include <qle/termstructures/scenario.hpp>
 
@@ -617,13 +617,13 @@ std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::DuplicatePil
 /*!
 \ingroup utilities
 */
-QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s);
+QuantExt::McRegressionModel::RegressorModel parseRegressorModel(const std::string& s);
 
 //! Convert text to QuantExt::McMultiLegBaseEngine::VarGroupMode
 /*!
 \ingroup utilities
 */
-QuantExt::McMultiLegBaseEngine::VarGroupMode parseVarGroupMode(const std::string& s);
+QuantExt::McRegressionModel::VarGroupMode parseVarGroupMode(const std::string& s);
 
 enum MporCashFlowMode { Unspecified, NonePay, BothPay, WePay, TheyPay };
 
