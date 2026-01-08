@@ -75,6 +75,7 @@ struct InputVariableInfo {
 };
 
 struct InputVariables {
+    virtual ~InputVariables() = default;
     virtual void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) = 0;
     void loadVariables(const QuantLib::ext::weak_ptr<InputParameters>& inputs);
 };
