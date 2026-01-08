@@ -686,8 +686,9 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         std::transform(instruments.begin(), instruments.end(), rh.begin(),                                             \
                        [](const RateHelperData& d) { return d.rateHelper; });                                          \
         if (globalBootstrap) {                                                                                         \
-            auto tmp = QuantLib::ext::make_shared<my_curve_2>(asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,      \
-                                                              my_curve_2::bootstrap_type(accuracy));                   \
+            auto tmp = QuantLib::ext::make_shared<my_curve_2>(                                                         \
+                asofDate_, std::vector<QuantLib::ext::shared_ptr<QuantLib::RateHelper>>{}, zeroDayCounter_[index],     \
+                INTINSTANCE, my_curve_2::bootstrap_type(rh, additionalDates, additionalPenalties, accuracy));          \
             yieldts = tmp;                                                                                             \
             yieldts->enableExtrapolation();                                                                            \
         } else {                                                                                                       \
@@ -712,8 +713,15 @@ QuantLib::ext::shared_ptr<YieldTermStructure> YieldCurve::buildPiecewiseCurve(co
     Size dontThrowSteps = curveConfig_[index]->bootstrapConfig().dontThrowSteps();
     bool globalBootstrap = curveConfig_[index]->bootstrapConfig().global();
 
-    // Check if iterative bootstrap can be used (if configured) and sort the helpers in that case
+    // parameters used for global bootstrap
+    std::function<std::vector<QuantLib::Date>()> additionalDates;
+    std::function<QuantLib::Array(const std::vector<QuantLib::Time>&, const std::vector<QuantLib::Real>&)>
+        additionalPenalties;
+
     if (!globalBootstrap) {
+
+        // Check if iterative bootstrap can be used (if configured) and sort the helpers in that case
+
         for (auto const& i : instruments) {
             QL_REQUIRE(i.mainPillarDate != Date() && i.addPillarDates.empty(),
                        "global bootstrap required, since there is a helper of type "
@@ -721,9 +729,31 @@ QuantLib::ext::shared_ptr<YieldTermStructure> YieldCurve::buildPiecewiseCurve(co
         }
         std::sort(instruments.begin(), instruments.end(),
                   [](const RateHelperData& x, const RateHelperData& y) { return x.mainPillarDate < y.mainPillarDate; });
-    }
+    } else {
 
-    // 
+        /* set up for global bootstrap:
+           - instrument set is empty, rate helpers are passed as additionalHelpers to stay flexible w.r.t. curve pillar dates
+           - additionalDates contain all rate helper pillar dates
+           - additionalPenalties contain the quote errors and penalties for smoothness (if given) */
+
+        std::set<QuantLib::Date> pillarDates;
+        std::for_each(instruments.begin(), instruments.end(), [&pillarDates](const RateHelperData& r) {
+            if (r.mainPillarDate != Date())
+                pillarDates.insert(r.mainPillarDate);
+            pillarDates.insert(r.addPillarDates.begin(), r.addPillarDates.end());
+        });
+
+        additionalDates = [pillarDates] { return std::vector<QuantLib::Date>(pillarDates.begin(), pillarDates.end()); };
+
+        additionalPenalties = [instruments](const std::vector<QuantLib::Time>& times,
+                                            const std::vector<QuantLib::Real>& data) {
+            Array result(instruments.size());
+            std::transform(instruments.begin(), instruments.end(), result.begin(),
+                           [](const RateHelperData& r) { return r.quoteErrorGenerator(); });
+            // TODO add penalty for curve smoothness
+            return result;
+        };
+    }
 
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
 
