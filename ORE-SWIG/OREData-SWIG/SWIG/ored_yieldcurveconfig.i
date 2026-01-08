@@ -73,7 +73,6 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     Type type() const;
-    const std::string& typeID() const;
     const std::string& conventionsID() const;
     const QuantLib::Pillar::Choice pillarChoice() const;
     Size priority() const;
