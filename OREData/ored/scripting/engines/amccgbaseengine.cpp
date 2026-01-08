@@ -64,11 +64,11 @@ Real AmcCgBaseEngine::time(const Date& d) const {
     return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
 }
 
-AmcCgBaseEngine::McCashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
+AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
                                                                   const std::string& payCcy, bool payer, Size legNo,
                                                                   Size cfNo) const {
 
-    McCashflowInfo info;
+    CashflowInfo info;
     QuantExt::ComputationGraph& g = *modelCg_->computationGraph();
 
     // set some common info: pay time, pay ccy, payer, exercise into decision time
@@ -523,7 +523,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
     // populate the info to generate the (alive) cashflow amounts
 
-    std::vector<McCashflowInfo> cashflowInfo;
+    std::vector<CashflowInfo> cashflowInfo;
 
     Size legNo = 0;
     for (auto const& leg : leg_) {
@@ -902,7 +902,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 }
 
 std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, const Date& d,
-                                                   const std::vector<McCashflowInfo>& cashflowInfo,
+                                                   const std::vector<CashflowInfo>& cashflowInfo,
                                                    const std::function<bool(std::size_t)>& cashflowRelevant,
                                                    const std::size_t filter) const {
     // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
