@@ -257,7 +257,6 @@ RiskFactorPnLSeries HistoricalPnlGenerator::riskFactorLevelPnlSeries(const ore::
         return series;
     }
 
-    // Build per-scenario maps for scenarios within the period
     // Determine how many scenarios we have from any cube in the map
     Size samples = mapCube_.begin()->second->samples();
     series.resize(samples);
@@ -269,29 +268,36 @@ RiskFactorPnLSeries HistoricalPnlGenerator::riskFactorLevelPnlSeries(const ore::
         if (!(period.contains(start) && period.contains(end))) {
             continue; // leave this scenario's map empty
         }
-        // Aggregate PnL across trades and collapse duplicates by risk factor name
-        std::unordered_map<std::string, std::pair<RiskFactorKey, Real>> byName;
+        // Aggregate PnL per trade and collapse duplicates by risk factor name
+        // Map: rf name -> (representative key, per-trade pnl vector)
+        std::unordered_map<std::string, std::pair<RiskFactorKey, std::vector<Real>>> byName;
         for (const auto& kv : mapCube_) {
             const RiskFactorKey& rfKey = kv.first;
             const ext::shared_ptr<NPVCube>& rfCube = kv.second;
-            Real pnl = 0.0;
             Size tradeCount = rfCube->numIds();
+            std::vector<Real> pnlVec(tradeCount, 0.0);
+            bool anyNonZero = false;
             for (Size i = 0; i < tradeCount; ++i) {
-                pnl += rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
+                Real v = rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
+                pnlVec[i] = v;
+                anyNonZero = anyNonZero || (v != 0.0);
             }
-            if (pnl == 0.0)
+            if (!anyNonZero)
                 continue;
             auto it = byName.find(rfKey.name);
             if (it == byName.end()) {
-                byName.emplace(rfKey.name, std::make_pair(rfKey, pnl));
+                byName.emplace(rfKey.name, std::make_pair(rfKey, std::move(pnlVec)));
             } else {
-                it->second.second += pnl;
+                auto& aggVec = it->second.second;
+                if (aggVec.size() < pnlVec.size())
+                    aggVec.resize(pnlVec.size(), 0.0);
+                for (Size i = 0; i < pnlVec.size(); ++i)
+                    aggVec[i] += pnlVec[i];
             }
         }
-        // Write one entry per risk factor name into the scenario map
-        for (const auto& e : byName) {
-            series[s].emplace(e.second.first, e.second.second);
-        }  
+        for (auto& e : byName) {
+            series[s].emplace(e.second.first, std::move(e.second.second));
+        }
     }
 
     return series;
