@@ -1593,8 +1593,8 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
             Date minDate = Date::maxDate();
             Date maxDate = Date::minDate();
             for (auto const& r : instrumentsPerSegment[i]) {
-                    minDate = r.minPillarDate();
-                    maxDate = r.maxPillarDate();
+                minDate = std::min(minDate, r.minPillarDate());
+                maxDate = std::max(maxDate, r.maxPillarDate());
             }
             minMaxDatePerSegment[i] = std::make_pair(minDate, maxDate);
             DLOG("curve segment #" << i << " has min pillar date " << minMaxDatePerSegment[i].first
