@@ -58,7 +58,10 @@ public:
     const OptionData& option() const { return option_; }
     const BarrierData& barrier() const { return barrier_; }
     double boughtAmount() const { return boughtAmount_; }
+    const std::string boughtCurrency() const { return boughtCurrency_; }
     double soldAmount() const { return soldAmount_; }
+    const std::string soldCurrency() const { return soldCurrency_; }
+    
     const std::string& fxIndex() const { return fxIndex_; }
     Real strike() const;
     //@}
