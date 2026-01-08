@@ -45,7 +45,7 @@
     }
 %}
 
-%typemap(BoostFilesystemPath) const boost::filesystem::path& "String"
+%typemap(BoostFilesystemPath) const std::filesystem::path& "String"
 
 %typecheck (QL_TYPECHECK_BOOL) boost::optional<bool> {
 if (PyBool_Check($input) || Py_None == $input) 

@@ -27,7 +27,7 @@
 #include <ql/errors.hpp>
 
 using namespace std;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using ore::data::InMemoryReport;
 
 namespace ore {

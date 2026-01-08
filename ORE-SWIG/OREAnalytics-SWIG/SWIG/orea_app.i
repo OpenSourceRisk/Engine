@@ -134,7 +134,7 @@ public:
     void setUseAtParCouponsCurves(bool b);
     void setUseAtParCouponsTrades(bool b);
     void setMarketConfig(const std::string& config, const std::string& context); 
-    void setResultsPath(boost::filesystem::path resultsPath);
+    void setResultsPath(std::filesystem::path resultsPath);
     void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);
     void setBaselTrafficLight(const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight);
     void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);
@@ -367,7 +367,7 @@ class OREApp {
     void run(const ext::shared_ptr<MarketDataLoader> loader);
 
     void setupLog(QuantLib::Size mask = 15, const std::string& path = "", const std::string& file = "", 
-                  const boost::filesystem::path& logRootPath = boost::filesystem::path(),
+                  const std::filesystem::path& logRootPath = std::filesystem::path(),
                   const std::string& progressLogFile = "", QuantLib::Size progressLogRotationSize = 100 * 1024 * 1024,
                   bool progressLogToConsole = false, const std::string& structuredLogFile = "",
                   QuantLib::Size structuredLogRotationSize = 100 * 1024 * 1024);

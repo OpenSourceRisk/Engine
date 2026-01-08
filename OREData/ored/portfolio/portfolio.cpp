@@ -30,6 +30,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/time/date.hpp>
+#include <rapidxml.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -50,9 +51,15 @@ void Portfolio::reset() {
         t->reset();
 }
 
+typedef rapidxml::xml_node<char> XMLNode;
 void Portfolio::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "Portfolio");
-    vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
+    QL_REQUIRE(std::string(node->name()) == "Portfolio" || std::string(node->name()) == "Trade",
+               "XML Node name " << node->name() << " does not match expected name Portfolio");
+    vector<XMLNode*> nodes;
+    if (std::string(node->name()) == "Portfolio")
+        nodes = XMLUtils::getChildrenNodes(node, "Trade");
+    else
+        nodes.push_back(node);
     for (Size i = 0; i < nodes.size(); i++) {
         string tradeType = XMLUtils::getChildValue(nodes[i], "TradeType", true);
 

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/test/unit_test.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -57,6 +57,7 @@
 #include <orea/app/reportwriter.hpp>
 
 #include "testmarket.hpp"
+#include <random>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
@@ -64,6 +65,13 @@ using std::string;
 using std::vector;
 
 namespace {
+std::filesystem::path unique_path(const std::filesystem::path& base = "tmp") {
+    static std::mt19937_64 rng{std::random_device{}()};
+    static std::uniform_int_distribution<unsigned long long> dist;
+
+    auto unique_name = base.string() + "_" + std::to_string(dist(rng));
+    return std::filesystem::path(unique_name);
+}
 
 void initCube(NPVCube& cube) {
     // Set every (i,j,k,d) node to be i*1000000 + j + (k/1000000) + d*3
@@ -120,7 +128,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     initCube(*cube);
 
     // get a random filename
-    string filename = boost::filesystem::unique_path().string();
+    string filename = unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
     saveCube(filename, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
 
@@ -130,7 +138,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
-    boost::filesystem::remove(filename);
+    std::filesystem::remove(filename);
 
     // Check dimensions match
     BOOST_CHECK_EQUAL(cube->numIds(), cube->numIds());
@@ -227,7 +235,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     initCube(*cube, portfolio, d);
 
     // get a random filename
-    string filename = boost::filesystem::unique_path().string();
+    string filename = unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
     saveCube(filename, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
 
@@ -238,7 +246,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
-    boost::filesystem::remove(filename);
+    std::filesystem::remove(filename);
 
     // Check dimensions match
     BOOST_CHECK_EQUAL(cube->numIds(), cube2->numIds());
@@ -542,7 +550,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionJaggedCube) {
 string writeCube(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size bufferSize) {
     auto report = QuantLib::ext::make_shared<InMemoryReport>(bufferSize);
     ReportWriter().writeCube(*report, cube);
-    string fileName = boost::filesystem::unique_path().string();
+    string fileName = unique_path().string();
     report->toFile(fileName);
     return fileName;
 }

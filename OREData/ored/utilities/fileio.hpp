@@ -23,14 +23,13 @@
 
 #pragma once
 
-#include <boost/filesystem/path.hpp>
 #include <ql/types.hpp>
 #include <stdio.h>
 
 namespace ore {
 namespace data {
 
-using boost::filesystem::path;
+using std::filesystem::path;
 
 class FileIO {
 
@@ -48,10 +47,10 @@ public:
     //! Retry wrapper for std::fopen
     static FILE* fopen(const char*, const char*);
 
-    //! Retry wrapper for boost::filesystem::create_directories
+    //! Retry wrapper for std::filesystem::create_directories
     static bool create_directories(const path&);
 
-    //! Retry wrapper for boost::filesystem::remove_all
+    //! Retry wrapper for std::filesystem::remove_all
     static bool remove_all(const path&);
 };
 

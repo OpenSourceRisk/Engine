@@ -507,14 +507,12 @@ public:
     std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) override {
         return string();
     }
-    std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory) override {
-        return string();
+    std::vector<std::string> loadParameterXMLString(const std::string& rawStr) override {
+        return {};
     }
 };
 
 BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
-
-
 
     CachedResultsData cachedResults;
     std::map<tuple<string, string, string, string, string, string>, vector<Date>> cachedDefaultDates = cachedResults.defaultDates;

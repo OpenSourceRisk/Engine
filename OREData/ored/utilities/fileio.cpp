@@ -21,7 +21,6 @@
     \ingroup
 */
 
-#include <boost/filesystem/operations.hpp>
 #include <chrono>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/log.hpp>
@@ -104,7 +103,7 @@ bool FileIO::create_directories(const path& p) {
         }
 
         try {
-            res = boost::filesystem::create_directories(p);
+            res = std::filesystem::create_directories(p);
             if (res)
                 break;
         } catch (...) {
@@ -131,7 +130,7 @@ bool FileIO::remove_all(const path& p) {
         }
 
         try {
-            res = boost::filesystem::remove_all(p);
+            res = std::filesystem::remove_all(p);
             if (res)
                 break;
         } catch (...) {
