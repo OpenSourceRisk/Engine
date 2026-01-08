@@ -1439,6 +1439,100 @@ std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecom
     }
 }
 
+YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
+    if (iequals(s, "Zero"))
+        return YieldCurveSegment::Type::Zero;
+    else if (iequals(s, "Zero Spread"))
+        return YieldCurveSegment::Type::ZeroSpread;
+    else if (iequals(s, "Discount"))
+        return YieldCurveSegment::Type::Discount;
+    else if (iequals(s, "Deposit"))
+        return YieldCurveSegment::Type::Deposit;
+    else if (iequals(s, "FRA"))
+        return YieldCurveSegment::Type::FRA;
+    else if (iequals(s, "Future"))
+        return YieldCurveSegment::Type::Future;
+    else if (iequals(s, "OIS"))
+        return YieldCurveSegment::Type::OIS;
+    else if (iequals(s, "Swap"))
+        return YieldCurveSegment::Type::Swap;
+    else if (iequals(s, "Average OIS"))
+        return YieldCurveSegment::Type::AverageOIS;
+    else if (iequals(s, "Tenor Basis Swap"))
+        return YieldCurveSegment::Type::TenorBasis;
+    else if (iequals(s, "Tenor Basis Two Swaps"))
+        return YieldCurveSegment::Type::TenorBasisTwo;
+    else if (iequals(s, "BMA Basis Swap"))
+        return YieldCurveSegment::Type::BMABasis;
+    else if (iequals(s, "FX Forward"))
+        return YieldCurveSegment::Type::FXForward;
+    else if (iequals(s, "Cross Currency Basis Swap"))
+        return YieldCurveSegment::Type::CrossCcyBasis;
+    else if (iequals(s, "Cross Currency Fix Float Swap"))
+        return YieldCurveSegment::Type::CrossCcyFixFloat;
+    else if (iequals(s, "Discount Ratio"))
+        return YieldCurveSegment::Type::DiscountRatio;
+    else if (iequals(s, "FittedBond"))
+        return YieldCurveSegment::Type::FittedBond;
+    else if (iequals(s, "Yield Plus Default"))
+        return YieldCurveSegment::Type::YieldPlusDefault;
+    else if (iequals(s, "Weighted Average"))
+        return YieldCurveSegment::Type::WeightedAverage;
+    else if (iequals(s, "Ibor Fallback"))
+        return YieldCurveSegment::Type::IborFallback;
+    else if (iequals(s, "Bond Yield Shifted"))
+        return YieldCurveSegment::Type::BondYieldShifted;
+    QL_FAIL("Yield curve segment type " << s << " not recognized");
+}
+
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::Type c) {
+    if (c == YieldCurveSegment::Type::Zero) {
+        return os << "Zero";
+    } else if (c == YieldCurveSegment::Type::ZeroSpread) {
+        return os << "Zero Spread";
+    } else if (c == YieldCurveSegment::Type::Discount) {
+        return os << "Discount";
+    } else if (c == YieldCurveSegment::Type::Deposit) {
+        return os << "Deposit";
+    } else if (c == YieldCurveSegment::Type::FRA) {
+        return os << "FRA";
+    } else if (c == YieldCurveSegment::Type::Future) {
+        return os << "Future";
+    } else if (c == YieldCurveSegment::Type::OIS) {
+        return os << "OIS";
+    } else if (c == YieldCurveSegment::Type::Swap) {
+        return os << "Swap";
+    } else if (c == YieldCurveSegment::Type::AverageOIS) {
+        return os << "Average OIS";
+    } else if (c == YieldCurveSegment::Type::TenorBasis) {
+        return os << "Tenor Basis Swap";
+    } else if (c == YieldCurveSegment::Type::TenorBasisTwo) {
+        return os << "Tenor Basis Two Swaps";
+    } else if (c == YieldCurveSegment::Type::BMABasis) {
+        return os << "BMA Basis Swap";
+    } else if (c == YieldCurveSegment::Type::FXForward) {
+        return os << "FX Forward";
+    } else if (c == YieldCurveSegment::Type::CrossCcyBasis) {
+        return os << "Cross Currency Basis Swap";
+    } else if (c == YieldCurveSegment::Type::CrossCcyFixFloat) {
+        return os << "Cross Currency Fix Float Swap";
+    } else if (c == YieldCurveSegment::Type::DiscountRatio) {
+        return os << "Discount Ratio";
+    } else if (c == YieldCurveSegment::Type::FittedBond) {
+        return os << "FittedBond";
+    } else if (c == YieldCurveSegment::Type::YieldPlusDefault) {
+        return os << "Yield Plus Default";
+    } else if (c == YieldCurveSegment::Type::WeightedAverage) {
+        return os << "Weighted Average";
+    } else if (c == YieldCurveSegment::Type::IborFallback) {
+        return os << "Ibor Fallback";
+    } else if (c == YieldCurveSegment::Type::BondYieldShifted) {
+        return os << "Bond Yield Shifted";
+    } else {
+        QL_FAIL("Unknonw PillarChoice value " << static_cast<std::size_t>(c));
+    }
+}
+
 YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s) {
     if (s == "NoPillar")
         return YieldCurveSegment::PillarChoice::NoPillar;
@@ -1475,6 +1569,35 @@ std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::PillarChoice
         return os << "StartDateAndLastRelevantDate";
     } else {
         QL_FAIL("Unknonw PillarChoice value " << static_cast<std::size_t>(c));
+    }
+}
+
+YieldCurveSegment::DuplicatePillarPolicy parseDuplicatePillarPolicy(const std::string& s) {
+    if (s == "KeepLast")
+        return YieldCurveSegment::DuplicatePillarPolicy::KeepLast;
+    else if (s == "KeepFirst")
+        return YieldCurveSegment::DuplicatePillarPolicy::KeepFirst;
+    else if (s == "KeepAll")
+        return YieldCurveSegment::DuplicatePillarPolicy::KeepAll;
+    else if (s == "ThrowError")
+        return YieldCurveSegment::DuplicatePillarPolicy::ThrowError;
+    else {
+        QL_FAIL("DuplicatePillarPolicy '" << s
+                                          << "' not recognized, expected KeepLast, KeepFirst, KeepAll, ThrowError");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::DuplicatePillarPolicy c) {
+    if (c == YieldCurveSegment::DuplicatePillarPolicy::KeepLast) {
+        return os << "KeepLast";
+    } else if (c == YieldCurveSegment::DuplicatePillarPolicy::KeepFirst) {
+        return os << "KeepFirst";
+    } else if (c == YieldCurveSegment::DuplicatePillarPolicy::KeepAll) {
+        return os << "KeepAll";
+    } else if (c == YieldCurveSegment::DuplicatePillarPolicy::ThrowError) {
+        return os << "ThrowError";
+    } else {
+        QL_FAIL("Unknonw DuplicatePillarPolicy value " << static_cast<std::size_t>(c));
     }
 }
 

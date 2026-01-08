@@ -224,7 +224,6 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentFromXml) {
 
     // Perform the checks
     BOOST_CHECK(seg.type() == YieldCurveSegment::Type::DiscountRatio);
-    BOOST_CHECK_EQUAL(seg.typeID(), "Discount Ratio");
     BOOST_CHECK_EQUAL(seg.conventionsID(), "");
     BOOST_CHECK(seg.quotes().empty());
 
@@ -249,7 +248,6 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentToXml) {
     DiscountRatioYieldCurveSegment newSeg;
     BOOST_CHECK_NO_THROW(newSeg.fromXML(doc.getFirstNode("")));
     BOOST_CHECK(newSeg.type() == YieldCurveSegment::Type::DiscountRatio);
-    BOOST_CHECK_EQUAL(newSeg.typeID(), "Discount Ratio");
     BOOST_CHECK_EQUAL(newSeg.conventionsID(), "");
     BOOST_CHECK(newSeg.quotes().empty());
 

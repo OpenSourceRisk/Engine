@@ -1493,18 +1493,33 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
             }
         }
 
-        /* If we have two instruments with identical pillar dates wthin a segment, remove the earlier one */
-
-        // TODO do we want an option (in the segment config) to turn that check off and keep both instruments?
+        /* Handle instruments with duplicate (main) pillar dates */
 
         for (Size i = 0; i < curveSegments_[index].size(); ++i) {
             for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
-                if (std::next(it, 1) != instrumentsPerSegment[i].end() &&
-                    (*it).rateHelper->pillarDate() == (*std::next(it, 1)).rateHelper->pillarDate()) {
-                    DLOG("Removing instrument with pillar date "
-                         << (*it).rateHelper->pillarDate() << " in segment #" << i
-                         << " because the next instrument in the same segment has the same pillar date");
-                    it = instrumentsPerSegment[i].erase(it);
+                if (std::next(it, 1) != instrumentsPerSegment[i].end() && (*it).mainPillarDate != Date() &&
+                    it->mainPillarDate == std::next(it, 1)->mainPillarDate) {
+                    DLOG("Found instruments with identical pillar date "
+                         << it->mainPillarDate << " in segment #" << i << ", apply policy "
+                         << curveSegments_[index][i]->duplicatePillarPolicy());
+                    switch (curveSegments_[index][i]->duplicatePillarPolicy()) {
+                    case YieldCurveSegment::DuplicatePillarPolicy::KeepLast:
+                        it = instrumentsPerSegment[i].erase(it);
+                        break;
+                    case YieldCurveSegment::DuplicatePillarPolicy::KeepFirst:
+                        instrumentsPerSegment[i].erase(std::next(it, 1));
+                        break;
+                    case YieldCurveSegment::DuplicatePillarPolicy::KeepAll:
+                        ++it;
+                        break;
+                    case YieldCurveSegment::DuplicatePillarPolicy::ThrowError:
+                        QL_FAIL("Found instruments with identical pillar date "
+                                << it->mainPillarDate << " in segment #" << i << ". Abort, since policy is "
+                                << curveSegments_[index][i]->duplicatePillarPolicy());
+                    default:
+                        QL_FAIL("unhandled duplicate pillar policy "
+                                << curveSegments_[index][i]->duplicatePillarPolicy());
+                    }
                 } else
                     ++it;
             }
@@ -1581,7 +1596,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
             if (initialSize > 0 && instrumentsPerSegment[i].empty()) {
                 std::map<std::string, std::string> subFields;
                 subFields["curveId"] = curveSpec_[index]->name();
-                subFields["segmentType"] = curveSegments_[index][i]->typeID();
+                subFields["segmentType"] = ore::data::to_string(curveSegments_[index][i]->type());
                 subFields["segmentNumber"] = std::to_string(i);
                 StructuredMessage(StructuredMessage::Category::Warning, StructuredMessage::Group::Configuration,
                                   "Entire yield curve segment has been removed", subFields)
@@ -2030,7 +2045,7 @@ void YieldCurve::buildBondYieldShiftedCurve(const std::size_t index) {
 void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                              vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2116,7 +2131,7 @@ void YieldCurve::addDeposits(const std::size_t index, const QuantLib::ext::share
 void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                             vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2265,7 +2280,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
 void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                          vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2347,7 +2362,7 @@ void YieldCurve::addFras(const std::size_t index, const QuantLib::ext::shared_pt
 void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                          vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2468,7 +2483,7 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
 void YieldCurve::addSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                           vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2550,7 +2565,7 @@ void YieldCurve::addSwaps(const std::size_t index, const QuantLib::ext::shared_p
 void YieldCurve::addAverageOISs(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                 vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2647,7 +2662,7 @@ void YieldCurve::addTenorBasisSwaps(const std::size_t index,
                                     const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                     vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2746,7 +2761,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
                                        const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                        vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2846,7 +2861,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const std::size_t index,
 void YieldCurve::addBMABasisSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                   vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -2918,7 +2933,7 @@ void YieldCurve::addBMABasisSwaps(const std::size_t index, const QuantLib::ext::
 void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -3154,7 +3169,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
                                        const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                        vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
@@ -3416,7 +3431,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
                                           const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
                                           vector<RateHelperData>& instruments) {
 
-    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+    DLOG("Adding Segment " << segment->type() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();

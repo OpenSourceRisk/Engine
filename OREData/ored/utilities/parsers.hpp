@@ -586,6 +586,15 @@ CreditPortfolioSensitivityDecomposition parseCreditPortfolioSensitivityDecomposi
 //! Output operator for CreditPortfolioSensitivityDecomposition
 std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecomposition d);
 
+//! Convert text to YieldCurveSegment::Type
+/*!
+\ingroup utilities
+*/
+YieldCurveSegment::Type parseYieldCurveSegment(const string& s);
+
+//! Output operator for YieldCurveSegment::Type
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::Type c);
+
 //! Convert text to YieldCurveConfig::PillarChoice
 /*!
 \ingroup utilities
@@ -594,6 +603,15 @@ YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s);
 
 //! Output operator for YieldCurveConfig::PillarChoice
 std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::PillarChoice c);
+
+//! Convert text to YieldCurveConfig::DuplicatePillarPolicy
+/*!
+\ingroup utilities
+*/
+YieldCurveSegment::DuplicatePillarPolicy parseDuplicatePillarPolicy(const std::string& s);
+
+//! Output operator for YieldCurveConfig::DuplicatePillarPolicy
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::DuplicatePillarPolicy c);
 
 //! Convert text to QuantExt::McMultiLegBaseEngine::RegressorModel
 /*!
