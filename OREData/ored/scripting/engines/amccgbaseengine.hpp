@@ -76,7 +76,7 @@ protected:
 
 private:
     // data structure storing info needed to generate the amount for a cashflow
-    struct CashflowInfo {
+    struct McCashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
         Date payDate = Null<Date>();
         Date exIntoCriterionDate = Null<Date>();
@@ -90,12 +90,12 @@ private:
     Real time(const Date& d) const;
 
     // create the info for a given flow
-    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
+    McCashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
                                     bool payer, Size legNo, Size cfNo) const;
 
     // create a regression model (i.e. an npv - node in the graph)
     std::size_t createRegressionModel(const std::size_t amount, const Date& d,
-                                      const std::vector<CashflowInfo>& cashflowInfo,
+                                      const std::vector<McCashflowInfo>& cashflowInfo,
                                       const std::function<bool(std::size_t)>& cashflowRelevant,
                                       const std::size_t filter) const;
 };

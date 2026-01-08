@@ -19,13 +19,16 @@
 /*! \file qle/utilities/mcstats.hpp
     \brief rate helper related utilities.
 */
+#pragma once
 
 #include <boost/timer/timer.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/shared_ptr.hpp>
 
-#pragma once
 namespace QuantExt {
+
+//! Helper that tracks cpu time spent in various parts of MC engines via three timers,
+// one for pricing calculcation, one for path generation and one for other tasks
 struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
     McEngineStats() {
         other_timer.start();

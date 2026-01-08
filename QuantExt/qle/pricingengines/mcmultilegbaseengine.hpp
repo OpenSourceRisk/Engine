@@ -71,12 +71,12 @@ public:
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
+        const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const RegressionModel::VarGroupMode regressionVarGroupMode = RegressionModel::VarGroupMode::Global);
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
 
     //! Destructor
     virtual ~McMultiLegBaseEngine() {}
@@ -109,7 +109,7 @@ public:
     std::vector<Date> stickyCloseOutDates_;
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
-    RegressionModel::RegressorModel regressorModel_;
+    McRegressionModel::RegressorModel regressorModel_;
     Real regressionVarianceCutoff_;
     bool recalibrateOnStickyCloseOutDates_;
     bool reevaluateExerciseInStickyRun_;
@@ -118,7 +118,7 @@ public:
     Size regressionMaxSimTimesIr_;
     Size regressionMaxSimTimesFx_;
     Size regressionMaxSimTimesEq_;
-    RegressionModel::VarGroupMode regressionVarGroupMode_;
+    McRegressionModel::VarGroupMode regressionVarGroupMode_;
 
     // set from global settings
     mutable bool includeTodaysCashflows_;
@@ -154,11 +154,11 @@ public:
             const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
             const std::vector<Real>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
             const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-            const std::array<std::vector<RegressionModel>, 2>& regModelUndDirty,
-            const std::array<std::vector<RegressionModel>, 2>& regModelUndExInto,
-            const std::array<std::vector<RegressionModel>, 2>& regModelRebate,
-            const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValue,
-            const std::array<std::vector<RegressionModel>, 2>& regModelOption,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValue,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelOption,
             const Real resultValue, const Array& initialState, const Currency& baseCurrency,
             const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
             const bool includeReferenceDateEvents);
@@ -177,11 +177,11 @@ public:
         std::set<Real> exerciseXvaTimes_;
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
-        std::array<std::vector<RegressionModel>, 2> regModelUndDirty_;
-        std::array<std::vector<RegressionModel>, 2> regModelUndExInto_;
-        std::array<std::vector<RegressionModel>, 2> regModelRebate_;
-        std::array<std::vector<RegressionModel>, 2> regModelContinuationValue_;
-        std::array<std::vector<RegressionModel>, 2> regModelOption_;
+        std::array<std::vector<McRegressionModel>, 2> regModelUndDirty_;
+        std::array<std::vector<McRegressionModel>, 2> regModelUndExInto_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRebate_;
+        std::array<std::vector<McRegressionModel>, 2> regModelContinuationValue_;
+        std::array<std::vector<McRegressionModel>, 2> regModelOption_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
@@ -206,13 +206,13 @@ public:
     // the model training logic
     void calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes,
                          const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-                         const std::vector<CashflowInfo>& cashflowInfo,
+                         const std::vector<McCashflowInfo>& cashflowInfo,
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-                         std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelUndExInto, std::vector<RegressionModel>& regModelRebate,
-                         std::vector<RegressionModel>& regModelContinuationValue,
-                         std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
+                         std::vector<McRegressionModel>& regModelUndDirty,
+                         std::vector<McRegressionModel>& regModelUndExInto, std::vector<McRegressionModel>& regModelRebate,
+                         std::vector<McRegressionModel>& regModelContinuationValue,
+                         std::vector<McRegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
                          RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
 
     // convert a date to a time w.r.t. the valuation date
@@ -223,7 +223,7 @@ public:
     Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
 
     // compute a cashflow path value (in model base ccy)
-    RandomVariable cashflowPathValue(const CashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
+    RandomVariable cashflowPathValue(const McCashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
                                      const std::set<Real>& simulationTimes) const;
 
     // valuation date
