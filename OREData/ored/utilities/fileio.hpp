@@ -25,6 +25,7 @@
 
 #include <ql/types.hpp>
 #include <stdio.h>
+#include <filesystem>
 
 namespace ore {
 namespace data {

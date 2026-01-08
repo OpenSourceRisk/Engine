@@ -134,7 +134,7 @@ std::ostream& operator<<(std::ostream& out, const LegType& legType) {
 void CashflowData::fromXML(XMLNode* node) {
     // allow for empty Cashflow legs without any payments
     if(node == nullptr)
-	return;
+    return;
     XMLUtils::checkNode(node, legNodeName());
     amounts_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Cashflow", "Amount", "date", dates_, &parseReal, false);
@@ -2454,11 +2454,11 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
     bondData.populateFromBondReferenceData(engineFactory->referenceData());
     DLOG("Bond data for security id " << securityFamily << " loaded");
     QL_REQUIRE(bondData.coupons().size() == 1,
-	       "multiple reference bond legs not covered by the CMB leg");
+           "multiple reference bond legs not covered by the CMB leg");
     QL_REQUIRE(bondData.coupons().front().schedule().rules().size() == 1,
-	       "multiple bond schedule rules not covered by the CMB leg");
+           "multiple bond schedule rules not covered by the CMB leg");
     QL_REQUIRE(bondData.coupons().front().schedule().dates().size() == 0,
-	       "dates based bond schedules not covered by the CMB leg");
+           "dates based bond schedules not covered by the CMB leg");
 
     // Get bond yield conventions
     auto ret = InstrumentConventions::instance().conventions()->get(securityFamily, Convention::Type::BondYield);
@@ -2466,13 +2466,13 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
     if (ret.first)
         conv = QuantLib::ext::dynamic_pointer_cast<BondYieldConvention>(ret.second);
     else {
-	conv = QuantLib::ext::make_shared<BondYieldConvention>();
-        ALOG("BondYield conventions not found for security " << securityFamily << ", falling back on defaults:"
-	     << " compounding=" << conv->compoundingName()
-	     << ", priceType=" << conv->priceTypeName()
-	     << ", accuracy=" << conv->accuracy() 
-	     << ", maxEvaluations=" << conv->maxEvaluations() 
-	     << ", guess=" << conv->guess());
+        conv = QuantLib::ext::make_shared<BondYieldConvention>();
+            ALOG("BondYield conventions not found for security " << securityFamily << ", falling back on defaults:"
+             << " compounding=" << conv->compoundingName()
+             << ", priceType=" << conv->priceTypeName()
+             << ", accuracy=" << conv->accuracy() 
+             << ", maxEvaluations=" << conv->maxEvaluations() 
+             << ", guess=" << conv->guess());
     } 
 
     Schedule bondSchedule = makeSchedule(bondData.coupons().front().schedule());
@@ -2493,22 +2493,22 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
         // Construct bond with start date = accrual start date and maturity = accrual start date + term
         // or start = accrual end if in arrears. Adjusted for fixing lag, ignoring bond settlement lags for now.
         Date refDate = cmbData->isInArrears() ? schedule[i+1] : schedule[i];
-	Date start = calendar.advance(refDate, -fixingDays, Days, Preceding); 
-	std::string startDate = to_string(start);
-	std::string endDate = to_string(start + underlyingPeriod);
-	bondData.populateFromBondReferenceData(engineFactory->referenceData(), startDate, endDate);
-	Bond bondTrade(Envelope(), bondData);
-	bondTrade.build(engineFactory);
-	auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bondTrade.instrument()->qlInstrument());
-	QuantLib::ext::shared_ptr<QuantExt::ConstantMaturityBondIndex> bondIndex
-	    = QuantLib::ext::make_shared<QuantExt::ConstantMaturityBondIndex>(securityFamily, underlyingPeriod,
-	        // from bond reference data
-		bondSettlementDays, bondCurrency, bondCalendar, bondDayCounter, bondConvention, bondEndOfMonth,
-		// underlying forward starting bond
-		bond,
-		// yield calculation parameters from conventions, except frequency which is from bond reference data
-		conv->compounding(), bondFrequency, conv->accuracy(), conv->maxEvaluations(), conv->guess(), conv->priceType());
-	bondIndices.push_back(bondIndex);
+        Date start = calendar.advance(refDate, -fixingDays, Days, Preceding); 
+        std::string startDate = to_string(start);
+        std::string endDate = to_string(start + underlyingPeriod);
+        bondData.populateFromBondReferenceData(engineFactory->referenceData(), startDate, endDate);
+        Bond bondTrade(Envelope(), bondData);
+        bondTrade.build(engineFactory);
+        auto bond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bondTrade.instrument()->qlInstrument());
+        QuantLib::ext::shared_ptr<QuantExt::ConstantMaturityBondIndex> bondIndex
+            = QuantLib::ext::make_shared<QuantExt::ConstantMaturityBondIndex>(securityFamily, underlyingPeriod,
+                // from bond reference data
+            bondSettlementDays, bondCurrency, bondCalendar, bondDayCounter, bondConvention, bondEndOfMonth,
+            // underlying forward starting bond
+            bond,
+            // yield calculation parameters from conventions, except frequency which is from bond reference data
+            conv->compounding(), bondFrequency, conv->accuracy(), conv->maxEvaluations(), conv->guess(), conv->priceType());
+        bondIndices.push_back(bondIndex);
     }
     
     // Create a sequence of floating rate coupons linked to those indexes and concatenate them to a leg
@@ -2519,8 +2519,8 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
 
     // FIXME: Move the following into CmbLeg in cmbcoupon.xpp
     QL_REQUIRE(bondIndices.size() == schedule.size() - 1,
-	       "vector size mismatch between schedule (" << schedule.size() << ") "
-	       << "and bond indices (" << bondIndices.size() << ")");
+           "vector size mismatch between schedule (" << schedule.size() << ") "
+           << "and bond indices (" << bondIndices.size() << ")");
     Leg leg;
     for (Size i = 0; i < schedule.size() - 1; i++) {
         Date paymentDate;
@@ -2530,26 +2530,26 @@ Leg makeCMBLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactor
             paymentDate = calendar.adjust(schedule[i + 1], convention);
         }
         
-	DLOG("Coupon " << i << ": "
-	     << io::iso_date(paymentDate) << " "
-	     << notionals[i] << " "
-	     << io::iso_date(schedule[i]) << " "
-	     << io::iso_date(schedule[i+1]) << " "
-	     << cmbData->fixingDays() << " "
-	     << gearings[i] << " "
-	     << spreads[i] << " "
-	     << dayCounter.name());
-	QuantLib::ext::shared_ptr<CmbCoupon> coupon
-	    = QuantLib::ext::make_shared<CmbCoupon>(paymentDate, notionals[i], schedule[i], schedule[i + 1],
-					    cmbData->fixingDays(), bondIndices[i], gearings[i], spreads[i], Date(), Date(),
-					    dayCounter, cmbData->isInArrears());	
+        DLOG("Coupon " << i << ": "
+             << io::iso_date(paymentDate) << " "
+             << notionals[i] << " "
+             << io::iso_date(schedule[i]) << " "
+             << io::iso_date(schedule[i+1]) << " "
+             << cmbData->fixingDays() << " "
+             << gearings[i] << " "
+             << spreads[i] << " "
+             << dayCounter.name());
+        QuantLib::ext::shared_ptr<CmbCoupon> coupon
+            = QuantLib::ext::make_shared<CmbCoupon>(paymentDate, notionals[i], schedule[i], schedule[i + 1],
+                            cmbData->fixingDays(), bondIndices[i], gearings[i], spreads[i], Date(), Date(),
+                            dayCounter, cmbData->isInArrears());    
     
-    if (!attachPricer)
-        return leg;
+        if (!attachPricer)
+            return leg;
 
-	auto pricer = QuantLib::ext::make_shared<CmbCouponPricer>();
-	coupon->setPricer(pricer);
-	leg.push_back(coupon);
+        auto pricer = QuantLib::ext::make_shared<CmbCouponPricer>();
+        coupon->setPricer(pricer);
+        leg.push_back(coupon);
     }
     
     return leg;
