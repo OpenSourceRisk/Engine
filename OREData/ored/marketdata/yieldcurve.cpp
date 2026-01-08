@@ -130,6 +130,24 @@ std::set<QuantLib::Date> additionalPillarDates(YieldCurveSegment::PillarChoice c
 
 } // namespace
 
+Date YieldCurve::RateHelperData::minPillarDate() const {
+    Date result = Date::maxDate();
+    if (mainPillarDate != Date())
+        result = std::min(result, mainPillarDate);
+    std::for_each(addPillarDates.begin(), addPillarDates.end(),
+                  [&result](const Date& d) { result = std::min(result, d); });
+    return result;
+}
+
+Date YieldCurve::RateHelperData::maxPillarDate() const {
+    Date result = Date::minDate();
+    if (mainPillarDate != Date())
+        result = std::max(result, mainPillarDate);
+    std::for_each(addPillarDates.begin(), addPillarDates.end(),
+                  [&result](const Date& d) { result = std::max(result, d); });
+    return result;
+}
+
 std::ostream& operator<<(std::ostream& os, YieldCurve::InterpolationVariable v) {
     switch (v) {
     case YieldCurve::InterpolationVariable::Zero:
@@ -680,9 +698,9 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
         }                                                                                                              \
     }
 
-QuantLib::ext::shared_ptr<YieldTermStructure>
-YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
-                                const vector<RateHelperData>& instruments) {
+QuantLib::ext::shared_ptr<YieldTermStructure> YieldCurve::buildPiecewiseCurve(const std::size_t index,
+                                                                              const std::size_t mixedInterpolationSize,
+                                                                              vector<RateHelperData>& instruments) {
 
     // Get configuration values for bootstrap
     Real accuracy = curveConfig_[index]->bootstrapConfig().accuracy();
@@ -693,6 +711,19 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
     Real minFactor = curveConfig_[index]->bootstrapConfig().minFactor();
     Size dontThrowSteps = curveConfig_[index]->bootstrapConfig().dontThrowSteps();
     bool globalBootstrap = curveConfig_[index]->bootstrapConfig().global();
+
+    // Check if iterative bootstrap can be used (if configured) and sort the helpers in that case
+    if (!globalBootstrap) {
+        for (auto const& i : instruments) {
+            QL_REQUIRE(i.mainPillarDate != Date() && i.addPillarDates.empty(),
+                       "global bootstrap required, since there is a helper of type "
+                           << i.rateHelperType << " without any or more than one pillar date");
+        }
+        std::sort(instruments.begin(), instruments.end(),
+                  [](const RateHelperData& x, const RateHelperData& y) { return x.mainPillarDate < y.mainPillarDate; });
+    }
+
+    // 
 
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
 
@@ -1527,22 +1558,17 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         /* Determine min and max pillar date in each segment */
 
-        // TODO those should take into account the main pillar dates as well as the additional pillar dates
-
-        std::vector<std::pair<Date, Date>> minMaxDatePerSegment(curveSegments_[index].size(),
-                                                                std::make_pair(Date::maxDate(), Date::minDate()));
+        std::vector<std::pair<Date, Date>> minMaxDatePerSegment(curveSegments_[index].size());
         for (Size i = 0; i < curveSegments_[index].size(); ++i) {
-            if (!instrumentsPerSegment[i].empty()) {
-                auto [minIt, maxIt] =
-                    std::minmax_element(instrumentsPerSegment[i].begin(), instrumentsPerSegment[i].end(),
-                                        [](const RateHelperData& h, const RateHelperData& j) {
-                                            return h.rateHelper->pillarDate() < h.rateHelper->pillarDate();
-                                        });
-                minMaxDatePerSegment[i] =
-                    std::make_pair((*minIt).rateHelper->pillarDate(), (*maxIt).rateHelper->pillarDate());
-                DLOG("curve segment #" << i << " has min pillar date " << minMaxDatePerSegment[i].first
-                                       << ", max pillar date " << minMaxDatePerSegment[i].second);
+            Date minDate = Date::maxDate();
+            Date maxDate = Date::minDate();
+            for (auto const& r : instrumentsPerSegment[i]) {
+                    minDate = r.minPillarDate();
+                    maxDate = r.maxPillarDate();
             }
+            minMaxDatePerSegment[i] = std::make_pair(minDate, maxDate);
+            DLOG("curve segment #" << i << " has min pillar date " << minMaxDatePerSegment[i].first
+                                   << ", max pillar date " << minMaxDatePerSegment[i].second);
         }
 
         /* If there are two segments with different priorities and overlapping instruments, remove instruments as
@@ -1559,11 +1585,11 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                      << i << " with priority " << curveSegments_[index][i]->priority() << " and segment #" << (i + 1)
                      << " with priority " << curveSegments_[index][i + 1]->priority());
                 for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
-                    if ((*it).rateHelper->pillarDate() >
+                    if (it->maxPillarDate() >
                         minMaxDatePerSegment[i + 1].first - curveSegments_[index][i]->minDistance()) {
                         DLOG("Removing instrument in segment #"
                              << i << " (priority " << curveSegments_[index][i]->priority()
-                             << ") because its pillar date " << (*it).rateHelper->pillarDate() << " > "
+                             << ") because its (max) pillar date " << it->maxPillarDate() << " > "
                              << minMaxDatePerSegment[i + 1].first << " (min pillar date in segment #" << (i + 1)
                              << ", priority " << curveSegments_[index][i + 1]->priority() << ") minus "
                              << curveSegments_[index][i]->minDistance() << " (min distance in segment #" << i << ")");
@@ -1577,11 +1603,11 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                      << i - 1 << " with priority " << curveSegments_[index][i - 1]->priority() << " and segment #" << i
                      << " with priority " << curveSegments_[index][i]->priority());
                 for (auto it = instrumentsPerSegment[i].begin(); it != instrumentsPerSegment[i].end();) {
-                    if ((*it).rateHelper->pillarDate() <
+                    if (it->minPillarDate() <
                         minMaxDatePerSegment[i - 1].second + curveSegments_[index][i - 1]->minDistance()) {
                         DLOG("Removing instrument in segment #"
                              << i << " (priority " << curveSegments_[index][i]->priority()
-                             << ") because its pillar date " << (*it).rateHelper->pillarDate() << " < "
+                             << ") because its (min) pillar date " << it->minPillarDate() << " < "
                              << minMaxDatePerSegment[i - 1].second << " (max pillar date in segment #" << (i - 1)
                              << ", priority " << curveSegments_[index][i - 1]->priority() << ") plus "
                              << curveSegments_[index][i - 1]->minDistance() << " (min distance in segment #" << (i - 1)
@@ -1631,10 +1657,6 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
         QL_REQUIRE(instruments.size() > 0,
                    "Empty instrument list for date = " << io::iso_date(asofDate_)
                                                        << " and curve = " << curveSpec_[index]->name());
-
-        std::sort(instruments.begin(), instruments.end(), [](const RateHelperData& x, const RateHelperData& y) {
-            return x.rateHelper->pillarDate() < y.rateHelper->pillarDate();
-        });
 
         yieldTermStructures.push_back(buildPiecewiseCurve(index, mixedInterpolationSize, instruments));
         curveSpecNames.push_back(curveSpec_[index]->name());

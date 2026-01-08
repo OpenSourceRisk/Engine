@@ -144,6 +144,8 @@ private:
         double mdQuoteValue;
         std::function<std::vector<TradeCashflowReportData>()> cashflowGenerator;
         std::function<double()> quoteErrorGenerator;
+        Date minPillarDate() const; // Date::maxDate() if rh has no pillar dates
+        Date maxPillarDate() const; // Date::minDate() if rh has no pillar dates
     };
 
     Date asofDate_;
@@ -203,7 +205,7 @@ private:
 
     QuantLib::ext::shared_ptr<YieldTermStructure> buildPiecewiseCurve(const std::size_t index,
                                                                       const std::size_t mixedInterpolationSize,
-                                                                      const vector<RateHelperData>& instruments);
+                                                                      vector<RateHelperData>& instruments);
 
     QuantLib::ext::shared_ptr<YieldTermStructure>
     flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::shared_ptr<YieldTermStructure>& yieldts,
