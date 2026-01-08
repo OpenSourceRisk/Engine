@@ -1497,7 +1497,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                 auto [minIt, maxIt] =
                     std::minmax_element(instrumentsPerSegment[i].begin(), instrumentsPerSegment[i].end(),
                                         [](const RateHelperData& h, const RateHelperData& j) {
-                                            return h.rateHelper->pillarDate() < h.rateHelper->pillarDate();
+                                            return h.rateHelper->pillarDate() < j.rateHelper->pillarDate();
                                         });
                 minMaxDatePerSegment[i] =
                     std::make_pair((*minIt).rateHelper->pillarDate(), (*maxIt).rateHelper->pillarDate());
