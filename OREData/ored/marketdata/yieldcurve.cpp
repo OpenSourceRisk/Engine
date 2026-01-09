@@ -770,7 +770,7 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                 // TODO penalty: do we want to include [0,t0] for pillar-only interpolated curves?
                 // TODO penalty: support forward rate interpolation
 
-                bool penalty = close_enough(smoothnessLambda, 0.0);
+                bool penalty = !close_enough(smoothnessLambda, 0.0);
                 Size nForwards = std::max<Size>(2, times.size()) - 2;
                 Size nPenalties = penalty ? std::max<Size>(1, nForwards) - 1 : 0;
 
