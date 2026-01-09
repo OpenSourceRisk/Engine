@@ -735,8 +735,9 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
         DLOG("using iterative bootstrap with "<< instruments.size() << " instruments");
         std::sort(instruments.begin(), instruments.end(),
                   [](const RateHelperData& x, const RateHelperData& y) { return x.mainPillarDate < y.mainPillarDate; });
-        std::for_each(instruments.begin(), instruments.end(),
-                      [&curvePillarDates](const RateHelperData& r) { return r->rateHelper->pillarDate(); });
+        std::for_each(instruments.begin(), instruments.end(), [&curvePillarDates](const RateHelperData& r) {
+            curvePillarDates.push_back(r.rateHelper->pillarDate());
+        });
 
     } else {
 
@@ -1061,7 +1062,7 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
 
     if (preserveQuoteLinkage_) {
         if (!extrapolation_[index]) {
-            curve->enableExtrapolation(false);
+            yieldts->enableExtrapolation(false);
         }
         return yieldts;
     }
