@@ -65,6 +65,10 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameter<string>(baseCurrency_, "setup", "baseCurrency");
     if (baseCurrency_.empty())
         inputs->loadParameter<string>(baseCurrency_, "npv", "baseCurrency");
+    if (baseCurrency_.empty()) {
+    	WLOG("baseCurrency not set, defaulting to USD");
+        baseCurrency_ = "USD";
+    }
 
     // Reference Data Manager loading - must come before curve config loading
     inputs->loadParameterXML<BasicReferenceDataManager>(refDataManager_, "setup", "referenceDataFile");

@@ -84,7 +84,7 @@ struct SetupVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
     
     QuantLib::Date asof_;
-    std::string baseCurrency_ = "USD";
+    std::string baseCurrency_;
     std::filesystem::path resultsPath_;
     std::filesystem::path inputPath_;
     std::string resultCurrency_;
@@ -185,7 +185,16 @@ public:
         }
 
         // else check for a string and load from XML
-        vector<string> xmlStr = loadParameterXMLString(str);
+        vector<string> xmlStr;
+        try {
+            xmlStr = loadParameterXMLString(str);
+        }
+        catch (const std::exception& e) {
+            if (mandatory)
+			    QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
+            						") XML parsing failed, with error: " + e.what());
+        }
+
         if (xmlStr.size() == 0)
                 return;
         
@@ -195,8 +204,9 @@ public:
             try {
                 obj->fromXMLString(s);
             } catch (const std::exception& e) {
-                QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
-                            ") parsing failed, with error: " + e.what());
+                if (mandatory)
+                    QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
+                                ") parsing failed, with error: " + e.what());
             }
         }
     }
