@@ -86,6 +86,9 @@ void OISRateHelper::initializeDates() {
     case Pillar::LastRelevantDate:
         pillarDate_ = latestRelevantDate_;
         break;
+    case Pillar::StartDate:
+        pillarDate_ = earliestDate_;
+        break;
     case Pillar::CustomDate:
         // pillarDate_ already assigned at construction time
         QL_REQUIRE(pillarDate_ >= earliestDate_, "pillar date (" << pillarDate_
@@ -191,6 +194,9 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
         break;
     case Pillar::LastRelevantDate:
         pillarDate_ = latestRelevantDate_;
+        break;
+    case Pillar::StartDate:
+        pillarDate_ = earliestDate_;
         break;
     case Pillar::CustomDate:
         // pillarDate_ already assigned at construction time
