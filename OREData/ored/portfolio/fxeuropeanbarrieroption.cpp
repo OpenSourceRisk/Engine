@@ -62,9 +62,14 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     Real level = barrier_.levels()[0].value();
     Real rebate = barrier_.rebate();
     QL_REQUIRE(rebate >= 0, "Rebate must be non-negative");
-
-    auto fxEuropeanBarrierOptionBuilder =
-        QuantLib::ext::dynamic_pointer_cast<FxEuropeanBarrierOptionEngineBuilder>(engineFactory->builder(tradeType_));
+    QuantLib::ext::shared_ptr<FxEuropeanBarrierOptionScriptedEngineBuilder> fxEuropeanBarrierOptionBuilder;
+    try {
+        fxEuropeanBarrierOptionBuilder = QuantLib::ext::dynamic_pointer_cast<FxEuropeanBarrierOptionScriptedEngineBuilder>(
+            engineFactory->builder(tradeType_));
+        DLOG("FxEuropeanBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
+    } catch (...) {
+        // no delegating builder found
+    }
     if (fxEuropeanBarrierOptionBuilder) {
         // We have a delegating builder for this trade
         auto delegatingBuilderTrade_ = fxEuropeanBarrierOptionBuilder->build(this, engineFactory);
@@ -72,7 +77,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         maturity_ = delegatingBuilderTrade_->maturity();
         npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
         additionalData_ = delegatingBuilderTrade_->additionalData();
-	    requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
         setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
         addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
 
