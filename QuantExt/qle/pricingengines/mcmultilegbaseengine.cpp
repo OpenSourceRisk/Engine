@@ -38,11 +38,11 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
     const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
-    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const RegressionModel::RegressorModel regressorModel,
+    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const McRegressionModel::RegressorModel regressorModel,
     const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
     const bool reevaluateExerciseInStickyRun, const Size cfOnCpnMaxSimTimes,
     const Period& cfOnCpnAddSimTimesCutoff, const Size regressionMaxSimTimesIr, const Size regressionMaxSimTimesFx,
-    const Size regressionMaxSimTimesEq, const RegressionModel::VarGroupMode regressionVarGroupMode)
+    const Size regressionMaxSimTimesEq, const McRegressionModel::VarGroupMode regressionVarGroupMode)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
@@ -90,7 +90,7 @@ Size McMultiLegBaseEngine::timeIndex(const Time t, const std::set<Real>& times) 
     return std::distance(times.begin(), it);
 }
 
-RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
+RandomVariable McMultiLegBaseEngine::cashflowPathValue(const McCashflowInfo& cf,
                                                        const std::vector<std::vector<RandomVariable>>& pathValues,
                                                        const std::set<Real>& simulationTimes) const {
 
@@ -131,12 +131,12 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
 
 void McMultiLegBaseEngine::calculateModels(
     const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes,
-    const std::set<Real>& xvaTimes, const std::vector<CashflowInfo>& cashflowInfo,
+    const std::set<Real>& xvaTimes, const std::vector<McCashflowInfo>& cashflowInfo,
     const std::vector<std::vector<RandomVariable>>& pathValues,
     const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-    std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelUndExInto,
-    std::vector<RegressionModel>& regModelRebate, std::vector<RegressionModel>& regModelContinuationValue,
-    std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto,
+    std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelUndExInto,
+    std::vector<McRegressionModel>& regModelRebate, std::vector<McRegressionModel>& regModelContinuationValue,
+    std::vector<McRegressionModel>& regModelOption, RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto,
     RandomVariable& pathValueOption) const {
 
     // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
@@ -222,7 +222,7 @@ void McMultiLegBaseEngine::calculateModels(
 
         if (exercise_ != nullptr) {
 
-            regModelUndExInto[counter] = RegressionModel(
+            regModelUndExInto[counter] = McRegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                 regressionMaxSimTimesEq_, regressionVarGroupMode_);
@@ -230,7 +230,7 @@ void McMultiLegBaseEngine::calculateModels(
                                              simulationTimes);
 
             if (pathValueRebate.initialised()) {
-                regModelRebate[counter] = RegressionModel(
+                regModelRebate[counter] = McRegressionModel(
                     *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                     regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                     regressionMaxSimTimesEq_, regressionVarGroupMode_);
@@ -255,7 +255,7 @@ void McMultiLegBaseEngine::calculateModels(
 
             // calculate continuation value, take exercise decition and update option path value
 
-            regModelContinuationValue[counter] = RegressionModel(
+            regModelContinuationValue[counter] = McRegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                 regressionMaxSimTimesEq_, regressionVarGroupMode_);
@@ -271,7 +271,7 @@ void McMultiLegBaseEngine::calculateModels(
 
         if (isXvaTime) {
 
-            regModelUndDirty[counter] = RegressionModel(
+            regModelUndDirty[counter] = McRegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
                 regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                 regressionMaxSimTimesEq_, regressionVarGroupMode_);
@@ -284,7 +284,7 @@ void McMultiLegBaseEngine::calculateModels(
         }
 
         if (exercise_ != nullptr) {
-            regModelOption[counter] = RegressionModel(
+            regModelOption[counter] = McRegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_, regressionMaxSimTimesIr_, regressionMaxSimTimesFx_,
                 regressionMaxSimTimesEq_, regressionVarGroupMode_);
@@ -380,7 +380,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     // populate the info to generate the (alive) cashflow amounts
 
-    std::vector<CashflowInfo> cashflowInfo;
+    std::vector<McCashflowInfo> cashflowInfo;
 
     Size legNo = 0;
     for (auto const& leg : leg_) {
@@ -392,7 +392,7 @@ void McMultiLegBaseEngine::calculate() const {
             if (cashflow->date() < today_ || (!includeTodaysCashflows_ && cashflow->date() == today_))
                 continue;
             // for an alive cashflow, populate the data
-            cashflowInfo.push_back(CashflowInfo(cashflow, currency, payer, legNo, cashflowNo, model_, lgmVectorised_,
+            cashflowInfo.push_back(McCashflowInfo(cashflow, currency, payer, legNo, cashflowNo, model_, lgmVectorised_,
                                                 exerciseIntoIncludeSameDayFlows_, tinyTime, cfOnCpnMaxSimTimes_,
                                                 cfOnCpnAddSimTimesCutoff_));
             // increment counter
@@ -521,11 +521,11 @@ void McMultiLegBaseEngine::calculate() const {
 
     // setup the models
 
-    std::vector<RegressionModel> regModelUndDirty(exerciseXvaTimes.size());          // available on xva times
-    std::vector<RegressionModel> regModelUndExInto(exerciseXvaTimes.size());         // available on xva and ex times
-    std::vector<RegressionModel> regModelRebate(exerciseXvaTimes.size());            // available on xva and ex times
-    std::vector<RegressionModel> regModelContinuationValue(exerciseXvaTimes.size()); // available on ex times
-    std::vector<RegressionModel> regModelOption(exerciseXvaTimes.size());            // available on xva and ex times
+    std::vector<McRegressionModel> regModelUndDirty(exerciseXvaTimes.size());          // available on xva times
+    std::vector<McRegressionModel> regModelUndExInto(exerciseXvaTimes.size());         // available on xva and ex times
+    std::vector<McRegressionModel> regModelRebate(exerciseXvaTimes.size());            // available on xva and ex times
+    std::vector<McRegressionModel> regModelContinuationValue(exerciseXvaTimes.size()); // available on ex times
+    std::vector<McRegressionModel> regModelOption(exerciseXvaTimes.size());            // available on xva and ex times
     RandomVariable pathValueUndDirty(calibrationSamples_);
     RandomVariable pathValueUndExInto(calibrationSamples_);
     RandomVariable pathValueOption(calibrationSamples_);
@@ -536,11 +536,11 @@ void McMultiLegBaseEngine::calculate() const {
 
     // setup the models on close-out grid if required or else copy them from valuation
 
-    std::vector<RegressionModel> regModelUndDirtyCloseOut(regModelUndDirty);
-    std::vector<RegressionModel> regModelUndExIntoCloseOut(regModelUndExInto);
-    std::vector<RegressionModel> regModelRebateCloseOut(regModelRebate);
-    std::vector<RegressionModel> regModelContinuationValueCloseOut(regModelContinuationValue);
-    std::vector<RegressionModel> regModelOptionCloseOut(regModelOption);
+    std::vector<McRegressionModel> regModelUndDirtyCloseOut(regModelUndDirty);
+    std::vector<McRegressionModel> regModelUndExIntoCloseOut(regModelUndExInto);
+    std::vector<McRegressionModel> regModelRebateCloseOut(regModelRebate);
+    std::vector<McRegressionModel> regModelContinuationValueCloseOut(regModelContinuationValue);
+    std::vector<McRegressionModel> regModelOptionCloseOut(regModelOption);
 
     if (!simulationTimesWithCloseOutLag.empty()) {
         RandomVariable pathValueUndDirtyCloseOut(calibrationSamples_);
@@ -566,12 +566,12 @@ void McMultiLegBaseEngine::calculate() const {
 
     amcCalculator_ = QuantLib::ext::make_shared<MultiLegBaseAmcCalculator>(
         externalModelIndices_, optionSettlement_, cashSettlementTimes, exerciseXvaTimes, exerciseTimes, xvaTimes,
-        std::array<std::vector<RegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
-        std::array<std::vector<RegressionModel>, 2>{regModelUndExInto, regModelUndExIntoCloseOut},
-        std::array<std::vector<RegressionModel>, 2>{regModelRebate, regModelRebateCloseOut},
-        std::array<std::vector<RegressionModel>, 2>{regModelContinuationValue,
+        std::array<std::vector<McRegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
+        std::array<std::vector<McRegressionModel>, 2>{regModelUndExInto, regModelUndExIntoCloseOut},
+        std::array<std::vector<McRegressionModel>, 2>{regModelRebate, regModelRebateCloseOut},
+        std::array<std::vector<McRegressionModel>, 2>{regModelContinuationValue,
                                                                           regModelContinuationValueCloseOut},
-        std::array<std::vector<RegressionModel>, 2>{regModelOption, regModelOptionCloseOut},
+        std::array<std::vector<McRegressionModel>, 2>{regModelOption, regModelOptionCloseOut},
         resultValue_, model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency(),
         reevaluateExerciseInStickyRun_, includeTodaysCashflows_, includeReferenceDateEvents_);
 }
@@ -582,11 +582,11 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
     const std::vector<Time>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
     const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-    const std::array<std::vector<RegressionModel>, 2>& regModelUndDirty,
-    const std::array<std::vector<RegressionModel>, 2>& regModelUndExInto,
-    const std::array<std::vector<RegressionModel>, 2>& regModelRebate,
-    const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValue,
-    const std::array<std::vector<RegressionModel>, 2>& regModelOption, const Real resultValue,
+    const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
+    const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
+    const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
+    const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValue,
+    const std::array<std::vector<McRegressionModel>, 2>& regModelOption, const Real resultValue,
     const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
     const bool includeTodaysCashflows, const bool includeReferenceDateEvents)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), cashSettlementTimes_(cashSettlementTimes),

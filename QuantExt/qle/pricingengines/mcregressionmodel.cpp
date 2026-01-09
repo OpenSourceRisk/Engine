@@ -23,16 +23,16 @@
 
 namespace QuantExt {
 
-RegressionModel::RegressionModel(const Real observationTime,
-                                                       const std::vector<CashflowInfo>& cashflowInfo,
+McRegressionModel::McRegressionModel(const Real observationTime,
+                                                       const std::vector<McCashflowInfo>& cashflowInfo,
                                                        const std::function<bool(std::size_t)>& cashflowRelevant,
                                                        const CrossAssetModel& model,
-                                                       const RegressionModel::RegressorModel regressorModel,
+                                                       const McRegressionModel::RegressorModel regressorModel,
                                                        const Real regressionVarianceCutoff,
                                                        const Size regressionMaxSimTimesIr,
                                                        const Size regressionMaxSimTimesFx,
                                                        const Size regressionMaxSimTimesEq,
-                                                       const RegressionModel::VarGroupMode regressionVarGroupMode)
+                                                       const McRegressionModel::VarGroupMode regressionVarGroupMode)
     : observationTime_(observationTime), regressionVarianceCutoff_(regressionVarianceCutoff) {
 
     // we always include the full model state as of the observation time
@@ -47,16 +47,16 @@ RegressionModel::RegressionModel(const Real observationTime,
 
     // for Lagged and LaggedIR we add past ir states
 
-    if (regressorModel == RegressionModel::RegressorModel::Lagged ||
-        regressorModel == RegressionModel::RegressorModel::LaggedIR) {
+    if (regressorModel == McRegressionModel::RegressorModel::Lagged ||
+        regressorModel == McRegressionModel::RegressorModel::LaggedIR) {
         for (Size i = 0; i < model.components(CrossAssetModel::AssetType::IR); ++i)
             modelIrIndices.insert(model.pIdx(CrossAssetModel::AssetType::IR, i));
     }
 
     // for Lagged and LaggedFX we add past fx states
 
-    if (regressorModel == RegressionModel::RegressorModel::Lagged ||
-        regressorModel == RegressionModel::RegressorModel::LaggedFX) {
+    if (regressorModel == McRegressionModel::RegressorModel::Lagged ||
+        regressorModel == McRegressionModel::RegressorModel::LaggedFX) {
         for (Size i = 1; i < model.components(CrossAssetModel::AssetType::IR); ++i)
             for (Size j = 0; j < model.stateVariables(CrossAssetModel::AssetType::FX, i - 1); ++j)
                 modelFxIndices.insert(model.pIdx(CrossAssetModel::AssetType::FX, i - 1, j));
@@ -64,8 +64,8 @@ RegressionModel::RegressionModel(const Real observationTime,
 
     // for Lagged and LaggedEQ we add past eq states
 
-    if (regressorModel == RegressionModel::RegressorModel::Lagged ||
-        regressorModel == RegressionModel::RegressorModel::LaggedEQ) {
+    if (regressorModel == McRegressionModel::RegressorModel::Lagged ||
+        regressorModel == McRegressionModel::RegressorModel::LaggedEQ) {
         for (Size i = 0; i < model.components(CrossAssetModel::AssetType::EQ); ++i)
             modelEqIndices.insert(model.pIdx(CrossAssetModel::AssetType::EQ, i));
     }
@@ -112,9 +112,9 @@ RegressionModel::RegressionModel(const Real observationTime,
     fillRegressorTimesModelIndices(modelFxIndices, regressionMaxSimTimesFx);
     fillRegressorTimesModelIndices(modelEqIndices, regressionMaxSimTimesEq);
 
-    if (regressionVarGroupMode == RegressionModel::VarGroupMode::Global) {
+    if (regressionVarGroupMode == McRegressionModel::VarGroupMode::Global) {
         varGroups_ = {};
-    } else if (regressionVarGroupMode == RegressionModel::VarGroupMode::Trivial) {
+    } else if (regressionVarGroupMode == McRegressionModel::VarGroupMode::Trivial) {
         for (Size i = 0; i < regressorTimesModelIndices_.size(); ++i) {
             varGroups_.insert({i});
         }
@@ -123,7 +123,7 @@ RegressionModel::RegressionModel(const Real observationTime,
     }
 }
 
-void RegressionModel::train(const Size polynomOrder,
+void McRegressionModel::train(const Size polynomOrder,
                                                   const LsmBasisSystem::PolynomialType polynomType,
                                                   const RandomVariable& regressand,
                                                   const std::vector<std::vector<const RandomVariable*>>& paths,
@@ -190,7 +190,7 @@ void RegressionModel::train(const Size polynomOrder,
 }
 
 RandomVariable
-RegressionModel::apply(const Array& initialState,
+McRegressionModel::apply(const Array& initialState,
                                              const std::vector<std::vector<const RandomVariable*>>& paths,
                                              const std::set<Real>& pathTimes) const {
 
@@ -285,7 +285,7 @@ RegressionModel::apply(const Array& initialState,
     return conditionalExpectation(regressor, basisFns_, regressionCoeffs_);
 }
 
-template <class Archive> void RegressionModel::serialize(Archive& ar, const unsigned int version) {
+template <class Archive> void McRegressionModel::serialize(Archive& ar, const unsigned int version) {
     ar& observationTime_;
     ar& regressionVarianceCutoff_;
     ar& isTrained_;
@@ -307,10 +307,10 @@ template <class Archive> void RegressionModel::serialize(Archive& ar, const unsi
     }
 }
 
-template void QuantExt::RegressionModel::serialize(boost::archive::binary_iarchive& ar,
+template void QuantExt::McRegressionModel::serialize(boost::archive::binary_iarchive& ar,
                                                                          const unsigned int version);
-template void QuantExt::RegressionModel::serialize(boost::archive::binary_oarchive& ar,
+template void QuantExt::McRegressionModel::serialize(boost::archive::binary_oarchive& ar,
                                                                          const unsigned int version);
 } // namespace QuantExt
 
-BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::RegressionModel);
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McRegressionModel);

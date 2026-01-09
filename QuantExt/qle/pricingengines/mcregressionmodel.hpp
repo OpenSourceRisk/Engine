@@ -36,14 +36,17 @@
 
 namespace QuantExt {
 
-// class representing a regression model for a certain observation (= xva, exercise) time
-class RegressionModel {
+//! Regression helper built on a observation time (e.g. XVA or exercise date). Trains a set of
+//! basis functions on simulated state variables to approximate continuation values.
+//! Used in American Monte Carlo (AMC) pricing engines for regression based valuation of
+//! early exercise options or XVA valuation.
+class McRegressionModel {
 public:
     enum class RegressorModel { Simple, Lagged, LaggedIR, LaggedFX, LaggedEQ };
     enum class VarGroupMode { Global, Trivial };
 
-    RegressionModel() = default;
-    RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
+    McRegressionModel() = default;
+    McRegressionModel(const Real observationTime, const std::vector<McCashflowInfo>& cashflowInfo,
                     const std::function<bool(std::size_t)>& cashflowRelevant, const CrossAssetModel& model,
                     const RegressorModel regressorModel, const Real regressionVarianceCutoff = Null<Real>(),
                     const Size regressionMaxSimTimesIr = 0, const Size regressionMaxSimTimesFx = 0,

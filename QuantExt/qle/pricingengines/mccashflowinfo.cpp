@@ -47,7 +47,7 @@ Real time(const Handle<CrossAssetModel>& model, const Date& d) {
     return model->irlgm1f(0)->termStructure()->timeFromReference(d);
 }
 
-CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, const bool payer,
+McCashflowInfo::McCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, const bool payer,
                  const Size legNo, const Size cfNo, const Handle<CrossAssetModel>& model,
                  const std::vector<LgmVectorised>& lgmVectorised, const bool exerciseIntoIncludeSameDayFlows,
                  const double tinyTime, const Size cfOnCpnMaxSimTimes, const Period cfOnCpnAddSimTimesCutoff) {
@@ -131,7 +131,7 @@ CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Curre
         if (auto indexCpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(flow)) {
             if (auto fxIndex = QuantLib::ext::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
                 QL_REQUIRE(!isFxIndexed,
-                           "McMultiLegBaseEngine::createCashflowInfo(): multiple fx indexings found for coupon at leg "
+                           "CashflowInfo: multiple fx indexings found for coupon at leg "
                                << legNo << " cashflow " << cfNo << ". Only one fx indexing is allowed.");
                 isFxIndexed = true;
                 auto fixingDate = indexCpn->fixingDate();
@@ -154,7 +154,7 @@ CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Curre
                 foundWrapper = true;
             } else if (auto eqIndex = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(indexCpn->index())) {
                 QL_REQUIRE(!isEqIndexed,
-                           "McMultiLegBaseEngine::createCashflowInfo(): multiple eq indexings found for coupon at leg "
+                           "CashflowInfo: multiple eq indexings found for coupon at leg "
                                << legNo << " cashflow " << cfNo << ". Only one eq indexing is allowed.");
                 isEqIndexed = true;
                 auto fixingDate = indexCpn->fixingDate();
@@ -169,7 +169,7 @@ CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Curre
                 flow = indexCpn->underlying();
                 foundWrapper = true;
             } else {
-                QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled indexing for coupon at leg "
+                QL_FAIL("CashflowInfo: unhandled indexing for coupon at leg "
                         << legNo << " cashflow " << cfNo << ": supported indexings are fx, eq");
             }
         } else if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
@@ -1063,13 +1063,13 @@ CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Curre
 
     if (auto eq = QuantLib::ext::dynamic_pointer_cast<EquityCoupon>(flow)) {
 
-        QL_REQUIRE(!isFxLinked, "McMultiLegBaseEngine::createCashflowInfo(): equity coupon at leg "
+        QL_REQUIRE(!isFxLinked, "CashflowInfo: equity coupon at leg "
                                     << legNo << " cashflow "
                                     << " is fx linked, this is not allowed");
-        QL_REQUIRE(!isFxIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity coupon at leg "
+        QL_REQUIRE(!isFxIndexed, "CashflowInfo: equity coupon at leg "
                                      << legNo << " cashflow "
                                      << " is fx indexed, this is not allowed");
-        QL_REQUIRE(!isEqIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity coupon at leg "
+        QL_REQUIRE(!isEqIndexed, "CashflowInfo: equity coupon at leg "
                                      << legNo << " cashflow "
                                      << " is eq indexed, this is not allowed");
 
@@ -1241,13 +1241,13 @@ CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Curre
     } // end of equity coupon handling
 
     if (auto eq = QuantLib::ext::dynamic_pointer_cast<EquityCashFlow>(flow)) {
-        QL_REQUIRE(!isFxLinked, "McMultiLegBaseEngine::createCashflowInfo(): equity cashflow at leg "
+        QL_REQUIRE(!isFxLinked, "CashflowInfo: equity cashflow at leg "
                                     << legNo << " cashflow "
                                     << " is fx linked, this is not allowed");
-        QL_REQUIRE(!isFxIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity cashflow at leg "
+        QL_REQUIRE(!isFxIndexed, "CashflowInfo: equity cashflow at leg "
                                      << legNo << " cashflow "
                                      << " is fx indexed, this is not allowed");
-        QL_REQUIRE(!isEqIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity cashflow at leg "
+        QL_REQUIRE(!isEqIndexed, "CashflowInfo: equity cashflow at leg "
                                      << legNo << " cashflow "
                                      << " is eq indexed, this is not allowed");
         if (eq->fixingDate() > today) {
@@ -1262,7 +1262,7 @@ CashflowInfo::CashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Curre
         };
     }
 
-    QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);
+    QL_FAIL("CashflowInfo: unhandled coupon leg " << legNo << " cashflow " << cfNo);
 }
 
 } // namespace QuantExt
