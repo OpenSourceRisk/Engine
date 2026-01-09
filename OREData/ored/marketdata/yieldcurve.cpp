@@ -691,7 +691,6 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                 INTINSTANCE, my_curve_2::bootstrap_type(rh, additionalDates, additionalPenalties, accuracy));          \
             curvePillarDates = tmp->dates();                                                                           \
             yieldts = tmp;                                                                                             \
-            yieldts->enableExtrapolation();                                                                            \
         } else {                                                                                                       \
             auto tmp = QuantLib::ext::make_shared<my_curve_1>(                                                         \
                 asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,                                                    \
@@ -700,6 +699,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
             curvePillarDates = tmp->dates();                                                                           \
             yieldts = tmp;                                                                                             \
         }                                                                                                              \
+        yieldts->enableExtrapolation();                                                                                \
     }
 
 std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, std::vector<Date>>
@@ -1057,6 +1057,9 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
                                   const std::vector<Date>& curvePillarDates) {
 
     if (preserveQuoteLinkage_) {
+        if (!extrapolation_[index]) {
+            curve->enableExtrapolation(false);
+        }
         return yieldts;
     }
 
@@ -1066,10 +1069,6 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
     // yield curve reacts to evaluation date changes because the bootstrap
     // helper recompute their start date (because they are relative date
     // helper for deposits, fras, swaps, etc.).
-
-    if (extrapolation_[index]) {
-        yieldts->enableExtrapolation();
-    }
 
     yieldts->discount(QL_EPSILON); // ensure initialization of instruments
 
