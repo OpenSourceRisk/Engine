@@ -480,6 +480,7 @@ public:
         QuantLib::Date predecessorImplementationDate;
         string entityType;
         string primaryPriceType;
+        Real runningSpread;
     };
     CreditReferenceDatum() {}
 
