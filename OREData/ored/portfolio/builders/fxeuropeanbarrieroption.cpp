@@ -25,16 +25,20 @@ namespace ore {
 namespace data {
 
 QuantLib::ext::shared_ptr<ore::data::Trade>
-FxEuropeanBarrierOptionEngineBuilder::build(const Trade* trade,
-                                            const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+FxEuropeanBarrierOptionScriptedEngineBuilder::build(const Trade* trade,
+                                                    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     auto fxEuropeanBarrierOption = dynamic_cast<const ore::data::FxEuropeanBarrierOption*>(trade);
 
-    QL_REQUIRE(fxEuropeanBarrierOption != nullptr, "FxEuropeanBarrierOptionEngineBuilder: internal error, could not "
-                                                   "cast to ore::data::FxEuropeanBarrierOption. Contact dev.");
+    QL_REQUIRE(fxEuropeanBarrierOption != nullptr,
+               "FxEuropeanBarrierOptionScriptedEngineBuilder: internal error, could not "
+               "cast to ore::data::FxEuropeanBarrierOption. Contact dev.");
 
-    QuantLib::ext::shared_ptr<Underlying> underlying =
-        QuantLib::ext::make_shared<FXUnderlying>("FX", fxEuropeanBarrierOption->fxIndex(), 1.0);
+    std::string indexName =
+        fxEuropeanBarrierOption->fxIndex().empty()
+            ? "GENERIC-" + fxEuropeanBarrierOption->boughtCurrency() + "-" + fxEuropeanBarrierOption->soldCurrency()
+            : fxEuropeanBarrierOption->fxIndex().substr(3);
+    QuantLib::ext::shared_ptr<Underlying> underlying = QuantLib::ext::make_shared<FXUnderlying>("FX", indexName, 1.0);
 
     const auto& optionData = fxEuropeanBarrierOption->option();
 

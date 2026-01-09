@@ -30,9 +30,9 @@
 namespace ore {
 namespace data {
 
-class FxEuropeanBarrierOptionEngineBuilder : public DelegatingEngineBuilder {
+class FxEuropeanBarrierOptionScriptedEngineBuilder : public DelegatingEngineBuilder {
 public:
-    FxEuropeanBarrierOptionEngineBuilder()
+    FxEuropeanBarrierOptionScriptedEngineBuilder()
         : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade",
                                   {"FxEuropeanBarrierOption"}) {}
     QuantLib::ext::shared_ptr<ore::data::Trade> build(const Trade* trade,
