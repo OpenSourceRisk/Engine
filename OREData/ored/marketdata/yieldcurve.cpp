@@ -2306,7 +2306,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                                                        *helper->future()->overnightIndex()->forwardingTermStructure()},
                                                       {1.0, 1.0}, {}, {});
                      }},
-                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
+                     std::function<double()>{[helper]() { return 0.01 * helper->quoteError(); }}});
 
                 TLOG("adding OI future helper: price=" << futureQuote->quote()->value() << " start=" << startDate
                                                        << " end=" << endDate << " nettingType="
@@ -2367,7 +2367,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                                                       {currency_[index].code(), currency_[index].code()}, asofDate_,
                                                       {ts, ts}, {1.0, 1.0}, {}, {});
                      }},
-                     std::function<double()>{[helper]() { return helper->quoteError(); }}});
+                     std::function<double()>{[helper]() { return 0.01 * helper->quoteError(); }}});
             }
         }
     }
