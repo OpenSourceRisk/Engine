@@ -689,14 +689,12 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
             auto tmp = QuantLib::ext::make_shared<my_curve_2>(                                                         \
                 asofDate_, std::vector<QuantLib::ext::shared_ptr<QuantLib::RateHelper>>{}, zeroDayCounter_[index],     \
                 INTINSTANCE, my_curve_2::bootstrap_type(rh, additionalDates, additionalPenalties, accuracy));          \
-            curvePillarDates = tmp->dates();                                                                           \
             yieldts = tmp;                                                                                             \
         } else {                                                                                                       \
             auto tmp = QuantLib::ext::make_shared<my_curve_1>(                                                         \
                 asofDate_, rh, zeroDayCounter_[index], INTINSTANCE,                                                    \
                 my_curve_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,     \
                                            dontThrowSteps));                                                           \
-            curvePillarDates = tmp->dates();                                                                           \
             yieldts = tmp;                                                                                             \
         }                                                                                                              \
         yieldts->enableExtrapolation();                                                                                \
@@ -737,6 +735,9 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
         DLOG("using iterative bootstrap with "<< instruments.size() << " instruments");
         std::sort(instruments.begin(), instruments.end(),
                   [](const RateHelperData& x, const RateHelperData& y) { return x.mainPillarDate < y.mainPillarDate; });
+        std::for_each(instruments.begin(), instruments.end(),
+                      [&curvePillarDates](const RateHelperData& r) { return r->rateHelper->pillarDate(); });
+
     } else {
 
         /* set up for global bootstrap:
@@ -757,7 +758,9 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
             TLOG("using global bootstrap curve pillar date: " << ore::data::to_string(d));
         }
 
-        additionalDates = [pillarDates] { return std::vector<QuantLib::Date>(pillarDates.begin(), pillarDates.end()); };
+        curvePillarDates = std::vector<QuantLib::Date>(pillarDates.begin(), pillarDates.end());
+
+        additionalDates = [curvePillarDates] { return curvePillarDates; };
 
         additionalPenalties =
             [instruments, intVar = interpolationVariable_[index],
