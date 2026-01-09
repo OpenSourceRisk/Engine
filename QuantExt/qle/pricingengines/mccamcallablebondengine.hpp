@@ -63,12 +63,12 @@ public:
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
+        const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const RegressionModel::VarGroupMode regressionVarGroupMode = RegressionModel::VarGroupMode::Global);
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
 
     //! Destructor
     virtual ~McCamCallableBondBaseEngine() {}
@@ -88,12 +88,12 @@ public:
             const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
             const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
             const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes,
-            const std::array<std::vector<RegressionModel>, 2>& regModelUndDirty,
-            const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValueCall,
-            const std::array<std::vector<RegressionModel>, 2>& regModelContinuationValuePut,
-            const std::array<std::vector<RegressionModel>, 2>& regModelOption,
-            const std::array<std::vector<RegressionModel>, 2>& regModelCallExerciseValue,
-            const std::array<std::vector<RegressionModel>, 2>& regModelPutExerciseValue, const Real resultValue,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValueCall,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValuePut,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelOption,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelCallExerciseValue,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelPutExerciseValue, const Real resultValue,
             const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
             const bool includeTodaysCashflows, const bool includeReferenceDateEvents,
             const ext::shared_ptr<QuantExt::CallableBondNotionalAndAccrualCalculator>& notionalAccrualCalculator);
@@ -112,12 +112,12 @@ public:
         std::set<Real> xvaTimes_;
         std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>> callTimes_;
         std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>> putTimes_;
-        std::array<std::vector<RegressionModel>, 2> regModelUndDirty_;
-        std::array<std::vector<RegressionModel>, 2> regModelContinuationValueCall_;
-        std::array<std::vector<RegressionModel>, 2> regModelContinuationValuePut_;
-        std::array<std::vector<RegressionModel>, 2> regModelOption_;
-        std::array<std::vector<RegressionModel>, 2> regModelCallExerciseValue_;
-        std::array<std::vector<RegressionModel>, 2> regModelPutExerciseValue_;
+        std::array<std::vector<McRegressionModel>, 2> regModelUndDirty_;
+        std::array<std::vector<McRegressionModel>, 2> regModelContinuationValueCall_;
+        std::array<std::vector<McRegressionModel>, 2> regModelContinuationValuePut_;
+        std::array<std::vector<McRegressionModel>, 2> regModelOption_;
+        std::array<std::vector<McRegressionModel>, 2> regModelCallExerciseValue_;
+        std::array<std::vector<McRegressionModel>, 2> regModelPutExerciseValue_;
 
         Real resultValue_;
         Array initialState_;
@@ -168,7 +168,7 @@ public:
     std::vector<Date> stickyCloseOutDates_;
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
-    RegressionModel::RegressorModel regressorModel_;
+    McRegressionModel::RegressorModel regressorModel_;
     Real regressionVarianceCutoff_;
     bool recalibrateOnStickyCloseOutDates_;
     bool reevaluateExerciseInStickyRun_;
@@ -177,7 +177,7 @@ public:
     Size regressionMaxSimTimesIr_;
     Size regressionMaxSimTimesFx_;
     Size regressionMaxSimTimesEq_;
-    RegressionModel::VarGroupMode regressionVarGroupMode_;
+    McRegressionModel::VarGroupMode regressionVarGroupMode_;
 
     // set from global settings
     mutable bool includeTodaysCashflows_;
@@ -200,11 +200,11 @@ public:
         const std::set<Real>& exerciseXvaTimes, const std::set<Real> exerciseTimes,
         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
         const std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& putTimes, const std::set<Real>& xvaTimes,
-        const std::vector<CashflowInfo>& cashflowInfo, const std::vector<std::vector<RandomVariable>>& pathValues,
+        const std::vector<McCashflowInfo>& cashflowInfo, const std::vector<std::vector<RandomVariable>>& pathValues,
         const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-        std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelContinuationValueCall,
-        std::vector<RegressionModel>& regModelContinuationValuePut, std::vector<RegressionModel>& regModelOption,
-        std::vector<RegressionModel>& regModelCallExerciseValue, std::vector<RegressionModel>& regModelPutExerciseValue,
+        std::vector<McRegressionModel>& regModelUndDirty, std::vector<McRegressionModel>& regModelContinuationValueCall,
+        std::vector<McRegressionModel>& regModelContinuationValuePut, std::vector<McRegressionModel>& regModelOption,
+        std::vector<McRegressionModel>& regModelCallExerciseValue, std::vector<McRegressionModel>& regModelPutExerciseValue,
         RandomVariable& pathValueUndDirty, RandomVariable& pathValueOption) const;
 
     void generateExerciseDates(std::map<Real, ext::shared_ptr<CallableBond::CallabilityData>>& callTimes,
@@ -218,7 +218,7 @@ public:
     Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
 
     // compute a cashflow path value (in model base ccy)
-    RandomVariable cashflowPathValue(const CashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
+    RandomVariable cashflowPathValue(const McCashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
                                      const std::set<Real>& simulationTimes,
                                      const Handle<YieldTermStructure>& discountCurve) const;
 
@@ -254,12 +254,12 @@ public:
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
+        const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const RegressionModel::VarGroupMode regressionVarGroupMode = RegressionModel::VarGroupMode::Global)
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global)
         : McCamCallableBondEngine(
               Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                   std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
@@ -288,12 +288,12 @@ public:
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressionModel::RegressorModel regressorModel = RegressionModel::RegressorModel::Simple,
+        const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const RegressionModel::VarGroupMode regressionVarGroupMode = RegressionModel::VarGroupMode::Global)
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global)
         : McCamCallableBondBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples,
                                       pricingSamples, calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering,
                                       directionIntegers, referenceCurve, discountingSpread, creditCurve, incomeCurve,
