@@ -338,6 +338,7 @@ pricingengines/volatilityfromvarianceswapengine.cpp
 processes/commodityschwartzstateprocess.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
+processes/hestonprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 processes/quantohestonprocess.cpp
@@ -913,6 +914,7 @@ pricingengines/volatilityfromvarianceswapengine.hpp
 processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
+processes/hestonprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 processes/quantohestonprocess.hpp
