@@ -715,6 +715,7 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
     Real minFactor = curveConfig_[index]->bootstrapConfig().minFactor();
     Size dontThrowSteps = curveConfig_[index]->bootstrapConfig().dontThrowSteps();
     bool globalBootstrap = curveConfig_[index]->bootstrapConfig().global();
+    Real smoothnessLambda = curveConfig_[index]->bootstrapConfig().smoothnessLambda();
 
     // populated in PWYC
     std::vector<Date> curvePillarDates;
@@ -758,14 +759,54 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
 
         additionalDates = [pillarDates] { return std::vector<QuantLib::Date>(pillarDates.begin(), pillarDates.end()); };
 
-        additionalPenalties = [instruments](const std::vector<QuantLib::Time>& times,
-                                            const std::vector<QuantLib::Real>& data) {
-            Array result(instruments.size());
-            std::transform(instruments.begin(), instruments.end(), result.begin(),
-                           [](const RateHelperData& r) { return r.quoteErrorGenerator(); });
-            // TODO add penalty for curve smoothness
-            return result;
-        };
+        additionalPenalties =
+            [instruments, intVar = interpolationVariable_[index],
+             smoothnessLambda](const std::vector<QuantLib::Time>& times, const std::vector<QuantLib::Real>& data) {
+
+                // TODO penalty: do we want to include [0,t0] for pillar-only interpolated curves?
+                // TODO penalty: support forward rate interpolation
+
+                bool penalty = close_enough(smoothnessLambda, 0.0);
+                Size nForwards = std::max<Size>(2, times.size()) - 2;
+                Size nPenalties = penalty ? std::max<Size>(1, nForwards) - 1 : 0;
+
+                Array result(instruments.size() + nPenalties);
+                std::transform(instruments.begin(), instruments.end(), result.begin(),
+                               [](const RateHelperData& r) { return r.quoteErrorGenerator(); });
+
+                if (penalty) {
+
+                    Array forwards(nForwards);
+                    for (Size i = 0; i < nForwards; ++i) {
+                        Real d0, d1;
+                        switch (intVar) {
+                        case InterpolationVariable::Zero:
+                            d0 = std::exp(-data[i] * times[i]);
+                            d1 = std::exp(-data[i + 1] * times[i + 1]);
+                            break;
+                        case InterpolationVariable::Discount:
+                            d0 = data[i];
+                            d1 = data[i + 1];
+                            break;
+                        case InterpolationVariable::Forward:
+                            QL_FAIL("additionalPenalties: interpolation variable Forward is not supported. Use "
+                                    "Discount or Zero instead.");
+                            break;
+                        default:
+                            QL_FAIL("additionalPenalties: non-handled interpolation variable ("
+                                    << static_cast<int>(intVar) << ")");
+                        }
+                        forwards[i] = -std::log(d1 / d0) / (times[i + 1] - times[i]);
+                    }
+
+                    for (Size i = 0; i < nPenalties; ++i) {
+                        result[instruments.size() + i] = forwards[i + 1] - forwards[i];
+                    }
+
+                }
+
+                return result;
+            };
     }
 
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
