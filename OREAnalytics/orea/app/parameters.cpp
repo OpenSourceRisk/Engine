@@ -58,7 +58,7 @@ const map<string, QuantLib::ext::any>& Parameters::data(const string& groupName)
     return it->second;
 }
     
-const map<string, string>& Parameters::markets() const {
+map<string, string> Parameters::markets() const {
     map<string, string> mp;
     auto it = data_.find("markets");
     if (it != data_.end()) {

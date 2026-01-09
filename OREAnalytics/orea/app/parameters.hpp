@@ -59,7 +59,7 @@ public:
         data_[groupName][paramName] = val;
     }
     const map<string, QuantLib::ext::any>& data(const string& groupName) const;
-    const map<string, string>& markets() const;
+    map<string, string> markets() const;
     
     void log();
 

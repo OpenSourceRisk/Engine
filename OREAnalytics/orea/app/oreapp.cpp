@@ -667,14 +667,14 @@ void OREAppInputParameters::loadParameters() {
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
-
-    InputParameters::loadParameters();
-
     if (params_->hasGroup("markets")) {
         setMarketConfigs(params_->markets());
         for (auto m : marketConfigs())
             LOG("MarketContext::" << m.first << " = " << m.second);
     }
+
+    InputParameters::loadParameters();
+
     std::string tmp;
 
     /*************
