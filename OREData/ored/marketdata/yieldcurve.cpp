@@ -1082,9 +1082,8 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
     vector<Date> dates(curvePillarDates);
     vector<Real> rates;
 
-    if (excludeT0FromInterpolation_[index]) {
-        // Pillar-only: use actual pillar dates without t0
-        dates.erase(dates.begin());
+    if (!excludeT0FromInterpolation_[index]) {
+        dates.insert(dates.begin(), asofDate_);
     }
 
     // Extract rates for all pillars
@@ -1093,10 +1092,10 @@ YieldCurve::flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::
             rates.push_back(yieldts->discount(d));
         } else if (interpolationVariable_[index] == InterpolationVariable::Zero) {
             // for today extrapolate flat from first future pillar
-            rates.push_back(yieldts->zeroRate(std::max(d, curvePillarDates[1]), zeroDayCounter_[index], Continuous));
+            rates.push_back(yieldts->zeroRate(std::max(d, curvePillarDates[0]), zeroDayCounter_[index], Continuous));
         } else if (interpolationVariable_[index] == InterpolationVariable::Forward) {
             // for today extrapolate flat from first future pillar
-            rates.push_back(yieldts->forwardRate(std::max(d, curvePillarDates[1]), std::max(d, curvePillarDates[1]),
+            rates.push_back(yieldts->forwardRate(std::max(d, curvePillarDates[0]), std::max(d, curvePillarDates[0]),
                                                  zeroDayCounter_[index], Continuous));
         }
     }
