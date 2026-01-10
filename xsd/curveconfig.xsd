@@ -632,7 +632,7 @@
       <xs:element type="xs:string" name="Lag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseRate" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="seasonalityType" name="Seasonality" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
@@ -713,7 +713,7 @@
       <xs:element type="interpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="MixedInterpolationCutoff" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="YieldCurveDayCounter" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="ExcludeT0FromInterpolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
@@ -1292,32 +1292,32 @@
       <xs:element type="xs:double" name="GlobalAccuracy" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:boolean" name="DontThrow" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:positiveInteger" name="MaxAttempts" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:decimal" name="MaxFactor" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:decimal" name="MinFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="MaxFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="MinFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:positiveInteger" name="DontThrowSteps" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:boolean" name="Global" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:boolean" name="SmoothnessLambda" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="SmoothnessLambda" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
   <xs:complexType name="minMaxType">
     <xs:all>
-      <xs:element type="xs:decimal" name="Min"/>
-      <xs:element type="xs:decimal" name="Max"/>
+      <xs:element type="xs:double" name="Min"/>
+      <xs:element type="xs:double" name="Max"/>
     </xs:all>
   </xs:complexType>
   
   <xs:complexType name="oneDimSolverConfigType">
     <xs:sequence>
       <xs:element type="xs:positiveInteger" name="MaxEvaluations"/>
-      <xs:element type="xs:decimal" name="InitialGuess"/>
+      <xs:element type="xs:double" name="InitialGuess"/>
       <xs:element type="xs:double" name="Accuracy"/>
       <xs:choice>
         <xs:element type="minMaxType" name="MinMax"/>
         <xs:element type="xs:double" name="Step"/>
       </xs:choice>
-      <xs:element type="xs:decimal" name="LowerBound" minOccurs="0"/>
-      <xs:element type="xs:decimal" name="UpperBound" minOccurs="0"/>
+      <xs:element type="xs:double" name="LowerBound" minOccurs="0"/>
+      <xs:element type="xs:double" name="UpperBound" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
