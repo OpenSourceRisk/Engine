@@ -3,13 +3,13 @@
   <Setup>
     <Parameter name="asofDate">2025-11-27</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/centralbank</Parameter>
+    <Parameter name="outputPath">Output/centralbank_2</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">market_centralbank.csv</Parameter>
     <Parameter name="fixingDataFile">fixings_centralbank.csv</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
-    <Parameter name="curveConfigFile">curveconfig_centralbank_4.xml</Parameter>
+    <Parameter name="curveConfigFile">curveconfig_centralbank_2.xml</Parameter>
     <Parameter name="conventionsFile">conventions_centralbank.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket_centralbank.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
