@@ -527,7 +527,7 @@
           <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
-          <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:integer" name="SpotLag" minOccurs="0" maxOccurs="1"/>
           <xs:element name="SourceCurves" minOccurs="0">
             <xs:complexType>
               <xs:sequence>
@@ -568,7 +568,7 @@
       <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SpotLag" minOccurs="0" maxOccurs="1"/>
       <xs:element name="SourceCurves" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
