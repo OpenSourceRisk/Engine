@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2022-09-22</Parameter>
+    <Parameter name="asofDate">2025-11-27</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output/centralbank</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">market_centralbank.csv</Parameter>
     <Parameter name="fixingDataFile">fixings_centralbank.csv</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
-    <Parameter name="curveConfigFile">curveconfig_centralbank.xml</Parameter>
+    <Parameter name="curveConfigFile">curveconfig_centralbank_4.xml</Parameter>
     <Parameter name="conventionsFile">conventions_centralbank.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket_centralbank.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
@@ -38,7 +38,8 @@
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
-      <Parameter name="grid">750,1D</Parameter>
+      <Parameter name="grid">400,1D</Parameter>
+      <Parameter name="calendar">NullCalendar</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
       <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     </Analytic>

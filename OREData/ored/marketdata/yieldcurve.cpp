@@ -804,7 +804,7 @@ YieldCurve::buildPiecewiseCurve(const std::size_t index, const std::size_t mixed
                     }
 
                     for (Size i = 0; i < nPenalties; ++i) {
-                        result[instruments.size() + i] = forwards[i + 1] - forwards[i];
+                        result[instruments.size() + i] = smoothnessLambda * (forwards[i + 1] - forwards[i]);
                     }
 
                 }
@@ -1549,7 +1549,7 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
 
         DLOG("Building instrument sets for yield curve segments 0..." << curveSegments_[index].size() - 1);
 
-        std::vector<vector<RateHelperData>> instrumentsPerSegment(curveSegments_[index].size());
+        std::vector<std::vector<RateHelperData>> instrumentsPerSegment(curveSegments_[index].size());
 
         for (Size i = 0; i < curveSegments_[index].size(); ++i) {
 
@@ -1715,11 +1715,16 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
                    "mixed interpolation cutoff (" << curveConfig_[index]->mixedInterpolationCutoff()
                                                   << ") can not be greater than the number of curve segments ("
                                                   << curveSegments_[index].size() << ")");
-
-        Size mixedInterpolationSize = 0;
-        for (Size i = 0; i < curveConfig_[index]->mixedInterpolationCutoff(); ++i)
-            mixedInterpolationSize += instrumentsPerSegment[i].size();
-
+        std::set<Date> tmpPillarDates;
+        for (Size i = 0; i < curveConfig_[index]->mixedInterpolationCutoff(); ++i) {
+            std::for_each(instrumentsPerSegment[i].begin(), instrumentsPerSegment[i].end(),
+                          [&tmpPillarDates](const RateHelperData& r) {
+                              if (r.mainPillarDate != Date())
+                                  tmpPillarDates.insert(r.mainPillarDate);
+                              tmpPillarDates.insert(r.addPillarDates.begin(), r.addPillarDates.end());
+                          });
+        }
+        Size mixedInterpolationSize = tmpPillarDates.size();
         DLOG("mixed interpolation size is " << mixedInterpolationSize);
 
         /* Now put all remaining instruments into a single vector. */
