@@ -1529,7 +1529,7 @@ std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::Type c) {
     } else if (c == YieldCurveSegment::Type::BondYieldShifted) {
         return os << "Bond Yield Shifted";
     } else {
-        QL_FAIL("Unknonw PillarChoice value " << static_cast<std::size_t>(c));
+        QL_FAIL("Unknonw YieldCurveSegment::Type value " << static_cast<std::size_t>(c));
     }
 }
 
