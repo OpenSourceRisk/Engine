@@ -26,26 +26,46 @@ using namespace QuantLib;
 namespace QuantExt {
 using namespace QuantLib;
 
-class Integrand {
+class PDFIntegrand {
 public:
-    Integrand(Real x, Time time, const ExtendedHestonProcess& p) : x_(x), time_(time), p_(p) {}
-    Real operator()(Real u) const { return p_.integrand(u, x_, time_); }
+    PDFIntegrand(Real x, Time time, const ExtendedHestonProcess& p) : x_(x), time_(time), p_(p) {}
+    Real operator()(Real u) const { return p_.pdfIntegrand(u, x_, time_); }
 
 private:
     Real x_, time_;
     ExtendedHestonProcess p_;
 };
 
-Real ExtendedHestonProcess::integrand(Real u, Real x, Real time) const {
-  Complex i(0.0, 1.0);
-  // return 1.0 / M_PI * std::real(std::exp(Complex(0.0, -u * x)) * phi(u, time));
-  return 1.0 / M_PI * std::real(std::exp(-i * u * x) * phi(u, time));
+class CDFIntegrand {
+public:
+    CDFIntegrand(Real x, Time time, const ExtendedHestonProcess& p) : x_(x), time_(time), p_(p) {}
+    Real operator()(Real u) const { return p_.cdfIntegrand(u, x_, time_); }
+
+private:
+    Real x_, time_;
+    ExtendedHestonProcess p_;
+};
+
+Real ExtendedHestonProcess::pdfIntegrand(Real u, Real x, Real time) const {
+    Complex i(0.0, 1.0);
+    return std::real(std::exp(-i * u * x) * phi(u, time));
+}
+
+Real ExtendedHestonProcess::cdfIntegrand(Real u, Real x, Real time) const {
+    Complex i(0.0, 1.0);
+    return std::imag(std::exp(-i * u * x) * phi(u, time)) / u;
 }
 
 Real ExtendedHestonProcess::pdf(Real x, Time time, Size order) const {
-    Integrand func(x, time, *this);
+    PDFIntegrand func(x, time, *this);
     GaussLaguerreIntegration integrator(order);
-    return integrator(func);
+    return integrator(func) / M_PI;
+}
+
+Real ExtendedHestonProcess::cdf(Real x, Time time, Size order) const {
+    CDFIntegrand func(x, time, *this);
+    GaussLaguerreIntegration integrator(order);
+    return 0.5 - integrator(func) / M_PI;
 }
 
 Complex ExtendedHestonProcess::phi(Real u, Real time) const {

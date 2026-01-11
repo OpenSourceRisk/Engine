@@ -56,12 +56,15 @@ public:
     // See equation (2) in https://perswww.kuleuven.be/~u0009713/HestonTrap.pdf
     std::complex<Real> phi(Real u, Real time) const;
 
+    // Gil-Pelaez formula with numerical integration using Gauss-Laguerre 
     // QuantLib's AnalyticHestonEngine uses Gauss-Laguerre integration
     // with order = 128 by default and requires order <= 192
     Real pdf(Real x, Time time, Size order) const;
+    Real cdf(Real x, Time time, Size order) const;
 
     // Integrand for the integration above 
-    Real integrand(Real u, Real x, Real time) const;
+    Real pdfIntegrand(Real u, Real x, Real time) const;
+    Real cdfIntegrand(Real u, Real x, Real time) const;
 };
 
 #endif

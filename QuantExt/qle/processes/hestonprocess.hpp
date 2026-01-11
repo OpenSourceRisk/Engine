@@ -33,14 +33,15 @@ namespace QuantExt {
 using namespace QuantLib;
   
 //! Extended QuantLib Heston process
-/*! This class provides the Heston probability density function (PDF) as a function of x=ln(S),
-    i.e. integrated across variance states.
+/*! This class provides the Heston probability density function (PDF) and cumulative density (CDF)
+    as a function of x=ln(S), i.e. integrated across variance states.
 
-    The PDF is computed by Fourier inversion (Gil-Pelaez formula) of Schouten's stable Heston
+    The PDF/CDF is computed by Fourier inversion (Gil-Pelaez formula) of Schouten's stable Heston
     characteristic function phi(u):
 
     pdf(x) = 1/pi * \int_0^\infty Re[ exp(-i*u*x) * phi(u)] du,
-
+    cdf(x) = 1/2 - 1/pi * \int_0^\infty 1/u * Im[ exp(-i*u*x) * phi(u)] du
+    
     The numerical integration is done using Gauss-Laguerre, following
     one of QuantLib's option pricing approaches in AnalyticHestonEngine, in particular the
     default approach where the engine constructor takes the HestonModel as its only argument.
@@ -64,12 +65,15 @@ public:
     // See equation (2) in https://perswww.kuleuven.be/~u0009713/HestonTrap.pdf
     Complex phi(Real u, Real time) const;
 
+    // Gil-Pelaez formula with numerical integration using Gauss-Laguerre 
     // QuantLib's AnalyticHestonEngine uses Gauss-Laguerre integration
     // with order = 128 by default and requires order <= 192
     Real pdf(Real x, Time time, Size order) const;
+    Real cdf(Real x, Time time, Size order) const;
 
-    // Integrand for the integration above
-    Real integrand(Real u, Real x, Real time) const;
+    // Integrands for the integrations above
+    Real pdfIntegrand(Real u, Real x, Real time) const;
+    Real cdfIntegrand(Real u, Real x, Real time) const;
 };
 
 } // namespace QuantExt
