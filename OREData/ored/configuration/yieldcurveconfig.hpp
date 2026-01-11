@@ -63,7 +63,7 @@ public:
         NoPillar,
         MaturityDate,     // maps to QuantLib::Pillar::Maturity
         LastRelevantDate, // maps to QuantLib::Pillar::LastRelevantDate
-        StartDate,
+        StartDate,        // maps to QuantLib::Pillar::StartDate
         StartDateAndMaturityDate,
         StartDateAndLastRelevantDate
     };
