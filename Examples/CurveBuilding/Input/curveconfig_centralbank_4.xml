@@ -74,7 +74,7 @@
       <BootstrapConfig>
         <Accuracy>1E-14</Accuracy>
         <Global>true</Global>
-        <SmoothnessLambda>0.2</SmoothnessLambda>
+        <SmoothnessLambda>0.1</SmoothnessLambda>
       </BootstrapConfig>
     </YieldCurve>
   </YieldCurves>
