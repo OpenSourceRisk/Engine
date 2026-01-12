@@ -3052,7 +3052,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     newVol = Handle<BlackVolTermStructure>(
                                         QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                             baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter,
-                                            priceYts, yts, stickyStrike, flatExtrapMoneyness, baseVol->volType(),
+                                            priceYts, yts, stickyStrike, flatExtrapMoneyness, BlackVolTimeExtrapolation::FlatVolatility,
+                                            baseVol->volType(),
                                             baseVol->shift()));
                                 }
                             }
