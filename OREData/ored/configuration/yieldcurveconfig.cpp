@@ -179,14 +179,14 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
                                    const string& discountCurveID,
                                    const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
-                                   const string& zeroDayCounter, bool extrapolation,
+                                   const string& zeroDayCounter, bool extrapolation, const string& extrapolationMethod,
                                    const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff,
                                    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig)
     : CurveConfig(curveID, curveDescription), currency_(currency), discountCurveID_(discountCurveID),
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
-      bootstrapConfig_(bootstrapConfig), mixedInterpolationCutoff_(mixedInterpolationCutoff),
-      iborFallbackConfig_(iborFallbackConfig) {}
+      extrapolationMethod_(extrapolationMethod), bootstrapConfig_(bootstrapConfig),
+      mixedInterpolationCutoff_(mixedInterpolationCutoff), iborFallbackConfig_(iborFallbackConfig) {}
 
 const vector<string>& YieldCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -284,6 +284,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     mixedInterpolationCutoff_ = XMLUtils::getChildValueAsInt(node, "MixedInterpolationCutoff", false, 1);
     zeroDayCounter_ = XMLUtils::getChildValue(node, "YieldCurveDayCounter", false, "A365");
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", false, true);
+    extrapolationMethod_ = XMLUtils::getChildValue(node, "ExtrapolationType", false, "ContinuousForward");
     excludeT0FromInterpolation_ = XMLUtils::getChildValueAsBool(node, "ExcludeT0FromInterpolation", false, false);
 
     // Optional bootstrap configuration
@@ -330,6 +331,7 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "YieldCurveDayCounter", zeroDayCounter_);
     XMLUtils::addChild(doc, node, "Tolerance", bootstrapConfig_.accuracy());
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
+    XMLUtils::addChild(doc, node, "ExtrapolationType", extrapolationMethod_);
     XMLUtils::addChild(doc, node, "ExcludeT0FromInterpolation", excludeT0FromInterpolation_);
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));

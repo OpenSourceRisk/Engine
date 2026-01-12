@@ -91,6 +91,8 @@ public:
         Svensson            // fitted bond curves only
     };
 
+    enum class ExtrapolationMethod { ContinuousForward, DiscreteForward };
+
     //! Constructor
     YieldCurve( //! Valuation date
         Date asof,
@@ -154,6 +156,7 @@ private:
     std::vector<Currency> currency_;
     std::vector<DayCounter> zeroDayCounter_;
     std::vector<bool> extrapolation_;
+    std::vector<ExtrapolationMethod> extrapolationMethod_;
     std::vector<Handle<YieldTermStructure>> discountCurve_;
     std::vector<bool> discountCurveGiven_;
     std::vector<QuantLib::ext::shared_ptr<YieldCurveConfig>> curveConfig_;
@@ -263,23 +266,34 @@ buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates, 
                 YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 //! Create a Interpolated Zero Curve and apply interpolators
-QuantLib::ext::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
-                                                        const DayCounter& dayCounter,
-                                                        YieldCurve::InterpolationMethod interpolationMethod, Size n = 0,
-                                                        bool excludeT0 = false, const Date& referenceDate = Date());
+QuantLib::ext::shared_ptr<YieldTermStructure>
+zerocurve(const vector<Date>& dates, const vector<Rate>& yields, const DayCounter& dayCounter,
+          YieldCurve::InterpolationMethod interpolationMethod,
+          YieldCurve::ExtrapolationMethod extrapolationMethod = YieldCurve::ExtrapolationMethod::ContinuousForward,
+          Size n = 0, bool excludeT0 = false, const Date& referenceDate = Date());
 
 //! Create a Interpolated Discount Curve and apply interpolators
 QuantLib::ext::shared_ptr<YieldTermStructure>
 discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs, const DayCounter& dayCounter,
-              YieldCurve::InterpolationMethod interpolationMethod, Size n = 0, bool excludeT0 = false,
-              const Date& referenceDate = Date());
+              YieldCurve::InterpolationMethod interpolationMethod,
+              YieldCurve::ExtrapolationMethod extrapolationMethod = YieldCurve::ExtrapolationMethod::ContinuousForward,
+              Size n = 0, bool excludeT0 = false, const Date& referenceDate = Date());
 
 //! Create a Interpolated Forward Curve and apply interpolators
-QuantLib::ext::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
-                                                           const DayCounter& dayCounter,
-                                                           YieldCurve::InterpolationMethod interpolationMethod,
-                                                           Size n = 0, bool excludeT0 = false,
-                                                           const Date& referenceDate = Date());
+QuantLib::ext::shared_ptr<YieldTermStructure>
+forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards, const DayCounter& dayCounter,
+             YieldCurve::InterpolationMethod interpolationMethod,
+             YieldCurve::ExtrapolationMethod extrapolationMethod = YieldCurve::ExtrapolationMethod::ContinuousForward,
+             Size n = 0, bool excludeT0 = false, const Date& referenceDate = Date());
+
+//! Convert text to YieldCurve::ExtrapolationMethod
+/*!
+\ingroup utilities
+*/
+YieldCurve::ExtrapolationMethod parseYieldCurveExtrapolationMethod(const std::string& s);
+
+//! Output operator for YieldCurve::ExtrapolationMethod
+std::ostream& operator<<(std::ostream& os, const YieldCurve::ExtrapolationMethod c);
 
 } // namespace data
 } // namespace ore

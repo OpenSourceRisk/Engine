@@ -46,16 +46,14 @@ using namespace QuantLib;
     \ingroup termstructures
 */
 template <class Interpolator>
-class InterpolatedPillarOnlyDiscountCurve : public YieldTermStructure,
-                                            protected InterpolatedCurve<Interpolator> {
+class InterpolatedPillarOnlyDiscountCurve : public YieldTermStructure, protected InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
     //@{
-    InterpolatedPillarOnlyDiscountCurve(const Date& referenceDate,
-                                        const std::vector<Date>& dates,
-                                        const std::vector<DiscountFactor>& discounts,
-                                        const DayCounter& dayCounter,
-                                        const Interpolator& interpolator = Interpolator());
+    InterpolatedPillarOnlyDiscountCurve(const Date& referenceDate, const std::vector<Date>& dates,
+                                        const std::vector<DiscountFactor>& discounts, const DayCounter& dayCounter,
+                                        const Interpolator& interpolator = Interpolator(),
+                                        const Extrapolation extrapolation = Extrapolation::ContinuousForward);
     //@}
 
     //! \name YieldTermStructure interface
@@ -70,6 +68,7 @@ protected:
     //@}
 
 private:
+    Extrapolation extrapolation_;
     std::vector<Date> dates_;
 };
 
@@ -87,16 +86,14 @@ private:
     \ingroup termstructures
 */
 template <class Interpolator>
-class InterpolatedPillarOnlyZeroCurve : public YieldTermStructure,
-                                        protected InterpolatedCurve<Interpolator> {
+class InterpolatedPillarOnlyZeroCurve : public YieldTermStructure, protected InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
     //@{
-    InterpolatedPillarOnlyZeroCurve(const Date& referenceDate,
-                                    const std::vector<Date>& dates,
-                                    const std::vector<Rate>& zeroRates,
-                                    const DayCounter& dayCounter,
-                                    const Interpolator& interpolator = Interpolator());
+    InterpolatedPillarOnlyZeroCurve(const Date& referenceDate, const std::vector<Date>& dates,
+                                    const std::vector<Rate>& zeroRates, const DayCounter& dayCounter,
+                                    const Interpolator& interpolator = Interpolator(),
+                                    const Extrapolation extrapolation = Extrapolation::ContinuousForward);
     //@}
 
     //! \name YieldTermStructure interface
@@ -111,6 +108,7 @@ protected:
     //@}
 
 private:
+    Extrapolation extrapolation_;
     std::vector<Date> dates_;
 };
 
@@ -128,16 +126,14 @@ private:
     \ingroup termstructures
 */
 template <class Interpolator>
-class InterpolatedPillarOnlyForwardCurve : public YieldTermStructure,
-                                           protected InterpolatedCurve<Interpolator> {
+class InterpolatedPillarOnlyForwardCurve : public YieldTermStructure, protected InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
     //@{
-    InterpolatedPillarOnlyForwardCurve(const Date& referenceDate,
-                                       const std::vector<Date>& dates,
-                                       const std::vector<Rate>& forwardRates,
-                                       const DayCounter& dayCounter,
-                                       const Interpolator& interpolator = Interpolator());
+    InterpolatedPillarOnlyForwardCurve(const Date& referenceDate, const std::vector<Date>& dates,
+                                       const std::vector<Rate>& forwardRates, const DayCounter& dayCounter,
+                                       const Interpolator& interpolator = Interpolator(),
+                                       const Extrapolation extrapolation = Extrapolation::ContinuousForward);
     //@}
 
     //! \name YieldTermStructure interface
@@ -152,6 +148,7 @@ protected:
     //@}
 
 private:
+    Extrapolation extrapolation_;
     std::vector<Date> dates_;
 };
 
@@ -159,14 +156,10 @@ private:
 
 template <class Interpolator>
 InterpolatedPillarOnlyDiscountCurve<Interpolator>::InterpolatedPillarOnlyDiscountCurve(
-    const Date& referenceDate,
-    const std::vector<Date>& dates,
-    const std::vector<DiscountFactor>& discounts,
-    const DayCounter& dayCounter,
-    const Interpolator& interpolator)
-    : YieldTermStructure(referenceDate, Calendar(), dayCounter),
-      InterpolatedCurve<Interpolator>(interpolator),
-      dates_(dates) {
+    const Date& referenceDate, const std::vector<Date>& dates, const std::vector<DiscountFactor>& discounts,
+    const DayCounter& dayCounter, const Interpolator& interpolator, const Extrapolation extrapolation)
+    : YieldTermStructure(referenceDate, Calendar(), dayCounter), InterpolatedCurve<Interpolator>(interpolator),
+      extrapolation_(extrapolation), dates_(dates) {
 
     QL_REQUIRE(!dates.empty(), "InterpolatedPillarOnlyDiscountCurve: dates cannot be empty");
     QL_REQUIRE(dates.size() == discounts.size(),
@@ -184,8 +177,7 @@ InterpolatedPillarOnlyDiscountCurve<Interpolator>::InterpolatedPillarOnlyDiscoun
     this->interpolation_.update();
 }
 
-template <class Interpolator>
-Date InterpolatedPillarOnlyDiscountCurve<Interpolator>::maxDate() const {
+template <class Interpolator> Date InterpolatedPillarOnlyDiscountCurve<Interpolator>::maxDate() const {
     return dates_.back();
 }
 
@@ -220,14 +212,10 @@ DiscountFactor InterpolatedPillarOnlyDiscountCurve<Interpolator>::discountImpl(T
 
 template <class Interpolator>
 InterpolatedPillarOnlyZeroCurve<Interpolator>::InterpolatedPillarOnlyZeroCurve(
-    const Date& referenceDate,
-    const std::vector<Date>& dates,
-    const std::vector<Rate>& zeroRates,
-    const DayCounter& dayCounter,
-    const Interpolator& interpolator)
-    : YieldTermStructure(referenceDate, Calendar(), dayCounter),
-      InterpolatedCurve<Interpolator>(interpolator),
-      dates_(dates) {
+    const Date& referenceDate, const std::vector<Date>& dates, const std::vector<Rate>& zeroRates,
+    const DayCounter& dayCounter, const Interpolator& interpolator, const Extrapolation extrapolation)
+    : YieldTermStructure(referenceDate, Calendar(), dayCounter), InterpolatedCurve<Interpolator>(interpolator),
+      extrapolation_(extrapolation), dates_(dates) {
 
     QL_REQUIRE(!dates.empty(), "InterpolatedPillarOnlyZeroCurve: dates cannot be empty");
     QL_REQUIRE(dates.size() == zeroRates.size(),
@@ -245,13 +233,11 @@ InterpolatedPillarOnlyZeroCurve<Interpolator>::InterpolatedPillarOnlyZeroCurve(
     this->interpolation_.update();
 }
 
-template <class Interpolator>
-Date InterpolatedPillarOnlyZeroCurve<Interpolator>::maxDate() const {
+template <class Interpolator> Date InterpolatedPillarOnlyZeroCurve<Interpolator>::maxDate() const {
     return dates_.back();
 }
 
-template <class Interpolator>
-DiscountFactor InterpolatedPillarOnlyZeroCurve<Interpolator>::discountImpl(Time t) const {
+template <class Interpolator> DiscountFactor InterpolatedPillarOnlyZeroCurve<Interpolator>::discountImpl(Time t) const {
     // At reference date (t=0), return 1.0 by definition
     if (t <= 0.0 || QuantLib::close_enough(t, 0.0)) {
         return 1.0;
@@ -277,14 +263,10 @@ DiscountFactor InterpolatedPillarOnlyZeroCurve<Interpolator>::discountImpl(Time 
 
 template <class Interpolator>
 InterpolatedPillarOnlyForwardCurve<Interpolator>::InterpolatedPillarOnlyForwardCurve(
-    const Date& referenceDate,
-    const std::vector<Date>& dates,
-    const std::vector<Rate>& forwardRates,
-    const DayCounter& dayCounter,
-    const Interpolator& interpolator)
-    : YieldTermStructure(referenceDate, Calendar(), dayCounter),
-      InterpolatedCurve<Interpolator>(interpolator),
-      dates_(dates) {
+    const Date& referenceDate, const std::vector<Date>& dates, const std::vector<Rate>& forwardRates,
+    const DayCounter& dayCounter, const Interpolator& interpolator, const Extrapolation extrapolation)
+    : YieldTermStructure(referenceDate, Calendar(), dayCounter), InterpolatedCurve<Interpolator>(interpolator),
+      extrapolation_(extrapolation), dates_(dates) {
 
     QL_REQUIRE(!dates.empty(), "InterpolatedPillarOnlyForwardCurve: dates cannot be empty");
     QL_REQUIRE(dates.size() == forwardRates.size(),
@@ -302,8 +284,7 @@ InterpolatedPillarOnlyForwardCurve<Interpolator>::InterpolatedPillarOnlyForwardC
     this->interpolation_.update();
 }
 
-template <class Interpolator>
-Date InterpolatedPillarOnlyForwardCurve<Interpolator>::maxDate() const {
+template <class Interpolator> Date InterpolatedPillarOnlyForwardCurve<Interpolator>::maxDate() const {
     return dates_.back();
 }
 
