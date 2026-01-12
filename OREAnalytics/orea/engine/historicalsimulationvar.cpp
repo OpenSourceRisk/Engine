@@ -67,6 +67,7 @@ void HistoricalSimulationVarReport::createAdditionalReports(
         // prepare report
         QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
         report2->addColumn("RiskFactor", string())
+            .addColumn("TradeId", string())
             .addColumn("PLDate1", Date())
             .addColumn("PLDate2", Date())
             .addColumn("PLAmount", double(), 6);
@@ -129,13 +130,18 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
             QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
             if (s < riskFactorPnls_.size() && countRF_ < 1) {
                 for (const auto& r : riskFactorPnls_[s]) {
-                    report2->next();
                     const auto& key = r.first;
-                    const Real value = r.second;
-                    report2->add(ore::data::to_string(key));
-                    report2->add(hisScenGen_->startDates()[s]);
-                    report2->add(hisScenGen_->endDates()[s]);
-                    report2->add(value);
+                    const std::vector<Real>& vals = r.second;
+                    Size idx = 0;
+                    for (const auto& t : tradeIdIdxPairs_) {
+                        report2->next();
+                        report2->add(ore::data::to_string(key));
+                        report2->add(t.first);
+                        report2->add(hisScenGen_->startDates()[s]);
+                        report2->add(hisScenGen_->endDates()[s]);
+                        report2->add(idx < vals.size() ? vals[idx] : 0.0);
+                        ++idx;
+                    }
                 }
             }
         }
