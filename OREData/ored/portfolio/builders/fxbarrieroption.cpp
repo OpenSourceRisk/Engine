@@ -68,10 +68,10 @@ GenericBarrierOptionData parseFxBarrierOption(const ore::data::FxOptionWithBarri
     } else {
         QL_FAIL("FxBarrierOptionScriptedEngineBuilder: only single and double barriers are supported. Please check trade xml.");
     }
-
-    std::string startDate = to_string(fxBarrierOption->startDate());
+    Date today = Settings::instance().evaluationDate();
+    auto start = fxBarrierOption->startDate();
+    std::string startDate = start == Date() ? to_string(today) : to_string(start);
     std::string exerciseDate = data.optionData.exerciseDates().front();
-
     ScheduleRules rule(startDate, exerciseDate, "1D", fxBarrierOption->calendarStr(), "Following", "Unadjusted",
                        "Backward");
     data.barrierMonitoringDates = ScheduleData(rule);
@@ -113,6 +113,7 @@ GenericBarrierOptionData parseFxKIKOBarrierOptionData(const ore::data::FxKIKOBar
     data.optionData = fxKiKoBarrierOption->option();
 
     std::string startDate = fxKiKoBarrierOption->startDate();
+    startDate = startDate.empty() ? to_string(Settings::instance().evaluationDate()) : startDate;
     std::string exerciseDate = data.optionData.exerciseDates().front();
 
     ScheduleRules rule(startDate, exerciseDate, "1D", fxKiKoBarrierOption->calendar(), "Following", "Unadjusted",
