@@ -37,13 +37,14 @@ HistoricalSimulationVarReport::HistoricalSimulationVarReport(
     const string& baseCurrency, const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const string& portfolioFilter,
     const vector<Real>& p, QuantLib::ext::optional<TimePeriod> period,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen, std::unique_ptr<FullRevalArgs> fullRevalArgs,
-    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool useAtParCouponsCurves,
+    const bool breakdown, const bool includeExpectedShortfall, const bool tradePnl, const bool riskFactorBreakdown, const bool useAtParCouponsCurves,
     const bool useAtParCouponsTrades)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, nullptr, std::move(fullRevalArgs),
-                false, useAtParCouponsCurves, useAtParCouponsTrades),
-      includeExpectedShortfall_(includeExpectedShortfall) {
+                false, useAtParCouponsCurves, useAtParCouponsTrades, tradePnl, riskFactorBreakdown),
+                includeExpectedShortfall_(includeExpectedShortfall) {
     fullReval_ = true;
     tradePnl_ = tradePnl;
+    riskFactorBreakdown_ = riskFactorBreakdown;
 }
 
 void HistoricalSimulationVarReport::createVarCalculator() {
@@ -54,7 +55,6 @@ void HistoricalSimulationVarReport::createAdditionalReports(
     const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) {
 
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(1);
-
     // prepare report
     report->addColumn("Portfolio", string())
         .addColumn("RiskClass", string())
@@ -62,13 +62,33 @@ void HistoricalSimulationVarReport::createAdditionalReports(
         .addColumn("PLDate1", Date())
         .addColumn("PLDate2", Date())
         .addColumn("PLAmount", double(), 6);
+
+    if(riskFactorBreakdown_){
+        // prepare report
+        QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
+        report2->addColumn("RiskFactor", string())
+            .addColumn("TradeId", string())
+            .addColumn("PLDate1", Date())
+            .addColumn("PLDate2", Date())
+            .addColumn("PLAmount", double(), 6);
+    }
+        
 }
 
 void HistoricalSimulationVarReport::handleFullRevalResults(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
                                                            const ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                                            const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
-    if (!tradePnl_) {
+    if (!tradePnl_ && !riskFactorBreakdown_) {
         pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
+    }else if(riskFactorBreakdown_){
+        //Full PnL report
+        if(!tradePnl_){
+            pnls_ = histPnlGen_->pnl(period_.value(), tradeIdIdxPairs_);
+        }else{
+            tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
+        }      
+        // The PnL breakdown per scenario on risk factors
+        riskFactorPnls_ = histPnlGen_->riskFactorLevelPnlSeries(period_.value());
     } else {
         tradePnls_ = histPnlGen_->tradeLevelPnl(period_.value(), tradeIdIdxPairs_);
     }
@@ -78,8 +98,9 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
     const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
     const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
     const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {
-    QL_REQUIRE(reports->reports().size()== 2, "HistoricalSimulationVarReport::writeAdditionalReports - 2 reports expected for HistoricalSimulationVar");
+    QL_REQUIRE(riskFactorBreakdown_?reports->reports().size()== 3:reports->reports().size()== 2, "HistoricalSimulationVarReport::writeAdditionalReports - 2 reports expected for HistoricalSimulationVar, 3 if riskFactorBreakdown==true");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(1);
+
     auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
     auto tg = ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);
 
@@ -94,7 +115,7 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
                 report->add(hisScenGen_->startDates()[s]);
                 report->add(hisScenGen_->endDates()[s]);
                 report->add(tradePnls_[s][t.second]);
-            }
+            }          
         } else {
             report->next();
             report->add(tg->portfolioId());
@@ -104,7 +125,28 @@ void HistoricalSimulationVarReport::writeAdditionalReports(
             report->add(hisScenGen_->endDates()[s]);
             report->add(pnls_.at(s));
         }
+        if (riskFactorBreakdown_) {
+            // The PnL breakdown on risk factors per scenario
+            QuantLib::ext::shared_ptr<Report> report2 = reports->reports().at(2);
+            if (s < riskFactorPnls_.size() && countRF_ < 1) {
+                for (const auto& r : riskFactorPnls_[s]) {
+                    const auto& key = r.first;
+                    const std::vector<Real>& vals = r.second;
+                    Size idx = 0;
+                    for (const auto& t : tradeIdIdxPairs_) {
+                        report2->next();
+                        report2->add(ore::data::to_string(key));
+                        report2->add(t.first);
+                        report2->add(hisScenGen_->startDates()[s]);
+                        report2->add(hisScenGen_->endDates()[s]);
+                        report2->add(idx < vals.size() ? vals[idx] : 0.0);
+                        ++idx;
+                    }
+                }
+            }
+        }
     }
+    countRF_++;
 }
 
 void HistoricalSimulationVarReport::writeHeader(const ext::shared_ptr<Report>& report) const {

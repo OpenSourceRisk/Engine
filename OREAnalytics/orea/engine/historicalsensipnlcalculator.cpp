@@ -258,7 +258,7 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     vector<Real> allPnls(hisScenGen_->numScenarios(), 0.0);
     vector<Real> allFoPnls(hisScenGen_->numScenarios(), 0.0);
     
-    //                    calculators,scenarios,  trades
+    // calculators,scenarios, trades
     using TradePnLStore = std::vector<std::vector<QuantLib::Real>>;
     std::vector<TradePnLStore> tradePnls, foTradePnls;
 

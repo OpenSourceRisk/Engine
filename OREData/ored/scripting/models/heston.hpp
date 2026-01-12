@@ -48,27 +48,15 @@ private:
                             const Matrix& correlation, const Matrix& sqrtCorr,
                             const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
+
+    RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const RandomVariable& addRegressor2) const override;
+
 };
 
 
 struct MultiAssetHestonPaths {
-    // MultiAssetHestonPaths() { DLOG("MultiAssetHestonPaths ctor called"); }
-    // ~MultiAssetHestonPaths() { DLOG("MultiAssetHestonPaths destructor called"); }
-    // MultiAssetHestonPaths(const MultiAssetHestonPaths& p) {
-    //     DLOG("MultiAssetHestonPaths copy ctor called");
-    //     samples = p.samples;
-    //     indexNames = p.indexNames;
-    // 	dates = p.dates;
-    // 	data = p.data;
-    // }
-    // MultiAssetHestonPaths& operator=(MultiAssetHestonPaths& a) {
-    //     DLOG("MultiAssetHestonPaths copy assignment ctor called");
-    //     return *this;
-    // }
-    // MultiAssetHestonPaths& operator=(MultiAssetHestonPaths&& a) {
-    //     DLOG("MultiAssetHestonPaths move assignment ctor called");
-    //     return *this;
-    // }
     Size samples;
     std::vector<std::string> indexNames;
     std::vector<Date> dates;

@@ -591,20 +591,21 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     } else if (modelParam_ == "Heston") {
         calibrationMoneyness_ =
 	  parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false, "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"), &parseReal);
-        calibrationExpiries_ =
-	  parseListOfValues<Period>(engineParameter("CalibrationExpiries", getModelEngineQualifiers(),false,"3M,6M"), &parsePeriod);
-        calibrationVarianceTerms_ =
-	  parseListOfValues<Period>(engineParameter("CalibrationVarianceTerms", getModelEngineQualifiers(), false, "1M,2M,3M,6M,9M,1Y,15M,18M,21M,2Y,5Y,7Y,10Y"), &parsePeriod);
+        hestonCalibrationExpiries_ =
+	  parseListOfValues<Period>(engineParameter("HestonCalibrationExpiries", getModelEngineQualifiers(),false,""), &parsePeriod);
+        hestonCalibrationVarianceTerms_ =
+	  parseListOfValues<Period>(engineParameter("HestonCalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
         hestonInitialValues_ =
 	  parseListOfValues<Real>(engineParameter("HestonInitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"), &parseReal);
         hestonFixedValues_ =
 	  parseListOfValues<bool>(engineParameter("HestonFixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
         hestonRelaxedFellerConstraint_ = parseReal(engineParameter("HestonRelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
-        hestonCalibrationRestarts_ = parseInteger(engineParameter("HestonCalibrationRestarts", getModelEngineQualifiers(), false, "0"));
+        hestonMaxCalibrationAttempts_ = parseInteger(engineParameter("HestonMaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
         hestonMaximumInitialValues_ =
 	  parseListOfValues<Real>(engineParameter("HestonMaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"), &parseReal);
-        hestonTolerance_ = parseReal(engineParameter("HestonTolerance", getModelEngineQualifiers(), false, "0.001"));
         hestonCalibrationMethod_ = engineParameter("HestonCalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
+        hestonEarlyExitThreshold_ = parseReal(engineParameter("HestonEarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
+        hestonMaxAcceptableError_ = parseReal(engineParameter("HestonMaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
         hestonProcessDiscretization_ =
 	  parseHestonProcessDiscretization(engineParameter("HestonProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
 	debug_ = parseBool(engineParameter("Debug", getModelEngineQualifiers(), false, "false"));
@@ -1383,9 +1384,10 @@ void ScriptedTradeEngineBuilder::buildHeston(const std::string& id,
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
-        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationExpiries_,
-        calibrationMoneyness_, calibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
-        hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_, hestonCalibrationMethod_,
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_,
+        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
+        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
         hestonProcessDiscretization_, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::MC, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
@@ -1401,9 +1403,10 @@ void ScriptedTradeEngineBuilder::buildFdHeston(
     Real T = modelCurves_.front()->timeFromReference(lastRelevantDate_);
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     auto builder = QuantLib::ext::make_shared<HestonModelBuilder>(
-        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibrationExpiries_,
-        calibrationMoneyness_, calibrationVarianceTerms_, hestonInitialValues_, hestonFixedValues_,
-        hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_, hestonCalibrationRestarts_, hestonTolerance_, hestonCalibrationMethod_,
+        modelIndices_, modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_,
+        hestonCalibrationExpiries_, calibrationMoneyness_, hestonCalibrationVarianceTerms_, hestonInitialValues_,
+        hestonFixedValues_, hestonCalibrationMethod_, hestonMaximumInitialValues_, hestonRelaxedFellerConstraint_,
+        hestonMaxCalibrationAttempts_, hestonEarlyExitThreshold_, hestonMaxAcceptableError_,
         hestonProcessDiscretization_, referenceCalibrationGrid_, !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<Heston>(
         Model::Type::FD, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
