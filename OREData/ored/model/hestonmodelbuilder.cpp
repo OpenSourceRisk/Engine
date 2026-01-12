@@ -56,16 +56,17 @@ HestonModelBuilder::HestonModelBuilder(
     const std::vector<Period>& calibrationVarianceTerms,
     // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
     const std::vector<Real>& initialValues, const std::vector<bool>& fixedValues,
-    const std::vector<Real>& maximumInitialValues, Real relaxedFellerConstraint, Size calibrationRestarts,
-    Real tolerance, const::std::string& calibrationMethod, const HestonProcess::Discretization& discretization,
-    const std::string& referenceCalibrationGrid, const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
+    const ::std::string& calibrationMethod, const std::vector<Real>& maximumInitialValues, Real relaxedFellerConstraint,
+    Size maxCalibrationAttempts, Real earlyExitThreshold, Real maxAcceptableError,
+    const HestonProcess::Discretization& discretization, const std::string& referenceCalibrationGrid,
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
     : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
       indices_(indices), calibrationExpiries_(calibrationExpiries), calibrationMoneyness_(calibrationMoneyness),
       calibrationVarianceTerms_(calibrationVarianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
-      maximumInitialValues_(maximumInitialValues), relaxedFellerConstraint_(relaxedFellerConstraint),
-      calibrationRestarts_(calibrationRestarts), tolerance_(tolerance), calibrationMethod_(calibrationMethod),
-      discretization_(discretization), referenceCalibrationGrid_(referenceCalibrationGrid),
-      dontCalibrate_(dontCalibrate) {
+      calibrationMethod_(calibrationMethod), maximumInitialValues_(maximumInitialValues),
+      relaxedFellerConstraint_(relaxedFellerConstraint), maxCalibrationAttempts_(maxCalibrationAttempts),
+      earlyExitThreshold_(earlyExitThreshold), maxAcceptableError_(maxAcceptableError), discretization_(discretization),
+      referenceCalibrationGrid_(referenceCalibrationGrid), dontCalibrate_(dontCalibrate) {
 
     if (calibrationMethod_ == "ConstantBestFit")
         processType_ = AssetModelWrapper::ProcessType::Heston;
@@ -92,12 +93,12 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
 
         DLOG("Create Heston process for " << indices_[i]);
 
-        HestonModelCalibration hmc(indices_[i], processes_[i], effectiveSimulationDates_, calibrationExpiries_,
-                                   calibrationMoneyness_, calibrationVarianceTerms_, initialValues_, fixedValues_,
-                                   maximumInitialValues_, relaxedFellerConstraint_, calibrationRestarts_, tolerance_,
-                                   calibrationMethod_, discretization_, dontCalibrate_);
+        HestonModelCalibration hmc(indices_[i], processes_[i], calibrationExpiries_, calibrationMoneyness_,
+                                   calibrationVarianceTerms_, initialValues_, fixedValues_, calibrationMethod_,
+                                   maximumInitialValues_, relaxedFellerConstraint_, maxCalibrationAttempts_,
+                                   earlyExitThreshold_, maxAcceptableError_, discretization_, dontCalibrate_);
 
-	DLOG("Build a Heston Model with constant parameters");
+        DLOG("Build a Heston Model with constant parameters");
 	auto model = hmc.model();
 
 	if (calibrationMethod_ == "ConstantBestFit") {  

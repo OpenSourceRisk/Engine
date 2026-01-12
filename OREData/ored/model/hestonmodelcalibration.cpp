@@ -19,6 +19,7 @@
 #include <ored/model/utilities.hpp>
 
 #include <ored/model/hestonmodelcalibration.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -42,6 +43,7 @@
 #include <ql/processes/hestonslvprocess.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+
 
 namespace ore {
 namespace data {
@@ -252,7 +254,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
             rho, discretization_);
         model = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     } else {
-        if (restarts_ > 0)
+        if (maxCalibrationAttempts_ > 0)
             model = model2();
         else
             model = model1();
@@ -389,6 +391,13 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
 
     logCalibration(results_);
 
+    Real rmse = getRMSE();
+    if (rmse > maxAcceptableError_) {
+        std::string msg = "Heston calibration error " + to_string(rmse) + " exceeds maximum acceptable error " +
+                          to_string(maxAcceptableError_);
+        StructuredModelWarningMessage("Failed to calibrate Heston model", msg, indexName_).log();
+    }
+
     return hestonModel;
 }
 
@@ -405,7 +414,7 @@ Real HestonModelCalibration::getRMSE() {
 
 QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
 
-    DLOG("model2 called");
+    DLOG("HestonModelCalibration::model2() called");
 
     Real theta = initialValues_[0];
     Real kappa = initialValues_[1];
@@ -413,7 +422,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     Real rho = initialValues_[3];
     Real v0 = initialValues_[4];
 
-    int restarts = restarts_;
+    int restarts = maxCalibrationAttempts_;
     // FIXME: Move to configuration
     int seed = 42;
 
@@ -455,7 +464,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
         DLOG("rmse = " << rmse << " params = " << model->params() << " (" << restarts << " restarts to go)");
 
         // if below acceptTolerance, no more restarts
-        if (rmse < tolerance_)
+        if (rmse < earlyExitThreshold_)
             break;
         // new random initial parameters
         if (restarts > 0) {
@@ -491,6 +500,13 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model2() {
     DLOG("best params = " << bestParams);
 
     logCalibration(results_);
+
+    // FIXME: pass and use continueOnError flag
+    if (bestRmse > maxAcceptableError_) {
+        std::string msg = "Heston calibration error " + to_string(bestRmse) + " exceeds maximum acceptable error " +
+                          to_string(maxAcceptableError_);
+        StructuredModelWarningMessage("Failed to calibrate Heston model", msg, indexName_).log();
+    }
 
     return model;
 }

@@ -70,7 +70,6 @@ class HestonModelCalibration {
 public:
     HestonModelCalibration(
         const std::string& indexName, const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-        const std::set<Date>& effectiveSimulationDates,
         const std::vector<Period>& expiries = {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years},
         const std::vector<Real>& moneyness = {-2.0, -1.0, 0.0, 1.0, 2.0},
         const std::vector<Period>& varianceTerms = {1 * Months, 2 * Months, 3 * Months, 6 * Months, 9 * Months,
@@ -79,15 +78,17 @@ public:
         // theta, kappa, sigma, rho, v0 (same order as in the Heston model, not the Heston process)
         const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.9, 0.04},
         const std::vector<bool>& fixedValues = {false, false, false, false, false},
+        const std::string& calibrationMethod = "ConstantBestFit",
         const std::vector<Real>& maximumInitialValues = {0.1, 20, 3, 0.9, 0.1}, Real relaxedFellerConstraint = 1.0,
-        Size restarts = 0, Real tolerance = 0.001, const std::string& calibrationMethod = "ConstantBestFit",
+        Size maxCalibrationAttempts = 0, Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
         const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
         const bool dontCalibrate = false)
-        : indexName_(indexName), process_(process), effectiveSimulationDates_(effectiveSimulationDates),
-          expiries_(expiries), moneyness_(moneyness), varianceTerms_(varianceTerms), initialValues_(initialValues),
-          fixedValues_(fixedValues), maximumInitialValues_(maximumInitialValues),
-          relaxedFellerConstraint_(relaxedFellerConstraint), restarts_(restarts), tolerance_(tolerance),
-          calibrationMethod_(calibrationMethod), discretization_(discretization), dontCalibrate_(dontCalibrate) {}
+        : indexName_(indexName), process_(process), expiries_(expiries), moneyness_(moneyness),
+          varianceTerms_(varianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
+          calibrationMethod_(calibrationMethod), maximumInitialValues_(maximumInitialValues),
+          relaxedFellerConstraint_(relaxedFellerConstraint), maxCalibrationAttempts_(maxCalibrationAttempts),
+          earlyExitThreshold_(earlyExitThreshold), maxAcceptableError_(maxAcceptableError),
+          discretization_(discretization), dontCalibrate_(dontCalibrate) {}
 
     ext::shared_ptr<HestonModel> model();
 
@@ -136,11 +137,12 @@ private:
     std::vector<Period> varianceTerms_;
     std::vector<Real> initialValues_;
     std::vector<bool> fixedValues_;
+    std::string calibrationMethod_;
     std::vector<Real> maximumInitialValues_;
     Real relaxedFellerConstraint_;
-    Size restarts_;
-    Real tolerance_;
-    std::string calibrationMethod_;
+    Size maxCalibrationAttempts_;
+    Real earlyExitThreshold_;
+    Real maxAcceptableError_;
     Period minimumPiecewiseCalibrationExpiry_ = 1*Months;
     Period minimumPiecewiseCalibrationStepSize_ = 1*Months;
     HestonProcess::Discretization discretization_;

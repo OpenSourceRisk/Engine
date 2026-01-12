@@ -48,6 +48,11 @@ private:
                             const Matrix& correlation, const Matrix& sqrtCorr,
                             const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
+
+    RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
+                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                       const RandomVariable& addRegressor2) const override;
+
 };
 
 

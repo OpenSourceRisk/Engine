@@ -191,10 +191,11 @@ protected:
     std::vector<Real> hestonInitialValues_; // order: theta, kappa, sigma, rho, v0
     std::vector<bool> hestonFixedValues_; // same order as above
     Real hestonRelaxedFellerConstraint_; // in [0,1], 0 means no constraint, 1 means Feller
-    Size hestonCalibrationRestarts_; // Max. number of initial value sets
+    Size hestonMaxCalibrationAttempts_; // Max. number of initial value sets
     std::vector<Real> hestonMaximumInitialValues_;
-    Real hestonTolerance_; // Implied vol RMSE below which we stop the search -->
-    std::string hestonCalibrationMethod_;
+    std::string hestonCalibrationMethod_; 
+    Real hestonEarlyExitThreshold_; // Stop search when this is reached
+    Real hestonMaxAcceptableError_; // Throw if best solution's error exceeds this
     HestonProcess::Discretization hestonProcessDiscretization_;
     bool debug_;
 };

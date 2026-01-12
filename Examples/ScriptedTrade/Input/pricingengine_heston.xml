@@ -60,7 +60,7 @@
       <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
       <Parameter name="StateGridPoints">24</Parameter>
       <Parameter name="RegressionOrder">2</Parameter>
-      <Parameter name="TimeStepsPerYear">100</Parameter>
+      <Parameter name="TimeStepsPerYear">48</Parameter>
       <!-- asset class specific choices -->
       <Parameter name="Engine_SingleAssetOption(EQ)">MC</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
@@ -79,9 +79,10 @@
       <Parameter name="HestonInitialValues">0.04, 2.0, 0.5, -0.7, 0.04</Parameter>
       <Parameter name="HestonFixedValues">N,N,N,N,N</Parameter>               
       <Parameter name="HestonRelaxedFellerConstraint">0.2</Parameter>
-      <Parameter name="HestonCalibrationRestarts">0</Parameter>      
+      <Parameter name="HestonMaxCalibrationAttempts">0</Parameter>      
       <Parameter name="HestonMaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
-      <Parameter name="HestonTolerance">0.001</Parameter>            
+      <Parameter name="HestonEarlyExitThreshold">0.005</Parameter>            
+      <Parameter name="HestonMaxAcceptableError">0.05</Parameter>            
       <!-- PartialTruncation,
            FullTruncation,
            Reflection,
@@ -92,7 +93,7 @@
            BroadieKayaExactSchemeLaguerre,
            BroadieKayaExactSchemeTrapezoidal -->
       <!--<Parameter name="HestonProcessDiscretization">QuadraticExponentialMartingale</Parameter>-->
-      <Parameter name="HestonProcessDiscretization">Reflection</Parameter>
+      <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
       <Parameter name="Debug">true</Parameter>
     </EngineParameters>
   </Product>

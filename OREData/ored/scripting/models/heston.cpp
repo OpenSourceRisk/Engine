@@ -263,5 +263,15 @@ void Heston::setAdditionalResults() const {
     }
 }
 
+RandomVariable Heston::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
+                           const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
+                           const RandomVariable& addRegressor2) const {
+    RandomVariable result;
+
+    QL_FAIL("Heston::npv not implemented");
+
+    return result;
+}
+
 } // namespace data
 } // namespace ore
