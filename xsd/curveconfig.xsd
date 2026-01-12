@@ -717,7 +717,7 @@
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element name="ExtrapolationMethod" minOccurs="0" maxOccurs="1">
         <xs:simpleType>
-          <xs:restriction base=xs:string">
+          <xs:restriction base="xs:string">
             <xs:enumeration value="ContinuousForward"/>
             <xs:enumeration value="DiscreteForward"/>
           </xs:restriction>
