@@ -3027,7 +3027,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
-                                        quotes[0], false));
+                                        quotes[0], false, baseVol->volType(), baseVol->shift()));
                                 }
                             } else {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
@@ -3052,7 +3052,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     newVol = Handle<BlackVolTermStructure>(
                                         QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                             baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter,
-                                            priceYts, yts, stickyStrike, flatExtrapMoneyness));
+                                            priceYts, yts, stickyStrike, flatExtrapMoneyness, baseVol->volType(),
+                                            baseVol->shift()));
                                 }
                             }
 
