@@ -25,6 +25,8 @@
 
 #include <ql/math/comparison.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
+#include <ql/termstructures/yield/forwardstructure.hpp>
+#include <ql/termstructures/yield/zeroyieldstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
@@ -86,7 +88,7 @@ private:
     \ingroup termstructures
 */
 template <class Interpolator>
-class InterpolatedPillarOnlyZeroCurve : public YieldTermStructure, protected InterpolatedCurve<Interpolator> {
+class InterpolatedPillarOnlyZeroCurve : public ZeroYieldStructure, protected InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
     //@{
@@ -102,9 +104,9 @@ public:
     //@}
 
 protected:
-    //! \name YieldTermStructure implementation
+    //! \name ZeroYieldStructure implementation
     //@{
-    DiscountFactor discountImpl(Time t) const override;
+    DiscountFactor zeroYieldImpl(Time t) const override;
     //@}
 
 private:
@@ -126,7 +128,7 @@ private:
     \ingroup termstructures
 */
 template <class Interpolator>
-class InterpolatedPillarOnlyForwardCurve : public YieldTermStructure, protected InterpolatedCurve<Interpolator> {
+class InterpolatedPillarOnlyForwardCurve : public ForwardRateStructure, protected InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
     //@{
@@ -142,9 +144,10 @@ public:
     //@}
 
 protected:
-    //! \name YieldTermStructure implementation
+    //! \name ForwardRateStructure implementation
     //@{
-    DiscountFactor discountImpl(Time t) const override;
+        Rate forwardImpl(Time t) const override;
+        Rate zeroYieldImpl(Time t) const override;
     //@}
 
 private:
@@ -200,21 +203,29 @@ DiscountFactor InterpolatedPillarOnlyDiscountCurve<Interpolator>::discountImpl(T
 
     // Interpolate on pillars for times within the curve range
     if (t <= this->times_.back()) {
-        return this->interpolation_(t, this->allowsExtrapolation());
+        return this->interpolation_(t, true);
     }
 
     // Flat forward extrapolation beyond the last pillar
     Time tMax = this->times_.back();
     DiscountFactor dMax = this->data_.back();
-    Rate instFwdMax = -this->interpolation_.derivative(tMax) / dMax;
-    return dMax * std::exp(-instFwdMax * (t - tMax));
+    if (extrapolation_ == YieldTermStructure::Extrapolation::ContinuousForward) {
+        Rate instFwdMax = -this->interpolation_.derivative(tMax, true) / dMax;
+        return dMax * std::exp(-instFwdMax * (t - tMax));
+    } else if (extrapolation_ == YieldTermStructure::Extrapolation::DiscreteForward) {
+        Time tMax_m = this->timeFromReference(dates_.back() - 1);
+        DiscountFactor dMax_m = this->interpolation_(tMax_m, true);
+        return dMax * std::pow(dMax / dMax_m, (t - tMax) / (tMax - tMax_m));
+    } else {
+        QL_FAIL("extrapolation method not handled.");
+    }
 }
 
 template <class Interpolator>
 InterpolatedPillarOnlyZeroCurve<Interpolator>::InterpolatedPillarOnlyZeroCurve(
     const Date& referenceDate, const std::vector<Date>& dates, const std::vector<Rate>& zeroRates,
     const DayCounter& dayCounter, const Interpolator& interpolator, const Extrapolation extrapolation)
-    : YieldTermStructure(referenceDate, Calendar(), dayCounter), InterpolatedCurve<Interpolator>(interpolator),
+    : ZeroYieldStructure(referenceDate, Calendar(), dayCounter), InterpolatedCurve<Interpolator>(interpolator),
       extrapolation_(extrapolation), dates_(dates) {
 
     QL_REQUIRE(!dates.empty(), "InterpolatedPillarOnlyZeroCurve: dates cannot be empty");
@@ -237,35 +248,35 @@ template <class Interpolator> Date InterpolatedPillarOnlyZeroCurve<Interpolator>
     return dates_.back();
 }
 
-template <class Interpolator> DiscountFactor InterpolatedPillarOnlyZeroCurve<Interpolator>::discountImpl(Time t) const {
-    // At reference date (t=0), return 1.0 by definition
-    if (t <= 0.0 || QuantLib::close_enough(t, 0.0)) {
-        return 1.0;
-    }
-
-    Rate zeroRate;
-    // For times between t=0 and first pillar, flat extrapolation using first pillar rate
+template <class Interpolator> DiscountFactor InterpolatedPillarOnlyZeroCurve<Interpolator>::zeroYieldImpl(Time t) const {
     if (t < this->times_.front()) {
-        zeroRate = this->data_.front();
+        // For times between t=0 and first pillar, flat extrapolation using first pillar rate
+        return this->data_.front();
+    } else if (t <= this->times_.back()) {
+        // Interpolate on pillars for times within the curve range
+        return this->interpolation_(t, true);
+    } else {
+        // flat fwd extrapolation
+        Time tMax = this->times_.back();
+        Rate zMax = this->data_.back();
+        if (extrapolation_ == YieldTermStructure::Extrapolation::ContinuousForward) {
+            Rate instFwdMax = zMax + tMax * this->interpolation_.derivative(tMax, true);
+            return (zMax * tMax + instFwdMax * (t - tMax)) / t;
+        } else if (extrapolation_ == YieldTermStructure::Extrapolation::DiscreteForward) {
+            Time tMax_m = this->timeFromReference(dates_.back() - 1);
+            Rate dz = this->interpolation_(tMax) - this->interpolation_(tMax_m, true);
+            return (zMax * tMax + dz * (t - tMax) / (tMax - tMax_m)) / t;
+        } else {
+            QL_FAIL("extrapolation method not handled.");
+        }
     }
-    // Interpolate on pillars for times within the curve range
-    else if (t <= this->times_.back()) {
-        zeroRate = this->interpolation_(t, this->allowsExtrapolation());
-    }
-    // Flat extrapolation beyond the last pillar
-    else {
-        zeroRate = this->data_.back();
-    }
-
-    // Convert zero rate to discount factor: DF = exp(-r * t)
-    return std::exp(-zeroRate * t);
 }
 
 template <class Interpolator>
 InterpolatedPillarOnlyForwardCurve<Interpolator>::InterpolatedPillarOnlyForwardCurve(
     const Date& referenceDate, const std::vector<Date>& dates, const std::vector<Rate>& forwardRates,
     const DayCounter& dayCounter, const Interpolator& interpolator, const Extrapolation extrapolation)
-    : YieldTermStructure(referenceDate, Calendar(), dayCounter), InterpolatedCurve<Interpolator>(interpolator),
+    : ForwardRateStructure(referenceDate, Calendar(), dayCounter), InterpolatedCurve<Interpolator>(interpolator),
       extrapolation_(extrapolation), dates_(dates) {
 
     QL_REQUIRE(!dates.empty(), "InterpolatedPillarOnlyForwardCurve: dates cannot be empty");
@@ -289,29 +300,58 @@ template <class Interpolator> Date InterpolatedPillarOnlyForwardCurve<Interpolat
 }
 
 template <class Interpolator>
-DiscountFactor InterpolatedPillarOnlyForwardCurve<Interpolator>::discountImpl(Time t) const {
-    // At reference date (t=0), return 1.0 by definition
-    if (t <= 0.0 || QuantLib::close_enough(t, 0.0)) {
-        return 1.0;
+DiscountFactor InterpolatedPillarOnlyForwardCurve<Interpolator>::forwardImpl(Time t) const {
+    if (t < this->times_.front()) {
+        Rate f = this->data_.front();
+        return f;
     }
 
+    if (t <= this->times_.back()) {
+        return this->interpolation_(t, true);
+    } else {
+        // flat fwd extrapolation
+        if (extrapolation_ == YieldTermStructure::Extrapolation::ContinuousForward) {
+            return this->data_.back();
+        } else if (extrapolation_ == YieldTermStructure::Extrapolation::DiscreteForward) {
+            Time tMax = this->times_.back();
+            Time tMax_m = this->timeFromReference(dates_.back() - 1);
+            Real iMax = this->interpolation_.primitive(tMax, true);
+            Real iMax_m = this->interpolation_.primitive(tMax_m, true);
+            return (iMax - iMax_m) / (tMax - tMax_m);
+        } else {
+            QL_FAIL("extrapolation method not handled.");
+        }
+    }
+}
+
+template <class Interpolator>
+DiscountFactor InterpolatedPillarOnlyForwardCurve<Interpolator>::zeroYieldImpl(Time t) const {
     // For times between t=0 and first pillar, use flat forward from first pillar
     if (t < this->times_.front()) {
         Rate f = this->data_.front();
-        return std::exp(-f * t);
+        return f;
     }
 
     // For times within the curve range, integrate forward rates
+    Real integral;
     if (t <= this->times_.back()) {
-        // Use numerical integration of forward rates
-        return std::exp(-this->interpolation_.primitive(t, this->allowsExtrapolation()));
+        integral = this->interpolation_.primitive(t, true);
+    } else {
+        // flat fwd extrapolation
+        if (extrapolation_ == YieldTermStructure::Extrapolation::ContinuousForward) {
+            integral = this->interpolation_.primitive(this->times_.back(), true) +
+                       this->data_.back() * (t - this->times_.back());
+        } else if (extrapolation_ == YieldTermStructure::Extrapolation::DiscreteForward) {
+            Time tMax = this->times_.back();
+            Time tMax_m = this->timeFromReference(dates_.back() - 1);
+            Real iMax = this->interpolation_.primitive(tMax, true);
+            Real iMax_m = this->interpolation_.primitive(tMax_m, true);
+            integral = iMax + (iMax - iMax_m) * (t - tMax) / (tMax - tMax_m);
+        } else {
+            QL_FAIL("extrapolation method not handled.");
+        }
     }
-
-    // Flat extrapolation beyond the last pillar
-    Rate fMax = this->data_.back();
-    Time tMax = this->times_.back();
-    DiscountFactor dMax = std::exp(-this->interpolation_.primitive(tMax, this->allowsExtrapolation()));
-    return dMax * std::exp(-fMax * (t - tMax));
+    return integral / t;
 }
 
 } // namespace QuantExt
