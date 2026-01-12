@@ -38,7 +38,7 @@ QuantLib::ext::shared_ptr<ore::data::Trade> FxBarrierOptionScriptedEngineBuilder
     std::string startDate = fxKiKoBarrierOption->startDate();
     std::string exerciseDate = optionData.exerciseDates().front();
 
-    ScheduleRules rule(startDate, exerciseDate, "1D", fxKiKoBarrierOption->calendar(), "Following", "Following", "Backward");
+    ScheduleRules rule(startDate, exerciseDate, "1D", fxKiKoBarrierOption->calendar(), "Following", "Unadjusted", "Backward");
     ScheduleData barrierMonitoringDates(rule);
 
     //! Empty transatlantic barrier
@@ -67,7 +67,7 @@ QuantLib::ext::shared_ptr<ore::data::Trade> FxBarrierOptionScriptedEngineBuilder
     std::vector<BarrierData> barriers = fxKiKoBarrierOption->barriers();
     auto barrierOption = QuantLib::ext::make_shared<GenericBarrierOption>(
         underlying, optionData, barriers, barrierMonitoringDates, transatlanticBarrier, domesticCurrency,
-        to_string(paymentDate), to_string(qty), to_string(strike), "", "");
+        to_string(paymentDate), to_string(qty), to_string(strike), "", "KoAlways");
 
     barrierOption->build(engineFactory);
     return barrierOption;

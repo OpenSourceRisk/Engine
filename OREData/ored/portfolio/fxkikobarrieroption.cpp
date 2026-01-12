@@ -85,12 +85,11 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(!barriers_[0].overrideTriggered() && !barriers_[1].overrideTriggered(),
                "FxKIKOBarrierOption::build(): OverrideTriggered not supported by this instrument type.");
 
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxOption");
-    QL_REQUIRE(builder, "No FxOption builder found");
+    
     QuantLib::ext::shared_ptr<FxBarrierOptionScriptedEngineBuilder> fxEuropeanBarrierOptionBuilder;
     try {
         fxEuropeanBarrierOptionBuilder = QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionScriptedEngineBuilder>(
-            engineFactory->builder(tradeType_));
+            engineFactory->builder("FxBarrierOption"));
         DLOG("FxEuropeanBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
     } catch (...) {
         // no delegating builder found
@@ -110,7 +109,8 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
         return;
     }
-
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxOption");
+    QL_REQUIRE(builder, "No FxOption builder found");
 
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);
