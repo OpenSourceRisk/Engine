@@ -128,6 +128,8 @@ void Heston::performCalculationsFd() const {
 
     const Time maturity = timeGrid_.back();
 
+    QuantLib::ext::shared_ptr<QuantExt::FdmBlackScholesMesher> equityMesher;
+    
     if (mesher_ == nullptr || !params_.staticMesher) {
 
         // variance mesher
@@ -153,7 +155,7 @@ void Heston::performCalculationsFd() const {
 
     // 3 set up operator using atmf vol and without discounting, floor forward variances at zero
 
-    // FIXME: Keep this in analogy to the BS local vol case
+    // Keep this in analogy to the BS local vol case
     QuantLib::ext::shared_ptr<QuantExt::FdmQuantoHelper> quantoHelper;
     if (applyQuantoAdjustment_) {
         Real quantoCorr = quantoCorrelationMultiplier_ * getCorrelation()[0][1];
@@ -163,8 +165,6 @@ void Heston::performCalculationsFd() const {
             model_->generalizedBlackScholesProcesses()[1]->x0(), false, true);
     }
 
-    // FIXME
-    // Modify QuantExt:FdmHestonOp in analogy to QuantExt::FdmBlackScholesOp
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(
         mesher_, process, quantoHelper);
 
@@ -183,19 +183,29 @@ void Heston::performCalculationsFd() const {
     // Size tGrid = timeGrid_.size();
     // Size dampingSteps = 0;
     // ext::shared_ptr<FdmInnerValueCalculator> calculator = nullptr;    
-    // FdmSolverDesc solverDesc = { mesher_, boundaries, stepConditions,
+    // FdmSolverDesc solverDesc = { mesher_, boundaries, stepCondition,
     // 				 calculator, maturity,
     // 				 tGrid, dampingSteps };
     // auto solver = ext::make_shared<FdmHestonSolver>(
     //                 Handle<HestonProcess>(process),
     //                 solverDesc, schemeDesc,
-    //                 Handle<FdmQuantoHelper>(quantoHelper));
+    //                 Handle<QuantLib::FdmQuantoHelper>());
     
     // 5 fill random variable with underlying values, these are valid for all times
-    
+
     auto locations = mesher_->locations(0);
+    // auto compositeMesher = QuantLib::ext::dynamic_pointer_cast<FdmMesherComposite>(mesher_);
+    // QL_REQUIRE(compositeMesher, "cast to composite mesher failed");
+    // auto equityMesher = compositeMesher->getFdm1dMeshers().front(); // strong assumption ?
+    // auto locations = equityMesher->locations(0); 
     underlyingValues_ = exp(RandomVariable(locations));
 
+    DLOG("layout dim(): " << to_string(mesher_->layout()->dim()));
+    DLOG("layout size(): " << to_string(mesher_->layout()->size()));
+    DLOG("layout spacing(): " << to_string(mesher_->layout()->spacing()));
+    DLOG("locations.size " << locations.size());
+    DLOG("underlyingValues.size " << underlyingValues_.size());
+    
     // 6 set additional results
 
     setAdditionalResults();

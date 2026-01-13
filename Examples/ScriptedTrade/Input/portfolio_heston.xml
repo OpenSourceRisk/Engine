@@ -121,6 +121,7 @@
   -->
 
   <!-- Analytic pricer -->
+  <!--
   <Trade id="EquityBarrierOptionAnalytic">
     <TradeType>EquityBarrierOption</TradeType>
     <Envelope>
@@ -157,9 +158,11 @@
       <Quantity>1000</Quantity>
     </EquityBarrierOptionData>
   </Trade>  
+  -->
   
   <!-- Equity Barrier Option as scripted trade with daily observations -->
 
+  <!--
   <Trade id="EquityBarrierOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
@@ -254,7 +257,9 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-
+  -->
+  
+  <!--
   <Trade id="RainbowOption">
     <TradeType>ScriptedTrade</TradeType>
     <Envelope>
@@ -307,5 +312,5 @@
       </Data>
     </ScriptedTradeData>
   </Trade>
-  
+  -->
 </Portfolio>
