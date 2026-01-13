@@ -19,6 +19,7 @@
 #include <ored/portfolio/fxkikobarrieroption.hpp>
 #include <ored/portfolio/genericbarrieroption.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/optionpaymentdates.hpp>
 namespace ore {
 namespace data {
 
@@ -35,6 +36,28 @@ struct GenericBarrierOptionData {
     std::string amount;
     std::string kikoType;
 };
+
+QuantLib::Date calculateOptionPaymentDate(const std::string tradeId, const std::string tradeType, 
+                                          const QuantLib::Date& expiryDate,
+                                          const QuantLib::ext::optional<OptionPaymentData>& opd) {
+    Date paymentDate = expiryDate;
+    if (opd) {
+        if (opd->rulesBased()) {
+            const Calendar& cal = opd->calendar();
+            QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+            paymentDate = cal.advance(expiryDate, opd->lag(), Days, opd->convention());
+        } else {
+            if (opd->dates().size() > 1)
+                ore::data::StructuredTradeWarningMessage(tradeId, tradeType, "Trade build",
+                                                         "Found more than 1 payment date. The first one will be used.")
+                    .log();
+            paymentDate = opd->dates().front();
+        }
+        QL_REQUIRE(paymentDate >= expiryDate, "Payment date must be greater than or equal to expiry date.");
+    }
+    return paymentDate;
+}
+
 
 GenericBarrierOptionData parseFxBarrierOption(const ore::data::FxOptionWithBarrier* fxBarrierOption) {
     QL_REQUIRE(fxBarrierOption != nullptr, "FxBarrierOptionScriptedEngineBuilder: internal error, could not "
@@ -79,20 +102,8 @@ GenericBarrierOptionData parseFxBarrierOption(const ore::data::FxOptionWithBarri
     data.transatlanticBarrier = BarrierData();
     data.payCurrency = fxBarrierOption->soldCurrency();
     Date expiryDate = parseDate(exerciseDate);
-    Date paymentDate = expiryDate;
-    const QuantLib::ext::optional<OptionPaymentData>& opd = data.optionData.paymentData();
-    if (opd) {
-        if (opd->rulesBased()) {
-            const Calendar& cal = opd->calendar();
-            QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
-            paymentDate = cal.advance(expiryDate, opd->lag(), Days, opd->convention());
-        } else {
-            const vector<Date>& dates = opd->dates();
-            QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
-            paymentDate = dates[0];
-        }
-        QL_REQUIRE(paymentDate >= expiryDate, "Payment date must be greater than or equal to expiry date.");
-    }
+    Date paymentDate = calculateOptionPaymentDate(fxBarrierOption->id(), fxBarrierOption->tradeType(), expiryDate,
+                                                  data.optionData.paymentData());
     data.settlementDate = to_string(paymentDate);
     data.quantity = to_string(fxBarrierOption->boughtAmount());
     data.strike = to_string(fxBarrierOption->strike());
@@ -125,20 +136,8 @@ GenericBarrierOptionData parseFxKIKOBarrierOptionData(const ore::data::FxKIKOBar
     data.transatlanticBarrier = BarrierData();
     data.payCurrency = fxKiKoBarrierOption->soldCurrency();
     Date expiryDate = parseDate(exerciseDate);
-    Date paymentDate = expiryDate;
-    const QuantLib::ext::optional<OptionPaymentData>& opd = data.optionData.paymentData();
-    if (opd) {
-        if (opd->rulesBased()) {
-            const Calendar& cal = opd->calendar();
-            QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
-            paymentDate = cal.advance(expiryDate, opd->lag(), Days, opd->convention());
-        } else {
-            const vector<Date>& dates = opd->dates();
-            QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
-            paymentDate = dates[0];
-        }
-        QL_REQUIRE(paymentDate >= expiryDate, "Payment date must be greater than or equal to expiry date.");
-    }
+    Date paymentDate = calculateOptionPaymentDate(fxKiKoBarrierOption->id(), fxKiKoBarrierOption->tradeType(), expiryDate,
+                                                  data.optionData.paymentData());
     data.settlementDate = to_string(paymentDate);
     data.quantity = to_string(fxKiKoBarrierOption->boughtAmount());
     data.strike = to_string(fxKiKoBarrierOption->strike());
