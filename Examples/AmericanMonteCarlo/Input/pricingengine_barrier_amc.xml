@@ -39,6 +39,18 @@
       <Parameter name="TrainingSeed">42</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="FxEuropeanBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters />
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters />
+  </Product>
+  <Product type="FxBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters />
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters />
+  </Product>
   <Product type="FxOption">
     <Model>CrossAssetModel</Model>
     <ModelParameters/>
