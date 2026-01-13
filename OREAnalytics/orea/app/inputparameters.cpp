@@ -78,7 +78,6 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
         refDataManager_->setRDMOverride(rdmOverride);
 
     // Ibor fallback config loading - must come before curve config loading
-    iborFallbackConfig_ = ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
     inputs->loadParameterXML<IborFallbackConfig>(iborFallbackConfig_, "setup", "iborFallbackConfig");
     inputs->loadParameter<bool>(iborFallbackOverride_, "setup", "iborFallbackOverride", false, parseBool);
     if (iborFallbackOverride_) {
@@ -231,6 +230,7 @@ vector<string> getFileNames(const string& fileString, const std::filesystem::pat
 }
 
 InputParameters::InputParameters() {
+    setupVariables_.iborFallbackConfig_ = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
     simmBucketMapper_ = ext::make_shared<SimmBucketMapperBase>();
 }
 
