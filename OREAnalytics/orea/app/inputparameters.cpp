@@ -242,7 +242,7 @@ bool checkString(const std::string& obj) { return true; }
 
 std::string InputParameters::loadParameterString(const std::string& analytic, const std::string& param,
                                                          bool mandatory) {
-    if (parameters_.has(analytic, param))
+    if (parameters_.hasGroup(analytic) && parameters_.has(analytic, param))
         return parameters_.getString(analytic, param, mandatory);
     else
         return std::string();

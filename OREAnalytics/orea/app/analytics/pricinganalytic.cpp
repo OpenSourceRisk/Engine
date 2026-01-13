@@ -53,6 +53,7 @@ void PricingAnalyticImpl::setUpConfigurations() {
                                  std::function<bool(const string&)>(parseBool));
     inputs_->loadParameter<string>(curvesGrid_, "curves", "grid", false);
     inputs_->loadParameter<string>(curvesMarketConfig_, "curves", "configuration", false);
+    inputs_->loadParameter<string>(curvesCalendar_, "curves", "calendar", false);
 }
 
 void PricingAnalyticImpl::runAnalytic( 
@@ -114,8 +115,8 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                DateGrid grid(inputs_->curvesGrid(), parseCalendar(inputs_->curvesCalendar()));
-                std::string config = inputs_->curvesMarketConfig();
+                DateGrid grid(curvesGrid_, parseCalendar(curvesCalendar_));
+                std::string config = curvesMarketConfig_;
                 ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());
