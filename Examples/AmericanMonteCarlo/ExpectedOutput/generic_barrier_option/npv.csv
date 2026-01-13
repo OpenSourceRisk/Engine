@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+generic_barrier_option_fx_raw_kiko,ScriptedTrade,2022-03-04,0.087671,7936.921587,USD,7936.921587,USD,1080000.00,USD,1080000.00,CPTY_A,CPTY_A
+generic_fx_barrier_option,FxGenericBarrierOption,2022-03-04,0.087671,7936.921587,USD,7936.921587,USD,1080000.00,USD,1080000.00,CPTY_A,CPTY_A
