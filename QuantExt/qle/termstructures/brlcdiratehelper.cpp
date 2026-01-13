@@ -20,6 +20,7 @@
 #include <ql/utilities/null_deleter.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
+#include <qle/utilities/ratehelpers.hpp>
 
 using namespace QuantLib;
 
@@ -28,10 +29,13 @@ namespace QuantExt {
 BRLCdiRateHelper::BRLCdiRateHelper(const Period& swapTenor, const Handle<Quote>& fixedRate,
                                    const QuantLib::ext::shared_ptr<BRLCdi>& brlCdiIndex, const bool brlCdiIndexGiven,
                                    const Handle<YieldTermStructure>& discountingCurve, const bool discountCurveGiven,
-                                   const bool telescopicValueDates)
+                                   const bool telescopicValueDates, QuantLib::Pillar::Choice pillarChoice,
+                                   const Date& customPillarDate)
     : RelativeDateRateHelper(fixedRate), swapTenor_(swapTenor), brlCdiIndex_(brlCdiIndex),
-      brlCdiIndexGiven_(brlCdiIndexGiven), telescopicValueDates_(telescopicValueDates),
+      brlCdiIndexGiven_(brlCdiIndexGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice),
       discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven) {
+
+    pillarDate_ = customPillarDate;
 
     QL_REQUIRE(!(brlCdiIndexGiven_ && discountCurveGiven_), "Have both curves nothing to solve for.");
 
@@ -70,9 +74,14 @@ void BRLCdiRateHelper::initializeDates() {
     // Set the pricing engine
     swap_->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));
 
-    // Update earliest and latest dates
     earliestDate_ = swap_->startDate();
-    latestDate_ = swap_->maturityDate();
+    maturityDate_ = swap_->maturityDate();
+
+    Date lastPaymentDate = std::max(swap_->overnightLeg().back()->date(), swap_->fixedLeg().back()->date());
+    latestRelevantDate_ = std::max(maturityDate_, lastPaymentDate);
+
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void BRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {

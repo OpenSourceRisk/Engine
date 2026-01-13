@@ -137,10 +137,15 @@ public:
 private:
     struct RateHelperData {
         QuantLib::ext::shared_ptr<QuantLib::RateHelper> rateHelper;
+        Date mainPillarDate;
+        std::set<Date> addPillarDates;
         std::string rateHelperType;
         std::string mdQuoteLabel;
         double mdQuoteValue;
         std::function<std::vector<TradeCashflowReportData>()> cashflowGenerator;
+        std::function<double()> quoteErrorGenerator;
+        Date minPillarDate() const; // Date::maxDate() if rh has no pillar dates
+        Date maxPillarDate() const; // Date::minDate() if rh has no pillar dates
     };
 
     Date asofDate_;
@@ -162,7 +167,7 @@ private:
     std::vector<RelinkableHandle<YieldTermStructure>> h_;
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> p_;
     std::vector<QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> calibrationInfo_;
-    std::vector<std::vector<std::function<std::vector<TradeCashflowReportData>()>>> rateHelperCashflowGenerator_;
+    std::vector<std::vector<RateHelperData>> rateHelperData_;
 
     void buildBootstrappedCurve(const std::set<std::size_t>& indices);
 
@@ -198,13 +203,14 @@ private:
 
     map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;
 
-    std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, const MultiCurveBootstrapContributor*>
+    std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, std::vector<Date>>
     buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
-                        const vector<RateHelperData>& instruments);
+                        vector<RateHelperData>& instruments);
 
     QuantLib::ext::shared_ptr<YieldTermStructure>
     flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::shared_ptr<YieldTermStructure>& yieldts,
-                          const std::size_t mixedInterpolationSize, const vector<RateHelperData>& instruments);
+                          const std::size_t mixedInterpolationSize, const vector<RateHelperData>& instruments,
+                          const std::vector<Date>& curvePillarDates);
 
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,

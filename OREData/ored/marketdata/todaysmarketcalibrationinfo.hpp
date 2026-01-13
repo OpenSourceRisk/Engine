@@ -48,19 +48,19 @@ struct YieldCurveCalibrationInfo {
     std::string dayCounter;
     std::string currency;
 
+    // these are all curve pillar dates used for interpolation or overwritten by report config date list
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
-    // the following are all empty or corresponding to pillarDates, if these were not overwritten manually
+
+    // a rate helper can have 0...n pillar dates associated to it in general
+    std::vector<std::set<QuantLib::Date>> rateHelperPillarDates;
     std::vector<std::string> mdQuoteLabels;
     std::vector<double> mdQuoteValues;
     std::vector<std::string> rateHelperTypes;
     std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
-};
-
-struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
-    // ... add instrument types?
+    std::vector<double> rateHelperQuoteErrors;
 };
 
 struct FittedBondCurveCalibrationInfo : public YieldCurveCalibrationInfo {

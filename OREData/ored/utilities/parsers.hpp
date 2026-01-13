@@ -26,6 +26,7 @@
 
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/utilities/log.hpp>
 
@@ -585,11 +586,32 @@ CreditPortfolioSensitivityDecomposition parseCreditPortfolioSensitivityDecomposi
 //! Output operator for CreditPortfolioSensitivityDecomposition
 std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecomposition d);
 
-//! Convert text to QuantLib::Pillar::Choice
+//! Convert text to YieldCurveSegment::Type
 /*!
 \ingroup utilities
 */
-QuantLib::Pillar::Choice parsePillarChoice(const std::string& s);
+YieldCurveSegment::Type parseYieldCurveSegment(const string& s);
+
+//! Output operator for YieldCurveSegment::Type
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::Type c);
+
+//! Convert text to YieldCurveConfig::PillarChoice
+/*!
+\ingroup utilities
+*/
+YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s);
+
+//! Output operator for YieldCurveConfig::PillarChoice
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::PillarChoice c);
+
+//! Convert text to YieldCurveConfig::DuplicatePillarPolicy
+/*!
+\ingroup utilities
+*/
+YieldCurveSegment::DuplicatePillarPolicy parseDuplicatePillarPolicy(const std::string& s);
+
+//! Output operator for YieldCurveConfig::DuplicatePillarPolicy
+std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::DuplicatePillarPolicy c);
 
 //! Convert text to QuantExt::McMultiLegBaseEngine::RegressorModel
 /*!
