@@ -533,6 +533,7 @@ void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
             try {
                 trade = TradeFactory::instance().build(tradeType);
                 trade->id() = id;
+                trade->isSubTrade() = false;
                 Envelope componentEnvelope;
                 if (XMLNode* envNode = XMLUtils::getChildNode(n, "Envelope")) {
                    componentEnvelope.fromXML(envNode);
@@ -565,8 +566,10 @@ vector<QuantLib::ext::shared_ptr<Trade>> PortfolioBasketReferenceDatum::getTrade
     auto portfolio = QuantLib::ext::make_shared<Portfolio>();
     portfolio->fromXMLString(tradecomponents_);
     vector<QuantLib::ext::shared_ptr<Trade>> result;
-    for (auto const& t : portfolio->trades())
+    for (auto const& t : portfolio->trades()) {
+        t.second->isSubTrade() = true;
         result.push_back(t.second);
+    }
     return result;
 }
 
