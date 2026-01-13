@@ -11,4 +11,9 @@
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
   </OIS>
+  <Deposit>
+    <Id>GBP-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>GBP-SONIA</Index>
+  </Deposit>
 </Conventions>

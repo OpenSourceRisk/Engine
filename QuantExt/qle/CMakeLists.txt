@@ -144,7 +144,6 @@ instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
-instruments/oiccbasisswap.cpp
 instruments/outperformanceoption.cpp
 instruments/pairwisevarianceswap.cpp
 instruments/payment.cpp
@@ -332,7 +331,6 @@ pricingengines/numericlgmbgsflexiswapengine.cpp
 pricingengines/numericlgmcallablebondengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
-pricingengines/oiccbasisswapengine.cpp
 pricingengines/pairwisevarianceswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
@@ -401,7 +399,6 @@ termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpicurve.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/interpolateddiscountcurve2.cpp
-termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
@@ -668,7 +665,6 @@ instruments/makeoiscapfloor.hpp
 instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
-instruments/oiccbasisswap.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
 instruments/payment.hpp
@@ -910,7 +906,6 @@ pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
-pricingengines/oiccbasisswapengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 pricingengines/tflattice.hpp
@@ -1015,7 +1010,6 @@ termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
-termstructures/oiccbasisswaphelper.hpp
 termstructures/oiscapfloorhelper.hpp
 termstructures/oisratehelper.hpp
 termstructures/optionletcurve.hpp
@@ -1089,6 +1083,7 @@ utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/localiborcouponsettings.hpp
 utilities/mcstats.hpp
 utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp

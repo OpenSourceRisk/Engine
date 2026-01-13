@@ -205,6 +205,7 @@ public:
     void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
+    void setCurvesCalendar(const std::string& s) { curvesCalendar_ = s; }
     void setCalendarAdjustment(const std::string& xml);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
     void setCurrencyConfig(const std::string& xml);
@@ -692,6 +693,7 @@ public:
     std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
     const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
     const std::string& curvesGrid() const { return curvesGrid_; }
+    const std::string& curvesCalendar() const { return curvesCalendar_; }
 
     /*****************************
      * Getters for sensi analytics
@@ -1168,6 +1170,7 @@ protected:
     bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
+    std::string curvesCalendar_ = "TARGET";
     bool outputTodaysMarketCalibration_ = true;
     std::size_t todaysMarketCalibrationPrecision_ = 8;
 
