@@ -19,7 +19,7 @@
 #include <ored/portfolio/fxkikobarrieroption.hpp>
 #include <ored/portfolio/genericbarrieroption.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/optionpaymentdates.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 namespace ore {
 namespace data {
 
