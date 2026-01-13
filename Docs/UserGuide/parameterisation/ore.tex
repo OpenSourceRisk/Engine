@@ -233,6 +233,7 @@ the list above.
     <Parameter name="active">Y</Parameter>
     <Parameter name="configuration">default</Parameter>
     <Parameter name="grid">240,1M</Parameter>
+    <Parameter name="calendar">TARGET</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
     <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     <Parameter name="todaysMarketCalibrationPrecision">8</Parameter>
@@ -282,9 +283,10 @@ if a payment is not a coupon payment.
 The curves analytic exports all yield curves that have been built according to the specification in {\tt
   todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets
 section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of
-240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on
-this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
-a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
+240 monthly time steps from today. The optional key {\tt calendar} defines the calendar that is used to roll out the
+grid, it defaults to TARGET. The discount factors for all curves with configuration default will be exported on this
+monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by a
+comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
 
 The {\tt outputTodaysMarketCalibration} parameter controls whether calibration information for the built market objects
 is written to a report. When set to Y, a detailed calibration report is generated. The {\tt todaysMarketCalibrationPrecision}

@@ -1263,11 +1263,21 @@ This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning
 \item \lstinline!DontThrowSteps! [Optional]:
 This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning of this node is given in the description of the \lstinline!DontThrow! node. This node should hold a positive integer. If omitted, the default value is 10.
 
-\item \lstinline!Global! [Optional]: This nodes specifies whether the curve should use a global bootstrap over all
-  instruments of the curve (true) or iterative bootstrap (false, default value). If global bootstrap is used, only the
-  Accuracy field of the BootstrapConfig is relevant and specifies the accuracy of the global optimizer. If a cycle is
-  present in the dependency graph of the curves, all members of the cycle must use global bootstrap, in this case a
-  global optimization is run over all instrument of all members of the cycle simultaneously.
+\item \lstinline!Global! [Optional]: Defaults to false. This nodes specifies whether the curve should use a global
+  bootstrap over all instruments of the curve (true) or iterative bootstrap (false, default value). If global bootstrap
+  is used, only the fields Accuracy and SmoothnessLambda of the BootstrapConfig are relevant. Accurcy specifies the
+  accuracy of the global optimizer in this case.  Global bootstrap is required to build curves that form a cycle in the
+  dependency graph, in this case all members of the cycle must have Global set to true in their bootstrap configs. In
+  this case a global optimization is run over all instrument of all members of the cycle simultaneously. Global
+  bootstrap is also required if according to the PillarChoice configuration of each segment there are curve instrument
+  without or with more than one associated curve pillar date. Finally, global bootstrap can be preferable over iterative
+  bootstrap if the latter requires an outer convergence loop, i.e. if a pillar choice is not set to LastRelevatDate or
+  if the interpolation is non-local.
+
+\item \lstinline!SmoothnessLambda! [Optional]: Defaults to zero. Only applies if GLobal is set to true. If positive,
+  penalty components are included in the global optimization used to build a curve. For each adjacent pair of discrete
+  forward rates $F_i$, $F_{i+1}$ between curve interpolation pillars, the term $\lambda\cdot(F_{i+1} - F_i)$ is added to
+  the target function vector of which the MSE is optimized.
 
 \end{itemize}
 

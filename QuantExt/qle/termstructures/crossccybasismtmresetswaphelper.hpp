@@ -77,7 +77,8 @@ public:
         QuantLib::ext::optional<Size> domesticRateCutoff = QuantLib::ext::nullopt,
         QuantLib::ext::optional<bool> domesticIsAveraged = QuantLib::ext::nullopt,
         const bool telescopicValueDates = false,
-        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+        const QuantLib::Date& customPillarDate = Date());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;

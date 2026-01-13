@@ -42,7 +42,8 @@ public:
                          const QuantLib::ext::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatDayCount,
                          const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                          QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding,
-                         QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
+                         QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                         const QuantLib::Date& customPillarDate = QuantLib::Date());
 
     //! \name RateHelper interface
     //@{
