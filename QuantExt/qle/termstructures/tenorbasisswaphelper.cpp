@@ -31,7 +31,8 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(
     const QuantLib::ext::shared_ptr<IborIndex>& receiveIndex, const Handle<YieldTermStructure>& discountingCurve,
     const bool payIndexGiven, const bool receiveIndexGiven, const bool discountingGiven, const bool spreadOnRec,
     const bool includeSpread, const Period& payFrequency, const Period& recFrequency, const bool telescopicValueDates,
-    const QuantExt::SubPeriodsCoupon1::Type type, QuantLib::Pillar::Choice pillarChoice)
+    const QuantExt::SubPeriodsCoupon1::Type type, QuantLib::Pillar::Choice pillarChoice,
+    const QuantLib::Date& customPillarDate)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
       payIndexGiven_(payIndexGiven), receiveIndexGiven_(receiveIndexGiven), discountingGiven_(discountingGiven),
       spreadOnRec_(spreadOnRec), includeSpread_(includeSpread), payFrequency_(payFrequency),
@@ -121,6 +122,9 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(
     registerWith(payIndex_);
     registerWith(receiveIndex_);
     registerWith(discountHandle_);
+
+    pillarDate_ = customPillarDate;
+
     initializeDates();
 }
 
@@ -152,7 +156,8 @@ void TenorBasisSwapHelper::initializeDates() {
     latestRelevantDate_ = determineLatestRelevantDate(
         swap_->legs(), {(spreadOnRec_ && payIndexGiven_) || (!spreadOnRec_ && !payIndexGiven_),
                         (spreadOnRec_ && !payIndexGiven_) || (!spreadOnRec_ && payIndexGiven_)});
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {

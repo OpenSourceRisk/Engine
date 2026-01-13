@@ -118,9 +118,7 @@ void IrModelData::reset() {
 
 void IrModelData::fromXML(XMLNode* node) {
     std::string calibTypeString = XMLUtils::getChildValue(node, "CalibrationType", true);
-    
     calibrationType_ = parseCalibrationType(calibTypeString);
-    LOG(name_ + " with calibrationType_ = " << qualifier_);
 }
 
 XMLNode* IrModelData::toXML(XMLDocument& doc) const {

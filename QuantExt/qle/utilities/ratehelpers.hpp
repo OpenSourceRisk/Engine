@@ -30,7 +30,8 @@ namespace QuantExt {
 QuantLib::Date determineLatestRelevantDate(const std::vector<QuantLib::Leg>& legs,
                                            const std::vector<bool>& includeIndexEstimationEndDate = {});
 
-QuantLib::Date determinePillarDate(const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& maturityDate,
+QuantLib::Date determinePillarDate(const QuantLib::Date& presetPillarDate, const QuantLib::Pillar::Choice pillarChoice,
+                                   const QuantLib::Date& startDate, const QuantLib::Date& maturityDate,
                                    const QuantLib::Date& latestRelevantDate);
 
 } // namespace QuantExt

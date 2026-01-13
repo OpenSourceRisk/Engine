@@ -50,6 +50,7 @@ public:
                                const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false,
                                const bool telescopicValueDates_ = false,
                                const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                               const QuantLib::Date& customPillarDate = QuantLib::Date(),
                                const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
                                const std::vector<Calendar>& spotFXSettleCalendar = std::vector<Calendar>(),
                                QuantLib::ext::optional<bool> includeSpread = QuantLib::ext::nullopt,

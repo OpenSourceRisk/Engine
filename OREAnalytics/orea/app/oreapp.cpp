@@ -949,6 +949,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setCurvesGrid(tmp);
 
+    tmp = params_->get("curves", "calendar", false);
+    if (tmp != "")
+        setCurvesCalendar(tmp);
+
     tmp = params_->get("curves", "configuration", false);
     if (tmp != "")
         setCurvesMarketConfig(tmp);
