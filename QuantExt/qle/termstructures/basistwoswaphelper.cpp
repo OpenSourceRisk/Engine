@@ -26,19 +26,17 @@
 
 namespace QuantExt {
 
-BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period& swapTenor, const Calendar& calendar,
-                                       // Long tenor swap
-                                       Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
-                                       const DayCounter& longFixedDayCount,
-                                       const QuantLib::ext::shared_ptr<IborIndex>& longIndex, bool longIndexGiven,
-                                       // Short tenor swap
-                                       Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
-                                       const DayCounter& shortFixedDayCount,
-                                       const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort,
-                                       bool shortIndexGiven,
-                                       // Discount curve
-                                       const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven,
-                                       const QuantLib::Pillar::Choice pillarChoice)
+BasisTwoSwapHelper::BasisTwoSwapHelper(
+    const Handle<Quote>& spread, const Period& swapTenor, const Calendar& calendar,
+    // Long tenor swap
+    Frequency longFixedFrequency, BusinessDayConvention longFixedConvention, const DayCounter& longFixedDayCount,
+    const QuantLib::ext::shared_ptr<IborIndex>& longIndex, bool longIndexGiven,
+    // Short tenor swap
+    Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention, const DayCounter& shortFixedDayCount,
+    const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort, bool shortIndexGiven,
+    // Discount curve
+    const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven,
+    const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), calendar_(calendar),
       longFixedFrequency_(longFixedFrequency), longFixedConvention_(longFixedConvention),
       longFixedDayCount_(longFixedDayCount), longIndex_(longIndex), longIndexGiven_(longIndexGiven),
@@ -62,6 +60,8 @@ BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period
     } else if (!longIndexGiven_ && !shortIndexGiven_) {
         QL_FAIL("Need at least one of the indices to have a valid curve.");
     }
+
+    pillarDate_ = customPillarDate;
 
     registerWith(longIndex_);
     registerWith(shortIndex_);
@@ -100,7 +100,8 @@ void BasisTwoSwapHelper::initializeDates() {
     latestRelevantDate_ =
         std::max(determineLatestRelevantDate(shortSwap_->legs(), {!shortIndexGiven_, !shortIndexGiven_}),
                  determineLatestRelevantDate(longSwap_->legs(), {!longIndexGiven_, !longIndexGiven_}));
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {
