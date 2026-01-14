@@ -4,6 +4,7 @@ FROM ${WHEEL_IMG}
 
 ARG CMAKE_BUILD_TYPE=Release
 ARG NUM_CORES=16
+ARG WHEELS_VERSION
 
 COPY CMakeLists.txt /ore/CMakeLists.txt
 COPY QuantLib /ore/QuantLib
@@ -12,6 +13,7 @@ COPY OREData /ore/OREData
 COPY OREAnalytics /ore/OREAnalytics
 COPY ThirdPartyLibs /ore/ThirdPartyLibs
 COPY cmake /ore/cmake
+COPY Docker/update_version_number.py /ore
 
 RUN \
 dnf -y install clang && \
@@ -24,6 +26,7 @@ ENV CCACHE_MAXSIZE="10G"
 
 WORKDIR /ore
 RUN \
+python3 update_version_number.py -f version.hpp -v ${WHEELS_VERSION} && \
 mkdir build && \
 cd build && \
 cmake .. -GNinja -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER $([ "$(uname -m)" = "x86_64" ] && echo "-mavx2")" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_TEST_SUITE=OFF -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_ENABLE_SESSIONS=ON -DORE_BUILD_APP=OFF -DORE_BUILD_DOC=OFF -DORE_BUILD_EXAMPLES=OFF -DORE_BUILD_SWIG=OFF -DORE_BUILD_TESTS=OFF -DORE_ENABLE_OPENCL=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_PYTHON_INTEGRATION=OFF
