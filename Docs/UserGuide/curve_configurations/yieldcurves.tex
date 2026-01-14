@@ -56,11 +56,19 @@ explicitly supplied, it takes precedence for backwards compatibility purposes.
 \item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
 the element is omitted or left blank, then it defaults to \emph{True}.
 
-\item ExcludeT0FromInterpolation [Optional]: Set to \emph{True} to exclude the synthetic time-zero (t0) point from
-yield curve interpolation. When enabled, the curve interpolates only on actual market pillar dates, while still
-ensuring proper behavior at the reference date (e.g., $DF(t_0) = 1.0$ for discount curves). This is useful when the
-first market pillar date does not coincide with the as-of date and you want to avoid including a synthetic point in
-the interpolation.
+\item ExtrapolationMethod [Optional]: Only applies to bootstrapped curves and interpolated zero / discount curves.
+Controls how the curve is extrapolated:
+\begin{itemize}
+\item \emph{ContinuousForward}: The instantaneous forward rate at the last curve pillar date $T$ is kept constant
+\item \emph{DiscreteForward}: The discrete forward rate between $T-1$ and $T$ is kept constant, where $T$ is the last
+curve pillar date and $T-1$ lies one calendar day before $T$.
+\end{itemize}
+
+\item ExcludeT0FromInterpolation [Optional]: Only applies to bootstrapped curves and interpolated zero / discount curves.
+Set to \emph{True} to exclude the  synthetic time-zero (t0) point from yield curve interpolation. When enabled, the curve
+interpolates only on actual market pillar dates, while still ensuring proper behavior at the reference date
+(e.g., $DF(t_0) = 1.0$ for discount curves). This is useful when the first market pillar date does not coincide with the
+as-of date and you want to avoid including a synthetic point in the interpolation.
 
 This feature is supported for all three interpolation variables:
 \begin{itemize}
