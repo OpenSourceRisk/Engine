@@ -24,6 +24,7 @@
 #pragma once
 
 #include <qle/math/covariancesalvage.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
@@ -156,6 +157,8 @@ public:
 
 protected:
     std::unique_ptr<BacktestArgs> btArgs_;
+    // Todays market parameters used to map DiscountCurve nodes
+    QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysmarket_;
 
     void initialise() override;
     
@@ -182,7 +185,8 @@ protected:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     virtual bool runTradeDetail(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     ore::data::TimePeriod covariancePeriod() const override { return btArgs_->benchmarkPeriod_; }
-    void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+    void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                        const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig) override;
     
     void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                             const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,

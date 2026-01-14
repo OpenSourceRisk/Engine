@@ -269,7 +269,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     
     bool runDetailTrd = runTradeDetail(reports);
     bool runDetailRF = runRiskFactorDetail(reports);
-    addPnlCalculators(reports);
+    addPnlCalculators(reports, multiThreadArgs_->todaysMarketParams_);
 
     // Loop over all the risk groups
     riskGroups_->reset();

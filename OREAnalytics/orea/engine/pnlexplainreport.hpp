@@ -69,7 +69,8 @@ protected:
     void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
                                     const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                                     const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
-    void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+    void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports, 
+                            const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig = nullptr) override;
     void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
                         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;

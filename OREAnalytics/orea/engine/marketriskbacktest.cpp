@@ -88,12 +88,14 @@ bool MarketRiskBacktest::runTradeDetail(const ext::shared_ptr<MarketRiskReport::
     return requireTradePnl_ || trdDetail;
 }
 
-void MarketRiskBacktest::addPnlCalculators(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+void MarketRiskBacktest::addPnlCalculators(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
+                                const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig) {
     pnlCalculators_.push_back(
         QuantLib::ext::make_shared<PNLCalculator>(btArgs_->benchmarkPeriod_));
     auto btRpts = ext::dynamic_pointer_cast<BacktestReports>(reports);
     pnlCalculators_.push_back(
         QuantLib::ext::make_shared<BacktestPNLCalculator>(btArgs_->backtestPeriod_, writePnl_, this, btRpts));
+    todaysmarket_ = marketConfig;
 }
 
 
@@ -372,6 +374,7 @@ void MarketRiskBacktest::createReports(const ext::shared_ptr<MarketRiskReport::R
         if (pnl) {
             for (const auto& t : pnlColumns())
                 pnl->addColumn(std::get<0>(t), std::get<1>(t), std::get<2>(t));
+            pnl->addColumn("DiscountSpec", string());
         }
     }
 
@@ -381,6 +384,7 @@ void MarketRiskBacktest::createReports(const ext::shared_ptr<MarketRiskReport::R
             pnlTrade->addColumn("TradeId", string());
             for (const auto& t : pnlColumns())
                 pnlTrade->addColumn(std::get<0>(t), std::get<1>(t), std::get<2>(t));
+            pnlTrade->addColumn("DiscountSpec", string());
         }
     }
 }
@@ -453,6 +457,20 @@ void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestRepor
         .add(currency.empty() || currency == calculationCurrency_ ? deltaPnl : deltaPnl / fxSpot)
         .add(currency.empty() || currency == calculationCurrency_ ? gammaPnl : gammaPnl / fxSpot)
         .add(currency.empty() ? calculationCurrency_ : currency);
+
+    // Append DiscountSpec column (from TodaysMarketParameters) if available and applicable
+    std::string discountSpecStr;
+    if (todaysmarket_ && key_1.keytype == QuantExt::RiskFactorKey::KeyType::DiscountCurve) {
+        const auto& discMap = todaysmarket_->mapping(ore::data::MarketObject::DiscountCurve, ore::data::Market::defaultConfiguration);
+        auto it = discMap.find(key_1.name);
+        if (it != discMap.end()){
+            discountSpecStr = it->second;
+        }     
+    }
+    if (!discountSpecStr.empty())
+        report.add(discountSpecStr);
+    else
+        report.add(string());
 }
 
 void BacktestPNLCalculator::writePNL(Size scenarioIdx, bool isCall, const RiskFactorKey& key_1, Real shift_1,
