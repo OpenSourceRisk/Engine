@@ -636,9 +636,14 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
             engineParameter("RegressionVarianceCutoff", getModelEngineQualifiers(), false, std::string()));
         params_.externalDeviceCompatibilityMode = externalDeviceCompatibilityMode_;
     } else if (engineParam_ == "FD") {
-        modelSize_ = parseInteger(engineParameter("StateGridPoints", getModelEngineQualifiers()));
-        params_.mesherEpsilon =
-            parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
+        params_.stateGridPoints = parseInteger(engineParameter("StateGridPoints", getModelEngineQualifiers()));
+	if (modelParam_ == "Heston") 
+	    params_.varianceStateGridPoints = parseInteger(engineParameter("VarianceStateGridPoints", getModelEngineQualifiers()));
+	else
+	    params_.varianceStateGridPoints = 1;
+        modelSize_ = params_.stateGridPoints * params_.varianceStateGridPoints;
+	params_.mesherEpsilon =
+	    parseReal(engineParameter("MesherEpsilon", getModelEngineQualifiers(), false, "1.0E-4"));
         params_.mesherScaling = parseReal(engineParameter("MesherScaling", getModelEngineQualifiers(), false, "1.5"));
         params_.mesherConcentration =
             parseReal(engineParameter("MesherConcentration", getModelEngineQualifiers(), false, "0.1"));

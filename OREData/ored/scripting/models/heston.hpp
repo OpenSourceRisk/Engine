@@ -53,6 +53,8 @@ private:
                        const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                        const RandomVariable& addRegressor2) const override;
 
+    Real extractT0Result(const RandomVariable& value) const override;
+
 };
 
 

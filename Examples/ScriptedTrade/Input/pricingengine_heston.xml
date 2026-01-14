@@ -58,9 +58,10 @@
       <Parameter name="Samples">10000</Parameter>
       <Parameter name="SalvagingAlgorithm">None</Parameter>
       <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
-      <Parameter name="StateGridPoints">24</Parameter>
+      <Parameter name="StateGridPoints">50</Parameter>
+      <Parameter name="VarianceStateGridPoints">40</Parameter>
       <Parameter name="RegressionOrder">2</Parameter>
-      <Parameter name="TimeStepsPerYear">48</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
       <!-- asset class specific choices -->
       <Parameter name="Engine_SingleAssetOption(EQ)">MC</Parameter>
       <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
@@ -72,7 +73,7 @@
       <!-- ConstantBestFit, PiecewiseBootstrap, PiecewiseBestFit -->
       <Parameter name="HestonCalibrationMethod">ConstantBestFit</Parameter>
       <Parameter name="CalibrationMoneyness">-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0</Parameter>
-      <Parameter name="HestonCalibrationExpiries">1M,2M,3M,6M</Parameter>
+      <Parameter name="HestonCalibrationExpiries">3M</Parameter>
       <Parameter name="HestonCalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y, 15M, 18M, 21M, 2Y, 5Y, 7Y, 10Y</Parameter>
       <!-- ordering: theta, kappa, sigma, rho, v0 -->
       <Parameter name="HestonInitialValues">0.04, 2.0, 0.5, -0.7, 0.04</Parameter>

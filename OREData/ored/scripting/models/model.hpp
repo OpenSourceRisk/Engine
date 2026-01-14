@@ -74,6 +74,8 @@ public:
         Real mesherConcentration = 0.1;
         Size mesherMaxConcentratingPoints = 9999;
         bool staticMesher = false;
+        Size stateGridPoints = 24;
+        Size varianceStateGridPoints = 50;
     };
 
     explicit Model(const Size n) : n_(n) {}

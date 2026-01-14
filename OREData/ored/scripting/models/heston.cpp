@@ -22,6 +22,7 @@
 #include <qle/methods/fdmblackscholesmesher.hpp>
 #include <qle/methods/fdmblackscholesop.hpp>
 #include <qle/methods/fdmhestonop.hpp>
+#include <ql/math/interpolations/bicubicsplineinterpolation.hpp>
 #include <ql/methods/finitedifferences/meshers/fdmblackscholesmesher.hpp>
 #include <ql/methods/finitedifferences/meshers/fdmblackscholesmultistrikemesher.hpp>
 #include <ql/methods/finitedifferences/meshers/fdmhestonvariancemesher.hpp>
@@ -128,19 +129,18 @@ void Heston::performCalculationsFd() const {
 
     const Time maturity = timeGrid_.back();
 
-    QuantLib::ext::shared_ptr<QuantExt::FdmBlackScholesMesher> equityMesher;
-    
     if (mesher_ == nullptr || !params_.staticMesher) {
 
         // variance mesher
-        const Size vGrid = 50; // FIXME: Add a "VarianceStateGridPoints" parameter
+        const Size vGrid = params_.varianceStateGridPoints;
+	// FIXME? tGridMin and tGridAvgSteps taken from FdHestonVanillaEngine
         const Size tGridMin = 5;
         const Size tGridAvgSteps = std::max(tGridMin, timeGrid_.size() / 50);
         const ext::shared_ptr<FdmHestonVarianceMesher> vMesher =
             ext::make_shared<FdmHestonVarianceMesher>(vGrid, process, maturity, tGridAvgSteps);
 
         // equity mesher
-        const Size xGrid = 24; // FIXME: use StateGridPoints parameter
+        const Size xGrid = params_.stateGridPoints; 
         ext::shared_ptr<QuantExt::FdmBlackScholesMesher> equityMesher;
         auto processHelper = QuantExt::FdmBlackScholesMesher::processHelper(
             process->s0(), process->dividendYield(), process->riskFreeRate(), vMesher->volaEstimate());
@@ -168,43 +168,29 @@ void Heston::performCalculationsFd() const {
     operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(
         mesher_, process, quantoHelper);
 
-    // FIXME
-    // Should we try to use FdmHestonSolver (as in fdhestonvanillaengine, i.e with
-    // calculator, step conditions, boundaries, solver desc, ...) instead of using the
-    // FdmBackwardSolver directly?
-    // FdmHestonSolver uses FdmBackwardSolver internally adding bicubic spline interpolation, etc.
     std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>> boundaries;
     ext::shared_ptr<FdmStepConditionComposite> stepCondition = nullptr;
-    //const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Douglas();
-    const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Hundsdorfer();
+    const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Douglas();
+    //const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Hundsdorfer();
 
     solver_ = QuantLib::ext::make_shared<FdmBackwardSolver>(operator_, boundaries, stepCondition, schemeDesc);
-
-    // Size tGrid = timeGrid_.size();
-    // Size dampingSteps = 0;
-    // ext::shared_ptr<FdmInnerValueCalculator> calculator = nullptr;    
-    // FdmSolverDesc solverDesc = { mesher_, boundaries, stepCondition,
-    // 				 calculator, maturity,
-    // 				 tGrid, dampingSteps };
-    // auto solver = ext::make_shared<FdmHestonSolver>(
-    //                 Handle<HestonProcess>(process),
-    //                 solverDesc, schemeDesc,
-    //                 Handle<QuantLib::FdmQuantoHelper>());
     
-    // 5 fill random variable with underlying values, these are valid for all times
+    // 5 fill random variable with underlying values (equity prices), these are valid for all times
 
     auto locations = mesher_->locations(0);
-    // auto compositeMesher = QuantLib::ext::dynamic_pointer_cast<FdmMesherComposite>(mesher_);
-    // QL_REQUIRE(compositeMesher, "cast to composite mesher failed");
-    // auto equityMesher = compositeMesher->getFdm1dMeshers().front(); // strong assumption ?
-    // auto locations = equityMesher->locations(0); 
-    underlyingValues_ = exp(RandomVariable(locations));
-
-    DLOG("layout dim(): " << to_string(mesher_->layout()->dim()));
-    DLOG("layout size(): " << to_string(mesher_->layout()->size()));
-    DLOG("layout spacing(): " << to_string(mesher_->layout()->spacing()));
-    DLOG("locations.size " << locations.size());
-    DLOG("underlyingValues.size " << underlyingValues_.size());
+    Size eDim = mesher_->layout()->dim()[0]; // equity states
+    Size vDim = mesher_->layout()->dim()[1]; // variance states
+    Array values(locations.size(), 0.0); // log of underlying values
+    for (Size i = 0; i < eDim; ++i) {
+        Size index = mesher_->layout()->index({i, 0}); // pick value at j = 0
+	Real v = locations[index];
+	DLOG("mesh at i=" << i << " j=" << 0 << " index=" << index << ": " <<  v);
+        for (Size j = 0; j < vDim; ++j) {
+	    Size index = mesher_->layout()->index({i, j}); // actual index
+            values[index] = v;  // all underlying values are the same, irrespective of variance state
+        }
+    }
+    underlyingValues_ = exp(RandomVariable(values));
     
     // 6 set additional results
 
@@ -396,10 +382,74 @@ RandomVariable Heston::npv(const RandomVariable& amount, const Date& obsdate, co
                            const RandomVariable& addRegressor2) const {
     RandomVariable result;
 
-    QL_FAIL("Heston::npv not implemented");
-
-    return result;
+    if (type_ == Model::Type::MC) {
+        QL_FAIL("Heston::npv not implemented for Model::Type::MC");
+        return result;
+    } else {
+        // FD calculation
+        return AssetModel::npv(amount, obsdate, filter, memSlot, addRegressor1, addRegressor2);
+    }
 }
 
+Real Heston::extractT0Result(const RandomVariable& value) const {
+
+    if (type_ == Type::MC)
+        return ModelImpl::extractT0Result(value);
+
+    // specific code for FD Heston:
+
+    calculate();
+
+    // roll back to today (if necessary), as in AssetModel
+    RandomVariable r =
+        npv(value, referenceDate(), Filter(), QuantLib::ext::nullopt, RandomVariable(), RandomVariable());
+
+    // if result is deterministic, return the value, as in AssetModel, FIXME?
+
+    if (r.deterministic())
+        return r.at(0);
+
+    // otherwise interpolate the result at the spot and v0 of the underlying process,
+    // this is different from the one-dimensional version in AssetModel,
+    // following FdmHestonSolver/Fdm2DimSolver here
+    
+    // a) convert result values into a matrix
+    Array res(r.size());
+    r.copyToArray(res);
+    Matrix resultValues(mesher_->layout()->dim()[1], mesher_->layout()->dim()[0]);
+    std::copy(res.begin(), res.end(), resultValues.begin());
+
+    // b) set up the x axis (log(S) state) and y axis (variance state) for interpolation
+    std::vector<Real> x, y;
+    x.reserve(mesher_->layout()->dim()[0]);
+    y.reserve(mesher_->layout()->dim()[1]);
+    for (const auto& iter : *mesher_->layout()) {
+        if (iter.coordinates()[1] == 0U)
+            x.push_back(mesher_->location(iter, 0));
+        if (iter.coordinates()[0] == 0U)
+            y.push_back(mesher_->location(iter, 1));
+    }
+
+    // c) BicubicSpline interpolation
+    auto interpolation = QuantLib::ext::make_shared<BicubicSpline>(x.begin(), x.end(), y.begin(), y.end(), resultValues);
+    auto process = model_->hestonProcesses()[0];
+    Real v0 = process->v0();
+    Real spot = process->s0()->value();
+    Real result = (*interpolation)(std::log(spot), v0);
+    DLOG("Heston::extractT0Result() result=" << result);
+
+    return result;
+    
+    // AssetModel code:
+    // Array x(underlyingValues_.size());
+    // Array y(underlyingValues_.size());
+    // underlyingValues_.copyToArray(x);
+    // r.copyToArray(y);
+    // MonotonicCubicNaturalSpline interpolation(x.begin(), x.end(), y.begin());
+    // interpolation.enableExtrapolation();
+    // Real res = interpolation(initialValue(0));
+    // return interpolation(initialValue(0));
+}
+  
 } // namespace data
 } // namespace ore
