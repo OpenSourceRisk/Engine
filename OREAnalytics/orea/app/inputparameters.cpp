@@ -59,7 +59,6 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
         std::filesystem::create_directories(resultsPath_);
     }
     QL_REQUIRE(std::filesystem::is_directory(resultsPath_), "output path '" << resultsPath_ << "' is not a directory.");
-    QL_REQUIRE(std::filesystem::is_directory(inputPath_), "input path '" << inputPath_ << "' is not a directory.");
     
     // first look for baseCurrency in setUp, and then in NPV node
     inputs->loadParameter<string>(baseCurrency_, "setup", "baseCurrency");
