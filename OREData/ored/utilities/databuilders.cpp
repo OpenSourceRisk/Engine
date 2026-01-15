@@ -73,6 +73,7 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/deltagammaengines.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
+#include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
@@ -498,6 +499,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionACGAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionTWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CmsSpreadCouponPricerBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityCouponPricerBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(BlackQuantoEquityCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AnalyticHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(NumericalHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTSRCmsCouponPricerBuilder, false)

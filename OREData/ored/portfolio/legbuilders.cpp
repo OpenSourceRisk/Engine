@@ -352,7 +352,8 @@ Leg EquityLegBuilder::buildLeg(
                                configuration, useXbsCurves);
     }
 
-    Leg result = makeEquityLeg(data, eqCurve, fxIndex, openEndDateReplacement);
+    Leg result =
+        makeEquityLeg(data, eqCurve, engineFactory, fxIndex, attachPricer, openEndDateReplacement, productModelEngines);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
     return result;
 }

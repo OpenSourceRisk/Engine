@@ -65,11 +65,6 @@ class SwapEngineBuilder : public SwapEngineBuilderBase {
 public:
     SwapEngineBuilder() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngine") {}
 
-    const bool useEquityConvexityAdjustment() const { return useEquityConvexityAdjustment_; }
-    const std::set<std::string>& equityConvexityAdjustmentCurrencyPairs() const {
-        return equityConvexityAdjustmentCurrencyPairs_;
-    }
-
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
                                                                 const std::string& securitySpread,
@@ -81,35 +76,8 @@ protected:
             yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
 
-        // Equity convexity adjustment
-        if (!equityConvexityAdjustmentInitialised_) {
-            useEquityConvexityAdjustment_ = parseBool(engineParameter("UseEquityConvexityAdjustment", {}, false, "false"));
-            if (useEquityConvexityAdjustment_) {
-                std::vector<std::string> pairs =
-                    parseListOfValues(engineParameter("EquityConvexityAdjustmentCurrencyPairList", {}, false, ""));
-                equityConvexityAdjustmentCurrencyPairs_.insert(pairs.begin(), pairs.end());
-                DLOG("Equity convexity adjustment enabled for currency pairs: "
-                     << boost::join(equityConvexityAdjustmentCurrencyPairs_, ","));
-                // Add inverse pairs for easy lookup
-                if (!equityConvexityAdjustmentCurrencyPairs_.empty()) {
-                    std::set<std::string> inversePairs;
-                    for (const auto& p : equityConvexityAdjustmentCurrencyPairs_) {
-                        std::string inversePair = p.substr(3, 3) + p.substr(0, 3);
-                        inversePairs.insert(inversePair);
-                    }
-                    equityConvexityAdjustmentCurrencyPairs_.insert(inversePairs.begin(), inversePairs.end());
-                }
-            }
-            equityConvexityAdjustmentInitialised_ = true;
-        }
-
         return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(yts);
     }
-
-private:
-    mutable bool equityConvexityAdjustmentInitialised_ = false;
-    mutable bool useEquityConvexityAdjustment_ = false;
-    mutable std::set<std::string> equityConvexityAdjustmentCurrencyPairs_;
 };
 
 //! Engine Builder base class for Cross Currency Swaps

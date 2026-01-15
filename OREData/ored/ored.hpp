@@ -180,6 +180,7 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/deltagammaengines.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
+#include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>

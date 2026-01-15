@@ -117,55 +117,6 @@ void EquitySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     // 2 now build the swap using the updated leg data
 
     Swap::build(engineFactory);
-
-    // 3 Convexity Adjustment
-    bool applyConvexityAdjustment = false;
-    std::string equityCurrency = engineFactory->market()->equityCurve(eqLegData->eqName())->currency().code();
-    std::string legCurrency = legData_[equityLegIndex_].currency();
-
-    if (legCurrency != equityCurrency) {
-        auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilder>(
-            engineFactory->builder("Swap"));
-
-        if (builder && builder->useEquityConvexityAdjustment()) {
-            std::string ccyPair = legCurrency + equityCurrency;
-            const auto& ccyPairs = builder->equityConvexityAdjustmentCurrencyPairs();
-            applyConvexityAdjustment = ccyPairs.empty() || ccyPairs.count(ccyPair) > 0;
-        }
-
-        if (applyConvexityAdjustment) {
-            DLOG("Applying equity convexity adjustment for equity swap "
-                 << id() << " with equity leg currency " << legCurrency << " and equity currency " << equityCurrency);
-            additionalData_["applyEquityConvexityAdjustment"] = true;
-            additionalData_["equityConvexityAdjustmentCurrencyPair"] = legCurrency + equityCurrency;
-
-            // Get equity and FX volatilities
-            Handle<BlackVolTermStructure> eqVol = engineFactory->market()->equityVol(
-                eqLegData->eqName(), engineFactory->configuration(MarketContext::pricing));
-
-            std::string ccyPair = legCurrency + equityCurrency;
-            Handle<BlackVolTermStructure> fxVol =
-                engineFactory->market()->fxVol(ccyPair, engineFactory->configuration(MarketContext::pricing));
-
-            // Get correlation
-            std::string eqCorrelationIndexName = "EQ-" + eqLegData->eqName();
-            std::string fxCorrelationIndexName = eqLegData->fxIndex().empty()
-                                                     ? "FX-GENERIC-" + legCurrency + "-" + equityCurrency
-                                                     : eqLegData->fxIndex();
-            Handle<QuantExt::CorrelationTermStructure> correlation = engineFactory->market()->correlationCurve(
-                eqCorrelationIndexName, fxCorrelationIndexName, engineFactory->configuration(MarketContext::pricing));
-
-            // Apply convexity adjustment in EquityCouponPricer
-            for (auto const& c : legs_[equityLegIndex_]) {
-                if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
-                    QuantLib::ext::shared_ptr<QuantExt::EquityCouponPricer> pricer = cpn->pricer();
-                    pricer->setEquityVolatility(eqVol);
-                    pricer->setFxVolatility(fxVol);
-                    pricer->setCorrelation(correlation);
-                }
-            }
-        }
-    }
 }
 
 void EquitySwap::setIsdaTaxonomyFields() {
