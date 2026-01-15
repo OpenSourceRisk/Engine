@@ -35,20 +35,6 @@ namespace analytics {
 
 class AnalyticsManager : public QuantLib::ext::enable_shared_from_this<AnalyticsManager> {
 public:
-    struct CommonParameters {
-        std::string baseCurrency;
-        QuantLib::Date asofDate;
-        std::string configurationFile;
-        std::string marketConfiguration;
-        std::string outputPath;
-        bool writeOutputToSubfolder;
-        bool updateMarketData;
-        bool fullOutputReport;
-        bool npvCubeOutput;
-        bool mktCubeOutput;
-        bool stressTestOutput;
-    };
-
     AnalyticsManager( //! Container for the inputs required by the standard analytics
         const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! A market data loader object that can retrieve required data from a large repository
@@ -58,7 +44,6 @@ public:
 
     //! initialise must be explicitly called
     void initialise();
-    const CommonParameters& commonParameters() const { return params_; }
 
     //! Valid analytics in the analytics manager are the union of analytics types provided by analytics_ map
     bool hasAnalytic(const std::string& type);
@@ -94,7 +79,6 @@ public:
                 const std::set<std::string>& lowerHeaderReportNames = {});
 
 private:
-    CommonParameters params_;
     std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>> analytics_;
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::ext::shared_ptr<MarketDataLoader> marketDataLoader_;

@@ -413,10 +413,10 @@ public:
     MarketDataLoader(const ext::shared_ptr<InputParameters>& inputs, ext::shared_ptr<MarketDataLoaderImpl> impl)
         : inputs_(inputs), impl_(impl);
 
-     virtual void populateLoader(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+     virtual void populateLoader(const std::vector<ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
         const std::set<QuantLib::Date>& loaderDates);
 
-     virtual void populateLoader(const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
+     virtual void populateLoader(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
                    const std::set<QuantLib::Date>& loaderDates);
 };
 

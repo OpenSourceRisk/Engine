@@ -143,6 +143,10 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameter<string>(marketDataLoaderOutput_, "setup", "marketDataLoaderOutput", false);
     inputs->loadParameter<string>(marketDataLoaderInput_, "setup", "marketDataLoaderInput", false);
     inputs->loadParameter<Size>(reportBufferSize_, "setup", "reportBufferSize", false, parseInteger);
+    inputs->loadParameter<bool>(useMarketDataFixings_, "setup", "useMarketDataFixings", false, parseBool);
+    inputs->loadParameter<bool>(eomInflationFixings_, "setup", "eomInflationFixings", false, parseBool);
+    inputs->loadParameter<bool>(entireMarket_, "setup", "entireMarket", false, parseBool);
+    inputs->loadParameter<bool>(allFixings_, "setup", "allFixings", false, parseBool);
 
     string csvCommentReportHeader;
     inputs->loadParameter<string>(csvCommentReportHeader, "setup", "csvCommentReportHeader", false);

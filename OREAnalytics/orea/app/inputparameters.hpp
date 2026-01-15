@@ -108,6 +108,10 @@ struct SetupVariables : public InputVariables {
     bool outputAdditionalResults_ = false;
     QuantLib::Natural additionalResultsReportPrecision_ = 6;
     bool includePastCashflows_ = false;
+    bool entireMarket_ = false;
+    bool allFixings_ = false;
+    bool eomInflationFixings_ = true;
+    bool useMarketDataFixings_ = true;
 
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
@@ -296,10 +300,10 @@ public:
     void setMporPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { setupVariables_.nThreads_ = i; }
-    void setEntireMarket(bool b) { entireMarket_ = b; }
-    void setAllFixings(bool b) { allFixings_ = b; }
-    void setEomInflationFixings(bool b) { eomInflationFixings_ = b; }
-    void setUseMarketDataFixings(bool b) { useMarketDataFixings_ = b; }
+    void setEntireMarket(bool b) { setupVariables_.entireMarket_ = b; }
+    void setAllFixings(bool b) { setupVariables_.allFixings_ = b; }
+    void setEomInflationFixings(bool b) { setupVariables_.eomInflationFixings_ = b; }
+    void setUseMarketDataFixings(bool b) { setupVariables_.useMarketDataFixings_ = b; }
     void setIborFallbackOverride(bool b) { setupVariables_.iborFallbackOverride_ = b; }
     void setReportNaString(const std::string& s) { setupVariables_.reportNaString_ = s; }
     void setCsvQuoteChar(const char& c){ csvQuoteChar_ = c; }
@@ -778,10 +782,10 @@ public:
 
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return setupVariables_.nThreads_; }
-    bool entireMarket() const { return entireMarket_; }
-    bool allFixings() const { return allFixings_; }
-    bool eomInflationFixings() const { return eomInflationFixings_; }
-    bool useMarketDataFixings() const { return useMarketDataFixings_; }
+    bool entireMarket() const { return setupVariables_.entireMarket_; }
+    bool allFixings() const { return setupVariables_.allFixings_; }
+    bool eomInflationFixings() const { return setupVariables_.eomInflationFixings_; }
+    bool useMarketDataFixings() const { return setupVariables_.useMarketDataFixings_; }
     bool iborFallbackOverride() const { return setupVariables_.iborFallbackOverride_; }
     const std::string& reportNaString() const { return setupVariables_.reportNaString_; }
     char csvCommentCharacter() const { return setupVariables_.csvCommentCharacter_; }
@@ -1237,11 +1241,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::Conventions> mporConventions_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> useCounterpartyOriginalPortfolio_, mporPortfolio_;
     QuantLib::Size maxRetries_ = 7;
-
-    bool entireMarket_ = false;
-    bool allFixings_ = false;
-    bool eomInflationFixings_ = true;
-    bool useMarketDataFixings_ = true;
+;
     char csvEolChar_ = '\n';
     char csvQuoteChar_ = '\0';
     char csvEscapeChar_ = '\\';
