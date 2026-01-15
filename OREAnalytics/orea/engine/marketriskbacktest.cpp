@@ -56,10 +56,11 @@ MarketRiskBacktest::MarketRiskBacktest(
     std::unique_ptr<MultiThreadArgs> mtArgs,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
     const bool breakdown,
-    const bool requireTradePnl)
+    const bool requireTradePnl,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig)
     : MarketRiskReport(calculationCurrency, portfolio, portfolioFilter, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
                        std::move(mtArgs), breakdown, requireTradePnl),
-      btArgs_(std::move(btArgs)) {
+      btArgs_(std::move(btArgs)), todaysmarket_(marketConfig) {
 }
 
 void MarketRiskBacktest::initialise() {
@@ -88,14 +89,12 @@ bool MarketRiskBacktest::runTradeDetail(const ext::shared_ptr<MarketRiskReport::
     return requireTradePnl_ || trdDetail;
 }
 
-void MarketRiskBacktest::addPnlCalculators(const ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                                const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig) {
+void MarketRiskBacktest::addPnlCalculators(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     pnlCalculators_.push_back(
         QuantLib::ext::make_shared<PNLCalculator>(btArgs_->benchmarkPeriod_));
     auto btRpts = ext::dynamic_pointer_cast<BacktestReports>(reports);
     pnlCalculators_.push_back(
         QuantLib::ext::make_shared<BacktestPNLCalculator>(btArgs_->backtestPeriod_, writePnl_, this, btRpts));
-    todaysmarket_ = marketConfig;
 }
 
 

@@ -138,7 +138,8 @@ public:
                        std::unique_ptr<MultiThreadArgs> mtArgs = nullptr,
                        const QuantLib::ext::shared_ptr<ore::analytics::HistoricalScenarioGenerator>& hisScenGen = nullptr,
                        const bool breakdown = false,
-                       const bool requireTradePnl = false);
+                       const bool requireTradePnl = false,
+                       const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig = nullptr);
 
     virtual ~MarketRiskBacktest() {}
 
@@ -185,8 +186,7 @@ protected:
     void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     virtual bool runTradeDetail(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     ore::data::TimePeriod covariancePeriod() const override { return btArgs_->benchmarkPeriod_; }
-    void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                        const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig) override;
+    void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
     
     void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
                             const QuantLib::ext::shared_ptr<ore::analytics::MarketRiskGroupBase>& riskGroup,
