@@ -333,7 +333,7 @@ protected:
     virtual std::string tradeGroupKey(const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) const;
     virtual ore::data::TimePeriod covariancePeriod() const { return period_.value(); }
     virtual void addPnlCalculators(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-                                    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig = nullptr) {}
+                                    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig) {}
 
     // handle results specific to this report
     virtual void handleSensiResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,

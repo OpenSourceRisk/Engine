@@ -108,7 +108,7 @@ void MarketRiskBacktest::handleSensiResults(const ext::shared_ptr<MarketRiskRepo
     sensiPnls_ = pnlCalculators_[1]->pnls();
     foSensiPnls_ = pnlCalculators_[1]->foPnls();
 
-    auto backtestPnlCalc = ext::dynamic_pointer_cast < BacktestPNLCalculator>(pnlCalculators_[1]);
+    auto backtestPnlCalc = ext::dynamic_pointer_cast<BacktestPNLCalculator>(pnlCalculators_[1]);
     QL_REQUIRE(backtestPnlCalc, "We must have a BacktestPnLCalculator");
     if (runTradeDetail(reports)) {
         foTradePnls_ = backtestPnlCalc->foTradePnls();
