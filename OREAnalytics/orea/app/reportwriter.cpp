@@ -2945,39 +2945,40 @@ void ReportWriter::writeModelCalibrationReport(ore::data::Report& report, const 
         .addColumn("Value", string());
 
     for (const auto& [id, trade] : portfolio->trades()) {
-        const auto& additionalResults = trade->instrument()->additionalResults();
-        if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
-            DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
-            const std::vector<AssetModelCalibrationResults>& results =
-                QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
-            for (const auto& result : results) {
-                if (result.constantParameters.size() > 0) {
-                    Size n = result.constantParameters.size();
-                    DLOG("constant paramters: " << n);
-                    for (Size i = 0; i < n; ++i)
-                        report.next()
-                            .add(id)
-                            .add(result.indexName)
-                            .add(result.constantParameters[i].first)
-                            .add(to_string(result.constantParameters[i].second));
-                } else if (result.piecewiseParameters.size() > 0) {
-                    Size n = result.piecewiseParameters.size();
-		    DLOG("piecewise paramters: " << n);
-                    for (Size i = 0; i < n; ++i)
-                        report.next()
-                            .add(id)
-                            .add(result.indexName)
-                            .add(result.piecewiseParameters[i].first)
-			    .add(result.piecewiseParameters[i].second);
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
+                DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+                const std::vector<AssetModelCalibrationResults>& results =
+                    QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
+                for (const auto& result : results) {
+                    if (result.constantParameters.size() > 0) {
+                        Size n = result.constantParameters.size();
+                        DLOG("constant paramters: " << n);
+                        for (Size i = 0; i < n; ++i)
+                            report.next()
+                                .add(id)
+                                .add(result.indexName)
+                                .add(result.constantParameters[i].first)
+                                .add(to_string(result.constantParameters[i].second));
+                    } else if (result.piecewiseParameters.size() > 0) {
+                        Size n = result.piecewiseParameters.size();
+                        DLOG("piecewise paramters: " << n);
+                        for (Size i = 0; i < n; ++i)
+                            report.next()
+                                .add(id)
+                                .add(result.indexName)
+                                .add(result.piecewiseParameters[i].first)
+                                .add(result.piecewiseParameters[i].second);
+                    }
+                    report.next().add(id).add(result.indexName).add("Error").add(to_string(result.rmse));
                 }
-                report.next()
-		  .add(id)
-		  .add(result.indexName)
-		  .add("Error")
-		  .add(to_string(result.rmse));
             }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
         }
     }
+    report.end();
 }
 
 void ReportWriter::writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
@@ -2992,27 +2993,32 @@ void ReportWriter::writeModelCalibrationDetailReport(ore::data::Report& report, 
         .addColumn("VolDifference", double(), 4);
 
     for (const auto& [id, trade] : portfolio->trades()) {
-        const auto& additionalResults = trade->instrument()->additionalResults();
-        if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
-            DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
-            const std::vector<AssetModelCalibrationResults>& results =
-                QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
-            for (const auto& result : results) {
-                for (const auto& helper : result.data) {
-                    report.next()
-                        .add(id)
-                        .add(result.indexName)
-                        .add(helper.expiry)
-                        .add(helper.moneyness)
-                        .add(helper.marketValue)
-                        .add(helper.modelValue)
-                        .add(helper.marketVol)
-                        .add(helper.modelVol)
-		        .add(helper.modelVol - helper.marketVol);
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
+                DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+                const std::vector<AssetModelCalibrationResults>& results =
+                    QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
+                for (const auto& result : results) {
+                    for (const auto& helper : result.data) {
+                        report.next()
+                            .add(id)
+                            .add(result.indexName)
+                            .add(helper.expiry)
+                            .add(helper.moneyness)
+                            .add(helper.marketValue)
+                            .add(helper.modelValue)
+                            .add(helper.marketVol)
+                            .add(helper.modelVol)
+                            .add(helper.modelVol - helper.marketVol);
+                    }
                 }
             }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
         }
     }
+    report.end();
 }
   
 void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
@@ -3024,29 +3030,29 @@ void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::sh
 
     Date today = Settings::instance().evaluationDate();
     for (const auto& [id, trade] : portfolio->trades()) {
-        const auto& additionalResults = trade->instrument()->additionalResults();
-        if (auto r = additionalResults.find("Heston.paths"); r != additionalResults.end()) {
-            DLOG("MultiAssetHestonPaths found for trade " << id);
-            const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<const MultiAssetHestonPaths&>(r->second);
-            DLOG("MultiAssetHestonPaths copied");
-            for (Size d = 0; d < paths.dates.size(); ++d) {
-                Date date = paths.dates[d];
-		if (date == today)
-		    continue;
-		auto it = paths.data.find(date);
-                for (Size i = 0; i < paths.indexNames.size(); ++i) {
-                    for (Size j = 0; j < paths.samples; ++j) {
-                        report.next()
-			  .add(id)
-			  .add(paths.indexNames[i])
-			  .add(date)
-			  .add(j)
-			  .add(it->second[i][j]);
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.paths"); r != additionalResults.end()) {
+                DLOG("MultiAssetHestonPaths found for trade " << id);
+                const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<const MultiAssetHestonPaths&>(r->second);
+                DLOG("MultiAssetHestonPaths copied");
+                for (Size d = 0; d < paths.dates.size(); ++d) {
+                    Date date = paths.dates[d];
+                    if (date == today)
+                        continue;
+                    auto it = paths.data.find(date);
+                    for (Size i = 0; i < paths.indexNames.size(); ++i) {
+                        for (Size j = 0; j < paths.samples; ++j) {
+                            report.next().add(id).add(paths.indexNames[i]).add(date).add(j).add(it->second[i][j]);
+                        }
                     }
                 }
             }
-	}
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
+        }
     }
+    report.end();
 }
 
 } // namespace analytics
