@@ -93,6 +93,7 @@
 #include <ored/portfolio/builders/fxdigitaloption.hpp>
 #include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
 #include <ored/portfolio/builders/fxdoubletouchoption.hpp>
+#include <ored/portfolio/builders/fxeuropeanbarrieroption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxtouchoption.hpp>
@@ -548,6 +549,8 @@ void dataBuilders() {
 
     ORE_REGISTER_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AsianOptionScriptedEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxEuropeanBarrierOptionScriptedEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionScriptedEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementBlackEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementXCcyBlackEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(RiskParticipationAgreementSwapLGMGridEngineBuilder, false)
