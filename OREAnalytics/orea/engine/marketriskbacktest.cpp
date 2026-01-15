@@ -56,10 +56,11 @@ MarketRiskBacktest::MarketRiskBacktest(
     std::unique_ptr<MultiThreadArgs> mtArgs,
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
     const bool breakdown,
-    const bool requireTradePnl)
+    const bool requireTradePnl,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketConfig)
     : MarketRiskReport(calculationCurrency, portfolio, portfolioFilter, btArgs->backtestPeriod_, hisScenGen, std::move(sensiArgs), std::move(revalArgs),
                        std::move(mtArgs), breakdown, requireTradePnl),
-      btArgs_(std::move(btArgs)) {
+      btArgs_(std::move(btArgs)), todaysmarket_(marketConfig) {
 }
 
 void MarketRiskBacktest::initialise() {
@@ -106,7 +107,7 @@ void MarketRiskBacktest::handleSensiResults(const ext::shared_ptr<MarketRiskRepo
     sensiPnls_ = pnlCalculators_[1]->pnls();
     foSensiPnls_ = pnlCalculators_[1]->foPnls();
 
-    auto backtestPnlCalc = ext::dynamic_pointer_cast < BacktestPNLCalculator>(pnlCalculators_[1]);
+    auto backtestPnlCalc = ext::dynamic_pointer_cast<BacktestPNLCalculator>(pnlCalculators_[1]);
     QL_REQUIRE(backtestPnlCalc, "We must have a BacktestPnLCalculator");
     if (runTradeDetail(reports)) {
         foTradePnls_ = backtestPnlCalc->foTradePnls();
@@ -372,6 +373,7 @@ void MarketRiskBacktest::createReports(const ext::shared_ptr<MarketRiskReport::R
         if (pnl) {
             for (const auto& t : pnlColumns())
                 pnl->addColumn(std::get<0>(t), std::get<1>(t), std::get<2>(t));
+            pnl->addColumn("DiscountSpec", string());
         }
     }
 
@@ -381,6 +383,7 @@ void MarketRiskBacktest::createReports(const ext::shared_ptr<MarketRiskReport::R
             pnlTrade->addColumn("TradeId", string());
             for (const auto& t : pnlColumns())
                 pnlTrade->addColumn(std::get<0>(t), std::get<1>(t), std::get<2>(t));
+            pnlTrade->addColumn("DiscountSpec", string());
         }
     }
 }
@@ -453,6 +456,20 @@ void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestRepor
         .add(currency.empty() || currency == calculationCurrency_ ? deltaPnl : deltaPnl / fxSpot)
         .add(currency.empty() || currency == calculationCurrency_ ? gammaPnl : gammaPnl / fxSpot)
         .add(currency.empty() ? calculationCurrency_ : currency);
+
+    // Append DiscountSpec column (from TodaysMarketParameters) if available and applicable
+    std::string discountSpecStr;
+    if (todaysmarket_ && key_1.keytype == QuantExt::RiskFactorKey::KeyType::DiscountCurve) {
+        const auto& discMap = todaysmarket_->mapping(ore::data::MarketObject::DiscountCurve, ore::data::Market::defaultConfiguration);
+        auto it = discMap.find(key_1.name);
+        if (it != discMap.end()){
+            discountSpecStr = it->second;
+        }     
+    }
+    if (!discountSpecStr.empty())
+        report.add(discountSpecStr);
+    else
+        report.add(string());
 }
 
 void BacktestPNLCalculator::writePNL(Size scenarioIdx, bool isCall, const RiskFactorKey& key_1, Real shift_1,
