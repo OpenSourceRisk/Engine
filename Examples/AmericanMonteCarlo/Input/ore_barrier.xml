@@ -12,7 +12,7 @@
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine_barrier.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_genericbarrieroption.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
     <Parameter name="scriptLibrary">scriptlibrary_barrier.xml</Parameter>
@@ -45,7 +45,7 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcTradeTypes">ScriptedTrade,FxGenericBarrierOption</Parameter>
+      <Parameter name="amcTradeTypes">ScriptedTrade,FxGenericBarrierOption,FxEuropeanBarrierOption,FxDoubleBarrierOption,FxBarrierOption,FxKIKOBarrierOption</Parameter>
       <Parameter name="simulationConfigFile">simulation_barrier.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine_barrier.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_barrier_amc.xml</Parameter>

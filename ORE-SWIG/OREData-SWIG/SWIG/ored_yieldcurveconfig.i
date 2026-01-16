@@ -259,6 +259,7 @@ public:
                      const std::string& discountCurveID, const std::vector<ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const std::string& interpolationVariable = "Discount", const std::string& interpolationMethod = "LogLinear",
                      const std::string& zeroDayCounter = "A365", bool extrapolation = true,
+                     const std::string& extrapolationMethod = "ContinuousForward",
                      const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
                      const QuantLib::Size mixedInterpolationCutoff = 1);
 

@@ -498,7 +498,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
                    "Only CashOrNothing payoff allowed for mulitple underlyings");
 
     std::string payoffType;
-    if (optionData_.payoffType() == "Vanilla" || optionData_.payoffType() == "AssetOrNothing")
+    if (optionData_.payoffType().empty() || optionData_.payoffType() == "Vanilla" || optionData_.payoffType() == "AssetOrNothing")
         payoffType = "0";
     else if (optionData_.payoffType() == "CashOrNothing")
         payoffType = "1";

@@ -595,22 +595,22 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s);
 //! Output operator for YieldCurveSegment::Type
 std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::Type c);
 
-//! Convert text to YieldCurveConfig::PillarChoice
+//! Convert text to YieldCurveSegment::PillarChoice
 /*!
 \ingroup utilities
 */
 YieldCurveSegment::PillarChoice parsePillarChoice(const std::string& s);
 
-//! Output operator for YieldCurveConfig::PillarChoice
+//! Output operator for YieldCurveSegment::PillarChoice
 std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::PillarChoice c);
 
-//! Convert text to YieldCurveConfig::DuplicatePillarPolicy
+//! Convert text to YieldCurveSegment::DuplicatePillarPolicy
 /*!
 \ingroup utilities
 */
 YieldCurveSegment::DuplicatePillarPolicy parseDuplicatePillarPolicy(const std::string& s);
 
-//! Output operator for YieldCurveConfig::DuplicatePillarPolicy
+//! Output operator for YieldCurveSegment::DuplicatePillarPolicy
 std::ostream& operator<<(std::ostream& os, const YieldCurveSegment::DuplicatePillarPolicy c);
 
 //! Convert text to QuantExt::McMultiLegBaseEngine::RegressorModel

@@ -41,7 +41,8 @@ public:
     /*! This will work with both a floating and fixed reference date underlying surface,
         since we are reimplementing the reference date and update methods */
     BlackInvertedVolTermStructure(const Handle<BlackVolTermStructure>& vol)
-        : BlackVolTermStructure(vol->businessDayConvention(), vol->dayCounter()), vol_(vol) {
+        : BlackVolTermStructure(vol->businessDayConvention(), vol->dayCounter(), vol->volType(), vol->shift()),
+          vol_(vol) {
         registerWith(vol_);
     }
 
