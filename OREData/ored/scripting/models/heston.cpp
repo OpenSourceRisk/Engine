@@ -260,7 +260,8 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
                                 const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                 const Matrix& correlation, const Matrix& sqrtCorr,
                                 const std::vector<Size>& eqComIdx) const {
-    
+
+    DLOG("Heston::populatePathValues called");
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
                                                   std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
     std::vector<std::vector<RandomVariable*>> auxRvs(indices_.size(),
@@ -271,11 +272,12 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
         for (Size j = 0; j < indices_.size(); ++j) {
             rvs[j][i] = &paths[*date][j];
             rvs[j][i]->expand();
-            auxRvs[j][i] = &paths[*date][j];
+            auxRvs[j][i] = &auxPaths[*date][j];
             auxRvs[j][i]->expand();
         }
     }
     
+    DLOG("Heston::populatePathValues 2");
     Matrix C = getCorrelation();
 
     QuantLib::ext::shared_ptr<MultiAssetQuantoHestonProcess> quantoProcess;

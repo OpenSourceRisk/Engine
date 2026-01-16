@@ -160,6 +160,9 @@ void AssetModel::performCalculations() const {
     underlyingPaths_.clear();
     underlyingPathsTraining_.clear();
 
+    auxPaths_.clear();
+    auxPathsTraining_.clear();
+
     // nothing to do if we do not have any indices
 
     if (indices_.empty())
@@ -173,9 +176,13 @@ void AssetModel::performCalculations() const {
 void AssetModel::initUnderlyingPathsMc() const {
     for (auto const& d : effectiveSimulationDates_) {
         underlyingPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
-        if (trainingSamples() != Null<Size>())
+        auxPaths_[d] = std::vector<RandomVariable>(model_->processes().size(), RandomVariable(size(), 0.0));
+        if (trainingSamples() != Null<Size>()) {
             underlyingPathsTraining_[d] =
                 std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
+            auxPathsTraining_[d] =
+                std::vector<RandomVariable>(model_->processes().size(), RandomVariable(trainingSamples(), 0.0));
+	}
     }
 }
 
@@ -409,12 +416,12 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
             for (auto const& r : underlyingPaths_.at(obsdate))
                 state.push_back(&r);
         }
-
+	
         if (!auxPaths_.empty()) {
             for (auto const& r : auxPaths_.at(obsdate))
                 state.push_back(&r);
         }
-
+	
         Size nModelStates = state.size();
 
         if (addRegressor1.initialised() && (memSlot || !addRegressor1.deterministic()))
