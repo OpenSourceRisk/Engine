@@ -31,13 +31,14 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
                              bool endOfMonth, Frequency paymentFrequency, BusinessDayConvention fixedConvention,
                              BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
                              const Handle<YieldTermStructure>& discountingCurve, const bool discountCurveGiven,
-                             bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate)
+                             bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate,
+                             const Calendar& paymentCalendar)
     : RelativeDateRateHelper(fixedRate), settlementDays_(settlementDays), swapTenor_(swapTenor),
       overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven), fixedDayCounter_(fixedDayCounter),
       fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), endOfMonth_(endOfMonth),
       paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment),
-      rule_(rule), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven),
-      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+      rule_(rule), paymentCalendar_(paymentCalendar), discountHandle_(discountingCurve),
+      discountCurveGiven_(discountCurveGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
 
     pillarDate_ = customPillarDate;
 
@@ -56,7 +57,7 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
 
 void OISRateHelper::initializeDates() {
 
-    Calendar paymentCalendar_ = overnightIndex_->fixingCalendar();
+    Calendar paymentCalendar = paymentCalendar_.empty() ? overnightIndex_->fixingCalendar() : paymentCalendar_;
 
     swap_ = MakeOIS(swapTenor_, overnightIndex_, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value())
                 .withSettlementDays(settlementDays_)
@@ -64,7 +65,7 @@ void OISRateHelper::initializeDates() {
                 .withEndOfMonth(endOfMonth_)
                 .withPaymentFrequency(paymentFrequency_)
                 .withRule(rule_)
-                .withPaymentCalendar(paymentCalendar_)
+                .withPaymentCalendar(paymentCalendar)
                 .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(discountRelinkableHandle_)
@@ -147,12 +148,12 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                                        BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
                                        DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
                                        const bool discountCurveGiven, bool telescopicValueDates, Pillar::Choice pillar,
-                                       Date customPillarDate)
+                                       Date customPillarDate, const Calendar& paymentCalendar)
     : RateHelper(fixedRate), overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven),
       fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar), paymentLag_(paymentLag),
       paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment),
-      rule_(rule), discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven),
-      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
+      rule_(rule), paymentCalendar_(paymentCalendar), discountHandle_(discountingCurve),
+      discountCurveGiven_(discountCurveGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar) {
 
     pillarDate_ = customPillarDate;
 
@@ -167,6 +168,8 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
     registerWith(overnightIndex_);
     registerWith(discountHandle_);
 
+    Calendar paymentCal = paymentCalendar_.empty() ? overnightIndex_->fixingCalendar() : paymentCalendar_;
+
     swap_ = MakeOIS(Period(), overnightIndex_, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value())
                 .withEffectiveDate(startDate)
                 .withTerminationDate(endDate)
@@ -176,7 +179,7 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                 // TODO: patch QL
                 //.withFixedAccrualConvention(fixedConvention_)
                 // .withFixedCalendar(fixedCalendar_)
-                .withPaymentCalendar(overnightIndex_->fixingCalendar())
+                .withPaymentCalendar(paymentCal)
                 .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(termStructureHandle_)
