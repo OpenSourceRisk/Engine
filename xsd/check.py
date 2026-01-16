@@ -141,8 +141,8 @@ def main(xml_path:str, jobs:int=1) -> None:
 
     dict_paths = {
         "Examples": os.path.join(dir_name, '..', 'Examples'),
-        "RegressionTest": os.path.join(dir_name, '..', 'RegressionTests'),
-        "OREData": os.path.join(dir_name, '..', 'OREData', 'test')
+        "OREData": os.path.join(dir_name, '..', 'OREData', 'test'),
+        "QuantExt": os.path.join(dir_name, '..', 'QuantExt', 'test')
     }
 
     # Preprocess and compile schema once
