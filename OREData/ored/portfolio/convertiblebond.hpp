@@ -69,7 +69,8 @@ struct ConvertibleBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
-           const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
+           const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
+           std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
     void updateUnderlying(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData, QuantLib::ext::shared_ptr<Trade>& underlying,
                           const std::string& parentId) const override;
 };
