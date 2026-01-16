@@ -111,6 +111,7 @@ public:
                        const std::string& currency) const override;
 
   const std::map<Date, std::vector<RandomVariable>>& underlyingPaths() { return underlyingPaths_; }
+  const std::map<Date, std::vector<RandomVariable>>& auxPaths() { return auxPaths_; }
   const std::set<Date>& effectiveSimulationDates() { return effectiveSimulationDates_; }
 
 protected:
@@ -172,7 +173,9 @@ protected:
 
     // used for MC only:
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPaths_;         // per simulation date index states
+    mutable std::map<Date, std::vector<RandomVariable>> auxPaths_;                // per simulation date index states
     mutable std::map<Date, std::vector<RandomVariable>> underlyingPathsTraining_; // ditto (training phase)
+    mutable std::map<Date, std::vector<RandomVariable>> auxPathsTraining_;          
     mutable bool inTrainingPhase_ = false;   // are we currently using training paths?
     mutable std::map<long, std::tuple<Array, Size, Matrix>> storedRegressionModel_; // stored regression coefficients
 

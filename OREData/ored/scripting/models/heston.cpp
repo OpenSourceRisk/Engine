@@ -239,13 +239,13 @@ void Heston::generatePaths() const {
     // correlation matrix business is handled in the MultiAssetHestonProcess class, so we just pass dummies here
     Matrix correlation(1, 1, 1), sqrtCorr(1, 1, 1);
 
-    populatePathValues(size(), underlyingPaths_,
+    populatePathValues(size(), underlyingPaths_, auxPaths_,
                        makeMultiPathVariateGenerator(params_.sequenceType, 2 * n, timeGrid_.size() - 1, params_.seed,
                                                      params_.sobolOrdering, params_.sobolDirectionIntegers),
                        correlation, sqrtCorr, eqComIdx);
 
     if (trainingSamples() != Null<Size>()) {
-        populatePathValues(trainingSamples(), underlyingPathsTraining_,
+        populatePathValues(trainingSamples(), underlyingPathsTraining_, auxPathsTraining_,
                            makeMultiPathVariateGenerator(params_.trainingSequenceType, 2 * n, timeGrid_.size() - 1,
                                                          params_.trainingSeed, params_.sobolOrdering,
                                                          params_.sobolDirectionIntegers),
@@ -256,18 +256,23 @@ void Heston::generatePaths() const {
 }
 
 void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+				std::map<Date, std::vector<RandomVariable>>& auxPaths,
                                 const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                 const Matrix& correlation, const Matrix& sqrtCorr,
                                 const std::vector<Size>& eqComIdx) const {
     
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
                                                   std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
+    std::vector<std::vector<RandomVariable*>> auxRvs(indices_.size(),
+						     std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
     auto date = effectiveSimulationDates_.begin();
     for (Size i = 0; i < effectiveSimulationDates_.size() - 1; ++i) {
         ++date;
         for (Size j = 0; j < indices_.size(); ++j) {
             rvs[j][i] = &paths[*date][j];
             rvs[j][i]->expand();
+            auxRvs[j][i] = &paths[*date][j];
+            auxRvs[j][i]->expand();
         }
     }
     
@@ -302,8 +307,10 @@ void Heston::populatePathValues(const Size nSamples, std::map<Date, std::vector<
 	
 	    // on the effective simulation dates populate the underlying paths
             if (i + 1 == *pos) {
-	        for (Size j = 0; j < indices_.size(); ++j)
-		  rvs[j][date]->data()[path] = state[2*j]; // spot at even locations in the state array
+                for (Size j = 0; j < indices_.size(); ++j) {
+                    rvs[j][date]->data()[path] = state[2 * j]; // spot at even locations in the state array
+                    auxRvs[j][date]->data()[path] = state[2 * j + 1]; // variance state
+                }
                 ++date;
                 ++pos;
             }
@@ -377,6 +384,7 @@ void Heston::setAdditionalResults() const {
     }
 }
 
+/*
 RandomVariable Heston::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
                            const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
                            const RandomVariable& addRegressor2) const {
@@ -390,6 +398,7 @@ RandomVariable Heston::npv(const RandomVariable& amount, const Date& obsdate, co
         return AssetModel::npv(amount, obsdate, filter, memSlot, addRegressor1, addRegressor2);
     }
 }
+*/
 
 Real Heston::extractT0Result(const RandomVariable& value) const {
 

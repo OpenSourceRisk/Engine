@@ -44,14 +44,15 @@ private:
     void performCalculationsFd() const;
     void generatePaths() const;
     void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+			    std::map<Date, std::vector<RandomVariable>>& auxPaths,
                             const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                             const Matrix& correlation, const Matrix& sqrtCorr,
                             const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
 
-    RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                       const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
-                       const RandomVariable& addRegressor2) const override;
+    // RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
+    //                    const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
+    //                    const RandomVariable& addRegressor2) const override;
 
     Real extractT0Result(const RandomVariable& value) const override;
 

@@ -410,6 +410,11 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
                 state.push_back(&r);
         }
 
+        if (!auxPaths_.empty()) {
+            for (auto const& r : auxPaths_.at(obsdate))
+                state.push_back(&r);
+        }
+
         Size nModelStates = state.size();
 
         if (addRegressor1.initialised() && (memSlot || !addRegressor1.deterministic()))
