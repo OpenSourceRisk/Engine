@@ -58,7 +58,7 @@ void OISRateHelper::initializeDates() {
 
     Calendar paymentCalendar_ = overnightIndex_->fixingCalendar();
 
-    swap_ = MakeOIS(swapTenor_, overnightIndex_, quote().empty() ? 0.0 : quote()->value())
+    swap_ = MakeOIS(swapTenor_, overnightIndex_, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value())
                 .withSettlementDays(settlementDays_)
                 .withFixedLegDayCount(fixedDayCounter_)
                 .withEndOfMonth(endOfMonth_)
@@ -85,6 +85,9 @@ void OISRateHelper::initializeDates() {
         break;
     case Pillar::LastRelevantDate:
         pillarDate_ = latestRelevantDate_;
+        break;
+    case Pillar::StartDate:
+        pillarDate_ = earliestDate_;
         break;
     case Pillar::CustomDate:
         // pillarDate_ already assigned at construction time
@@ -164,7 +167,7 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
     registerWith(overnightIndex_);
     registerWith(discountHandle_);
 
-    swap_ = MakeOIS(Period(), overnightIndex_, quote().empty() ? 0.0 : quote()->value())
+    swap_ = MakeOIS(Period(), overnightIndex_, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value())
                 .withEffectiveDate(startDate)
                 .withTerminationDate(endDate)
                 .withFixedLegDayCount(fixedDayCounter_)
@@ -191,6 +194,9 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
         break;
     case Pillar::LastRelevantDate:
         pillarDate_ = latestRelevantDate_;
+        break;
+    case Pillar::StartDate:
+        pillarDate_ = earliestDate_;
         break;
     case Pillar::CustomDate:
         // pillarDate_ already assigned at construction time

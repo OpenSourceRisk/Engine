@@ -35,7 +35,7 @@ AverageOISRateHelper::AverageOISRateHelper(
     const Handle<Quote>& onSpread, Natural rateCutoff,
     // Exogenous discount curve
     const Handle<YieldTermStructure>& discountCurve, const bool discountCurveGiven, const bool telescopicValueDates,
-    const QuantLib::Pillar::Choice pillarChoice)
+    const QuantLib::Pillar::Choice pillarChoice, const Date& customPillarDate)
     : RelativeDateRateHelper(fixedRate), spotLagTenor_(spotLagTenor), swapTenor_(swapTenor), fixedTenor_(fixedTenor),
       fixedDayCounter_(fixedDayCounter), fixedCalendar_(fixedCalendar), fixedConvention_(fixedConvention),
       fixedPaymentAdjustment_(fixedPaymentAdjustment), overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven),
@@ -51,6 +51,8 @@ AverageOISRateHelper::AverageOISRateHelper(
         overnightIndex_->unregisterWith(termStructureHandle_);
     }
 
+    pillarDate_ = customPillarDate;
+
     registerWith(overnightIndex_);
     registerWith(onSpread_);
     registerWith(discountHandle_);
@@ -59,8 +61,9 @@ AverageOISRateHelper::AverageOISRateHelper(
 
 void AverageOISRateHelper::initializeDates() {
 
-    averageOIS_ = MakeAverageOIS(swapTenor_, overnightIndex_, onTenor_, quote().empty() ? 0.0 : quote()->value(),
-                                 fixedTenor_, fixedDayCounter_, spotLagTenor_)
+    averageOIS_ = MakeAverageOIS(swapTenor_, overnightIndex_, onTenor_,
+                                 quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fixedTenor_,
+                                 fixedDayCounter_, spotLagTenor_)
                       .withFixedCalendar(fixedCalendar_)
                       .withFixedConvention(fixedConvention_)
                       .withFixedTerminationDateConvention(fixedConvention_)
@@ -79,7 +82,8 @@ void AverageOISRateHelper::initializeDates() {
 
     maturityDate_ = averageOIS_->maturityDate();
     latestRelevantDate_ = determineLatestRelevantDate(averageOIS_->legs());
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 Real AverageOISRateHelper::impliedQuote() const {

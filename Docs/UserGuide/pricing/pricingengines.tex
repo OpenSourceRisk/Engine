@@ -3622,6 +3622,7 @@ Available Model/Engine pairs:
 \begin{itemize}
 \item BlackScholesMerton/AnalyticBarrierEngine
 \item BlackScholesMerton/FdBlackScholesBarrierEngine
+\item ScriptedTrade / ScriptedTrade (fx only)
 \end{itemize}
 
 Engine description:
@@ -3686,13 +3687,45 @@ The parameters have the following meaning:
 \label{lst:peconfig_EquityBarrierOption_BlackScholesMerton_FdBlackScholesBarrierEngine}
 \end{longlisting}
 
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_FxBarrierOption_ScriptedTrade_ScriptedTrade}. Only FxBarrierOptions are supported at the moment.
+Typical use case for this pricing engine config would XVA calculation within the AMC framework.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxBarrierOption, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxBarrierOption_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
 %--------------------------------------------------------
 \subsection{Product Type: EquityDoubleBarrierOption, FxDoubleBarrierOption}
 %--------------------------------------------------------
 
 Used by trade type: EquityDoubleBarrierOption, FxDoubleBarrierOption
 
-Available Model/Engine pairs: GarmanKohlhagen/AnalyticDoubleBarrierEngine (both fx and equity)
+Available Model/Engine pairs: 
+\begin{itemize}
+    \item GarmanKohlhagen/AnalyticDoubleBarrierEngine (both fx and equity)
+    \item ScriptedTrade / ScriptedTrade (fx only)
+\end{itemize}
+
+
 
 Engine description:
 
@@ -3721,6 +3754,69 @@ The parameters have the following meaning:
 \label{lst:peconfig_FxDoubleBarrierOption_GarmanKohlhagen_AnalyticDoubleBarrierEngine}
 \end{longlisting}
 
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade}. Only FxBarrierOptions are supported at the moment.
+Typical use case for this pricing engine config would XVA calculation within the AMC framework.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxDoubleBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDoubleBarrierOption, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
+
+
+%--------------------------------------------------------
+\subsection{Product Type: FxEuropeanBarrierOption}
+%--------------------------------------------------------
+
+Available Model/Engine pairs: 
+\begin{itemize}
+    \item ScriptedTrade / ScriptedTrade
+\end{itemize}
+
+Engine description:
+
+ScriptedTrade/ScriptedTrade delegates to the scripted trade engine and the associated pricing engine configuration for
+Product Type ScriptedTrade, see there for details. A sample configuration is given in listing
+\ref{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade}. Only FxBarrierOptions are supported at the moment.
+Typical use case for this pricing engine config would XVA calculation within the AMC framework.
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxDoubleBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_MC</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxDoubleBarrierOption, Model ScriptedTrade, Engine ScriptedTrade}
+\label{lst:peconfig_FxDoubleBarrierOption_ScriptedTrade_ScriptedTrade}
+\end{longlisting}
 
 %--------------------------------------------------------
 \subsection{Product Type: EquityDigitalOption, FxDigitalOption}

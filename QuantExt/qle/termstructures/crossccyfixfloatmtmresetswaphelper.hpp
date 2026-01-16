@@ -64,6 +64,7 @@ public:
                                        const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false,
                                        bool resetsOnFloatLeg = true, bool telescopicValueDates = false,
                                        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                                       const QuantLib::Date& customPillarDate = Date(),
                                        const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
                                        const std::vector<Calendar>& spotFXSettleCalendarVec = std::vector<Calendar>(),
                                        QuantLib::ext::optional<bool> includeSpread = QuantLib::ext::nullopt,

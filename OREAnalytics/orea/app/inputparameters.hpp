@@ -205,6 +205,7 @@ public:
     void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
+    void setCurvesCalendar(const std::string& s) { curvesCalendar_ = s; }
     void setCalendarAdjustment(const std::string& xml);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
     void setCurrencyConfig(const std::string& xml);
@@ -266,6 +267,7 @@ public:
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
     void setTradePnl(bool b) { tradePnL_ = b; }
+    void setRiskFactorBreakdown(bool b) { riskFactorBreakdown_ = b; }
     void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
@@ -691,6 +693,7 @@ public:
     std::size_t todaysMarketCalibrationPrecision() const { return todaysMarketCalibrationPrecision_; }
     const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
     const std::string& curvesGrid() const { return curvesGrid_; }
+    const std::string& curvesCalendar() const { return curvesCalendar_; }
 
     /*****************************
      * Getters for sensi analytics
@@ -753,6 +756,7 @@ public:
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
     bool tradePnl() const { return tradePnL_; }
+    bool riskFactorBreakdown() const { return riskFactorBreakdown_; }
     bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
     const std::string& varMethod() const { return varMethod_; }
@@ -1166,6 +1170,7 @@ protected:
     bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
+    std::string curvesCalendar_ = "TARGET";
     bool outputTodaysMarketCalibration_ = true;
     std::size_t todaysMarketCalibrationPrecision_ = 8;
 
@@ -1227,6 +1232,7 @@ protected:
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
     bool tradePnL_ = false;
+    bool riskFactorBreakdown_ = false;
     bool includeExpectedShortfall_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 

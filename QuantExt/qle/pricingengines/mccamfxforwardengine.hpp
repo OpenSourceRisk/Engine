@@ -43,12 +43,12 @@ public:
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressorModel regressorModel = RegressorModel::Simple,
+        const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const VarGroupMode regressionVarGroupMode = VarGroupMode::Global);
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
 
     void calculate() const override;
     const Handle<CrossAssetModel>& model() const { return model_; }

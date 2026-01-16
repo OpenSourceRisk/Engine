@@ -28,6 +28,9 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/lgmvectorised.hpp>
 #include <qle/pricingengines/amccalculator.hpp>
+#include <qle/pricingengines/mccashflowinfo.hpp>
+#include <qle/pricingengines/mcregressionmodel.hpp>
+#include <qle/utilities/mcstats.hpp>
 
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/instruments/swaption.hpp>
@@ -45,33 +48,9 @@
 
 namespace QuantExt {
 
-// statistics
-
-struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
-    McEngineStats() {
-        other_timer.start();
-        other_timer.stop();
-        path_timer.stop();
-        path_timer.start();
-        calc_timer.start();
-        calc_timer.stop();
-    }
-
-    void reset() {
-        other_timer.stop();
-        path_timer.stop();
-        calc_timer.stop();
-    }
-
-    boost::timer::cpu_timer other_timer;
-    boost::timer::cpu_timer path_timer;
-    boost::timer::cpu_timer calc_timer;
-};
-
 class McMultiLegBaseEngine {
 public:
-    enum RegressorModel { Simple, Lagged, LaggedIR, LaggedFX, LaggedEQ };
-    enum VarGroupMode { Global, Trivial };
+    
 
 //protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
@@ -92,12 +71,12 @@ public:
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressorModel regressorModel = RegressorModel::Simple,
+        const McRegressionModel::RegressorModel regressorModel = McRegressionModel::RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false, const Size cfOnCpnMaxSimTimes = 1,
         const Period& cfOnCpnAddSimTimesCutoff = Period(), const Size regressionMaxSimTimesIr = 0,
         const Size regressionMaxSimTimesFx = 0, const Size regressionMaxSimTimesEq = 0,
-        const VarGroupMode regressionVarGroupMode = VarGroupMode::Global);
+        const McRegressionModel::VarGroupMode regressionVarGroupMode = McRegressionModel::VarGroupMode::Global);
 
     //! Destructor
     virtual ~McMultiLegBaseEngine() {}
@@ -130,7 +109,7 @@ public:
     std::vector<Date> stickyCloseOutDates_;
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
-    RegressorModel regressorModel_;
+    McRegressionModel::RegressorModel regressorModel_;
     Real regressionVarianceCutoff_;
     bool recalibrateOnStickyCloseOutDates_;
     bool reevaluateExerciseInStickyRun_;
@@ -139,7 +118,7 @@ public:
     Size regressionMaxSimTimesIr_;
     Size regressionMaxSimTimesFx_;
     Size regressionMaxSimTimesEq_;
-    VarGroupMode regressionVarGroupMode_;
+    McRegressionModel::VarGroupMode regressionVarGroupMode_;
 
     // set from global settings
     mutable bool includeTodaysCashflows_;
@@ -154,18 +133,7 @@ public:
     static constexpr Real tinyTime = 1E-10;
 
     // data structure storing info needed to generate the amount for a cashflow
-    struct CashflowInfo {
-        Size legNo = Null<Size>(), cfNo = Null<Size>();
-        Real payTime = Null<Real>();
-        Real exIntoCriterionTime = Null<Real>();
-        Size payCcyIndex = Null<Size>();
-        bool payer = false;
-        std::vector<Real> simulationTimes;
-        std::vector<std::vector<Size>> modelIndices;
-        std::function<RandomVariable(const Size n, const std::vector<std::vector<const RandomVariable*>>&)>
-            amountCalculator;
-    };
-
+    
     // overwrite function to transform values going into regression
     // current usage in the fwd bond case
     virtual RandomVariable overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
@@ -176,46 +144,7 @@ public:
 
     virtual bool useOverwritePathValueUndDirty() const { return false; };
 
-    // class representing a regression model for a certain observation (= xva, exercise) time
-    class RegressionModel {
-    public:
-        RegressionModel() = default;
-        RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
-                        const std::function<bool(std::size_t)>& cashflowRelevant, const CrossAssetModel& model,
-                        const RegressorModel regressorModel, const Real regressionVarianceCutoff = Null<Real>(),
-                        const Size regressionMaxSimTimesIr = 0,
-                        const Size regressionMaxSimTimesFx = 0,
-                        const Size regressionMaxSimTimesEq = 0,
-                        const VarGroupMode regressionVarGroupMode = VarGroupMode::Global);
-        // pathTimes must contain the observation time and the relevant cashflow simulation times
-        void train(const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
-                   const RandomVariable& regressand, const std::vector<std::vector<const RandomVariable*>>& paths,
-                   const std::set<Real>& pathTimes, const Filter& filter = Filter());
-        // pathTimes do not need to contain the observation time or the relevant cashflow simulation times
-        RandomVariable apply(const Array& initialState, const std::vector<std::vector<const RandomVariable*>>& paths,
-                             const std::set<Real>& pathTimes) const;
-        // is this model initialized and trained?
-        bool isTrained() const { return isTrained_; }
-
-    private:
-        Real observationTime_ = Null<Real>();
-        Real regressionVarianceCutoff_ = Null<Real>();
-        bool isTrained_ = false;
-        std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
-        Matrix coordinateTransform_;
-        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_ =
-            std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>{};
-        Array regressionCoeffs_;
-
-        Size basisDim_ = 0;
-        Size basisOrder_ = 0;
-        LsmBasisSystem::PolynomialType basisType_ = LsmBasisSystem::PolynomialType::Monomial;
-        Size basisSystemSizeBound_ = Null<Size>();
-        std::set<std::set<Size>> varGroups_ = {};
-
-        friend class boost::serialization::access;
-        template <class Archive> void serialize(Archive& ar, const unsigned int version);
-    };
+    
 
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
@@ -225,11 +154,11 @@ public:
             const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
             const std::vector<Real>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
             const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
-            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
-            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelRebate,
-            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
-            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelUndDirty,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelUndExInto,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelRebate,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelContinuationValue,
+            const std::array<std::vector<McRegressionModel>, 2>& regModelOption,
             const Real resultValue, const Array& initialState, const Currency& baseCurrency,
             const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
             const bool includeReferenceDateEvents);
@@ -248,11 +177,11 @@ public:
         std::set<Real> exerciseXvaTimes_;
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
-        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndDirty_;
-        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndExInto_;
-        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelRebate_;
-        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelContinuationValue_;
-        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelOption_;
+        std::array<std::vector<McRegressionModel>, 2> regModelUndDirty_;
+        std::array<std::vector<McRegressionModel>, 2> regModelUndExInto_;
+        std::array<std::vector<McRegressionModel>, 2> regModelRebate_;
+        std::array<std::vector<McRegressionModel>, 2> regModelContinuationValue_;
+        std::array<std::vector<McRegressionModel>, 2> regModelOption_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
@@ -277,27 +206,24 @@ public:
     // the model training logic
     void calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes,
                          const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-                         const std::vector<CashflowInfo>& cashflowInfo,
+                         const std::vector<McCashflowInfo>& cashflowInfo,
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
-                         std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelUndExInto, std::vector<RegressionModel>& regModelRebate,
-                         std::vector<RegressionModel>& regModelContinuationValue,
-                         std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
+                         std::vector<McRegressionModel>& regModelUndDirty,
+                         std::vector<McRegressionModel>& regModelUndExInto, std::vector<McRegressionModel>& regModelRebate,
+                         std::vector<McRegressionModel>& regModelContinuationValue,
+                         std::vector<McRegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
                          RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
 
-    // create the info for a given flow
-    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
-                                    Size cfNo) const;
 
     // get the index of a time in the given simulation times set
     Size timeIndex(const Time t, const std::set<Real>& simulationTimes) const;
 
     // compute a cashflow path value (in model base ccy)
-    RandomVariable cashflowPathValue(const CashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
+    RandomVariable cashflowPathValue(const McCashflowInfo& cf, const std::vector<std::vector<RandomVariable>>& pathValues,
                                      const std::set<Real>& simulationTimes) const;
 
     // valuation date
