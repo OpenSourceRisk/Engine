@@ -3,6 +3,7 @@
 This folder introduces the Scripted Trade framework by discussing various
 representations of
 - European Equity Options
+- American Equity Options
 - Equity Barrier Options
 - Equity Accumulators
 
