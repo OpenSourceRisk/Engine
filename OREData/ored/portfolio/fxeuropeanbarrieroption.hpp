@@ -52,13 +52,18 @@ public:
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
 
     //! \name Inspectors
     //@{
     const OptionData& option() const { return option_; }
     const BarrierData& barrier() const { return barrier_; }
     double boughtAmount() const { return boughtAmount_; }
+    const std::string boughtCurrency() const { return boughtCurrency_; }
     double soldAmount() const { return soldAmount_; }
+    const std::string soldCurrency() const { return soldCurrency_; }
+    
     const std::string& fxIndex() const { return fxIndex_; }
     Real strike() const;
     //@}
@@ -75,6 +80,7 @@ private:
     double soldAmount_;
     //! If the option has automatic exercise (i.e. cash settled after maturity), need an FX index for settlement.
     std::string fxIndex_;
+    QuantLib::ext::shared_ptr<Trade> delegatingBuilderTrade_;
 };
 } // namespace data
 } // namespace oreplus

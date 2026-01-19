@@ -52,14 +52,18 @@ public:
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                   const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false, 
-                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
+                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                  const VolatilityType type = VolatilityType::ShiftedLognormal,
+                                  const Real shift = 0.0);
 
     //! Moneyness variance surface with a fixed reference date.
     BlackVarianceSurfaceMoneyness(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
                                   const std::vector<Time>& times, const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                   const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false, 
-                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
+                                  BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                  const VolatilityType type = VolatilityType::ShiftedLognormal,
+                                  const Real shift = 0.0);
 
     //! \name TermStructure interface
     //@{
@@ -129,7 +133,9 @@ public:
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                       const DayCounter& dayCounter, bool stickyStrike = false,
                                       bool flatExtrapMoneyness = false, 
-                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
+                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                      const VolatilityType type = VolatilityType::ShiftedLognormal,
+                                      const Real shift = 0.0);
 
     //! Spot moneyness variance surface with a fixed reference date.
     BlackVarianceSurfaceMoneynessSpot(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
@@ -137,7 +143,9 @@ public:
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                       const DayCounter& dayCounter, bool stickyStrike = false,
                                       bool flatExtrapMoneyness = false, 
-                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
+                                      BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                      const VolatilityType type = VolatilityType::ShiftedLognormal,
+                                      const Real shift = 0.0);
 
 private:
     virtual Real moneyness(Time t, Real strike) const override;
@@ -154,7 +162,9 @@ public:
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
                                          const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
                                          bool flatExtrapMoneyness = false, 
-                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
+                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                         const VolatilityType type = VolatilityType::ShiftedLognormal,
+                                         const Real shift = 0.0);
 
     //! Forward moneyness variance surface with a fixed reference date.
     BlackVarianceSurfaceMoneynessForward(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
@@ -163,7 +173,9 @@ public:
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
                                          const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
                                          bool flatExtrapMoneyness = false, 
-                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility);
+                                         BlackVolTimeExtrapolation timeExtrapolation = BlackVolTimeExtrapolation::FlatVolatility,
+                                         const VolatilityType type = VolatilityType::ShiftedLognormal,
+                                         const Real shift = 0.0);
 
 private:
     // Shared initialisation

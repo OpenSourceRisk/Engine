@@ -130,7 +130,7 @@
           <Premium>
             <Amount>0</Amount>
             <Currency>EUR</Currency>
-            <PayDate>2022-03-04</PayDate>
+            <PayDate>2022-01-31</PayDate>
           </Premium>
         </Premiums>
       </OptionData>
@@ -205,5 +205,192 @@
         </BarrierData>
       </TransatlanticBarrier>
     </FxGenericBarrierOptionData>
+  </Trade>
+  <Trade id="FX_EUROPEAN_BARRIER_OPTION">
+    <TradeType>FxEuropeanBarrierOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <FxEuropeanBarrierOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2022-03-01</ExerciseDate>
+        </ExerciseDates>
+        <PremiumAmount>10900</PremiumAmount>
+        <PremiumCurrency>USD</PremiumCurrency>
+        <PremiumPayDate>2022-01-30</PremiumPayDate>
+      </OptionData>
+      <BarrierData>
+        <Type>UpAndIn</Type>
+        <Levels>
+          <Level>1.10</Level>
+        </Levels>
+      </BarrierData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1080000</SoldAmount>
+      <!--FXIndex>FX-ECB-EUR-USD</FXIndex-->
+    </FxEuropeanBarrierOptionData>
+  </Trade>
+  <Trade id="FX_KIKO_BARRIER_OPTION">
+    <TradeType>FxKIKOBarrierOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
+      <AdditionalFields />
+    </Envelope>
+    <FxKIKOBarrierOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2022-03-01</ExerciseDate>
+        </ExerciseDates>
+        <PremiumAmount>10900</PremiumAmount>
+        <PremiumCurrency>USD</PremiumCurrency>
+        <PremiumPayDate>2022-01-30</PremiumPayDate>
+      </OptionData>
+      <Barriers>
+        <BarrierData>
+          <Type>UpAndIn</Type>
+          <Levels>
+            <Level>1.10</Level>
+          </Levels>
+        </BarrierData>
+        <BarrierData>
+          <Type>DownAndOut</Type>
+          <Levels>
+            <Level>1.06</Level>
+          </Levels>
+        </BarrierData>
+      </Barriers>
+      <StartDate>2022-02-01</StartDate>
+      <Calendar>US</Calendar>
+      <FXIndex>FX-Reuters-EUR-USD</FXIndex>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1080000</SoldAmount>
+    </FxKIKOBarrierOptionData>
+  </Trade>
+  <Trade id="FX_BARRIER_OPTION_UPIN">
+    <TradeType>FxBarrierOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CRIF_20191230</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <FxBarrierOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2022-03-01</ExerciseDate>
+        </ExerciseDates>
+        <PremiumAmount>10900</PremiumAmount>
+        <PremiumCurrency>EUR</PremiumCurrency>
+        <PremiumPayDate>2022-01-30</PremiumPayDate>
+      </OptionData>
+      <BarrierData>
+        <Type>UpAndIn</Type>
+        <Levels>
+          <Level>1.10</Level>
+        </Levels>
+      </BarrierData>
+      <StartDate>2022-02-01</StartDate>
+      <Calendar>USD,TARGET</Calendar>
+      <FXIndex>FX-Reuters-EUR-USD</FXIndex>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1080000</SoldAmount>
+    </FxBarrierOptionData>
+  </Trade>
+  <Trade id="FX_DOUBLE_BARRIER_OPTION_KNOCKIN">
+    <TradeType>FxDoubleBarrierOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CRIF_20191230</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <FxDoubleBarrierOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2022-03-01</ExerciseDate>
+        </ExerciseDates>
+        <PremiumAmount>10900</PremiumAmount>
+        <PremiumCurrency>EUR</PremiumCurrency>
+        <PremiumPayDate>2022-01-30</PremiumPayDate>
+      </OptionData>
+      <BarrierData>
+        <Type>KnockIn</Type>
+        <Levels>
+          <Level>1.07</Level>
+          <Level>1.10</Level>
+        </Levels>
+      </BarrierData>
+      <StartDate>2022-02-01</StartDate>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1080000</SoldAmount>
+    </FxDoubleBarrierOptionData>
+  </Trade>
+  <Trade id="FX_DOUBLE_BARRIER_OPTION_KNOCKOUT">
+    <TradeType>FxDoubleBarrierOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CRIF_20191230</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <FxDoubleBarrierOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2022-03-01</ExerciseDate>
+        </ExerciseDates>
+        <PremiumAmount>10900</PremiumAmount>
+        <PremiumCurrency>EUR</PremiumCurrency>
+        <PremiumPayDate>2022-01-30</PremiumPayDate>
+      </OptionData>
+      <BarrierData>
+        <Type>KnockOut</Type>
+        <Levels>
+          <Level>1.07</Level>
+          <Level>1.12</Level>
+        </Levels>
+      </BarrierData>
+      <StartDate>2022-02-01</StartDate>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1080000</SoldAmount>
+    </FxDoubleBarrierOptionData>
   </Trade>
 </Portfolio>

@@ -1,5 +1,17 @@
 <?xml version="1.0"?>
 <PricingEngines>
+  <Product type="FxEuropeanBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxBarrierOption">
+    <Model>ScriptedTrade</Model>
+    <ModelParameters/>
+    <Engine>ScriptedTrade</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="ScriptedTrade">
     <Model>Generic</Model>
     <ModelParameters>

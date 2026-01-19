@@ -22,6 +22,7 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -121,6 +122,15 @@ protected:
         }
         return QuantLib::ext::make_shared<FdBlackScholesBarrierEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
     }
+};
+
+class FxBarrierOptionScriptedEngineBuilder : public DelegatingEngineBuilder {
+public:
+    FxBarrierOptionScriptedEngineBuilder()
+        : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade", {"FxBarrierOption"}) {}
+    QuantLib::ext::shared_ptr<ore::data::Trade>
+    build(const Trade* trade, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
+    std::string effectiveTradeType() const override { return "ScriptedTrade"; }
 };
 
 } // namespace data
