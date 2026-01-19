@@ -238,7 +238,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
     // set currency and notional
 
     npvCurrency_ = notionalCurrency_ = tlockData_.bondData().currency();
-    notional_ = tlockData_.bondData().bondNotional();
+    notional_ = envelope().additionalField("im_model") == "Schedule" ? tlockData_.bondData().bondNotional() * participationRate_ : tlockData_.bondData().bondNotional();
 
     // checks
 
@@ -275,7 +275,6 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
     }
 
     Date paymentDate = paymentCalendar.advance(terminationDate, paymentGap * Days);
-    std::cout<<"notional="<<notional_<<std::endl;
     auto qleInstr = QuantLib::ext::make_shared<QuantExt::RiskParticipationAgreementTLock>(
         bond, notional_, payer, referenceRate, dayCounter, terminationDate, paymentDate, protectionFeeLegs,
         protectionPayer.front(), protectionCcys, participationRate_, protectionStart_, protectionEnd_, settlesAccrual_,
