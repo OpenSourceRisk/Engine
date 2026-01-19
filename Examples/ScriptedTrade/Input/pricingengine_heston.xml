@@ -1,13 +1,6 @@
 <?xml version="1.0"?>
 <PricingEngines>
   
-  <Product type="Swap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingSwapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-
   <Product type="EquityOption">
     <Model>BlackScholesMerton</Model>
     <ModelParameters/>
@@ -52,11 +45,11 @@
       <Parameter name="Engine">MC</Parameter>
       <Parameter name="Engine_MC">MC</Parameter>
       <Parameter name="Engine_FD">FD</Parameter>
-      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="Samples">20000</Parameter>
       <Parameter name="SalvagingAlgorithm">None</Parameter>
       <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
       <Parameter name="StateGridPoints">100</Parameter>
-      <Parameter name="VarianceStateGridPoints">50</Parameter>
+      <Parameter name="VarianceStateGridPoints">100</Parameter>
       <Parameter name="RegressionOrder">2</Parameter>
       <Parameter name="TimeStepsPerYear">100</Parameter>
       <!-- Heston specific -->
@@ -82,7 +75,6 @@
            BroadieKayaExactSchemeLobatto,
            BroadieKayaExactSchemeLaguerre,
            BroadieKayaExactSchemeTrapezoidal -->
-      <!--<Parameter name="HestonProcessDiscretization">QuadraticExponentialMartingale</Parameter>-->
       <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
       <Parameter name="Debug">true</Parameter>
     </EngineParameters>
