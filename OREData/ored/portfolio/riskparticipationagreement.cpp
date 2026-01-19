@@ -192,6 +192,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
                                                          engineFactory->configuration(MarketContext::pricing))
                                                 ->value());
     }
+    notional_ = envelope().additionalField("im_model") == "Schedule" ? notional_ * participationRate_ : notional_;
     legs_ = underlyingLegs;
     legCurrencies_ = underlyingCcys;
     legPayers_ = underlyingPayer;
@@ -274,6 +275,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
     }
 
     Date paymentDate = paymentCalendar.advance(terminationDate, paymentGap * Days);
+    std::cout<<"notional="<<notional_<<std::endl;
     auto qleInstr = QuantLib::ext::make_shared<QuantExt::RiskParticipationAgreementTLock>(
         bond, notional_, payer, referenceRate, dayCounter, terminationDate, paymentDate, protectionFeeLegs,
         protectionPayer.front(), protectionCcys, participationRate_, protectionStart_, protectionEnd_, settlesAccrual_,
