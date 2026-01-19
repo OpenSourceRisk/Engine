@@ -192,7 +192,10 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
                                                          engineFactory->configuration(MarketContext::pricing))
                                                 ->value());
     }
-    notional_ = envelope().additionalField("im_model") == "Schedule" ? notional_ * participationRate_ : notional_;
+    for(auto const& af: envelope().additionalFields()){
+        if(af.first == "im_model" && af.second =="Schedule")
+            notional_ = notional_ * participationRate_;
+    }
     legs_ = underlyingLegs;
     legCurrencies_ = underlyingCcys;
     legPayers_ = underlyingPayer;
@@ -238,7 +241,11 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
     // set currency and notional
 
     npvCurrency_ = notionalCurrency_ = tlockData_.bondData().currency();
-    notional_ = envelope().additionalField("im_model") == "Schedule" ? tlockData_.bondData().bondNotional() * participationRate_ : tlockData_.bondData().bondNotional();
+    notional_ = tlockData_.bondData().bondNotional();
+    for(auto const& af: envelope().additionalFields()){
+        if(af.first == "im_model" && af.second =="Schedule")
+            notional_ = notional_ * participationRate_;
+    }
 
     // checks
 
