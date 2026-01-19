@@ -67,7 +67,7 @@ void BlackScholesLocalVolBase::performCalculationsFd(const bool localVol) const 
         if (f != calibrationStrikes_.end()) {
             for (Size j = 0; j < std::min(f->second.size(), params_.mesherMaxConcentratingPoints); ++j) {
                 cPoints.back().push_back(
-                    QuantLib::ext::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
+                    std::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
                 TLOG("added critical point at strike " << f->second[j] << " with concentration "
                                                        << params_.mesherConcentration);
             }

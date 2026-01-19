@@ -304,13 +304,11 @@ InflationCurve::CurveBuildResults
                 DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
                                             << " quote " << zcq->quote()->value());
                 auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                    zcq->quote(), convention->observationLag(), maturity, convention->fixCalendar(),
-                    convention->fixConvention(), convention->dayCounter(), index, observationInterpolation, nominalTs,
-                    swapStart);
+                    zcq->quote(), convention->observationLag(), swapStart, maturity, convention->fixCalendar(),
+                    convention->fixConvention(), convention->dayCounter(), index, observationInterpolation);
 
                 // Unregister with inflation index. See PR #326 on github for details.
                 instrument->unregisterWithAll();
-                instrument->registerWith(nominalTs);
                 instrument->registerWith(zcq->quote());
 
                 helpers.push_back(instrument);
@@ -416,8 +414,8 @@ InflationCurve::CurveBuildResults
             results.latestMaturity =
                 results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
             auto instrument = QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
-                quote, convention->observationLag(), maturity, convention->fixCalendar(), convention->fixConvention(),
-                convention->dayCounter(), index, nominalTs, swapStart);
+                quote, convention->observationLag(), swapStart, maturity, convention->fixCalendar(), convention->fixConvention(),
+                convention->dayCounter(), index, convention->interpolated() ? CPI::Linear : CPI::Flat, nominalTs);
 
             // Unregister with inflation index (and evaluationDate). See PR #326 on github for details.
             instrument->unregisterWithAll();
@@ -474,11 +472,11 @@ InflationCurve::computeFairYoYQuote(const QuantLib::Date& swapStart, const Quant
                             .withConvention(Unadjusted)
                             .withCalendar(conv->fixCalendar())
                             .backwards();
-    QL_DEPRECATED_DISABLE_WARNING
+
     YearOnYearInflationSwap tmp(YearOnYearInflationSwap::Payer, 1000000.0, schedule, 0.02, conv->dayCounter(), schedule,
-                                conversionIndex, conv->observationLag(), 0.0, conv->dayCounter(), conv->fixCalendar(),
-                                conv->fixConvention());
-    QL_DEPRECATED_ENABLE_WARNING
+                                conversionIndex, conv->observationLag(), conv->interpolated() ? CPI::Linear : CPI::Flat,
+                                0.0, conv->dayCounter(), conv->fixCalendar(), conv->fixConvention());
+
     for (auto& c : tmp.yoyLeg()) {
         auto cpn = QuantLib::ext::dynamic_pointer_cast<YoYInflationCoupon>(c);
         QL_REQUIRE(cpn, "yoy inflation coupon expected, could not cast");

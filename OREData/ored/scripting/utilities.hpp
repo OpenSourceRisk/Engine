@@ -20,7 +20,7 @@
     \brief some utility functions
     \ingroup utilities
 */
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/context.hpp>
