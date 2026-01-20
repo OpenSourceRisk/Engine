@@ -459,10 +459,14 @@ void TRSWrapperAccrualEngine::calculate() const {
                             results_.additionalResults["todaysFixing_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compIndexToday;
                         }catch(...){}
                         if(compIndices->fxConversion()[k]){
-                            Real compFxIndexStart = compIndices->fxConversion()[k]->fixing(startDate, true);
-                            Real compFxIndexToday = compIndices->fxConversion()[k]->fixing(today, true);
-                            results_.additionalResults["fxStartConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexStart;
-                            results_.additionalResults["fxTodayConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexToday;
+                            try{
+                                Real compFxIndexStart = compIndices->indices()[k]->fixing(startDate, true);
+                                results_.additionalResults["fxStartConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexStart;
+                            }catch(...){}
+                            try{
+                                Real compFxIndexToday = compIndices->fxConversion()[k]->fixing(today, true);
+                                results_.additionalResults["fxTodayConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexToday;
+                            }catch(...){}
                         }
                     }
                 }
