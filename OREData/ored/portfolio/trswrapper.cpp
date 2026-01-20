@@ -453,7 +453,6 @@ void TRSWrapperAccrualEngine::calculate() const {
                         results_.additionalResults["weight_underlying["+ std::to_string(i)+ "]_" + compIndices->name()[k]] = compIndices->weights()[k];
                         try{
                             Real compIndexStart = compIndices->indices()[k]->fixing(startDate, true);
-                            std::cout<<compIndices->weights()[k];
                             results_.additionalResults["startFixing_underlying["+ std::to_string(i)+ "]_" + compIndices->name()[k]] = compIndexStart;
                         }catch(...){}
                         try{
@@ -462,7 +461,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                         }catch(...){}
                         if(compIndices->fxConversion()[k]){
                             try{
-                                Real compFxIndexStart = compIndices->indices()[k]->fixing(startDate, true);
+                                Real compFxIndexStart = compIndices->fxConversion()[k]->fixing(startDate, true);
                                 results_.additionalResults["fxStartConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->name()[k]] = compFxIndexStart;
                             }catch(...){}
                             try{
