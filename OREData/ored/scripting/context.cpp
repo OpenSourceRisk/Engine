@@ -20,7 +20,7 @@
 
 #include <ored/utilities/to_string.hpp>
 
-#include <ql/tuple.hpp>
+#include <tuple>
 
 #include <iomanip>
 #include <sstream>

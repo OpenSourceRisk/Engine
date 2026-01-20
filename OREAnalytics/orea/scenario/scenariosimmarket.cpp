@@ -2636,7 +2636,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < yoyCurveTimes.size(); i++) {
-                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1], yoyInflationTs->observationLag());
+                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1] - yoyInflationTs->observationLag());
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1
