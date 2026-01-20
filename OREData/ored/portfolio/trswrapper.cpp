@@ -449,11 +449,17 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
                 if(auto compIndices = QuantLib::ext::dynamic_pointer_cast<CompositeIndex>(arguments_.underlyingIndex_[i])){
-                    for(Size i = 0; i < compIndices->indices().size(); i++){
-                        auto compIndexToday = compIndices->indices()[i]->fixing(today, true);
-                        auto compIndexStart = compIndices->indices()[i]->fixing(startDate, true);
-                        results_.additionalResults["startFixing_" + compIndices->indices()[i]->name()] = compIndexStart;
-                        results_.additionalResults["todaysFixing_" + compIndices->indices()[i]->name()] = compIndexToday;
+                    for(Size k = 0; k < compIndices->indices().size(); k++){
+                        Real compIndexToday = compIndices->indices()[k]->fixing(today, true);
+                        Real compIndexStart = compIndices->indices()[k]->fixing(startDate, true);
+                        if(compIndices->fxConversion()[k]){
+                            Real compFxIndexStart = compIndices->fxConversion()[k]->fixing(startDate, true);
+                            Real compFxIndexToday = compIndices->fxConversion()[k]->fixing(today, true);
+                            results_.additionalResults["fxStartConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexStart;
+                            results_.additionalResults["fxTodayConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexToday;
+                        }
+                        results_.additionalResults["startFixing_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compIndexStart;
+                        results_.additionalResults["todaysFixing_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compIndexToday;
                     }
                 }
                 if (endDate == Null<Date>()) {
