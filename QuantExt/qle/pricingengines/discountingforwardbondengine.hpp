@@ -34,7 +34,7 @@
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/pricingengines/forwardenabledbondengine.hpp>
 
-#include <ql/tuple.hpp>
+#include <tuple>
 
 namespace QuantExt {
 
