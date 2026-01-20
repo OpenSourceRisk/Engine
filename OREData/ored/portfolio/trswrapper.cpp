@@ -403,7 +403,6 @@ Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
         Date today = Settings::instance().evaluationDate();
         return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
-        std::cout<<std::fixed<<"NPV = "<<arguments_.underlying_[i]->instrument()->NPV()<<std::endl;
         return arguments_.underlying_[i]->instrument()->NPV();
     }
 }
@@ -464,9 +463,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                     s1 = getUnderlyingFixing(i, endDate, false) * arguments_.underlyingMultiplier_[i];
                     fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                 }
-                std::cout<<"S1 = "<<s1<<std::endl;
                 assetLegNpv += fx1 * s1 - underlyingStartValue[i] * fxConversionFactor[i];
-                std::cout<<std::fixed<<"assetLegNpv = "<<assetLegNpv<<std::endl;
                 DLOG("end value (underlying " << std::to_string(i + 1) << "): s1=" << s1 << " fx1=" << fx1 << " => "
                                               << fx1 * s1 << " on "
                                               << io::iso_date(endDate == Null<Date>() ? today : endDate));
