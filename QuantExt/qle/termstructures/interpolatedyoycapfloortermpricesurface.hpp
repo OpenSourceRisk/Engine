@@ -76,11 +76,13 @@ public:
     virtual Rate atmYoYSwapRate(const Date& d, bool extrapolate = true) const override {
         return atmYoYSwapRateCurve_(timeFromReference(d), extrapolate);
     }
+
     virtual Rate atmYoYRate(const Date& d, const Period& obsLag = Period(-1, Days), bool extrapolate = true) const override {
         // work in terms of maturity-of-instruments
         // so ask for rate with observation lag
         // Third parameter = force linear interpolation of yoy
-        return yoy_->yoyRate(d, obsLag, false, extrapolate);
+        Period relevantObsLag = obsLag == Period(-1, Days) ? yoy_->observationLag() : obsLag;
+        return yoy_->yoyRate(d - relevantObsLag, extrapolate);
     }
     //@}
 
@@ -231,7 +233,8 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
         for (Size k = 0; k < numYears; ++k)
             sumDiscount += nominalTS_->discount(k + 1.0);
 
-        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat), observationLag());
+        auto relevantObsLag = observationLag() == Period(-1, Days) ? yoy_->observationLag() : observationLag();
+        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat) - relevantObsLag);
         for (Size i = 0; i < cfStrikes_.size(); ++i) {
             Real K = cfStrikes_[i];
             // Real K = std::pow(1.0 + K_quote, mat.length());

@@ -132,7 +132,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 calInfo->baseDate = curve_->baseDate();
                 for (Size i = 0; i < pillarDates.size(); ++i) {
                     calInfo->pillarDates.push_back(pillarDates[i]);
-                    calInfo->yoyRates.push_back(yoyCurve->yoyRate(pillarDates[i], 0 * Days));
+                    calInfo->yoyRates.push_back(yoyCurve->yoyRate(pillarDates[i]));
                     calInfo->times.push_back(yoyCurve->timeFromReference(pillarDates[i]));
                     if (!results.mdQuoteLabels.empty() && !overwrittenPillarDates) {
                         calInfo->mdQuoteLabels.push_back(results.mdQuoteLabels[i]);
