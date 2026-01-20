@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">255</Parameter>
+    <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">market.csv</Parameter>
     <Parameter name="fixingDataFile">fixings.csv</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
@@ -29,7 +29,7 @@
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="outputFileName">npv_scripted_black.csv</Parameter>
       <Parameter name="additionalResults">Y</Parameter>
     </Analytic>
     <Analytic type="cashflow">

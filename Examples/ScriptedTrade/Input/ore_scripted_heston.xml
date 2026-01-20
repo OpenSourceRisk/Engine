@@ -29,7 +29,7 @@
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="outputFileName">npv_scripted_heston.csv</Parameter>
       <Parameter name="additionalResults">Y</Parameter>
     </Analytic>
     <Analytic type="cashflow">

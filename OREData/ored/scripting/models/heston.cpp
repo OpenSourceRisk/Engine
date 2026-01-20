@@ -191,6 +191,7 @@ void Heston::performCalculationsFd() const {
         }
     }
     underlyingValues_ = exp(RandomVariable(values));
+    //underlyingValues_ = exp(RandomVariable(locations));
     
     // 6 set additional results
 

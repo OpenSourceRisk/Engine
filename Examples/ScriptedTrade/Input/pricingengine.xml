@@ -43,6 +43,8 @@
       <Parameter name="FullDynamicFx">false</Parameter>
       <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
       <Parameter name="Model">BlackScholes</Parameter>
+      <!-- model selection -->
+      <Parameter name="Model_SingleAssetOption(EQ)">BlackScholes</Parameter>
     </ModelParameters>
     <Engine>Generic</Engine>
     <EngineParameters>
@@ -53,10 +55,15 @@
       <Parameter name="Engine">MC</Parameter>
       <Parameter name="Engine_MC">MC</Parameter>
       <Parameter name="Engine_FD">FD</Parameter>
-      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="Samples">10000</Parameter><!-- use 10k->100k samples to match the American Put better --> 
       <Parameter name="StateGridPoints">100</Parameter>
       <Parameter name="RegressionOrder">2</Parameter>
-      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter><!-- use 24->100 steps to match analytical prices better -->
+      <!-- asset class specific choices -->
+      <Parameter name="Engine_SingleAssetOption(EQ)">MC</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(EQ)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(FX)">FD</Parameter>
+      <Parameter name="Engine_SingleAssetOptionBwd(COMM)">FD</Parameter>      
     </EngineParameters>
   </Product>
 

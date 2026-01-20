@@ -45,13 +45,13 @@
       <Parameter name="Engine">MC</Parameter>
       <Parameter name="Engine_MC">MC</Parameter>
       <Parameter name="Engine_FD">FD</Parameter>
-      <Parameter name="Samples">20000</Parameter>
+      <Parameter name="Samples">10000</Parameter><!-- use 10k->10k for better match -->
       <Parameter name="SalvagingAlgorithm">None</Parameter>
       <Parameter name="SequenceType">SobolBrownianBridge</Parameter>
       <Parameter name="StateGridPoints">100</Parameter>
       <Parameter name="VarianceStateGridPoints">100</Parameter>
       <Parameter name="RegressionOrder">2</Parameter>
-      <Parameter name="TimeStepsPerYear">100</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter><!-- use 24->100 steps for better match -->
       <!-- Heston specific -->
       <!-- ConstantBestFit, PiecewiseBootstrap, PiecewiseBestFit -->
       <Parameter name="HestonCalibrationMethod">ConstantBestFit</Parameter>
@@ -76,7 +76,7 @@
            BroadieKayaExactSchemeLaguerre,
            BroadieKayaExactSchemeTrapezoidal -->
       <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
-      <Parameter name="Debug">true</Parameter>
+      <Parameter name="Debug">false</Parameter>
     </EngineParameters>
   </Product>
 
