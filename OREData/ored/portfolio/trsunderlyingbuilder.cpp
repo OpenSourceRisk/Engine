@@ -89,8 +89,7 @@ void BondTrsUnderlyingBuilder::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::Bond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::Bond, this is unexpected");
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
@@ -137,8 +136,7 @@ void BondFutureTrsUnderlyingBuilder::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
 
     auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::BondFuture>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::BondFuture, this is unexpected");
@@ -181,8 +179,7 @@ void ForwardBondTrsUnderlyingBuilder::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
 
     auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::ForwardBond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::ForwardBond, this is unexpected");
@@ -237,8 +234,7 @@ void AssetPositionTrsUnderlyingBuilder<T>::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = QuantLib::ext::dynamic_pointer_cast<T>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::EquityPosition, this is unexpected");
     if (t->isSingleCurrency()) {
@@ -324,8 +320,7 @@ void EquityOptionPositionTrsUnderlyingBuilder::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityOptionPosition>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::EquityOptionPosition, this is unexpected");
     if (t->isSingleCurrency()) {
@@ -383,8 +378,7 @@ void BondPositionTrsUnderlyingBuilder::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::BondPosition>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::BondPosition, this is unexpected");
     if (t->isSingleCurrency()) {
@@ -416,18 +410,6 @@ void BondPositionTrsUnderlyingBuilder::build(
         
         // add required bond and fx fixings from the index
         bondIndexBuilder.addRequiredFixings(fixings, bondLeg);
-        for (Size k = 0; k<bondLeg.size();k++) {
-            if (auto trsCf = QuantLib::ext::dynamic_pointer_cast<QuantExt::BondTRSCashFlow>(bondLeg[k])) {
-                const Date start = trsCf->fixingStartDate();
-                try {
-                    auto fixingVal = bondIndexBuilder.bondIndex()->fixing(start);
-                    indexNamesFixings[t->bonds()[i].securityId+"_Leg"+to_string(k)] = std::make_tuple(start, fixingVal);
-                } catch (const std::exception& e) {
-                    // Fixing not loaded yet
-                    DLOG("No fixing for bond index at " << ore::data::to_string(start) << ": " << e.what());
-                }
-            }
-        }
 
         indices.push_back(bondIndexBuilder.bondIndex());
         DLOG("underlying bond index " << indices.back()->name() << " added.");
@@ -468,8 +450,7 @@ void DerivativeTrsUnderlyingBuilder::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     assetCurrency = underlying->npvCurrency();
     auto indexName = "GENERIC-" + underlyingDerivativeId;
     IndexNameTranslator::instance().add(indexName, indexName);

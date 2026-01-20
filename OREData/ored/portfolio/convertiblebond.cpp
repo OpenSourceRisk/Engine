@@ -652,8 +652,7 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-    std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const {
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
     auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::ConvertibleBond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::Bond, this is unexpected");
     auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());

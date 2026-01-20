@@ -462,7 +462,6 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     // build indices corresponding to underlying trades and populate necessary data
 
     std::map<std::string, double> indexNamesAndQty;
-    std::map<std::string, std::tuple<Date,Real>> indexNamesFixings;
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> initialFxIndices, fxIndices, fxIndicesDummy;
 
     // get fx indices for conversion return and add cf ccy to funding ccy
@@ -502,7 +501,6 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
         std::string localCreditRiskCurrency;
         std::map<std::string, double> localIndexNamesAndQuantities;
-        std::map<std::string, std::tuple<Date,Real>> localIndexNamesFixings;
         std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> localFxIndices = initialFxIndices;
         Real dummyInitialPrice = 1.0; // initial price is only updated if we have one underlying
         
@@ -516,7 +514,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
                        std::bind(&TRS::getFxIndex, this, std::placeholders::_1, std::placeholders::_2,
                                  std::placeholders::_3, std::placeholders::_4, std::placeholders::_5,
                                  std::ref(missingFxIndexPairs)),
-                       underlyingDerivativeId_[i], requiredFixings_, returnLegs, localIndexNamesFixings);
+                       underlyingDerivativeId_[i], requiredFixings_, returnLegs);
 
         addTRSRequiredFixings(requiredFixings_, returnLegs, fxIndexReturn);
 
@@ -545,9 +543,6 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
         for (const auto& [indexName, qty] : localIndexNamesAndQuantities) {
             indexNamesAndQty[indexName] += (returnData_.payer() ? -1.0 : 1.0) * qty;
-        }
-        for(const auto& [indexName, tple]:localIndexNamesFixings){
-            indexNamesFixings[indexName] = tple;
         }
 
         fxIndices.insert(localFxIndices.begin(), localFxIndices.end());
@@ -758,10 +753,6 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["startDate"] = to_string(startDate);
     for (const auto& [name, qty] : indexNamesAndQty) {
         additionalData_["underlying_quantity_" + name] = qty;
-    }
-    for(const auto& [name, tple]: indexNamesFixings){
-        additionalData_["underlying_fixingStartDate_" + name ] = std::get<0>(tple);
-        additionalData_["underlying_fixing_" + name] = std::get<1>(tple);
     }
     
     // build additional cashflow leg (if given)

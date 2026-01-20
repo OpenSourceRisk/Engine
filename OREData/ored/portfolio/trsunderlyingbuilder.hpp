@@ -42,8 +42,7 @@ struct TrsUnderlyingBuilder {
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex, 
-        const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-        std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const = 0;
+        const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const = 0;
     virtual void updateUnderlying(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData,
                                   QuantLib::ext::shared_ptr<Trade>& underlying, const std::string& parentId) const {}
 };
@@ -77,8 +76,7 @@ struct BondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
-          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-          std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 struct BondFutureTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
@@ -94,8 +92,7 @@ struct BondFutureTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
-          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-          std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
@@ -111,8 +108,7 @@ struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
-          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-          std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 template<class T>
@@ -129,8 +125,7 @@ struct AssetPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
-          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-          std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 
     void updateQuantities(std::map<std::string, double>& indexQuantities, const std::string& indexName,
                           const double qty) const;
@@ -154,8 +149,7 @@ struct EquityOptionPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
-          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-          std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 
@@ -171,8 +165,7 @@ struct BondPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
-          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-          std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 struct DerivativeTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
@@ -187,8 +180,7 @@ struct DerivativeTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
-          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs,
-          std::map<std::string, std::tuple<Date,Real>>& indexNamesFixings) const override;
+          const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };
 
 // utility functions for bond TRS
