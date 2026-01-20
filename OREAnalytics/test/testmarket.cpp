@@ -568,8 +568,8 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
-            new ZeroCouponInflationSwapHelper(quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing,
-                                              ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts, asof_));
+            new ZeroCouponInflationSwapHelper(quote, Period(2, Months), asof_, dates[i], TARGET(), ModifiedFollowing,
+                                              ActualActual(ActualActual::ISDA), ii, CPI::AsIndex));
 
         // Remove the helper's observation of the inflation index. This has the effect that the
         // PiecewiseZeroInflationCurve created below will also not observe the index. It will only get recalculated
@@ -605,11 +605,9 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     vector<QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>>> instruments;
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
-        QL_DEPRECATED_DISABLE_WARNING
         QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(
-            new YearOnYearInflationSwapHelper(quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing,
-                                              ActualActual(ActualActual::ISDA), ii, yts, asof_));
-        QL_DEPRECATED_ENABLE_WARNING
+            new YearOnYearInflationSwapHelper(quote, Period(2, Months), asof_, dates[i], TARGET(), ModifiedFollowing,
+                                              ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts));
 
         // Remove the helper's observation of the inflation index. This has the effect that the
         // PiecewiseYoYInflationCurve created below will also not observe the index. It will only get recalculated
@@ -1175,8 +1173,8 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
     std::vector<QuantLib::ext::shared_ptr<YoYInflationTraits::helper>> instruments;
     for (Size i = 0; i < parTenor.size(); i++) {
         instruments.push_back(QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
-            parQuotes[i], conv->observationLag(), asof_ + parTenor[i], conv->infCalendar(), conv->infConvention(),
-            conv->dayCounter(), yi, yieldCurve(YieldCurveType::Discount, ccy, Market::defaultConfiguration)));
+            parQuotes[i], conv->observationLag(), asof_, asof_ + parTenor[i], conv->infCalendar(), conv->infConvention(),
+            conv->dayCounter(), yi, CPI::AsIndex, yieldCurve(YieldCurveType::Discount, ccy, Market::defaultConfiguration)));
     }
     QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyCurve;
 

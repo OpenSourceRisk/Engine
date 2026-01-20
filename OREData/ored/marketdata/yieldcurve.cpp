@@ -1357,12 +1357,11 @@ void YieldCurve::buildZeroSpreadedCurve(const std::size_t index) {
     QL_REQUIRE(convention->type() == Convention::Type::Zero, "Conventions ID does not give zero rate conventions.");
     QuantLib::ext::shared_ptr<ZeroRateConvention> zeroConvention =
         QuantLib::ext::dynamic_pointer_cast<ZeroRateConvention>(convention);
-    DayCounter quoteDayCounter = zeroConvention->dayCounter();
     Compounding comp = zeroConvention->compounding();
     Frequency freq = zeroConvention->compoundingFrequency();
 
     p_[index] = QuantLib::ext::shared_ptr<YieldTermStructure>(
-        new PiecewiseZeroSpreadedTermStructure(referenceCurve, quoteHandles, dates, comp, freq, quoteDayCounter));
+        new PiecewiseZeroSpreadedTermStructure(referenceCurve, quoteHandles, dates, comp, freq));
 }
 
 void YieldCurve::buildWeightedAverageCurve(const std::size_t index) {

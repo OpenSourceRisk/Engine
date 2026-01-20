@@ -37,7 +37,7 @@
 #include <qle/utilities/inflation.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 
 #include <iomanip>
 #include <map>

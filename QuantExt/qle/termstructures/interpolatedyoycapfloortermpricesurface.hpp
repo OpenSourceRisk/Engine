@@ -40,7 +40,8 @@ class InterpolatedYoYCapFloorTermPriceSurface : public YoYCapFloorTermPriceSurfa
 public:
     InterpolatedYoYCapFloorTermPriceSurface(Natural fixingDays,
                                             const Period& yyLag, // observation lag
-                                            const QuantLib::ext::shared_ptr<YoYInflationIndex>& yii, Rate baseRate,
+                                            const QuantLib::ext::shared_ptr<YoYInflationIndex>& yii,
+                                            QuantLib::CPI::InterpolationType interpolation, 
                                             const Handle<YieldTermStructure>& nominal, const DayCounter& dc,
                                             const Calendar& cal, const BusinessDayConvention& bdc,
                                             const std::vector<Rate>& cStrikes, const std::vector<Rate>& fStrikes,
@@ -75,11 +76,13 @@ public:
     virtual Rate atmYoYSwapRate(const Date& d, bool extrapolate = true) const override {
         return atmYoYSwapRateCurve_(timeFromReference(d), extrapolate);
     }
+
     virtual Rate atmYoYRate(const Date& d, const Period& obsLag = Period(-1, Days), bool extrapolate = true) const override {
         // work in terms of maturity-of-instruments
         // so ask for rate with observation lag
         // Third parameter = force linear interpolation of yoy
-        return yoy_->yoyRate(d, obsLag, false, extrapolate);
+        Period relevantObsLag = obsLag == Period(-1, Days) ? yoy_->observationLag() : obsLag;
+        return yoy_->yoyRate(d - relevantObsLag, extrapolate);
     }
     //@}
 
@@ -115,22 +118,19 @@ struct CloseEnoughComparator {
 };
 } // namespace detail
 
-
-QL_DEPRECATED_DISABLE_WARNING
 // template definitions
 template <class Interpolator2D, class Interpolator1D>
 InterpolatedYoYCapFloorTermPriceSurface<Interpolator2D, Interpolator1D>::InterpolatedYoYCapFloorTermPriceSurface(
-    Natural fixingDays, const Period& yyLag, const QuantLib::ext::shared_ptr<YoYInflationIndex>& yii, Rate baseRate,
-    const Handle<YieldTermStructure>& nominal, const DayCounter& dc, const Calendar& cal,
-    const BusinessDayConvention& bdc, const std::vector<Rate>& cStrikes, const std::vector<Rate>& fStrikes,
-    const std::vector<Period>& cfMaturities, const Matrix& cPrice, const Matrix& fPrice,
-    const Interpolator2D& interpolator2d, const Interpolator1D& interpolator1d)
-    : YoYCapFloorTermPriceSurface(fixingDays, yyLag, yii, baseRate, nominal, dc, cal, bdc, cStrikes, fStrikes,
+    Natural fixingDays, const Period& yyLag, const QuantLib::ext::shared_ptr<YoYInflationIndex>& yii,
+    QuantLib::CPI::InterpolationType interpolation, const Handle<YieldTermStructure>& nominal, const DayCounter& dc,
+    const Calendar& cal, const BusinessDayConvention& bdc, const std::vector<Rate>& cStrikes,
+    const std::vector<Rate>& fStrikes, const std::vector<Period>& cfMaturities, const Matrix& cPrice,
+    const Matrix& fPrice, const Interpolator2D& interpolator2d, const Interpolator1D& interpolator1d)
+    : YoYCapFloorTermPriceSurface(fixingDays, yyLag, yii, interpolation, nominal, dc, cal, bdc, cStrikes, fStrikes,
                                   cfMaturities, cPrice, fPrice),
       interpolator2d_(interpolator2d), interpolator1d_(interpolator1d) {
     performCalculations();
 }
-QL_DEPRECATED_ENABLE_WARNING
 
 template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::update() { notifyObservers(); }
 
@@ -233,7 +233,8 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
         for (Size k = 0; k < numYears; ++k)
             sumDiscount += nominalTS_->discount(k + 1.0);
 
-        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat), observationLag());
+        auto relevantObsLag = observationLag() == Period(-1, Days) ? yoy_->observationLag() : observationLag();
+        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat) - relevantObsLag);
         for (Size i = 0; i < cfStrikes_.size(); ++i) {
             Real K = cfStrikes_[i];
             // Real K = std::pow(1.0 + K_quote, mat.length());
@@ -309,10 +310,10 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     for (Size i = 1; i <= nYears; i++) {
         Date maturity = nominalTS_->referenceDate() + Period(i, Years);
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(atmYoYSwapRate(maturity)))); //!
-        QL_DEPRECATED_DISABLE_WARNING
-        QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure> > anInstrument(new YearOnYearInflationSwapHelper(
-            quote, observationLag(), maturity, calendar(), bdc_, dayCounter(), yoyIndex(), nominalH));
-        QL_DEPRECATED_ENABLE_WARNING
+        QuantLib::ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(
+            new YearOnYearInflationSwapHelper(
+                quote, observationLag(), nominalTS_->referenceDate(), maturity, calendar(), bdc_, dayCounter(),
+                yoyIndex(), indexIsInterpolated() ? QuantLib::CPI::Linear : QuantLib::CPI::Flat, nominalH));
         YYhelpers.push_back(anInstrument);
     }
 

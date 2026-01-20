@@ -28,7 +28,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 
 namespace ore {
 namespace data {
