@@ -358,7 +358,7 @@ AverageONLeg& AverageONLeg::withPaymentCalendar(const Calendar& calendar) {
     return *this;
 }
 
-AverageONLeg& AverageONLeg::withPaymentLag(Natural lag) {
+AverageONLeg& AverageONLeg::withPaymentLag(Integer lag) {
     paymentLag_ = lag;
     return *this;
 }

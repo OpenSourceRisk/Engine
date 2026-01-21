@@ -174,7 +174,7 @@ public:
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
     EquityLeg& withPaymentDayCounter(const DayCounter& dayCounter);
     EquityLeg& withPaymentAdjustment(BusinessDayConvention convention);
-    EquityLeg& withPaymentLag(Natural paymentLag);
+    EquityLeg& withPaymentLag(Integer paymentLag);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withReturnType(EquityReturnType);
     EquityLeg& withDividendFactor(Real);
@@ -193,7 +193,7 @@ private:
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     EquityReturnType returnType_;
