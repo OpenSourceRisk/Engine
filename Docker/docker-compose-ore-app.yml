@@ -9,5 +9,6 @@ services:
       context: ../
       dockerfile: Docker/Dockerfile-ORE-App
       args:
+        - DEBIAN_TAG=${DEBIAN_TAG}
         - ORE_VERSION=${ORE_TAG}
         - ORE_HELPER_VERSION=${ORE_HELPER_VERSION}

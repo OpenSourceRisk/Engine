@@ -1,6 +1,7 @@
 # syntax = docker/dockerfile:1.2
+ARG DOCKER_REPO
 ARG DEBIAN_TAG
-FROM ${DOCKER_TAG}debian:${DEBIAN_TAG}
+FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
