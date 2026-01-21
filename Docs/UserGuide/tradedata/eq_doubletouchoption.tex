@@ -25,13 +25,13 @@ options with payout at expiry only.
 
 \else
 
-An Equity Double Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit either of the barriers (KnockIn) resp. has not hit any of barriers (KnockOut) using continuous monitoring between start and expiry date. No rebates are supported. 
+An Equity Double Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit either of the barriers (KnockIn) resp. has not hit any of barriers (KnockOut) using continuous monitoring between start and expiry date. No rebates are supported.
 
 \fi
 
 The \lstinline!EquityDoubleTouchOptionData!  node is the trade data container for the \emph{EquityDoubleTouchOption} trade type.   The
 \lstinline!EquityDoubleTouchOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
-specific to the Equity Double Touch Option. 
+specific to the Equity Double Touch Option.
 
 The structure of an example \lstinline!EquityDoubleTouchOptionData! node for an Equity Double Touch Option is shown in Listing
 \ref{lst:eqdoubletouchoption_data}.
@@ -45,7 +45,7 @@ The structure of an example \lstinline!EquityDoubleTouchOptionData! node for an 
                 <PayOffAtExpiry>true</PayOffAtExpiry>
                 <ExerciseDates>
                  <ExerciseDate>2021-12-14</ExerciseDate>
-                </ExerciseDates>                     
+                </ExerciseDates>
                 ...
             </OptionData>
             <BarrierData>
@@ -73,7 +73,7 @@ The meanings and allowable values of the elements in the \lstinline!EquityDouble
 
 \begin{itemize}
 
-\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. 
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}.
 The relevant fields in the \lstinline!OptionData! node for an EquityDoubleTouchOption are as below. Note that the \lstinline!OptionType! can be omitted.
 
 \begin{itemize}
@@ -95,10 +95,10 @@ Allowable values:  See section \ref{ss:premiums}
 
 
 \item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
-Two levels in ascending order should be defined in \emph{Levels}. \emph{Type} should be \emph{KnockOut} or \emph{KnockIn}. Levels specified in BarrierData should be quoted  in the same currency as the underlying Equity spot prices. 
-StrictComparison [Optional]: Define wether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
+Two levels in ascending order should be defined in \emph{Levels}. \emph{Type} should be \emph{KnockOut} or \emph{KnockIn}. Levels specified in BarrierData should be quoted  in the same currency as the underlying Equity spot prices.
+StrictComparison [Optional]: Define whether we apply $<=$, $>=$ or $<$, $>$ for the barrier check. Defaults to \emph{0} and $<=$, $>=$, \emph{1} for $<$, $>$.
 
-\item PayoffCurrency: The payoff currency of the Equity Double Touch Option is the currency of the payoff amount. Must be consistent with the currency of the underlying Equity spot prices.   
+\item PayoffCurrency: The payoff currency of the Equity Double Touch Option is the currency of the payoff amount. Must be consistent with the currency of the underlying Equity spot prices.
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
@@ -120,4 +120,3 @@ Allowable values: See Table \ref{tab:calendar} Calendar.
 
 Allowable values:  The format of the Equity Index is``EQ-RICCode''.
 \end{itemize}
-

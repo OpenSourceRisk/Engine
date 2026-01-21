@@ -37,6 +37,7 @@
 #include <ored/marketdata/yieldcurve.hpp>
 
 #include <ql/termstructures/globalbootstrap.hpp>
+#include <ql/termstructures/multicurve.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
@@ -118,7 +119,9 @@ public:
         //! build calibration info
         const bool buildCalibrationInfo = true,
         //! market object to look up external discount curves
-        const Market* market = nullptr);
+        const Market* market = nullptr,
+        //! use at par coupons
+        const bool useAtParCoupons = true);
 
     //! \name Inspectors
     //@{
@@ -132,6 +135,14 @@ public:
     //@}
 
 private:
+    struct RateHelperData {
+        QuantLib::ext::shared_ptr<QuantLib::RateHelper> rateHelper;
+        std::string rateHelperType;
+        std::string mdQuoteLabel;
+        double mdQuoteValue;
+        std::function<std::vector<TradeCashflowReportData>()> cashflowGenerator;
+    };
+
     Date asofDate_;
 
     std::vector<QuantLib::ext::shared_ptr<YieldCurveSpec>> curveSpec_;
@@ -146,10 +157,12 @@ private:
     std::vector<InterpolationMethod> interpolationMethod_;
     std::vector<bool> excludeT0FromInterpolation_;
 
-    const Loader& loader_; // only used in ctor
+    const Loader& loader_;
+    QuantLib::ext::shared_ptr<MultiCurve> multiCurve_;
     std::vector<RelinkableHandle<YieldTermStructure>> h_;
     std::vector<QuantLib::ext::shared_ptr<YieldTermStructure>> p_;
     std::vector<QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo>> calibrationInfo_;
+    std::vector<std::vector<std::function<std::vector<TradeCashflowReportData>()>>> rateHelperCashflowGenerator_;
 
     void buildBootstrappedCurve(const std::set<std::size_t>& indices);
 
@@ -176,48 +189,48 @@ private:
     map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
     map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
-    const QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
-    const bool preserveQuoteLinkage_;
+    bool preserveQuoteLinkage_;
     bool buildCalibrationInfo_;
     const Market* market_;
+    bool useAtParCoupons_;
 
     map<string, QuantLib::RelinkableHandle<YieldTermStructure>> requiredYieldCurveHandles_;
 
     std::pair<QuantLib::ext::shared_ptr<YieldTermStructure>, const MultiCurveBootstrapContributor*>
     buildPiecewiseCurve(const std::size_t index, const std::size_t mixedInterpolationSize,
-                        const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                        const vector<RateHelperData>& instruments);
 
     QuantLib::ext::shared_ptr<YieldTermStructure>
     flattenPiecewiseCurve(const std::size_t index, const QuantLib::ext::shared_ptr<YieldTermStructure>& yieldts,
-                          const std::size_t mixedInterpolationSize,
-                          const vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                          const std::size_t mixedInterpolationSize, const vector<RateHelperData>& instruments);
 
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                     vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                     vector<RateHelperData>& instruments);
     void addFutures(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                    vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                    vector<RateHelperData>& instruments);
     void addFras(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                 vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                 vector<RateHelperData>& instruments);
     void addOISs(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                 vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                 vector<RateHelperData>& instruments);
     void addSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                  vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                  vector<RateHelperData>& instruments);
     void addAverageOISs(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                        vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                        vector<RateHelperData>& instruments);
     void addTenorBasisSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                            vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                            vector<RateHelperData>& instruments);
     void addTenorBasisTwoSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                               vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                               vector<RateHelperData>& instruments);
     void addBMABasisSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                          vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                          vector<RateHelperData>& instruments);
     void addFXForwards(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                       vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                       vector<RateHelperData>& instruments);
     void addCrossCcyBasisSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                               vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                               vector<RateHelperData>& instruments);
     void addCrossCcyFixFloatSwaps(const std::size_t index, const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
-                                  vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+                                  vector<RateHelperData>& instruments);
 
     // get the fx spot from the string provided
     QuantLib::ext::shared_ptr<FXSpotQuote> getFxSpotQuote(string spotId);
@@ -246,9 +259,8 @@ buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates, 
 //! Create a Interpolated Zero Curve and apply interpolators
 QuantLib::ext::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
                                                         const DayCounter& dayCounter,
-                                                        YieldCurve::InterpolationMethod interpolationMethod,
-                                                        Size n = 0, bool excludeT0 = false,
-                                                        const Date& referenceDate = Date());
+                                                        YieldCurve::InterpolationMethod interpolationMethod, Size n = 0,
+                                                        bool excludeT0 = false, const Date& referenceDate = Date());
 
 //! Create a Interpolated Discount Curve and apply interpolators
 QuantLib::ext::shared_ptr<YieldTermStructure>

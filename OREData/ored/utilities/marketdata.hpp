@@ -56,7 +56,8 @@ QuantLib::Handle<QuantLib::YieldTermStructure>
 xccyYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& ccyCode, bool& outXccyExists,
                const std::string& configuration = Market::defaultConfiguration);
 
-/*! Get a yield curve by name, where name can refer to an index or a yield curve name */
+/*! Get a yield curve by name, where name can refer to an index or a yield curve name
+    If the name is set to the special string "NULLCURVE" a curve with constant rate 0 is returned. */
 QuantLib::Handle<QuantLib::YieldTermStructure>
 indexOrYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& name,
                   const std::string& configuration = Market::defaultConfiguration);
@@ -109,7 +110,8 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
                                               QuantLib::Period tenor, FutureConvention::DateGenerationRule rule,
                                               const QuantLib::Calendar& calendar);
 
-Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                           FutureConvention::DateGenerationRule rule = FutureConvention::DateGenerationRule::IMM);
 
 /*! convert the creditCurveId into the internal name for the index tranche credit curve*/
 std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate);

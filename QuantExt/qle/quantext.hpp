@@ -280,8 +280,8 @@
 #include <qle/methods/projectedvariatemultipathgenerator.hpp>
 #include <qle/methods/projectedvariatepathgeneratorfactory.hpp>
 #include <qle/models/annuitymapping.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 #include <qle/models/basket.hpp>
-#include <qle/models/blackscholesmodelwrapper.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
@@ -327,6 +327,7 @@
 #include <qle/models/homogeneouspooldef.hpp>
 #include <qle/models/hullwhitebucketing.hpp>
 #include <qle/models/hwconstantparametrization.hpp>
+#include <qle/models/hwhistoricalcalibrationmodel.hpp>
 #include <qle/models/hwmodel.hpp>
 #include <qle/models/hwparametrization.hpp>
 #include <qle/models/hwpiecewiseparametrization.hpp>
@@ -441,12 +442,14 @@
 #include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
+#include <qle/pricingengines/mccashflowinfo.hpp>
 #include <qle/pricingengines/mclgmbondengine.hpp>
 #include <qle/pricingengines/mclgmfwdbondengine.hpp>
 #include <qle/pricingengines/mclgmswapengine.hpp>
 #include <qle/pricingengines/mclgmswaptionengine.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
+#include <qle/pricingengines/mcregressionmodel.hpp>
 #include <qle/pricingengines/midpointcdoengine.hpp>
 #include <qle/pricingengines/midpointcdsenginemultistate.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
@@ -552,7 +555,6 @@
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
-#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
@@ -566,7 +568,6 @@
 #include <qle/termstructures/optionletstripper2.hpp>
 #include <qle/termstructures/optionletstripperwithatm.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
-#include <qle/termstructures/overnightfallbackcurve.hpp>
 #include <qle/termstructures/parametricvolatility.hpp>
 #include <qle/termstructures/parametricvolatilitysmilesection.hpp>
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
@@ -599,6 +600,7 @@
 #include <qle/termstructures/spreadedyoyvolsurface.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/termstructures/strippedoptionlet.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
@@ -622,6 +624,7 @@
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/time/dateutilities.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
+#include <qle/time/monthcounter.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/barrier.hpp>
 #include <qle/utilities/cashflows.hpp>
@@ -630,6 +633,7 @@
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/mcstats.hpp>
 #include <qle/utilities/ratehelpers.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <qle/utilities/scenarioinformation.hpp>

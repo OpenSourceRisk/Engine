@@ -31,6 +31,7 @@
 #include <qle/indexes/fxindex.hpp>
 
 #include <ql/time/imm.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -72,6 +73,10 @@ Handle<YieldTermStructure> xccyYieldCurve(const QuantLib::ext::shared_ptr<Market
 
 Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Market>& market, const std::string& name,
                                              const std::string& configuration) {
+    if (name == "NULLCURVE") {
+        return Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<QuantLib::FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    }
     try {
         return market->iborIndex(name, configuration)->forwardingTermStructure();
     } catch (...) {
@@ -83,7 +88,6 @@ Handle<YieldTermStructure> indexOrYieldCurve(const QuantLib::ext::shared_ptr<Mar
     QL_FAIL("Could not find index or yield curve with name '" << name << "' under configuration '" << configuration
                                                               << "' or default configuration.");
 }
-
 
 std::string indexTrancheSpecificCreditCurveName(const std::string& creditCurveId, const double assumedRecoveryRate){
     std::ostringstream oss;
@@ -301,7 +305,7 @@ indexTrancheBaseCorrelationCurve(const QuantLib::ext::shared_ptr<Market>& market
                                  const std::string& baseCorrelationCurveId, const std::string& configuration) {
     Handle<QuantExt::BaseCorrelationTermStructure> curve;
     try {
-        curve = market->baseCorrelation(baseCorrelationCurveId, configuration);
+        return market->baseCorrelation(baseCorrelationCurveId, configuration);
     } catch (const std::exception&) {
         DLOG("Could not find base correlation curve " << baseCorrelationCurveId
                                                       << ", fall back on curve id without tenor.");
@@ -328,10 +332,17 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
     return std::make_pair(startDate, endDate);
 }
 
-Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear) { 
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                           FutureConvention::DateGenerationRule rule) {
     Date refDate(1, expiryMonth, expiryYear);
-    Date immDate = IMM::nextDate(refDate, false);
-    return immDate;
+
+    if (rule == FutureConvention::DateGenerationRule::IMM) {
+        return IMM::nextDate(refDate, false);  // Third Wednesday
+    } else if (rule == FutureConvention::DateGenerationRule::SecondThursday) {
+        return Date::nthWeekday(2, Thursday, refDate.month(), refDate.year());
+    } else {
+        QL_FAIL("getMmFutureExpiryDate: DateGenerationRule '" << rule << "' not supported for MM Futures");
+    }
 }
 
 std::string fxIndexNameForDailyLowsOrHighs(const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool lows) {

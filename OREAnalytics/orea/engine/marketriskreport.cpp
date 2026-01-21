@@ -19,6 +19,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -130,7 +131,7 @@ void MarketRiskReport::initialise() {
     if (hisScenGen_) {
         // Build the filtered historical scenario generator
         hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
-            timePeriods(), hisScenGen_);
+                timePeriods(), hisScenGen_);
 
         if (fullRevalArgs_ && fullRevalArgs_->simMarket_)
             hisScenGen_->baseScenario() = fullRevalArgs_->simMarket_->baseScenario();
@@ -149,7 +150,7 @@ void MarketRiskReport::initialise() {
                                                          fullRevalArgs_->iborFallbackConfig_);
 
             DLOG("Building the portfolio");
-            portfolio_->build(factory_, "historical pnl generation");
+            portfolio_->build(factory_, "historical pnl generation", true, useAtParCouponsTrades_);
             DLOG("Portfolio built");
 
             LOG("Creating the historical P&L generator (dryRun=" << std::boolalpha << fullRevalArgs_->dryRun_ << ")");
@@ -236,7 +237,7 @@ void MarketRiskReport::initSimMarket() {
     auto initMarket = QuantLib::ext::make_shared<TodaysMarket>(
         multiThreadArgs_->today_, multiThreadArgs_->todaysMarketParams_, multiThreadArgs_->loader_,
         multiThreadArgs_->curveConfigs_, true, true, false, fullRevalArgs_->referenceData_, false,
-        fullRevalArgs_->iborFallbackConfig_);
+        fullRevalArgs_->iborFallbackConfig_, false, true, useAtParCouponsCurves_);
 
     fullRevalArgs_->simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket, multiThreadArgs_->simMarketData_, multiThreadArgs_->configuration_,
@@ -273,6 +274,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     // Loop over all the risk groups
     riskGroups_->reset();
     Size currentRiskGroup = 0;
+    bool runRiskFactorBreakdown = true;
     while (ext::shared_ptr<MarketRiskGroupBase> riskGroup = riskGroups_->next()) {
         LOG("[progress] Processing RiskGroup " << ++currentRiskGroup << " out of " << riskGroups_->size()
                                                   << ") = " << riskGroup);
@@ -291,7 +293,9 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
         // If doing a full revaluation backtest, generate the cube under this filter
         if (fullReval_) {
             if (generateCube(riskGroup)) {
-                histPnlGen_->generateCube(filter);
+                histPnlGen_->generateCube(filter, runRiskFactorBreakdown);
+                // Assume (All, All, All) case ois run first and only needs to be run once
+                runRiskFactorBreakdown = false;
                 if (fullRevalArgs_->writeCube_) {
                     CubeWriter writer(cubeFilePath(riskGroup));
                     writer.write(histPnlGen_->cube(), {});
@@ -316,6 +320,14 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             
             writePnl_ = tradeGroup->allLevel() && riskGroup->allLevel();
             tradeIdIdxPairs_ = tradeIdGroups_.at(tradeGroupKey(tradeGroup));
+            if (tradeIdIdxPairs_.size() == 0) {
+                StructuredAnalyticsErrorMessage(
+                    "Market Risk Backtest", "No trades for tradeGroup",
+                    "No trades to process for RiskGroup: " + riskGroup->to_string() + ", TradeGroup: "
+                        + tradeGroup->to_string())
+                    .log();
+                continue;
+            }
 
             // populate the tradeIds
             transform(tradeIdIdxPairs_.begin(), tradeIdIdxPairs_.end(), back_inserter(tradeIds_),

@@ -36,19 +36,27 @@ SwaptionSabrCube::SwaptionSabrCube(
         initialModelParameters,
     const std::vector<Real>& outputShift, const std::vector<Real>& modelShift,
     const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
-    const QuantLib::Real maxAcceptableError)
+    const QuantLib::Real maxAcceptableError, bool stickySabr)
     : SwaptionVolatilityCube(atmVolStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
                              shortSwapIndexBase, false),
       atmOptionTenors_(atmOptionTenors), atmSwapTenors_(atmSwapTenors), modelVariant_(modelVariant),
       outputVolatilityType_(outputVolatilityType), initialModelParameters_(initialModelParameters),
       outputShift_(outputShift), modelShift_(modelShift), maxCalibrationAttempts_(maxCalibrationAttempts),
-      exitEarlyErrorThreshold_(exitEarlyErrorThreshold), maxAcceptableError_(maxAcceptableError) {
+      exitEarlyErrorThreshold_(exitEarlyErrorThreshold), maxAcceptableError_(maxAcceptableError), stickySabr_(stickySabr) {
 
     registerWith(atmVolStructure);
+    registerWith(swapIndexBase);
+    registerWith(shortSwapIndexBase);
 
-    for (auto const& v : volSpreads)
-        for (auto const& s : v)
-            registerWith(s);
+    if (stickySabr) {
+        for (auto const& v : volSpreads)
+            for (auto const& s : v)
+                unregisterWith(s);
+    } else {
+        for (auto const& v : volSpreads)
+            for (auto const& s : v)
+                registerWith(s);
+    }
 }
 
 namespace {
@@ -136,7 +144,9 @@ void SwaptionSabrCube::performCalculations() const {
                 ParametricVolatility::MarketSmile{allOptionTimes[i],
                                                   allSwapLengths[j],
                                                   forward,
-                                                  atmVol()->shift(allOptionTenors[i], allSwapTenors[j]),
+                                                  atmVol()->volatilityType() == ShiftedLognormal ?
+                                                    atmVol()->shift(allOptionTenors[i], allSwapTenors[j]) :
+                                                    0.0,
                                                   {},
                                                   strikes,
                                                   vols});
@@ -144,6 +154,14 @@ void SwaptionSabrCube::performCalculations() const {
                 m != initialModelParameters_.end()) {
                 modelParameters[std::make_pair(allOptionTimes[i], allSwapLengths[j])] = m->second;
             }
+        }
+    }
+
+    // For sticky SABR, we only need to re-imply the alpha parameter after initial calibration
+    if (stickySabr_) {
+        if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrParametricVolatility>(parametricVolatility_)) {
+            parametricVolatility_ = sabr->clone(marketSmiles, {});
+            return;
         }
     }
 
@@ -164,6 +182,18 @@ void SwaptionSabrCube::performCalculations() const {
             : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
         Handle<YieldTermStructure>(), modelParameters, modelShift, maxCalibrationAttempts_, exitEarlyErrorThreshold_,
         maxAcceptableError_);
+
+    // for sticky SABR, after initial calibration, we re-create parametric volatility with only alpha to be implied
+    // this ensures that basis between the two parametric volatilities is eliminated
+    if (stickySabr_) {
+        if (auto sabr = QuantLib::ext::dynamic_pointer_cast<SabrParametricVolatility>(parametricVolatility_)) {
+            parametricVolatility_ = sabr->clone(marketSmiles,
+                                                { ParametricVolatility::ParameterCalibration::Implied, 
+                                                  ParametricVolatility::ParameterCalibration::Fixed,
+                                                  ParametricVolatility::ParameterCalibration::Fixed, 
+                                                  ParametricVolatility::ParameterCalibration::Fixed });
+        }
+    }
 }
 
 VolatilityType SwaptionSabrCube::volatilityType() const {
@@ -191,7 +221,7 @@ QuantLib::ext::shared_ptr<SmileSection> SwaptionSabrCube::smileSectionImpl(Time 
     return tmp;
 }
 
-QuantLib::ext::shared_ptr<ParametricVolatility> SwaptionSabrCube::parametricVolatility() const {
+const QuantLib::ext::shared_ptr<ParametricVolatility>& SwaptionSabrCube::parametricVolatility() const {
     calculate();
     return parametricVolatility_;
 }

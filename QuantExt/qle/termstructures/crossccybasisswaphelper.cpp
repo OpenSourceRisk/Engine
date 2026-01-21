@@ -147,7 +147,8 @@ void CrossCcyBasisSwapHelper::initializeDates() {
 
     /* Arbitrarily set the spread leg as the pay leg */
     swap_ = QuantLib::ext::make_shared<CrossCcyBasisSwap>(
-        spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_, flatLegNominal,
+        spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_,
+        quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), spreadGearing_, flatLegNominal,
         flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_, paymentLag_, flatPaymentLag_,
         includeSpread_, lookback_, fixingDays_, rateCutoff_, isAveraged_, flatIncludeSpread_, flatLookback_,
         flatFixingDays_, flatRateCutoff_, flatIsAveraged_, telescopicValueDates_);

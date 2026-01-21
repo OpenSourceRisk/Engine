@@ -82,15 +82,17 @@ public:
 
     Rate fixedRate() const;
     const std::vector<Rate>& fixedRates() const { return fixedRates_; }
-    const DayCounter& fixedDayCounter() { return fixedDayCounter_; }
+    const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
 
-    const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex() { return overnightIndex_; }
-    Natural rateCutoff() { return rateCutoff_; }
+    const QuantLib::ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
+    Natural rateCutoff() const { return rateCutoff_; }
     Spread onSpread() const;
     const std::vector<Spread>& onSpreads() const { return onSpreads_; }
     Real onGearing() const;
     const std::vector<Real>& onGearings() const { return onGearings_; }
-    const DayCounter& onDayCounter() { return onDayCounter_; }
+    const DayCounter& onDayCounter() const { return onDayCounter_; }
+
+    const Schedule& onSchedule() const { return onSchedule_; }
 
     const Leg& fixedLeg() const { return legs_[0]; }
     const Leg& overnightLeg() const { return legs_[1]; }
@@ -119,6 +121,7 @@ private:
     DayCounter fixedDayCounter_;
     BusinessDayConvention fixedPaymentAdjustment_;
     Calendar fixedPaymentCalendar_;
+    Schedule onSchedule_;
 
     QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
     BusinessDayConvention onPaymentAdjustment_;
