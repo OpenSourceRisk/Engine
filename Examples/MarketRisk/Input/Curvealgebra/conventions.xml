@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Conventions>
+  <Zero>
+    <Id>USD-ZERO-TENOR-BASED</Id>
+    <TenorBased>true</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <Compounding>Continuous</Compounding>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+    <TenorCalendar>US</TenorCalendar>
+    <SpotLag>2</SpotLag>
+    <SpotCalendar>US</SpotCalendar>
+    <RollConvention>Following</RollConvention>
+    <EOM>false</EOM>
+  </Zero>
+  <CommodityFuture>
+    <Id>NaturalGas</Id>
+    <AnchorDay>
+      <DayOfMonth>14</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>ICE_FuturesUS</Calendar>
+    <ExpiryCalendar>ICE_FuturesUS</ExpiryCalendar>
+    <ExpiryMonthLag>0</ExpiryMonthLag>
+    <OffsetDays>2</OffsetDays>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <AdjustBeforeOffset>false</AdjustBeforeOffset>
+    <IsAveraging>false</IsAveraging>
+    <OptionExpiryOffset>5</OptionExpiryOffset>
+    <BalanceOfTheMonthPricingCalendar>ICE_FuturesUS</BalanceOfTheMonthPricingCalendar>
+  </CommodityFuture>
+  <CommodityFuture>
+    <Id>NaturalGasBasis</Id>
+    <AnchorDay>
+      <DayOfMonth>14</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>ICE_FuturesUS</Calendar>
+    <ExpiryCalendar>ICE_FuturesUS</ExpiryCalendar>
+    <ExpiryMonthLag>0</ExpiryMonthLag>
+    <OffsetDays>2</OffsetDays>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <AdjustBeforeOffset>false</AdjustBeforeOffset>
+    <IsAveraging>false</IsAveraging>
+    <OptionExpiryOffset>5</OptionExpiryOffset>
+    <BalanceOfTheMonthPricingCalendar>ICE_FuturesUS</BalanceOfTheMonthPricingCalendar>
+  </CommodityFuture>
+</Conventions>

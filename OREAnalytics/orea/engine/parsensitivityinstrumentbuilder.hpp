@@ -75,6 +75,15 @@ public:
                          const QuantLib::ext::shared_ptr<ore::analytics::Market>& simMarket = nullptr) const;
 
 private:
+    //! Dispatcher into the rate curve related makeXXX() methods below
+    std::pair<QuantLib::ext::shared_ptr<Instrument>, Date>
+    makeInstrument(const std::string& instType, const QuantLib::Date& asof,
+                   const QuantLib::ext::shared_ptr<Market>& market, string ccy, string otherCcy, string curveName,
+                   string yieldCurveName, string equityForecastCurveName, Period term,
+                   const QuantLib::ext::shared_ptr<Convention>& convention, bool singleCurve,
+                   std::set<ore::analytics::RiskFactorKey>& parHelperDependencies,
+                   std::set<std::string>& removeTodaysFixingIndices, const string& expDiscountCurve,
+                   const string& marketConfiguration) const;
     //! Create Deposit for implying par rate sensitivity from zero rate sensitivity
     std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date>
     makeDeposit(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<ore::data::Market>& market, std::string ccy,

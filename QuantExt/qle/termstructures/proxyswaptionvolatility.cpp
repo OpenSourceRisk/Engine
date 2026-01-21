@@ -32,6 +32,11 @@ ProxySwaptionVolatility::ProxySwaptionVolatility(const QuantLib::Handle<Swaption
     : SwaptionVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
       baseSwapIndexBase_(baseSwapIndexBase), baseShortSwapIndexBase_(baseShortSwapIndexBase),
       targetSwapIndexBase_(targetSwapIndexBase), targetShortSwapIndexBase_(targetShortSwapIndexBase) {
+    registerWith(baseVol_);
+    registerWith(baseSwapIndexBase_);
+    registerWith(baseShortSwapIndexBase_);
+    registerWith(targetSwapIndexBase_);
+    registerWith(targetShortSwapIndexBase_);
     enableExtrapolation(baseVol->allowsExtrapolation());
 }
 

@@ -29,14 +29,15 @@ namespace QuantExt {
 FallbackIborIndex::FallbackIborIndex(const QuantLib::ext::shared_ptr<IborIndex> originalIndex,
                                      const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
                                      const Date& switchDate, const bool useRfrCurve)
-    : FallbackIborIndex(originalIndex,
-                        useRfrCurve ? rfrIndex
-                                    : QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(
-                                          rfrIndex->clone(originalIndex->forwardingTermStructure())),
-                        spread, switchDate,
-                        useRfrCurve ? Handle<YieldTermStructure>(QuantLib::ext::make_shared<IborFallbackCurve>(
-                                          originalIndex, rfrIndex, spread, switchDate))
-                                    : originalIndex->forwardingTermStructure()) {}
+    : FallbackIborIndex(
+          originalIndex,
+          useRfrCurve ? rfrIndex
+                      : QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(rfrIndex->clone(Handle<YieldTermStructure>(
+                            QuantLib::ext::make_shared<SpreadedIndexYieldCurve>(rfrIndex, originalIndex, spread, false)))),
+          spread, switchDate,
+          useRfrCurve ? Handle<YieldTermStructure>(
+                            QuantLib::ext::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, switchDate))
+                      : originalIndex->forwardingTermStructure()) {}
 
 FallbackIborIndex::FallbackIborIndex(const QuantLib::ext::shared_ptr<IborIndex> originalIndex,
                                      const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread,

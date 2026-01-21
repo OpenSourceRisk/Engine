@@ -599,6 +599,7 @@ void CreditReferenceDatum::fromXML(XMLNode* node) {
                               XMLUtils::getChildValue(innerNode, "EntityType", false) == "Corp")
                                  ? "Corporate"
                                  : XMLUtils::getChildValue(innerNode, "EntityType", false);
+    creditData_.primaryPriceType = XMLUtils::getChildValue(innerNode, "PrimaryPriceType", false);
 }
 
 XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) const {
@@ -616,6 +617,8 @@ XMLNode* CreditReferenceDatum::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, creditNode, "PredecessorImplementationDate",
                            to_string(creditData_.predecessorImplementationDate));
     XMLUtils::addChild(doc, creditNode, "EntityType", creditData_.entityType);
+    if(creditData_.primaryPriceType != string())
+        XMLUtils::addChild(doc, creditNode, "PrimaryPriceType", creditData_.primaryPriceType);
     return node;
 }
 
@@ -794,6 +797,9 @@ void BasicReferenceDataManager::check(const string& type, const string& id, cons
 }
 
 bool BasicReferenceDataManager::hasData(const string& type, const string& id, const QuantLib::Date& asof) {
+    if (rdmOverride_ && rdmOverride_->hasData(type, id, asof)) 
+        return true;
+
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();
@@ -805,6 +811,10 @@ bool BasicReferenceDataManager::hasData(const string& type, const string& id, co
 
 QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
                                                                      const QuantLib::Date& asof) {
+
+    if (rdmOverride_ && rdmOverride_->hasData(type, id, asof)) 
+		return rdmOverride_->getData(type, id, asof);
+
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {
         asofDate = Settings::instance().evaluationDate();

@@ -95,16 +95,18 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const string& marketConfiguration, const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig, const bool bumpCvaSensis,
-                         const bool enableDynamicIM, const Size dynamicIMStepSize, const Size regressionOrder,
-                         const Real regressionVarianceCutoff, const Size regressionOrderDynamicIm,
-                         const double regressionVarianceCutoffDynamicIm, const bool tradeLevelBreakDown,
-                         const std::vector<Size>& regressionReportTimeStepsDynamicIM, const bool useRedBlocks,
-                         const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
+                         const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+                         const bool bumpCvaSensis, const bool enableDynamicIM, const Size dynamicIMStepSize,
+                         const Size regressionOrder, const Real regressionVarianceCutoff,
+                         const Size regressionOrderDynamicIm, const double regressionVarianceCutoffDynamicIm,
+                         const bool tradeLevelBreakDown, const std::vector<Size>& regressionReportTimeStepsDynamicIM,
+                         const bool useRedBlocks, const bool useExternalComputeDevice,
+                         const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool usePythonIntegration, const bool usePythonIntegrationDynamicIm,
                          const bool continueOnCalibrationError, const bool allowModelFallbacks,
-                         const bool continueOnError, const std::string& context)
+                         const bool continueOnError, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades,
+                         const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
@@ -120,14 +122,15 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       externalComputeDevice_(externalComputeDevice), usePythonIntegration_(usePythonIntegration),
       usePythonIntegrationDynamicIm_(usePythonIntegrationDynamicIm),
       continueOnCalibrationError_(continueOnCalibrationError), allowModelFallbacks_(allowModelFallbacks),
-      continueOnError_(continueOnError), context_(context) {}
+      continueOnError_(continueOnError), useAtParCouponsCurves_(useAtParCouponsCurves),
+      useAtParCouponsTrades_(useAtParCouponsTrades), context_(context) {}
 
 void XvaEngineCG::buildT0Market() {
     DLOG("XvaEngineCG: build init market");
     boost::timer::cpu_timer timer;
     initMarket_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
         asof_, todaysMarketParams_, loader_, curveConfigs_, continueOnError_, true, true, referenceData_, false,
-        iborFallbackConfig_, false, true);
+        iborFallbackConfig_, false, true, useAtParCouponsCurves_);
     timing_t0_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build init market done");
 }
@@ -253,7 +256,7 @@ void XvaEngineCG::buildPortfolio() {
         EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
             model_, std::vector<Date>(simulationDates_.begin(), simulationDates_.end())));
 
-    portfolio_->build(factory, "xva engine cg", true);
+    portfolio_->build(factory, "xva engine cg", true, useAtParCouponsTrades_);
 
     timing_pf_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build trades (" << portfolio_->size() << ") done.");
@@ -1274,14 +1277,6 @@ void XvaEngineCG::calculateDynamicIM() {
             model_->currencies().size() - 1,
             std::vector<RandomVariable>(fxVegaTerms.size(), RandomVariable(model_->size())));
 
-        // additional IM calculator results
-        auto deltaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto vegaMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto curvatureMarginIr = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto deltaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto vegaMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-        auto curvatureMarginFx = QuantLib::ext::make_shared<RandomVariable>(model_->size(), 0.0);
-
         for (auto const& [parameterGroup, exposureNode] : dynamicImInfo_[i].plainTradeSumGrouped) {
 
             // init derivatives container
@@ -1497,16 +1492,15 @@ void XvaEngineCG::calculateDynamicIM() {
 
         // set results for this valuation date
 
+        RandomVariable deltaMarginIr, vegaMarginIr, curvatureMarginIr, deltaMarginFx, vegaMarginFx, curvatureMarginFx;
+
         for (auto const& n : nettingSetIds) {
             dynamicIM_[n][i] = imCalculator.value(conditionalIrDelta, conditionalIrVega, conditionalFxDelta,
-                                                  conditionalFxVega, deltaMarginIr, vegaMarginIr, curvatureMarginIr,
-                                                  deltaMarginFx, vegaMarginFx, curvatureMarginFx);
-            if (deltaMarginIr && deltaMarginFx)
-                dynamicDeltaIM_[n][i] = *deltaMarginIr + *deltaMarginFx;
-            if (vegaMarginIr && vegaMarginFx)
-                dynamicVegaIM_[n][i] = *vegaMarginIr + *vegaMarginFx;
-            if (curvatureMarginIr && curvatureMarginFx)
-                dynamicCurvatureIM_[n][i] = *curvatureMarginIr + *curvatureMarginFx;
+                                                  conditionalFxVega, &deltaMarginIr, &vegaMarginIr, &curvatureMarginIr,
+                                                  &deltaMarginFx, &vegaMarginFx, &curvatureMarginFx);
+            dynamicDeltaIM_[n][i] = deltaMarginIr + deltaMarginFx;
+            dynamicVegaIM_[n][i] = vegaMarginIr + vegaMarginFx;
+            dynamicCurvatureIM_[n][i] = curvatureMarginIr + curvatureMarginFx;
 
             for (Size j = i + 1; j < std::min(i + dynamicIMStepSize_, valuationDates_.size() + 1); ++j) {
                 dynamicIM_[n][j] = dynamicIM_[n][i];

@@ -89,6 +89,8 @@ public:
         QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic,
         const std::string& param, const bool mandatory = false) {
         string str = loadParameterXMLString(analytic, param, mandatory);
+        if (str.empty() && !mandatory)
+            return false;
         obj = QuantLib::ext::make_shared<T>();
         obj->fromXMLString(str);
         return true;
@@ -132,6 +134,9 @@ public:
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
+    void setFixingCutOffDate(Date d) { fixingCutOffDate_ = d; }
+    void setUseAtParCouponsCurves(bool b) { useAtParCouponsCurves_ = b; }
+    void setUseAtParCouponsTrades(bool b) { useAtParCouponsTrades_ = b; }
     void setEnrichIndexFixings(bool b) { enrichIndexFixings_ = b; }
     void setIgnoreFixingLead(Size i) { ignoreFixingLead_ = i; }
     void setIgnoreFixingLag(Size i) { ignoreFixingLag_ = i; }
@@ -149,6 +154,8 @@ public:
     void setConventions(const std::string& xml);
     void setConventions(const QuantLib::ext::shared_ptr<Conventions>& convs);
     void setConventionsFromFile(const std::string& fileName);
+    void setMporConventions(const std::string& xml);
+    void setMporConventionsFromFile(const std::string& fileName);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setBaselTrafficLightConfig(const std::string& xml);
@@ -259,6 +266,7 @@ public:
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
     void setTradePnl(bool b) { tradePnL_ = b; }
+    void setRiskFactorBreakdown(bool b) { riskFactorBreakdown_ = b; }
     void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
     void setVarMethod(const std::string& s) { varMethod_ = s; }
@@ -351,6 +359,24 @@ public:
     void setReportBufferSize(Size s) { reportBufferSize_ = s; }
     void setCounterpartyManager(const std::string& xml);
     void setCounterpartyManagerFromFile(const std::string& fileName);
+    void setCalibrationModel(const std::string& s);
+    void setHwCalibrationMode(const std::string& s);
+    void setPcaCalibration(bool b);
+    void setMeanReversionCalibration(bool b);
+    void setForeignCurrencies(const std::string& s);
+    void setCurveTenors(const std::string& s);
+    void setScenarioInputFile(const std::string& fileName);
+    void setStartDate(const Date& d);
+    void setEndDate(const Date& d);
+    void setUseForwardOrZeroRate(const std::string& s);
+    void setLambda(Real r);
+    void setVarianceRetained(Real r);
+    void setPcaInputFiles(const std::string& fileName, const std::filesystem::path& inputPath);
+    void setBasisFunctionNumber(Size s);
+    void setKappaUpperBound(Real r);
+    void setHaltonMaxGuess(Size s);
+    void setPcaOutputFileName(const std::string& fileName);
+    void setMeanReversionOutputFileName(const std::string& fileName);
 
     // Setters for xva
     void setXvaUseDoublePrecisionCubes(const bool b) { xvaUseDoublePrecisionCubes_ = b; }
@@ -373,6 +399,7 @@ public:
     void setExposureProfiles(bool b) { exposureProfiles_ = b; }
     void setExposureProfilesByTrade(bool b) { exposureProfilesByTrade_ = b; }
     void setExposureProfilesUseCloseOutValues(bool b) { exposureProfilesUseCloseOutValues_ = b; }
+    void setWriteIndividualExposureReports(bool b) { writeIndividualExposureReports_ = b; }
     void setPfeQuantile(Real r) { pfeQuantile_ = r; }
     void setCollateralCalculationType(const std::string& s) { collateralCalculationType_ = s; }
     void setExposureAllocationMethod(const std::string& s) { exposureAllocationMethod_ = s; }
@@ -590,6 +617,9 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
+    Date fixingCutOffDate() const { return fixingCutOffDate_; }
+    bool useAtParCouponsCurves() const { return useAtParCouponsCurves_; }
+    bool useAtParCouponsTrades() const { return useAtParCouponsTrades_; }
     bool enrichIndexFixings() const { return enrichIndexFixings_; }
     Size ignoreFixingLead() const { return ignoreFixingLead_; }
     Size ignoreFixingLag() const { return ignoreFixingLag_; }
@@ -597,6 +627,7 @@ public:
     const std::string& marketConfig(const std::string& context);
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& mporConventions() const { return mporConventions_; }
     const QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig>& iborFallbackConfig() const { return iborFallbackConfig_; }
     const QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLightConfig() const { return baselTrafficLightConfig_; }
     
@@ -723,6 +754,7 @@ public:
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
     bool tradePnl() const { return tradePnL_; }
+    bool riskFactorBreakdown() const { return riskFactorBreakdown_; }
     bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
     const std::string& varMethod() const { return varMethod_; }
@@ -801,7 +833,29 @@ public:
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     const QuantLib::Size& maxScenario() const { return maxScenario_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-  
+
+    /*********************************
+     * Getters for calibration
+     *********************************/
+    const std::string& calibrationModel() const { return calibrationModel_; }
+    const std::string& hwCalibrationMode() const { return hwCalibrationMode_; }
+    bool pcaCalibration() const { return pcaCalibration_; }
+    bool meanReversionCalibration() const { return meanReversionCalibration_; }
+    const std::vector<std::string>& foreignCurrencies() const { return foreignCurrencies_; }
+    const std::vector<Period>& curveTenors() const { return curveTenors_; }
+    const std::string& scenarioInputFile() const { return scenarioInputFile_; }
+    const Date& startDate() const { return startDate_; }
+    const Date& endDate() const { return endDate_; }
+    const std::vector<std::string>& pcaInputFiles() const { return pcaInputFiles_; }
+    bool useForwardRate() const { return useForwardRate_; }
+    Real lambda() const { return lambda_; }
+    Real varianceRetained() const { return varianceRetained_; }
+    Size basisFunctionNumber() const { return basisFunctionNumber_; }
+    Real kappaUpperBound() const { return kappaUpperBound_; }
+    Size haltonMaxGuess() const { return haltonMaxGuess_; }
+    const std::string& pcaOutputFileName() const { return pcaOutputFileName_; }
+    const std::string& meanReversionOutputFileName() const { return meanReversionOutputFileName_; }
+
     /*****************
      * Getters for xva
      *****************/
@@ -818,6 +872,7 @@ public:
     bool exposureProfiles() const { return exposureProfiles_; }
     bool exposureProfilesByTrade() const { return exposureProfilesByTrade_; }
     bool exposureProfilesUseCloseOutValues() const { return exposureProfilesUseCloseOutValues_; }
+    bool writeIndividualExposureReports() const { return writeIndividualExposureReports_; };
     Real pfeQuantile() const { return pfeQuantile_; }
     const std::string&  collateralCalculationType() const { return collateralCalculationType_; }
     const std::string& exposureAllocationMethod() const { return exposureAllocationMethod_; }
@@ -1026,7 +1081,7 @@ public:
      *************************************/
     const std::set<std::string>& analytics() const { return analytics_; }
 
-    virtual void loadParameters(){}
+    virtual void loadParameters();
     virtual void writeOutParameters(){}
 
 protected:
@@ -1058,6 +1113,9 @@ protected:
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    Date fixingCutOffDate_;
+    bool useAtParCouponsCurves_ = true;
+    bool useAtParCouponsTrades_ = true;
     bool enrichIndexFixings_ = false;
     Size ignoreFixingLead_ = 0;
     Size ignoreFixingLag_ = 0;
@@ -1069,7 +1127,7 @@ protected:
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     QuantLib::ext::shared_ptr<ore::data::BaselTrafficLightData> baselTrafficLightConfig_;
-    QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
+    QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_, mporConventions_;
     QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     CurveConfigurationsManager curveConfigs_;
     QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig> calendarAdjustment_;
@@ -1171,6 +1229,7 @@ protected:
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
     bool tradePnL_ = false;
+    bool riskFactorBreakdown_ = false;
     bool includeExpectedShortfall_ = false;
     std::string portfolioFilter_;
     // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
@@ -1191,6 +1250,28 @@ protected:
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationData_;
     // Pearson, Kendall-Rank
     std::string correlationMethod_ = "Pearson";
+
+    /*************
+     * Calibration analytics
+     *************/
+    std::string calibrationModel_;
+    std::string hwCalibrationMode_;
+    bool pcaCalibration_;
+    bool meanReversionCalibration_;
+    std::vector<std::string> foreignCurrencies_;
+    std::vector<Period> curveTenors_;
+    Date startDate_;
+    Date endDate_;
+    std::string scenarioInputFile_;
+    bool useForwardRate_;
+    Real lambda_;
+    std::vector<std::string> pcaInputFiles_;
+    Real varianceRetained_;
+    Size basisFunctionNumber_;
+    Real kappaUpperBound_;
+    Size haltonMaxGuess_;
+    std::string pcaOutputFileName_;
+    std::string meanReversionOutputFileName_;
 
     /*******************
      * EXPOSURE analytic
@@ -1328,6 +1409,7 @@ protected:
     bool sensitivityStressCalcBaseScenario_ = false;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
+    bool writeIndividualExposureReports_ = true;
 
     /***************
      * SIMM analytic
@@ -1477,6 +1559,8 @@ private:
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
     std::string calibrationOutputFileName_;
+    std::string pcaOutputFileName_;
+    std::string meanReversionOutputFileName_;
     std::string xvaSensiJacobiFileName_;
     std::string xvaSensiJacobiInverseFileName_;
     std::string timeAveragedNettedExposureFileName_;

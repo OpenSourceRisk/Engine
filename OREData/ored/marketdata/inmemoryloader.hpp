@@ -77,7 +77,9 @@ void loadDataFromBuffers(
     //! QuantLib::Date Index Fixing in a single std::string, separated by blanks, tabs, colons or commas
     const std::vector<std::string>& fixingData,
     //! Enable/disable implying today's fixings
-    bool implyTodaysFixings = false);
+    bool implyTodaysFixings = false,
+    //! load fixings up to this date
+    QuantLib::Date fixingCutOffDate = QuantLib::Date());
 
 } // namespace data
 } // namespace ore

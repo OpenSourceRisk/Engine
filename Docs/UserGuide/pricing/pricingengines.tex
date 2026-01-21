@@ -42,7 +42,7 @@ in listing \ref{lst:peconfig_Ascot_BlackScholes_Intrinsic}.
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -86,7 +86,7 @@ The parameters have the following meaning:
   as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
 \item OpenEndDateReplacement: if end date is missing in bond schedule (perpetual bond), valuation date plus this period is used as a replacement date
 \item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
 \end{itemize}
 
@@ -138,7 +138,7 @@ The parameters have the following meaning:
 \item TreatSecuritySpreadAsCreditSpread [optional]: If true, the security spread is not incoroporated into the benchmark curve $b$
   as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
 \item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -367,7 +367,7 @@ The parameters have the following meaning:
 \item Bootstrap.StateGridPoints: The number of state grid points of the Fokker-Planck PDE in the calibration phase
 \item Bootstrap.MesherEpsilon: The mesher epsilon of the Fokker-Planck PDE in the calibration phase
 \item Bootstrap.MesherScaling: The mesher scaling multiplier of the Fokker-Planck PDE in the calibration phase
-\item Bootstrap.Mode: bootstrap strategy: ``Simultaneously'' or  ``Alternating'', see separate model docs for further details 
+\item Bootstrap.Mode: bootstrap strategy: ``Simultaneously'' or  ``Alternating'', see separate model docs for further details
 \item Pricing.TimeStepsPerYear: The number of time steps per year to be used for the pricing PDE
 \item Pricing.StateGridPoints: The number of state grid points to be used for the pricing PDE
 \item Pricing.MesherEpsilon: The mesher epsilon for the pricing PDE
@@ -439,7 +439,7 @@ in listing \ref{lst:peconfig_CreditLinkedSwap_DiscountedCashflows_DiscountingCre
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -481,7 +481,7 @@ listing \ref{lst:peconfig_EuropeanSwaption_BlackBachelier_BlackBachelierSwaption
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -519,7 +519,7 @@ The parameters have the following meaning:
   nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -573,7 +573,7 @@ The parameters have the following meaning:
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
 \item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -698,7 +698,7 @@ details.
 A pricing product type similar to European Swaption in subsection \ref{sec:EuropeanSwaption_pt}.
 
 The ``NonStandard'' product type accessed here represents the case of swaptions that do not fullfill
-the standard case of a fixed-against-floating swaption. 
+the standard case of a fixed-against-floating swaption.
 
 In detail, a swaption is defined to be ``Standard'' if the following three conditions hold.
 
@@ -706,7 +706,7 @@ In detail, a swaption is defined to be ``Standard'' if the following three condi
     \item There must be precisely one fixed leg and one floating leg. This condition is necessary since a higher number of legs would
         make it possible to replicate a varying leg with many constant legs.
     \item On the fixed leg the values for notional and rate must be constant.
-    \item On the floating leg, the values for notional and spread must be constant. 
+    \item On the floating leg, the values for notional and spread must be constant.
     Additional to this, the gearing must be equal to one at all times.
 \end{itemize}
 
@@ -753,7 +753,7 @@ The parameters have the following meaning:
   nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -807,7 +807,7 @@ The parameters have the following meaning:
 \item StateGridPoints: The number of grid points in state direction
 \item TimeStepsPerYear: The number of time steps per year to use
 \item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -927,8 +927,8 @@ details.
 \subsection{Product Type: BermudanSwaption NonStandard}
 %--------------------------------------------------------
 
-A pricing product type very similar to ``Bermudan Swaption'' in \ref{sec:BermudanSwaption_pt}. 
-The difference between the two types is analogue to the European case, i.e. the difference is 
+A pricing product type very similar to ``Bermudan Swaption'' in \ref{sec:BermudanSwaption_pt}.
+The difference between the two types is analogue to the European case, i.e. the difference is
 as between European Swaption in \ref{sec:EuropeanSwaption_pt} and European Swaption NonStandard in \ref{sec:EuropeanSwaption_ns_pt}.
 
 %--------------------------------------------------------
@@ -971,7 +971,7 @@ The parameters have the following meaning:
 \item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
 \item TimeStepsPerYear: The number of time steps per year to use
 \item MesherEpsilon: determines the covered probability mass, mass outside state grid is $\Phi^{-1}(1-2\epsilon)$
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1025,7 +1025,7 @@ The parameters have the following meaning:
 \item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1147,8 +1147,8 @@ details.
 \subsection{Product Type: AmericanSwaption NonStandard}
 %--------------------------------------------------------
 
-A pricing product type very similar to ``American Swaption'' in \ref{sec:AmericanSwaption_pt}. 
-The difference between the two types is analogue to the European case, i.e. the difference is 
+A pricing product type very similar to ``American Swaption'' in \ref{sec:AmericanSwaption_pt}.
+The difference between the two types is analogue to the European case, i.e. the difference is
 as between European Swaption in \ref{sec:EuropeanSwaption_pt} and European Swaption NonStandard in \ref{sec:EuropeanSwaption_ns_pt}.
 
 %--------------------------------------------------------
@@ -1173,7 +1173,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item IncludeSecurityLeg: include the security leg in the valuation
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1200,7 +1200,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item IncludeSecurityLeg: include the security leg in the valuation
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1240,7 +1240,7 @@ The parameters have the following meaning:
   as described above, but rather added as a spread on top of the credit curve. Defaults to false if not given
 \item TimestepPeriod [optional]: discretization interval for zero bond pricing, defaults to 3M if not given
   discounting of intermediate bond cashflows.
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1278,7 +1278,7 @@ type. A sample configuration is shown in listing \ref{lst:peconfig_CapFloor_Ibor
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1312,7 +1312,7 @@ shown in listing \ref{lst:peconfig_CapFlooredIborLeg_BlackOrBachelier_BlackIborC
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1346,7 +1346,7 @@ shown in listing \ref{lst:peconfig_CapFlooredInterpolatedIborLeg_BlackOrBachelie
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1380,7 +1380,7 @@ shown in listing \ref{lst:peconfig_CapFlooredOvernightIndexedCouponLeg_BlackOrBa
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1414,7 +1414,7 @@ shown in listing \ref{lst:peconfig_CapFlooredAverageONIndexedCouponLeg_BlackOrBa
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1448,7 +1448,7 @@ shown in listing \ref{lst:peconfig_CapFlooredAverageBMAIndexedCouponLeg_BlackOrB
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1483,8 +1483,8 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag        
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+  use observation lag
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1520,8 +1520,8 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag        
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+  use observation lag
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1555,7 +1555,7 @@ Available Model/Engine pairs:
 
 Engine description:
 
-Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine. 
+Black/AnalyticalApproximation builds a CommodityAveragePriceOptionAnalyticalEngine.
 
 Model Parameters:
 \begin{itemize}
@@ -1563,8 +1563,8 @@ Model Parameters:
     \begin{itemize}
         \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities = bachelier model, lognormal volatilities = moment-matching approximation)
         \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
-        \item \textbf{Lognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed and possible normal input vols are converted into log-normal vols 
-        \item \textbf{ShiftedLognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed convert vols in shifted lognormal vols with a given displacement 
+        \item \textbf{Lognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed and possible normal input vols are converted into log-normal vols
+        \item \textbf{ShiftedLognormal}: Use first-two-moment Turnbull-Wakeman approximation, if needed convert vols in shifted lognormal vols with a given displacement
     \end{itemize}
     \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
 \end{itemize}
@@ -1580,7 +1580,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item beta: parameter in correlation parametrization
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 You can set \texttt{beta}, \texttt{volatility} and \texttt{displacement} for each underlying individually:
@@ -1613,7 +1613,7 @@ The parameters have the following meaning:
 \begin{itemize}
 \item samples: the number of Monte Carlo Samples
 \item beta: parameter in correlation parametrization
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1662,7 +1662,7 @@ The parameters have the following meaning:
 \begin{itemize}
 \item samples: the number of Monte Carlo Samples
 \item beta: parameter in correlation parametrization
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1702,7 +1702,7 @@ DiscountedCashflows/DiscountingCommodityForwardEngine builds a DiscountingCommod
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1741,7 +1741,7 @@ DiscountedCashflows/MidPointCdsEngine builds a MidPointCdsEngine. A sample confi
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1782,7 +1782,7 @@ Black/BlackCdsOptionEngine builds a BlackCdsOptionEngine. A sample configuration
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1822,7 +1822,11 @@ The parameters have the following meaning:
 \begin{itemize}
 \item Curve: Index, Underlying
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item CalibrateUnderlyingCurves [optional]: Only applies when Curve is set to Underlying.
+If true, it apply a spread to the individual constituent curves to match the index CDS spread.
+This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
+(See Calibration of default curves for index tranches for details.)
 \end{itemize}
 
 \begin{longlisting}
@@ -1835,6 +1839,7 @@ The parameters have the following meaning:
         <Parameter name="Curve">Index</Parameter>
         <Parameter name="SensitivityDecomposition">DeltaWeighted</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+        <Parameter name="CalibrateUnderlyingCurves">false</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -1866,7 +1871,11 @@ The parameters have the following meaning:
 \item Curve: Index, Underlying
 \item FepCurve: Index, Underlying
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item CalibrateUnderlyingCurves [optional]: Only applies when Curve or FepCurve is set to Underlying.
+If true, it apply a spread to the individual constituent curves to match the index CDS spread.
+This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
+(See Calibration of default curves for index tranches for details.)
 \end{itemize}
 
 \begin{longlisting}
@@ -1897,7 +1906,11 @@ The parameters have the following meaning:
 \item Curve: Index, Underlying
 \item FepCurve: Index, Underlying
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item CalibrateUnderlyingCurves [optional]: Only applies when Curve or FepCurve is set to Underlying.
+If true, it apply a spread to the individual constituent curves to match the index CDS spread.
+This ensures that pricing the index CDS using underlying curves produces the same NPV as pricing with the index curve directly. Defaults to false.
+(See Calibration of default curves for index tranches for details.)
 \end{itemize}
 
 \begin{longlisting}
@@ -1937,7 +1950,7 @@ The parameters have the following meaning:
 \begin{itemize}
 \item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
   use observation lag
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -1973,7 +1986,7 @@ shown in listing \ref{lst:peconfig_YYCapFloor_YYCapModel_YYCapEngine}.
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2008,7 +2021,7 @@ sample configuration is shown in listing \ref{lst:peconfig_CapFlooredYYLeg_CapFl
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2044,7 +2057,7 @@ volatility input. A sample configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2092,7 +2105,7 @@ The parameters have the following meaning:
 \item VegaRatio: vega ratio for policy
 \item PriceThreshold: price threshold for policy
 \item BsStdDev: std devs for BsStdDev
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2142,7 +2155,7 @@ The parameters have the following meaning:
 \item min, max: min max std dev for Gauss copula
 \item steps: integration steps
 \item useStochasticRecovery: whether to use deterministic (false) or stochastic (true) recovery model
-\item useAssumedRecovery: wheter to use specialized default curves, which are bootstrapped using the assumed recovery rate
+\item useAssumedRecovery: whether to use specialized default curves, which are bootstrapped using the assumed recovery rate
 \item recoveryRateGrid: recovery rate grid for the recovery rate grid
 \item recoveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
@@ -2152,22 +2165,22 @@ The parameters have the following meaning:
 \item homogeneousPoolWhenJustified: whether to use homogeneous pool if possible, applies to QuantLib::LossDist
 \item useQuadrature: whether to use quadrature
 \item calibrateConstituentCurves: whether to calibrate constituent curves to index level
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \item useIndexCDSPricer [optional]: whether to use the index CDS pricer for tranches with detachment point at 100 percent, defaults to true
 \item useIndexCurveForIndexCDS [optional]: use the index curve for the 100 tranche instead of the constituent curve, defaults to false
 \end{itemize}
 
-It is possible to define multiple recovery rate grids and probabilities. 
-For example, you can define a grid for different CDS tiers, such as SNRFOR. The parameter name for a specific grid is recoveryRateGrid\_SNRFOR, 
+It is possible to define multiple recovery rate grids and probabilities.
+For example, you can define a grid for different CDS tiers, such as SNRFOR. The parameter name for a specific grid is recoveryRateGrid\_SNRFOR,
 and the corresponding probabilities are recoveryRateProbabilities\_SNRFOR.
 
 If you need to differentiate the grids further based on the underlying, such as having different grids for CDX HY and CDX IG,
-you can add the \emph{IndexSubFamily} identifier to the index credit reference data. 
-This allows you to set up independent grids for groups of credit indices, 
+you can add the \emph{IndexSubFamily} identifier to the index credit reference data.
+This allows you to set up independent grids for groups of credit indices,
 such as a grid for CDX High Yields Tranches recoveryRateGrid\_CDX.NA.HY\_SNRFOR.
 
-The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values \emph{Markit2020} and \emph{constant} are deprecated and 
-will cause a warning. With the setting \emph{Markit2020} there will be a recovery grid with three points used. The grid will be be based around the constituent's recovery. If the recovery rate 
+The recovery rate grid and probabilities are defined as a comma-separated list of values. The previous allowed values \emph{Markit2020} and \emph{constant} are deprecated and
+will cause a warning. With the setting \emph{Markit2020} there will be a recovery grid with three points used. The grid will be be based around the constituent's recovery. If the recovery rate
 is greater than 10 \% and lower than 55 \%,  the grid is $[0.1, RR, 2 RR - 0.1]$, otherwise a constant recovery rate will be assumed.
 
 \begin{longlisting}
@@ -2232,7 +2245,7 @@ The parameters have the following meaning:
 \item Seed: seed for MC simulation
 \item LossDistributionPeriods:
 \item Correlation: correlation to use
-\item SensitivityTemplate [optional]: the sensitivity template to use   
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2277,7 +2290,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item IntegrationPoints: Number of points for Gauss-Hermite numerical integration
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2319,7 +2332,7 @@ The parameters have the following meaning:
 \item MeanReversion: the mean reversion for the model
 \item LowerRateBoundLogNormal, UpperRateBoundLogNormal: rate bounds for ln / sln vol input
 \item LowerRateNormal, UpperRateNormal: rate bounds for normal vol input
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2372,7 +2385,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2382,13 +2395,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteArithmeticAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -2403,7 +2416,7 @@ listing \ref{lst:peconfig_CommodityAsianOptionArithmeticPrice_BlackScholesMerton
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2428,7 +2441,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2459,7 +2472,7 @@ Available Model/Engine pairs:
 \item BlackScholesMerton/MCDiscreteArithmeticASEngine
 \item ScriptedTrade/ScriptedTrade
 \end{itemize}
-  
+
 Engine description:
 
 BlackScholesMerton/MCDiscreteArithmeticASEngine builds a MCDiscreteArithmeticASEngine using Sobol sequences. A sample
@@ -2476,7 +2489,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2486,13 +2499,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteArithmeticASEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -2508,7 +2521,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2557,7 +2570,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2567,13 +2580,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteGeometricAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -2589,7 +2602,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2614,7 +2627,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2639,7 +2652,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2687,7 +2700,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2697,13 +2710,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteGeometricASEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -2719,7 +2732,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2744,7 +2757,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2776,7 +2789,7 @@ Model Parameters:
     \begin{itemize}
         \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve (normal volatilities use Bachelier model, lognormal volatilities use Kirk Approximation)
         \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
-        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into log-normal vols 
+        \item \textbf{Lognormal}: Use Kirk approximation, if needed and possible normal input vols are converted into log-normal vols
         \item \textbf{ShiftedLognormal}: Use Kirk approximation where both underlyings following a shifted lognormal process, if needed and possible input vols are converted into a shifted lognormal vols with a given displacement.
     \end{itemize}
     \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
@@ -2786,7 +2799,7 @@ Engine description:
 
 BlackScholes/CommoditySpreadOptionEngine builds a CommoditySpreadOptionAnalyticalEngine, which uses the Bachelier model or the Kirk
 approximation described in Iain J. Clark, Commodity Option Pricing, Section 2.9. The correlation between two different commodities are
-taken from correlation termstructure and the the intra-asset correlation between two future contracts of the same underlying (calendar spread) 
+taken from correlation termstructure and the intra-asset correlation between two future contracts of the same underlying (calendar spread)
 is parametrized as
 
 $$\rho(s, t) = e^{-\beta |s-t|}$$
@@ -2798,7 +2811,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item beta: the parameter ``beta'' in the correlation parametrization
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 You can set \texttt{beta}, \texttt{volatility} and \texttt{displacement} for each underlying or spread pair individually:
@@ -2850,8 +2863,8 @@ Model Parameters
     \begin{itemize}
         \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
         \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
-        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
-        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement
     \end{itemize}
     \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
 \end{itemize}
@@ -2870,7 +2883,7 @@ BlackScholes/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample co
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2902,8 +2915,8 @@ Model Parameters
     \begin{itemize}
         \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
         \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
-        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
-        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement
     \end{itemize}
     \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
 \end{itemize}
@@ -2922,7 +2935,7 @@ BlackScholes/AnalyticEuropeanForwardEngine builds a AnalyticEuropeanForwardEngin
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -2954,8 +2967,8 @@ Model Parameters
     \begin{itemize}
         \item \textbf{AsInputVolatilityType}: Use Model according to volatility type of the vol curve
         \item \textbf{Normal}: Use Bachelier model, if needed log-normal input vols are converted into normal vols
-        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols 
-        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement 
+        \item \textbf{Lognormal}: Use Black model, if needed and possible normal input vols are converted into log-normal vols
+        \item \textbf{ShiftedLognormal}: Use shifted Black model with displacement, if needed convert vols in shifted lognormal vols with the given displacement
     \end{itemize}
     \item Displacement [optional]: Only relevant for volatility = \textbf{ShiftedLognormal}. The displacement parameter in the shifted lognormal model. Defaults to 0 if omitted.
 \end{itemize}
@@ -2974,7 +2987,7 @@ BlackScholes/AnalyticCashSettledEuropeanEngine builds a AnalyticCashSettledEurop
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3019,7 +3032,7 @@ The parameters have the following meaning:
 \item DampingSteps: Number of damping steps taken by FD solver
 \item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
 \item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3048,7 +3061,7 @@ BlackScholes/BaroneAdesiWhaleyApproximationEngine builds a BaroneAdesiWhaleyAppr
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3082,8 +3095,8 @@ DiscountedCashflows/CommoditySwapEngine builds a DiscountingSwapEngine. A sample
 The parameters have the following meaning:
 
 \begin{itemize}
-\item 
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3128,7 +3141,7 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item beta: the parameter ``beta'' in the correlation parametrization
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3157,7 +3170,7 @@ The parameters have the following meaning:
 \item beta: the parameter ``beta'' in the correlation parametrization
 \item samples: the number of MC samples to use
 \item seed: the seed to use
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3169,7 +3182,7 @@ The parameters have the following meaning:
     <EngineParameters>
         <Parameter name="beta">2.05</Parameter>
         <Parameter name="samples">10000</Parameter>
-        <Parameter name="seed">42</Parameter>    
+        <Parameter name="seed">42</Parameter>
         <Parameter name="SensitivityTemplate">COMM_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -3177,7 +3190,7 @@ The parameters have the following meaning:
 \caption{Configuration for Product CommoditySwaption, Model Black, Engine MonteCarlo}
 \label{lst:peconfig_CommoditySwaption_Black_MonteCarlo}
 \end{longlisting}
-    
+
 %--------------------------------------------------------
 \subsection{Product Type: EquityAsianOptionArithmeticPrice}
 %--------------------------------------------------------
@@ -3208,7 +3221,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3218,13 +3231,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteArithmeticAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -3239,7 +3252,7 @@ listing \ref{lst:peconfig_EquityAsianOptionArithmeticPrice_BlackScholesMerton_Tu
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3264,7 +3277,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3295,7 +3308,7 @@ Available Model/Engine pairs:
 \item BlackScholesMerton/MCDiscreteArithmeticASEngine
 \item ScriptedTrade/ScriptedTrade
 \end{itemize}
-  
+
 Engine description:
 
 BlackScholesMerton/MCDiscreteArithmeticASEngine builds a MCDiscreteArithmeticASEngine using Sobol sequences. A sample
@@ -3312,7 +3325,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3322,13 +3335,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteArithmeticASEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -3344,7 +3357,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3393,7 +3406,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3403,13 +3416,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteGeometricAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -3425,7 +3438,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3450,7 +3463,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3475,7 +3488,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3523,7 +3536,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3533,13 +3546,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteGeometricASEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">EQ_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -3555,7 +3568,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3580,7 +3593,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3620,7 +3633,7 @@ identical except the Model is set to GarmanKohlhagen.
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3650,7 +3663,7 @@ The parameters have the following meaning:
 \item XGrid: State grid specification
 \item DampingSteps: Number of damping steps taken by FD solver
 \item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3690,7 +3703,7 @@ is identical.
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3728,7 +3741,7 @@ identical except the Model is set to BlackScholesMerton.
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3763,7 +3776,7 @@ vol surfaces). A sample configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3797,7 +3810,7 @@ shown in listing \ref{lst:peconfig_EquityForward_DiscountedCashflows_Discounting
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3831,7 +3844,7 @@ listing \ref{lst:peconfig_EquityFutureOption_BlackScholes_AnalyticEuropeanForwar
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3865,7 +3878,7 @@ BlackScholesMerton/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sam
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3903,7 +3916,7 @@ The parameters have the following meaning:
 \item RegressionOrder: the regression order to use for conditional expectations (not used by this engine)
 \item Interactive: whether to enable the interactive debugger
 \item ScriptedLibraryOverride: whether to override a script 'EquityCliquetOption' in the script library with a hardcoded script
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3941,7 +3954,7 @@ BlackScholes/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample co
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -3977,7 +3990,7 @@ BlackScholesMerton/AnalyticCashSettledEuropeanEngine builds a AnalyticCashSettle
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4022,7 +4035,7 @@ The parameters have the following meaning:
 \item DampingSteps: Number of damping steps taken by FD solver
 \item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
 \item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4051,7 +4064,7 @@ BlackScholesMerton/BaroneAdesiWhaleyApproximationEngine builds a BaroneAdesiWhal
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4095,7 +4108,7 @@ The parameters have the following meaning:
 \item DampingSteps: Number of damping steps taken by FD solver
 \item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
 \item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4137,7 +4150,7 @@ configuration for equity is the same except the Model ist set to BlackScholesMer
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4253,7 +4266,7 @@ The parameters have the following meaning:
 \begin{itemize}
 \item Scheme [Optional, default GaussLobatto]: GaussLobatto or Segment, this determines the integration scheme used
 \item Bounds [Optional, default PriceThreshold]: ``Fixed'': The integration bounds are found by
-  
+
   $$
   \text{Lower} = F e ^ {m \sigma \sqrt{T}},  \text{Upper} = F e ^ {M \sigma \sqrt{T}}
   $$
@@ -4280,7 +4293,7 @@ The parameters have the following meaning:
 \item FixedMaxStdDevs [Optional, default $5$]: Used to determine the integration bounds, if Bounds = Fixed, see above.
 \item StaticTodaysSpot [Optional, default false]: If true the contribution to the variance from the last day before the
   valuation date to the valuation date is ignored in scenario / sensitivity calculations. See below for more details.
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{listing}[ht]
@@ -4358,7 +4371,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4368,13 +4381,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteArithmeticAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">FX_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -4389,7 +4402,7 @@ listing \ref{lst:peconfig_FxAsianOptionArithmeticPrice_BlackScholesMerton_Turnbu
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4414,7 +4427,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4445,7 +4458,7 @@ Available Model/Engine pairs:
 \item BlackScholesMerton/MCDiscreteArithmeticASEngine
 \item ScriptedTrade/ScriptedTrade
 \end{itemize}
-  
+
 Engine description:
 
 BlackScholesMerton/MCDiscreteArithmeticASEngine builds a MCDiscreteArithmeticASEngine using Sobol sequences. A sample
@@ -4462,7 +4475,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4472,13 +4485,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteArithmeticASEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">FX_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -4494,7 +4507,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4543,7 +4556,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4553,13 +4566,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteGeometricAPEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">FX_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -4575,7 +4588,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4600,7 +4613,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4625,7 +4638,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4673,7 +4686,7 @@ The parameters have the following meaning:
 \item RequiredTolerance: max tolerance for MC error, if 0 (not specified) RequiredSamples must be given
 \item MaxSamples: max number of samples for MC simulation
 \item Seed: seed for random number generator
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4683,13 +4696,13 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>MCDiscreteGeometricASEngine</Engine>
     <EngineParameters>
-        <Parameter name="BrownianBridge">true</Parameter>    
-        <Parameter name="AntitheticVariate">true</Parameter>    
-        <Parameter name="ControlVariate">true</Parameter>    
-        <Parameter name="RequiredSamples">10000</Parameter>    
-        <Parameter name="RequiredTolerance">0</Parameter>    
-        <Parameter name="MaxSamples">0</Parameter>    
-        <Parameter name="Seed">42</Parameter>    
+        <Parameter name="BrownianBridge">true</Parameter>
+        <Parameter name="AntitheticVariate">true</Parameter>
+        <Parameter name="ControlVariate">true</Parameter>
+        <Parameter name="RequiredSamples">10000</Parameter>
+        <Parameter name="RequiredTolerance">0</Parameter>
+        <Parameter name="MaxSamples">0</Parameter>
+        <Parameter name="Seed">42</Parameter>
         <Parameter name="SensitivityTemplate">FX_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -4705,7 +4718,7 @@ configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4730,7 +4743,7 @@ Product Type ScriptedTrade, see there for details. A sample configuration is giv
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4764,7 +4777,7 @@ shown in listing \ref{lst:peconfig_FxDigitalOptionEuropeanCS_GarmanKohlhagen_Ana
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4803,7 +4816,7 @@ The parameters have the following meaning:
 \item XGrid: State grid specification
 \item DampingSteps: Number of damping steps taken by FD solver
 \item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4850,7 +4863,7 @@ The parameters have the following meaning:
 \item Samples: number of MC samples to use
 \item Sobol: whether to use Sobol numbers for simulation
 \item SalvagingAlgorithm: whether to make the input correlation matrix positive definite. Compare \cite{corrSalv}.
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4895,7 +4908,7 @@ listing \ref{lst:peconfig_FxForward_DiscountedCashflows_DiscountingFxForwardEngi
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4942,7 +4955,7 @@ GarmanKohlhagen/AnalyticEuropeanEngine builds a AnalyticEuropeanEngine. A sample
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -4979,7 +4992,7 @@ GarmanKohlhagen/AnalyticCashSettledEuropeanEngine builds a AnalyticCashSettledEu
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5058,7 +5071,7 @@ The parameters have the following meaning:
 \item DampingSteps: Number of damping steps taken by FD solver
 \item EnforceMonotoneVariance [optional]: If true variance is modified to be monotone if needed, defaults to true
 \item TimeGridMinimumSize [optional]: Minimum number in resulting time grid, defaults to $1$ if not given
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5087,7 +5100,7 @@ GarmanKohlhagen/BaroneAdesiWhaleyApproximationEngine builds a BaroneAdesiWhaleyA
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5121,7 +5134,7 @@ shown in listing \ref{lst:peconfig_FxDoubleTouchOption_GarmanKohlhagen_AnalyticD
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5268,7 +5281,7 @@ DiscountedCashflows/DiscountingSwapEngine builds a DiscountingSwapEngine. A samp
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5310,7 +5323,7 @@ shown in listing \ref{lst:peconfig_Swap_DiscountedCashflows_DiscountingCurrencyS
 The parameters have the following meaning:
 
 \begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5358,7 +5371,7 @@ The parameters have the following meaning:
 \item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
 \item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
 \item OptionExpiryPosition: optional, defaults to Mid, can be Left or Mid
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5408,7 +5421,7 @@ The parameters have the following meaning:
 \item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
 \item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
 \item OptionExpiryPosition: optional, defaults to Mid, can be Left or Mid
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5441,7 +5454,7 @@ Used by trade type: RiskParticipationAgreement with
 \item only fixed, ibor coupons, ois (comp, avg), simple cashflows allowed, but possibly capped / floored,
   as naked option, with in arrears fixing for ibor
 \item with optionData (i.e. callable underlying), as naked option (i.e. swaption)
-\end{itemize} 
+\end{itemize}
 
 Available Model/Engine pairs: LGM/Grid
 
@@ -5467,7 +5480,7 @@ The parameters have the following meaning:
 \item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
 \item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
 \item OptionExpiryPosition: optional, defaults to Mid, can be Left or Mid
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5529,7 +5542,7 @@ The parameters have the following meaning:
 \item Tolerance: Error tolerance for calibration
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
 \begin{longlisting}
@@ -5603,7 +5616,7 @@ In addition to product specific settings there is also a block with global param
   a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
   types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
   able to compute analytical or AAD first order sensitivities.
-\item McType: Set automatically. One of Classic and American depending on the context for which the pricinge engines 
+\item McType: Set automatically. One of Classic and American depending on the context for which the pricinge engines
   file is referenced. Might also be left empty. This is used by some trade constructions to adapt to certain monte carlo
   types. E.g. Pricer would not be attached to coupons which can be computed in AMC without a leg / coupon pricer
 \item StrikeSpread: Defaults to 0.1. If set, overrides the default value used to calculate the strike spread for replication engines.
