@@ -1024,9 +1024,9 @@ The parameters have the following interpretation:
 
 See the examples in sections \ref{example:marketrisk} for a demonstrations of these analytics.
 
-\subsubsection{Value at Risk}
+\subsubsection{Parametric Value at Risk}
 
-The {\tt VaR} analytics provide computation of Value-at-Risk measures based on the sensitivity (delta, gamma, cross gamma) data above. Listing \ref{lst:ore_var} shows a configuration example.
+The {\tt VaR} analytics provide computation of parametric Value-at-Risk measures based on the sensitivity (delta, gamma, cross gamma) data above. Listing \ref{lst:ore_var} shows a configuration example.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -1070,6 +1070,52 @@ The parameters have the following interpretation:
 \end{itemize}
 
 See the example in section \ref{example:marketrisk_parametricvar} for a demonstration.
+
+\subsubsection{Historical Simulation Value at Risk}
+
+The {\tt Historical Simulation VaR} analytics provide computation of historical simulated Value-at-Risk measures based on the historical market scenarios passed in a csv file. Listing \ref{lst:ore_histvar} shows a configuration example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="parametricVar"> 
+      <Parameter name="active">Y</Parameter> 
+	  <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="historicalPeriod">2017-01-17,2019-12-30</Parameter>
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">USD</Parameter>
+      <Parameter name="mporOverlappingPeriods">true</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>  
+	  <Parameter name="includeExpectedShortfall">Y</Parameter>
+      <Parameter name="breakdown">Y</Parameter>
+      <Parameter name="portfolioFilter">PF1</Parameter>
+      <Parameter name="outputFile">histvar.csv</Parameter> 
+    </Analytic> 
+</Analytics>
+\end{minted}
+\caption{ORE analytic: Historical Simulation VaR}
+\label{lst:ore_histvar}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt historicalScenarioFile:} csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor.
+\item {\tt simulationConfigFile:} defines the structure of the simulation market applied in the P&L calculation, e.g. discount and index curves, yield curve tenor points used, FX pairs etc.
+\item {\tt historicalPeriod:} comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used.
+\item {\tt mporDays:} Number of calendar days between historical scenarios taken from the observation periods in order to compute P&L efects (typically 1 or 10)
+\item {\tt mporCalendar:} Calendar applied in the scenario date calculation
+\item {\tt mporOverlappingPeriods:} Boolean, if true we use overlapping periods of length mporDays (t to t + 10 calendar days, t+1 to t+11, t+2 to t+12, ...), otherwise consecutive periods (t to t+10, t+10 to t+20, ...)
+\item {\tt quantiles:} Several desired quantiles can be specified here in a comma separated list; these lead to several columns of results in the output file. Note that e.g. the 1\% quantile corresponds to the lower tail of the P\&L distribution (VaR), 99\% to the upper tail.
+\item {\tt includeExpectedShortfall:} If yes, also include the expected shortfall in the output file
+\item {\tt breakdown:} If yes, VaR is computed by portfolio, risk class (All, Interest Rate, FX, Inflation, Equity, Credit) and risk type (All, Delta \& Gamma, Vega)
+\item {\tt portfolioFilter:} Regular expression used to filter the portfolio for which VaR is computed; if the filter is not provided, then the full portfolio is processed
+\item {\tt outputFile:} Output file name
+\end{itemize}
+
+See the example in section \ref{example:marketrisk_histsim} for a demonstration.
 
 \subsubsection{P\&L, P\&L Explain, ZeroToParShift, Scenario}
 
