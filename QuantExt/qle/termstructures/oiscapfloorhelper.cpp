@@ -27,7 +27,7 @@
 #include <ql/utilities/null_deleter.hpp>
 
 #include <boost/bind/bind.hpp>
-#include <ql/functional.hpp>
+#include <functional>
 
 using namespace QuantLib;
 using std::ostream;

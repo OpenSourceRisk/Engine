@@ -270,9 +270,9 @@ void SaccrCalculator::aggregate() {
     DLOG("SA-CCR: Hedging set AddOn calculation");
     for (map<HedgingSetKey, Real>::iterator it = addOnHedgingSet_.begin(); it != addOnHedgingSet_.end(); it++) {
         // Add-ons
-        const NettingSetDetails& nettingSetDetails = QuantLib::ext::get<0>(it->first);
-        const AssetClass& assetClass = QuantLib::ext::get<1>(it->first);
-        const string& hedgingSet = QuantLib::ext::get<2>(it->first);
+        const NettingSetDetails& nettingSetDetails = std::get<0>(it->first);
+        const AssetClass& assetClass = std::get<1>(it->first);
+        const string& hedgingSet = std::get<2>(it->first);
         if (assetClass == AssetClass::IR) {
             // effectiveNotional_[it->first] =
             //     sqrt(D1 * D1 + D2 * D2 + D3 * D3 + 1.4 * (D1 * D2 + D2 * D3) + 0.6 * D1 * D3);
@@ -290,12 +290,12 @@ void SaccrCalculator::aggregate() {
             Real addonType = 0;
             Real addonTypeSquared = 0;
             for (const auto& [hedgingSubsetKey, effectiveNotional] : subsetEffectiveNotional_) {
-                HedgingSetKey hedgingSetKey(QuantLib::ext::get<0>(hedgingSubsetKey),
-                                            QuantLib::ext::get<1>(hedgingSubsetKey),
-                                            QuantLib::ext::get<2>(hedgingSubsetKey));
+                HedgingSetKey hedgingSetKey(std::get<0>(hedgingSubsetKey),
+                                            std::get<1>(hedgingSubsetKey),
+                                            std::get<2>(hedgingSubsetKey));
                 if (hedgingSetKey != it->first)
                     continue;
-                const string& hedgingSubset = QuantLib::ext::get<3>(hedgingSubsetKey);
+                const string& hedgingSubset = std::get<3>(hedgingSubsetKey);
                 vector<string> tokens;
                 boost::split(tokens, hedgingSubset, boost::is_any_of("_"));
                 QL_REQUIRE(tokens.size() == 1 || tokens.size() == 2,
@@ -319,10 +319,10 @@ void SaccrCalculator::aggregate() {
             Real addonType = 0;
             Real addonTypeSquared = 0;
             for (const auto& [hedgingSubsetKey, effectiveNotional] : subsetEffectiveNotional_) {
-                string hedgingSubset = QuantLib::ext::get<3>(hedgingSubsetKey);
-                HedgingSetKey hedgingSetKey(QuantLib::ext::get<0>(hedgingSubsetKey),
-                                            QuantLib::ext::get<1>(hedgingSubsetKey),
-                                            QuantLib::ext::get<2>(hedgingSubsetKey));
+                string hedgingSubset = std::get<3>(hedgingSubsetKey);
+                HedgingSetKey hedgingSetKey(std::get<0>(hedgingSubsetKey),
+                                            std::get<1>(hedgingSubsetKey),
+                                            std::get<2>(hedgingSubsetKey));
                 if (hedgingSetKey != it->first)
                     continue;
                 bool isEquityIndex = isIndex_[hedgingSubset];
@@ -352,9 +352,9 @@ void SaccrCalculator::aggregate() {
     DLOG("SA-CCR: Asset Class AddOn calculation");
     for (map<AssetClassKey, Real>::iterator it = addOnAssetClass_.begin(); it != addOnAssetClass_.end(); it++) {
         for (map<HedgingSetKey, Real>::iterator ith = addOnHedgingSet_.begin(); ith != addOnHedgingSet_.end(); ith++) {
-            NettingSetDetails nettingSetDetails = QuantLib::ext::get<0>(ith->first);
-            AssetClass assetClass = QuantLib::ext::get<1>(ith->first);
-            // string hedgingSet = QuantLib::ext::get<2>(it->first);
+            NettingSetDetails nettingSetDetails = std::get<0>(ith->first);
+            AssetClass assetClass = std::get<1>(ith->first);
+            // string hedgingSet = std::get<2>(it->first);
             AssetClassKey key(nettingSetDetails, assetClass);
             if (it->first != key)
                 continue;
@@ -421,12 +421,12 @@ void SaccrCalculator::aggregate() {
 
     hedgingSets_.clear();
     for (map<HedgingSetKey, Real>::iterator it = addOnHedgingSet_.begin(); it != addOnHedgingSet_.end(); it++) {
-        NettingSetDetails nettingSetDetails = QuantLib::ext::get<0>(it->first);
-        AssetClass ac = QuantLib::ext::get<1>(it->first);
+        NettingSetDetails nettingSetDetails = std::get<0>(it->first);
+        AssetClass ac = std::get<1>(it->first);
         pair<NettingSetDetails, AssetClass> key(nettingSetDetails, ac);
         if (hedgingSets_.find(key) == hedgingSets_.end())
             hedgingSets_[key] = vector<string>();
-        hedgingSets_[key].push_back(QuantLib::ext::get<2>(it->first));
+        hedgingSets_[key].push_back(std::get<2>(it->first));
     }
 
     if (reports_.size() > 0)

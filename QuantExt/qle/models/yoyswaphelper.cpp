@@ -129,7 +129,7 @@ void YoYSwapHelper::createSwap() {
 
     // YoY swap
     yoySwap_ = QuantLib::ext::make_shared<YearOnYearInflationSwap>(YearOnYearInflationSwap::Payer, 1.0,
-        fixedSchedule, 0.01, fixedDayCount_, yoySchedule, yoyIndex_, observationLag_, 0.0, yoyDayCount_,
+        fixedSchedule, 0.01, fixedDayCount_, yoySchedule, yoyIndex_, observationLag_, QuantLib::CPI::AsIndex, 0.0, yoyDayCount_,
         paymentCalendar_, paymentConvention_);
 
     // set coupon pricer
