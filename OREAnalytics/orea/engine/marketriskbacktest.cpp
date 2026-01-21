@@ -373,7 +373,8 @@ void MarketRiskBacktest::createReports(const ext::shared_ptr<MarketRiskReport::R
         if (pnl) {
             for (const auto& t : pnlColumns())
                 pnl->addColumn(std::get<0>(t), std::get<1>(t), std::get<2>(t));
-            pnl->addColumn("DiscountSpec", string());
+            pnl->addColumn("DiscountSpecKey1", string());
+            pnl->addColumn("DiscountSpecKey2", string());
         }
     }
 
@@ -383,7 +384,8 @@ void MarketRiskBacktest::createReports(const ext::shared_ptr<MarketRiskReport::R
             pnlTrade->addColumn("TradeId", string());
             for (const auto& t : pnlColumns())
                 pnlTrade->addColumn(std::get<0>(t), std::get<1>(t), std::get<2>(t));
-            pnlTrade->addColumn("DiscountSpec", string());
+            pnlTrade->addColumn("DiscountSpecKey1", string());
+            pnlTrade->addColumn("DiscountSpecKey2", string());
         }
     }
 }
@@ -458,16 +460,29 @@ void MarketRiskBacktest::addPnlRow(const QuantLib::ext::shared_ptr<BacktestRepor
         .add(currency.empty() ? calculationCurrency_ : currency);
 
     // Append DiscountSpec column (from TodaysMarketParameters) if available and applicable
-    std::string discountSpecStr;
+    std::string discountSpecStr1;
     if (todaysmarket_ && key_1.keytype == QuantExt::RiskFactorKey::KeyType::DiscountCurve) {
         const auto& discMap = todaysmarket_->mapping(ore::data::MarketObject::DiscountCurve, ore::data::Market::defaultConfiguration);
         auto it = discMap.find(key_1.name);
         if (it != discMap.end()){
-            discountSpecStr = it->second;
-        }     
+            discountSpecStr1 = it->second;
+        }
     }
-    if (!discountSpecStr.empty())
-        report.add(discountSpecStr);
+    if (!discountSpecStr1.empty())
+        report.add(discountSpecStr1);
+    else
+        report.add(string());
+
+    std::string discountSpecStr2;
+    if (todaysmarket_ && key_2.keytype == QuantExt::RiskFactorKey::KeyType::DiscountCurve) {
+        const auto& discMap = todaysmarket_->mapping(ore::data::MarketObject::DiscountCurve, ore::data::Market::defaultConfiguration);
+        auto it = discMap.find(key_2.name);
+        if (it != discMap.end()){
+            discountSpecStr2 = it->second;
+        }
+    }
+    if (!discountSpecStr2.empty())
+        report.add(discountSpecStr2);
     else
         report.add(string());
 }
