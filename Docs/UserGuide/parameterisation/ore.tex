@@ -202,6 +202,7 @@ type can be (so far) in
 \item XVA Stress, XVA Sensitivities, XVA Explain
 \item SA-CCR, SA-CVA, BA-CVA, SMRC
 \item Portfolio Details
+\item Correlation
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -243,7 +244,7 @@ the list above.
   </Analytic>
 </Analytics>
 \end{minted}
-\caption{ORE analytics: npv, cashflow, curves, additional results, todays market calibration}
+\caption{ORE analytics: npv, cashflow, curves, additional results, todays market calibration, correlation}
 \label{lst:ore_analytics}
 \end{listing}
 
@@ -645,6 +646,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
     <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
     <Parameter name="mporCashFlowMode">NonePay</Parameter>
+    <Parameter name="generateCorrelations">N</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -1072,6 +1074,48 @@ The parameters have the following interpretation:
 \end{itemize}
 
 See the example in section \ref{example:marketrisk_parametricvar} for a demonstration.
+
+\subsubsection{Correlation}
+
+The {\tt Correlation} analytic provide computation of the correlation matrix based on the generated historical scenarios. Listing \ref{lst:ore_corr} shows a configuration example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+  <Analytic type="correlation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="correlation_method">Pearson</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="historicalPeriod">2016-12-30,2019-12-30</Parameter>
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">USD</Parameter>
+      <Parameter name="outputFile">correlation.csv</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: Correlation}
+\label{lst:ore_corr}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\t correlation_method:} Regular expression used to filter the portfolio for which VaR is computed; if the filter is not provided, then the full portfolio is processed
+\item {\tt marketConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+  \ref{sec:sim_market} for a detailed description).
+\item {\tt historicalScenarioFile:} csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor.
+\item {\tt sensitivityConfigFile:} Sensitivity parameterisation for the sensitivity analysis on asofDate.
+\item {\tt historicalPeriod}: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used.
+\item {\tt mporDays}: Alternatively, the second date can be specified in terms of calendar days from asofDate.
+\item {\tt mporCalendar}: Calendar for computing the mporDate from asofDate and mporDays.
+\item {\tt outputFile:} Output file name
+\end{itemize}
+
+See the example in section \ref{example:marketrisk_correlation} for a demonstration.
 
 \subsubsection{P\&L, P\&L Explain, ZeroToParShift, Scenario}
 
