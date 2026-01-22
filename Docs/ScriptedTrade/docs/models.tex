@@ -239,7 +239,8 @@ The engine parameters have the following meaning:
     Default: 0.005
   \item HestonMaxAcceptableError [Optional]: Log an error message if the (best) calibration error exceeds this value.\\
     Default: 0.05
-  \item HestonCalibrationMethod: Choices are ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
+  \item HestonCalibrationMethod: Choices are ``None'', ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
+    ``None'' means no calibration, the initial parameter values are used; \\
     ``ConstantBestFit'' means calibration of the Heston model with constant parameters only, possibly with restarts (see HestonMaxCalibrationAttempts above); \\
     ``PiecewiseBestFit'' means running the former first, followed by a calibration with piecewise constant $\sigma(t)$ and $\rho(t)$
     Heston parameters for more flexibility in matching several expiries, the other parameters are kept fixed at the previous

@@ -68,7 +68,7 @@ HestonModelBuilder::HestonModelBuilder(
       earlyExitThreshold_(earlyExitThreshold), maxAcceptableError_(maxAcceptableError), discretization_(discretization),
       referenceCalibrationGrid_(referenceCalibrationGrid), dontCalibrate_(dontCalibrate) {
 
-    if (calibrationMethod_ == "ConstantBestFit")
+    if (calibrationMethod_ == "ConstantBestFit" || calibrationMethod_ == "None")
         processType_ = AssetModelWrapper::ProcessType::Heston;
     else
         processType_ = AssetModelWrapper::ProcessType::PiecewiseHeston;
@@ -101,7 +101,7 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::ge
         DLOG("Build a Heston Model with constant parameters");
 	auto model = hmc.model();
 
-	if (calibrationMethod_ == "ConstantBestFit") {  
+	if (calibrationMethod_ == "ConstantBestFit" || calibrationMethod_ == "None") {
 	    processes.push_back(model->process());
 	    calibrationResults_.push_back(hmc.results());
 	} else {

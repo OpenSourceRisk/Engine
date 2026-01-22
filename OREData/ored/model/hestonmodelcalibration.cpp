@@ -44,7 +44,6 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-
 namespace ore {
 namespace data {
 
@@ -240,6 +239,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
     QuantLib::ext::shared_ptr<HestonModel> model;
 
     QL_REQUIRE(initialValues_.size() == 5, "5 initial values expected, found " << initialValues_.size());
+    QL_REQUIRE(fixedValues_.size() == 5, "5 fixed values flags expected, found " << fixedValues_.size());
 
     Real theta = initialValues_[0];
     Real kappa = initialValues_[1];
@@ -247,8 +247,8 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
     Real rho = initialValues_[3];
     Real v0 = initialValues_[4];    
     bool allFixed = fixedValues_[0] && fixedValues_[1] && fixedValues_[2] && fixedValues_[3] && fixedValues_[4];
-    
-    if (dontCalibrate_ || allFixed) {
+
+    if (dontCalibrate_ || allFixed || calibrationMethod_ == "None") {
         auto hestonProcess = QuantLib::ext::make_shared<HestonProcess>(
             process_->riskFreeRate(), process_->dividendYield(), process_->stateVariable(), v0, kappa, theta, sigma,
             rho, discretization_);
