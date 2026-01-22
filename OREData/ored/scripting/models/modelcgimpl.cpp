@@ -221,6 +221,8 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
         Date baseDate = inf->second->zeroInflationTermStructure()->baseDate();
         Date effectiveFixingDate = fwddate != Null<Date>() ? fwddate : obsdate;
         std::pair<Date, Date> lim = inflationPeriod(effectiveFixingDate, inf->second->frequency());
+        std::cout << "Get Inflation fixing obsDate" << obsdate << " fwddate " << fwddate << " effectiveFixingDate "
+                  << effectiveFixingDate << " lim (" << lim.first << "," << lim.second << ")" << std::endl;
         std::size_t indexStart =
             getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                     std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
@@ -228,6 +230,8 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
         if (!indexInfo.infIsInterpolated()) {
             return indexStart;
         }
+        std::cout << "Inflation index is interpolated, getting second fixing for date "
+                  << QuantLib::io::iso_date(lim.second) << std::endl;
         // otherwise we need to get a second value and interpolate as in ZeroInflationIndex
         std::size_t indexEnd = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                                        std::distance(infIndices_.begin(), inf), lim.second + 1, obsdate,

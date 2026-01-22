@@ -62,17 +62,19 @@ Time inflationTime(const Date& date,
     const QuantLib::ext::shared_ptr<InflationTermStructure>& inflationTs,
     bool indexIsInterpolated,               
     const DayCounter& dayCounter) {
-
+    
     DayCounter dc = inflationTs->dayCounter();
     if (dayCounter != DayCounter())
         dc = dayCounter;
-
+    std::cout << "inflationTime: date=" << date << " baseDate=" << inflationTs->baseDate()
+              << " dayCounter=" << dc.name() << " indexIsInterpolated=" << indexIsInterpolated << std::endl;
     return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, 
         dc, inflationTs->baseDate(), date);
 }
 
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const DayCounter& dc, bool indexIsInterpolated) {
     auto lag = inflationTime(ts->referenceDate(), *ts, indexIsInterpolated, dc);
+    std::cout << "inflationGrowth: t=" << t << " lag=" << lag << std::endl;
     return pow(1.0 + ts->zeroRate(t - lag), t);
 }
 

@@ -930,6 +930,7 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
 }
 
 std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
+    std::cout << "infdkI called with i=" << i << ", t=" << t << ", T=" << T << ", z=" << z << ", y=" << y << std::endl;
     QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
     Real V0, V_tilde;
     std::pair<Real, Real> Vs = infdkV(i, t, T);

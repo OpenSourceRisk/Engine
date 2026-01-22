@@ -1128,11 +1128,11 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                     getInfMarketIndex(info.name(), modelInfIndices_);
                 Size lag = getInflationSimulationLag(marketIndex);
                 for (auto const& d : s.second) {
-                    auto lim = inflationPeriod(d, info.inf()->frequency());
-                    simulationDates_.insert(lim.first + lag);
+                    auto lim = inflationPeriod(d + lag, info.inf()->frequency());
+                    simulationDates_.insert(lim.first);
                     // Allow interpolation of indices for convencience (avoid interpolation logic in script)
                     if (info.infIsInterpolated())
-                        simulationDates_.insert(d + lag);
+                        simulationDates_.insert(lim.second + 1);
                 }
             } else {
                 // for all other indices we just take the original dates

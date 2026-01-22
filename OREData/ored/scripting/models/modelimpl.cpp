@@ -158,6 +158,9 @@ RandomVariable ModelImpl::getInflationIndexFixing(const bool returnMissingFixing
                                                   const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
                                                   const Size indexNo, const Date& limDate, const Date& obsdate,
                                                   const Date& fwddate, const Date& baseDate) const {
+    std::cout << "ModelImpl::getInflationIndexFixing for index " << indexInput << " limDate "
+              << QuantLib::io::iso_date(limDate) << " obsdate " << QuantLib::io::iso_date(obsdate) << " fwddate "
+              << QuantLib::io::iso_date(fwddate) << " baseDate " << QuantLib::io::iso_date(baseDate) << std::endl;
     RandomVariable res(size());
     Real f = infIndex->timeSeries()[limDate];
     // we exclude historical fixings
@@ -196,14 +199,18 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
         Date baseDate = inf->second->zeroInflationTermStructure()->baseDate();
         Date effectiveFixingDate = fwddate != Null<Date>() ? fwddate : obsdate;
         std::pair<Date, Date> lim = inflationPeriod(effectiveFixingDate, inf->second->frequency());
+        std::cout << "modelImpl.eval() obsDate " << obsdate << " fwddate " << fwddate << " effectiveFixingDate "
+                  << effectiveFixingDate << " lim (" << lim.first << "," << lim.second << ")" << std::endl;
         RandomVariable indexStart =
             getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                     std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
+        std::cout << "  indexStart for date " << QuantLib::io::iso_date(lim.first) << " is " << indexStart << std::endl;
         // if the index is not interpolated we are done
         if (!indexInfo.infIsInterpolated()) {
             return indexStart;
         }
-        ALOG("Interpolated Inflation Indices are deprecated, adjust your script to handle interpolation there");
+        std::cout << "  Inflation index is interpolated, getting second fixing for date "
+                  << QuantLib::io::iso_date(lim.second+1) << std::endl;
         // otherwise we need to get a second value and interpolate as in ZeroInflationIndex
         RandomVariable indexEnd = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                                           std::distance(infIndices_.begin(), inf), lim.second + 1,

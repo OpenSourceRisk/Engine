@@ -475,25 +475,30 @@ RandomVariable GaussianCam::getIrIndexValue(const Size indexNo, const Date& d, c
 }
 
 RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
+    std::cout << "GaussianCam:getInfIndexValue called for indexNo " << indexNo << " date " << d
+              << " fwd " << (fwd != Null<Date>() ? to_string(fwd) : "Null") << std::endl;
     Date fixingDate = d;
     Date obsDate = d;
     if (fwd != Null<Date>())
         fixingDate = fwd;
     Size lag = getInflationSimulationLag(infIndices_[indexNo].second);
-    auto const& state = infStates_.at(obsDate + lag).at(indexNo);
+    obsDate = inflationPeriod(obsDate + lag, infIndices_[indexNo].second->frequency()).first;
+    fixingDate = inflationPeriod(fixingDate + lag, infIndices_[indexNo].second->frequency()).first;
+    std::cout << "  obsDate " << obsDate << " fixingDate " << fixingDate << std::endl;
+    auto const& state = infStates_.at(obsDate).at(indexNo);
     Size camIndex = infIndexPositionInCam_[indexNo];
-    Real t = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(obsDate + lag);
-    Real T = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(fixingDate + lag);
-    bool isInterpolated = infIndices_[indexNo].first.infIsInterpolated();
+    Real t = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(obsDate);
+    Real T = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(fixingDate);
     Real baseFixing =
         infIndices_[indexNo].second->fixing(infIndices_[indexNo].second->zeroInflationTermStructure()->baseDate());
+    std::cout << "  t " << t << " T " << T << " baseFixing " << baseFixing << std::endl;
     RandomVariable result(size());
 
     if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::DK) {
         InfDkVectorised infdkv(*cam_);
         RandomVariable baseFixingVec(size(), baseFixing);
         QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
-        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second, isInterpolated);
+        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second, false);
         result = baseFixingVec * dk.first * (fixingDate != obsDate ? dk.second : RandomVariable(size(), 1.0));
     } else if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::JY) {
         result = exp(state.second);
@@ -503,7 +508,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
             growthFactor.expand();
             for (Size p = 0; p < size(); ++p) {
                 growthFactor.data()[p] =
-                    inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], isInterpolated);
+                    inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], false);
             }
             result *= growthFactor;
         }
