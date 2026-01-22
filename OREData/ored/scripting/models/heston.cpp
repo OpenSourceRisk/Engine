@@ -387,22 +387,6 @@ void Heston::setAdditionalResults() const {
     }
 }
 
-/*
-RandomVariable Heston::npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-                           const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
-                           const RandomVariable& addRegressor2) const {
-    RandomVariable result;
-
-    if (type_ == Model::Type::MC) {
-        QL_FAIL("Heston::npv not implemented for Model::Type::MC");
-        return result;
-    } else {
-        // FD calculation
-        return AssetModel::npv(amount, obsdate, filter, memSlot, addRegressor1, addRegressor2);
-    }
-}
-*/
-
 Real Heston::extractT0Result(const RandomVariable& value) const {
 
     if (type_ == Type::MC)

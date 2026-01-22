@@ -34,6 +34,8 @@ class Heston final : public AssetModel {
 public:
     using AssetModel::AssetModel;
 
+    Real extractT0Result(const RandomVariable& value) const override;
+
 private:
     void performModelCalculations() const override;
     Real initialValue(const Size indexNo) const override;
@@ -49,13 +51,6 @@ private:
                             const Matrix& correlation, const Matrix& sqrtCorr,
                             const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
-
-    // RandomVariable npv(const RandomVariable& amount, const Date& obsdate, const Filter& filter,
-    //                    const QuantLib::ext::optional<long>& memSlot, const RandomVariable& addRegressor1,
-    //                    const RandomVariable& addRegressor2) const override;
-
-    Real extractT0Result(const RandomVariable& value) const override;
-
 };
 
 

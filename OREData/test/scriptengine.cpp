@@ -1088,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
 }
 
 BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
-    BOOST_TEST_MESSAGE("Testing american option with Heston model using MC vs QuantLib FD engine...");
+    BOOST_TEST_MESSAGE("Testing American option with Heston model using MC vs QuantLib FD engine...");
 
     Date ref(7, May, 2019);
     Settings::instance().evaluationDate() = ref;
@@ -1181,13 +1181,13 @@ BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
     Model::Params params;
     params.regressionOrder = 6;
     auto iborFallbackConfig = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
-    std::vector<std::string> indices = {"EQ-STOXX"};    
+    std::vector<std::string> indices = {"EQ-STOXX"};
     auto modelBuilder = QuantLib::ext::make_shared<HestonModelBuilder>(
         indices, yts, bsProcess, simulationDates, std::set<Date>(), nSteps, std::vector<Period>(), std::vector<Real>(),
         std::vector<Period>(), initialValues, fixedValues, "None");
     auto model = QuantLib::ext::make_shared<Heston>(Model::Type::MC, nPaths, "EUR", yts, "EQ-STOXX", "EUR",
-                                                          modelBuilder->model(), simulationDates, iborFallbackConfig,
-                                                          "Smile", std::vector<Real>(), params);
+                                                    modelBuilder->model(), simulationDates, iborFallbackConfig, "Smile",
+                                                    std::vector<Real>(), params);
 
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
@@ -1213,6 +1213,146 @@ BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
     timer.stop();
     BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
     BOOST_CHECK_CLOSE(avg, fdNpv, 5.0);
+}
+
+void testEuropeanOptionHeston(Model::Type modelType) {
+  
+    BOOST_REQUIRE(modelType == Model::Type::MC || modelType == Model::Type::FD);
+
+    Date ref(7, May, 2019);
+    Settings::instance().evaluationDate() = ref;
+
+    std::string script = "Option = Quantity * PAY(max( PutCall * (Underlying(Expiry) - Strike), 0 ),\n"
+                         "                        Expiry, Settlement, PayCcy);";
+    ScriptParser parser(script);
+    BOOST_REQUIRE(parser.success());
+    BOOST_TEST_MESSAGE("Parsing successful, AST:\n" << to_string(parser.ast()));
+
+    Real blackVol = 0.15;
+    Real s0 = 4338;
+    Real theta = 0.03;
+    Real kappa = 19;
+    Real sigma = 2.4;
+    Real rho = -0.6;
+    Real v0 = 0.03;
+    BOOST_TEST_MESSAGE("Feller: " << 2.0 * theta * kappa / (sigma*sigma));
+
+    std::vector<Real> initialValues = {theta, kappa, sigma, rho, v0};
+    std::vector<bool> fixedValues(5, true);
+
+    Real rate = 0.01;
+    Real quantity = 10.0;
+    Real putcall = -1.0;
+    Real strike = 4350;
+    Date expiry(7, May, 2020);
+    Date settlement(9, May, 2020);
+
+    Size nSteps = 50;
+    constexpr Size nPaths = 100000;
+    
+    // FD specification for the benchmark QuantLib engine
+    Size xGrid = 100;
+    Size vGrid = 100;
+    Size dampingSteps = 0;
+    FdmSchemeDesc scheme = FdmSchemeDesc::Hundsdorfer();
+
+    Size modelSize = modelType == Model::Type::MC ? nPaths : xGrid * vGrid;
+    Model::Params params;
+    params.regressionOrder = 6;
+    params.stateGridPoints = xGrid;
+    params.varianceStateGridPoints = vGrid;
+
+    auto context = QuantLib::ext::make_shared<Context>();
+    context->scalars["Quantity"] = RandomVariable(modelSize, quantity);
+    context->scalars["PutCall"] = RandomVariable(modelSize, putcall);
+    context->scalars["Strike"] = RandomVariable(modelSize, strike);
+    context->scalars["Underlying"] = IndexVec{modelSize, "EQ-STOXX"};
+    context->scalars["Expiry"] = EventVec{modelSize, expiry};
+    context->scalars["Settlement"] = EventVec{modelSize, settlement};
+    context->scalars["PayCcy"] = CurrencyVec{modelSize, "EUR"};
+    context->scalars["Option"] = RandomVariable(modelSize, 0.0);
+
+    auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
+    BOOST_REQUIRE_NO_THROW(indexInfo->run());
+    BOOST_REQUIRE_EQUAL(indexInfo->indexEvalDates().size(), 1);
+    BOOST_CHECK_EQUAL(indexInfo->indexEvalDates().begin()->first, "EQ-STOXX");
+    BOOST_CHECK_EQUAL(indexInfo->indexEvalDates().begin()->second.size(), 1);
+    BOOST_CHECK_EQUAL(*indexInfo->indexEvalDates().begin()->second.begin(), expiry);
+    BOOST_REQUIRE_EQUAL(indexInfo->payObsDates().size(), 1);
+    BOOST_CHECK_EQUAL(indexInfo->payObsDates().begin()->first, "EUR");
+    BOOST_CHECK_EQUAL(indexInfo->payObsDates().begin()->second.size(), 1);
+    BOOST_CHECK_EQUAL(*indexInfo->payObsDates().begin()->second.begin(), expiry);
+    BOOST_REQUIRE_EQUAL(indexInfo->payPayDates().size(), 1);
+    BOOST_CHECK_EQUAL(indexInfo->payPayDates().begin()->first, "EUR");
+    BOOST_CHECK_EQUAL(indexInfo->payPayDates().begin()->second.size(), 1);
+    BOOST_CHECK_EQUAL(*indexInfo->payPayDates().begin()->second.begin(), settlement);
+    BOOST_CHECK(indexInfo->regressionDates().empty());
+
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<FlatForward>(ref, rate, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> yts0(
+        QuantLib::ext::make_shared<FlatForward>(ref, 0.0, ActualActual(ActualActual::ISDA)));
+    Handle<BlackVolTermStructure> volts(
+        QuantLib::ext::make_shared<BlackConstantVol>(ref, NullCalendar(), blackVol, ActualActual(ActualActual::ISDA)));
+    auto bsProcess = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
+
+    // compile the sim and pay dates required by the BS model ctor below
+    std::set<Date> simulationDates, payDates;
+    for (auto const& s : indexInfo->indexEvalDates())
+        simulationDates.insert(s.second.begin(), s.second.end());
+    for (auto const& s : indexInfo->payObsDates())
+        simulationDates.insert(s.second.begin(), s.second.end());
+    simulationDates.insert(indexInfo->regressionDates().begin(), indexInfo->regressionDates().end());
+    for (auto const& s : indexInfo->payPayDates())
+        payDates.insert(s.second.begin(), s.second.end());
+
+    cpu_timer timer;
+
+    auto iborFallbackConfig = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
+    std::vector<std::string> indices = {"EQ-STOXX"};    
+    auto modelBuilder = QuantLib::ext::make_shared<HestonModelBuilder>(
+        indices, yts, bsProcess, simulationDates, std::set<Date>(), nSteps, std::vector<Period>(), std::vector<Real>(),
+        std::vector<Period>(), initialValues, fixedValues, "None");
+    auto model =
+        QuantLib::ext::make_shared<Heston>(modelType, modelSize, "EUR", yts, "EQ-STOXX", "EUR", modelBuilder->model(),
+                                           simulationDates, iborFallbackConfig, "Smile", std::vector<Real>(), params);
+
+    ScriptEngine engine(parser.ast(), context, model);
+    BOOST_REQUIRE_NO_THROW(engine.run());
+    BOOST_TEST_MESSAGE(*context);
+    BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
+    RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
+    BOOST_REQUIRE(rv.size() == modelSize);
+    //Real avg = expectation(rv).at(0);
+    Real avg = model->extractT0Result(rv);    
+    timer.stop();
+    BOOST_TEST_MESSAGE("option value estimation " << avg << " (timing " << timer.format(default_places, "%w") << "s)");
+    
+    // compare with result from fd engine
+    auto hestonProcess = modelBuilder->model()->hestonProcesses().front();
+    auto hestonModel = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
+    auto fdEngine = QuantLib::ext::make_shared<FdHestonVanillaEngine>(hestonModel, nSteps, xGrid, vGrid, dampingSteps, scheme);
+    
+    VanillaOption option(
+        QuantLib::ext::make_shared<PlainVanillaPayoff>(putcall > 0.0 ? Option::Call : Option::Put, strike),
+        QuantLib::ext::make_shared<EuropeanExercise>(expiry));
+    option.setPricingEngine(fdEngine);
+    timer.start();
+    Real fdNpv = option.NPV() * quantity;
+    timer.stop();
+    BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
+    BOOST_CHECK_CLOSE(avg, fdNpv, 5.0);
+}
+
+BOOST_AUTO_TEST_CASE(testEuropeanOptionHestonMC) {
+    BOOST_TEST_MESSAGE("Testing European option with Heston model using MC vs QuantLib FD pricer");
+    testEuropeanOptionHeston(Model::Type::MC);
+}
+
+BOOST_AUTO_TEST_CASE(testEuropeanOptionHestonFD) {
+    BOOST_TEST_MESSAGE("Testing European option with Heston model using MC vs QuantLib FD pricer");
+    testEuropeanOptionHeston(Model::Type::FD);
 }
 
 BOOST_AUTO_TEST_CASE(testAsianOption) {
