@@ -758,6 +758,12 @@ void FixingDateGetter::visit(CmbCoupon& c) {
 void FixingDateGetter::visit(EquityMarginCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(c.equityCurve()->name()),
                                     c.date());
+    for (const auto& d : c.fixingDates()) {
+        if(c.equityCurve()){
+            Date endDate = c.equityCurve()->fixingCalendar().advance(d, -1 * Days);
+            requiredFixings_.addFixingDate(endDate, IndexNameTranslator::instance().oreName(c.equityCurve()->name()), c.date());
+        }
+    }
     if (c.fxIndex() != nullptr)
         requiredFixings_.addFixingDate(c.fixingStartDate(),
                                        IndexNameTranslator::instance().oreName(c.fxIndex()->name()), c.date());
