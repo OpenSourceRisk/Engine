@@ -1087,22 +1087,9 @@ BOOST_AUTO_TEST_CASE(testAmericanOption) {
     BOOST_CHECK_CLOSE(avg, fdNpv, 5.0);
 }
 
-BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
-    BOOST_TEST_MESSAGE("Testing American option with Heston model using MC vs QuantLib FD engine...");
-
+void testAmericanOptionHeston(Model::Type modelType, std::string script) {
     Date ref(7, May, 2019);
     Settings::instance().evaluationDate() = ref;
-
-    std::string script = "NUMBER Exercise;\n"
-                         "NUMBER i;\n"
-                         "FOR i IN (SIZE(Expiry), 1, -1) DO\n"
-                         "    Exercise = PAY( PutCall * (Underlying(Expiry[i]) - Strike),\n"
-                         "                    Expiry[i], Settlement[i], PayCcy );\n"
-                         "    IF Exercise > NPV( Option, Expiry[i], Exercise > 0 ) AND Exercise > 0 THEN\n"
-                         "        Option = Exercise;\n"
-                         "    END;\n"
-                         "END;\n"
-                         "Option = Quantity * Option;\n";
 
     ScriptParser parser(script);
     BOOST_REQUIRE(parser.success());
@@ -1128,30 +1115,35 @@ BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
     Size nSteps = 50;
     constexpr Size nPaths = 100000;
     // FD specification for the benchmark QuantLib engine
-    Size tGrid = nSteps;
     Size xGrid = 100;
     Size vGrid = 100;
     Size dampingSteps = 0;
     FdmSchemeDesc scheme = FdmSchemeDesc::Hundsdorfer();
-    
+
+    Size modelSize = modelType == Model::Type::MC ? nPaths : xGrid * vGrid;
+    Model::Params params;
+    params.regressionOrder = 6;
+    params.stateGridPoints = xGrid;
+    params.varianceStateGridPoints = vGrid;
+
     Schedule expirySchedule(Date(8, May, 2019), Date(9, May, 2020), 1 * Weeks, NullCalendar(), Unadjusted, Unadjusted,
                             DateGeneration::Forward, false);
     std::vector<ValueType> expiryDates, settlDates;
     for (auto const& d : expirySchedule.dates()) {
-        expiryDates.push_back(EventVec{nPaths, d});
-        settlDates.push_back(EventVec{nPaths, d /* + 2*/}); // for comparison with fd engine set settlment = expiry
+        expiryDates.push_back(EventVec{modelSize, d});
+        settlDates.push_back(EventVec{modelSize, d /* + 2*/}); // for comparison with fd engine set settlment = expiry
     }
     BOOST_TEST_MESSAGE("expiry schedule size: " <<  expirySchedule.dates().size());
     
     auto context = QuantLib::ext::make_shared<Context>();
-    context->scalars["Quantity"] = RandomVariable(nPaths, quantity);
-    context->scalars["PutCall"] = RandomVariable(nPaths, putcall);
-    context->scalars["Strike"] = RandomVariable(nPaths, strike);
-    context->scalars["Underlying"] = IndexVec{nPaths, "EQ-STOXX"};
+    context->scalars["Quantity"] = RandomVariable(modelSize, quantity);
+    context->scalars["PutCall"] = RandomVariable(modelSize, putcall);
+    context->scalars["Strike"] = RandomVariable(modelSize, strike);
+    context->scalars["Underlying"] = IndexVec{modelSize, "EQ-STOXX"};
     context->arrays["Expiry"] = expiryDates;
     context->arrays["Settlement"] = settlDates;
-    context->scalars["PayCcy"] = CurrencyVec{nPaths, "EUR"};
-    context->scalars["Option"] = RandomVariable(nPaths, 0.0);
+    context->scalars["PayCcy"] = CurrencyVec{modelSize, "EUR"};
+    context->scalars["Option"] = RandomVariable(modelSize, 0.0);
 
     auto indexInfo = QuantLib::ext::make_shared<StaticAnalyser>(parser.ast(), context);
     BOOST_REQUIRE_NO_THROW(indexInfo->run());
@@ -1178,31 +1170,35 @@ BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
         Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), yts0, yts, volts);
 
     cpu_timer timer;
-    Model::Params params;
-    params.regressionOrder = 6;
     auto iborFallbackConfig = QuantLib::ext::make_shared<IborFallbackConfig>(IborFallbackConfig::defaultConfig());
     std::vector<std::string> indices = {"EQ-STOXX"};
     auto modelBuilder = QuantLib::ext::make_shared<HestonModelBuilder>(
         indices, yts, bsProcess, simulationDates, std::set<Date>(), nSteps, std::vector<Period>(), std::vector<Real>(),
         std::vector<Period>(), initialValues, fixedValues, "None");
-    auto model = QuantLib::ext::make_shared<Heston>(Model::Type::MC, nPaths, "EUR", yts, "EQ-STOXX", "EUR",
+    auto model = QuantLib::ext::make_shared<Heston>(modelType, modelSize, "EUR", yts, "EQ-STOXX", "EUR",
                                                     modelBuilder->model(), simulationDates, iborFallbackConfig, "Smile",
                                                     std::vector<Real>(), params);
 
     ScriptEngine engine(parser.ast(), context, model);
+    // try {
+    //   engine.run();
+    // } catch(std::exception& e) {
+    //   BOOST_TEST_MESSAGE("error in engine.run(): " << e.what());
+    // }      
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE(*context);
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
     RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
-    BOOST_REQUIRE(rv.size() == nPaths);
-    Real avg = expectation(rv).at(0);
+    BOOST_REQUIRE(rv.size() == modelSize);
+    //Real avg = expectation(rv).at(0);
+    Real avg = model->extractT0Result(rv);    
     timer.stop();
     BOOST_TEST_MESSAGE("option value estimation " << avg << " (timing " << timer.format(default_places, "%w") << "s)");
     
     // compare with result from fd engine
     auto hestonProcess = modelBuilder->model()->hestonProcesses().front();
     auto hestonModel = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
-    auto fdEngine = QuantLib::ext::make_shared<FdHestonVanillaEngine>(hestonModel, tGrid, xGrid, vGrid, dampingSteps, scheme);
+    auto fdEngine = QuantLib::ext::make_shared<FdHestonVanillaEngine>(hestonModel, nSteps, xGrid, vGrid, dampingSteps, scheme);
     
     VanillaOption option(
         QuantLib::ext::make_shared<PlainVanillaPayoff>(putcall > 0.0 ? Option::Call : Option::Put, strike),
@@ -1213,6 +1209,45 @@ BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
     timer.stop();
     BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
     BOOST_CHECK_CLOSE(avg, fdNpv, 5.0);
+}
+
+BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
+    BOOST_TEST_MESSAGE("Testing American option with Heston model using MC vs QuantLib FD engine...");
+
+    std::string scriptMC = "NUMBER Payoff;\n"
+                           "NUMBER i;\n"
+                           "FOR i IN (SIZE(Expiry), 1, -1) DO\n"
+                           "    Payoff = PAY( PutCall * (Underlying(Expiry[i]) - Strike),\n"
+                           "                    Expiry[i], Settlement[i], PayCcy );\n"
+                           "    IF Payoff > NPV( Option, Expiry[i], Payoff > 0 ) AND Payoff > 0 THEN\n"
+                           "        Option = Payoff;\n"
+                           "    END;\n"
+                           "END;\n"
+                           "Option = Quantity * Option;\n";
+
+    testAmericanOptionHeston(Model::Type::MC, scriptMC);
+}
+
+BOOST_AUTO_TEST_CASE(testAmericanOptionHestonFD) {
+    BOOST_TEST_MESSAGE("Testing American option with Heston model using FD vs QuantLib FD engine...");
+
+    std::string scriptFD = "NUMBER Payoff;\n"
+                           "NUMBER i;\n"
+                           "NUMBER ContinuationValue;\n"
+                           "Option = 0 * Underlying(Expiry[SIZE(Expiry)]);"
+                           "FOR i IN (SIZE(Expiry), 1, -1) DO\n"
+                           "    Payoff = PAY( PutCall * (Underlying(Expiry[i]) - Strike),\n"
+                           "                    Expiry[i], Settlement[i], PayCcy );\n"
+                           "    ContinuationValue = NPV( Option, Expiry[i] );\n"
+                           "    IF Payoff > ContinuationValue AND Payoff > 0 THEN\n"
+                           "        Option = Payoff;\n"
+                           "    ELSE \n"
+                           "        Option = ContinuationValue; \n"
+                           "    END;\n"
+                           "END;\n"
+                           "Option = Quantity * Option;\n";
+
+    testAmericanOptionHeston(Model::Type::FD, scriptFD);
 }
 
 void testEuropeanOptionHeston(Model::Type modelType) {
