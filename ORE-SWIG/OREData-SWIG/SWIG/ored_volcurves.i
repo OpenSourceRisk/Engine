@@ -62,7 +62,7 @@ class SwaptionVolCurve : public GenericYieldVolCurve {
 %template(GeneralizedBlackScholesProcessVector) std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess> >;
 
 %shared_ptr(LocalVolModelBuilder)
-class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
+class LocalVolModelBuilder : public AssetModelBuilderBase {
     public:
          enum class Type { Dupire, DupireFloored, AndreasenHuge };
          LocalVolModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
