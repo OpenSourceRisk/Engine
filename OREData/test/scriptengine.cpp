@@ -1208,7 +1208,7 @@ void testAmericanOptionHeston(Model::Type modelType, std::string script) {
     Real fdNpv = option.NPV() * quantity;
     timer.stop();
     BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
-    BOOST_CHECK_CLOSE(avg, fdNpv, 5.0);
+    BOOST_CHECK_CLOSE(avg, fdNpv, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(testAmericanOptionHestonMC) {
@@ -1377,7 +1377,7 @@ void testEuropeanOptionHeston(Model::Type modelType) {
     Real fdNpv = option.NPV() * quantity;
     timer.stop();
     BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
-    BOOST_CHECK_CLOSE(avg, fdNpv, 5.0);
+    BOOST_CHECK_CLOSE(avg, fdNpv, 2.0);
 }
 
 BOOST_AUTO_TEST_CASE(testEuropeanOptionHestonMC) {
