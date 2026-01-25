@@ -22,7 +22,7 @@
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <boost/math/distributions/normal.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -244,9 +244,9 @@ QuantLib::Real StandardApproachCvaCalculator::getHedgeSensi(const CvaRiskFactorK
         return 0.0;
     } else {
         auto& indexRiskFactor = cvaNetSensitivities_.get<CvaRiskFactorTag>();
-        if (indexRiskFactor.count(QuantLib::ext::make_tuple("", rt, b, mt, rf, CvaType::CvaHedge)) == 0)
+        if (indexRiskFactor.count(std::make_tuple("", rt, b, mt, rf, CvaType::CvaHedge)) == 0)
             QL_FAIL("no hedge sensitivity found for " << rt << " " << b << " " << mt << " " << rf << " ");
-        auto it = indexRiskFactor.find(QuantLib::ext::make_tuple("", rt, b, mt, rf, CvaType::CvaHedge));
+        auto it = indexRiskFactor.find(std::make_tuple("", rt, b, mt, rf, CvaType::CvaHedge));
         return it->value;
     }
 }
@@ -272,7 +272,7 @@ void StandardApproachCvaCalculator::calculate() {
             for (auto mt : marginTypes) {
                 set<std::string> buckets;
                 set<std::string> riskFactors;
-                auto p = indexRiskType.equal_range(QuantLib::ext::make_tuple(n, rt, mt));
+                auto p = indexRiskType.equal_range(std::make_tuple(n, rt, mt));
                 while (p.first != p.second) {
                     buckets.insert(p.first->bucket);
                     checkRiskFactor(rt, mt, p.first->riskFactor);
@@ -285,8 +285,8 @@ void StandardApproachCvaCalculator::calculate() {
                     map<string, Real> ws;
                     vector<Real> ws_hdg;
                     for (auto rf : riskFactors) {
-                        if (indexRiskFactor.count(QuantLib::ext::make_tuple(n, rt, b, mt, rf, CvaType::CvaAggregate)) != 0) { 
-                            auto it = indexRiskFactor.find(QuantLib::ext::make_tuple(n, rt, b, mt, rf, CvaType::CvaAggregate));
+                        if (indexRiskFactor.count(std::make_tuple(n, rt, b, mt, rf, CvaType::CvaAggregate)) != 0) { 
+                            auto it = indexRiskFactor.find(std::make_tuple(n, rt, b, mt, rf, CvaType::CvaAggregate));
                             Real sk_cva = it->value;
                             Real sk_hdg = getHedgeSensi(rt, b, mt, rf, sk_cva);
                             Real rw = getRiskWeight(rt, b, mt, rf);

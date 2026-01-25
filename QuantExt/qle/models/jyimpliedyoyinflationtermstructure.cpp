@@ -143,7 +143,8 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     for (const auto& kv : yyiisRates) {
         Handle<Quote> yyiisQuote(QuantLib::ext::make_shared<SimpleQuote>(kv.second));
         helpers.push_back(QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
-            yyiisQuote, observationLag(), kv.first, calendar(), Unadjusted, dayCounter(), index, yts));
+            yyiisQuote, observationLag(), referenceDate_, kv.first, calendar(), Unadjusted, dayCounter(), index,
+            QuantLib::CPI::AsIndex, yts));
     }
 
     // Create a YoY curve from the helpers
@@ -158,7 +159,9 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
     for (const auto& maturity : dts) {
+        QL_DEPRECATED_DISABLE_WARNING
         result[maturity] = yoyCurve->yoyRate(maturity, yoyCurve->observationLag());
+        QL_DEPRECATED_ENABLE_WARNING
     }
 
     return result;

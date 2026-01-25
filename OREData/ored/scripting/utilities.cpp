@@ -434,7 +434,7 @@ IndexInfo::IndexInfo(const std::string& name, const QuantLib::ext::shared_ptr<Ma
     // and same for inflation
     if (!done) {
         try {
-            QuantExt::ext::tie(inf_, infName_, infIsInterpolated_) = parseScriptedInflationIndex(name);
+            std::tie(inf_, infName_, infIsInterpolated_) = parseScriptedInflationIndex(name);
             isInf_ = done = true;
         } catch (...) {
         }
@@ -605,7 +605,7 @@ parseScriptedInflationIndex(const std::string& indexName) {
     } else {
         QL_FAIL("parseScriptedInflationIndex(): expected IndexName or IndexName#[F|L], got '" << indexName << "'");
     }
-    return QuantExt::ext::make_tuple(parseZeroInflationIndex(plainIndexName, Handle<ZeroInflationTermStructure>()),
+    return std::make_tuple(parseZeroInflationIndex(plainIndexName, Handle<ZeroInflationTermStructure>()),
                                      plainIndexName, interpolated);
 }
 

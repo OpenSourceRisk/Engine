@@ -200,6 +200,7 @@
 #include <ored/portfolio/builders/fxdigitaloption.hpp>
 #include <ored/portfolio/builders/fxdoublebarrieroption.hpp>
 #include <ored/portfolio/builders/fxdoubletouchoption.hpp>
+#include <ored/portfolio/builders/fxeuropeanbarrieroption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/fxtouchoption.hpp>

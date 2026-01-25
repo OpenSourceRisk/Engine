@@ -1357,12 +1357,11 @@ void YieldCurve::buildZeroSpreadedCurve(const std::size_t index) {
     QL_REQUIRE(convention->type() == Convention::Type::Zero, "Conventions ID does not give zero rate conventions.");
     QuantLib::ext::shared_ptr<ZeroRateConvention> zeroConvention =
         QuantLib::ext::dynamic_pointer_cast<ZeroRateConvention>(convention);
-    DayCounter quoteDayCounter = zeroConvention->dayCounter();
     Compounding comp = zeroConvention->compounding();
     Frequency freq = zeroConvention->compoundingFrequency();
 
     p_[index] = QuantLib::ext::shared_ptr<YieldTermStructure>(
-        new PiecewiseZeroSpreadedTermStructure(referenceCurve, quoteHandles, dates, comp, freq, quoteDayCounter));
+        new PiecewiseZeroSpreadedTermStructure(referenceCurve, quoteHandles, dates, comp, freq));
 }
 
 void YieldCurve::buildWeightedAverageCurve(const std::size_t index) {
@@ -2567,7 +2566,8 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->eom(), oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
-                        discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()));
+                        discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()), Date(),
+                        oisConvention->paymentCalendar());
                     instruments.push_back(
                         {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
                          additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS",
@@ -2589,7 +2589,8 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                         oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
                         oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
-                        discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()));
+                        discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()), Date(),
+                        oisConvention->paymentCalendar());
                     instruments.push_back(
                         {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
                          additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS Dated",

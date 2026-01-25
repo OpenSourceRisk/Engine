@@ -26,7 +26,7 @@
 #include <utility> // pair
 #include <vector>
 
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <boost/tuple/tuple_comparison.hpp>
 
 #include <ql/time/period.hpp>
