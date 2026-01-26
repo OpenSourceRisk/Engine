@@ -2711,7 +2711,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
 namespace {
 
 struct IrFxInfCrEqModelTestData {
-    IrFxInfCrEqModelTestData()
+    IrFxInfCrEqModelTestData(Period baseDateLag = 3 * Months)
         : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
           usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
           gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
@@ -2725,23 +2725,24 @@ struct IrFxInfCrEqModelTestData {
 
         std::vector<Date> infDates;
         std::vector<Real> infRates;
-        auto baseDate = inflationPeriod(referenceDate- 3 * Months, Monthly).first;
+        auto baseDate = inflationPeriod(referenceDate - baseDateLag, Monthly).first;
+        std::map<Period, Real> inflationTenors { {1 * Years, 0.01} , {2 * Years, 0.015}, {5 * Years, 0.02}, {10 * Years, 0.0275}, {20 * Years, 0.04} };
         infDates.push_back(baseDate);
-        infDates.push_back(Date(30, April, 2015));
-        infDates.push_back(Date(30, July, 2015));
         infRates.push_back(0.01);
-        infRates.push_back(0.01);
-        infRates.push_back(0.01);
+        for (const auto& [tenor, rate] : inflationTenors) {
+            infDates.push_back(inflationPeriod(referenceDate + tenor - baseDateLag, Monthly).first);
+            infRates.push_back(rate);
+        }
         infEurTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+            referenceDate, infDates, infRates, 3 * Months, Monthly, Thirty360(Thirty360::EurobondBasis)));
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
+            referenceDate, infDates, infRates, 3 * Months, Monthly, Thirty360(Thirty360::EurobondBasis)));
         infEurTs->enableExtrapolation();
         infGbpTs->enableExtrapolation();
         // same for eur and gbp (doesn't matter anyway, since we are
         // using flat ts here)
         infLag =
-            inflationYearFraction(Monthly, false, Actual365Fixed(), infEurTs->baseDate(), infEurTs->referenceDate());
+            inflationYearFraction(Monthly, false, Thirty360(Thirty360::EurobondBasis), infEurTs->baseDate(), infEurTs->referenceDate());
 
         Settings::instance().evaluationDate() = referenceDate;
         volstepdates.push_back(Date(15, July, 2016));
@@ -2921,6 +2922,25 @@ struct IrFxInfCrEqModelTestData {
 }; // IrFxInfCrEqModelTestData
 
 } // anonymous namespace
+
+BOOST_AUTO_TEST_CASE(testInfMartingaleProperty){
+    
+    BOOST_TEST_MESSAGE("Testing martingale property for inflation components in ir-fx-inf-cr-eq model...");
+
+    IrFxInfCrEqModelTestData d;
+    
+
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
+
+    Size n = 50000;                         // number of paths
+    Size seed = 18;                         // rng seed
+    Time T = 2.0;                          // maturity of payoff
+
+
+
+
+}
+
 
 BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
 
