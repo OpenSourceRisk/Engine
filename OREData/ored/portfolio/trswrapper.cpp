@@ -408,10 +408,10 @@ Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
             Real bondPositionNPV = arguments_.underlying_[i]->instrument()->NPV();
             auto bondDetails = bondPositionWrapper->getBondDetails();
             for(int k = 0; k < bondDetails.size(); k++){
-                results_.additionalResults["weight_underlying["+ std::to_string(k)+ "]"] = std::get<0>(bondDetails[k]);
-                results_.additionalResults["bidAskSpread_underlying["+ std::to_string(k)+ "]"] = std::get<1>(bondDetails[k]);
-                results_.additionalResults["fxConversion_underlying["+ std::to_string(k)+ "]"] = std::get<2>(bondDetails[k]);
-                results_.additionalResults["npv_underlying["+ std::to_string(k)+ "]"] = std::get<3>(bondDetails[k]);
+                results_.additionalResults["underlying["+ std::to_string(k)+ "]_weight"] = std::get<0>(bondDetails[k]);
+                results_.additionalResults["underlying["+ std::to_string(k)+ "]_bidAskSpread"] = std::get<1>(bondDetails[k]);
+                results_.additionalResults["underlying["+ std::to_string(k)+ "]_fxConversion"] = std::get<2>(bondDetails[k]);
+                results_.additionalResults["underlying["+ std::to_string(k)+ "]_npv"] = std::get<3>(bondDetails[k]);
             }
             return bondPositionNPV;
         }
