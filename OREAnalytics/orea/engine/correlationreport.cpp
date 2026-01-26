@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 #include <orea/engine/correlationreport.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
@@ -34,6 +35,26 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     
     ext::shared_ptr<Scenario> sc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
     std::vector<RiskFactorKey> deltaKeys = sc->keys();
+
+    // Filter deltaKeys to the union with risk factors generated from the portfolio based on (KeyType, Name)
+    // i.e., keep only those deltaKeys present in ptfRiskFactors ignoring index
+    // populateSensiShifts iterate over the scenario and deltaKeys, if mismatch with the sensiScenarioData shift
+    // it throws an error.
+    auto ptfRiskFactors = sensiScenarioData_->getPortfolioRiskFactors();
+    if(ptfRiskFactors.size()>0){
+        std::set<std::pair<RiskFactorKey::KeyType, std::string>> ptfKeyNameSet;
+        for (auto& k : ptfRiskFactors) {
+            ptfKeyNameSet.emplace(k.keytype, k.name);
+        }
+        std::vector<RiskFactorKey> filteredKeys;
+        filteredKeys.reserve(deltaKeys.size());
+        for (auto& k : deltaKeys) {
+            if (ptfKeyNameSet.count(std::make_pair(k.keytype, k.name)) > 0) {
+                filteredKeys.push_back(k);
+            }
+        }
+        deltaKeys.swap(filteredKeys);
+    }
 
     ext::shared_ptr<NPVCube>cube;
     ext::shared_ptr<CovarianceCalculator> covCalculator;

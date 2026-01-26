@@ -114,7 +114,8 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
                                                                 analytic()->configurations().simMarketParams);
         
     correlationReport_ = ext::make_shared<CorrelationReport>(inputs_->scenarioReader(),
-            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator);
+            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator,
+            analytic()->configurations().sensiScenarioData);
 }
 
 } //namespace analytics

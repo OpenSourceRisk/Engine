@@ -304,6 +304,7 @@ public:
     void setComputeGamma(const bool b) { computeGamma_ = b; }
     void setUseSpreadedTermStructures(const bool b) { useSpreadedTermStructures_ = b; }
     void setParConversionExcludeFixings(const std::string b) { parConversionExcludeFixings_ = b; }
+    void setPortfolioRiskFactors(const std::vector<RiskFactorKey> b) { portfolioRiskFactors_ = b;}
 
     //@}
 
@@ -322,6 +323,7 @@ public:
     //! Utilities
     //@{
     string getIndexCurrency(string indexName);
+    std::vector<RiskFactorKey> getPortfolioRiskFactors(){return portfolioRiskFactors_;}
     //@}
 
 protected:
@@ -369,6 +371,7 @@ protected:
     set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;
     std::string parConversionExcludeFixings_;
     ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation_;
+    std::vector<RiskFactorKey> portfolioRiskFactors_;
 
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);
