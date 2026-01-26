@@ -100,6 +100,7 @@ public:
     void updateQlInstruments() override {}
 
     void setNpvCurrencyConversion(const Handle<Quote>& npvCcyConversion);
+    const std::vector<std::tuple<Real, Real, Real, Real>> getBondDetails(){ return bondDetails_; }
 
 private:
     Real quantity_;
@@ -107,6 +108,7 @@ private:
     std::vector<Real> weights_;
     std::vector<Real> bidAskAdjustments_;
     std::vector<Handle<Quote>> fxConversion_;
+    mutable std::vector<std::tuple<Real, Real, Real, Real>> bondDetails_;
     Handle<Quote> npvCcyConversion_;
 };
 

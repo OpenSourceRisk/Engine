@@ -404,6 +404,17 @@ Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
         Date today = Settings::instance().evaluationDate();
         return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
+        if(auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument())){
+            Real bondPositionNPV = arguments_.underlying_[i]->instrument()->NPV();
+            auto bondDetails = bondPositionWrapper->getBondDetails();
+            for(int k = 0; k < bondDetails.size(); k++){
+                results_.additionalResults["weight_underlying["+ std::to_string(k)+ "]"] = std::get<0>(bondDetails[k]);
+                results_.additionalResults["bidAskSpread_underlying["+ std::to_string(k)+ "]"] = std::get<1>(bondDetails[k]);
+                results_.additionalResults["fxConversion_underlying["+ std::to_string(k)+ "]"] = std::get<2>(bondDetails[k]);
+                results_.additionalResults["npv_underlying["+ std::to_string(k)+ "]"] = std::get<3>(bondDetails[k]);
+            }
+            return bondPositionNPV;
+        }
         return arguments_.underlying_[i]->instrument()->NPV();
     }
 }
@@ -449,29 +460,6 @@ void TRSWrapperAccrualEngine::calculate() const {
 
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
-                if(auto compIndices = QuantLib::ext::dynamic_pointer_cast<CompositeIndex>(arguments_.underlyingIndex_[i])){
-                    for(Size k = 0; k < compIndices->indices().size(); k++){
-                        results_.additionalResults["weight_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compIndices->weights()[k];
-                        try{
-                            Real compIndexStart = compIndices->indices()[k]->fixing(startDate, true);
-                            results_.additionalResults["startFixing_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compIndexStart;
-                        }catch(...){}
-                        try{
-                            Real compIndexToday = compIndices->indices()[k]->fixing(today, true);
-                            results_.additionalResults["todaysFixing_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compIndexToday;
-                        }catch(...){}
-                        if(compIndices->fxConversion()[k]){
-                            try{
-                                Real compFxIndexStart = compIndices->fxConversion()[k]->fixing(startDate, true);
-                                results_.additionalResults["fxStartConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexStart;
-                            }catch(...){}
-                            try{
-                                Real compFxIndexToday = compIndices->fxConversion()[k]->fixing(today, true);
-                                results_.additionalResults["fxTodayConversion_underlying["+ std::to_string(i)+ "]_" + compIndices->indices()[k]->name()] = compFxIndexToday;
-                            }catch(...){}
-                        }
-                    }
-                }
                 if (endDate == Null<Date>()) {
                     s1 = getUnderlyingNPV(i);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
