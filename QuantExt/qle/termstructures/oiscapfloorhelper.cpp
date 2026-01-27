@@ -77,10 +77,12 @@ void OISCapFloorHelper::initializeDates() {
         Rate dummyStrike = strike_ == Null<Real>() ? 0.01 : strike_;
         capFloor_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, dummyStrike)
                         .withEffectiveDate(effectiveDate_)
-                        .withTelescopicValueDates(true);
+                        .withTelescopicValueDates(true)
+                        .withRule(DateGeneration::Rule::Forward);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, dummyStrike)
                             .withEffectiveDate(effectiveDate_)
-                            .withTelescopicValueDates(true);
+                            .withTelescopicValueDates(true)
+                            .withRule(DateGeneration::Rule::Forward);
 
         QL_REQUIRE(!capFloor_.empty(), "OISCapFloorHelper: got empty leg.");
 
@@ -108,10 +110,12 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
         CapFloor::Type capFloorType = type_ == CapFloorHelper::Cap ? CapFloor::Cap : CapFloor::Floor;
         capFloor_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, atm)
                         .withTelescopicValueDates(true)
-                        .withEffectiveDate(effectiveDate_);
+                        .withEffectiveDate(effectiveDate_)
+                        .withRule(DateGeneration::Rule::Forward);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, atm)
-                        .withTelescopicValueDates(true)
-                            .withEffectiveDate(effectiveDate_);
+                            .withTelescopicValueDates(true)
+                            .withEffectiveDate(effectiveDate_)
+                            .withRule(DateGeneration::Rule::Forward);
     } else if (type_ == CapFloorHelper::Automatic && quoteType_ != CapFloorHelper::Premium) {
         // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
         Rate atm = CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
@@ -121,7 +125,9 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
                         .withEffectiveDate(effectiveDate_);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, strike_)
                             .withTelescopicValueDates(true)
-                            .withEffectiveDate(effectiveDate_);
+                            .withEffectiveDate(effectiveDate_)
+                            .withRule(DateGeneration::Rule::Forward);
+
         for (auto const& c : capFloor_) {
 	    auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c);
         }
