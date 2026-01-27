@@ -109,24 +109,25 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
         Rate atm = CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
         CapFloor::Type capFloorType = type_ == CapFloorHelper::Cap ? CapFloor::Cap : CapFloor::Floor;
         capFloor_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, atm)
-                        .withTelescopicValueDates(true)
                         .withEffectiveDate(effectiveDate_)
+                        .withTelescopicValueDates(true)
                         .withRule(DateGeneration::Rule::Forward);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, atm)
-                            .withTelescopicValueDates(true)
-                            .withEffectiveDate(effectiveDate_)
-                            .withRule(DateGeneration::Rule::Forward);
+                        .withEffectiveDate(effectiveDate_)
+                        .withTelescopicValueDates(true)
+                        .withRule(DateGeneration::Rule::Forward);
     } else if (type_ == CapFloorHelper::Automatic && quoteType_ != CapFloorHelper::Premium) {
         // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
         Rate atm = CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
         CapFloor::Type capFloorType = atm > strike_ ? CapFloor::Floor : CapFloor::Cap;
         capFloor_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, strike_)
+                        .withEffectiveDate(effectiveDate_)
                         .withTelescopicValueDates(true)
-                        .withEffectiveDate(effectiveDate_);
+                        .withRule(DateGeneration::Rule::Forward);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, strike_)
-                            .withTelescopicValueDates(true)
-                            .withEffectiveDate(effectiveDate_)
-                            .withRule(DateGeneration::Rule::Forward);
+                        .withEffectiveDate(effectiveDate_)
+                        .withTelescopicValueDates(true)
+                        .withRule(DateGeneration::Rule::Forward);
 
         for (auto const& c : capFloor_) {
 	    auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c);

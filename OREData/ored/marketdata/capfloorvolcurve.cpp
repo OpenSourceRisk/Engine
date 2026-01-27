@@ -114,9 +114,12 @@ CapFloorVolCurve::CapFloorVolCurve(
                 QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) << ") for cap floor config "
                                             << config->curveID());
             }
-            // Turn on or off extrapolation
-            capletVol_->enableExtrapolation(config->extrapolate());
+
+            capletVol_->enableExtrapolation(true);
         }
+
+        // force bootstrap so that errors are thrown during the build, not later
+        capletVol_->volatility(QL_EPSILON, capletVol_->minStrike());
 
         if (buildCalibrationInfo) {
             this->buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
@@ -130,8 +133,6 @@ CapFloorVolCurve::CapFloorVolCurve(
         QL_FAIL("cap/floor vol curve building failed: unknown error");
     }
 
-    // force bootstrap so that errors are thrown during the build, not later
-    capletVol_->volatility(QL_EPSILON, capletVol_->minStrike());
 }
 
 void CapFloorVolCurve::buildProxyCurve(
