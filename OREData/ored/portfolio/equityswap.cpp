@@ -18,11 +18,9 @@
 
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
-#include <ored/portfolio/builders/swap.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/equitycoupon.hpp>
-#include <qle/cashflows/equitycouponpricer.hpp>
 
 namespace ore {
 namespace data {
