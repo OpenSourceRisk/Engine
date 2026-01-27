@@ -2002,10 +2002,11 @@ std::vector<Period> comTerms = { 1*Days, 1*Years, 2*Years, 3*Years, 5*Years, 10*
 std::vector<Real> comPrices { 100, 101, 102, 103, 105, 110, 115, 120, 130 };
 
 struct IrFxInfCrComModelTestData {
-    
-    IrFxInfCrComModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false, bool driftFreeState = false)
-        : referenceDate(30, July, 2015),
-          dc(Actual365Fixed()),
+
+    IrFxInfCrComModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false,
+                              bool driftFreeState = false, Period infObsLag = 3 * Months,
+                              DayCounter infDc = Actual365Fixed(), Period infBaseLag = 3 * Months)
+        : referenceDate(30, July, 2015), dc(Actual365Fixed()), 
           eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, dc)),
           usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, dc)),
           gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, dc)),
@@ -2013,7 +2014,7 @@ struct IrFxInfCrComModelTestData {
           fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)),
           n1Ts(QuantLib::ext::make_shared<FlatHazardRate>(referenceDate, 0.01, dc)),
           comTS(QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(comTerms, comPrices, dc, USDCurrency())) {
-        
+
         Settings::instance().evaluationDate() = referenceDate;
         
         // Store the individual models that will be fed to the CAM.
@@ -2029,16 +2030,24 @@ struct IrFxInfCrComModelTestData {
         addSingleFxModel(flatVols, GBPCurrency(), fxEurGbp, 0.10, 0.15, singleModels);
 
         // Add the inflation parameterisations.
-        auto baseDate = inflationPeriod(referenceDate - 3 * Months, Monthly).first;
+        auto baseDate = inflationPeriod(referenceDate - infBaseLag, Monthly).first;
 
-        vector<Date> infDates{ baseDate, Date(30, April, 2015), Date(30, July, 2015) };
-        vector<Real> infRates{ 0.01, 0.01, 0.01 };
+        std::vector<Date> infDates;
+        std::vector<Real> infRates;
+        
+        std::map<Period, Real> inflationTenors { {1 * Years, 0.01} , {2 * Years, 0.015}, {5 * Years, 0.02}, {10 * Years, 0.0275}, {20 * Years, 0.04} };
+        infDates.push_back(baseDate);
+        infRates.push_back(0.01);
+        for (const auto& [tenor, rate] : inflationTenors) {
+            infDates.push_back(inflationPeriod(referenceDate + tenor - infObsLag, Monthly).first);
+            infRates.push_back(rate);
+        }
 
         infEurTs = Handle<ZeroInflationTermStructure>(
-            QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate, infDates, infRates, 3 * Months, Monthly, dc));
+            QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate, infDates, infRates, infObsLag, Monthly, infDc));
         infEurTs->enableExtrapolation();
         
-        infLag = inflationYearFraction(Monthly, false, dc, infEurTs->baseDate(), infEurTs->referenceDate());
+        infLag = inflationYearFraction(Monthly, false, infDc, infEurTs->baseDate(), infEurTs->referenceDate());
 
         Real infEurAlpha = 0.01;
         Real infEurKappa = 0.01;
@@ -2056,7 +2065,7 @@ struct IrFxInfCrComModelTestData {
             singleModels.push_back(QuantLib::ext::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
         }
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate,
-            infDates, infRates, 3 * Months, Monthly, dc));
+            infDates, infRates, infObsLag, Monthly, infDc));
         infGbpTs->enableExtrapolation();
 
         Real infGbpAlpha = 0.01;
@@ -2260,6 +2269,7 @@ struct IrFxInfCrComModelTestData {
     Handle<ZeroInflationTermStructure> infEurTs;
     Handle<ZeroInflationTermStructure> infGbpTs;
     Real infLag;
+    DayCounter infDc;
 
     // Credit
     Handle<DefaultProbabilityTermStructure> n1Ts;
@@ -2276,6 +2286,117 @@ struct IrFxInfCrComModelTestData {
 }; // IrFxInfCrModelTestData
 
 } // anonymous namespace
+
+
+BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
+    
+    BOOST_TEST_MESSAGE("Testing martingale property for inflation JY in classical simulation");
+    bool indexIsInterpolated = false;
+    bool infIsDK = false;
+    DayCounter infDc = Actual365Fixed();
+    IrFxInfCrComModelTestData d{infIsDK, infIsDK, false, true, 3 * Months, infDc , 3 * Months};
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
+
+    // check zeroImpliedCurve here 
+    Date today = d.referenceDate;
+    Date baseDate = inflationPeriod(today - 3 * Months, Monthly).first;
+    BOOST_TEST_MESSAGE("today " << io::iso_date(today));
+    BOOST_TEST_MESSAGE("baseDate " << io::iso_date(baseDate));
+    BOOST_TEST_MESSAGE("infLag " << d.infLag);
+    // Assume we have a 22Y coupon and obsLag is 3M -> we need to price a 20Y zero coupon bond in 2Y
+    // Assume we have also a 20Y bucket in the simulation market 
+    Date couponObsDate = inflationPeriod(today + 22 * Years - 3 * Months, Monthly).first;
+
+    Time couponObsTimeAsT0 = d.infEurTs->timeFromReference(couponObsDate);
+    Time tau = inflationYearFraction(Monthly, false, infDc, baseDate, couponObsDate);
+    Date simMarketBucket20YDate = inflationPeriod(today + 20 * Years - 3 * Months, Monthly).first;
+    Time simMarketBucket20YTimeAsT0 = d.infEurTs->timeFromReference(simMarketBucket20YDate);
+    // Lets move to T=2Y later
+    Date simDate = today + 2 * Years;
+    Date simBaseDateOfScenarioSimCurve = inflationPeriod(simDate - 3 * Months, Monthly).first;
+    Date refDateOfScenarioSimCurve = simDate;
+    Time couponObnsTimeAsT = infDc.yearFraction(refDateOfScenarioSimCurve, couponObsDate);
+    
+    // Relative time is set in JY implied curve
+    Time relativeTime = infDc.yearFraction(d.referenceDate, simDate); // to set evaluation date
+    // Time in the scenario generator is calculcated using the yield curve daycounter and ignoring the observation lag
+    relativeTime = d.dc.yearFraction(d.referenceDate, simDate);
+    Time T =  relativeTime;
+    Time T2 = d.dc.yearFraction(simDate, simDate + 20 * Years);
+    T2 = T2 + relativeTime;
+    BOOST_TEST_MESSAGE("couponObsTimeAsT0 " << couponObsTimeAsT0 << " simMarketBucket20YTimeAsT0 "
+                                            << simMarketBucket20YTimeAsT0 << " couponObnsTimeAsT " << couponObnsTimeAsT
+                                            << " simDate " << io::iso_date(simDate) << " simBaseDateOfScenarioSimCurve "
+                                            << io::iso_date(simBaseDateOfScenarioSimCurve) << " relative Time "
+                                            << relativeTime << " T2 " << T2 << " tau " << tau << " simulationLag " << d.infLag);
+    couponObsTimeAsT0 = T2 - d.infLag;
+    
+    Size n = 50000;                         // number of paths
+    Size seed = 18;                         // rng seed
+    LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * 1, seed);
+    TimeGrid grid1(T, 1);
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
+        tmp->resetCache(grid1.size() - 1);
+    }
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, gbpzb1, infeur1, infgbp1, cpieur1;
+    MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
+    for (Size j = 0; j < n; ++j) {
+        Sample<MultiPath> path1 = pg1.next();
+        Size l1 = path1.value[0].length() - 1;
+        Real zeur1 = path1.value[0][l1];
+        
+        Real zgbp1 = path1.value[2][l1];
+        
+        Real fxgbp1 = std::exp(path1.value[4][l1]);
+        Real infeurz1 = path1.value[5][l1];
+        Real infeury1 = path1.value[6][l1];
+        Real infgbpz1 = path1.value[7][l1];
+        Real infgbpy1 = path1.value[8][l1];
+        eurzb1(d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+        // GBP zerobond
+        gbpzb1(d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+        
+        if (infIsDK) {
+            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
+            infeur1(sinfeur1.first * sinfeur1.second);
+        } else {
+            cpieur1(exp(infeury1));
+            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1, indexIsInterpolated) *
+                    d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+        }
+        // GBP CPI indexed bond
+        if (infIsDK) {
+            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1);
+            infgbp1(sinfgbp1.first * sinfgbp1.second);
+        } else {
+            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1, indexIsInterpolated) *
+                    d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1) );
+        }
+    }
+    Real expectedEur = std::pow(1.0 + d.infEurTs->zeroRate(couponObsTimeAsT0), tau) * d.eurYts->discount(T2);
+    Real expectedGbpInf =
+        std::pow(1.0 + d.infGbpTs->zeroRate(couponObsTimeAsT0), tau) * d.gbpYts->discount(T2) * d.fxEurGbp->value();
+    BOOST_TEST_MESSAGE("EXACT:");
+    BOOST_TEST_MESSAGE("IDX zb EUR = " << mean(infeur1) << " +- " << error_of<tag::mean>(infeur1) << " vs analytical "
+                                       << expectedEur << "error " << std::abs(mean(infeur1) - expectedEur));
+    BOOST_TEST_MESSAGE("IDX zb GBP = " << mean(infgbp1) << " +- " << error_of<tag::mean>(infgbp1) << " vs analytical "
+                                       << expectedGbpInf << " error" << std::abs(mean(infgbp1) - expectedGbpInf));
+    BOOST_TEST_MESSAGE(
+        "EUR CPI   = " << mean(cpieur1) << " +- " << error_of<tag::mean>(cpieur1) << " vs analytical "
+                       << std::pow(1.0 + d.infEurTs->zeroRate(T - d.infLag), T) << " error "
+                       << std::abs(mean(cpieur1) - std::pow(1.0 + d.infEurTs->zeroRate(T - d.infLag), T)));
+    Real tol1 = 5.0E-4; // EXACT
+
+    if (std::abs(mean(infeur1) - expectedEur) > tol1)
+        BOOST_TEST_ERROR("Martingale test failed for idx eurzb (Euler discr.),"
+                         "expected "
+                         << expectedEur << ", got " << mean(infeur1) << ", tolerance " << tol1);
+
+    if (std::abs(mean(infgbp1) - expectedGbpInf) > tol1)
+        BOOST_TEST_ERROR("Martingale test failed for idx gbpzb (Euler discr.),"
+                         "expected "
+                         << expectedGbpInf << ", got " << mean(infgbp1) << ", tolerance " << tol1);
+}
 
 // Test case options
 vector<bool> infEurFlags{ true, false };
@@ -2923,23 +3044,7 @@ struct IrFxInfCrEqModelTestData {
 
 } // anonymous namespace
 
-BOOST_AUTO_TEST_CASE(testInfMartingaleProperty){
-    
-    BOOST_TEST_MESSAGE("Testing martingale property for inflation components in ir-fx-inf-cr-eq model...");
 
-    IrFxInfCrEqModelTestData d;
-    
-
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
-
-    Size n = 50000;                         // number of paths
-    Size seed = 18;                         // rng seed
-    Time T = 2.0;                          // maturity of payoff
-
-
-
-
-}
 
 
 BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
