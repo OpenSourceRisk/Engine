@@ -200,7 +200,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         underlyingIndex = cmsData->swapIndex();
         Handle<SwapIndex> hIndex =
-            engineFactory->market()->swapIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
+            engineFactory->market()->swapIndex(underlyingIndex, swapBuilder->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << underlyingIndex << " in market.");
 
         QuantLib::ext::shared_ptr<SwapIndex> index = hIndex.currentLink();
