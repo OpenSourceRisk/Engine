@@ -88,11 +88,16 @@ ostream& operator<<(std::ostream& os, XvaResults::Adjustment adjustment) {
     }
 }
 
+void XvaSensitivityAnalyticImpl::buildDependencies() {
+    auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
+    addDependentAnalytic("XVA", xvaAnalytic);
+    xvaVariables_ = xvaAnalytic->impl()->inputVariablesAs<XvaVariables>();
+}
+
 XvaSensitivityAnalyticImpl::XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic::Impl(inputs) {
     setLabel(LABEL);
 }
-
    
 QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSimMarket(bool overrideTenors){
                                  
@@ -127,14 +132,14 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     SavedSettings settings;
 
-    optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
+    optional<bool> localIncTodaysCashFlows = xvaVariables_->exposureIncludeTodaysCashFlows_;
     Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
     LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
     if (localIncTodaysCashFlows) {
         LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
     }
 
-    bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
+    bool localIncRefDateEvents = xvaVariables_->exposureIncludeReferenceDateEvents_.value();
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
     LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
 
@@ -331,6 +336,9 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
     std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
     auto simMarketParams = analytic()->configurations().simMarketParams;
 
+    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
+    auto xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
+
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         auto desc = scenarioGenerator->scenarioDescriptions()[i];
@@ -338,8 +346,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
-            auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
-            XvaAnalyticImpl* xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
+            xvaAnalytic->reset();
             xvaImpl->setOffsetScenario(scenario);
             xvaImpl->setOffsetSimMarketParams(simMarketParams);
 	    

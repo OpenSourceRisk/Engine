@@ -29,11 +29,18 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void SaCcrVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "saccr", "csaFile");
+    inputs->loadParameterXML<CollateralBalances>(collateralBalances_, "saccr", "collateralBalancesFile");
+}
+
 SaCcrAnalyticImpl::SaCcrAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
-    : Analytic::Impl(inputs) {
+    : Analytic::Impl(inputs, QuantLib::ext::make_shared<SaCcrVariables>()) {
     setLabel(LABEL);
-    if (inputs->nettingSetManager())
-        inputs->nettingSetManager()->loadAll();
+
+    auto saccrVars = ext::dynamic_pointer_cast<SaCcrVariables>(inputVariables_);
+    if (saccrVars->nettingSetManager_)
+        saccrVars->nettingSetManager_->loadAll();
 }
 
 void SaCcrAnalyticImpl::setUpConfigurations() {
@@ -45,7 +52,7 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
                                 const std::set<std::string>& runTypes) {
 
     LOG("SaCcrAnalytic::runAnalytic called");
-
+    ext::shared_ptr<SaCcrVariables> saccrVars = ext::dynamic_pointer_cast<SaCcrVariables>(inputVariables_);
     auto saccrAnalytic = static_cast<SaCcrAnalytic*>(analytic());
     QL_REQUIRE(saccrAnalytic, "Analytic must be of type SaCcrAnalytic");
 
@@ -80,16 +87,15 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     }
     
     // Load collateral balances if provided
-    auto& collateralBalances =
-        inputs_->collateralBalances() ? inputs_->collateralBalances()
+    auto collateralBalances = saccrVars->collateralBalances_ ? saccrVars->collateralBalances_
                                                                  : QuantLib::ext::make_shared<CollateralBalances>();
 
     // Load netting set definitions if provided
-    auto& nettingSetManager =
-        inputs_->nettingSetManager() ? inputs_->nettingSetManager() : QuantLib::ext::make_shared<NettingSetManager>();
+    auto nettingSetManager = saccrVars->nettingSetManager_ ? saccrVars->nettingSetManager_
+                                                             : QuantLib::ext::make_shared<NettingSetManager>();
 
     // Load counterparty information if provided
-    auto& counterpartyManager = inputs_->counterpartyManager() ? inputs_->counterpartyManager()
+    auto counterpartyManager = inputs_->counterpartyManager() ? inputs_->counterpartyManager()
                                                                    : QuantLib::ext::make_shared<CounterpartyManager>();
 
     QuantLib::ext::shared_ptr<InMemoryReport> saCcrReport = QuantLib::ext::make_shared<InMemoryReport>();

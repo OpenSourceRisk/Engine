@@ -32,6 +32,7 @@
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -54,7 +55,7 @@ public:
     typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>
         analytic_reports;
 
-    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<NPVCube>>>
+    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<NPVCubeWithMetaData>>>
         analytic_npvcubes;
 
     typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<AggregationScenarioData>>>
@@ -140,18 +141,10 @@ public:
     //! Analytic results
     analytic_reports reports();
     void addReport(const std::string& key, const std::string& subKey,
-        const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
-        reports_[key][subKey] = report;
-    }
-    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key, const std::string& subKey) {
-        auto it = reports_.find(key);
-        if (it != reports_.end()) {
-			auto it2 = it->second.find(subKey);
-			if (it2 != it->second.end())
-				return it2->second;
-		}
-        QL_FAIL("Could not find report for key " << key << " and subKey " << subKey);
-    }
+                   const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report);
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key,
+                                                                          const std::string& subKey);
+    void reset();
 
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
@@ -214,7 +207,9 @@ private:
 class Analytic::Impl {
 public:    
     Impl() {}
-    Impl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : inputs_(inputs) {}
+    Impl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+         QuantLib::ext::shared_ptr<InputVariables> inputVars = nullptr)
+        : inputs_(inputs), inputVariables_(inputVars) {}
     virtual ~Impl(){}
     
     virtual void runAnalytic(
@@ -256,8 +251,14 @@ public:
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
     virtual std::vector<QuantLib::Date> additionalMarketDates() const { return {}; }
 
+    QuantLib::ext::shared_ptr<InputVariables> inputVariables() { return inputVariables_; }
+    template <class T> QuantLib::ext::shared_ptr<T> inputVariablesAs() {
+		return QuantLib::ext::dynamic_pointer_cast<T>(inputVariables_);
+	}
+
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<InputVariables> inputVariables_;
 
     //! label for logging purposes primarily
     std::string label_;

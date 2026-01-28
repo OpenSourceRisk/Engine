@@ -30,6 +30,10 @@ using namespace QuantLib::ext;
 namespace ore {
 namespace analytics {
 
+void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    inputs->loadParameter<bool>(allowPartialScenarios_, "correlation", "allowPartialScenarios", false, parseBool);
+}
+
 void CorrelationAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();    
@@ -80,6 +84,7 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
     LOG("Build Correlation Calculator");
+    auto corrVars = ext::dynamic_pointer_cast<CorrelationVariables>(inputVariables_);
     TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
 
@@ -96,7 +101,7 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
         analytic()->market(), analytic()->configurations().simMarketParams,
         QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
         *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
-        inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig(), false, nullptr);
+        corrVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, nullptr);
     
     auto scenarios = buildHistoricalScenarioGenerator(
         inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),

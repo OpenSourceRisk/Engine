@@ -134,7 +134,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
 
     // Create a new Cube and load it
     BOOST_TEST_MESSAGE("Loading from file " << filename);
-    auto cube2 = loadCube(filename).cube;
+    auto cube2 = loadCube(filename)->cube();
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory

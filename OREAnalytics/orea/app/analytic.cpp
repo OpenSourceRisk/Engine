@@ -92,6 +92,25 @@ Analytic::analytic_reports Analytic::reports() {
     return rpts;
 }
 
+void Analytic::addReport(const std::string& key, const std::string& subKey,
+               const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
+    reports_[key][subKey] = report;
+}
+const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& Analytic::getReport(const std::string& key,
+                                                                      const std::string& subKey) {
+    auto it = reports_.find(key);
+    if (it != reports_.end()) {
+        auto it2 = it->second.find(subKey);
+        if (it2 != it->second.end())
+            return it2->second;
+    }
+    QL_FAIL("Could not find report for key " << key << " and subKey " << subKey);
+}
+
+void Analytic::reset() {
+    reports_.clear();
+}
+
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
@@ -112,6 +131,8 @@ void Analytic::initialise() {
 
 void Analytic::Impl::initialise() {
     if (!initialised_) {
+        if (inputVariables_)
+            inputVariables_->loadVariables(inputs_);
         buildDependencies();
         setUpConfigurations();
         for (const auto& [_, a] : dependentAnalytics_)
