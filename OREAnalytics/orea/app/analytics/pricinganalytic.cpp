@@ -86,7 +86,7 @@ void PricingAnalyticImpl::runAnalytic(
             continue;
 
         std::string effectiveResultCurrency = inputs_->baseCurrency();
-        if (inputs_->resultCurrency().empty())
+        if (!inputs_->resultCurrency().empty())
             effectiveResultCurrency = inputs_->resultCurrency();
         if (overwriteResultCurrency_) {
             effectiveResultCurrency = *overwriteResultCurrency_;
