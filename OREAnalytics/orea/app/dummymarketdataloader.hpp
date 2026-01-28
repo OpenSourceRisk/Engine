@@ -23,7 +23,7 @@
 #pragma once
 
 #include <orea/app/marketdataloader.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 
 namespace ore {
 namespace analytics {

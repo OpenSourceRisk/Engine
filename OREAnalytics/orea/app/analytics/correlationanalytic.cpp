@@ -80,6 +80,7 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
     LOG("Build Correlation Calculator");
+    QL_REQUIRE(inputs_->benchmarkVarPeriod()!=std::string(), "BenchmarkVarPeriod Required.");
     TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
 
@@ -97,6 +98,8 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
         QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
         *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
         inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig(), false, nullptr);
+    
+    QL_REQUIRE(inputs_->scenarioReader(), "ScenarioReader Required.");
     
     auto scenarios = buildHistoricalScenarioGenerator(
         inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),

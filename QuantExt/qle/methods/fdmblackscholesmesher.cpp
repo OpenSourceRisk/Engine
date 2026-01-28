@@ -109,7 +109,7 @@ FdmBlackScholesMesher::FdmBlackScholesMesher(Size size, const ext::shared_ptr<Ge
     // filter cPoints on [xmin, xmax]
     std::vector<std::tuple<Real, Real, bool>> cPointsEff;
     for (auto const& c : cPoints) {
-        if (QuantLib::ext::get<0>(c) == Null<Real>() || QuantLib::ext::get<0>(c) < xMin || QuantLib::ext::get<0>(c) > xMax)
+        if (std::get<0>(c) == Null<Real>() || std::get<0>(c) < xMin || std::get<0>(c) > xMax)
             continue;
         cPointsEff.push_back(c);
     }
@@ -119,8 +119,8 @@ FdmBlackScholesMesher::FdmBlackScholesMesher(Size size, const ext::shared_ptr<Ge
         helper = ext::shared_ptr<Fdm1dMesher>(new Uniform1dMesher(xMin, xMax, size));
     } else if (cPointsEff.size() == 1) {
         helper = ext::shared_ptr<Fdm1dMesher>(new Concentrating1dMesher(
-            xMin, xMax, size, std::make_pair(QuantLib::ext::get<0>(cPointsEff[0]), QuantLib::ext::get<1>(cPointsEff[0])),
-            QuantLib::ext::get<2>(cPointsEff[0])));
+            xMin, xMax, size, std::make_pair(std::get<0>(cPointsEff[0]), std::get<1>(cPointsEff[0])),
+            std::get<2>(cPointsEff[0])));
     } else {
         helper = ext::shared_ptr<Fdm1dMesher>(new Concentrating1dMesher(xMin, xMax, size, cPointsEff));
     }

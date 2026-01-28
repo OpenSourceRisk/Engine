@@ -26,7 +26,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <vector>
 #include <map>
 
