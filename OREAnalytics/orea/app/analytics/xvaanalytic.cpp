@@ -27,6 +27,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
+#include <orea/cube/overlaynpvcube.hpp>
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sparsenpvcube.hpp>
@@ -92,6 +93,13 @@ void XvaAnalyticImpl::buildDependencies() {
                 AnalyticFactory::instance().build("CORRELATION", inputs_, analytic()->analyticsManager(), false);
             if (correlationAnalytic.second)
                 addDependentAnalytic(corrLookupKey, correlationAnalytic.second);
+    }
+    if (inputs_->cubeNpvOverlay()) {
+        if (auto pricingAnalytic =
+                AnalyticFactory::instance().build("PRICING", inputs_, analytic()->analyticsManager(), false);
+            pricingAnalytic.second) {
+            addDependentAnalytic("PRICING", pricingAnalytic.second);
+        }
     }
 }
 
@@ -969,6 +977,22 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
     LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
 
+    std::map<std::string, double> cubeNpvOverlay;
+    if (inputs_->cubeNpvOverlay()) {
+        auto pricingAnalytic = dependentAnalytic("PRICING");
+        static_cast<PricingAnalyticImpl*>(pricingAnalytic->impl().get())
+            ->overwriteResultCurrency(analytic()->configurations().simMarketParams->baseCcy());
+        pricingAnalytic->runAnalytic(loader,{"NPV"});
+        auto npvReport = pricingAnalytic->reports().at("NPV").at("npv");
+        // FIXME ensure base currency matches sim market base ccy
+        std::size_t colTradeId = npvReport->columnPosition("TradeId");
+        std::size_t colNpvBase = npvReport->columnPosition("NPV(Base)");
+        for (Size r = 0; r < npvReport->rows(); ++r) {
+            cubeNpvOverlay[boost::get<std::string>(npvReport->data(colTradeId, r))] =
+                boost::get<double>(npvReport->data(colNpvBase, r));
+        }
+    }
+
     if(inputs_->generateCorrelations()){
         auto corrAnalytic = dependentAnalytic(corrLookupKey);
         corrAnalytic->runAnalytic(loader,{"CORRELATION"});
@@ -1108,10 +1132,18 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             LOG("We have generated an AMC cube only");
             cube_ = amcCube_;
         } else {
-            WLOG("We have generated a classic cube only");
+            LOG("We have generated a classic cube only");
         }
 
         LOG("NPV cube generation completed");
+
+        /************************************************************
+         * Apply correction pricing t0 npv - sim t0 npv if requested
+         ************************************************************/
+
+        if (!cubeNpvOverlay.empty()) {
+            cube_ = QuantLib::ext::make_shared<OverlayNPVCube>(cube_, cubeNpvOverlay);
+        }
 
         /***********************************************************************
          * We may have two non-empty portfolios to be merged for post processing
