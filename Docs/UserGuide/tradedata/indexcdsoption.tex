@@ -100,7 +100,11 @@ Allowable values: \emph{Spread} or \emph{Price}. Note that \emph{Spread} is only
 \item 
 \lstinline!TradeDate! [Optional]: The trade date. If not given defaults to the valuation date. In case of an underlying
 default the trade date is used to determine whether the underlying notional before default should be considered part of
-the outstanding notional (TradeDate $<$ AuctionDate) or not (TradeDate $\geq$ AuctionDate).
+the outstanding notional (TradeDate $<$ AuctionDate) or not (TradeDate $\geq$ AuctionDate). Since the trade date is also
+used as the start date of the front end protection (if the field FrontEndProtectionStartDate is not populated), it
+impacts the realized front end protection value. It is therefore essential to populate the TradeDate with the correct
+value if defaults occured in the underlying index. If the trade date is not given and there were defaults a warning is
+emitted stating that the valuation might not be accruate.
  
 Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Can not be later than the valuation date.
  
