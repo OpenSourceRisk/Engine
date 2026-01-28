@@ -984,7 +984,6 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             ->overwriteResultCurrency(analytic()->configurations().simMarketParams->baseCcy());
         pricingAnalytic->runAnalytic(loader,{"NPV"});
         auto npvReport = pricingAnalytic->reports().at("NPV").at("npv");
-        // FIXME ensure base currency matches sim market base ccy
         std::size_t colTradeId = npvReport->columnPosition("TradeId");
         std::size_t colNpvBase = npvReport->columnPosition("NPV(Base)");
         for (Size r = 0; r < npvReport->rows(); ++r) {
