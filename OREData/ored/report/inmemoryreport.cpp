@@ -17,6 +17,7 @@
 */
 
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/utilities/fileio.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
 
@@ -36,17 +37,6 @@
 #include <fstream>
 #include <filesystem>
 #include <random>
-
-namespace {
-std::filesystem::path unique_path(const std::filesystem::path& base = "tmp") {
-    static std::mt19937_64 rng{std::random_device{}()};
-    static std::uniform_int_distribution<unsigned long long> dist;
-
-    auto unique_name = base.string() + "_" + std::to_string(dist(rng));
-    return std::filesystem::path(unique_name);
-}
-
-}
 
 namespace ore {
 namespace data {

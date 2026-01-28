@@ -140,5 +140,14 @@ bool FileIO::remove_all(const path& p) {
     return res;
 }
 
+
+std::filesystem::path unique_path(const std::filesystem::path& base = "tmp") {
+    static std::mt19937_64 rng{std::random_device{}()};
+    static std::uniform_int_distribution<unsigned long long> dist;
+
+    auto unique_name = base.string() + "_" + std::to_string(dist(rng));
+    return std::filesystem::path(unique_name);
+}
+
 } // namespace data
 } // namespace ore
