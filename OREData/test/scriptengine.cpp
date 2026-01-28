@@ -44,12 +44,15 @@
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/pricingengines/vanilla/fdhestonvanillaengine.hpp>
+#include <ql/pricingengines/vanilla/mceuropeanhestonengine.hpp>
 #include <ql/processes/stochasticprocessarray.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/methods/finitedifferences/operators/fdmlinearoplayout.hpp>
+#include <ql/methods/finitedifferences/meshers/fdmmeshercomposite.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -1112,6 +1115,8 @@ void testAmericanOptionHeston(Model::Type modelType, std::string script) {
     Real putcall = -1.0;
     Real strike = 4350;
 
+    std::vector<Real> calibrationStrikes = { 4350 };
+
     Size nSteps = 50;
     constexpr Size nPaths = 100000;
     // FD specification for the benchmark QuantLib engine
@@ -1175,22 +1180,16 @@ void testAmericanOptionHeston(Model::Type modelType, std::string script) {
     auto modelBuilder = QuantLib::ext::make_shared<HestonModelBuilder>(
         indices, yts, bsProcess, simulationDates, std::set<Date>(), nSteps, std::vector<Period>(), std::vector<Real>(),
         std::vector<Period>(), initialValues, fixedValues, "None");
-    auto model = QuantLib::ext::make_shared<Heston>(modelType, modelSize, "EUR", yts, "EQ-STOXX", "EUR",
-                                                    modelBuilder->model(), simulationDates, iborFallbackConfig, "Smile",
-                                                    std::vector<Real>(), params);
+    auto model =
+        QuantLib::ext::make_shared<Heston>(modelType, modelSize, "EUR", yts, "EQ-STOXX", "EUR", modelBuilder->model(),
+                                           simulationDates, iborFallbackConfig, "Smile", calibrationStrikes, params);
 
     ScriptEngine engine(parser.ast(), context, model);
-    // try {
-    //   engine.run();
-    // } catch(std::exception& e) {
-    //   BOOST_TEST_MESSAGE("error in engine.run(): " << e.what());
-    // }      
     BOOST_REQUIRE_NO_THROW(engine.run());
     BOOST_TEST_MESSAGE(*context);
     BOOST_REQUIRE(context->scalars["Option"].which() == ValueTypeWhich::Number);
     RandomVariable rv = boost::get<RandomVariable>(context->scalars["Option"]);
     BOOST_REQUIRE(rv.size() == modelSize);
-    //Real avg = expectation(rv).at(0);
     Real avg = model->extractT0Result(rv);    
     timer.stop();
     BOOST_TEST_MESSAGE("option value estimation " << avg << " (timing " << timer.format(default_places, "%w") << "s)");
@@ -1250,6 +1249,25 @@ BOOST_AUTO_TEST_CASE(testAmericanOptionHestonFD) {
     testAmericanOptionHeston(Model::Type::FD, scriptFD);
 }
 
+void logMesh(const QuantLib::ext::shared_ptr<FdmMesher>& mesher, const std::string& label) {
+  BOOST_TEST_MESSAGE(label);
+  std::vector<Real> x, y;
+    x.reserve(mesher->layout()->dim()[0]);
+    y.reserve(mesher->layout()->dim()[1]);
+    for (const auto& iter : *mesher->layout()) {
+        if (iter.coordinates()[1] == 0U)
+            x.push_back(mesher->location(iter, 0));
+        if (iter.coordinates()[0] == 0U)
+            y.push_back(mesher->location(iter, 1));
+    }
+    for (Size i = 0; i < x.size(); ++i) {
+        BOOST_TEST_MESSAGE(label << " x " << i << " " << x[i]);
+    }
+    for (Size i = 0; i < y.size(); ++i) {
+        BOOST_TEST_MESSAGE(label << " y " << i << " " << y[i]);
+    }
+}
+
 void testEuropeanOptionHeston(Model::Type modelType) {
   
     BOOST_REQUIRE(modelType == Model::Type::MC || modelType == Model::Type::FD);
@@ -1259,7 +1277,11 @@ void testEuropeanOptionHeston(Model::Type modelType) {
 
     std::string script = "Option = Quantity * PAY(max( PutCall * (Underlying(Expiry) - Strike), 0 ),\n"
                          "                        Expiry, Settlement, PayCcy);";
+
+    std::vector<Real> calibrationStrikes = { 4350 };
+    
     ScriptParser parser(script);
+	
     BOOST_REQUIRE(parser.success());
     BOOST_TEST_MESSAGE("Parsing successful, AST:\n" << to_string(parser.ast()));
 
@@ -1275,7 +1297,7 @@ void testEuropeanOptionHeston(Model::Type modelType) {
     std::vector<Real> initialValues = {theta, kappa, sigma, rho, v0};
     std::vector<bool> fixedValues(5, true);
 
-    Real rate = 0.01;
+    Real rate = 0.01; // 0.01
     Real quantity = 10.0;
     Real putcall = -1.0;
     Real strike = 4350;
@@ -1286,8 +1308,8 @@ void testEuropeanOptionHeston(Model::Type modelType) {
     constexpr Size nPaths = 100000;
     
     // FD specification for the benchmark QuantLib engine
-    Size xGrid = 100;
-    Size vGrid = 100;
+    Size xGrid = 100; 
+    Size vGrid = 100; 
     Size dampingSteps = 0;
     FdmSchemeDesc scheme = FdmSchemeDesc::Hundsdorfer();
 
@@ -1351,7 +1373,7 @@ void testEuropeanOptionHeston(Model::Type modelType) {
         std::vector<Period>(), initialValues, fixedValues, "None");
     auto model =
         QuantLib::ext::make_shared<Heston>(modelType, modelSize, "EUR", yts, "EQ-STOXX", "EUR", modelBuilder->model(),
-                                           simulationDates, iborFallbackConfig, "Smile", std::vector<Real>(), params);
+                                           simulationDates, iborFallbackConfig, "Smile", calibrationStrikes, params);
 
     ScriptEngine engine(parser.ast(), context, model);
     BOOST_REQUIRE_NO_THROW(engine.run());
@@ -1368,6 +1390,11 @@ void testEuropeanOptionHeston(Model::Type modelType) {
     auto hestonProcess = modelBuilder->model()->hestonProcesses().front();
     auto hestonModel = QuantLib::ext::make_shared<HestonModel>(hestonProcess);
     auto fdEngine = QuantLib::ext::make_shared<FdHestonVanillaEngine>(hestonModel, nSteps, xGrid, vGrid, dampingSteps, scheme);
+    auto mcEngine = MakeMCEuropeanHestonEngine<PseudoRandom>(hestonProcess)
+      .withStepsPerYear(nSteps)
+      .withAntitheticVariate()
+      .withSamples(nPaths)
+      .withSeed(1234);
     
     VanillaOption option(
         QuantLib::ext::make_shared<PlainVanillaPayoff>(putcall > 0.0 ? Option::Call : Option::Put, strike),
@@ -1376,8 +1403,21 @@ void testEuropeanOptionHeston(Model::Type modelType) {
     timer.start();
     Real fdNpv = option.NPV() * quantity;
     timer.stop();
+    
+    Real tolerance = 1.0;
+
     BOOST_TEST_MESSAGE("fd engine result " << fdNpv << " (timing " << timer.format(default_places, "%w") << "s)");
-    BOOST_CHECK_CLOSE(avg, fdNpv, 2.0);
+    BOOST_CHECK_CLOSE(avg, fdNpv, tolerance);
+
+    option.setPricingEngine(mcEngine);
+    timer.start();
+    Real mcNpv = option.NPV() * quantity;
+    timer.stop();
+    BOOST_TEST_MESSAGE("ql mc engine result " << mcNpv << " (timing " << timer.format(default_places, "%w") << "s)");
+    BOOST_CHECK_CLOSE(avg, mcNpv, tolerance);
+
+    // logMesh(model->mesher(), "ST");
+    // logMesh(fdEngine->mesher(), "QL");
 }
 
 BOOST_AUTO_TEST_CASE(testEuropeanOptionHestonMC) {

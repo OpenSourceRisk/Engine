@@ -110,9 +110,10 @@ public:
     RandomVariable pay(const RandomVariable& amount, const Date& obsdate, const Date& paydate,
                        const std::string& currency) const override;
 
-  const std::map<Date, std::vector<RandomVariable>>& underlyingPaths() { return underlyingPaths_; }
-  const std::map<Date, std::vector<RandomVariable>>& auxPaths() { return auxPaths_; }
-  const std::set<Date>& effectiveSimulationDates() { return effectiveSimulationDates_; }
+    const std::map<Date, std::vector<RandomVariable>>& underlyingPaths() { return underlyingPaths_; }
+    const std::map<Date, std::vector<RandomVariable>>& auxPaths() { return auxPaths_; }
+    const std::set<Date>& effectiveSimulationDates() { return effectiveSimulationDates_; }
+    const QuantLib::ext::shared_ptr<FdmMesher>& mesher() { return mesher_; }
 
 protected:
     // to be implemented by derived classes

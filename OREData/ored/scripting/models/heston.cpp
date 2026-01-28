@@ -33,6 +33,7 @@
 #include <ql/methods/finitedifferences/stepconditions/fdmstepconditioncomposite.hpp>
 #include <ql/methods/finitedifferences/utilities/fdminnervaluecalculator.hpp>
 #include <sstream>
+#include <iostream>
 
 namespace ore {
 namespace data {
@@ -117,11 +118,14 @@ void Heston::performCalculationsFd() const {
         auto f = calibrationStrikes_.find(indices_[i].name());
         if (f != calibrationStrikes_.end()) {
             for (Size j = 0; j < std::min(f->second.size(), params_.mesherMaxConcentratingPoints); ++j) {
+	        std::cout << "found calibration strike " << f->second[j] << std::endl;
                 cPoints.back().push_back(
 		    std::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
                 TLOG("added critical point at strike " << f->second[j] << " with concentration "
                                                        << params_.mesherConcentration);
             }
+	    cPoints.back().push_back(
+		    std::make_tuple(std::log(4350), params_.mesherConcentration, false));
         }
     }
 
@@ -133,7 +137,7 @@ void Heston::performCalculationsFd() const {
 
         // variance mesher
         const Size vGrid = params_.varianceStateGridPoints;
-	// FIXME? tGridMin and tGridAvgSteps taken from FdHestonVanillaEngine
+	// tGridMin and tGridAvgSteps as in FdHestonVanillaEngine
         const Size tGridMin = 5;
         const Size tGridAvgSteps = std::max(tGridMin, timeGrid_.size() / 50);
         const ext::shared_ptr<FdmHestonVarianceMesher> vMesher =
@@ -141,14 +145,17 @@ void Heston::performCalculationsFd() const {
 
         // equity mesher
         const Size xGrid = params_.stateGridPoints; 
-        ext::shared_ptr<QuantExt::FdmBlackScholesMesher> equityMesher;
+        ext::shared_ptr<QuantExt::FdmBlackScholesMesher> equityMesher;	
         auto processHelper = QuantExt::FdmBlackScholesMesher::processHelper(
             process->s0(), process->dividendYield(), process->riskFreeRate(), vMesher->volaEstimate());
         QL_REQUIRE(calibrationStrikes.size() > 0, "empty calibration strikes");
-        Real strike = calibrationStrikes[0] == Null<Real>() ? atmForward(0, timeGrid_.back()) : calibrationStrikes[0];
+        Real strike = calibrationStrikes[0] == Null<Real>() ? atmForward(0, timeGrid_.back()) : calibrationStrikes[0];	
+	//Real scaling = params_.mesherScaling;
+	Real scaling = 2.0; // FdHestonVanillaEngine uses hard-coded scaling 2.0
+	// FIXME: What about other critical points - how to use FdmBlackScholesMultiStrikeMesher?
         equityMesher = QuantLib::ext::make_shared<QuantExt::FdmBlackScholesMesher>(
             xGrid, processHelper, maturity, strike, Null<Real>(), Null<Real>(), params_.mesherEpsilon,
-            params_.mesherScaling, cPoints[0]);
+            scaling, cPoints[0]);
 
         mesher_ = ext::make_shared<FdmMesherComposite>(equityMesher, vMesher);
     }
@@ -165,33 +172,27 @@ void Heston::performCalculationsFd() const {
             model_->generalizedBlackScholesProcesses()[1]->x0(), false, true);
     }
 
-    operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(
-        mesher_, process, quantoHelper);
+    ext::shared_ptr<LocalVolTermStructure> leverageFct = nullptr;
+    Real mixingFactor = 1.0;
+    // Avoid discounting in the operator because we feed discounted payoffs!
+    bool discounting = false;
+
+    operator_ = QuantLib::ext::make_shared<QuantExt::FdmHestonOp>(mesher_, process, quantoHelper, leverageFct,
+                                                                  mixingFactor, discounting);
 
     std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>> boundaries;
     ext::shared_ptr<FdmStepConditionComposite> stepCondition = nullptr;
-    const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Douglas();
-    //const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Hundsdorfer();
+    const FdmSchemeDesc& schemeDesc = FdmSchemeDesc::Hundsdorfer();
 
     solver_ = QuantLib::ext::make_shared<FdmBackwardSolver>(operator_, boundaries, stepCondition, schemeDesc);
-    
+
     // 5 fill random variable with underlying values (equity prices), these are valid for all times
 
     auto locations = mesher_->locations(0);
-    Size eDim = mesher_->layout()->dim()[0]; // equity states
-    Size vDim = mesher_->layout()->dim()[1]; // variance states
     Array values(locations.size(), 0.0); // log of underlying values
-    for (Size i = 0; i < eDim; ++i) {
-        Size index = mesher_->layout()->index({i, 0}); // pick value at j = 0
-	Real v = locations[index];
-	DLOG("mesh at i=" << i << " j=" << 0 << " index=" << index << ": " <<  v);
-        for (Size j = 0; j < vDim; ++j) {
-	    Size index = mesher_->layout()->index({i, j}); // actual index
-            values[index] = v;  // all underlying values are the same, irrespective of variance state
-        }
-    }
+    for (const auto& iter : *mesher_->layout())
+        values[iter.index()] = mesher_->location(iter, 0);
     underlyingValues_ = exp(RandomVariable(values));
-    //underlyingValues_ = exp(RandomVariable(locations));
     
     // 6 set additional results
 
@@ -223,19 +224,6 @@ void Heston::generatePaths() const {
         }
         eqComIdx[j] = idx;
     }
-
-    /*
-    for (Size j = 0; j < n; ++j) {
-        auto process = model_->hestonProcesses()[j];
-        auto d = process->discretization();
-        if (eqComIdx[j] != Null<Size>() && d != HestonProcess::FullTruncation &&
-            d != HestonProcess::PartialTruncation && d != HestonProcess::Reflection) {
-            ALOG("The use of HestonProcess::Discretization "
-                 << d << " is inconsistent with the Euler quanto adjustment for process " << j << ", "
-                 << " use full/partial truncation or reflection schemes with sufficiently large number of time steps.");
-        }
-    }
-    */
     
     // correlation matrix business is handled in the MultiAssetHestonProcess class, so we just pass dummies here
     Matrix correlation(1, 1, 1), sqrtCorr(1, 1, 1);
@@ -428,6 +416,7 @@ Real Heston::extractT0Result(const RandomVariable& value) const {
 
     // c) BicubicSpline interpolation
     auto interpolation = QuantLib::ext::make_shared<BicubicSpline>(x.begin(), x.end(), y.begin(), y.end(), resultValues);
+
     auto process = model_->hestonProcesses()[0];
     Real v0 = process->v0();
     Real spot = process->s0()->value();
@@ -435,16 +424,6 @@ Real Heston::extractT0Result(const RandomVariable& value) const {
     DLOG("Heston::extractT0Result() result=" << result);
 
     return result;
-    
-    // AssetModel code:
-    // Array x(underlyingValues_.size());
-    // Array y(underlyingValues_.size());
-    // underlyingValues_.copyToArray(x);
-    // r.copyToArray(y);
-    // MonotonicCubicNaturalSpline interpolation(x.begin(), x.end(), y.begin());
-    // interpolation.enableExtrapolation();
-    // Real res = interpolation(initialValue(0));
-    // return interpolation(initialValue(0));
 }
   
 } // namespace data

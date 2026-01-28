@@ -364,7 +364,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
         // handle stochastic amount
 
         QL_REQUIRE(t1 != Null<Real>(),
-                   "AssetModel::npv(): can not roll back amount wiithout time attached (to t0=" << t0 << ")");
+                   "AssetModel::npv(): can not roll back amount without time attached (to t0=" << t0 << ")");
 
         // might throw if t0, t1 are not found in timeGrid_
 
@@ -386,7 +386,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
         Array workingArray(amount.size());
         amount.copyToArray(workingArray);
 
-	for (int j = static_cast<int>(ind1) - 1; j >= static_cast<int>(ind0); --j) {
+        for (int j = static_cast<int>(ind1) - 1; j >= static_cast<int>(ind0); --j) {
             solver_->rollback(workingArray, timeGrid_[j + 1], timeGrid_[j], 1, 0);
         }
 

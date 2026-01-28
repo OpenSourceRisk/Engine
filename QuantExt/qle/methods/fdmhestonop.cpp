@@ -36,11 +36,12 @@ using namespace QuantLib;
                                              ext::shared_ptr<YieldTermStructure> rTS,
                                              ext::shared_ptr<YieldTermStructure> qTS,
                                              ext::shared_ptr<FdmQuantoHelper> quantoHelper,
-                                             ext::shared_ptr<LocalVolTermStructure> leverageFct)
+                                             ext::shared_ptr<LocalVolTermStructure> leverageFct,
+                                             const bool discounting)
     : varianceValues_(0.5 * mesher->locations(1)), dxMap_(FirstDerivativeOp(0, mesher)),
       dxxMap_(SecondDerivativeOp(0, mesher).mult(0.5 * mesher->locations(1))), mapT_(0, mesher),
       mesher_(mesher), rTS_(std::move(rTS)), qTS_(std::move(qTS)),
-      quantoHelper_(std::move(quantoHelper)), leverageFct_(std::move(leverageFct)) {
+      quantoHelper_(std::move(quantoHelper)), leverageFct_(std::move(leverageFct)), discounting_(discounting) {
 
         // on the boundary s_min and s_max the second derivative
         // d^2V/dS^2 is zero and due to Ito's Lemma the variance term
@@ -57,6 +58,7 @@ using namespace QuantLib;
     void FdmHestonEquityPart::setTime(Time t1, Time t2) {
         const Rate r = rTS_->forwardRate(t1, t2, Continuous).rate();
         const Rate q = qTS_->forwardRate(t1, t2, Continuous).rate();
+        Rate discountRate = discounting_ ? r : 0.0;
 
         L_ = getLeverageFctSlice(t1, t2);
         const Array Lsquare = L_*L_;
@@ -65,10 +67,10 @@ using namespace QuantLib;
             mapT_.axpyb(r - q - varianceValues_*Lsquare
                 - quantoHelper_->quantoAdjustment(
                     volatilityValues_*L_, t1, t2),
-                dxMap_, dxxMap_.mult(Lsquare), Array(1, -0.5*r));
+                dxMap_, dxxMap_.mult(Lsquare), Array(1, -0.5*discountRate));
         } else {
             mapT_.axpyb(r - q - varianceValues_*Lsquare, dxMap_,
-                        dxxMap_.mult(Lsquare), Array(1, -0.5*r));
+                        dxxMap_.mult(Lsquare), Array(1, -0.5*discountRate));
         }
     }
 
@@ -107,15 +109,17 @@ using namespace QuantLib;
                                                  ext::shared_ptr<YieldTermStructure> rTS,
                                                  Real mixedSigma,
                                                  Real kappa,
-                                                 Real theta)
+                                                 Real theta,
+                                                 const bool discounting)
     : dyMap_(SecondDerivativeOp(1, mesher)
                  .mult(0.5 * mixedSigma * mixedSigma * mesher->locations(1))
                  .add(FirstDerivativeOp(1, mesher).mult(kappa * (theta - mesher->locations(1))))),
-      mapT_(1, mesher), rTS_(std::move(rTS)) {}
+      mapT_(1, mesher), rTS_(std::move(rTS)), discounting_(discounting) {}
 
     void FdmHestonVariancePart::setTime(Time t1, Time t2) {
         const Rate r = rTS_->forwardRate(t1, t2, Continuous).rate();
-        mapT_.axpyb(Array(), dyMap_, dyMap_, Array(1,-0.5*r));
+        Rate discountRate = discounting_ ? r : 0.0;
+        mapT_.axpyb(Array(), dyMap_, dyMap_, Array(1,-0.5*discountRate));
     }
 
     const TripleBandLinearOp& FdmHestonVariancePart::getMap() const {
@@ -127,19 +131,22 @@ using namespace QuantLib;
         const ext::shared_ptr<HestonProcess> & hestonProcess,
         const ext::shared_ptr<FdmQuantoHelper>& quantoHelper,
         const ext::shared_ptr<LocalVolTermStructure>& leverageFct,
-        const Real mixingFactor)
+        const Real mixingFactor,
+        const bool discounting)
     : correlationMap_(SecondOrderMixedDerivativeOp(0, 1, mesher)
                         .mult(hestonProcess->rho()*hestonProcess->sigma()
                                 *mixingFactor
                                 *mesher->locations(1))),
       dyMap_(mesher, hestonProcess->riskFreeRate().currentLink(),
-              hestonProcess->sigma()*mixingFactor,
-              hestonProcess->kappa(), 
-              hestonProcess->theta()),
+             hestonProcess->sigma()*mixingFactor,
+             hestonProcess->kappa(), 
+             hestonProcess->theta(),
+             discounting),
       dxMap_(mesher,
              hestonProcess->riskFreeRate().currentLink(), 
              hestonProcess->dividendYield().currentLink(),
-             quantoHelper, leverageFct) {
+             quantoHelper, leverageFct,
+             discounting) {
     }
 
 

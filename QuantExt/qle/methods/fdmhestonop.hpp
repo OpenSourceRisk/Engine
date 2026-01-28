@@ -20,8 +20,26 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
+/*
+ Copyright (C) 2020 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
 /*! \file fdmhestonop.hpp
-    \brief Heston linear operator
+    \brief extended version of the QuantLib Heston linear operator
 */
 
 #ifndef quantext_fdm_heston_op_hpp
@@ -39,7 +57,13 @@
 namespace QuantExt {
 
 using namespace QuantLib;
-  
+
+    /* Extended QuantLib::FdmHeston* operators that utilize the QuantExt::FdmQuantoHelper
+       and allow deactivating discounting, see the last flag.
+       Note that ORE's scripted trade framework assumes discounted payoffs, so that the
+       FD oerators must not cover discounting when used in the ST framework.
+    */
+
     class FdmHestonEquityPart {
       public:
         FdmHestonEquityPart(const ext::shared_ptr<FdmMesher>& mesher,
@@ -47,7 +71,8 @@ using namespace QuantLib;
                             ext::shared_ptr<YieldTermStructure> qTS,
                             ext::shared_ptr<FdmQuantoHelper> quantoHelper,
                             ext::shared_ptr<LocalVolTermStructure> leverageFct =
-			      ext::shared_ptr<LocalVolTermStructure>());
+                            ext::shared_ptr<LocalVolTermStructure>(),
+                            const bool discounting = true);
 
         void setTime(Time t1, Time t2);
         const TripleBandLinearOp& getMap() const;
@@ -65,6 +90,8 @@ using namespace QuantLib;
         const ext::shared_ptr<YieldTermStructure> rTS_, qTS_;
         const ext::shared_ptr<FdmQuantoHelper> quantoHelper_;
         const ext::shared_ptr<LocalVolTermStructure> leverageFct_;
+        const bool discounting_;
+        
     };
 
     class FdmHestonVariancePart {
@@ -73,7 +100,8 @@ using namespace QuantLib;
                               ext::shared_ptr<YieldTermStructure> rTS,
                               Real mixedSigma,
                               Real kappa,
-                              Real theta);
+                              Real theta,
+                              const bool discounting = true);
 
         void setTime(Time t1, Time t2);
         const TripleBandLinearOp& getMap() const;
@@ -83,6 +111,8 @@ using namespace QuantLib;
         TripleBandLinearOp mapT_;
 
         const ext::shared_ptr<YieldTermStructure> rTS_;
+        const bool discounting_;
+
     };
 
 
@@ -94,7 +124,8 @@ using namespace QuantLib;
 		    ext::shared_ptr<FdmQuantoHelper>(),
                     const ext::shared_ptr<LocalVolTermStructure>& leverageFct =
                         ext::shared_ptr<LocalVolTermStructure>(),
-                    Real mixingFactor = 1.0);
+                    Real mixingFactor = 1.0,
+                    const bool discounting = true);
 
         Size size() const override;
         void setTime(Time t1, Time t2) override;
