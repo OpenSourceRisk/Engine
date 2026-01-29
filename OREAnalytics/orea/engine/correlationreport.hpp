@@ -39,10 +39,9 @@ public:
                       const std::string& correlationMethod,
                       QuantLib::ext::optional<ore::data::TimePeriod> period,
                       const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
-                      const QuantLib::ext::shared_ptr<ScenarioShiftCalculator>& shiftCalc = nullptr,
-                      QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData = nullptr)
+                      const QuantLib::ext::shared_ptr<ScenarioShiftCalculator>& shiftCalc = nullptr)
         : scenario_(scenario), correlationMethod_(correlationMethod), period_(period), hisScenGen_(hisScenGen),
-          shiftCalc_(shiftCalc), sensiScenarioData_(sensiScenarioData) {
+          shiftCalc_(shiftCalc) {
     }
 
     void writeReports(const QuantLib::ext::shared_ptr<Report>& report);
@@ -60,7 +59,6 @@ protected:
     QuantLib::Matrix correlationMatrix_;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> correlationPairs_;
     std::vector<QuantLib::ext::shared_ptr<PNLCalculator>> pnlCalculators_;
-    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     
     ore::data::TimePeriod covariancePeriod() const { return period_.value(); } 
     std::vector<ore::data::TimePeriod> timePeriods() { return {period_.value()}; }
