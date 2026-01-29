@@ -57,6 +57,7 @@
 #include <orea/app/reportwriter.hpp>
 
 #include "testmarket.hpp"
+#include <random>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
