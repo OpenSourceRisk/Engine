@@ -17,6 +17,7 @@
 */
 
 #include <ored/utilities/parsers.hpp>
+#include <orea/scenario/scenarioreader.hpp>
 
 namespace ore {
 namespace analytics {
