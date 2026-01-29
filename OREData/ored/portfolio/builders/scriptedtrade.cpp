@@ -608,10 +608,11 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         hestonMaxAcceptableError_ = parseReal(engineParameter("HestonMaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
         hestonProcessDiscretization_ =
 	  parseHestonProcessDiscretization(engineParameter("HestonProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
-	hestonQuantoTimeStepsPerYear_ = parseInteger(engineParameter("HestonQuantoTimeStepsPerYear", getModelEngineQualifiers(), false, to_string(timeStepsPerYear_)));
-        hestonQuantoProcessDiscretization_ =
-	  parseHestonProcessDiscretization(engineParameter("HestonQuantoProcessDiscretization", getModelEngineQualifiers(), false, to_string(hestonProcessDiscretization_)));
-	debug_ = parseBool(engineParameter("Debug", getModelEngineQualifiers(), false, "false"));
+        hestonQuantoTimeStepsPerYear_ = parseInteger(engineParameter(
+            "HestonQuantoTimeStepsPerYear", getModelEngineQualifiers(), false, to_string(timeStepsPerYear_)));
+        hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(engineParameter(
+            "HestonQuantoProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
+        debug_ = parseBool(engineParameter("Debug", getModelEngineQualifiers(), false, "false"));
     }
 
     if (engineParam_ == "MC") {

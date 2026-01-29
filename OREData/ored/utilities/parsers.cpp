@@ -1842,5 +1842,31 @@ HestonProcess::Discretization parseHestonProcessDiscretization(const std::string
     }
 }
 
+std::ostream& operator<<(std::ostream& os, HestonProcess::Discretization dis) {
+    if (dis == HestonProcess::PartialTruncation) {
+        os << "PartialTruncation";
+    } else if (dis == HestonProcess::FullTruncation) {
+        os << "FullTruncation";
+    } else if (dis == HestonProcess::Reflection) {
+        os << "Reflection";
+    } else if (dis == HestonProcess::NonCentralChiSquareVariance) {
+        os << "NonCentralChiSquareVariance";
+    } else if (dis == HestonProcess::QuadraticExponential) {
+        os << "QuadraticExponential";
+    } else if (dis == HestonProcess::QuadraticExponentialMartingale) {
+        os << "QuadraticExponentialMartingale";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLobatto) {
+        os << "BroadieKayaExactSchemeLobatto";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLaguerre) {
+        os << "BroadieKayaExactSchemeLaguerre";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeTrapezoidal) {
+        os << "BroadieKayaExactSchemeTrapezoidal";
+    } else {
+        QL_FAIL("Unknown HestonProcess::Discretization");
+    }
+    return os;
+}
+
+  
 } // namespace data
 } // namespace ore
