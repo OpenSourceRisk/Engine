@@ -25,8 +25,10 @@
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <thread>
 #include <vector>
+#include <random>
 
 namespace ore {
 namespace data {
@@ -140,8 +142,7 @@ bool FileIO::remove_all(const path& p) {
     return res;
 }
 
-
-std::filesystem::path unique_path(const std::filesystem::path& base = "tmp") {
+std::filesystem::path unique_path(const std::filesystem::path& base) {
     static std::mt19937_64 rng{std::random_device{}()};
     static std::uniform_int_distribution<unsigned long long> dist;
 

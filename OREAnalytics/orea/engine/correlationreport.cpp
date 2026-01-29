@@ -33,7 +33,7 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(timePeriods(), hisScenGen_);
     
     ext::shared_ptr<Scenario> sc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
-    std::vector<RiskFactorKey> deltaKeys = sc->keys();
+    std::vector<RiskFactorKey> deltaKeys = hisScenGen_->baseScenario()->keys();
 
     ext::shared_ptr<NPVCube>cube;
     ext::shared_ptr<CovarianceCalculator> covCalculator;
