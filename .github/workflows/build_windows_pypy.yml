@@ -35,6 +35,10 @@ jobs:
       run: |
         swig -version
         swig -help
+    - name: install setuptools
+      run: |
+        python --version
+        pip install setuptools
     - name: zlib
       run: |
         $Url = "https://www.zlib.net/zlib131.zip"

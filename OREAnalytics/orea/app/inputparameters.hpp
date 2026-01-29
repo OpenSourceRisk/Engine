@@ -332,6 +332,7 @@ public:
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
     void setWriteScenarios(bool b) { writeScenarios_ = b; }
+    void setCubeNpvOverlay(bool b) { cubeNpvOverlay_ = b; }
     void setExposureSimMarketParams(const std::string& xml);
     void setExposureSimMarketParamsFromFile(const std::string& fileName);
     void setScenarioGeneratorData(const std::string& xml);
@@ -823,6 +824,7 @@ public:
     bool writeCube() const { return writeCube_; }
     bool writeScenarios() const { return writeScenarios_; }
     bool generateCorrelations() const {return generateCorrelations_;}
+    bool cubeNpvOverlay() const { return cubeNpvOverlay_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& exposureSimMarketParams() const { return exposureSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData() const { return scenarioGeneratorData_; }
     const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData() const { return crossAssetModelData_; }
@@ -1316,6 +1318,7 @@ protected:
     bool writeCube_ = false;
     bool writeScenarios_ = false;
     bool generateCorrelations_ = false;
+    bool cubeNpvOverlay_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> exposureSimMarketParams_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
