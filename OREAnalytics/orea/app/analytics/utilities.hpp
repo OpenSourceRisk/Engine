@@ -17,6 +17,7 @@
 */
 
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/csvfilereader.hpp>
 #include <orea/scenario/scenarioreader.hpp>
 
 namespace ore {
