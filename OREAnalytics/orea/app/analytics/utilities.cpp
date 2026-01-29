@@ -21,6 +21,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 
 using namespace ore::data;
+using namespace QuantExt;
 
 namespace ore {
 namespace analytics {

@@ -31,10 +31,13 @@ std::vector<QuantLib::Size> parseListOfIntegerValues(const std::string& s);
 std::vector<QuantLib::Period> parseListOfPeriodValues(const std::string& s);
 std::vector<std::string> parseListOfStringValues(const std::string& s);
 
-std::map<std::string, TimeSeries<Real>>  loadDeterministicInitialMarginFromFile(const std::string& fileName);
+std::map<std::string, QuantLib::TimeSeries<QuantLib::Real>>
+loadDeterministicInitialMarginFromFile(const std::string& fileName);
 
-std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> loadCorrelationDataFromFile(const std::string& fileName);
-std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> loadCorrelationData(ore::data::CSVReader& reader);
+std::map<std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>, QuantLib::Real>
+loadCorrelationDataFromFile(const std::string& fileName);
+std::map<std::pair<QuantExt::RiskFactorKey, QuantExt::RiskFactorKey>, QuantLib::Real>
+loadCorrelationData(ore::data::CSVReader& reader);
 
 } // namesapce analytics
 } // namespace ore
