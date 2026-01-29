@@ -48,6 +48,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -57,12 +58,13 @@
 #include <orea/app/reportwriter.hpp>
 
 #include "testmarket.hpp"
-#include <random>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
 using std::string;
 using std::vector;
+
+namespace {
 
 void initCube(NPVCube& cube) {
     // Set every (i,j,k,d) node to be i*1000000 + j + (k/1000000) + d*3
