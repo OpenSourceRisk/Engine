@@ -197,6 +197,8 @@ protected:
     Real hestonEarlyExitThreshold_; // Stop search when this is reached
     Real hestonMaxAcceptableError_; // Throw if best solution's error exceeds this
     HestonProcess::Discretization hestonProcessDiscretization_;
+    Size hestonQuantoTimeStepsPerYear_;
+    HestonProcess::Discretization hestonQuantoProcessDiscretization_;
     bool debug_;
 };
 
