@@ -48,7 +48,6 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/osutils.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -58,7 +57,6 @@
 #include <orea/app/reportwriter.hpp>
 
 #include "testmarket.hpp"
-#include <random>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
