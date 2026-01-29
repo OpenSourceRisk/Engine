@@ -55,7 +55,7 @@ struct OptionletTraits {
         }
 
         // First iteration, not sure if we can do any better here.
-        if (i == 1) {
+        if (i==0 || i == 1) {
             if (c->volatilityType() == QuantLib::Normal) {
                 return 0.0020;
             } else {
