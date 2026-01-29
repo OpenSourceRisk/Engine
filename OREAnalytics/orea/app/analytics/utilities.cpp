@@ -20,6 +20,8 @@
 #include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 
+using namespace ore::data;
+
 namespace ore {
 namespace analytics {
 

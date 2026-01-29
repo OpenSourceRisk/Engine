@@ -87,7 +87,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (scenarioFile.empty())
         scenarioReader_ = loadScenarioReader(scenarioFile, inputs->setupVariables().inputPath_);
 
-    simulationPricingEngine_, amcPricingEngine_, amcCgPricingEngine_ = inputs->setupVariables().pricingEngine_;
+    simulationPricingEngine_ = amcPricingEngine_ = amcCgPricingEngine_ = inputs->setupVariables().pricingEngine_;
     inputs->loadParameterXML<EngineData>(simulationPricingEngine_, "simulation", "pricingEnginesFile");
     inputs->loadParameterXML<EngineData>(amcPricingEngine_, "simulation", "amcPricingEnginesFile");
     inputs->loadParameterXML<EngineData>(amcCgPricingEngine_, "simulation", "amcCgPricingEnginesFile");
