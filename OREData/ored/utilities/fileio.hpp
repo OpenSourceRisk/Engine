@@ -55,5 +55,7 @@ public:
     static bool remove_all(const path&);
 };
 
+std::filesystem::path unique_path(const std::filesystem::path& base = "tmp");
+
 } // namespace data
 } // namespace ore

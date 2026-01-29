@@ -161,7 +161,8 @@ void OptionletStripper::populateDates() const {
                 MakeOISCapFloor(CapFloor::Cap, capFloorLengths_[i], QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_),
                                 rateComputationPeriod_, 0.04)
                     .withTelescopicValueDates(true)
-                    .withSettlementDays(onCapSettlementDays_);
+                    .withSettlementDays(onCapSettlementDays_)
+                    .withRule(DateGeneration::Rule::Forward);
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
             optionletDates_[i] = std::max(referenceDate + 1, lastCoupon->underlying()->fixingDates().front());

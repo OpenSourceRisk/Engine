@@ -46,6 +46,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/fileio.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -63,15 +64,6 @@ using namespace ore::analytics;
 using namespace boost::unit_test_framework;
 using std::string;
 using std::vector;
-
-namespace {
-std::filesystem::path unique_path(const std::filesystem::path& base = "tmp") {
-    static std::mt19937_64 rng{std::random_device{}()};
-    static std::uniform_int_distribution<unsigned long long> dist;
-
-    auto unique_name = base.string() + "_" + std::to_string(dist(rng));
-    return std::filesystem::path(unique_name);
-}
 
 void initCube(NPVCube& cube) {
     // Set every (i,j,k,d) node to be i*1000000 + j + (k/1000000) + d*3
