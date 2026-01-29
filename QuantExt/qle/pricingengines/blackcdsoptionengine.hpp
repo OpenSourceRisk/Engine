@@ -63,6 +63,8 @@ public:
     //@}
 
 private:
+
+    Real forwardRiskyAnnuityStrike() const;
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> probability_;
     QuantLib::Real recovery_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
