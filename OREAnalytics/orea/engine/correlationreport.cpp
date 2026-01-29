@@ -35,10 +35,7 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     ext::shared_ptr<Scenario> sc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
     std::vector<RiskFactorKey> deltaKeys = sc->keys();
 
-    // Filter deltaKeys to the union with risk factors generated from the portfolio based on (KeyType, Name)
-    // i.e., keep only those deltaKeys present in ptfRiskFactors ignoring index
-    // populateSensiShifts iterate over the scenario and deltaKeys, if mismatch with the sensiScenarioData shift
-    // it throws an error.
+    // Discrepancy between scenario risk factors and shift risk factors
     bool supressError = true;
 
     ext::shared_ptr<NPVCube>cube;
