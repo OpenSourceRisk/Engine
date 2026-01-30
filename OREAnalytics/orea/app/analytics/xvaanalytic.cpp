@@ -88,10 +88,16 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (!scenarioFile.empty())
         scenarioReader_ = loadScenarioReader(scenarioFile, inputs->setupVariables().inputPath_);
 
-    simulationPricingEngine_ = amcPricingEngine_ = amcCgPricingEngine_ = inputs->setupVariables().pricingEngine_;
     inputs->loadParameterXML<EngineData>(simulationPricingEngine_, "simulation", "pricingEnginesFile");
+    if (!simulationPricingEngine_)
+        simulationPricingEngine_ = inputs->setupVariables().pricingEngine_;
     inputs->loadParameterXML<EngineData>(amcPricingEngine_, "simulation", "amcPricingEnginesFile");
+    if (!amcPricingEngine_)
+        amcPricingEngine_ = inputs->setupVariables().pricingEngine_;
     inputs->loadParameterXML<EngineData>(amcCgPricingEngine_, "simulation", "amcCgPricingEnginesFile");
+    if (!amcCgPricingEngine_)
+        amcCgPricingEngine_ = inputs->setupVariables().pricingEngine_;
+
     inputs->loadParameterXML<ScenarioSimMarketParameters>(exposureSimMarketParams_, "simulation", "simulationConfigFile");
     inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "simulation", "crossAssetModelData");
     if (!crossAssetModelData_)
