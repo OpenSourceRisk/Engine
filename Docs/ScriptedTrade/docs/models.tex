@@ -71,17 +71,20 @@ wip An example pricing engine configuration looks as follows.
       <Parameter name="UseDoublePrecisionForExternalCalculation">true</Parameter>
       <Parameter name="ExternalDeviceCompatibilityMode">false</Parameter>
       <!-- Heston specific -->
-      <Parameter name="CalibrationExpiries">3M</Parameter>
-      <Parameter name="CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y</Parameter>
-      <Parameter name="HestonCalibrationMethod">PiecewiseBestFit</Parameter>
-      <Parameter name="HestonInitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter> 
-      <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter>                
-      <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter>             
-      <Parameter name="HestonCalibrationRestarts">0</Parameter>
-      <Parameter name="HestonMaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
-      <Parameter name="HestonTolerance">0.001</Parameter>                          
-      <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
-      <Parameter name="Debug">true</Parameter>
+      <Parameter name="Heston.CalibrationMethod">PiecewiseBestFit</Parameter>
+      <Parameter name="Heston.CalibrationExpiries">3M</Parameter>
+      <Parameter name="Heston.CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y</Parameter>
+      <Parameter name="Heston.InitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter> 
+      <Parameter name="Heston.FixedValues">N, N, N, N, N</Parameter>                
+      <Parameter name="Heston.RelaxedFellerConstraint">0.25</Parameter>             
+      <Parameter name="Heston.MaxCalibrationAttempts">0</Parameter>
+      <Parameter name="Heston.MaximumInitialValues">0.1, 20, 3, 0.9, 0.1</Parameter> 
+      <Parameter name="Heston.EarlyExitThreshold">0.005</Parameter>
+      <Parameter name="Heston.MaxAcceptableError">0.01</Parameter>
+      <Parameter name="Heston.ProcessDiscretization">QuadraticExponential</Parameter>
+      <Parameter name="Heston.QuantoProcessDiscretization">FullTruncation</Parameter>
+      <Parameter name="Heston.QuantoTimeStepsPerYear">100</Parameter>
+      <Parameter name="Heston.Debug">true</Parameter>
     </EngineParameters>
   </Product>
 \end{minted}
@@ -208,58 +211,58 @@ The engine parameters have the following meaning:
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
 \item Heston-specific parameters [Optional]:
   \begin{itemize}
-  \item HestonCalibrationExpiries [Optional]: Comma-separated list of option expiry terms, will be used for Heston model calibration if provided.
-    Otherwise we use the effective simulation dates to determine calibration option expiries. \\
-    Default: empty list
-  \item HestonCalibrationVarianceTerms [Optional]: Comma-separated list of terms where annualised variances are computed from the provided
-    option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. \\
-    Can be left blank which means we skip this step of generating initial guesses. \\
-    Default: empty list
-  \item HestonInitialValues [Optional]: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$,
-    $\rho$, $v_0$. \\
-    Default: $0.04, 1.0, 0.5, -0.5, 0.04$
-  \item HestonFixedValues [Optional]: Comma-separated list of booleans to indicate which of the five parameters above shall be kept
-    fixed in the ``ConstantBestFit'' calibration (see below), same order as the parmeters above. \\
-    Default: none fixed, i.e. ``N,N,N,N,N''
-  \item HestonRelaxedFellerConstraint [Optional]: Constraint on $2\kappa\theta/\sigma^2$ to be used in the ``ConstantBestFit''
-    calibration, to be chosen in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between
-    can be chosen representing a somewhat relaxed Feller constraint. \\
-    Default: 0.25 
-  \item HestonMaxCalibrationAttempts [Optional]: If set to zero, we calibrate the Heston
-    parameters once (except for fixed parameters, see above), starting from the initial values/guesses; if positive,
-    we perform several calibrations as specified by ``HestonMaxCalibrationAttempts'' with randomised initial values, keeping the best result. \\
-    Default: 0
-  \item HestonMaximumInitialValues [Optional]: When using HestonMaxCalibrationAttempts $>$ 0,  this comma-separated list specifies the range of the
-    initial values searched, in the order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. For $\theta$, $\kappa$, $\rho$,
-    the specified values are upper limits. For $\sigma$, we rather choose $\epsilon = 2\kappa\theta/\sigma^2$, given $\kappa$
-    and $\theta$, randomly between the relaxed Feller constraint (a value in (0,1]) and the specified upper limit ($>1$). \\
-    Default: $0.1, 20, 3, 0.9, 0.1$
-  \item HestonEarlyExitThreshold [Optional]: When using HestonMaxCalibrationAttempts $>$ 0, exit the search when the calibration error
-    (root mean squared error of implied black volatilities) is below this tolerance. \\
-    Default: 0.005
-  \item HestonMaxAcceptableError [Optional]: Log an error message if the (best) calibration error exceeds this value.\\
-    Default: 0.05
-  \item HestonCalibrationMethod: Choices are ``None'', ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
+  \item Heston.CalibrationMethod: Choices are ``None'', ``ConstantBestFit'', ``PiecewiseBestFit'', ``PiecewiseBootstrap''. \\
     ``None'' means no calibration, the initial parameter values are used; \\
-    ``ConstantBestFit'' means calibration of the Heston model with constant parameters only, possibly with restarts (see HestonMaxCalibrationAttempts above); \\
+    ``ConstantBestFit'' means calibration of the Heston model with constant parameters only, possibly with restarts (see Heston.MaxCalibrationAttempts below); \\
     ``PiecewiseBestFit'' means running the former first, followed by a calibration with piecewise constant $\sigma(t)$ and $\rho(t)$
     Heston parameters for more flexibility in matching several expiries, the other parameters are kept fixed at the previous
     ``ConstantBestFit'' results; \\
     ``PiecewiseBootstrap'' is a variation of the former approach with a sequence of calibrations with piecewise constant
     $\sigma(t)$ and $\rho(t)$, where each calibration in the sequence optimises one expiry or smile section at a time. \\
     Default: ``ConstantBestFit''
-  \item HestonProcessDiscretization [Optional]: Choice of the HestonProcess discretization (PartialTruncation, FullTruncation,
+  \item Heston.CalibrationExpiries [Optional]: Comma-separated list of option expiry terms, will be used for Heston model calibration if provided.
+    Otherwise we use the effective simulation dates to determine calibration option expiries. \\
+    Default: empty list
+  \item Heston.CalibrationVarianceTerms [Optional]: Comma-separated list of terms where annualised variances are computed from the provided
+    option volatility surface; these are used for an initial guess of model parameters $\theta$, $\kappa$ and $v_0$. \\
+    Can be left blank which means we skip this step of generating initial guesses. \\
+    Default: empty list
+  \item Heston.InitialValues [Optional]: Initial values for the five (constant) model parameters in order $\theta$, $\kappa$, $\sigma$,
+    $\rho$, $v_0$. \\
+    Default: $0.04, 1.0, 0.5, -0.5, 0.04$
+  \item Heston.FixedValues [Optional]: Comma-separated list of booleans to indicate which of the five parameters above shall be kept
+    fixed in the ``ConstantBestFit'' calibration (see below), same order as the parmeters above. \\
+    Default: none fixed, i.e. ``N, N, N, N, N''
+  \item Heston.RelaxedFellerConstraint [Optional]: Constraint on $2\kappa\theta/\sigma^2$ to be used in the ``ConstantBestFit''
+    calibration, to be chosen in $[0,1]$; 1 means original Feller constraint, 0 means no constraint, anything in between
+    can be chosen representing a somewhat relaxed Feller constraint. \\
+    Default: 0.25 
+  \item Heston.MaxCalibrationAttempts [Optional]: If set to zero, we calibrate the Heston
+    parameters once (except for fixed parameters, see above), starting from the initial values/guesses; if positive,
+    we perform several calibrations as specified by ``Heston.MaxCalibrationAttempts'' with randomised initial values, keeping the best result. \\
+    Default: 0
+  \item Heston.MaximumInitialValues [Optional]: When using Heston.MaxCalibrationAttempts $>$ 0,  this comma-separated list specifies the range of the
+    initial values searched, in the order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. For $\theta$, $\kappa$, $\rho$,
+    the specified values are upper limits. For $\sigma$, we rather choose $\epsilon = 2\kappa\theta/\sigma^2$, given $\kappa$
+    and $\theta$, randomly between the relaxed Feller constraint (a value in (0,1]) and the specified upper limit ($>1$). \\
+    Default: $0.1, 20, 3, 0.9, 0.1$
+  \item Heston.EarlyExitThreshold [Optional]: When using HestonMaxCalibrationAttempts $>$ 0, exit the search when the calibration error
+    (root mean squared error of implied black volatilities) is below this tolerance. \\
+    Default: 0.005
+  \item Heston.MaxAcceptableError [Optional]: Log an error message if the (best) calibration error exceeds this value.\\
+    Default: 0.05
+  \item Heston.ProcessDiscretization [Optional]: Choice of the HestonProcess discretization (PartialTruncation, FullTruncation,
     Reflection, NonCentral\-Chi\-SquareVariance, Quadratic\-Exponential, Quadratic\-Exponential\-Martingale,
     Broadie\-Kaya\-Exact\-SchemeLobatto, Broadie\-Kaya\-Exact\-SchemeLaguerre, BroadieKayaExactSchemeTrapezoidal). \\
     Default: QuadraticExponential
-  \item HestonQuantoProcessDiscretization [Optional]: Choice of the HestonProcess discretization in case the indices contain
+  \item Heston.QuantoProcessDiscretization [Optional]: Choice of the HestonProcess discretization in case the indices contain
     at least one that needs a quanto adjustment \\
     Default: Use the value of HestonProcessDiscretization above, if missing
-  \item HestonQuantoTimeStepsPerYear: The number of time steps used in case the indices contain
+  \item Heston.QuantoTimeStepsPerYear: The number of time steps used in case the indices contain
     at least one that needs a quanto adjustment, i.e. the HestonQuantoProcessDiscretization might need a finer grid than
-    HestonProcessDiscretization \\
+    Heston.ProcessDiscretization \\
     Default: Use the value of TimeStepsPerYear above, if missing
-  \item Debug [Optional]: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
+  \item Heston.Debug [Optional]: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
     across all indices, effective simulation dates and MC samples for each trade; moreover we perform additional consistency
     checks during Heston path generation. \\
     Default: false

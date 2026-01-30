@@ -592,32 +592,33 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         calibrationMoneyness_ =
 	  parseListOfValues<Real>(engineParameter("CalibrationMoneyness", getModelEngineQualifiers(), false, "-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0"), &parseReal);
         hestonCalibrationExpiries_ =
-	  parseListOfValues<Period>(engineParameter("HestonCalibrationExpiries", getModelEngineQualifiers(),false,""), &parsePeriod);
+	  parseListOfValues<Period>(engineParameter("Heston.CalibrationExpiries", getModelEngineQualifiers(),false,""), &parsePeriod);
         hestonCalibrationVarianceTerms_ =
-	  parseListOfValues<Period>(engineParameter("HestonCalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
+	  parseListOfValues<Period>(engineParameter("Heston.CalibrationVarianceTerms", getModelEngineQualifiers(), false, ""), &parsePeriod);
         hestonInitialValues_ =
-	  parseListOfValues<Real>(engineParameter("HestonInitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"), &parseReal);
+	  parseListOfValues<Real>(engineParameter("Heston.InitialValues", getModelEngineQualifiers(), false, "0.04,1.0,0.5,-0.5,0.04"), &parseReal);
         hestonFixedValues_ =
-	  parseListOfValues<bool>(engineParameter("HestonFixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
-        hestonRelaxedFellerConstraint_ = parseReal(engineParameter("HestonRelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
-        hestonMaxCalibrationAttempts_ = parseInteger(engineParameter("HestonMaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
+	  parseListOfValues<bool>(engineParameter("Heston.FixedValues", getModelEngineQualifiers(), false, "N,N,N,N,N"), &parseBool);
+        hestonRelaxedFellerConstraint_ = parseReal(engineParameter("Heston.RelaxedFellerConstraint", getModelEngineQualifiers(), false, "0.25"));
+        hestonMaxCalibrationAttempts_ = parseInteger(engineParameter("Heston.MaxCalibrationAttempts", getModelEngineQualifiers(), false, "0"));
         hestonMaximumInitialValues_ =
-	  parseListOfValues<Real>(engineParameter("HestonMaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"), &parseReal);
-        hestonCalibrationMethod_ = engineParameter("HestonCalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
-        hestonEarlyExitThreshold_ = parseReal(engineParameter("HestonEarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
-        hestonMaxAcceptableError_ = parseReal(engineParameter("HestonMaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
+	  parseListOfValues<Real>(engineParameter("Heston.MaximumInitialValues", getModelEngineQualifiers(), false, "0.1,20,3,0.9,0.1"), &parseReal);
+        hestonCalibrationMethod_ = engineParameter("Heston.CalibrationMethod", getModelEngineQualifiers(), false, "ConstantBestFit");
+        hestonEarlyExitThreshold_ = parseReal(engineParameter("Heston.EarlyExitThreshold", getModelEngineQualifiers(), false, "0.005"));
+        hestonMaxAcceptableError_ = parseReal(engineParameter("Heston.MaxAcceptableError", getModelEngineQualifiers(), false, "0.05"));
         hestonProcessDiscretization_ =
-	  parseHestonProcessDiscretization(engineParameter("HestonProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
+	  parseHestonProcessDiscretization(engineParameter("Heston.ProcessDiscretization", getModelEngineQualifiers(), false, "QuadraticExponential"));
         hestonQuantoTimeStepsPerYear_ = parseInteger(engineParameter(
             "HestonQuantoTimeStepsPerYear", getModelEngineQualifiers(), false, to_string(timeStepsPerYear_)));
         try {
-	  // We cannot use the above with to_string(hestonProcessDiscretization_), because discretization is an enum rather than an enum class
-	  hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(
-                engineParameter("HestonQuantoProcessDiscretization", getModelEngineQualifiers()));
+            // We cannot use the above with to_string(hestonProcessDiscretization_), because discretization is an enum
+            // rather than an enum class
+            hestonQuantoProcessDiscretization_ = parseHestonProcessDiscretization(
+                engineParameter("Heston.QuantoProcessDiscretization", getModelEngineQualifiers()));
         } catch (std::exception& e) {
             hestonQuantoProcessDiscretization_ = hestonProcessDiscretization_;
         }
-        debug_ = parseBool(engineParameter("Debug", getModelEngineQualifiers(), false, "false"));
+        debug_ = parseBool(engineParameter("Heston.Debug", getModelEngineQualifiers(), false, "false"));
     }
 
     if (engineParam_ == "MC") {

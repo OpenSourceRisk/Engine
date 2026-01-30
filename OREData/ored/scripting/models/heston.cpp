@@ -33,7 +33,6 @@
 #include <ql/methods/finitedifferences/stepconditions/fdmstepconditioncomposite.hpp>
 #include <ql/methods/finitedifferences/utilities/fdminnervaluecalculator.hpp>
 #include <sstream>
-#include <iostream>
 
 namespace ore {
 namespace data {
@@ -118,7 +117,6 @@ void Heston::performCalculationsFd() const {
         auto f = calibrationStrikes_.find(indices_[i].name());
         if (f != calibrationStrikes_.end()) {
             for (Size j = 0; j < std::min(f->second.size(), params_.mesherMaxConcentratingPoints); ++j) {
-	        std::cout << "found calibration strike " << f->second[j] << std::endl;
                 cPoints.back().push_back(
 		    std::make_tuple(std::log(f->second[j]), params_.mesherConcentration, false));
                 TLOG("added critical point at strike " << f->second[j] << " with concentration "
