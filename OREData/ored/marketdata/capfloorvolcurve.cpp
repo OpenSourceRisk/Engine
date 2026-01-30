@@ -45,6 +45,7 @@
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
+#include <ql/termstructures/globalbootstrap.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -154,18 +155,31 @@ void CapFloorVolCurve::buildProxyCurve(
 
 #define TERM_ATM_OPT(INTMETH, INTINSTANCE)                                                                             \
     {                                                                                                                  \
-        QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<INTMETH>> tmp =                                           \
-            QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<INTMETH>>(                                           \
+        typedef PiecewiseAtmOptionletCurve<INTMETH, QuantExt::IterativeBootstrap> my_curve_1;                          \
+        typedef PiecewiseAtmOptionletCurve<INTMETH, QuantLib::GlobalBootstrap> my_curve_2;                             \
+        if (globalBootstrap) {                                                                                         \
+            auto tmp = QuantLib::ext::make_shared<my_curve_2>(                                                         \
                 config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,                                     \
                 volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, INTINSTANCE,       \
-                QuantExt::IterativeBootstrap<                                                                          \
-                    PiecewiseAtmOptionletCurve<INTMETH, QuantExt::IterativeBootstrap>::optionlet_curve>(               \
-                    accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),           \
+                my_curve_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},       \
+                                           true),                                                                      \
                 config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
-        capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(                 \
-            asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),          \
-                            tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),                   \
-                            tmp->volatilityType(), tmp->displacement()));                                              \
+            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(             \
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),      \
+                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),               \
+                                tmp->volatilityType(), tmp->displacement()));                                          \
+        } else {                                                                                                       \
+            auto tmp = QuantLib::ext::make_shared<my_curve_1>(                                                         \
+                config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,                                     \
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, INTINSTANCE,       \
+                my_curve_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,     \
+                                           dontThrowSteps),                                                            \
+                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(             \
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),      \
+                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),               \
+                                tmp->volatilityType(), tmp->displacement()));                                          \
+        }                                                                                                              \
     }
 
 void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
@@ -175,7 +189,7 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     // Get the ATM cap floor term vol curve
     QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolCurve> cftvc = atmCurve(asof, config, loader);
 
-    bool flatFirstPeriod = true;
+    bool flatFirstPeriod = config.flatFirstPeriod();
     VolatilityType optVolType = volatilityType(config.outputVolatilityType());
     Real optDisplacement = 0.0;
     if (optVolType == QuantLib::ShiftedLognormal) {
@@ -190,6 +204,17 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     Real maxFactor = config.bootstrapConfig().maxFactor();
     Real minFactor = config.bootstrapConfig().minFactor();
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
+    bool globalBootstrap = config.bootstrapConfig().global();
+    Real smoothnessLambda = config.bootstrapConfig().smoothnessLambda();
+
+    std::function<Array(const std::vector<Time>&, const std::vector<Real>&)> additionalPenalties =
+        [smoothnessLambda](const std::vector<Time>& times, const std::vector<Real>& data) {
+            Array p(times.size() - 1);
+            for (Size i = 0; i < times.size() - 2; ++i) {
+                p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
+            }
+            return p;
+        };
 
     // On optionlets is the newly added interpolation approach whereas on term volatilities is legacy
     bool onOpt = interpOnOpt(config);
