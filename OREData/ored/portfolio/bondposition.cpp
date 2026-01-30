@@ -172,8 +172,6 @@ std::vector<std::tuple<Real, Real, Real, Real>> BondPositionInstrumentWrapper::N
         Real notional = bonds_[i]->notional();
         if (close_enough(notional, 0.0))
             continue;
-        // - divide by current notional, because weights are supposed to include any amortization factors
-        // - add bid ask adjustment to relative price in bond ccy
         Real fxConversion = 1;
         if (!fxConversion_[i].empty()) {
             fxConversion = fxConversion_[i]->value();
