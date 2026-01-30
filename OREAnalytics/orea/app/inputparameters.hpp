@@ -170,7 +170,8 @@ public:
 
     template <class T>
     bool loadFromParameters(T& obj, const std::string& analytic, const std::vector<std::string>& params) {
-        return loadFromParameters<T>(obj, std::vector<std::string>({analytic}), params);
+        auto analytics = std::vector<std::string>({analytic});
+        return loadFromParameters<T>(obj, analytics, params);
     }
 
     //! load and convert an object from a string for the given (analytic, param) pair
@@ -222,7 +223,8 @@ public:
     bool loadParameter(
         T& obj, const std::vector<std::string>& analytics, const std::string& param, const bool mandatory = false,
         std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
-        return loadParameter<T>(obj, analytics, std::vector<std::string>({param}), false, parser);
+        auto params = std::vector<std::string>({param});
+        return loadParameter<T>(obj, analytics, params, false, parser);
     }
 
     // allow multiple parameter names - ie "curveconfigFile" or "curveconfig"
@@ -230,7 +232,8 @@ public:
     bool loadParameter(
         T& obj, const std::string& analytic, const std::vector<std::string>& params, const bool mandatory = false,
         std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
-        return loadParameter<T>(obj, std::vector<std::string>({analytics}), params, false, parser);
+        auto analytics = std::vector<std::string>({analytic});
+        return loadParameter<T>(obj, analytics, params, false, parser);
     }
 
     //! load the XML object from an XML string for the given (analytic, param) pair
@@ -304,15 +307,16 @@ public:
     }
 
     template <class T, typename... Args>
-    bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params,
-                          const bool mandatory = false, Args... args) {
-        return loadParameterXML<T>(obj, std::vector<std::string>({analytic}), params, false, args...);
+    bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params, const bool mandatory = false, Args... args) {
+        auto analytics = std::vector<std::string>({analytic});
+        return loadParameterXML<T>(obj, analytics, params, false, args...);
     }
 
     template <class T, typename... Args>
     bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
                           const std::string& param, const bool mandatory = false, Args... args) {
-        return loadParameterXML<T>(obj, analytics, std::vector<std::string>({ param }), false, args...);
+        auto params = std::vector<std::string>({param});
+        return loadParameterXML<T>(obj, analytics, params, false, args...);
     }
 
     //! virtual function to load a parameter string for the given (analytic, param) pair
