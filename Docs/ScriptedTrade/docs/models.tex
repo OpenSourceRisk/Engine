@@ -229,12 +229,12 @@ The engine parameters have the following meaning:
     parameters once (except for fixed parameters, see above), starting from the initial values/guesses; if positive,
     we perform several calibrations as specified by ``HestonMaxCalibrationAttempts'' with randomised initial values, keeping the best result. \\
     Default: 0
-  \item HestonMaximumInitialValues [Optional]: When using HestonMaxCalibrationAttempts > 0,  this comma-separated list specifies the range of the
+  \item HestonMaximumInitialValues [Optional]: When using HestonMaxCalibrationAttempts $>$ 0,  this comma-separated list specifies the range of the
     initial values searched, in the order $\theta$, $\kappa$, $\sigma$, $\rho$, $v_0$. For $\theta$, $\kappa$, $\rho$,
     the specified values are upper limits. For $\sigma$, we rather choose $\epsilon = 2\kappa\theta/\sigma^2$, given $\kappa$
     and $\theta$, randomly between the relaxed Feller constraint (a value in (0,1]) and the specified upper limit ($>1$). \\
     Default: $0.1, 20, 3, 0.9, 0.1$
-  \item HestonEarlyExitThreshold [Optional]: When using HestonMaxCalibrationAttempts > 0, exit the search when the calibration error
+  \item HestonEarlyExitThreshold [Optional]: When using HestonMaxCalibrationAttempts $>$ 0, exit the search when the calibration error
     (root mean squared error of implied black volatilities) is below this tolerance. \\
     Default: 0.005
   \item HestonMaxAcceptableError [Optional]: Log an error message if the (best) calibration error exceeds this value.\\
@@ -248,10 +248,17 @@ The engine parameters have the following meaning:
     ``PiecewiseBootstrap'' is a variation of the former approach with a sequence of calibrations with piecewise constant
     $\sigma(t)$ and $\rho(t)$, where each calibration in the sequence optimises one expiry or smile section at a time. \\
     Default: ``ConstantBestFit''
-  \item HestonProcessDiscretization [Optional]: Choice of the QuantLib::HestonProcess discretization (PartialTruncation, FullTruncation,
+  \item HestonProcessDiscretization [Optional]: Choice of the HestonProcess discretization (PartialTruncation, FullTruncation,
     Reflection, NonCentral\-Chi\-SquareVariance, Quadratic\-Exponential, Quadratic\-Exponential\-Martingale,
     Broadie\-Kaya\-Exact\-SchemeLobatto, Broadie\-Kaya\-Exact\-SchemeLaguerre, BroadieKayaExactSchemeTrapezoidal). \\
     Default: QuadraticExponential
+  \item HestonQuantoProcessDiscretization [Optional]: Choice of the HestonProcess discretization in case the indices contain
+    at least one that needs a quanto adjustment \\
+    Default: Use the value of HestonProcessDiscretization above, if missing
+  \item HestonQuantoTimeStepsPerYear: The number of time steps used in case the indices contain
+    at least one that needs a quanto adjustment, i.e. the HestonQuantoProcessDiscretization might need a finer grid than
+    HestonProcessDiscretization \\
+    Default: Use the value of TimeStepsPerYear above, if missing
   \item Debug [Optional]: If set to true or Y, we generate a report (assetmodel\_paths.csv) that contains the spot price realisations
     across all indices, effective simulation dates and MC samples for each trade; moreover we perform additional consistency
     checks during Heston path generation. \\

@@ -121,6 +121,9 @@ protected:
     // gets comm ccy from market
     std::string getCommCcy(const IndexInfo& e);
 
+    // Check whether the list of indices contains at least one that needs a quanto adjustment
+    bool containsQuanto();
+  
     // input data (for amc, amcCam_, amcCgModel_ are mutually exclusive)
     bool buildingAmc_ = false;
     bool buildingAmcCg_ = false;
