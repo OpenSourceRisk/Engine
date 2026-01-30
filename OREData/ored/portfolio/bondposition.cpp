@@ -192,10 +192,8 @@ Real BondPositionInstrumentWrapper::NPV() const {
         // - divide by current notional, because weights are supposed to include any amortization factors
         // - add bid ask adjustment to relative price in bond ccy
         Real tmp = quantity_ * (bonds_[i]->NPV() / notional + bidAskAdjustments_[i]);
-        Real fxConversion = 1;
         if (!fxConversion_[i].empty()) {
-            fxConversion = fxConversion_[i]->value();
-            tmp *= fxConversion;
+            tmp *= fxConversion_[i]->value();
         }
         result += tmp * weights_[i];
     }
