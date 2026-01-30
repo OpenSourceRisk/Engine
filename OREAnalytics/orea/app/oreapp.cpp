@@ -1649,7 +1649,7 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->getString("xvaExplain", "active", false);
     if (!tmp.empty() && parseBool(tmp))
-        insertAnalytic("XVA_EXPLAIN");  
+        insertAnalytic("XVA_EXPLAIN");
 
     /*************
      * XVA Stress

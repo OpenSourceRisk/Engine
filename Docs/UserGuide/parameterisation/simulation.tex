@@ -121,6 +121,7 @@ When defining the currencies in the cross asset model, the domestic currency alw
   <BootstrapTolerance>0.0001</BootstrapTolerance>
   <Measure>LGM</Measure><!-- Choices: LGM, BA -->
   <Discretization>Exact</Discretization>
+  <SalvagingAlgorithm>Spectral</SalvagingAlgorithm>
   <!-- ... -->
 </CrossAssetModel>
 \end{minted}
@@ -138,6 +139,8 @@ exploiting the analytical tractability of the model to avoid any time discretiza
 time discretization scheme which has numerical error and requires small time steps for accurate results (useful for
 testing purposes or if more sophisticated component models are used). If {\em Euler} is used, you should consider
 setting TimeStepsPerYear (see above) to a large enough value.
+
+The SalvagingAlgorithm tag specifies the preprocessing of the input correlation matrix (None, Spectral, Hypersphere, LowerDiagonal, Higham). Optional, defaults to None.
 
 \medskip
 

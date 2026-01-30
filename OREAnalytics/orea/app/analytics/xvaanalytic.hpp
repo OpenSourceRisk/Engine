@@ -73,6 +73,7 @@ struct XvaVariables : public InputVariables {
     bool writeCube_ = false;
     bool writeScenarios_ = false;
     bool generateCorrelations_ = false;
+    bool cubeNpvOverlay_ = false;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> exposureSimMarketParams_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;

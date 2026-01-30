@@ -348,7 +348,7 @@ as well as American Monte Carlo (AMC), see below. The setup in \ref{lst:ore_simu
     <Parameter name="cptyCubeFile">cptyCube.csv.gz</Parameter>
     <Parameter name="storeSurvivalProbabilities">Y</Parameter>
     <Parameter name="storeCreditStateNPVs">8</Parameter>
-    <Parameter name="salvageCorrelationMatrix">true</Parameter>
+    <Parameter name="cubeNpvOverlay">true</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -369,6 +369,8 @@ Key `store flows' (Y or N) controls whether cumulative cash flows between simula
 cube for post processing in the context of some Dynamic Initial Margin and Variation Margin models. And finally, the
 key `store survival probabilities' (Y or N) controls whether survival probabilities on simulation dates are stored in the
 cube for post processing in the context of Dynamic Credit XVA calculation.
+Key 'cubeNpvOverlay' is optional and defaults to false. If true, all raw npv cube entries are corrected by the
+difference of the T0 npv from the pricing analytic and the T0 npv from the simulation npv.
 
 \medskip
 To use  AMC simulation the simulation setup needs the additional elements shown in \ref{lst:ore_amc_simulation}
