@@ -258,13 +258,23 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
 
 #define TERM_OPT_STRIPPER(INTMETH, INTINSTANCE)                                                                        \
     {                                                                                                                  \
-        optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<INTMETH>>(                           \
-            cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,          \
-            INTINSTANCE,                                                                                               \
-            QuantExt::IterativeBootstrap<                                                                              \
-                PiecewiseOptionletStripper<INTMETH, QuantExt::IterativeBootstrap>::optionlet_curve>(                   \
-                accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),               \
-            config.rateComputationPeriod(), config.onCapSettlementDays());                                             \
+        typedef PiecewiseOptionletStripper<INTMETH, QuantExt::IterativeBootstrap> my_stripper_1;                       \
+        typedef PiecewiseOptionletStripper<INTMETH, QuantLib::GlobalBootstrap> my_stripper_2;                          \
+        if (globalBootstrap) {                                                                                         \
+            optionletStripper = QuantLib::ext::make_shared<my_stripper_2>(                                             \
+                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,      \
+                INTINSTANCE,                                                                                           \
+                my_stripper_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},    \
+                                              true),                                                                   \
+                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+        } else {                                                                                                       \
+            optionletStripper = QuantLib::ext::make_shared<my_stripper_1>(                                             \
+                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,      \
+                INTINSTANCE,                                                                                           \
+                my_stripper_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,  \
+                                              dontThrowSteps),                                                         \
+                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+        }                                                                                                              \
     }
 
 #define TERM_OPT_ADAPTER(INTMETH_TIME, INTINSTANCE_TIME, INTMETH_STRIKE, INTINSTANCE_STRIKE)                           \
@@ -312,6 +322,17 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     Real maxFactor = config.bootstrapConfig().maxFactor();
     Real minFactor = config.bootstrapConfig().minFactor();
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
+    bool globalBootstrap = config.bootstrapConfig().global();
+    Real smoothnessLambda = config.bootstrapConfig().smoothnessLambda();
+
+    std::function<Array(const std::vector<Time>&, const std::vector<Real>&)> additionalPenalties =
+        [smoothnessLambda](const std::vector<Time>& times, const std::vector<Real>& data) {
+            Array p(times.size() - 1);
+            for (Size i = 0; i < times.size() - 2; ++i) {
+                p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
+            }
+            return p;
+        };
 
     // Get configuration values for parametric smile
     std::vector<std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
