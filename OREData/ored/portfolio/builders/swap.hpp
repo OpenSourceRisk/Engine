@@ -48,7 +48,7 @@ class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const C
                                                                  const std::string&, const std::set<std::string>&> {
 public:
     SwapEngineBuilderBase(const std::string& model, const std::string& engine)
-        : CachingEngineBuilder(model, engine, {"Swap"}) {}
+        : CachingEngineBuilder(model, engine, {"Swap", "CapFloor_as_Swap"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy, const std::string& discountCurve, const std::string& securitySpread,
