@@ -167,7 +167,7 @@ void BondPositionInstrumentWrapper::setNpvCurrencyConversion(const Handle<Quote>
     npvCcyConversion_ = npvCcyConversion;
 }
 std::vector<std::tuple<Real, Real, Real, Real>> BondPositionInstrumentWrapper::NPVBreakDown() {
-    bondDetails_.clear();
+    std::vector<std::tuple<Real, Real, Real, Real>> bondDetails;
     for (Size i = 0; i < bonds_.size(); ++i) {
         Real notional = bonds_[i]->notional();
         if (close_enough(notional, 0.0))
@@ -176,9 +176,9 @@ std::vector<std::tuple<Real, Real, Real, Real>> BondPositionInstrumentWrapper::N
         if (!fxConversion_[i].empty()) {
             fxConversion = fxConversion_[i]->value();
         }
-        bondDetails_.push_back(std::make_tuple(weights_[i], bidAskAdjustments_[i], fxConversion, bonds_[i]->NPV()));
+        bondDetails.push_back(std::make_tuple(weights_[i], bidAskAdjustments_[i], fxConversion, bonds_[i]->NPV()));
     }
-    return bondDetails_;
+    return bondDetails;
 }
 
 Real BondPositionInstrumentWrapper::NPV() const {

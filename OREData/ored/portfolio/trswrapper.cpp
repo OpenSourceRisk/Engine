@@ -267,7 +267,11 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                         usingInitialPrice = true;
                     }
                 } else {
-                    s0 = getUnderlyingFixing(i, v0, false, "s0") * arguments_.underlyingMultiplier_[i];
+                    std::map<std::string, QuantLib::ext::any> s0AdditionalData;
+                    s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
+                    for (const auto& [key, value] : s0AdditionalData) {
+                        results_.additionalResults["s0_" + key] = value;
+                    }
                     fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                 }
                 DLOG("start value (underlying " << std::to_string(i + 1) << "): s0=" << s0 << " fx0=" << fx0 << " => "
@@ -376,12 +380,18 @@ Real TRSWrapperAccrualEngine::getFxConversionRate(const Date& date, const Curren
     return result1 / result2;
 }
 
-Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection, const string isS0S1) const {
+Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection) const {
+    std::map<std::string, QuantLib::ext::any> unused;
+    return getUnderlyingFixing(i, date, enforceProjection, unused);
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection,
+                                                std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const {
     Date today = Settings::instance().evaluationDate();
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        auto tmp = getUnderlyingNPV(i, isS0S1);
+        auto tmp = getUnderlyingNPV(i, fixingAdditionalData);
         return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
@@ -390,7 +400,7 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
         return tmp;
     } catch (const std::exception&) {
         if (adjustedDate == today) {
-            auto tmp = getUnderlyingNPV(i, isS0S1);
+            auto tmp = getUnderlyingNPV(i, fixingAdditionalData);
             return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
         }
         else
@@ -398,20 +408,24 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     }
 }
 
-Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, const string isS0S1) const {
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
+    std::map<std::string, QuantLib::ext::any> unused;
+    return getUnderlyingNPV(i, unused);
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const {
     if (QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]) != nullptr ||
         QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) != nullptr) {
         Date today = Settings::instance().evaluationDate();
         return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
-        auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument());
-        if(bondPositionWrapper && isS0S1!=""){
+        if(auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument())){
             auto bondDetails = bondPositionWrapper->NPVBreakDown();
             for(Size k = 0; k < bondDetails.size(); k++){
-                results_.additionalResults[isS0S1+"_underlying["+ std::to_string(k)+ "]_weight"] = std::get<0>(bondDetails[k]);
-                results_.additionalResults[isS0S1+"_underlying["+ std::to_string(k)+ "]_bidAskSpread"] = std::get<1>(bondDetails[k]);
-                results_.additionalResults[isS0S1+"_underlying["+ std::to_string(k)+ "]_fxConversion"] = std::get<2>(bondDetails[k]);
-                results_.additionalResults[isS0S1+"_underlying["+ std::to_string(k)+ "]_npv"] = std::get<3>(bondDetails[k]);
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_weight"] = std::get<0>(bondDetails[k]);
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_bidAskSpread"] = std::get<1>(bondDetails[k]);
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_fxConversion"] = std::get<2>(bondDetails[k]);
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_npv"] = std::get<3>(bondDetails[k]);
             }
             return bondPositionWrapper->NPV();
         }
@@ -460,12 +474,16 @@ void TRSWrapperAccrualEngine::calculate() const {
 
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
+                std::map<std::string, QuantLib::ext::any> s1AdditionalData;
                 if (endDate == Null<Date>()) {
-                    s1 = getUnderlyingNPV(i, "s1");
+                    s1 = getUnderlyingNPV(i, s1AdditionalData);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
                 } else {
-                    s1 = getUnderlyingFixing(i, endDate, false, "s1") * arguments_.underlyingMultiplier_[i];
+                    s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.underlyingMultiplier_[i];
                     fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
+                }
+                for (const auto& [key, value] : s1AdditionalData) {
+                    results_.additionalResults["s1_" + key] = value;
                 }
                 assetLegNpv += fx1 * s1 - underlyingStartValue[i] * fxConversionFactor[i];
                 DLOG("end value (underlying " << std::to_string(i + 1) << "): s1=" << s1 << " fx1=" << fx1 << " => "
