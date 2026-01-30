@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="CallableBondTrade">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_CALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+
+  <Trade id="CallableBondNoCall">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_NOCALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+  <Trade id="CallableBondCertainCall">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_CERTAINCALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+  <Trade id="PutCallBondTrade">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>SECURITY_PUTCALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+  <!--Trade id="UnderlyingBondTrade">
+    <TradeType>Bond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <BondData>
+      <SecurityId>SECURITY_1_STRIPPED</SecurityId>
+      <BondNotional>100000000</BondNotional>
+    </BondData>
+  </Trade-->
+</Portfolio>

@@ -310,6 +310,7 @@ pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/intrinsicascotengine.cpp
 pricingengines/lgmconvolutionsolver.cpp
+pricingengines/mccamcallablebondengine.cpp
 pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamequityforwardengine.cpp
 pricingengines/mccamfxforwardengine.cpp
@@ -731,6 +732,7 @@ models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
+models/crlgmvectorised.hpp
 models/cmscaphelper.hpp
 models/commoditymodel.hpp
 models/commodityschwartzconstantparametrization.hpp
@@ -881,6 +883,7 @@ pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/intrinsicascotengine.hpp
 pricingengines/lgmconvolutionsolver.hpp
+pricingengines/mccamcallablebondengine.hpp
 pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamequityforwardengine.hpp
 pricingengines/mccamfxforwardengine.hpp
@@ -1047,6 +1050,7 @@ termstructures/strippedoptionletadapter2.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
+termstructures/survivalprobabilitycurvefromyield.hpp
 termstructures/swaptionsabrcube.hpp
 termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
@@ -1068,6 +1072,7 @@ time/futureexpirycalculator.hpp
 time/monthcounter.hpp
 time/yearcounter.hpp
 utilities/barrier.hpp
+utilities/callablebond.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
 utilities/creditcurves.hpp

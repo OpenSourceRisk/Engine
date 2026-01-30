@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="CallableBondTrade_Call">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>CallableBond_CALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+   <Trade id="CallableBondTrade_Put">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>CallableBond_PUT</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+  <Trade id="CallableBondTrade_PutCall">
+    <TradeType>CallableBond</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_C</CounterParty>
+      <NettingSetId>CPTY_C</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CallableBondData>
+      <BondData>
+        <SecurityId>CallableBond_PUTCALL</SecurityId>
+        <BondNotional>100000000</BondNotional>
+      </BondData>
+    </CallableBondData>
+  </Trade>
+</Portfolio>
