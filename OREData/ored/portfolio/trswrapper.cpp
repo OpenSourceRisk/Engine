@@ -404,7 +404,8 @@ Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, const string isS0S1
         Date today = Settings::instance().evaluationDate();
         return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
-        if(auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument())){
+        auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument());
+        if(bondPositionWrapper && isS0S1!=""){
             auto bondDetails = bondPositionWrapper->NPVBreakDown();
             for(Size k = 0; k < bondDetails.size(); k++){
                 results_.additionalResults[isS0S1+"_underlying["+ std::to_string(k)+ "]_weight"] = std::get<0>(bondDetails[k]);
