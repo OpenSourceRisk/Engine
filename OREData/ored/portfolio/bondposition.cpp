@@ -185,7 +185,6 @@ std::vector<std::tuple<Real, Real, Real, Real>> BondPositionInstrumentWrapper::N
 
 Real BondPositionInstrumentWrapper::NPV() const {
     Real result = 0.0;
-    // bondDetails_.clear();
     for (Size i = 0; i < bonds_.size(); ++i) {
         Real notional = bonds_[i]->notional();
         if (close_enough(notional, 0.0))
@@ -198,7 +197,6 @@ Real BondPositionInstrumentWrapper::NPV() const {
             fxConversion = fxConversion_[i]->value();
             tmp *= fxConversion;
         }
-        // bondDetails_.push_back(std::tuple(weights_[i], bidAskAdjustments_[i], fxConversion, bonds_[i]->NPV()));
         result += tmp * weights_[i];
     }
     if (!npvCcyConversion_.empty()) {
