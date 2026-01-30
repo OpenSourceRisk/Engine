@@ -2353,36 +2353,29 @@
     </xs:all>
   </xs:complexType>
 
+
   <xs:complexType name="trsUnderlyingData">
     <xs:sequence>
       <xs:choice maxOccurs="unbounded">
         <xs:element name="Derivative">
-         <xs:complexType>
+		 <xs:complexType>
           <xs:sequence>
            <xs:element type="xs:string" name="Id"/>
-           <xs:element name="Trade">
-            <xs:complexType>
-             <xs:sequence>
-              <xs:element type="oreTradeType" name="TradeType"/>
-              <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-              <xs:group ref="oreTradeData"/>
-             </xs:sequence>
-             <xs:attribute type="xs:string" name="id"/>
-            </xs:complexType>
-           </xs:element>
-          </xs:sequence>
+			<xs:element ref="subTradeGroup"/>
+		  </xs:sequence>
          </xs:complexType>
         </xs:element>
-        <xs:element name="Trade">
-         <xs:complexType>
-           <xs:sequence>
-            <xs:element type="oreTradeType" name="TradeType"/>
-            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-            <xs:group ref="oreTradeData"/>
-            </xs:sequence>
-          <xs:attribute type="xs:string" name="id"/>
-         </xs:complexType>
-        </xs:element>
+		<!-- <xs:element name="Trade"> -->
+         <!-- <xs:complexType> -->
+           <!-- <xs:sequence> -->
+            <!-- <xs:element type="oreTradeType" name="TradeType"/> -->
+            <!-- <xs:element type="envelope" name="Envelope" minOccurs="0"/> -->
+            <!-- <xs:group ref="oreTradeData"/> -->
+            <!-- </xs:sequence> -->
+          <!-- <xs:attribute type="xs:string" name="id"/> -->
+         <!-- </xs:complexType> -->
+        <!-- </xs:element> -->
+		<xs:element ref="subTradeGroup"/>
         <xs:element name="PortfolioIndexTradeData" minOccurs="0">
          <xs:complexType>
            <xs:sequence>
@@ -2588,17 +2581,19 @@
   </xs:complexType>
 
   <xs:complexType name="cboBondBasketData">
-    <xs:sequence>
-      <xs:element name="Trade" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="oreTradeType" name="TradeType"/>
-            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-            <xs:element type="bondData" name="BondData" maxOccurs="1" minOccurs="0"/>
-          </xs:all>
-          <xs:attribute type="xs:string" name="id"/>
-        </xs:complexType>
-      </xs:element>
+    
+	<xs:sequence>
+		<xs:element ref="subTradeGroup" maxOccurs="unbounded"/>
+      <!-- <xs:element name="Trade" maxOccurs="unbounded"> -->
+        <!-- <xs:complexType> -->
+          <!-- <xs:all> -->
+            <!-- <xs:element type="oreTradeType" name="TradeType"/> -->
+            <!-- <xs:element type="envelope" name="Envelope" minOccurs="0"/> -->
+            <!-- <xs:element type="bondData" name="BondData" maxOccurs="1" minOccurs="0"/> -->
+          <!-- </xs:all> -->
+          <!-- <xs:attribute type="xs:string" name="id"/> -->
+        <!-- </xs:complexType> -->
+      <!-- </xs:element> -->
     </xs:sequence>
   </xs:complexType>
 
@@ -3031,16 +3026,17 @@
 
   <xs:complexType name="compositeTradeComponents">
     <xs:sequence>
-      <xs:element name="Trade" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element type="oreTradeType" name="TradeType"/>
-            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-            <xs:group ref="oreTradeData"/>
-          </xs:sequence>
-          <xs:attribute type="xs:string" name="id"/>
-        </xs:complexType>
-      </xs:element>
+		<xs:element ref="subTradeGroup" maxOccurs="unbounded"/>
+	  <!-- <xs:element name="Trade" maxOccurs="unbounded"> -->
+        <!-- <xs:complexType> -->
+          <!-- <xs:sequence> -->
+            <!-- <xs:element type="oreTradeType" name="TradeType"/> -->
+            <!-- <xs:element type="envelope" name="Envelope" minOccurs="0"/> -->
+            <!-- <xs:group ref="oreTradeData"/> -->
+          <!-- </xs:sequence> -->
+          <!-- <xs:attribute type="xs:string" name="id"/> -->
+        <!-- </xs:complexType> -->
+      <!-- </xs:element> -->
     </xs:sequence>
   </xs:complexType>
 
