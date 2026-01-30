@@ -1414,5 +1414,11 @@
 	  <EOM>false</EOM>
 	  </Zero>
 	-->
+	  <Zero>
+		<Id>EUR-ZERO</Id>
+		<TenorBased>false</TenorBased>
+		<DayCounter>A365</DayCounter>
+		<CompoundingFrequency>Daily</CompoundingFrequency>
+		<Compounding>Continuous</Compounding>
+	</Zero>
 </Conventions>
-
