@@ -1,3 +1,30 @@
+Changes for the 15th ORE release:
+=================================
+
+ORE v15 includes the following notable changes (November 2025 to January 2026)
+
+- Update of QuantLib: ORE is built on top of QuantLib and version 14 will use the recent QuantLib version v1.41
+- Support for conventional spreads in credit curve builder
+- ForwardFlat interpolation for commodity curves
+- Exposure cube npv overlay: apply an optional correction to exposure npv cubes to match t0 npvs from pricing analytic
+- New rate curve cashflow report containing the cashflows of rate curve instruments
+- 1D discrete extrapolation for rate curves
+- Rounding for commodity swaps
+- Hull-White n-Factor calibration to historical rate curve moves
+- Constituent calibration to index level for index cds options
+- Wildcard support for direct zero and discount rate curve segments
+- Configurable usage of indexed resp. par ibor coupons for curve building and trade pricing
+- Volatility smile output in additional results for variance swap replication engine
+- Sticky SABR sensitivity calculation
+- Multiple conventions for single instrument type in par conversion
+- Start delay for inflation rate helpers
+- Month daycounter for inflation
+- Subtrades for composite trades
+- Support AMC for GenericBarrierOption, FxDigitalOption, FxEuropeanBarrierOption, FxDoubleBarrierOption, FxBarrierOption, FxKIKOBarrierOption
+- New pillar choices StartDate, StandAndEndDate, None in rate curve configuration
+- Penalty for curve smoothness in global rate curve builder
+- Several bug fixes
+
 Changes for the 14th ORE release:
 =================================
 
