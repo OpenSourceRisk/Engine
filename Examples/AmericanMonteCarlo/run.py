@@ -8,8 +8,9 @@ cases = [ "run_benchmark.py",          # 39
 	  "run_scriptedberm.py",       # 54
 	  "run_fxtarf.py",             # 55
 	  "run_forwardbond.py",        # 73
-          "run_overlapping.py",        # 60
-          "run_scenariostatistics.py"  # 75
+      "run_overlapping.py",        # 60
+      "run_scenariostatistics.py",  # 75
+      "run_genericbarrier.py"
          ]
 
 # Get max parallel from environment variable, default to 1

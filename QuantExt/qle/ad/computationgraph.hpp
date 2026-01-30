@@ -114,9 +114,11 @@ std::size_t cg_indicatorGeq(ComputationGraph& g, const std::size_t a, const std:
                             const std::string& label = std::string());
 std::size_t cg_min(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_max(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
+std::size_t cg_round(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_abs(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_exp(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_sqrt(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
+std::size_t cg_frac(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_log(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_pow(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_normalCdf(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());

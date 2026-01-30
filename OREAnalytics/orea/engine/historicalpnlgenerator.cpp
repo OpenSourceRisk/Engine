@@ -20,6 +20,7 @@
 
 #include <orea/engine/multithreadedvaluationengine.hpp>
 #include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/historicalsensipnlcalculator.hpp>
 
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -94,7 +95,7 @@ HistoricalPnlGenerator::HistoricalPnlGenerator(
           return {QuantLib::ext::make_shared<NPVCalculator>(baseCurrency)};
       }) {}
 
-void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter) {
+void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<ScenarioFilter>& filter, const bool runRiskFactorBreakdown) {
 
     DLOG("Filling historical P&L cube for " << portfolio_->size() << " trades and " << hisScenGen_->numScenarios()
                                             << " scenarios.");
@@ -112,9 +113,32 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         simMarket_->reset();
         simMarket_->scenarioGenerator() = hisScenGen_;
         hisScenGen_->baseScenario() = simMarket_->baseScenario();
+        if(hisScenGen_->isRiskFactorBreakdown() && runRiskFactorBreakdown){
+            //Run for RiskFactor PnL Breakdown
+            ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
+            std::vector<RiskFactorKey> deltaKeys = sc->keys();
+            for(auto const& key: deltaKeys){
+                // If we already have a non-empty shared_ptr for this key, skip rebuilding
+                auto it = mapCube_.find(key);
+                if (it != mapCube_.end() && it->second) {
+                    continue;
+                }
+                hisScenGen_->setCurrentKey(key);
+                hisScenGen_->setIterator(0);
+                ext::shared_ptr<NPVCube> newCube = ext::make_shared<InMemoryCubeOpt<double>>(simMarket_->asofDate(), portfolio_->ids(),
+                    vector<Date>(1, simMarket_->asofDate()), hisScenGen_->numScenarios());
+
+                valuationEngine_->buildCube(portfolio_, newCube, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
+                                        nullptr, nullptr, {}, dryRun_);
+                mapCube_[key] = newCube;
+                hisScenGen_->reset();
+            }
+            //Run for Full report - Remove risk factor key - reset counter
+            hisScenGen_->setCurrentKey(RiskFactorKey());
+            hisScenGen_->setIterator(0);
+        }
         valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
-
     } else {
         MultiThreadedValuationEngine engine(
             nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
@@ -224,6 +248,60 @@ TradePnlStore HistoricalPnlGenerator::tradeLevelPnl(const set<pair<string, Size>
 }
 
 TradePnlStore HistoricalPnlGenerator::tradeLevelPnl() const { return tradeLevelPnl(timePeriod()); }
+
+using RiskFactorPnLSeries = HistoricalPnlGenerator::RiskFactorPnLSeries;
+RiskFactorPnLSeries HistoricalPnlGenerator::riskFactorLevelPnlSeries(const ore::data::TimePeriod& period) const {
+    RiskFactorPnLSeries series;
+    if (mapCube_.empty()) {
+        DLOG("riskFactorLevelPnlSeries: mapCube_ is empty; returning empty result");
+        return series;
+    }
+
+    // Determine how many scenarios we have from any cube in the map
+    Size samples = mapCube_.begin()->second->samples();
+    series.resize(samples);
+
+    Size dateIdx = 0; // risk factor cubes have a single date at asof
+    for (Size s = 0; s < samples; ++s) {
+        Date start = hisScenGen_->startDates()[s];
+        Date end = hisScenGen_->endDates()[s];
+        if (!(period.contains(start) && period.contains(end))) {
+            continue; // leave this scenario's map empty
+        }
+        // Aggregate PnL per trade and collapse duplicates by risk factor name
+        // Map: rf name -> (representative key, per-trade pnl vector)
+        std::unordered_map<std::string, std::pair<RiskFactorKey, std::vector<Real>>> byName;
+        for (const auto& kv : mapCube_) {
+            const RiskFactorKey& rfKey = kv.first;
+            const ext::shared_ptr<NPVCube>& rfCube = kv.second;
+            Size tradeCount = rfCube->numIds();
+            std::vector<Real> pnlVec(tradeCount, 0.0);
+            bool anyNonZero = false;
+            for (Size i = 0; i < tradeCount; ++i) {
+                Real v = rfCube->get(i, dateIdx, s) - rfCube->getT0(i);
+                pnlVec[i] = v;
+                anyNonZero = anyNonZero || (v != 0.0);
+            }
+            if (!anyNonZero)
+                continue;
+            auto it = byName.find(rfKey.name);
+            if (it == byName.end()) {
+                byName.emplace(rfKey.name, std::make_pair(rfKey, std::move(pnlVec)));
+            } else {
+                auto& aggVec = it->second.second;
+                if (aggVec.size() < pnlVec.size())
+                    aggVec.resize(pnlVec.size(), 0.0);
+                for (Size i = 0; i < pnlVec.size(); ++i)
+                    aggVec[i] += pnlVec[i];
+            }
+        }
+        for (auto& e : byName) {
+            series[s].emplace(e.second.first, std::move(e.second.second));
+        }
+    }
+
+    return series;
+}
 
 const QuantLib::ext::shared_ptr<NPVCube>& HistoricalPnlGenerator::cube() const { return cube_; }
 

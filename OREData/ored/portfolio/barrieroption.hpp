@@ -51,6 +51,9 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
+    
     //! check validity of barriers
     virtual void checkBarriers() = 0;
 
@@ -60,7 +63,7 @@ public:
     virtual QuantLib::ext::shared_ptr<QuantLib::Index> getHighIndex() const { return nullptr; }
 
     // strike of underlying option
-    virtual const QuantLib::Real strike() = 0;
+    virtual const QuantLib::Real strike() const = 0;
 
     virtual QuantLib::Real tradeMultiplier() = 0;
     virtual Currency tradeCurrency() = 0;
@@ -70,6 +73,11 @@ public:
     virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate) = 0;
+
+    virtual QuantLib::ext::shared_ptr<ore::data::DelegatingEngineBuilder>
+    getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) {
+        return nullptr;
+    }
     virtual const QuantLib::Handle<QuantLib::Quote>& spotQuote() = 0;
 
     virtual void additionalFromXml(ore::data::XMLNode* node) = 0;
@@ -81,6 +89,7 @@ public:
     const BarrierData& barrier() const { return barrier_; }
     const QuantLib::Date& startDate() const { return startDate_; }
     const QuantLib::Calendar& calendar() const { return calendar_; }
+    const std::string& calendarStr() const { return calendarStr_; }
     //@}
 
     //! \name Serialisation
@@ -94,7 +103,7 @@ private:
     BarrierData barrier_;
     QuantLib::Date startDate_;
     QuantLib::Calendar calendar_;
-
+    QuantLib::ext::shared_ptr<Trade> delegatingTrade_;
 protected:
     std::string calendarStr_;
 };
@@ -124,6 +133,7 @@ public:
     //@}
 
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) override;
+
     //! \name Serialisation
     //@{
     void additionalFromXml(ore::data::XMLNode* node) override;
@@ -133,11 +143,14 @@ public:
     QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(fxIndex_); }
     QuantLib::ext::shared_ptr<QuantLib::Index> getLowIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(fxIndexLows_); }
     QuantLib::ext::shared_ptr<QuantLib::Index> getHighIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(fxIndexHighs_); }
-    const QuantLib::Real strike() override { return soldAmount_ / boughtAmount_; }
+    QuantLib::ext::shared_ptr<DelegatingEngineBuilder> getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) override;
+    const QuantLib::Real strike() const override { return soldAmount_ / boughtAmount_; }
     QuantLib::Real tradeMultiplier() override { return boughtAmount_; }
     Currency tradeCurrency() override { return parseCurrency(soldCurrency_); }
     const QuantLib::Handle<QuantLib::Quote>& spotQuote() override { return spotQuote_; }
     std::string indexFixingName() override;
+    const std::string& fxIndex() const { return fxIndexStr_; }
+    
 
     void fromXML(ore::data::XMLNode* node) override { BarrierOption::fromXML(node); }
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override { return BarrierOption::toXML(doc); }
@@ -152,6 +165,7 @@ private:
     QuantLib::Handle<QuantLib::Quote> spotQuote_;
     QuantLib::Real boughtAmount_;
     QuantLib::Real soldAmount_;
+    
 };
 
 
@@ -187,7 +201,7 @@ public:
     //@}
 
     QuantLib::ext::shared_ptr<QuantLib::Index> getIndex() const override { return QuantLib::ext::dynamic_pointer_cast<Index>(eqIndex_); }
-    const QuantLib::Real strike() override { return tradeStrike_.value(); }
+    const QuantLib::Real strike() const override { return tradeStrike_.value(); }
     QuantLib::Real tradeMultiplier() override { return quantity_; }
     Currency tradeCurrency() override { return currency_; }
     const QuantLib::Handle<QuantLib::Quote>& spotQuote() override { return eqIndex_->equitySpot(); }

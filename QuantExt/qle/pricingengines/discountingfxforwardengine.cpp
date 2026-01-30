@@ -23,18 +23,17 @@
 
 namespace QuantExt {
 
-DiscountingFxForwardEngine::DiscountingFxForwardEngine(const Currency& ccy1,
-                                                       const Handle<YieldTermStructure>& currency1Discountcurve,
-                                                       const Currency& ccy2,
-                                                       const Handle<YieldTermStructure>& currency2Discountcurve,
-                                                       const Handle<Quote>& spotFX, const Date& settlementDate,
-                                                       const Date& npvDate)
+DiscountingFxForwardEngine::DiscountingFxForwardEngine(
+    const Currency& ccy1, const Handle<YieldTermStructure>& currency1Discountcurve, const Currency& ccy2,
+    const Handle<YieldTermStructure>& currency2Discountcurve, const Handle<Quote>& spotFX, const Date& settlementDate,
+    const Date& npvDate, const Handle<YieldTermStructure>& discountCurve)
     : ccy1_(ccy1), currency1Discountcurve_(currency1Discountcurve), ccy2_(ccy2),
       currency2Discountcurve_(currency2Discountcurve), spotFX_(spotFX), settlementDate_(settlementDate),
-      npvDate_(npvDate) {
+      npvDate_(npvDate), discountCurve_(discountCurve) {
     registerWith(currency1Discountcurve_);
     registerWith(currency2Discountcurve_);
     registerWith(spotFX_);
+    registerWith(discountCurve_);
 }
 
 void DiscountingFxForwardEngine::calculate() const {
@@ -148,7 +147,12 @@ void DiscountingFxForwardEngine::calculate() const {
         }
         results_.additionalResults["cashFlowResults"] = cashFlowResults;
 
-        results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (tmpNominal1 / fx1 - tmpNominal2 / fx2);
+        Real applicableDiscountFactor = discFar / discNear;
+        if (!discountCurve_.empty()) {
+            applicableDiscountFactor = discountCurve_->discount(arguments_.payDate) / discountCurve_->discount(npvDate);
+        }
+
+        results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * applicableDiscountFactor * (tmpNominal1 / fx1 - tmpNominal2 / fx2);
 
         results_.npv = Money(settleCcy, results_.value);
 
@@ -159,6 +163,9 @@ void DiscountingFxForwardEngine::calculate() const {
         results_.additionalResults["discountFactor[2]"] = disc2far;
         results_.additionalResults["legNPV[1]"] = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * tmpNominal1 / fx1;
         results_.additionalResults["legNPV[2]"] = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (-tmpNominal2 / fx2);
+        if(!discountCurve_.empty()) {
+            results_.additionalResults["applicableDiscountFactor"] = applicableDiscountFactor;
+        }
 
         // set notional
         if (arguments_.isPhysicallySettled) {

@@ -202,6 +202,7 @@ type can be (so far) in
 \item XVA Stress, XVA Sensitivities, XVA Explain
 \item SA-CCR, SA-CVA, BA-CVA, SMRC
 \item Portfolio Details
+\item Correlation
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -210,7 +211,7 @@ analysis.
 
 \subsubsection{Pricing, Cashflows, Curves}
 
-The following listing \ref{lst:ore_analytics} shows the parametrisation of the first four basic analytics in
+The following listing \ref{lst:ore_analytics} shows the parametrisation of the first three basic analytics in
 the list above.
 
 \begin{listing}[H]
@@ -233,6 +234,7 @@ the list above.
     <Parameter name="active">Y</Parameter>
     <Parameter name="configuration">default</Parameter>
     <Parameter name="grid">240,1M</Parameter>
+    <Parameter name="calendar">TARGET</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
     <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     <Parameter name="todaysMarketCalibrationPrecision">8</Parameter>
@@ -242,7 +244,7 @@ the list above.
   </Analytic>
 </Analytics>
 \end{minted}
-\caption{ORE analytics: npv, cashflow, curves, additional results, todays market calibration}
+\caption{ORE analytics: npv, cashflow, curves}
 \label{lst:ore_analytics}
 \end{listing}
 
@@ -282,9 +284,10 @@ if a payment is not a coupon payment.
 The curves analytic exports all yield curves that have been built according to the specification in {\tt
   todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets
 section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of
-240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on
-this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
-a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
+240 monthly time steps from today. The optional key {\tt calendar} defines the calendar that is used to roll out the
+grid, it defaults to TARGET. The discount factors for all curves with configuration default will be exported on this
+monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by a
+comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
 
 The {\tt outputTodaysMarketCalibration} parameter controls whether calibration information for the built market objects
 is written to a report. When set to Y, a detailed calibration report is generated. The {\tt todaysMarketCalibrationPrecision}
@@ -345,7 +348,7 @@ as well as American Monte Carlo (AMC), see below. The setup in \ref{lst:ore_simu
     <Parameter name="cptyCubeFile">cptyCube.csv.gz</Parameter>
     <Parameter name="storeSurvivalProbabilities">Y</Parameter>
     <Parameter name="storeCreditStateNPVs">8</Parameter>
-    <Parameter name="salvageCorrelationMatrix">true</Parameter>
+    <Parameter name="cubeNpvOverlay">true</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -366,6 +369,8 @@ Key `store flows' (Y or N) controls whether cumulative cash flows between simula
 cube for post processing in the context of some Dynamic Initial Margin and Variation Margin models. And finally, the
 key `store survival probabilities' (Y or N) controls whether survival probabilities on simulation dates are stored in the
 cube for post processing in the context of Dynamic Credit XVA calculation.
+Key 'cubeNpvOverlay' is optional and defaults to false. If true, all raw npv cube entries are corrected by the
+difference of the T0 npv from the pricing analytic and the T0 npv from the simulation npv.
 
 \medskip
 To use  AMC simulation the simulation setup needs the additional elements shown in \ref{lst:ore_amc_simulation}
@@ -643,6 +648,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
     <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
     <Parameter name="mporCashFlowMode">NonePay</Parameter>
+    <Parameter name="generateCorrelations">N</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -1070,6 +1076,48 @@ The parameters have the following interpretation:
 \end{itemize}
 
 See the example in section \ref{example:marketrisk_parametricvar} for a demonstration.
+
+\subsubsection{Correlation}
+
+The {\tt Correlation} analytic provide computation of the correlation matrix based on the generated historical scenarios. Listing \ref{lst:ore_corr} shows a configuration example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+  <Analytic type="correlation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="correlation_method">Pearson</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="historicalPeriod">2016-12-30,2019-12-30</Parameter>
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">USD</Parameter>
+      <Parameter name="outputFile">correlation.csv</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: Correlation}
+\label{lst:ore_corr}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt correlation\_method}: Regular expression used to filter the portfolio for which VaR is computed; if the filter is not provided, then the full portfolio is processed
+\item {\tt marketConfigFile}: Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+  \ref{sec:sim_market} for a detailed description).
+\item {\tt historicalScenarioFile}: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor.
+\item {\tt sensitivityConfigFile}: Sensitivity parameterisation for the sensitivity analysis on asofDate.
+\item {\tt historicalPeriod}: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used.
+\item {\tt mporDays}: Alternatively, the second date can be specified in terms of calendar days from asofDate.
+\item {\tt mporCalendar}: Calendar for computing the mporDate from asofDate and mporDays.
+\item {\tt outputFile}: Output file name
+\end{itemize}
+
+See the example in section \ref{example:marketrisk_correlation} for a demonstration.
 
 \subsubsection{P\&L, P\&L Explain, ZeroToParShift, Scenario}
 

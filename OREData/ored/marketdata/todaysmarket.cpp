@@ -53,7 +53,7 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
-#include <ql/tuple.hpp>
+#include <tuple>
 
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/map.hpp>

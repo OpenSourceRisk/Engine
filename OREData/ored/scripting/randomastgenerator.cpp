@@ -570,6 +570,20 @@ struct RandomASTGenerator {
                 }
                 current = QuantLib::ext::make_shared<VarEvaluationNode>(args);
                 break;
+            case 26:
+                createTerm();
+                args.push_back(current);
+                createTerm();
+                args.push_back(current);
+                current = QuantLib::ext::make_shared<FunctionFractionNode>(args);
+                break;
+            case 27:
+                createTerm();
+                args.push_back(current);
+                createTerm();
+                args.push_back(current);
+                current = QuantLib::ext::make_shared<FunctionRoundNode>(args);
+                break;
             default:
                 QL_FAIL("internal error");
             }

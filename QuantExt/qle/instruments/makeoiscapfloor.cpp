@@ -26,7 +26,7 @@ MakeOISCapFloor::MakeOISCapFloor(CapFloor::Type type, const Period& tenor, const
                                  const Period& rateComputationPeriod, Rate strike,
                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve)
     : type_(type), tenor_(tenor), index_(index), rateComputationPeriod_(rateComputationPeriod), strike_(strike),
-      nominal_(1.0), settlementDays_(2), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
+      nominal_(1.0), settlementDays_(0), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
       rule_(DateGeneration::Backward), dayCounter_(index->dayCounter()), telescopicValueDates_(false),
       discountCurve_(discountCurve) {}
 
@@ -43,8 +43,8 @@ MakeOISCapFloor::operator Leg() const {
 
     Date endDate = calendar.adjust(startDate + tenor_, ModifiedFollowing);
 
-    Schedule schedule(startDate, endDate, rateComputationPeriod_, calendar, ModifiedFollowing, ModifiedFollowing,
-                      DateGeneration::Backward, false);
+    Schedule schedule(startDate, endDate, rateComputationPeriod_, calendar, ModifiedFollowing, ModifiedFollowing, rule_,
+                      false);
 
     // determine atm strike if required
     Real effectiveStrike = strike_;

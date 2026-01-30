@@ -17,6 +17,7 @@
 */
 
 #include <orea/engine/creditindexdecomposition.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/indexcreditdefaultswapoption.hpp>
@@ -112,7 +113,9 @@ void decomposeCreditIndex(const QuantLib::ext::shared_ptr<ore::data::Trade>& tra
             decompose = true;
         }
     } catch (const std::exception& e) {
-        QL_FAIL("Can not decompose credit risk in CRIF for trade id '" << trade->id() << "': " << e.what());
+        string msg = "Can not decompose credit risk in CRIF: " + std::string(e.what());
+        auto subFields = map<string, string>({{"tradeId", trade->id()}});
+        StructuredAnalyticsErrorMessage("CRIF Generation", "", msg, subFields).log();
         sensitivityDecompositionWeights.clear();
     }
 }

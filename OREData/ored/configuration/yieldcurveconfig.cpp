@@ -37,52 +37,6 @@ using QuantLib::Visitor;
 namespace ore {
 namespace data {
 
-YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
-    if (iequals(s, "Zero"))
-        return YieldCurveSegment::Type::Zero;
-    else if (iequals(s, "Zero Spread"))
-        return YieldCurveSegment::Type::ZeroSpread;
-    else if (iequals(s, "Discount"))
-        return YieldCurveSegment::Type::Discount;
-    else if (iequals(s, "Deposit"))
-        return YieldCurveSegment::Type::Deposit;
-    else if (iequals(s, "FRA"))
-        return YieldCurveSegment::Type::FRA;
-    else if (iequals(s, "Future"))
-        return YieldCurveSegment::Type::Future;
-    else if (iequals(s, "OIS"))
-        return YieldCurveSegment::Type::OIS;
-    else if (iequals(s, "Swap"))
-        return YieldCurveSegment::Type::Swap;
-    else if (iequals(s, "Average OIS"))
-        return YieldCurveSegment::Type::AverageOIS;
-    else if (iequals(s, "Tenor Basis Swap"))
-        return YieldCurveSegment::Type::TenorBasis;
-    else if (iequals(s, "Tenor Basis Two Swaps"))
-        return YieldCurveSegment::Type::TenorBasisTwo;
-    else if (iequals(s, "BMA Basis Swap"))
-        return YieldCurveSegment::Type::BMABasis;
-    else if (iequals(s, "FX Forward"))
-        return YieldCurveSegment::Type::FXForward;
-    else if (iequals(s, "Cross Currency Basis Swap"))
-        return YieldCurveSegment::Type::CrossCcyBasis;
-    else if (iequals(s, "Cross Currency Fix Float Swap"))
-        return YieldCurveSegment::Type::CrossCcyFixFloat;
-    else if (iequals(s, "Discount Ratio"))
-        return YieldCurveSegment::Type::DiscountRatio;
-    else if (iequals(s, "FittedBond"))
-        return YieldCurveSegment::Type::FittedBond;
-    else if (iequals(s, "Yield Plus Default"))
-        return YieldCurveSegment::Type::YieldPlusDefault;
-    else if (iequals(s, "Weighted Average"))
-        return YieldCurveSegment::Type::WeightedAverage;
-    else if (iequals(s, "Ibor Fallback"))
-        return YieldCurveSegment::Type::IborFallback;
-    else if (iequals(s, "Bond Yield Shifted"))
-        return YieldCurveSegment::Type::BondYieldShifted;
-    QL_FAIL("Yield curve segment type " << s << " not recognized");
-}
-
 class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<YieldCurveSegment>,
                         public Visitor<SimpleYieldCurveSegment>,
@@ -225,14 +179,14 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
                                    const string& discountCurveID,
                                    const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
-                                   const string& zeroDayCounter, bool extrapolation,
+                                   const string& zeroDayCounter, bool extrapolation, const string& extrapolationMethod,
                                    const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff,
                                    QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig)
     : CurveConfig(curveID, curveDescription), currency_(currency), discountCurveID_(discountCurveID),
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
-      bootstrapConfig_(bootstrapConfig), mixedInterpolationCutoff_(mixedInterpolationCutoff),
-      iborFallbackConfig_(iborFallbackConfig) {}
+      extrapolationMethod_(extrapolationMethod), bootstrapConfig_(bootstrapConfig),
+      mixedInterpolationCutoff_(mixedInterpolationCutoff), iborFallbackConfig_(iborFallbackConfig) {}
 
 const vector<string>& YieldCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -330,6 +284,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     mixedInterpolationCutoff_ = XMLUtils::getChildValueAsInt(node, "MixedInterpolationCutoff", false, 1);
     zeroDayCounter_ = XMLUtils::getChildValue(node, "YieldCurveDayCounter", false, "A365");
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", false, true);
+    extrapolationMethod_ = XMLUtils::getChildValue(node, "ExtrapolationMethod", false, "ContinuousForward");
     excludeT0FromInterpolation_ = XMLUtils::getChildValueAsBool(node, "ExcludeT0FromInterpolation", false, false);
 
     // Optional bootstrap configuration
@@ -376,6 +331,7 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "YieldCurveDayCounter", zeroDayCounter_);
     XMLUtils::addChild(doc, node, "Tolerance", bootstrapConfig_.accuracy());
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
+    XMLUtils::addChild(doc, node, "ExtrapolationMethod", extrapolationMethod_);
     XMLUtils::addChild(doc, node, "ExcludeT0FromInterpolation", excludeT0FromInterpolation_);
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
@@ -399,34 +355,32 @@ void YieldCurveConfig::populateRequiredIds() const {
 
 YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID,
                                      const vector<string>& quoteNames)
-    : type_(parseYieldCurveSegment(typeID)), typeID_(typeID), conventionsID_(conventionsID) {
+    : type_(parseYieldCurveSegment(typeID)), conventionsID_(conventionsID) {
     for (auto q : quoteNames)
         quotes_.emplace_back(quote(q));
 }
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
-    typeID_ = XMLUtils::getChildValue(node, "Type", true);
+    static std::map<std::string, std::set<Type>> validSegmentTypes = {
+        {"Direct", {Type::Zero, Type::Discount}},
+        {"Simple", {Type::Deposit, Type::FRA, Type::Future, Type::OIS, Type::Swap, Type::BMABasis}},
+        {"AverageOIS", {Type::AverageOIS}},
+        {"TenorBasis", {Type::TenorBasis, Type::TenorBasisTwo}},
+        {"CrossCurrency", {Type::FXForward, Type::CrossCcyBasis, Type::CrossCcyFixFloat}},
+        {"ZeroSpread", {Type::ZeroSpread}},
+        {"FittedBond", {Type::FittedBond}},
+        {"YieldPlusDefault", {Type::YieldPlusDefault}},
+        {"WeightedAverage", {Type::WeightedAverage}},
+        {"DiscountRatio", {Type::DiscountRatio}},
+        {"IborFallback", {Type::IborFallback}},
+        {"BondYieldShifted", {Type::BondYieldShifted}}};
+
+    type_ = parseYieldCurveSegment(XMLUtils::getChildValue(node, "Type", true));
     string name = XMLUtils::getNodeName(node);
-
-	// Check if curve type is valid for the given segment name
-    std::map<std::string, std::list<std::string>> validSegmentTypes = {
-        {"Direct", {"Zero", "Discount"}},
-        {"Simple", {"Deposit", "FRA", "Future", "OIS", "Swap", "BMA Basis Swap"}},
-        {"AverageOIS", {"Average OIS"}},
-        {"TenorBasis", {"Tenor Basis Swap", "Tenor Basis Two Swaps"}},
-        {"CrossCurrency", {"FX Forward", "Cross Currency Basis Swap", "Cross Currency Fix Float Swap"}},
-        {"ZeroSpread", {"Zero Spread"}},
-        {"FittedBond", {"FittedBond"}},
-        {"YieldPlusDefault", {"Yield Plus Default"}},
-        {"WeightedAverage", {"Weighted Average"}},
-        {"DiscountRatio", {"Discount Ratio"}},
-        {"IborFallback", {"Ibor Fallback"}},
-        {"BondYieldShifted", {"Bond Yield Shifted"}}
-        };
-
-    std::list<std::string> validTypes = validSegmentTypes.at(name);
-    QL_REQUIRE(std::find(validTypes.begin(), validTypes.end(), typeID_) != validTypes.end(),
-               "The curve type " << typeID_ << " is not a valid " << name << " curve segment type");
+    auto v = validSegmentTypes.find(name);
+    QL_REQUIRE(v != validSegmentTypes.end(), "The segment name '" << name << "' is invalid.");
+    QL_REQUIRE(v->second.find(type_) != v->second.end(),
+               "The segment type '" << type_ << "' is invalid for segment name '" << name << "'.");
 
     quotes_.clear();
     if (name == "AverageOIS") {
@@ -450,18 +404,17 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
             }
         }
     }
-    type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
     pillarChoice_ = parsePillarChoice(XMLUtils::getChildValue(node, "PillarChoice", false, "LastRelevantDate"));
-    QL_REQUIRE(pillarChoice_ == QuantLib::Pillar::MaturityDate || pillarChoice_ == QuantLib::Pillar::LastRelevantDate,
-               "PillarChoice " << pillarChoice_ << " not supported, expected MaturityDate, LastRelevantDate");
+    duplicatePillarPolicy_ =
+        parseDuplicatePillarPolicy(XMLUtils::getChildValue(node, "DuplicatePillarPolicy", false, "KeepLast"));
     priority_ = XMLUtils::getChildValueAsInt(node, "Priority", false, 0);
     minDistance_ = XMLUtils::getChildValueAsInt(node, "MinDistance", false, 1);
 }
 
 XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Segment");
-    XMLUtils::addChild(doc, node, "Type", typeID_);
+    XMLUtils::addChild(doc, node, "Type", ore::data::to_string(type_));
     if (!quotes_.empty()) {
         XMLNode* quotesNode = doc.allocNode("Quotes");
         // Special case handling for AverageOIS where the quotes are stored as pairs
@@ -491,6 +444,8 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) const {
     if (!conventionsID_.empty())
         XMLUtils::addChild(doc, node, "Conventions", conventionsID_);
     XMLUtils::addChild(doc, node, "PillarChoice", ore::data::to_string(pillarChoice_));
+    if (duplicatePillarPolicy_ != DuplicatePillarPolicy::KeepLast)
+        XMLUtils::addChild(doc, node, "DuplicatePillarPolicy", ore::data::to_string(duplicatePillarPolicy_));
     XMLUtils::addChild(doc, node, "Priority", (int)priority_);
     XMLUtils::addChild(doc, node, "MinDistance", (int)minDistance_);
     return node;

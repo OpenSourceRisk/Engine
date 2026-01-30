@@ -23,8 +23,9 @@ namespace QuantExt {
 
 BlackVarianceCurve3::BlackVarianceCurve3(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                          const DayCounter& dc, const std::vector<Time>& times,
-                                         const std::vector<Handle<Quote> >& blackVolCurve, bool requireMonotoneVariance)
-    : BlackVarianceTermStructure(settlementDays, cal, bdc, dc), times_(times), quotes_(blackVolCurve),
+                                         const std::vector<Handle<Quote> >& blackVolCurve, bool requireMonotoneVariance,
+                                         const VolatilityType type, const Real shift)
+    : BlackVarianceTermStructure(settlementDays, cal, bdc, dc, type, shift), times_(times), quotes_(blackVolCurve),
       requireMonotoneVariance_(requireMonotoneVariance) {
 
     QL_REQUIRE(times.size() == blackVolCurve.size(), "mismatch between date vector and black vol vector");

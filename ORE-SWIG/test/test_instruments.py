@@ -204,79 +204,7 @@ class CreditDefaultSwapTest(unittest.TestCase):
         implied_hazard_rate = self.cds.impliedHazardRate(self.cds.NPV(), self.discount_curve, self.day_counter,
                                                          self.recovery_rate, 1.0e-12)
         self.assertFalse(abs(implied_hazard_rate - self.hazard_rate) > tolerance)
-         
 
-class OvernightIndexedCrossCcyBasisSwapTest(unittest.TestCase):
-    def setUp(self):
-        """ Set-up OvernightIndexedCrossCcyBasisSwap and engine"""
-        self.todays_date = Date(4, October, 2018)
-        Settings.instance().evaluationDate = self.todays_date
-        self.settlement_date = Date(6, October, 2018)
-        self.swap_tenor = Period(10, Years)
-        self.pay_tenor = Period(3, Months)
-        self.calendar = UnitedStates(UnitedStates.NYSE)
-        self.pay_currency = USDCurrency()
-        self.rec_currency = EURCurrency()
-        self.maturity_date = self.calendar.advance(self.settlement_date, self.swap_tenor)
-        self.bdc = ModifiedFollowing
-        self.day_counter = Actual365Fixed()
-        self.pay_nominal = 10000000
-        self.rec_nominal = 10000000
-        self.schedule = Schedule(self.settlement_date, self.maturity_date,
-                                 self.pay_tenor, self.calendar,
-                                 self.bdc, self.bdc, DateGeneration.Forward, False)
-        self.pay_spread = 0.005
-        self.rec_spread = 0.0
-        self.fxQuote = QuoteHandle(SimpleQuote(1.1))
-        self.USD_OIS_flat_forward = FlatForward(self.todays_date, 0.01, self.day_counter)
-        self.USD_OIS_term_structure = RelinkableYieldTermStructureHandle(self.USD_OIS_flat_forward)
-        self.USD_OIS_index = FedFunds(self.USD_OIS_term_structure)
-        self.EUR_OIS_flat_forward = FlatForward(self.todays_date, 0.01, self.day_counter)
-        self.EUR_OIS_term_structure = RelinkableYieldTermStructureHandle(self.EUR_OIS_flat_forward)
-        self.EUR_OIS_index = Eonia(self.EUR_OIS_term_structure)
-        self.swap = OvernightIndexedCrossCcyBasisSwap(self.pay_nominal, self.pay_currency, self.schedule,
-                                                      self.USD_OIS_index, self.pay_spread, self.rec_nominal, 
-                                                      self.rec_currency, self.schedule, self.EUR_OIS_index, 
-                                                      self.rec_spread)
-        self.engine = OvernightIndexedCrossCcyBasisSwapEngine(self.USD_OIS_term_structure, self.pay_currency,
-                                                              self.EUR_OIS_term_structure, self.rec_currency,
-                                                              self.fxQuote)
-        self.swap.setPricingEngine(self.engine)
-        
-    def testSimpleInspectors(self):
-        """ Test OvernightIndexedCrossCcyBasisSwap and engine simple inspectors. """
-        self.assertEqual(self.swap.payNominal(), self.pay_nominal)
-        self.assertEqual(self.swap.recNominal(), self.rec_nominal)
-        self.assertEqual(self.swap.payCurrency(), self.pay_currency)
-        self.assertEqual(self.swap.recCurrency(), self.rec_currency)
-        self.assertEqual(self.swap.paySpread(), self.pay_spread)
-        self.assertEqual(self.swap.recSpread(), self.rec_spread)
-        self.assertEqual(self.engine.ccy1(), self.pay_currency)
-        self.assertEqual(self.engine.ccy2(), self.rec_currency)
-
-    def testSchedules(self):
-        """ Test OvernightIndexedCrossCcyBasisSwap schedules. """
-        for i, d in enumerate(self.schedule):
-            self.assertEqual(self.swap.recSchedule()[i], d)
-            self.assertEqual(self.swap.paySchedule()[i], d)
-            
-    def testConsistency(self):
-        """ Test consistency of fair price and NPV() """
-        tolerance = 1.0e-8
-        fair_pay_spread = self.swap.fairPayLegSpread()
-        swap = OvernightIndexedCrossCcyBasisSwap(self.pay_nominal, self.pay_currency, self.schedule,
-                                                 self.USD_OIS_index, fair_pay_spread, self.rec_nominal, 
-                                                 self.rec_currency, self.schedule, self.EUR_OIS_index, 
-                                                 self.rec_spread)
-        swap.setPricingEngine(self.engine)
-        self.assertFalse(abs(swap.NPV()) > tolerance)
-        fair_rec_spread = self.swap.fairRecLegSpread()
-        swap = OvernightIndexedCrossCcyBasisSwap(self.pay_nominal, self.pay_currency, self.schedule,
-                                                 self.USD_OIS_index, self.pay_spread, self.rec_nominal, 
-                                                 self.rec_currency, self.schedule, self.EUR_OIS_index, 
-                                                 fair_rec_spread)
-        swap.setPricingEngine(self.engine)
-        self.assertFalse(abs(swap.NPV()) > tolerance)
 class AverageOISTest(unittest.TestCase):
     def setUp(self):
         """ Set-up AverageOIS and engine """

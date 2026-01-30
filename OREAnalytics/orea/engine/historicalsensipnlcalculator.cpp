@@ -173,7 +173,7 @@ void PNLCalculator::populateRiskFactorTradePNLs(const RiskFactorTradePnLStore& a
 }
 
 void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,
-    ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator) {
+    ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator, const bool& supressError) {
 
     hisScenGen_->reset();
     QuantLib::ext::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
@@ -200,11 +200,13 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
                 Real shift = shiftCalculator->shift(key, *baseScenario, *scenario, isPar);
                 cube->set(shift, j, 0, i);
             } catch (const std::exception& e) {
-                StructuredAnalyticsErrorMessage(
+                if(!supressError){
+                    StructuredAnalyticsErrorMessage(
                     "HistocialSensiPnlCalculator",
                     "Shift calculation failed. Check consistency of simulation and sensi config.",
                     "Error retrieving sensi key '" + ore::data::to_string(key) + "' from ssm scenario: '" + e.what())
                     .log();
+                }
             }
             j++;
         }
@@ -258,7 +260,7 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     vector<Real> allPnls(hisScenGen_->numScenarios(), 0.0);
     vector<Real> allFoPnls(hisScenGen_->numScenarios(), 0.0);
     
-    //                    calculators,scenarios,  trades
+    // calculators,scenarios, trades
     using TradePnLStore = std::vector<std::vector<QuantLib::Real>>;
     std::vector<TradePnLStore> tradePnls, foTradePnls;
 

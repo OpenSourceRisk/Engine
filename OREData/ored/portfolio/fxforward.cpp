@@ -156,7 +156,8 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     instrument_.reset(new VanillaInstrument(instrument));
 
     // set pricing engine
-    instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
+    instrument_->qlInstrument()->setPricingEngine(
+        fxBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false)));
     setSensitivityTemplate(*fxBuilder);
     addProductModelEngine(*fxBuilder);
 

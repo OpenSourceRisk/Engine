@@ -185,6 +185,7 @@ portfolio/builders/fxdigitalbarrieroption.cpp
 portfolio/builders/fxdigitaloption.cpp
 portfolio/builders/fxdoublebarrieroption.cpp
 portfolio/builders/fxdoubletouchoption.cpp
+portfolio/builders/fxeuropeanbarrieroption.cpp
 portfolio/builders/fxforward.cpp
 portfolio/builders/fxoption.cpp
 portfolio/builders/fxtouchoption.cpp
@@ -603,6 +604,7 @@ portfolio/builders/fxdigitalbarrieroption.hpp
 portfolio/builders/fxdigitaloption.hpp
 portfolio/builders/fxdoublebarrieroption.hpp
 portfolio/builders/fxdoubletouchoption.hpp
+portfolio/builders/fxeuropeanbarrieroption.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/fxtouchoption.hpp
