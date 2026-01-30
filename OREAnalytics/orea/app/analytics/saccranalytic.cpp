@@ -30,17 +30,17 @@ namespace ore {
 namespace analytics {
 
 void SaCcrVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
-    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "saccr", "csaFile");
-    inputs->loadParameterXML<CollateralBalances>(collateralBalances_, "saccr", "collateralBalancesFile");
+    vector<string> analyitcStrs = {"saccr", "bacva"};
+    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, analyitcStrs, "csaFile");
+    if (nettingSetManager_)
+        nettingSetManager_->loadAll();
+
+    inputs->loadParameterXML<CollateralBalances>(collateralBalances_, analyitcStrs, "collateralBalancesFile");
 }
 
 SaCcrAnalyticImpl::SaCcrAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
     : Analytic::Impl(inputs, QuantLib::ext::make_shared<SaCcrVariables>()) {
     setLabel(LABEL);
-
-    auto saccrVars = ext::dynamic_pointer_cast<SaCcrVariables>(inputVariables_);
-    if (saccrVars->nettingSetManager_)
-        saccrVars->nettingSetManager_->loadAll();
 }
 
 void SaCcrAnalyticImpl::setUpConfigurations() {

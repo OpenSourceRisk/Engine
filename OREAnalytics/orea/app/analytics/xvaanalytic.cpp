@@ -253,8 +253,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
 
     // credit simulation
     inputs->loadParameter<bool>(creditMigrationAnalytic_, "xva", "creditMigration", false, parseBool);
-    inputs->loadParameter<vector<Real>>(creditMigrationDistributionGrid_, "xvs", "creditMigrationDistributionGrid", false, parseListOfRealValues);
-    inputs->loadParameter<vector<Size>>(creditMigrationTimeSteps_, "xvs", "creditMigrationTimeSteps", false, parseListOfIntegerValues);
+    inputs->loadParameter<vector<Real>>(creditMigrationDistributionGrid_, "xva", "creditMigrationDistributionGrid", false, parseListOfRealValues);
+    inputs->loadParameter<vector<Size>>(creditMigrationTimeSteps_, "xva", "creditMigrationTimeSteps", false, parseListOfIntegerValues);
     inputs->loadParameter<bool>(firstMporCollateralAdjustment_, "xva", "firstMporCollateralAdjustment", false, parseBool);
     inputs->loadParameter<string>(creditMigrationOutputFiles_, "xva", "creditMigrationOutputFiles", false);
     inputs->loadParameterXML<CreditSimulationParameters>(creditSimulationParameters_, "xva", "creditMigrationConfig");
