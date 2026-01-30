@@ -32,6 +32,7 @@ namespace analytics {
 
 struct XvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+    void loadCube(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
 
     /*******************
      * EXPOSURE analytic

@@ -84,7 +84,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
 
     string scenarioFile;
     inputs->loadParameter<string>(scenarioFile, "simulation", "scenarioFile", false);
-    if (scenarioFile.empty())
+    if (!scenarioFile.empty())
         scenarioReader_ = loadScenarioReader(scenarioFile, inputs->setupVariables().inputPath_);
 
     simulationPricingEngine_ = amcPricingEngine_ = amcCgPricingEngine_ = inputs->setupVariables().pricingEngine_;
@@ -117,8 +117,13 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<bool>(allowPartialScenarios_, "simulation", "allowPartialScenarios", false, parseBool);
     inputs->loadParameter<Size>(storeCreditStateNPVs_, "simulation", "storeCreditStateNPVs", false, parseInteger);
     inputs->loadParameter<bool>(storeSurvivalProbabilities_, "simulation", "storeSurvivalProbabilities", false, parseBool);
-    inputs->loadParameter<bool>(writeCube_, "simulation", "cubeFile", false, parseBool);
-    inputs->loadParameter<bool>(writeScenarios_, "simulation", "scenariodump", false, parseBool);
+    string writeCube, writeScenarios;
+    inputs->loadParameter<string>(writeCube, "simulation", "cubeFile", false);
+    if (!writeCube.empty())
+        writeCube_ = true;
+    inputs->loadParameter<string>(writeScenarios, "simulation", "scenariodump", false);
+    if (!writeScenarios.empty())
+        writeScenarios_ = true;
     inputs->loadParameter<bool>(xvaCgBumpSensis_, "simulation", "xvaCgBumpSensis", false, parseBool);
     inputs->loadParameter<bool>(xvaCgUseExternalComputeDevice_, "simulation", "xvaCgUseExternalComputeDevice", false, parseBool);
     inputs->loadParameter<string>(xvaCgExternalComputeDevice_, "simulation", "xvaCgExternalComputeDevice", false);
@@ -252,7 +257,11 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(correlationInputFile, "xva", "correlationInputFile", false);
     if (!correlationInputFile.empty())
         correlationData_ = loadCorrelationDataFromFile((inputs->setupVariables().inputPath_ / correlationInputFile).generic_string());
-    
+        
+}
+
+void XvaVariables::loadCube(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    vector<string> pfeAnalytics = {"xva", "pfe"};
     bool loadedCube = inputs->loadFromParameters<QuantLib::ext::shared_ptr<NPVCube>>(cube_, pfeAnalytics, "cubeFile");
     if (!loadedCube) {
         string cubeFile;
@@ -272,27 +281,6 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
         }
     }
 
-    string nettingCubeFile;
-    inputs->loadParameter<string>(nettingCubeFile, "xva", "nettingSetCubeFile", false);
-    if (!nettingCubeFile.empty()) {
-        LOG("Load nettingset cube from file " << nettingCubeFile);
-        nettingSetCube_ =
-            ore::analytics::loadCube((inputs->setupVariables().inputPath_ / nettingCubeFile).generic_string())->cube();
-        DLOG("NettingSetCube loading done: ids="
-             << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
-             << " samples=" << nettingSetCube_->samples() << " depth=" << nettingSetCube_->depth());
-    }
-    
-    string cptyCubeFile;
-    inputs->loadParameter<string>(cptyCubeFile, "xva", "cptyCubeFile", false);
-    if (!cptyCubeFile.empty()) {
-        LOG("Load cpty cube from file " << cptyCubeFile);
-        cptyCube_ =
-            ore::analytics::loadCube((inputs->setupVariables().inputPath_ / cptyCubeFile).generic_string())->cube();
-        DLOG("CptyCube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
-                                                 << " samples=" << cptyCube_->samples() << " depth=" << cptyCube_->depth());
-    }
-
     bool loadedAggData = inputs->loadFromParameters<QuantLib::ext::shared_ptr<AggregationScenarioData>>(
         mktCube_, pfeAnalytics, "scenarioFile");
     if (!loadedAggData) {
@@ -306,6 +294,26 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
         }
     }
 
+    string nettingCubeFile;
+    inputs->loadParameter<string>(nettingCubeFile, "xva", "nettingSetCubeFile", false);
+    if (!nettingCubeFile.empty()) {
+        LOG("Load nettingset cube from file " << nettingCubeFile);
+        nettingSetCube_ =
+            ore::analytics::loadCube((inputs->setupVariables().inputPath_ / nettingCubeFile).generic_string())->cube();
+        DLOG("NettingSetCube loading done: ids="
+             << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
+             << " samples=" << nettingSetCube_->samples() << " depth=" << nettingSetCube_->depth());
+    }
+
+    string cptyCubeFile;
+    inputs->loadParameter<string>(cptyCubeFile, "xva", "cptyCubeFile", false);
+    if (!cptyCubeFile.empty()) {
+        LOG("Load cpty cube from file " << cptyCubeFile);
+        cptyCube_ =
+            ore::analytics::loadCube((inputs->setupVariables().inputPath_ / cptyCubeFile).generic_string())->cube();
+        DLOG("CptyCube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
+                                           << " samples=" << cptyCube_->samples() << " depth=" << cptyCube_->depth());
+    }
 }
 
 std::string XvaAnalyticImpl::mapRiskFactorToAssetType(RiskFactorKey::KeyType keyF) {
@@ -1268,6 +1276,9 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     if (runTypes.find("PFE") != runTypes.end() || runTypes.empty())
         runPFE_ = true;
+
+    if (!runSimulation_ && (runXva_ || runPFE_))
+        xvaVars->loadCube(inputs_);
 
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(xvaVars->exposureObservationModel_);
