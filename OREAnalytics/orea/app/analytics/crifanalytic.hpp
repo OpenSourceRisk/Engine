@@ -45,6 +45,9 @@ public:
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+private:
+    bool applySimmExemptions_ = true;
 };
 
 

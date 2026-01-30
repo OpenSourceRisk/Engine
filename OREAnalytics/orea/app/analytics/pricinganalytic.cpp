@@ -33,6 +33,8 @@ namespace analytics {
  * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
  *******************************************************************/
 
+void PricingAnalyticImpl::overwriteResultCurrency(const std::string& ccy) { overwriteResultCurrency_ = ccy; }
+
 void PricingAnalyticImpl::setUpConfigurations() {    
     if (find(begin(analytic()->analyticTypes()), end(analytic()->analyticTypes()), "SENSITIVITY") !=
         end(analytic()->analyticTypes())) {
@@ -83,8 +85,12 @@ void PricingAnalyticImpl::runAnalytic(
         if (runTypes.find(type) == runTypes.end())
             continue;
 
-        std::string effectiveResultCurrency =
-            inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
+        std::string effectiveResultCurrency = inputs_->baseCurrency();
+        if (!inputs_->resultCurrency().empty())
+            effectiveResultCurrency = inputs_->resultCurrency();
+        if (overwriteResultCurrency_) {
+            effectiveResultCurrency = *overwriteResultCurrency_;
+        }
         auto marketConfig = inputs_->marketConfig("pricing");
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
@@ -106,7 +112,7 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                DateGrid grid(inputs_->curvesGrid());
+                DateGrid grid(inputs_->curvesGrid(), parseCalendar(inputs_->curvesCalendar()));
                 std::string config = inputs_->curvesMarketConfig();
                 ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,

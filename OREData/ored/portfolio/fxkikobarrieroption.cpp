@@ -85,6 +85,33 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(!barriers_[0].overrideTriggered() && !barriers_[1].overrideTriggered(),
                "FxKIKOBarrierOption::build(): OverrideTriggered not supported by this instrument type.");
 
+    
+    QuantLib::ext::shared_ptr<FxBarrierOptionScriptedEngineBuilder> fxEuropeanBarrierOptionBuilder;
+    try {
+        fxEuropeanBarrierOptionBuilder = QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionScriptedEngineBuilder>(
+            engineFactory->builder("FxBarrierOption"));
+        DLOG("FxEuropeanBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
+    } catch (...) {
+        // no delegating builder found
+    }
+    if (fxEuropeanBarrierOptionBuilder) {
+        // We have a delegating builder for this trade
+        auto delegatingBuilderTrade_ = fxEuropeanBarrierOptionBuilder->build(this, engineFactory);
+        instrument_ = delegatingBuilderTrade_->instrument();
+        maturity_ = delegatingBuilderTrade_->maturity();
+        npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
+        additionalData_ = delegatingBuilderTrade_->additionalData();
+        requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
+
+        // notional and notional currency are defined in overriden methods!
+
+        return;
+    }
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxOption");
+    QL_REQUIRE(builder, "No FxOption builder found");
+
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);
 
@@ -208,8 +235,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     }
 
     // All possible instruments require an underlying vanilla option so we set this up
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxOption");
-    QL_REQUIRE(builder, "No FxOption builder found");
+    
     QuantLib::ext::shared_ptr<FxEuropeanOptionEngineBuilder> fxOptBuilder =
         QuantLib::ext::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), expiryDate));
@@ -369,6 +395,15 @@ XMLNode* FxKIKOBarrierOption::toXML(XMLDocument& doc) const {
 
     return node;
 }
+
+QuantLib::Real FxKIKOBarrierOption::notional() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
+}
+
+string FxKIKOBarrierOption::notionalCurrency() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
+}
+
 
 } // namespace data
 } // namespace oreplus

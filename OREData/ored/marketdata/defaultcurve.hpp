@@ -93,6 +93,11 @@ private:
     //! Build a null curve (null rate, null recovery)
     void buildNullCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
                         const DefaultCurveSpec& spec);
+
+    //! Build a yield curve wrapped as a default curve
+    void buildYieldCurveAsDefaultCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
+                                       const Date& asof, const DefaultCurveSpec& spec,
+                                       std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 };
 
 } // namespace data

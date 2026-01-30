@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     for (Size i = 0; i < datesZCII.size(); i++) {
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
         QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(new ZeroCouponInflationSwapHelper(
-        quote, Period(3, Months), datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii, CPI::AsIndex, nominalTs));
+        quote, Period(3, Months), asof_, datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii, CPI::AsIndex));
         instruments.push_back(anInstrument);
     };
 
@@ -177,14 +177,14 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
 
     yoyIndex =
         QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, true, Handle<YoYInflationTermStructure>());
-    QL_DEPRECATED_DISABLE_WARNING
+    
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(
-        0, Period(3, Months), yoyIndex, 1, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes, floorStrikes,
+        0, Period(3, Months), yoyIndex, CPI::AsIndex, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes, floorStrikes,
         maturities, capPrice, floorPrice);
 
     QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
         QuantLib::ext::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
-    QL_DEPRECATED_ENABLE_WARNING
+    
     // check the cap and floor prices from the surface
     Real tol = 1.0E-8;
     for (Size i = 0; i < maturities.size(); i++) {

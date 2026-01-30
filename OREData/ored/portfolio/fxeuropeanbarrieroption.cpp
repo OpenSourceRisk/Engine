@@ -16,7 +16,7 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/fxeuropeanbarrieroption.hpp>
 #include <ored/portfolio/builders/fxdigitaloption.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
@@ -62,7 +62,29 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     Real level = barrier_.levels()[0].value();
     Real rebate = barrier_.rebate();
     QL_REQUIRE(rebate >= 0, "Rebate must be non-negative");
+    QuantLib::ext::shared_ptr<FxEuropeanBarrierOptionScriptedEngineBuilder> fxEuropeanBarrierOptionBuilder;
+    try {
+        fxEuropeanBarrierOptionBuilder = QuantLib::ext::dynamic_pointer_cast<FxEuropeanBarrierOptionScriptedEngineBuilder>(
+            engineFactory->builder(tradeType_));
+        DLOG("FxEuropeanBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
+    } catch (...) {
+        // no delegating builder found
+    }
+    if (fxEuropeanBarrierOptionBuilder) {
+        // We have a delegating builder for this trade
+        auto delegatingBuilderTrade_ = fxEuropeanBarrierOptionBuilder->build(this, engineFactory);
+        instrument_ = delegatingBuilderTrade_->instrument();
+        maturity_ = delegatingBuilderTrade_->maturity();
+        npvCurrency_ = delegatingBuilderTrade_->npvCurrency();
+        additionalData_ = delegatingBuilderTrade_->additionalData();
+        requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
 
+        // notional and notional currency are defined in overriden methods!
+
+        return;
+    }
     // Replicate the payoff of European Barrier Option (with strike K and barrier B) using combinations of options
 
     // Call
@@ -417,5 +439,14 @@ XMLNode* FxEuropeanBarrierOption::toXML(XMLDocument& doc) const {
 Real FxEuropeanBarrierOption::strike() const {
     return soldAmount_ / boughtAmount_;
 }
+
+QuantLib::Real FxEuropeanBarrierOption::notional() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notional() : Trade::notional();
+}
+
+string FxEuropeanBarrierOption::notionalCurrency() const {
+    return delegatingBuilderTrade_ != nullptr ? delegatingBuilderTrade_->notionalCurrency() : Trade::notionalCurrency();
+}
+
 } // namespace data
 } // namespace ore

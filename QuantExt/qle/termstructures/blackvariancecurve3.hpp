@@ -49,7 +49,8 @@ public:
     // If requireMonotoneVariance is true, we check for monotone variance in performCalculations and throw if not
     BlackVarianceCurve3(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
                         const std::vector<Time>& times, const std::vector<Handle<Quote> >& blackVolCurve,
-                        bool requireMonotoneVariance = true);
+                        bool requireMonotoneVariance = true, const VolatilityType type = ShiftedLognormal, 
+                        const Real shift = 0.0);
     //! \name TermStructure interface
     //@{
     Date maxDate() const override;

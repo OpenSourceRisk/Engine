@@ -171,7 +171,10 @@ void CrifAnalyticImpl::setUpConfigurations() {
     QL_REQUIRE(analytic()->configurations().simMarketParams, "CrifAnalytic: simMarketParams not set");
     QL_REQUIRE(analytic()->configurations().sensiScenarioData, "CrifAnalytic: sensiScenarioData not set");
     QL_REQUIRE(analytic()->configurations().todaysMarketParams, "CrifAnalytic: todaysMarketParams not set");
-    
+
+    inputs_->loadParameter<bool>(applySimmExemptions_, "crif", "applySimmExemptions", false,
+                                 std::function<bool(const string&)>(parseBool));
+
     setGenerateAdditionalResults(true);
 }
 
@@ -208,15 +211,19 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->addReport(LABEL, "npv_no_simm_exemptions", npvWithoutReport);
 
     std::set<std::string> removedTrades, modifiedTrades;
-    analytic()->startTimer("applySimmExemptions()");
-    try {
-        std::tie(removedTrades, modifiedTrades) =
-            applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides(),
-                                inputs_->useAtParCouponsTrades());
-    } catch (std::exception& e) {
-        QL_FAIL(e.what());
+    if (applySimmExemptions_) {
+        analytic()->startTimer("applySimmExemptions()");
+        try {
+            std::tie(removedTrades, modifiedTrades) =
+                applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides(),
+                                    inputs_->useAtParCouponsTrades());
+        } catch (std::exception& e) {
+            QL_FAIL(e.what());
+        }
+        analytic()->stopTimer("applySimmExemptions()");
+    } else {
+        WLOG("Skipping application of SIMM exemptions as applySimmExemptions is set to false");
     }
-    analytic()->stopTimer("applySimmExemptions()");
 
     // If we have an empty portfolio, then quit the CRIF analytic
     if (analytic()->portfolio()->size() == 0) {

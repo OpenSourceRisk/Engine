@@ -217,7 +217,6 @@
 #include <qle/instruments/multiccycompositeinstrument.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/nullinstrument.hpp>
-#include <qle/instruments/oiccbasisswap.hpp>
 #include <qle/instruments/outperformanceoption.hpp>
 #include <qle/instruments/pairwisevarianceswap.hpp>
 #include <qle/instruments/payment.hpp>
@@ -298,6 +297,7 @@
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
+#include <qle/models/crlgmvectorised.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -438,6 +438,7 @@
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/intrinsicascotengine.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
+#include <qle/pricingengines/mccamcallablebondengine.hpp>
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
@@ -459,7 +460,6 @@
 #include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmflexiswapengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/pairwisevarianceswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/pricingengines/tflattice.hpp>
@@ -559,7 +559,6 @@
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
-#include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oiscapfloorhelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/optionletcurve.hpp>
@@ -606,6 +605,7 @@
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/survivalprobabilitycurvefromyield.hpp>
 #include <qle/termstructures/swaptionsabrcube.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
@@ -627,12 +627,14 @@
 #include <qle/time/monthcounter.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/barrier.hpp>
+#include <qle/utilities/callablebond.hpp>
 #include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/commodity.hpp>
 #include <qle/utilities/creditcurves.hpp>
 #include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
+#include <qle/utilities/localiborcouponsettings.hpp>
 #include <qle/utilities/mcstats.hpp>
 #include <qle/utilities/ratehelpers.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
