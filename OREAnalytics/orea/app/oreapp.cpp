@@ -1570,52 +1570,8 @@ void OREAppInputParameters::loadParameters() {
     * Correlation
     *************/
     tmp = params_->getString("correlation", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
-        insertAnalytic("CORRELATION");
-        tmp = params_->getString("correlation", "historicalScenarioFile", false);
-        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
-        std::string scenarioFile = (setupVariables_.inputPath_ / tmp).generic_string();
-        setScenarioReader(scenarioFile);
-
-        tmp = params_->getString("correlation", "marketConfigFile", false);
-        if (tmp != "") {
-            string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading sensitivity scenario sim market parameters from file" << file);
-            setSensiSimMarketParamsFromFile(file);
-        } else {
-            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
-        }
-
-        tmp = params_->getString("correlation", "sensitivityConfigFile", false);
-        if (tmp != "") {
-            string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
-            setSensiScenarioDataFromFile(file);
-        } else {
-            WLOG("Sensitivity scenario data not loaded");
-        }
-
-        tmp = params_->getString("correlation", "historicalPeriod", false);
-        if (tmp != "")
-            setBenchmarkVarPeriod(tmp);
-
-        tmp = params_->getString("correlation", "correlation_method", false);
-        if (tmp != "")
-            setCorrelationMethod(tmp);
-
-        tmp = params_->getString("correlation", "mporDays", false);
-        if (tmp != "")
-            setMporDays(static_cast<Size>(parseInteger(tmp)));
-
-        tmp = params_->getString("correlation", "mporCalendar", false);
-        if (tmp != "")
-            setMporCalendar(tmp);
-
-        tmp = params_->getString("correlation", "mporOverlappingPeriods", false);
-        if (tmp != "")
-            setMporOverlappingPeriods(parseBool(tmp));
-
-    }
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("CORRELATION");    
 
     /************
      * Simulation

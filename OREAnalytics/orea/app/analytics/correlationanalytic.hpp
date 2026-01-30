@@ -32,7 +32,16 @@ namespace analytics {
 
 struct CorrelationVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
-
+        
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
+    string lookbackPeriod_;
+    // Pearson, Kendall-Rank
+    std::string correlationMethod_ = "Pearson";
+    QuantLib::Size horizonDays_ = 10;
+    QuantLib::Calendar horizonCalendar_;
+    bool horizonOverlappingPeriods_ = true;
     bool allowPartialScenarios_ = false;
 };
 

@@ -276,7 +276,7 @@ void XvaVariables::loadCube(const QuantLib::ext::shared_ptr<InputParameters>& in
         inputs->loadParameter<string>(cubeFile, pfeAnalytics, "cubeFile", false);
         if (!cubeFile.empty()) {
             LOG("Load cube from file " << cubeFile);
-            auto r = ore::analytics::loadCube((inputs->setupVariables().inputPath_ / cubeFile).generic_string());
+            auto r = ore::analytics::loadCube((inputs->setupVariables().resultsPath_ / cubeFile).generic_string());
             cube_ = r->cube();
             if (r->scenarioGeneratorData())
                 scenarioGeneratorData_ = r->scenarioGeneratorData();
@@ -297,7 +297,7 @@ void XvaVariables::loadCube(const QuantLib::ext::shared_ptr<InputParameters>& in
         if (!scenarioFile.empty()) {
             LOG("Load agg scen data from file " << scenarioFile);
             mktCube_ =
-                loadAggregationScenarioData((inputs->setupVariables().inputPath_ / scenarioFile).generic_string());
+                loadAggregationScenarioData((inputs->setupVariables().resultsPath_ / scenarioFile).generic_string());
             LOG("MktCube loading done");
         }
     }
@@ -307,7 +307,8 @@ void XvaVariables::loadCube(const QuantLib::ext::shared_ptr<InputParameters>& in
     if (!nettingCubeFile.empty()) {
         LOG("Load nettingset cube from file " << nettingCubeFile);
         nettingSetCube_ =
-            ore::analytics::loadCube((inputs->setupVariables().inputPath_ / nettingCubeFile).generic_string())->cube();
+            ore::analytics::loadCube((inputs->setupVariables().resultsPath_ / nettingCubeFile).generic_string())
+                ->cube();
         DLOG("NettingSetCube loading done: ids="
              << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
              << " samples=" << nettingSetCube_->samples() << " depth=" << nettingSetCube_->depth());
@@ -318,7 +319,7 @@ void XvaVariables::loadCube(const QuantLib::ext::shared_ptr<InputParameters>& in
     if (!cptyCubeFile.empty()) {
         LOG("Load cpty cube from file " << cptyCubeFile);
         cptyCube_ =
-            ore::analytics::loadCube((inputs->setupVariables().inputPath_ / cptyCubeFile).generic_string())->cube();
+            ore::analytics::loadCube((inputs->setupVariables().resultsPath_ / cptyCubeFile).generic_string())->cube();
         DLOG("CptyCube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
                                            << " samples=" << cptyCube_->samples() << " depth=" << cptyCube_->depth());
     }

@@ -149,28 +149,28 @@ public:
     }
 
     template <class T>
-    bool loadFromParameters(T& obj, const std::vector<std::string>& analytics, const std::string& param) {
+    bool loadFromParameters(T& obj, const std::vector<std::string>& analytics, std::vector<std::string>& params) {
         for (const auto& a : analytics) {
-            try {                
-                if (loadFromParameters<T>(obj, a, param))
-                    return true;
-            } catch (...) {
+            for (const auto& p : params) {
+                try {
+                    if (loadFromParameters<T>(obj, a, p))
+                        return true;
+                } catch (...) {
+                }
             }
         }
         return false;
     }
 
     template <class T>
+    bool loadFromParameters(T& obj, const std::vector<std::string>& analytics, const std::string& param) {
+        auto params = std::vector<std::string>({param});
+        return loadFromParameters<T>(obj, analytics, params);
+    }
+
+    template <class T>
     bool loadFromParameters(T& obj, const std::string& analytic, const std::vector<std::string>& params) {
-        std::optional<T> result;
-        for (const auto& p : params) {
-            try {
-                if (loadFromParameters<T>(obj, analytic, p))
-                    return true;
-            } catch (...) {
-            }
-        }
-        return false;
+        return loadFromParameters<T>(obj, std::vector<std::string>({analytic}), params);
     }
 
     //! load and convert an object from a string for the given (analytic, param) pair
@@ -197,21 +197,32 @@ public:
         return b;
     }
 
+    // allow multiple analytic names - ie "pfe" or "xva" or parameter names - ie "curveconfigFile" or "curveconfig"
+    template <class T>
+    bool loadParameter(
+        T& obj, const std::vector<std::string>& analytics, const std::vector<std::string>& params, const bool mandatory = false,
+        std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
+        for (const auto& a : analytics) {
+            for (const auto& p : params) {
+                try {
+                    if (loadParameter<T>(obj, a, p, false, parser))
+                        return true;
+                } catch (...) {
+                }
+            }
+        }
+        if (mandatory)
+            QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + to_string(analytics) + "," + to_string(params) +
+                    ") parsing failed");
+        return false;
+    }
+
     // allow multiple analytic names - ie "pfe" or "xva"
     template <class T>
     bool loadParameter(
         T& obj, const std::vector<std::string>& analytics, const std::string& param, const bool mandatory = false,
         std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
-        for (const auto& a : analytics) {
-            try {
-                if (loadParameter<T>(obj, a, param, false, parser))
-                    return true;
-            } catch (...) {
-            }
-        }
-        if (mandatory) 
-            QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + to_string(analytics) + "," + param + ") parsing failed");
-        return false;
+        return loadParameter<T>(obj, analytics, std::vector<std::string>({param}), false, parser);
     }
 
     // allow multiple parameter names - ie "curveconfigFile" or "curveconfig"
@@ -219,18 +230,7 @@ public:
     bool loadParameter(
         T& obj, const std::string& analytic, const std::vector<std::string>& params, const bool mandatory = false,
         std::function<T(const std::string&)> parser = [](auto const& s) { return s; }) {
-        for (const auto& p : params) {
-            try {
-                if (loadParameter<T>(obj, analytic, p, false, parser)) {
-                    return true;
-                }
-            } catch (...) {
-            }
-        }
-        if (mandatory)
-            QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + analytic + "," + to_string(params) +
-                    ") parsing failed");
-        return false;
+        return loadParameter<T>(obj, std::vector<std::string>({analytics}), params, false, parser);
     }
 
     //! load the XML object from an XML string for the given (analytic, param) pair
@@ -286,35 +286,33 @@ public:
     }
 
     template <class T, typename... Args>
-    bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params,
-                          const bool mandatory = false, Args... args) {
-        for (const auto& p : params) {
-            try {
-                if (loadParameterXML<T>(obj, analytic, p, false, args...))
-                    return true;                
-            } catch (...) {
+    bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
+                          const std::vector<std::string>& params, const bool mandatory = false, Args... args) {
+        for (const auto& a : analytics) {
+            for (const auto& p : params) {
+                try {
+                    if (loadParameterXML<T>(obj, a, p, false, args...))
+                        return true;
+                } catch (...) {
+                }
             }
         }
         if (mandatory)
-            QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + analytic + "," + to_string(params) +
+            QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + to_string(analytics) + "," + to_string(params) +
                     ") parsing failed");
         return false;
     }
 
     template <class T, typename... Args>
+    bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, const std::vector<std::string>& params,
+                          const bool mandatory = false, Args... args) {
+        return loadParameterXML<T>(obj, std::vector<std::string>({analytic}), params, false, args...);
+    }
+
+    template <class T, typename... Args>
     bool loadParameterXML(QuantLib::ext::shared_ptr<T>& obj, const std::vector<std::string>& analytics,
                           const std::string& param, const bool mandatory = false, Args... args) {
-        for (const auto& a : analytics) {
-            try {                
-                if (loadParameterXML<T>(obj, a, param, false, args...))
-                    return true;
-            } catch (...) {
-            }
-        }
-        if (mandatory)
-            QL_FAIL("InputParameters::loadParameter(): mandatory parameter (" + to_string(analytics) + "," + param +
-                    ") parsing failed");
-        return false;
+        return loadParameterXML<T>(obj, analytics, std::vector<std::string>({ param }), false, args...);
     }
 
     //! virtual function to load a parameter string for the given (analytic, param) pair
@@ -507,7 +505,7 @@ public:
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for Correlation
-    void setCorrelationMethod(const std::string& s) { correlationMethod_ = s; }
+    void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
 
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { parameters_.set("simulation", "includeTodaysCashFlows", b); }
@@ -970,10 +968,6 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
 
-    /*************************
-     * Getters for Correlation
-     *************************/
-    const std::string& correlationMethod() const { return correlationMethod_; }
     QuantLib::Size reportBufferSize() const { return setupVariables_.reportBufferSize_; }
     
     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const {
@@ -1269,12 +1263,6 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
-
-    /*****************
-     * CORRELATION analytics
-     *****************/
-    // Pearson, Kendall-Rank
-    std::string correlationMethod_ = "Pearson";
 
     /*************
      * Calibration analytics
