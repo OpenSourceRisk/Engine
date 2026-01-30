@@ -226,7 +226,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             inputType_ = XMLUtils::getNodeValue(n);
         }
 
-        // Flag whether first period is flag
+        // Flag whether first period is flat
         flatFirstPeriod_ = XMLUtils::getChildValueAsBool(node, "FlatFirstPeriod", false, true);
 
         // Set type_
