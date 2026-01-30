@@ -267,7 +267,7 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                         usingInitialPrice = true;
                     }
                 } else {
-                    s0 = getUnderlyingFixing(i, v0, false) * arguments_.underlyingMultiplier_[i];
+                    s0 = getUnderlyingFixing(i, v0, false, "s0") * arguments_.underlyingMultiplier_[i];
                     fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                 }
                 DLOG("start value (underlying " << std::to_string(i + 1) << "): s0=" << s0 << " fx0=" << fx0 << " => "
@@ -376,12 +376,12 @@ Real TRSWrapperAccrualEngine::getFxConversionRate(const Date& date, const Curren
     return result1 / result2;
 }
 
-Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection) const {
+Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection, const string isS0) const {
     Date today = Settings::instance().evaluationDate();
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        auto tmp = getUnderlyingNPV(i);
+        auto tmp = getUnderlyingNPV(i, isS0);
         return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
@@ -390,7 +390,7 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
         return tmp;
     } catch (const std::exception&) {
         if (adjustedDate == today) {
-            auto tmp = getUnderlyingNPV(i);
+            auto tmp = getUnderlyingNPV(i, isS0);
             return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
         }
         else
@@ -398,22 +398,21 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
     }
 }
 
-Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, const string isS0) const {
     if (QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]) != nullptr ||
         QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) != nullptr) {
         Date today = Settings::instance().evaluationDate();
         return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
         if(auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument())){
-            Real bondPositionNPV = arguments_.underlying_[i]->instrument()->NPV();
-            auto bondDetails = bondPositionWrapper->getBondDetails();
-            for(int k = 0; k < bondDetails.size(); k++){
-                results_.additionalResults["underlying["+ std::to_string(k)+ "]_weight"] = std::get<0>(bondDetails[k]);
-                results_.additionalResults["underlying["+ std::to_string(k)+ "]_bidAskSpread"] = std::get<1>(bondDetails[k]);
-                results_.additionalResults["underlying["+ std::to_string(k)+ "]_fxConversion"] = std::get<2>(bondDetails[k]);
-                results_.additionalResults["underlying["+ std::to_string(k)+ "]_npv"] = std::get<3>(bondDetails[k]);
+            auto bondDetails = bondPositionWrapper->NPVBreakDown();
+            for(Size k = 0; k < bondDetails.size(); k++){
+                results_.additionalResults[isS0+"_underlying["+ std::to_string(k)+ "]_weight"] = std::get<0>(bondDetails[k]);
+                results_.additionalResults[isS0+"_underlying["+ std::to_string(k)+ "]_bidAskSpread"] = std::get<1>(bondDetails[k]);
+                results_.additionalResults[isS0+"_underlying["+ std::to_string(k)+ "]_fxConversion"] = std::get<2>(bondDetails[k]);
+                results_.additionalResults[isS0+"_underlying["+ std::to_string(k)+ "]_npv"] = std::get<3>(bondDetails[k]);
             }
-            return bondPositionNPV;
+            return bondPositionWrapper->NPV();
         }
         return arguments_.underlying_[i]->instrument()->NPV();
     }
@@ -461,10 +460,10 @@ void TRSWrapperAccrualEngine::calculate() const {
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
                 if (endDate == Null<Date>()) {
-                    s1 = getUnderlyingNPV(i);
+                    s1 = getUnderlyingNPV(i, "s1");
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
                 } else {
-                    s1 = getUnderlyingFixing(i, endDate, false) * arguments_.underlyingMultiplier_[i];
+                    s1 = getUnderlyingFixing(i, endDate, false, "s1") * arguments_.underlyingMultiplier_[i];
                     fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                 }
                 assetLegNpv += fx1 * s1 - underlyingStartValue[i] * fxConversionFactor[i];

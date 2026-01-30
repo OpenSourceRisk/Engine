@@ -166,10 +166,26 @@ BondPositionInstrumentWrapper::BondPositionInstrumentWrapper(
 void BondPositionInstrumentWrapper::setNpvCurrencyConversion(const Handle<Quote>& npvCcyConversion) {
     npvCcyConversion_ = npvCcyConversion;
 }
+std::vector<std::tuple<Real, Real, Real, Real>> BondPositionInstrumentWrapper::NPVBreakDown() {
+    bondDetails_.clear();
+    for (Size i = 0; i < bonds_.size(); ++i) {
+        Real notional = bonds_[i]->notional();
+        if (close_enough(notional, 0.0))
+            continue;
+        // - divide by current notional, because weights are supposed to include any amortization factors
+        // - add bid ask adjustment to relative price in bond ccy
+        Real fxConversion = 1;
+        if (!fxConversion_[i].empty()) {
+            fxConversion = fxConversion_[i]->value();
+        }
+        bondDetails_.push_back(std::make_tuple(weights_[i], bidAskAdjustments_[i], fxConversion, bonds_[i]->NPV()));
+    }
+    return bondDetails_;
+}
 
 Real BondPositionInstrumentWrapper::NPV() const {
     Real result = 0.0;
-    bondDetails_.clear();
+    // bondDetails_.clear();
     for (Size i = 0; i < bonds_.size(); ++i) {
         Real notional = bonds_[i]->notional();
         if (close_enough(notional, 0.0))
@@ -182,7 +198,7 @@ Real BondPositionInstrumentWrapper::NPV() const {
             fxConversion = fxConversion_[i]->value();
             tmp *= fxConversion;
         }
-        bondDetails_.push_back(std::tuple(weights_[i], bidAskAdjustments_[i], fxConversion, bonds_[i]->NPV()));
+        // bondDetails_.push_back(std::tuple(weights_[i], bidAskAdjustments_[i], fxConversion, bonds_[i]->NPV()));
         result += tmp * weights_[i];
     }
     if (!npvCcyConversion_.empty()) {

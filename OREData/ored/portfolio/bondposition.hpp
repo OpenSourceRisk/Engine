@@ -96,6 +96,7 @@ public:
     void initialise(const std::vector<QuantLib::Date>& dates) override {}
     void reset() override {}
     QuantLib::Real NPV() const override;
+    std::vector<std::tuple<Real, Real, Real, Real>> NPVBreakDown();
     const std::map<std::string,QuantLib::ext::any>& additionalResults() const override;
     void updateQlInstruments() override {}
 
@@ -108,7 +109,7 @@ private:
     std::vector<Real> weights_;
     std::vector<Real> bidAskAdjustments_;
     std::vector<Handle<Quote>> fxConversion_;
-    mutable std::vector<std::tuple<Real, Real, Real, Real>> bondDetails_;
+    std::vector<std::tuple<Real, Real, Real, Real>> bondDetails_;
     Handle<Quote> npvCcyConversion_;
 };
 

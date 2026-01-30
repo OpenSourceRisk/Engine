@@ -176,10 +176,10 @@ private:
                                        const QuantLib::Currency& target, const bool enforceProjection) const;
 
     // return underlying #i fixing on date < today
-    Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
+    Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection, const string isS0 = "") const;
 
     // return underlying #i npv on today
-    Real getUnderlyingNPV(const Size i) const;
+    Real getUnderlyingNPV(const Size i, const string isS0 = "") const;
 
     // additional inspectors
     QuantLib::Real currentNotional() const;
