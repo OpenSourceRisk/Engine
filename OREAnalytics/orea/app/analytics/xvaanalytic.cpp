@@ -360,7 +360,7 @@ void XvaAnalyticImpl::buildDependencies() {
             if (correlationAnalytic.second)
                 addDependentAnalytic(corrLookupKey, correlationAnalytic.second);
     }
-    if (inputs_->cubeNpvOverlay()) {
+    if (xvaVars->cubeNpvOverlay_) {
         if (auto pricingAnalytic =
                 AnalyticFactory::instance().build("PRICING", inputs_, analytic()->analyticsManager(), false);
             pricingAnalytic.second) {
