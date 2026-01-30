@@ -1837,6 +1837,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setWriteCube(true);
 
+        tmp = params_->getString("simulation", "cubeNpvOverlay", false);
+        if (tmp != "")
+            setCubeNpvOverlay(parseBool(tmp));
+
         tmp = params_->getString("simulation", "scenariodump", false);
         if (tmp != "")
             setWriteScenarios(true);
