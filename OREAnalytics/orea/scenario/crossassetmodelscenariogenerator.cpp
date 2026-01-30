@@ -41,7 +41,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     const std::string& configuration, const std::string& amcPathDataOutput, Size samples)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
-      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples) {
+      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dataGrid_(grid) {
 
     LOG("CrossAssetModelScenarioGenerator ctor called");
 

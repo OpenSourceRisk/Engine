@@ -39,7 +39,7 @@ Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
     // ratio holds \frac{P_r(S, T)}{P_n(S, T)}.
     auto S = relativeTime_;
     auto T = relativeTime_ + t;
-    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], false);
+    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], true);
     // Return the desired z(S) = \left( \frac{P_r(S, T)}{P_n(S, T)} \right)^{\frac{1}{t}} - 1
     return std::pow(ratio, 1 / t) - 1;
 }
@@ -75,8 +75,8 @@ Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Si
     // Now, use the original zero inflation term structure to get P_r(0, S) / P_n(0, S) and P_r(0, T) / P_n(0, T) and
     // return \frac{P_r(S, T)}{P_n(S, T)}
     const auto& zts = model->infjy(index)->realRate()->termStructure();
-    return inflationGrowth(zts, T, indexIsInterpolated) / inflationGrowth(zts, S, indexIsInterpolated) * p_r / p_n;
-
+    return inflationGrowth(zts, T, indexIsInterpolated) /
+           inflationGrowth(zts, S, indexIsInterpolated) * p_r / p_n;
 }
 
 }

@@ -98,6 +98,9 @@ public:
     /*! returns the state process with a given discretization */
     QuantLib::ext::shared_ptr<CrossAssetStateProcess> stateProcess() const;
 
+    /*! returns the state process with a given discretization */
+    QuantLib::ext::shared_ptr<CrossAssetStateProcess> stateProcess(DayCounter gridDayCounter) const;
+
     /*! total dimension of model (sum of number of state variables) */
     Size dimension() const;
 

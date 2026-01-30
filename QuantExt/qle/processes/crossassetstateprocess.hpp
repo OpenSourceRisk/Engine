@@ -39,7 +39,8 @@ class CrossAssetModel;
  */
 class CrossAssetStateProcess : public StochasticProcess {
 public:
-    CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model);
+    CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                           const std::optional<DayCounter>& gridDayCounter_ = std::nullopt);
 
     /*! StochasticProcess interface */
     Size size() const override;
@@ -54,14 +55,17 @@ public:
 
     // get sqrt correlation matrix (only available for Euler discretization, empty otherwise)
     const Matrix& sqrtCorrelation() const { return sqrtCorrelation_; }
-
+    const std::optional<DayCounter>& gridDayCounter() const { return gridDayCounter_; }
+    void setGridDayCounter(const DayCounter& dc) const { gridDayCounter_ = dc; }
 protected:
     virtual Matrix diffusionOnCorrelatedBrownians(Time t, const Array& x) const;
     virtual Matrix diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const;
     void updateSqrtCorrelation() const;
 
     QuantLib::ext::shared_ptr<const CrossAssetModel> model_;
-
+    // for inflation we need to convert the time grid to dates, if its not given 
+    // we assume inflation curve daycounter are equal to the simulation grid daycounter
+    mutable std::optional<DayCounter> gridDayCounter_;
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> crCirpp_;
     Size cirppCount_;
 
@@ -70,6 +74,7 @@ protected:
     class ExactDiscretization : public StochasticProcess::discretization {
     public:
         ExactDiscretization(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                            const std::optional<DayCounter>& gridDayCounter,
                             SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
         virtual Array drift(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
         virtual Matrix diffusion(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
@@ -82,6 +87,7 @@ protected:
         virtual Matrix covarianceImpl(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
 
         QuantLib::ext::shared_ptr<const CrossAssetModel> model_;
+        mutable std::optional<DayCounter> gridDayCounter_;
         SalvagingAlgorithm::Type salvaging_;
 
         mutable bool cacheNotReady_m_ = true;
@@ -105,6 +111,7 @@ protected:
     mutable Size timeStepCache_d_ = 0;
     mutable std::vector<Array> cache_m_;
     mutable std::vector<Matrix> cache_d_;
+    
 }; // CrossAssetStateProcess
 
 } // namespace QuantExt

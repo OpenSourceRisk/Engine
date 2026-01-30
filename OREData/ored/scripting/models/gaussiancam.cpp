@@ -34,7 +34,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmvectorised.hpp>
-
+#include <qle/utilities/inflation.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/quotes/simplequote.hpp>
 
@@ -481,14 +481,17 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     Date obsDate = d;
     if (fwd != Null<Date>())
         fixingDate = fwd;
-    Size lag = getInflationSimulationLag(infIndices_[indexNo].second);
-    obsDate = inflationPeriod(obsDate + lag, infIndices_[indexNo].second->frequency()).first;
-    fixingDate = inflationPeriod(fixingDate + lag, infIndices_[indexNo].second->frequency()).first;
     std::cout << "  obsDate " << obsDate << " fixingDate " << fixingDate << std::endl;
-    auto const& state = infStates_.at(obsDate).at(indexNo);
+    auto lag = getInflationSimulationLag(infIndices_[indexNo].second);
+    auto relObsDate = inflationPeriod(obsDate + lag, infIndices_[indexNo].second->frequency()).first;
+    auto const& state = infStates_.at(relObsDate).at(indexNo);
     Size camIndex = infIndexPositionInCam_[indexNo];
-    Real t = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(obsDate);
-    Real T = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(fixingDate);
+    const auto& zits = infIndices_[indexNo].second->zeroInflationTermStructure().currentLink();
+    // Calculate time from curve base date to observation and fixing date and not from reference date, as
+    // inflation curves are starting from their base date < reference date, and we have to add the time from base
+    // date to reference date to the timeFromReference calculation
+    Real t = inflationTime(obsDate, zits, true);
+    Real T = inflationTime(fixingDate, zits, true);
     Real baseFixing =
         infIndices_[indexNo].second->fixing(infIndices_[indexNo].second->zeroInflationTermStructure()->baseDate());
     std::cout << "  t " << t << " T " << T << " baseFixing " << baseFixing << std::endl;
@@ -508,7 +511,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
             growthFactor.expand();
             for (Size p = 0; p < size(); ++p) {
                 growthFactor.data()[p] =
-                    inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], false);
+                    inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], true);
             }
             result *= growthFactor;
         }

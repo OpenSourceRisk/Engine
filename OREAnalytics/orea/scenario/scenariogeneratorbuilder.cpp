@@ -50,7 +50,7 @@ ScenarioGeneratorBuilder::build(QuantLib::ext::shared_ptr<QuantExt::CrossAssetMo
     QL_REQUIRE(initMarket != NULL, "ScenarioGeneratorBuilder: initMarket is null");
 
     // enable cache
-    auto process = model->stateProcess();
+    auto process = model->stateProcess(data_->getGrid()->dayCounter());
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process)) {
         tmp->resetCache(data_->getGrid()->timeGrid().size() - 1);
     }

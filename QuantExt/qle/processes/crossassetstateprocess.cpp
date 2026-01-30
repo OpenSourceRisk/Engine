@@ -53,14 +53,15 @@ inline void setValue2(Matrix& m, const Real& value, const QuantLib::ext::shared_
 }
 } // anonymous namespace
 
-CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model)
-    : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
+CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                                               const std::optional<DayCounter>& gridDayCounter)
+    : StochasticProcess(), model_(std::move(model)), gridDayCounter_(gridDayCounter), cirppCount_(0) {
 
     if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
         discretization_ = QuantLib::ext::make_shared<EulerDiscretization>();
     } else {
-        discretization_ =
-            QuantLib::ext::make_shared<CrossAssetStateProcess::ExactDiscretization>(model_, model_->salvagingAlgorithm());
+        discretization_ = QuantLib::ext::make_shared<CrossAssetStateProcess::ExactDiscretization>(
+            model_, gridDayCounter_, model_->salvagingAlgorithm());
     }
 
     updateSqrtCorrelation();
@@ -599,8 +600,9 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
 }
 
 CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                                                                 const std::optional<DayCounter>& gridDayCounter,
                                                                  SalvagingAlgorithm::Type salvaging)
-    : model_(std::move(model)), salvaging_(salvaging) {
+    : model_(std::move(model)), gridDayCounter_(gridDayCounter), salvaging_(salvaging) {
 
     QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                "CrossAssetStateProces::ExactDiscretization is only supported by LGM1F IR model types.");
@@ -690,7 +692,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
         if (model_->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::JY) {
             std::tie(res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 0)],
                      res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 1)]) =
-                inf_jy_expectation_1(*model_, i, t0, dt);
+                inf_jy_expectation_1(*model_, i, t0, dt, gridDayCounter_);
         }
     }
 

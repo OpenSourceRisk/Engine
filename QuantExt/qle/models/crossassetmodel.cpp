@@ -118,6 +118,14 @@ QuantLib::ext::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess(
     return stateProcess_;
 }
 
+QuantLib::ext::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess(DayCounter gridDayCounter) const {
+    if (stateProcess_ == nullptr) {
+        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this(), gridDayCounter);
+    }
+    stateProcess_->setGridDayCounter(gridDayCounter);
+    return stateProcess_;
+}
+
 Size CrossAssetModel::components(const AssetType t) const { return components_[(Size)t]; }
 
 Size CrossAssetModel::ccyIndex(const Currency& ccy) const {

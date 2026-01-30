@@ -19,6 +19,7 @@
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <qle/utilities/time.hpp>
 #include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 
@@ -72,10 +73,17 @@ Time inflationTime(const Date& date,
         dc, inflationTs->baseDate(), date);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const DayCounter& dc, bool indexIsInterpolated) {
-    auto lag = inflationTime(ts->referenceDate(), *ts, indexIsInterpolated, dc);
-    std::cout << "inflationGrowth: t=" << t << " lag=" << lag << std::endl;
-    return pow(1.0 + ts->zeroRate(t - lag), t);
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc, bool indexIsInterpolated) {
+    // compute the simulationLag
+    auto effectiveDayCounter = dc.has_value() && dc.value() != DayCounter() ? dc.value() : ts->dayCounter();
+    auto lag = inflationTime(ts->referenceDate(), *ts, indexIsInterpolated, effectiveDayCounter);
+    auto laggedFixingTime = t - lag;
+    auto laggedObservationDate = lowerDate(laggedFixingTime, ts->referenceDate(), effectiveDayCounter);
+    laggedObservationDate = inflationPeriod(laggedObservationDate, ts->frequency()).first;
+    
+    //std::cout << "inflationGrowth: t=" << t << " lag=" << lag << " laggedFixingTime=" << laggedFixingTime
+    //          << " laggedObservationDate=" << QuantLib::io::iso_date(laggedObservationDate) << std::endl;
+    return pow(1.0 + ts->zeroRate(laggedObservationDate), t);
 }
 
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool indexIsInterpolated) {
