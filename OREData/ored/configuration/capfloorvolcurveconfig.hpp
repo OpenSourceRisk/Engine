@@ -111,6 +111,7 @@ public:
     Type type() const { return type_; }
     const string& currency() const;
     string indexTenor() const;
+    bool flatFirstPeriod() const { return flatFirstPeriod_; }
     //
     const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
     const std::string& proxySourceIndex() const { return proxySourceIndex_; }
@@ -158,6 +159,7 @@ private:
     Type type_ = Type::TermSurface;
     std::string extrapolation_;
     std::string inputType_;
+    bool flatFirstPeriod_ = true;
     //
     std::string proxySourceCurveId_;
     std::string proxySourceIndex_;
