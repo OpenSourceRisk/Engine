@@ -1269,7 +1269,8 @@ vector<Date> CapFloorVolCurve::populateFixingDates(const QuantLib::Date& asof, C
                 MakeOISCapFloor(CapFloor::Cap, configTenors[i], QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
                                 config.rateComputationPeriod(), 0.04)
                     .withTelescopicValueDates(true)
-                    .withSettlementDays(config.settleDays());
+                    .withSettlementDays(config.settleDays())
+                     withRule(DateGeneration::Rule::Forward);
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
             fixingDates.push_back(std::max(asof + 1, lastCoupon->underlying()->fixingDates().front()));
@@ -1318,7 +1319,8 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
             Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, p, QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index),
                                            config->rateComputationPeriod(), 0.04)
                                .withTelescopicValueDates(true)
-                               .withSettlementDays(onSettlementDays);
+                               .withSettlementDays(onSettlementDays)
+                               .withRule(DateGeneration::Rule::Forward);
             if (dummyCap.empty())
                 continue;
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
