@@ -272,25 +272,42 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
     clear();
     initIndices();
 
-    // 1a ensure each rangeBoundSet_ covers all fixing values by filling gaps
+    // 1 ensure each rangeBoundSet_ covers RangeFrom Null to RangeTo first node fixing values by filling gaps
     // A missing node is added with leverage 0
     for (auto& bounds : rangeBoundSet_) {
         if (bounds.empty())
             continue;
 
-        std::vector<RangeBound> filled;
-        filled.reserve(bounds.size() + 2);
+        auto fromValue = [](const RangeBound& b) {
+            return b.from() == Null<Real>() ? -QL_MAX_REAL : b.from();
+        };
 
-        const auto& first = bounds.front();
-        if (first.from() != Null<Real>()) {
+        std::vector<RangeBound> sorted = bounds;
+        std::sort(sorted.begin(), sorted.end(), [&](const RangeBound& a, const RangeBound& b) {
+            return fromValue(a) < fromValue(b);
+        });
+
+        bool hasNullFrom = false;
+        for (const auto& b : sorted) {
+            if (b.from() == Null<Real>()) {
+                hasNullFrom = true;
+                break;
+            }
+        }
+
+        std::vector<RangeBound> filled;
+        filled.reserve(sorted.size() + 2);
+
+        const auto& first = sorted.front();
+        if (!hasNullFrom && first.from() != Null<Real>()) {
             filled.emplace_back(Null<Real>(), first.from(), 0.0, first.strike(),
                                 first.strikeAdjustment());
         }
         filled.push_back(first);
 
-        for (Size j = 1; j < bounds.size(); ++j) {
-            const auto& prev = bounds[j - 1];
-            const auto& curr = bounds[j];
+        for (Size j = 1; j < sorted.size(); ++j) {
+            const auto& prev = sorted[j - 1];
+            const auto& curr = sorted[j];
             if (prev.to() != Null<Real>() && curr.from() != Null<Real>() && curr.from() > prev.to()) {
                 filled.emplace_back(prev.to(), curr.from(), 0.0, prev.strike(),
                                     prev.strikeAdjustment());
@@ -298,7 +315,7 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
             filled.push_back(curr);
         }
 
-        const auto& last = bounds.back();
+        const auto& last = sorted.back();
         if (last.to() != Null<Real>()) {
             filled.emplace_back(last.to(), Null<Real>(), 0.0, last.strike(),
                                 last.strikeAdjustment());
