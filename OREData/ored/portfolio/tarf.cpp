@@ -272,8 +272,8 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
     clear();
     initIndices();
 
-    // 1 ensure each rangeBoundSet_ covers RangeFrom Null to RangeTo first node fixing values by filling gaps
-    // A missing node is added with leverage 0
+    // 1 ensure each rangeBoundSet_ has a leading node covering [Null, first.from()]
+    // If there is no RangeBound with RangeFrom==Null/0 and RangeTo!=Null, add one with leverage 0
     for (auto& bounds : rangeBoundSet_) {
         if (bounds.empty())
             continue;
@@ -287,41 +287,24 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
             return fromValue(a) < fromValue(b);
         });
 
-        bool hasNullFrom = false;
+        // Check if there's already a bound with from==Null and to!=Null
+        bool hasLeadingNullRange = false;
         for (const auto& b : sorted) {
-            if (b.from() == Null<Real>()) {
-                hasNullFrom = true;
+            if ((b.from() == Null<Real>()|| b.from() == 0) && b.to() != Null<Real>()) {
+                hasLeadingNullRange = true;
                 break;
             }
         }
 
-        std::vector<RangeBound> filled;
-        filled.reserve(sorted.size() + 2);
-
-        const auto& first = sorted.front();
-        if (!hasNullFrom && first.from() != Null<Real>()) {
-            filled.emplace_back(Null<Real>(), first.from(), 0.0, first.strike(),
-                                first.strikeAdjustment());
-        }
-        filled.push_back(first);
-
-        for (Size j = 1; j < sorted.size(); ++j) {
-            const auto& prev = sorted[j - 1];
-            const auto& curr = sorted[j];
-            if (prev.to() != Null<Real>() && curr.from() != Null<Real>() && curr.from() > prev.to()) {
-                filled.emplace_back(prev.to(), curr.from(), 0.0, prev.strike(),
-                                    prev.strikeAdjustment());
+        // If not, add a leading node [Null, first.from()] with leverage 0
+        if (!hasLeadingNullRange) {
+            std::vector<RangeBound> filled;
+            filled.emplace_back(Null<Real>(), sorted[0].from(), 0.0, sorted[0].strike(), sorted[0].strikeAdjustment());
+            for (const auto& b : sorted) {
+                filled.push_back(b);
             }
-            filled.push_back(curr);
+            bounds = filled;
         }
-
-        const auto& last = sorted.back();
-        if (last.to() != Null<Real>()) {
-            filled.emplace_back(last.to(), Null<Real>(), 0.0, last.strike(),
-                                last.strikeAdjustment());
-        }
-
-        bounds = std::move(filled);
     }
 
     // 2 build rangeBounds and strikes vectors according to fixing date schedule
