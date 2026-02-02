@@ -210,8 +210,11 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     std::function<Array(const std::vector<Time>&, const std::vector<Real>&)> additionalPenalties =
         [smoothnessLambda](const std::vector<Time>& times, const std::vector<Real>& data) {
             Array p(times.size() - 1);
-            for (Size i = 0; i < times.size() - 2; ++i) {
-                p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
+            // for (Size i = 0; i < times.size() - 2; ++i) {
+            //     p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
+            // }
+            for (Size i = 0; i < times.size() - 1; ++i) {
+                p[i] = smoothnessLambda * (data[i + 1] - data[i]);
             }
             return p;
         };
