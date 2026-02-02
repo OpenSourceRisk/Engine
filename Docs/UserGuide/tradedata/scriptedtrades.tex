@@ -121,13 +121,13 @@ The meanings and allowable values for the \lstinline!VolatilityBarrierOptionData
   Allowable values: Any non-negative number.
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to exchanging PutNotional in PutCcy for CallNotional in CallCcy at expiry. \\
   Allowable values: \emph{Long, Short}.
-  \item{}[index] \lstinline!Underlying!: Underlying FX/EQ/COM index. \\
+  \item{}[index] \lstinline!Underlying!: Underlying FX/EQ/COM index. For FX, where the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should be \lstinline!CCY2! \\
   Allowable values: See Section \ref{data_index} for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
   \item{}[barrierType] \lstinline!BarrierType!: Whether the barrier is a (\emph{DownIn} or \emph{UpIn}) barrier. \\
   Allowable values: \emph{DownIn, UpIn}.
-  \item{}[number] \lstinline!BarrierLevel!: The agreed volatility barrier level. \\
+  \item{}[number] \lstinline!BarrierLevel!: The agreed volatility barrier level. Expressed in decimal form, it is a volatlity.\\
   Allowable values: Any non-negative real number.
   \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
@@ -135,7 +135,9 @@ The meanings and allowable values for the \lstinline!VolatilityBarrierOptionData
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!Premium!: The option premium. \\
   Allowable values: Any non-negative real number.
-  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+  \item{}[event] \lstinline!Expiry!: The option expiration date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency of the premium and option. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
       COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
@@ -245,7 +247,7 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionData! n
 \begin{itemize}
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to receiving the settlement amount at expiry. \\
   Allowable values: \emph{Long, Short}.
-  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  \item{}[index] \lstinline!Underlying!: Underlying index. For FX, where the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should be \lstinline!CCY2!\\
   Allowable values: See Section \ref{data_index} for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
   Allowable values: See Section \ref{ss:schedule_data}.
@@ -257,7 +259,7 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionData! n
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!VolBarrierType!: Whether the realized volatility barrier is a (\emph{DownIn} or \emph{UpIn}) barrier. \\
   Allowable values: \emph{DownIn, UpIn}.
-  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. \\
+  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. Expressed in decimal form, it is a volatlity.\\
   Allowable values: Any non-negative real number.
   \item{}[number] \lstinline!SettlementAmount!: The settlement amount. \\
   Allowable values: Any non-negative real number.
@@ -267,7 +269,9 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionData! n
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!Premium!: The option premium. \\
   Allowable values: Any non-negative real number.
-  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+  \item{}[event] \lstinline!Expiry!: The option expiration date. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency of the premium and option. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
       COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\

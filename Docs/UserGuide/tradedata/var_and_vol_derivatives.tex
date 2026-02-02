@@ -398,6 +398,7 @@ The traditional trade representation is as follows, using an EQ underlying in th
     <Underlying type="index">FX-ECB-JPY-USD</Underlying>
     <PayCcy type="currency">USD</PayCcy>
     <Expiry type="event">2020-07-15</Expiry>
+    <isTerminalOnly type="bool">false</isTerminalOnly>
     <Premium type="number">0</Premium>
     <PremiumDate type="event">2020-07-18</PremiumDate>
   </DualEuroBinaryOptionDoubleKOData>
@@ -421,6 +422,10 @@ FOR d IN (2, SIZE(ValuationSchedule), 1) DO
     Alive = 0;
   END;
   realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+END;
+
+IF currPrice >= SpotBarrierLevel AND isTerminalOnly == 1  THEN
+  Alive = 0;
 END;
 
 expectedN = SIZE(ValuationSchedule) - 1;
@@ -454,25 +459,30 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionDoubleK
 \begin{itemize}
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to receiving the settlement amount at expiry. \\
   Allowable values: \emph{Long, Short}.
-  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  \item{}[index] \lstinline!Underlying!: Underlying index. For FX, where the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should be \lstinline!CCY2!\\
   Allowable values: See Section \ref{data_index} for allowable values.
-  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  \item{}[event] \lstinline!ValuationSchedule!: The base schedule which defines the start dates of the variance accrual schedule. This node is also used to derive the variance accrual schedule and defines the observation dates of the SPOT KO. \\
   Allowable values: See Section \ref{ss:schedule_data}.
-  \item{}[number] \lstinline!SpotBarrierLevel!: The agreed Spot barrier level. \\
+  \item{}[number] \lstinline!SpotBarrierLevel!: The agreed Spot barrier level. For Fx, the Fx barrier level is defined as amount in domestic currency (CCY2) for one unit of foreign currency (CCY1). \\
+  For Equity and Commodity: The barrier level for one unit/share/contract of the underlying equity or commodity, expressed in the domestic currency (CCY2).\\
   Allowable values: Any non-negative real number.
-  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. \\
+  \item{}[number] \lstinline!VolBarrierLevel!: The agreed volatility barrier level. Expressed in decimal form, it is a volatlity.\\
   Allowable values: Any non-negative real number.
   \item{}[event] \lstinline!VolBarrierDate!: The date on which the realised volatility event is determined. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!SettlementAmount!: The settlement amount. \\
   Allowable values: Any non-negative real number.
+  \item{}[boolean] \lstinline!isTerminalOnly!: Determine if the Spot Barrier occurs on every valuation date or at End Date. \\
+  Allowable values: Any non-negative real number.
   \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!Expiry!: The option expiration date. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[event] \lstinline!PremiumDate!: The date on which the option premium is paid. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!Premium!: The option premium. \\
   Allowable values: Any non-negative real number.
-  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+  \item{}[currency] \lstinline!PayCcy!: The payment currency of the premium and option. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
       COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
