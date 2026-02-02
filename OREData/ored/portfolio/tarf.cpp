@@ -272,6 +272,41 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
     clear();
     initIndices();
 
+    // 1a ensure each rangeBoundSet_ covers all fixing values by filling gaps
+    // A missing node is added with leverage 0
+    for (auto& bounds : rangeBoundSet_) {
+        if (bounds.empty())
+            continue;
+
+        std::vector<RangeBound> filled;
+        filled.reserve(bounds.size() + 2);
+
+        const auto& first = bounds.front();
+        if (first.from() != Null<Real>()) {
+            filled.emplace_back(Null<Real>(), first.from(), 0.0, first.strike(),
+                                first.strikeAdjustment());
+        }
+        filled.push_back(first);
+
+        for (Size j = 1; j < bounds.size(); ++j) {
+            const auto& prev = bounds[j - 1];
+            const auto& curr = bounds[j];
+            if (prev.to() != Null<Real>() && curr.from() != Null<Real>() && curr.from() > prev.to()) {
+                filled.emplace_back(prev.to(), curr.from(), 0.0, prev.strike(),
+                                    prev.strikeAdjustment());
+            }
+            filled.push_back(curr);
+        }
+
+        const auto& last = bounds.back();
+        if (last.to() != Null<Real>()) {
+            filled.emplace_back(last.to(), Null<Real>(), 0.0, last.strike(),
+                                last.strikeAdjustment());
+        }
+
+        bounds = std::move(filled);
+    }
+
     // 2 build rangeBounds and strikes vectors according to fixing date schedule
 
     std::vector<QuantLib::Date> fixingSchedulePlusInf = makeSchedule(fixingDates_).dates();
