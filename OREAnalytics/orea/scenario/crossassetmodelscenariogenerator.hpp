@@ -116,7 +116,7 @@ private:
     Size currentSample_ = 0;
     Size totalSamples_;
     std::vector<Size> gridIndexInPath_;
-    QuantLib::ext::shared_ptr<DateGrid> dataGrid_;
+    QuantLib::ext::shared_ptr<DateGrid> dateGrid_;
 };
 
 } // namespace analytics

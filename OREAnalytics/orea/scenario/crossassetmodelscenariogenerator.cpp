@@ -41,7 +41,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     const std::string& configuration, const std::string& amcPathDataOutput, Size samples)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
-      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dataGrid_(grid) {
+      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples), dateGrid_(grid) {
 
     LOG("CrossAssetModelScenarioGenerator ctor called");
 
@@ -292,9 +292,9 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> ts;
 
         if (mt == CrossAssetModel::ModelType::DK) {
-            ts = QuantLib::ext::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx);
+            ts = QuantLib::ext::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx, dateGrid_->dayCounter());
         } else {
-            ts = QuantLib::ext::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
+            ts = QuantLib::ext::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx, dateGrid_->dayCounter());
             QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                        "Simulation of INF JY model is only supported for LGM1F ir model type.");
         }

@@ -45,10 +45,8 @@ QuantLib::Time inflationTime(const QuantLib::Date& date,
 /*! Utility for calculating the ratio \f$ \frac{P_r(0, t)}{P_n(0, t)} \f$ where \f$ P_r(0, t) \f$ is the real zero
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
 */
-QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-    QuantLib::Time t,
-    const QuantLib::DayCounter& dc,
-    bool indexIsInterpolated);
+QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts, QuantLib::Time t,
+                               const std::optional<QuantLib::DayCounter>& dc, bool indexIsInterpolated);
 
 /*! Utility for calculating the ratio \f$ \frac{P_r(0, t)}{P_n(0, t)} \f$ where \f$ P_r(0, t) \f$ is the real zero
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
