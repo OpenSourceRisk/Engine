@@ -108,6 +108,7 @@ const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& Analytic::getReport(
 }
 
 void Analytic::reset() {
+    analyticComplete_ = false;
     reports_.clear();
 }
 
