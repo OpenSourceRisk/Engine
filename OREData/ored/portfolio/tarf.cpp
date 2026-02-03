@@ -164,7 +164,9 @@ using namespace QuantExt;
         "      wasTriggered = 1;\n"
         "      Triggered[d] = 1;\n"
         "      IF TargetType == 0 THEN\n"
-        "        Payoff = Payoff + LOGPAY((TargetPoints - (AccProfitPoints - PnLPoints)) * PnL / PnLPoints, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);\n"
+        "        IF PnLPoints !=0  THEN\n"
+        "          Payoff = Payoff + LOGPAY((TargetPoints - (AccProfitPoints - PnLPoints)) * PnL / PnLPoints, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);\n"
+        "        END;\n"
         "      END;\n"
         "      IF TargetType == 1 THEN\n"
         "        Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);\n"
@@ -207,9 +209,11 @@ using namespace QuantExt;
         "      wasTriggered = 1;\n"
         "      Triggered[d] = 1;\n"
         "      IF TargetType == 0 THEN\n"
-        "        Payoff = Payoff + LOGPAY((TargetPoints - (AccProfitPoints[d] - PnLPoints)) * PnL / PnLPoints, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);\n"
-        "        nthPayoff[d] = PAY((TargetPoints - (AccProfitPoints[d] - PnLPoints)) * PnL / PnLPoints, FixingDates[d], SettlementDates[d], PayCcy);\n"
-        "        AccProfitPoints[d] = TargetPoints;\n"
+        "        IF PnLPoints!=0 THEN\n"
+        "          Payoff = Payoff + LOGPAY((TargetPoints - (AccProfitPoints[d] - PnLPoints)) * PnL / PnLPoints, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);\n"
+        "          nthPayoff[d] = PAY((TargetPoints - (AccProfitPoints[d] - PnLPoints)) * PnL / PnLPoints, FixingDates[d], SettlementDates[d], PayCcy);\n"
+        "          AccProfitPoints[d] = TargetPoints;\n"
+        "        END;\n"
         "      END;\n"
         "      IF TargetType == 1 THEN\n"
         "        Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);\n"
@@ -271,41 +275,6 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     clear();
     initIndices();
-
-    // 1 ensure each rangeBoundSet_ has a leading node covering [Null, first.from()]
-    // If there is no RangeBound with RangeFrom==Null/0 and RangeTo!=Null, add one with leverage 0
-    for (auto& bounds : rangeBoundSet_) {
-        if (bounds.empty())
-            continue;
-
-        auto fromValue = [](const RangeBound& b) {
-            return b.from() == Null<Real>() ? -QL_MAX_REAL : b.from();
-        };
-
-        std::vector<RangeBound> sorted = bounds;
-        std::sort(sorted.begin(), sorted.end(), [&](const RangeBound& a, const RangeBound& b) {
-            return fromValue(a) < fromValue(b);
-        });
-
-        // Check if there's already a bound with from==Null and to!=Null
-        bool hasLeadingNullRange = false;
-        for (const auto& b : sorted) {
-            if ((b.from() == Null<Real>()|| b.from() == 0) && b.to() != Null<Real>()) {
-                hasLeadingNullRange = true;
-                break;
-            }
-        }
-
-        // If not, add a leading node [Null, first.from()] with leverage 0
-        if (!hasLeadingNullRange) {
-            std::vector<RangeBound> filled;
-            filled.emplace_back(Null<Real>(), sorted[0].from(), 0.0, sorted[0].strike(), sorted[0].strikeAdjustment());
-            for (const auto& b : sorted) {
-                filled.push_back(b);
-            }
-            bounds = filled;
-        }
-    }
 
     // 2 build rangeBounds and strikes vectors according to fixing date schedule
 
@@ -420,6 +389,7 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
         numbers_.emplace_back("Number", "KnockOutProfitAmount", knockOutProfitAmount);
         numbers_.emplace_back("Number", "KnockOutProfitEvents", knockOutProfitEvents);
     }
+    std::cout<<scriptToUse<<std::endl;
 
     // 4c set target type
 

@@ -609,7 +609,11 @@ RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
     else {
         resumeCalcStats();
         for (Size i = 0; i < n_; ++i) {
-            data_[i] *= y[i];
+            if (y[i] == 0.0 || data_[i] == 0.0)
+                data_[i] = 0.0;
+            else
+                data_[i] *= y[i];
+
         }
         stopCalcStats(n_);
     }
