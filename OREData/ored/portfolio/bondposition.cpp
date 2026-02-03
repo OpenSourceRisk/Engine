@@ -166,6 +166,20 @@ BondPositionInstrumentWrapper::BondPositionInstrumentWrapper(
 void BondPositionInstrumentWrapper::setNpvCurrencyConversion(const Handle<Quote>& npvCcyConversion) {
     npvCcyConversion_ = npvCcyConversion;
 }
+std::vector<std::tuple<Real, Real, Real, Real>> BondPositionInstrumentWrapper::NPVBreakDown() {
+    std::vector<std::tuple<Real, Real, Real, Real>> bondDetails;
+    for (Size i = 0; i < bonds_.size(); ++i) {
+        Real notional = bonds_[i]->notional();
+        if (close_enough(notional, 0.0))
+            continue;
+        Real fxConversion = 1;
+        if (!fxConversion_[i].empty()) {
+            fxConversion = fxConversion_[i]->value();
+        }
+        bondDetails.push_back(std::make_tuple(weights_[i], bidAskAdjustments_[i], fxConversion, bonds_[i]->NPV()));
+    }
+    return bondDetails;
+}
 
 Real BondPositionInstrumentWrapper::NPV() const {
     Real result = 0.0;
