@@ -177,6 +177,7 @@ public:
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+    void reset() override;
 
     void checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 

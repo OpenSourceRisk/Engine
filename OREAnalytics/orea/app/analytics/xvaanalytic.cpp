@@ -414,6 +414,11 @@ void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKe
     analytic()->configurations().crossAssetModelData->setCorrelations(instantaneousCorrelation);
 }
 
+void XvaAnalyticImpl::reset() { 
+    model_.reset();
+    scenarioGenerator_.reset();
+}
+
 void XvaAnalyticImpl::setUpConfigurations() {
 
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
@@ -1248,7 +1253,6 @@ void XvaAnalyticImpl::runPostProcessor() {
 
 void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                   const std::set<std::string>& runTypes) {
-    
     auto xvaVars = ext::dynamic_pointer_cast<XvaVariables>(inputVariables_);
     LOG("XVA analytic is running with amc cg mode '" << xvaVars->amcCg_ << "'.");
 

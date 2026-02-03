@@ -144,7 +144,7 @@ public:
                    const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report);
     const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& getReport(const std::string& key,
                                                                           const std::string& subKey);
-    void reset();
+    virtual void reset();
 
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
@@ -217,6 +217,7 @@ public:
         const std::set<std::string>& runTypes = {}) = 0;
     
     void initialise();
+    virtual void reset(){};
     const bool initialised() { return initialised_; };
     virtual void buildDependencies(){};
     virtual void buildConfigurations(){};

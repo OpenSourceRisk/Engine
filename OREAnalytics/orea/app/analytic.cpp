@@ -110,6 +110,7 @@ const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& Analytic::getReport(
 void Analytic::reset() {
     analyticComplete_ = false;
     reports_.clear();
+    impl_->reset();
 }
 
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
