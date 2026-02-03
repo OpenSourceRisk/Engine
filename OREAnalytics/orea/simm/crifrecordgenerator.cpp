@@ -37,7 +37,7 @@
 #include <qle/utilities/inflation.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 
 #include <iomanip>
 #include <map>
@@ -661,7 +661,7 @@ CrifRecordData CrifRecordGenerator::yieldVolatilityImpl(const ore::analytics::Se
     return data;
 }
 
-double CrifRecordGenerator::CdsAtmVol(const std::string& tradeId, const std::string& optionExpiryTenor) const {
+std::optional<double> CrifRecordGenerator::CdsAtmVol(const std::string& tradeId, const std::string& optionExpiryTenor) const {
     Real atmVol = 0.0;
     QL_FAIL("CrifRecordGenerator::CdsAtmVol not implemented");
     return atmVol;

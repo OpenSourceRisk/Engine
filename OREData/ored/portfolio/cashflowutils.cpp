@@ -291,7 +291,7 @@ TradeCashflowReportData getCashflowReportData(
             fixingValue = (c->rate() - c->spread()) / c->gearing();
         } else if (auto c = ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
             fixingValue = (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
-        } else if (auto c = ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
+        } else if (auto c = ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
             fixingValue = (c->underlying()->rate() - c->underlying()->effectiveSpread()) / c->underlying()->gearing();
         } else if (auto c = ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(ptrFloat)) {
             fixingValue = (c->underlying()->rate() - c->underlying()->spread()) / c->underlying()->gearing();
@@ -383,7 +383,7 @@ TradeCashflowReportData getCashflowReportData(
             qlIndexName = ibor->iborIndex()->name();
             usesCapVol = true;
         }
-    } else if (auto tmp = ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
+    } else if (auto tmp = ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c)) {
         floorStrike = tmp->effectiveFloor();
         capStrike = tmp->effectiveCap();
         volFixingDate = tmp->underlying()->fixingDates().front();
@@ -393,7 +393,7 @@ TradeCashflowReportData getCashflowReportData(
             effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
         if (capStrike != Null<Real>())
             effectiveCapVolatility = tmp->effectiveCapletVolatility();
-    } else if (auto tmp = ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
+    } else if (auto tmp = ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c)) {
         floorStrike = tmp->effectiveFloor();
         capStrike = tmp->effectiveCap();
         volFixingDate = tmp->underlying()->fixingDates().front();
@@ -403,7 +403,7 @@ TradeCashflowReportData getCashflowReportData(
             effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
         if (capStrike != Null<Real>())
             effectiveCapVolatility = tmp->effectiveCapletVolatility();
-    } else if (auto tmp = ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(c)) {
+    } else if (auto tmp = ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c)) {
         floorStrike = tmp->effectiveFloor();
         capStrike = tmp->effectiveCap();
         volFixingDate = tmp->underlying()->fixingDates().front();

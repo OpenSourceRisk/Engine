@@ -353,8 +353,8 @@
       <Currency>USD</Currency>
       <NotionalCalculation>Sum</NotionalCalculation>
       <Components>
-        <Trade id="Swap_EUR">
-          <TradeType>Swap</TradeType>
+        <SubTrade id="Swap_EUR">
+          <SubTradeType>Swap</SubTradeType>
           <Envelope>
             <CounterParty>CPTY_A</CounterParty>
             <NettingSetId>CPTY_A</NettingSetId>
@@ -423,9 +423,9 @@
               </ScheduleData>
             </LegData>
           </SwapData>
-        </Trade>
-        <Trade id="BermSwp">
-          <TradeType>Swaption</TradeType>
+        </SubTrade>
+        <SubTrade id="BermSwp">
+          <SubTradeType>Swaption</SubTradeType>
           <Envelope>
             <CounterParty>CPTY_A</CounterParty>
             <NettingSetId>CPTY_A</NettingSetId>
@@ -513,7 +513,7 @@
               </ScheduleData>
             </LegData>
           </SwaptionData>
-        </Trade>
+        </SubTrade>
       </Components>
     </CompositeTradeData>
   </Trade>

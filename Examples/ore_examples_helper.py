@@ -94,13 +94,11 @@ class OreExample(object):
                     self.ore_exe = "..\\..\\..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"
                 elif os.path.isfile("..\\..\\build\\App\\Release\\ore.exe"):
                     self.ore_exe = "..\\..\\build\\App\\Release\\ore.exe"
-                elif os.path.isfile("..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"):
-                    self.ore_exe = "..\\..\\build\\ore\\App\\RelWithDebInfo\\ore.exe"
                 elif os.path.isfile("..\\..\\..\\build\\App\\Release\\ore.exe"):
                     self.ore_exe = "..\\..\\..\\build\\App\\Release\\ore.exe"
                 else:
                     print_on_console("ORE executable not found.")
-                    sys.exit(1)
+                    quit()
             else:
                 if os.path.isfile("..\\..\\App\\bin\\Win32\\Release\\ore.exe"):
                     self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
@@ -112,7 +110,7 @@ class OreExample(object):
                     self.ore_exe = "..\\..\\..\\build\\App\\ore.exe"
                 else:
                     print_on_console("ORE executable not found.")
-                    sys.exit(1)
+                    quit()
         else:
             if os.path.isfile("../../App/build/ore"):
                 self.ore_exe = "../../App/build/ore"
@@ -140,7 +138,7 @@ class OreExample(object):
                 self.ore_exe = "/ore/App/ore"
             else:
                 print_on_console("ORE executable not found.")
-                sys.exit(1)
+                quit()
         print_on_console("Using ORE executable " + (os.path.abspath(self.ore_exe)))
 
     def print_headline(self, headline):

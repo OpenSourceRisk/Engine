@@ -949,6 +949,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setCurvesGrid(tmp);
 
+    tmp = params_->get("curves", "calendar", false);
+    if (tmp != "")
+        setCurvesCalendar(tmp);
+
     tmp = params_->get("curves", "configuration", false);
     if (tmp != "")
         setCurvesMarketConfig(tmp);
@@ -2098,6 +2102,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "cubeFile", false);
         if (tmp != "")
             setWriteCube(true);
+
+        tmp = params_->get("simulation", "cubeNpvOverlay", false);
+        if (tmp != "")
+            setCubeNpvOverlay(parseBool(tmp));
 
         tmp = params_->get("simulation", "scenariodump", false);
         if (tmp != "")

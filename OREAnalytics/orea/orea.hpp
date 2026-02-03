@@ -83,6 +83,7 @@
 #include <orea/cube/jointnpvsensicube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/npvsensicube.hpp>
+#include <orea/cube/overlaynpvcube.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/cube/sparsenpvcube.hpp>

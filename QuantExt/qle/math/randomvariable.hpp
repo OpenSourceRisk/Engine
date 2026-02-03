@@ -25,7 +25,7 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
-#include <ql/functional.hpp>
+#include <functional>
 
 #include <boost/timer/timer.hpp>
 #include <boost/serialization/array.hpp>

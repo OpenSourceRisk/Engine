@@ -778,31 +778,91 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
                "EquityVolCurve: only quote type"
                    << " RATE_LNVOL is currently supported for a 2-D volatility delta strike surface.");
+    
+    // Put Deltas may be configured with a wildcard or given explicitly
+    bool putDeltaWc = false;
+    vector<Real>putDeltas(1);
+    if (find(vdsc.putDeltas().begin(), vdsc.putDeltas().end(), "*") != vdsc.putDeltas().end()) {
+        putDeltaWc = true;
+        QL_REQUIRE(vdsc.putDeltas().size() == 1, "Wild card expiry specified but more expiries also specified.");
+        DLOG("EquityVolCurve: Have Put Deltas wildcard pattern " << vdsc.putDeltas()[0]);
+    }else{
+        // Parse, sort and check the vector of configured put deltas
+        putDeltas = parseVectorOfValues<Real>(vdsc.putDeltas(), &parseReal);
+        sort(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
+        QL_REQUIRE(adjacent_find(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
+                    putDeltas.end(),
+                "EquityVolCurve: The configured put deltas contain duplicates");
+        DLOG("EquityVolCurve: Parsed " << putDeltas.size() << " unique configured put deltas");
+        DLOG("EquityVolCurve: Put deltas are: " << join(putDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
+    }
+    
 
-    // Parse, sort and check the vector of configured put deltas
-    vector<Real> putDeltas = parseVectorOfValues<Real>(vdsc.putDeltas(), &parseReal);
-    sort(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
-    QL_REQUIRE(adjacent_find(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
-                   putDeltas.end(),
-               "EquityVolCurve: The configured put deltas contain duplicates");
-    DLOG("EquityVolCurve: Parsed " << putDeltas.size() << " unique configured put deltas");
-    DLOG("EquityVolCurve: Put deltas are: " << join(putDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
-
-    // Parse, sort descending and check the vector of configured call deltas
-    vector<Real> callDeltas = parseVectorOfValues<Real>(vdsc.callDeltas(), &parseReal);
-    sort(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return !close(x, y) && x > y; });
-    QL_REQUIRE(adjacent_find(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
-                   callDeltas.end(),
-               "EquityVolCurve: The configured call deltas contain duplicates");
-    DLOG("EquityVolCurve: Parsed " << callDeltas.size() << " unique configured call deltas");
-    DLOG("EquityVolCurve: Call deltas are: " << join(callDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
-
+    
+    // Call Deltas may be configured with a wildcard or given explicitly
+    bool callDeltaWc = false;
+    vector<Real>callDeltas(1);
+    if (find(vdsc.callDeltas().begin(), vdsc.callDeltas().end(), "*") != vdsc.callDeltas().end()) {
+        callDeltaWc = true;
+        QL_REQUIRE(vdsc.callDeltas().size() == 1, "Wild card expiry specified but more expiries also specified.");
+        DLOG("EquityVolCurve: Have Call Deltas wildcard pattern " << vdsc.callDeltas()[0]);
+    }else{
+        // Parse, sort descending and check the vector of configured call deltas
+        callDeltas = parseVectorOfValues<Real>(vdsc.callDeltas(), &parseReal);
+        sort(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return !close(x, y) && x > y; });
+        QL_REQUIRE(adjacent_find(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
+                    callDeltas.end(),
+                "EquityVolCurve: The configured call deltas contain duplicates");
+        DLOG("EquityVolCurve: Parsed " << callDeltas.size() << " unique configured call deltas");
+        DLOG("EquityVolCurve: Call deltas are: " << join(callDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
+    }
+    
     // Expiries may be configured with a wildcard or given explicitly
     bool expWc = false;
     if (find(vdsc.expiries().begin(), vdsc.expiries().end(), "*") != vdsc.expiries().end()) {
         expWc = true;
         QL_REQUIRE(vdsc.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
         DLOG("EquityVolCurve: Have expiry wildcard pattern " << vdsc.expiries()[0]);
+    }
+
+    // If delta wildcards are used, discover all available put/call deltas from market data
+    std::ostringstream ss;
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.equityId() << "/"
+       << vc.ccy() << "/*";
+    Wildcard w(ss.str());
+    auto loadedQuotes = loader.get(w, asof);
+    if (putDeltaWc || callDeltaWc) {
+        std::set<Real> discoveredPutDeltas, discoveredCallDeltas;
+        for (const auto& md : loadedQuotes) {
+            QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
+            auto q = QuantLib::ext::dynamic_pointer_cast<EquityOptionQuote>(md);
+            QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
+            if (q->eqName() != vc.equityId() || q->ccy() != vc.ccy() || q->quoteType() != vdsc.quoteType())
+                continue;
+            if (!expWc) {
+                auto itCfg = find(vc.quotes().begin(), vc.quotes().end(), q->name());
+                if (itCfg == vc.quotes().end())
+                    continue;
+            }
+            auto ds = QuantLib::ext::dynamic_pointer_cast<DeltaStrike>(q->strike());
+            if (!ds)
+                continue;
+            Real d = std::fabs(ds->delta());
+            if (ds->optionType() == Option::Put && putDeltaWc)
+                discoveredPutDeltas.insert(d);
+            if (ds->optionType() == Option::Call && callDeltaWc)
+                discoveredCallDeltas.insert(d);
+        }
+        if (putDeltaWc) {
+            QL_REQUIRE(!discoveredPutDeltas.empty(), "EquityVolCurve: No put delta quotes found for wildcard configuration");
+            putDeltas.assign(discoveredPutDeltas.begin(), discoveredPutDeltas.end());
+        }
+        if (callDeltaWc) {
+            QL_REQUIRE(!discoveredCallDeltas.empty(), "EquityVolCurve: No call delta quotes found for wildcard configuration");
+            callDeltas.assign(discoveredCallDeltas.begin(), discoveredCallDeltas.end());
+            sort(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return !close(x, y) && x > y; });
+        }
+        DLOG("EquityVolCurve: Discovered " << putDeltas.size() << " put deltas and " << callDeltas.size() << " call deltas via wildcard.");
     }
 
     // Map to hold the rows of the equity volatility matrix. The keys are the expiry dates and the values are the
@@ -835,11 +895,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     }
 
     // Read the quotes to fill the expiry dates and vols matrix.
-    std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.equityId() << "/"
-       << vc.ccy() << "/*";
-    Wildcard w(ss.str());
-    for (const auto& md : loader.get(w, asof)) {
+    for (const auto& md : loadedQuotes) {
 
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
@@ -908,7 +964,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     DLOG("EquityVolCurve: EquityVolCurve: added " << quotesAdded << " quotes in building delta strike surface.");
 
     // Check the data gathered.
-    if (expWc) {
+    if (expWc || putDeltaWc || callDeltaWc) {
         // If the expiries were configured via a wildcard, check that no surfaceData element has a Null<Real>().
         for (const auto& kv : surfaceData) {
             for (Size j = 0; j < numStrikes; j++) {
