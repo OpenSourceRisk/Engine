@@ -4089,6 +4089,51 @@ The parameters have the following meaning:
 \end{longlisting}
 
 %--------------------------------------------------------
+\subsection{Product Type: EquityLeg}
+%--------------------------------------------------------
+
+Used by trade type: any trade referencing an Equity leg
+
+Available Model/Engine pairs:
+
+\begin{itemize}
+  \item DiscountedCashflows/EquityCouponPricer
+  \item BlackQuantoAdjusted/BlackQuantoEquityCouponPricer
+\end{itemize}
+
+Engine description:
+
+DiscountedCashflows/EquityCouponPricer is the default engine pricer for equity legs. BlackQuantoAdjusted/BlackQuantoEquityCouponPricer
+will apply a convexity adjustments following 
+\[e^{\sigma_{\text{eq}}(t) \cdot \sigma_{\text{fx}}(t) \cdot \text{corr}(\text{eq}, \text{fx}, t) \cdot t}\]
+A sample configuration is shown in listing
+\ref{lst:peconfig_EquityLeg_BlackQuantoAdjusted_BlackQuantoEquityCouponPricer}.
+
+DiscountedCashflows/EquityCouponPricer does not take any parameters, while the parameters for BlackQuantoAdjusted/BlackQuantoEquityCouponPricer have the following meaning:
+
+\begin{itemize}
+\item ApplyConvexityAdjustment: whether convexity adjustment will be used for equity swap.
+\item QuantoCurrencyPairs: the currency pairs that the convexity adjustment will apply on.
+
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="EquityLeg">
+    <Model>BlackQuantoAdjusted</Model>
+    <ModelParameters/>
+    <Engine>BlackQuantoEquityCouponPricer</Engine>
+    <EngineParameters>
+        <Parameter name="ApplyConvexityAdjustment">true</Parameter>
+        <Parameter name="QuantoCurrencyPairs">EURUSD</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product EquityLeg, Model BlackQuantoAdjusted, Engine BlackQuantoEquityCouponPricer}
+\label{lst:peconfig_EquityLeg_BlackQuantoAdjusted_BlackQuantoEquityCouponPricer}
+\end{longlisting}
+
+%--------------------------------------------------------
 \subsection{Product Type: EquityOption}
 %--------------------------------------------------------
 
