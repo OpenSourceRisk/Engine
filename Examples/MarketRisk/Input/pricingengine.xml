@@ -182,6 +182,12 @@
       <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="EquityLeg">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>EquityCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="EquityOption">
     <Model>BlackScholesMerton</Model>
     <ModelParameters/>

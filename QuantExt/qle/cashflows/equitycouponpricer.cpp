@@ -31,6 +31,10 @@ void EquityCouponPricer::AdditionalResultCache::clear() {
     pastDividends = Null<Real>();
     forecastDividends = Null<Real>();
     dividendFactor = Null<Real>();
+    equityVolatility = Null<Real>();
+    fxVolatility = Null<Real>();
+    equityFxCorrelation = Null<Real>();
+    convexityAdjustment = Null<Real>();
 }
 
 Rate EquityCouponPricer::swapletRate() {
@@ -69,6 +73,22 @@ Rate EquityCouponPricer::swapletRate() {
         dividends += additionalResultCache_.pastDividends;
     }
 
+    if (coupon_->fixingEndDate() > Settings::instance().evaluationDate() && !equityVolatility_.empty() &&
+        !fxVolatility_.empty() && !correlation_.empty()) {
+        Real sigmaEq = equityVolatility_->blackVol(coupon_->fixingEndDate(), additionalResultCache_.endFixing);
+        Real sigmaFx =
+            fxVolatility_->blackVol(coupon_->fixingEndDate(), additionalResultCache_.currentPeriodEndFxFixing);
+        Real rho = correlation_->correlation(coupon_->fixingEndDate());
+        Real convexityAdjustment = std::exp(sigmaEq * sigmaFx * rho *
+                                            equityCurve_->equityForecastCurve()->dayCounter().yearFraction(
+                                                Settings::instance().evaluationDate(), coupon_->fixingEndDate()));
+        additionalResultCache_.equityVolatility = sigmaEq;
+        additionalResultCache_.fxVolatility = sigmaFx;
+        additionalResultCache_.equityFxCorrelation = rho;
+        additionalResultCache_.convexityAdjustment = convexityAdjustment;
+        additionalResultCache_.endFixing *= convexityAdjustment;
+    }
+
     if (returnType_ == EquityReturnType::Dividend)
         return dividends; 
     else if (additionalResultCache_.currentPeriodStartPrice == 0)
@@ -93,6 +113,24 @@ void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
     fxIndex_ = QuantLib::ext::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
     returnType_ = coupon.returnType();
     dividendFactor_ = coupon.dividendFactor();
+}
+
+void EquityCouponPricer::setEquityVolatility(const Handle<BlackVolTermStructure>& equityVol) {
+    equityVolatility_ = equityVol;
+    registerWith(equityVolatility_);
+    update();
+}
+
+void EquityCouponPricer::setFxVolatility(const Handle<BlackVolTermStructure>& fxVol) {
+    fxVolatility_ = fxVol;
+    registerWith(fxVolatility_);
+    update();
+}
+
+void EquityCouponPricer::setCorrelation(const Handle<QuantExt::CorrelationTermStructure>& correlation) {
+    correlation_ = correlation;
+    registerWith(correlation_);
+    update();
 }
 
 } // namespace QuantExt
