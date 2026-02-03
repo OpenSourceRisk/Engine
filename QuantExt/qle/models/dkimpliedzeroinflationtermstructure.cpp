@@ -25,12 +25,15 @@ using QuantLib::Time;
 namespace QuantExt {
 
 DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
-    : ZeroInflationModelTermStructure(model, index) {}
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, const std::optional<QuantLib::DayCounter>& simulationDayCounter)
+    : ZeroInflationModelTermStructure(model, index, simulationDayCounter) {}
 
 Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
-    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1]);
+    
+    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1], simulationDayCounter_);
+    
+
     return std::pow(p.second, 1 / t) - 1;
 }
 

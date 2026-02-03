@@ -2287,37 +2287,60 @@ struct IrFxInfCrComModelTestData {
 }; // IrFxInfCrModelTestData
 
 } // anonymous namespace
-BOOST_AUTO_TEST_CASE(testJYMartingalePropertySimple){
-    
+
+BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
     BOOST_TEST_MESSAGE("Testing martingale property for inflation JY in classical simulation");
-    bool indexIsInterpolated = false;
+    bool indexIsInterpolated = true;
     bool infIsDK = false;
-    DayCounter infDc = Actual365Fixed();
+    bool flatVols = false;
+    bool driftFreeState = false;
+    BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
+
+    DayCounter infDc = Thirty360(Thirty360::ISDA);
+    //DayCounter infDc = MonthCounter();
+    //DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
-    IrFxInfCrComModelTestData d{infIsDK, infIsDK, false, true, infObsLag, infDc , infObsLag};
+    Period infSimLag = 3 * Months;
+    IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc , infSimLag};
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
 
-    // check zeroImpliedCurve here 
-    Date today = d.referenceDate;
-    Date baseDate = inflationPeriod(today - 3 * Months, Monthly).first;
-    Real simLag = inflationYearFraction(Monthly, false, infDc, baseDate, today);
-    BOOST_TEST_MESSAGE("today " << io::iso_date(today));
-    BOOST_TEST_MESSAGE("baseDate " << io::iso_date(baseDate));
-    BOOST_TEST_MESSAGE("d.infLag " << d.infLag);
-    BOOST_TEST_MESSAGE("simLag " << simLag);
-
     
-    Period infTenor =  5* Years;
-    Time couponObsTime = infDc.yearFraction(d.referenceDate, d.referenceDate + infTenor) - d.infLag;
-    Time tau = couponObsTime + d.infLag;                                       
-    Period infPillar = 4 * Years;
-    Date simDate = today + 1 * Years;
-    Time relativeTime = infDc.yearFraction(d.referenceDate, simDate);
-    Time T =  relativeTime;
-    Time T2 = d.dc.yearFraction(simDate, simDate + infPillar);
-    T2 = T2 + relativeTime;
-    BOOST_TEST_MESSAGE("Inflation Tenor " << infTenor << " infLag " << d.infLag <<"  couponObsTime " << couponObsTime << " simDate "
-                                            << io::iso_date(simDate) << " T " << T << " T2 " << T2 << " relativeTime " << relativeTime);
+
+    auto today = d.referenceDate;
+    auto simDate = today + 2 * Years;
+    Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
+    Date BaseDateT1 = simDate - (today - baseDate);
+
+    Date inflationPaymentDate = today + 20 * Years;
+    Date inflationObsDate = inflationPeriod(inflationPaymentDate - infObsLag, Monthly).first;
+    Time inflationObsTime = infDc.yearFraction(d.referenceDate, inflationObsDate);
+    Time tau = infDc.yearFraction(baseDate, inflationObsDate);
+
+    Time relativeTime = d.dc.yearFraction(d.referenceDate, simDate);
+    Time simLag = d.dc.yearFraction(baseDate, today);
+    Time simPillarTime = d.dc.yearFraction(simDate, inflationObsDate) + simLag; 
+
+    Time T = relativeTime;
+    Time T2_discount = d.dc.yearFraction(simDate, inflationPaymentDate) + relativeTime;
+    Time T2_index = simPillarTime + relativeTime;
+    BOOST_TEST_MESSAGE("today = " << io::iso_date(today) << "\n"
+                                    << "simDate = " << io::iso_date(simDate) << "\n"
+                                    << " inflationPaymentDate = " << io::iso_date(inflationPaymentDate) << "\n"
+                                    << " inflationObsDate = " << io::iso_date(inflationObsDate) << "\n"
+                                    << " inflationObsTime = " << inflationObsTime << "\n"
+                                    << " tau = " << tau << "\n"
+                                    << " baseDate = " << io::iso_date(baseDate) << "\n"
+                                    << " BaseDateT1 = " << io::iso_date(BaseDateT1) << "\n"
+                                    << " relativeTime = " << relativeTime << "\n"
+                                    << " simLag = " << simLag << "\n"
+                                    << " simPillarTime = " << simPillarTime << "\n"
+                                    << " T = " << T << "\n"
+                                    << " T2_discount = " << T2_discount << "\n"
+                                    << " T2_index = " << T2_index << "\n"
+                                    << " d.obsLag = " << d.infLag);
+    //T = 2;
+    //T2_index = 20;
+    //T2_discount = 20.0;
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * 1, seed);
@@ -2325,7 +2348,7 @@ BOOST_AUTO_TEST_CASE(testJYMartingalePropertySimple){
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
-    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, gbpzb1, infeur1, infgbp1, cpieur1;
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, gbpzb1, infeur1, infgbp1, cpieur1, test;
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     for (Size j = 0; j < n; ++j) {
         Sample<MultiPath> path1 = pg1.next();
@@ -2339,30 +2362,45 @@ BOOST_AUTO_TEST_CASE(testJYMartingalePropertySimple){
         Real infeury1 = path1.value[6][l1];
         Real infgbpz1 = path1.value[7][l1];
         Real infgbpy1 = path1.value[8][l1];
-        eurzb1(d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+        eurzb1(d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         // GBP zerobond
-        gbpzb1(d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+        gbpzb1(d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         
         if (infIsDK) {
-            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
-            infeur1(sinfeur1.first * sinfeur1.second);
+            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T, infeurz1, infeury1, d.dc);
+            cpieur1(sinfeur2.first);
+            test(sinfeur2.second);
+            infeur1(sinfeur1.first * sinfeur1.second *
+                    d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         } else {
             cpieur1(exp(infeury1));
-            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1, indexIsInterpolated) *
-                    d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+            //infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated) *
+            //        d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+            auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
+            auto zeroRate = std::pow(inflationGrowth(d.modelExact, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) - 1.0;
+            infeur1(exp(infeury1) * std::pow(1.0 + zeroRate, tauSim) *
+                d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
         if (infIsDK) {
-            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1);
-            infgbp1(sinfgbp1.first * sinfgbp1.second);
+            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
+            infgbp1(sinfgbp1.first * sinfgbp1.second *
+                d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1, indexIsInterpolated) *
-                    d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1) );
+            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
+                d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         }
     }
-    Real expectedEur = std::pow(1.0 + d.infEurTs->zeroRate(couponObsTime), tau) * d.eurYts->discount(T2);
+    
+    Real expectedEur = std::pow(1.0 + d.infEurTs->zeroRate(inflationObsDate), tau) * d.eurYts->discount(inflationPaymentDate);
     Real expectedGbpInf =
-        std::pow(1.0 + d.infGbpTs->zeroRate(couponObsTime), tau) * d.gbpYts->discount(T2) * d.fxEurGbp->value();
+        std::pow(1.0 + d.infGbpTs->zeroRate(inflationObsDate), tau) * d.gbpYts->discount(inflationPaymentDate) * d.fxEurGbp->value();
+    /*
+   Real expectedEur = std::pow(1.0 + d.infEurTs->zeroRate(T2_index-d.infLag), T2_index) * d.eurYts->discount(T2_discount);
+    Real expectedGbpInf =
+        std::pow(1.0 + d.infGbpTs->zeroRate(T2_index-d.infLag), T2_index) * d.gbpYts->discount(T2_discount) * d.fxEurGbp->value();
+    */
     BOOST_TEST_MESSAGE("EXACT:");
     BOOST_TEST_MESSAGE("IDX zb EUR = " << mean(infeur1) << " +- " << error_of<tag::mean>(infeur1) << " vs analytical "
                                        << expectedEur << "error " << std::abs(mean(infeur1) - expectedEur));
@@ -2370,8 +2408,9 @@ BOOST_AUTO_TEST_CASE(testJYMartingalePropertySimple){
                                        << expectedGbpInf << " error" << std::abs(mean(infgbp1) - expectedGbpInf));
     BOOST_TEST_MESSAGE(
         "EUR CPI   = " << mean(cpieur1) << " +- " << error_of<tag::mean>(cpieur1) << " vs analytical "
-                       << std::pow(1.0 + d.infEurTs->zeroRate(T - d.infLag), T) << " error "
-                       << std::abs(mean(cpieur1) - std::pow(1.0 + d.infEurTs->zeroRate(T - d.infLag), T)));
+                       << std::pow(1.0 + d.infEurTs->zeroRate(BaseDateT1), infDc.yearFraction(baseDate, BaseDateT1)) << " error "
+                       << std::abs(mean(cpieur1) - std::pow(1.0 + d.infEurTs->zeroRate(BaseDateT1), infDc.yearFraction(baseDate, BaseDateT1))));
+    BOOST_TEST_MESSAGE("Test – decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
     Real tol1 = 5.0E-4; // EXACT
 
     if (std::abs(mean(infeur1) - expectedEur) > tol1)
@@ -2385,124 +2424,98 @@ BOOST_AUTO_TEST_CASE(testJYMartingalePropertySimple){
                          << expectedGbpInf << ", got " << mean(infgbp1) << ", tolerance " << tol1);
 }
 
-BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
-    
+BOOST_AUTO_TEST_CASE(testJYMartingaleProperty3) {
     BOOST_TEST_MESSAGE("Testing martingale property for inflation JY in classical simulation");
     bool indexIsInterpolated = true;
     bool infIsDK = false;
-    //DayCounter infDc = Thirty360(Thirty360::EurobondBasis);
-    //DayCounter infDc = MonthCounter();
+    bool flatVols = false;
+    bool driftFreeState = false;
+    BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
+
+    // DayCounter infDc = Thirty360(Thirty360::ISDA);
+    // DayCounter infDc = MonthCounter();
     DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
-    Period infSimLag = 2 * Months;
-    IrFxInfCrComModelTestData d{infIsDK, infIsDK, false, true, infObsLag, infDc , infSimLag};
+    Period infSimLag = 3 * Months;
+    IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag};
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
 
-    // check zeroImpliedCurve here 
-    Date today = d.referenceDate;
-    Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
-    Real simLag = inflationYearFraction(Monthly, true, infDc, baseDate, today);
-    BOOST_TEST_MESSAGE("today " << io::iso_date(today));
-    BOOST_TEST_MESSAGE("baseDate " << io::iso_date(baseDate));
-    BOOST_TEST_MESSAGE("d.infLag " << d.infLag);
-    BOOST_TEST_MESSAGE("simLag " << simLag);
-    // Assume we have a 22Y coupon and obsLag is 3M -> we need to price a 20Y zero coupon bond in 2Y
-    // Assume we have also a 20Y bucket in the simulation market 
-    Period inflationTenor =  5 * Years;
-    Date couponPaymentDate = today + inflationTenor;
-    Date couponObsDate = inflationPeriod(couponPaymentDate - infObsLag, Monthly).first;
-    Time couponObsTimeAsT0 = d.infEurTs->timeFromReference(couponObsDate);
-    Time couponMatTimeAsT0 = d.infEurTs->timeFromReference(couponPaymentDate);
-    Time couponDiscTimeAsT0 = d.dc.yearFraction(today, couponPaymentDate);
-    Time tau =  infDc.yearFraction(baseDate, couponObsDate);
-    BOOST_TEST_MESSAGE("CouponPaymentDate " << io::iso_date(couponPaymentDate) << "\n"
-                                            << " couponObsDate " << io::iso_date(couponObsDate) <<"\n"
-                                            << " couponObsTimeAsT0 " << couponObsTimeAsT0 << "\n"
-                                            << " couponMatTimeAsT0 " << couponMatTimeAsT0 << "\n"
-                                            << " couponDiscTimeAsT0 " << couponDiscTimeAsT0 << "\n"
-                                            << " tau " << tau);
-
-    // SimDate 1Y ahead
-    Date simDate = today + 2*Years;   
-    Date simMaturityDate = simDate + 3 * Years;
-    // Relative time is set in JY implied curve
-    Time relativeTime = infDc.yearFraction(d.referenceDate, simDate); // to set evaluation date
-    Time T =  relativeTime;
-    auto maturityTime = infDc.yearFraction(simDate, simMaturityDate);
-    auto observationTime = infDc.yearFraction(simDate, inflationPeriod(simMaturityDate - infObsLag, Monthly).first);
-    auto obsLagInTime = maturityTime - observationTime;
-    //Time simLagDiff = simLag - obsLagInTime;
-    //simLagDiff = 0;
-    
-    //relativeTime = T;
-    Time T2 = d.dc.yearFraction(simDate, inflationPeriod(simMaturityDate - infObsLag, Monthly).first) + simLag;
-    T2 = T2 + relativeTime;// + simLagDiff;
-    Time T2_discount = d.dc.yearFraction(simDate, simMaturityDate) + relativeTime;
-    //tau = T2;
-    BOOST_TEST_MESSAGE("SimDate = " << io::iso_date(simDate) << "\n"
-                                    << "simLag " << simLag << "\nobsLagInTime " << obsLagInTime << "\n"
-                                    << "diff simLag ObsLag " << (simLag - obsLagInTime) << "\n"
-                                    << " T " << T << "\nT2 " << T2 << "\nrelativeTime " << relativeTime);
-
-    BOOST_TEST_MESSAGE("Updated couponObsTimeAsT0 " << T2 - d.infLag);
-    BOOST_TEST_MESSAGE("Updated couponDiscTimeAsT0 " << T2_discount);
-    BOOST_TEST_MESSAGE("Updated tau " << tau);
-    couponObsTimeAsT0 = T2 - d.infLag;
-    couponDiscTimeAsT0 = T2_discount;
-    Size n = 50000;                         // number of paths
-    Size seed = 18;                         // rng seed
+    Time T = 2.0;
+    Time T2_discount = 20.0;
+    Time T2_index = 20.0;
+    BOOST_TEST_MESSAGE("today = " << io::iso_date(d.referenceDate) << "\n"
+                                  << " T = " << T << "\n"
+                                  << " T2_discount = " << T2_discount << "\n"
+                                  << " T2_index = " << T2_index << "\n"
+                                  << " d.obsLag = " << d.infLag);
+    // T = 2;
+    // T2_index = 20;
+    // T2_discount = 20.0;
+    Size n = 10000; // number of paths
+    Size seed = 18; // rng seed
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * 1, seed);
     TimeGrid grid1(T, 1);
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
-    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, gbpzb1, infeur1, infgbp1, cpieur1;
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>> eurzb1, gbpzb1, infeur1, infgbp1, cpieur1, test;
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     for (Size j = 0; j < n; ++j) {
         Sample<MultiPath> path1 = pg1.next();
         Size l1 = path1.value[0].length() - 1;
         Real zeur1 = path1.value[0][l1];
-        
+
         Real zgbp1 = path1.value[2][l1];
-        
+
         Real fxgbp1 = std::exp(path1.value[4][l1]);
         Real infeurz1 = path1.value[5][l1];
         Real infeury1 = path1.value[6][l1];
         Real infgbpz1 = path1.value[7][l1];
         Real infgbpy1 = path1.value[8][l1];
-        eurzb1(d.modelExact->discountBond(0, T, T2, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+        eurzb1(d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         // GBP zerobond
-        gbpzb1(d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
-        
+        gbpzb1(d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+
         if (infIsDK) {
-            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
-            infeur1(sinfeur1.first * sinfeur1.second);
+            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T, infeurz1, infeury1, d.dc);
+            cpieur1(sinfeur2.first);
+            test(sinfeur2.second);
+            infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2_discount, zeur1) /
+                    d.modelExact->numeraire(0, T, zeur1));
         } else {
             cpieur1(exp(infeury1));
-            infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2, zeur1, infeurz1, indexIsInterpolated, 0.0) *
+            auto tauSim = 18.0;
+            auto zeroRate =
+                std::pow(inflationGrowth(d.modelExact, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated),
+                         1.0 / tauSim) -
+                1.0;
+            infeur1(exp(infeury1) * std::pow(1.0 + zeroRate, tauSim) *
                     d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
         if (infIsDK) {
-            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1);
-            infgbp1(sinfgbp1.first * sinfgbp1.second);
+            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
+            infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 /
+                    d.modelExact->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2, zgbp1, infgbpz1, indexIsInterpolated) *
+            infgbp1(
+                exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
                 d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         }
     }
-    Real expectedEur = std::pow(1.0 + d.infEurTs->zeroRate(couponObsTimeAsT0), tau) * d.eurYts->discount(couponDiscTimeAsT0);
-    Real expectedGbpInf =
-        std::pow(1.0 + d.infGbpTs->zeroRate(couponObsTimeAsT0), tau) * d.gbpYts->discount(couponDiscTimeAsT0) * d.fxEurGbp->value();
+
+    Real expectedEur =
+        std::pow(1.0 + d.infEurTs->zeroRate(T2_index - d.infLag), T2_index) * d.eurYts->discount(T2_discount);
+    Real expectedGbpInf = std::pow(1.0 + d.infGbpTs->zeroRate(T2_index - d.infLag), T2_index) *
+                          d.gbpYts->discount(T2_discount) * d.fxEurGbp->value();
+
     BOOST_TEST_MESSAGE("EXACT:");
     BOOST_TEST_MESSAGE("IDX zb EUR = " << mean(infeur1) << " +- " << error_of<tag::mean>(infeur1) << " vs analytical "
                                        << expectedEur << "error " << std::abs(mean(infeur1) - expectedEur));
     BOOST_TEST_MESSAGE("IDX zb GBP = " << mean(infgbp1) << " +- " << error_of<tag::mean>(infgbp1) << " vs analytical "
                                        << expectedGbpInf << " error" << std::abs(mean(infgbp1) - expectedGbpInf));
-    BOOST_TEST_MESSAGE(
-        "EUR CPI   = " << mean(cpieur1) << " +- " << error_of<tag::mean>(cpieur1) << " vs analytical "
-                       << std::pow(1.0 + d.infEurTs->zeroRate(T - d.infLag), T) << " error "
-                       << std::abs(mean(cpieur1) - std::pow(1.0 + d.infEurTs->zeroRate(T - d.infLag), T)));
+    BOOST_TEST_MESSAGE("Test – decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
     Real tol1 = 5.0E-4; // EXACT
 
     if (std::abs(mean(infeur1) - expectedEur) > tol1)
@@ -2515,6 +2528,7 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
                          "expected "
                          << expectedGbpInf << ", got " << mean(infgbp1) << ", tolerance " << tol1);
 }
+
 
 // Test case options
 vector<bool> infEurFlags{ true, false };

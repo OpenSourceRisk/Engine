@@ -37,7 +37,8 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within
         the model, \p index.
     */
-    DkImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+    DkImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+                                        const std::optional<QuantLib::DayCounter>& simulationDayCounter = std::nullopt);
 
 protected:
     //! \name ZeroInflationTermStructure interface

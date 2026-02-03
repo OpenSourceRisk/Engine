@@ -567,7 +567,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                 auto zts = index->zeroInflationTermStructure();
                 Time relativeTime = inflationYearFraction(zts->frequency(), false, zts->dayCounter(), baseDate,
                                                           dates_[i] - zts->observationLag());
-                std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y);
+                std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y, dateGrid_->dayCounter());
                 cpi *= index->fixing(baseDate);
             } else {
                 QL_FAIL("CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");

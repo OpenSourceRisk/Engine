@@ -286,8 +286,11 @@ public:
 
     /*! return (I(t), I^tilde(t,T)) in the notation of the book, note that
         I(0) is normalized to 1 here, i.e. you have to multiply the result
-        with the index value (as of the base date of the inflation ts) */
-    std::pair<Real, Real> infdkI(const Size i, const Time t, const Time T, const Real z, const Real y);
+        with the index value (as of the base date of the inflation ts).
+        DayCounter dc was used to convert dates from the grid to times, used
+        to convert the times to times measure by the inflation day counter
+        */
+    std::pair<Real, Real> infdkI(const Size i, const Time t, const Time T, const Real z, const Real y, const std::optional<DayCounter>& dc);
 
     /*! return YoYIIS(t) in the notation of the book, the year on year
         swaplet price from S to T, at time t */
