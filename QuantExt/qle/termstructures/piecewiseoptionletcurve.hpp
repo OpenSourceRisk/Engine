@@ -55,7 +55,7 @@ struct OptionletTraits {
         }
 
         // First iteration, not sure if we can do any better here.
-        if (i == 1) {
+        if (i==0 || i == 1) {
             if (c->volatilityType() == QuantLib::Normal) {
                 return 0.0020;
             } else {
@@ -95,6 +95,10 @@ struct OptionletTraits {
 
     //! Maximum number of iterations to perform in search for root
     static QuantLib::Size maxIterations() { return 100; }
+
+    // transformation to add constraints to an unconstrained optimization
+    template <class C> static Real transformDirect(Real x, Size i, const C* c) { return std::exp(x); }
+    template <class C> static Real transformInverse(Real x, Size i, const C* c) { return std::log(x); }
 };
 
 template <class Interpolator, template <class> class Bootstrap = QuantExt::IterativeBootstrap>
