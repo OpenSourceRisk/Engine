@@ -85,7 +85,9 @@ class Parameters {
     void fromFile(const std::string& name);
     bool hasGroup(const std::string& groupName) const;
     bool has(const std::string& groupName, const std::string& paramName) const;
-    std::string get(const std::string& groupName, const std::string& paramName) const;
+    ext::any get(const std::string& groupName, const std::string& paramName) const;
+    std::string getString(const std::string& groupName, const std::string& paramName) const;
+    template <class T> T getParameter(const string& groupName, const string& paramName, bool fail = true);
     //TODO: add this function to ORE, then add here
     //void add(const std::string& groupName, const std::string& paramName, const std::string& paramValue);
 };
@@ -132,7 +134,7 @@ public:
     void setUseAtParCouponsCurves(bool b);
     void setUseAtParCouponsTrades(bool b);
     void setMarketConfig(const std::string& config, const std::string& context); 
-    void setResultsPath(boost::filesystem::path resultsPath);
+    void setResultsPath(std::filesystem::path resultsPath);
     void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);
     void setBaselTrafficLight(const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight);
     void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);
@@ -365,7 +367,7 @@ class OREApp {
     void run(const ext::shared_ptr<MarketDataLoader> loader);
 
     void setupLog(QuantLib::Size mask = 15, const std::string& path = "", const std::string& file = "", 
-                  const boost::filesystem::path& logRootPath = boost::filesystem::path(),
+                  const std::filesystem::path& logRootPath = std::filesystem::path(),
                   const std::string& progressLogFile = "", QuantLib::Size progressLogRotationSize = 100 * 1024 * 1024,
                   bool progressLogToConsole = false, const std::string& structuredLogFile = "",
                   QuantLib::Size structuredLogRotationSize = 100 * 1024 * 1024);
@@ -415,7 +417,7 @@ public:
         const std::set<Date>& loaderDates);
 
      virtual void populateLoader(const ext::shared_ptr<TodaysMarketParameters>& todaysMarketParameters,
-        const std::set<Date>& loaderDates);
+                   const std::set<Date>& loaderDates);
 };
 
 %shared_ptr(AnalyticsManager)

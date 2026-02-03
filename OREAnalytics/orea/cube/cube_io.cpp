@@ -21,7 +21,7 @@
 
 #include <ored/utilities/to_string.hpp>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #ifdef ORE_USE_ZLIB
 #include <boost/iostreams/filter/gzip.hpp>
@@ -40,7 +40,7 @@ bool use_compression(const std::string& filename) {
 #ifdef ORE_USE_ZLIB
     // assume compression for all filenames that do not end with csv or txt
 
-    std::string extension = boost::filesystem::path(filename).extension().string();
+    std::string extension = std::filesystem::path(filename).extension().string();
     return extension != ".csv" && extension != ".txt";
 #else
     return false;

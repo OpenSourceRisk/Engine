@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/test/unit_test.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -46,6 +46,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/fileio.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -120,7 +121,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     initCube(*cube);
 
     // get a random filename
-    string filename = boost::filesystem::unique_path().string();
+    string filename = unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
     saveCube(filename, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
 
@@ -130,7 +131,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
-    boost::filesystem::remove(filename);
+    std::filesystem::remove(filename);
 
     // Check dimensions match
     BOOST_CHECK_EQUAL(cube->numIds(), cube->numIds());
@@ -227,7 +228,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     initCube(*cube, portfolio, d);
 
     // get a random filename
-    string filename = boost::filesystem::unique_path().string();
+    string filename = unique_path().string();
     BOOST_TEST_MESSAGE("Saving cube " << cubeName << " to file " << filename);
     saveCube(filename, NPVCubeWithMetaData{cube, nullptr, QuantLib::ext::nullopt, QuantLib::ext::nullopt});
 
@@ -238,7 +239,7 @@ void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& 
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
 
     // Delete the file to make sure all reads are from memory
-    boost::filesystem::remove(filename);
+    std::filesystem::remove(filename);
 
     // Check dimensions match
     BOOST_CHECK_EQUAL(cube->numIds(), cube2->numIds());
@@ -542,7 +543,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionJaggedCube) {
 string writeCube(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size bufferSize) {
     auto report = QuantLib::ext::make_shared<InMemoryReport>(bufferSize);
     ReportWriter().writeCube(*report, cube);
-    string fileName = boost::filesystem::unique_path().string();
+    string fileName = unique_path().string();
     report->toFile(fileName);
     return fileName;
 }

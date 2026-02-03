@@ -33,7 +33,7 @@
 #include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
@@ -427,8 +427,8 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             if (inputs_->pcaCalibration()) {
                 // Write PCA reports
                 LOG("Write PCA Results Reports to " << inputs_->pcaOutputFileName());
-                boost::filesystem::path outputDir = inputs_->resultsPath();
-                boost::filesystem::path baseFileName(inputs_->pcaOutputFileName());
+                std::filesystem::path outputDir = inputs_->resultsPath();
+                std::filesystem::path baseFileName(inputs_->pcaOutputFileName());
                 std::string stem = baseFileName.stem().string();
                 std::string extension = baseFileName.extension().string();
                 for (auto const& ccyMatrix : hwHistoricalModelData_->eigenValues()) {
@@ -445,8 +445,8 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
             if (inputs_->meanReversionCalibration()) {
                 // Write Mean Reversion reports
                 LOG("Write Mean Reversion Results Report to " << inputs_->meanReversionOutputFileName());
-                boost::filesystem::path outputDir = inputs_->resultsPath();
-                boost::filesystem::path baseFileName(inputs_->meanReversionOutputFileName());
+                std::filesystem::path outputDir = inputs_->resultsPath();
+                std::filesystem::path baseFileName(inputs_->meanReversionOutputFileName());
                 std::string stem = baseFileName.stem().string();
                 std::string extension = baseFileName.extension().string();
                 for (auto const& ccyMatrix : hwHistoricalModelData_->v()) {
