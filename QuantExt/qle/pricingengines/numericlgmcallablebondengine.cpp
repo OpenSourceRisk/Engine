@@ -22,6 +22,7 @@
 #include <qle/pricingengines/numericlgmcallablebondengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/termstructures/effectivebonddiscountcurve.hpp>
+#include <qle/utilities/callablebond.hpp>
 
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
@@ -140,45 +141,9 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
     // 6 set up functions accrualFraction(t), notional(t)
 
-    Real N0 = instrArgs_->notionals.front();
-    std::vector<Real> notionalTimes = {0.0};
-    std::vector<Real> notionals = {N0};
-    std::vector<Real> couponAmounts, couponAccrualStartTimes, couponAccrualEndTimes, couponPayTimes;
-    for (auto const& c : instrArgs_->cashflows) {
-        if (c->date() <= today)
-            continue;
-        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
-            if (!QuantLib::close_enough(cpn->nominal(), notionals.back())) {
-                notionalTimes.push_back(
-                    solver_->model()->parametrization()->termStructure()->timeFromReference(c->date()));
-                notionals.push_back(cpn->nominal());
-            }
-            couponAmounts.push_back(cpn->amount());
-            couponAccrualStartTimes.push_back(
-                solver_->model()->parametrization()->termStructure()->timeFromReference(cpn->accrualStartDate()));
-            couponAccrualEndTimes.push_back(
-                solver_->model()->parametrization()->termStructure()->timeFromReference(cpn->accrualEndDate()));
-            couponPayTimes.push_back(
-                solver_->model()->parametrization()->termStructure()->timeFromReference(cpn->date()));
-        }
-    }
-
-    auto notional = [&notionalTimes, &notionals](const Real t) {
-        auto cn = std::upper_bound(notionalTimes.begin(), notionalTimes.end(), t,
-                                   [](Real s, Real t) { return s < t && !QuantLib::close_enough(s, t); });
-        return notionals[std::max<Size>(std::distance(notionalTimes.begin(), cn), 1) - 1];
-    };
-
-    auto accrual = [&couponAmounts, &couponPayTimes, &couponAccrualStartTimes, &couponAccrualEndTimes](const Real t) {
-        Real accruals = 0.0;
-        for (Size i = 0; i < couponAmounts.size(); ++i) {
-            if (couponPayTimes[i] > t && t > couponAccrualStartTimes[i]) {
-                accruals += (t - couponAccrualStartTimes[i]) / (couponAccrualEndTimes[i] - couponAccrualStartTimes[i]) *
-                            couponAmounts[i];
-            }
-        }
-        return accruals;
-    };
+    QuantExt::CallableBondNotionalAndAccrualCalculator notionalAccrualCalc(
+        today, instrArgs_->notionals.front(), instrArgs_->cashflows,
+        solver_->model()->parametrization()->termStructure().currentLink());
 
     // 7 init variables for rollback with bounday value at last grid point
 
@@ -250,7 +215,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             if (events.hasCall(i)) {
 
                 RandomVariable f = RandomVariable(
-                    solver_->gridSize(), getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from)));
+                    solver_->gridSize(), getCallPriceAmount(events.getCallData(i), notionalAccrualCalc.notional(t_from), notionalAccrualCalc.accrual(t_from)));
                 RandomVariable num = lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
                 RandomVariable c = f / num;
 
@@ -271,7 +236,7 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             if (events.hasPut(i)) {
 
                 RandomVariable f = RandomVariable(
-                    solver_->gridSize(), getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from)));
+                    solver_->gridSize(), getCallPriceAmount(events.getPutData(i), notionalAccrualCalc.notional(t_from), notionalAccrualCalc.accrual(t_from)));
                 RandomVariable num = lgmv.numeraire(t_from, solver_->stateGrid(t_from), effDiscountCurve);
                 RandomVariable p = f / num;
 
@@ -343,9 +308,9 @@ void NumericLgmCallableBondEngineBase::calculate() const {
             if (grid[i] > t_fwd_cutoff)
                 gridCashflows[i] = (1.0 - (cumCallProb + cumPutProb)) * gridCashflows[i] +
                                    exercisedCall[i].at(0) *
-                                       getCallPriceAmount(events.getCallData(i), notional(grid[i]), accrual(grid[i])) +
+                                       getCallPriceAmount(events.getCallData(i), notionalAccrualCalc.notional(grid[i]), notionalAccrualCalc.accrual(grid[i])) +
                                    exercisedPut[i].at(0) *
-                                       getCallPriceAmount(events.getPutData(i), notional(grid[i]), accrual(grid[i]));
+                                       getCallPriceAmount(events.getPutData(i), notionalAccrualCalc.notional(grid[i]), notionalAccrualCalc.accrual(grid[i]));
         }
 
         // 10.3 allocate cashflows back to dates and store expectation in result vector
@@ -468,11 +433,12 @@ void NumericLgmCallableBondEngineBase::calculate() const {
 
         std::ostringstream eventDescription;
         eventDescription << std::left << "|" << std::setw(width) << grid[i] << "|" << std::setw(width) << dateStr.str()
-                         << "|" << std::setw(width) << notional(grid[i]) << "|" << std::setw(width) << accrual(grid[i])
-                         << "|" << std::setw(width) << bondFlowStr.str() << "|" << std::setw(width) << callStr.str()
-                         << "|" << std::setw(width) << putStr.str() << "|" << std::setw(width) << refDisc << "|"
-                         << std::setw(width) << survProb << "|" << std::setw(width) << secDisc << "|"
-                         << std::setw(width) << effDisc << "|";
+                         << "|" << std::setw(width) << notionalAccrualCalc.notional(grid[i])
+                         << "|" << std::setw(width) << notionalAccrualCalc.accrual(grid[i]) 
+                         << "|" << std::setw(width) << bondFlowStr.str() << "|"
+                         << std::setw(width) << callStr.str() << "|" << std::setw(width) << putStr.str() << "|"
+                         << std::setw(width) << refDisc << "|" << std::setw(width) << survProb << "|"
+                         << std::setw(width) << secDisc << "|" << std::setw(width) << effDisc << "|";
         std::string label = "0000" + std::to_string(counter++);
         additionalResults_["event_" + label.substr(label.size() - 5)] = eventDescription.str();
         // do not log more than 100k events, unlikely that this is ever necessary

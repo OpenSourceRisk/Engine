@@ -73,6 +73,7 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/deltagammaengines.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
+#include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
@@ -423,6 +424,7 @@ void dataBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcEquityForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CallableBondCamAmcEngineBuilder, false)
 
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwaptionEngineBuilder, false)
@@ -499,6 +501,8 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionACGAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanAsianOptionTWEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CmsSpreadCouponPricerBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(EquityCouponPricerBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(BlackQuantoEquityCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(AnalyticHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(NumericalHaganCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTSRCmsCouponPricerBuilder, false)
@@ -543,6 +547,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CallableBondLgmFdEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CallableBondLgmGridEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CallableBondCamMcEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CboMCEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CamMcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondFutureEngineBuilder, false)

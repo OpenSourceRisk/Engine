@@ -71,6 +71,7 @@ cube/inmemorycubeopt.cpp
 cube/jaggedcube.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/overlaynpvcube.cpp
 cube/sensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
@@ -292,6 +293,7 @@ cube/jointnpvcube.hpp
 cube/jointnpvsensicube.hpp
 cube/npvcube.hpp
 cube/npvsensicube.hpp
+cube/overlaynpvcube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp

@@ -89,6 +89,9 @@ template <class T, typename... Args>
 using CachingInflationCouponPricerBuilder = CachingEngineBuilder<T, InflationCouponPricer, Args...>;
 
 template <class T, typename... Args>
+using CachingEquityCouponPricerBuilder = CachingEngineBuilder<T, QuantExt::EquityCouponPricer, Args...>;
+
+template <class T, typename... Args>
 using CachingInflationCashFlowPricerBuilder = CachingEngineBuilder<T, QuantExt::InflationCashFlowPricer, Args...>;
 
 } // namespace data

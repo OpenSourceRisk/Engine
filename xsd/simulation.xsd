@@ -606,7 +606,7 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
-      <xs:element name="ParameterTransformation">
+      <xs:element name="ParameterTransformation" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="xs:float" name="ShiftHorizon"/>

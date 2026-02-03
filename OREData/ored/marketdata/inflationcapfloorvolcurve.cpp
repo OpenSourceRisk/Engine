@@ -252,7 +252,8 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
 
         YoYPriceSurfaceFromVolatilities volToPriceConverter;
 
-        auto priceSurface = volToPriceConverter(capVol, index, discountCurve_, quoteVolatilityType, 0.0);
+        auto priceSurface = volToPriceConverter(capVol, index, index->interpolated() ? CPI::Linear : CPI::Flat,
+                                                discountCurve_, quoteVolatilityType, 0.0);
 
         // Get configuration values for bootstrap
         Real accuracy = config->bootstrapConfig().accuracy();
@@ -564,16 +565,14 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                     true, Handle<YoYInflationTermStructure>());
             }
         }
-        // Required by the QL pricesurface but not used
-        Rate startRate = 0.0;
         // Build the term structure
-        QL_DEPRECATED_DISABLE_WARNING
+        
         QuantLib::ext::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>
             yoySurface = QuantLib::ext::make_shared<
                 QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
-                0, config->observationLag(), index, startRate, discountCurve_, config->dayCounter(), config->calendar(),
+                0, config->observationLag(), index, CPI::AsIndex, discountCurve_, config->dayCounter(), config->calendar(),
                 config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice);
-        QL_DEPRECATED_ENABLE_WARNING
+        
         std::vector<Period> optionletTerms = {yoySurface->maturities().front()};
         while (optionletTerms.back() != terms.back()) {
             optionletTerms.push_back(optionletTerms.back() + Period(1, Years));

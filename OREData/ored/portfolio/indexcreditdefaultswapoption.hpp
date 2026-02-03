@@ -99,6 +99,7 @@ private:
 
     //! Populated during trade building
     Notionals notionals_;
+    bool defaultHasOccured_ = false;
 
     //! map of all the constituents to notionals
     map<string, Real> constituents_;

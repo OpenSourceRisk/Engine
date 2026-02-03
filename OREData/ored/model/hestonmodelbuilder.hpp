@@ -62,7 +62,6 @@ protected:
 private:
     std::vector<Real> calibrationMoneyness_;
     std::string referenceCalibrationGrid_;
-    bool dontCalibrate_;
 };
 
 } // namespace data

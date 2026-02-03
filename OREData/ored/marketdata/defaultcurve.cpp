@@ -27,6 +27,7 @@
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
 #include <qle/termstructures/terminterpolateddefaultcurve.hpp>
+#include <qle/termstructures/survivalprobabilitycurvefromyield.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/time.hpp>
 
@@ -298,6 +299,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     break;
                 case DefaultCurveConfig::Config::Type::Null:
                     buildNullCurve(configs->curveID(), config.second, asof, spec);
+                    break;
+                case DefaultCurveConfig::Config::Type::YieldCurve:
+                    buildYieldCurveAsDefaultCurve(configs->curveID(), config.second, asof, spec, yieldCurves);
                     break;
                 default:
                     QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
@@ -880,6 +884,27 @@ void DefaultCurve::buildNullCurve(const std::string& curveID, const DefaultCurve
         QuantLib::Handle<QuantLib::YieldTermStructure>(),
         QuantLib::Handle<Quote>(QuantLib::ext::make_shared<QuantLib::SimpleQuote>(recoveryRate_)));
     LOG("Finished building default curve of type Null for curve " << curveID);
+}
+
+void DefaultCurve::buildYieldCurveAsDefaultCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
+                                                 const Date& asof, const DefaultCurveSpec& spec,
+                                                 map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
+    LOG("Start building default curve from yield curve for " << curveID);
+
+    auto it = yieldCurves.find(config.reinterpretedYieldCurveID());
+    QL_REQUIRE(it != yieldCurves.end(), "The yield curve, " << config.reinterpretedYieldCurveID()
+                                                            << ", required in the building of the curve, "
+                                                            << spec.name() << ", was not found.");
+    QuantLib::ext::shared_ptr<YieldCurve> yieldCurve = it->second;
+    if (recoveryRate_ == Null<Real>())
+        recoveryRate_ = 0.0;
+
+    curve_ = QuantLib::ext::make_shared<QuantExt::CreditCurve>(
+        Handle<DefaultProbabilityTermStructure>(QuantLib::ext::make_shared<QuantExt::SurvivalProbabilityCurveFromYield>(
+            yieldCurve->handle(config.reinterpretedYieldCurveID()),
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(recoveryRate_)))));
+
+    LOG("Finished building default curve from yield curve for " << curveID);
 }
 
 } // namespace data

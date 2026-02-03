@@ -38,7 +38,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <ql/errors.hpp>
 
 #include <iomanip>
@@ -97,7 +97,7 @@ CrifGenerator::generateCrif(const QuantLib::ext::shared_ptr<ore::analytics::Sens
     auto results = QuantLib::ext::make_shared<Crif>();
 
     // A map that will be used to store Risk_FX sensitivities for the (base) currency itself for each trade.
-    map<QuantLib::ext::tuple<string, string, string>, CrifRecord> riskFxCalcCurrency;
+    map<std::tuple<string, string, string>, CrifRecord> riskFxCalcCurrency;
 
     set<string> failedTrades;
 

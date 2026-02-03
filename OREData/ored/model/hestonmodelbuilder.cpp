@@ -38,8 +38,7 @@ HestonModelBuilder::HestonModelBuilder(const std::vector<Handle<YieldTermStructu
                                        const std::string& referenceCalibrationGrid, const bool dontCalibrate,
                                        const Handle<YieldTermStructure>& baseCurve)
     : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
-      calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
-      dontCalibrate_(dontCalibrate) {}
+      calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid) {}
 
 std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> HestonModelBuilder::getCalibratedProcesses() const {
 

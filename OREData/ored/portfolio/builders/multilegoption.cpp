@@ -158,7 +158,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
         auto volatilityType = parseVolatilityType(getCcyValue("IrVolatilityType", currencies[i].code(), true));
         auto lgmData = QuantLib::ext::make_shared<IrLgmData>();
         lgmData->reset();
-        lgmData->ccy() = currencies[i].code();
+        lgmData->qualifier() = currencies[i].code();
         lgmData->calibrateH() = false;
         lgmData->hParamType() = ParamType::Constant;
         lgmData->hValues() = {rev};

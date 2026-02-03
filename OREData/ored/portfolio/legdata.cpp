@@ -26,6 +26,7 @@
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/makenonstandardlegs.hpp>
@@ -2851,8 +2852,12 @@ Leg makeDigitalCMSSpreadLeg(
 }
 
 Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityIndex2>& equityCurve,
-                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, const QuantLib::Date& openEndDateReplacement) {
-    QuantLib::ext::shared_ptr<EquityLegData> eqLegData = QuantLib::ext::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
+                  const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, const bool attachPricer,
+                  const QuantLib::Date& openEndDateReplacement,
+                  std::set<std::tuple<std::set<std::string>, std::string, std::string>>* productModelEngines) {
+    QuantLib::ext::shared_ptr<EquityLegData> eqLegData =
+        QuantLib::ext::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
     DayCounter dc;
@@ -2866,10 +2871,10 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
     Real initialPrice = eqLegData->initialPrice();
     bool initialPriceIsInTargetCcy = false;
 
+    Currency dataCurrency = parseCurrencyWithMinors(data.currency());
     if (!eqLegData->initialPriceCurrency().empty()) {
         // parse currencies to handle minor currencies
         Currency initialPriceCurrency = parseCurrencyWithMinors(eqLegData->initialPriceCurrency());
-        Currency dataCurrency = parseCurrencyWithMinors(data.currency());
         Currency eqCurrency;
         // set equity currency
         if (!eqLegData->eqCurrency().empty())
@@ -2943,6 +2948,31 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
                   .withPaymentDates(paymentDates);
 
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
+
+    if (attachPricer) {
+        // Get a coupon pricer for the leg
+        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("EquityLeg");
+        QL_REQUIRE(builder, "No Equity builder found for EquityLeg");
+        LOG("Before cast");
+        QuantLib::ext::shared_ptr<EquityCouponPricerBuilderBase> equityBuilder =
+            QuantLib::ext::dynamic_pointer_cast<EquityCouponPricerBuilderBase>(builder);
+        LOG("After cast");
+        auto equityPricer = QuantLib::ext::dynamic_pointer_cast<EquityCouponPricer>(
+            equityBuilder->engine(dataCurrency, equityCurve->name(), eqLegData->fxIndex()));
+        LOG("After cast2");
+        QL_REQUIRE(equityPricer, "Expected Equity Pricer");
+
+        if (productModelEngines)
+            productModelEngines->insert(std::make_tuple(builder->tradeTypes(), builder->model(), builder->engine()));
+
+        // Loop over the coupons in the leg and set pricer
+        for (auto& cf : leg) {
+            auto eqCoupon = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(cf);
+            if (eqCoupon) {
+                eqCoupon->setPricer(equityPricer);
+            }
+        }
+    }
 
     return leg;
 }

@@ -142,19 +142,19 @@ public:
         checkpoint(v);
         if (v.isCached) {
             if (v.isScalar) {
-                return std::make_pair(QuantLib::ext::ref(*v.cachedScalar), 0);
+                return std::make_pair(std::ref(*v.cachedScalar), 0);
             } else {
                 QL_REQUIRE(v.args[0], "array subscript required for variable '" << v.name << "'");
                 v.args[0]->accept(*this);
                 auto arg = value.pop();
                 QL_REQUIRE(arg.which() == ValueTypeWhich::Number,
                            "array subscript must be of type NUMBER, got " << valueTypeLabels.at(arg.which()));
-                RandomVariable i = boost::get<RandomVariable>(arg);
+                RandomVariable& i = boost::get<RandomVariable>(arg);
                 QL_REQUIRE(i.deterministic(), "array subscript must be deterministic");
                 long il = std::lround(i.at(0));
                 QL_REQUIRE(static_cast<long>(v.cachedVector->size()) >= il && il >= 1,
                            "array index " << il << " out of bounds 1..." << v.cachedVector->size());
-                return std::make_pair(QuantLib::ext::ref(v.cachedVector->operator[](il - 1)), il - 1);
+                return std::make_pair(std::ref(v.cachedVector->operator[](il - 1)), il - 1);
             }
         } else {
             auto scalar = context_.scalars.find(v.name);
@@ -163,7 +163,7 @@ public:
                 v.isCached = true;
                 v.isScalar = true;
                 v.cachedScalar = &scalar->second;
-                return std::make_pair(QuantLib::ext::ref(scalar->second), 0);
+                return std::make_pair(std::ref(scalar->second), 0);
             }
             auto array = context_.arrays.find(v.name);
             if (array != context_.arrays.end()) {
@@ -195,7 +195,7 @@ public:
             checkpoint(*arg);
             auto size = value.pop();
             QL_REQUIRE(size.which() == ValueTypeWhich::Number, "expected NUMBER for array size definition");
-            RandomVariable arraySize = boost::get<RandomVariable>(size);
+            RandomVariable& arraySize = boost::get<RandomVariable>(size);
             QL_REQUIRE(arraySize.deterministic(), "array size definition requires deterministic argument");
             long arraySizeL = std::lround(arraySize.at(0));
             QL_REQUIRE(arraySizeL >= 0, "expected non-negative array size, got " << arraySizeL);
@@ -258,7 +258,7 @@ public:
         auto left = value.pop();
         checkpoint(n);
         QL_REQUIRE(left.which() == ValueTypeWhich::Filter, "expected condition");
-        Filter l = boost::get<Filter>(left);
+        Filter& l = boost::get<Filter>(left);
         if (l.deterministic() && !l[0]) {
             // short cut if first expression is already false
             value.push(Filter(l.size(), false));
@@ -278,7 +278,7 @@ public:
         auto left = value.pop();
         checkpoint(n);
         QL_REQUIRE(left.which() == ValueTypeWhich::Filter, "expected condition");
-        Filter l = boost::get<Filter>(left);
+        Filter& l = boost::get<Filter>(left);
         if (l.deterministic() && l[0]) {
             // short cut if first expression is already true
             value.push(Filter(l.size(), true));
@@ -430,7 +430,7 @@ public:
         checkpoint(n);
         QL_REQUIRE(if_.which() == ValueTypeWhich::Filter,
                    "IF must be followed by a boolean, got " << valueTypeLabels.at(if_.which()));
-        Filter cond = boost::get<Filter>(if_);
+        Filter& cond = boost::get<Filter>(if_);
         TRACE("if( " << cond << " )", n);
         Filter baseFilter = filter.top();
         Filter currentFilter = baseFilter && cond;
@@ -473,9 +473,9 @@ public:
                    "loop bounds and step must be of type NUMBER, got " << valueTypeLabels.at(left.which()) << ", "
                                                                        << valueTypeLabels.at(right.which()) << ", "
                                                                        << valueTypeLabels.at(step.which()));
-        RandomVariable a = boost::get<RandomVariable>(left);
-        RandomVariable b = boost::get<RandomVariable>(right);
-        RandomVariable s = boost::get<RandomVariable>(step);
+        RandomVariable& a = boost::get<RandomVariable>(left);
+        RandomVariable& b = boost::get<RandomVariable>(right);
+        RandomVariable& s = boost::get<RandomVariable>(step);
         QL_REQUIRE(a.deterministic(), "first loop bound must be deterministic");
         QL_REQUIRE(b.deterministic(), "second loop bound must be deterministic");
         QL_REQUIRE(s.deterministic(), "loop step must be deterministic");
@@ -747,12 +747,12 @@ public:
         QL_REQUIRE(forward.which() == ValueTypeWhich::Number, "forward must be NUMBER");
         QL_REQUIRE(forward.which() == ValueTypeWhich::Number, "impliedvol must be NUMBER");
 
-        RandomVariable omega = boost::get<RandomVariable>(callput);
+        RandomVariable& omega = boost::get<RandomVariable>(callput);
         Date obs = boost::get<EventVec>(obsdate).value;
         Date expiry = boost::get<EventVec>(expirydate).value;
-        RandomVariable k = boost::get<RandomVariable>(strike);
-        RandomVariable f = boost::get<RandomVariable>(forward);
-        RandomVariable v = boost::get<RandomVariable>(impliedvol);
+        RandomVariable& k = boost::get<RandomVariable>(strike);
+        RandomVariable& f = boost::get<RandomVariable>(forward);
+        RandomVariable& v = boost::get<RandomVariable>(impliedvol);
 
         QL_REQUIRE(model_, "model is null");
 
@@ -807,7 +807,7 @@ public:
                     pn.args[4]->accept(*this);
                     auto s = value.pop();
                     QL_REQUIRE(s.which() == ValueTypeWhich::Number, "legno must be NUMBER");
-                    RandomVariable sv = boost::get<RandomVariable>(s);
+                    RandomVariable& sv = boost::get<RandomVariable>(s);
                     sv.updateDeterministic();
                     QL_REQUIRE(sv.deterministic(), "legno must be deterministic");
                     legno = std::lround(sv.at(0));
@@ -821,7 +821,7 @@ public:
                         pn.args[6]->accept(*this);
                         auto s = value.pop();
                         QL_REQUIRE(s.which() == ValueTypeWhich::Number, "slot must be NUMBER");
-                        RandomVariable sv = boost::get<RandomVariable>(s);
+                        RandomVariable& sv = boost::get<RandomVariable>(s);
                         sv.updateDeterministic();
                         QL_REQUIRE(sv.deterministic(), "slot must be deterministic");
                         slot = std::lround(sv.at(0));
@@ -888,7 +888,7 @@ public:
         obs = std::max(obs, model_->referenceDate());
         QuantLib::ext::optional<long> mem(QuantLib::ext::nullopt);
         if (hasMemSlot) {
-            RandomVariable v = boost::get<RandomVariable>(memSlot);
+            RandomVariable& v = boost::get<RandomVariable>(memSlot);
             QL_REQUIRE(v.deterministic(), "memory slot must be deterministic");
             mem = static_cast<long>(v.at(0));
         }
@@ -1103,7 +1103,7 @@ public:
         std::string und = boost::get<IndexVec>(underlying).value;
         Date obs1 = boost::get<EventVec>(obsdate1).value;
         Date obs2 = boost::get<EventVec>(obsdate2).value;
-        RandomVariable barrierValue = boost::get<RandomVariable>(barrier);
+        RandomVariable& barrierValue = boost::get<RandomVariable>(barrier);
         if (obs1 > obs2)
             value.push(RandomVariable(model_->size(), 0.0));
         else

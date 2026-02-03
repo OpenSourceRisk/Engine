@@ -63,6 +63,20 @@ protected:
                const QuantLib::Date& maturityDate, Args... args);
 };
 
+class CallableBondCamEngineBuilder : public CallableBondEngineBuilder {
+public:
+    explicit CallableBondCamEngineBuilder(const std::string& engine) : CallableBondEngineBuilder("CrossAssetModel", engine) {}
+
+protected:
+    bool dynamicCreditModelEnabled() const {
+        return parseBool(modelParameter("EnableCredit", {}, false, "false"));
+    }
+
+    Handle<QuantExt::CrossAssetModel> model(const std::string& id, const std::string& ccy,
+                                            const std::string& creditCurveId, const QuantLib::Date& maturityDate,
+                                            const bool generateAdditionalResults);
+};
+
 class CallableBondLgmFdEngineBuilder : public CallableBondLgmEngineBuilder {
 public:
     CallableBondLgmFdEngineBuilder() : CallableBondLgmEngineBuilder("FD") {}
@@ -83,6 +97,47 @@ protected:
     engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
                const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
                const QuantLib::Date& maturityDate) override;
+};
+
+class CallableBondCamMcBaseEngineBuilder : public CallableBondCamEngineBuilder {
+public:
+    CallableBondCamMcBaseEngineBuilder(const std::string& engine) : CallableBondCamEngineBuilder(engine) {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine> engine(const Handle<QuantExt::CrossAssetModel>& cam,
+                                                              const std::vector<Date>& simulationDates,
+                                                              const std::vector<Date>& stickyCloseOutDates);
+};
+
+class CallableBondCamMcEngineBuilder : public CallableBondCamMcBaseEngineBuilder {
+public:
+    CallableBondCamMcEngineBuilder() : CallableBondCamMcBaseEngineBuilder("MC") {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
+    engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate) override;
+};
+
+class CallableBondCamAmcEngineBuilder : public CallableBondCamMcBaseEngineBuilder {
+public:
+    CallableBondCamAmcEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                    const std::vector<Date>& simulationDates,
+                                    const std::vector<Date>& stickyCloseOutDates)
+        : CallableBondCamMcBaseEngineBuilder("AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
+
+protected:
+    QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
+    engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
+               const std::string& securityId, const std::string& referenceCurveId, const std::string& incomeCurveId,
+               const QuantLib::Date& maturityDate) override;
+
+private:
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data
