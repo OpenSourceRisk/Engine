@@ -38,6 +38,7 @@ class PiecewiseAtmOptionletCurve : public QuantLib::OptionletVolatilityStructure
 
 public:
     typedef typename PiecewiseOptionletCurve<Interpolator, Bootstrap>::this_curve optionlet_curve;
+    typedef Bootstrap<optionlet_curve> bootstrap_type;
 
     PiecewiseAtmOptionletCurve(QuantLib::Natural settlementDays,
                                const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
