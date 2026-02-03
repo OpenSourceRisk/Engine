@@ -26,7 +26,7 @@
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using namespace QuantLib::ext;
 
 namespace ore {
