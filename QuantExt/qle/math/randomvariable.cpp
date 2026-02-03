@@ -613,7 +613,6 @@ RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
                 data_[i] = 0.0;
             else
                 data_[i] *= y[i];
-
         }
         stopCalcStats(n_);
     }

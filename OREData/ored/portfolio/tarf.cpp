@@ -389,7 +389,6 @@ void TaRF::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
         numbers_.emplace_back("Number", "KnockOutProfitAmount", knockOutProfitAmount);
         numbers_.emplace_back("Number", "KnockOutProfitEvents", knockOutProfitEvents);
     }
-    std::cout<<scriptToUse<<std::endl;
 
     // 4c set target type
 
