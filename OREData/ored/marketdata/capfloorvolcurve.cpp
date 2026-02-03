@@ -162,7 +162,7 @@ void CapFloorVolCurve::buildProxyCurve(
                 config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,                                     \
                 volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, INTINSTANCE,       \
                 my_curve_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},       \
-                                           true),                                                                      \
+                                           !flatFirstPeriod),                                                          \
                 config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(             \
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),      \
@@ -181,6 +181,24 @@ void CapFloorVolCurve::buildProxyCurve(
                                 tmp->volatilityType(), tmp->displacement()));                                          \
         }                                                                                                              \
     }
+
+namespace {
+std::function<Array(const std::vector<Time>&, const std::vector<Real>&)> getPenaltyFunction(double smoothnessLambda) {
+    if (close_enough(smoothnessLambda, 0.0))
+        return {};
+    return [smoothnessLambda](const std::vector<Time>& times, const std::vector<Real>& data) {
+        Array p(times.size() - 1);
+        // TODO make the type of penalty configurable
+        // for (Size i = 0; i < times.size() - 2; ++i) {
+        //     p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
+        // }
+        for (Size i = 0; i < times.size() - 1; ++i) {
+            p[i] = smoothnessLambda * (data[i + 1] - data[i]);
+        }
+        return p;
+    };
+}
+} // namespace
 
 void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
                                        QuantLib::ext::shared_ptr<IborIndex> index,
@@ -207,17 +225,7 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     bool globalBootstrap = config.bootstrapConfig().global();
     Real smoothnessLambda = config.bootstrapConfig().smoothnessLambda();
 
-    std::function<Array(const std::vector<Time>&, const std::vector<Real>&)> additionalPenalties =
-        [smoothnessLambda](const std::vector<Time>& times, const std::vector<Real>& data) {
-            Array p(times.size() - 1);
-            // for (Size i = 0; i < times.size() - 2; ++i) {
-            //     p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
-            // }
-            for (Size i = 0; i < times.size() - 1; ++i) {
-                p[i] = smoothnessLambda * (data[i + 1] - data[i]);
-            }
-            return p;
-        };
+    auto additionalPenalties = getPenaltyFunction(smoothnessLambda);
 
     // On optionlets is the newly added interpolation approach whereas on term volatilities is legacy
     bool onOpt = interpOnOpt(config);
@@ -268,7 +276,7 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                 cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,      \
                 INTINSTANCE,                                                                                           \
                 my_stripper_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},    \
-                                              true),                                                                   \
+                                              !flatFirstPeriod),                                                       \
                 config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
         } else {                                                                                                       \
             optionletStripper = QuantLib::ext::make_shared<my_stripper_1>(                                             \
@@ -310,6 +318,8 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     // Get the cap floor term vol surface
     QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface> cftvs = capSurface(asof, config, loader);
 
+    bool flatFirstPeriod = config.flatFirstPeriod();
+
     // Get the ATM cap floor term vol curve if we are including an ATM curve
     bool includeAtm = config.includeAtm();
     Handle<QuantExt::CapFloorTermVolCurve> cftvc;
@@ -328,14 +338,7 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     bool globalBootstrap = config.bootstrapConfig().global();
     Real smoothnessLambda = config.bootstrapConfig().smoothnessLambda();
 
-    std::function<Array(const std::vector<Time>&, const std::vector<Real>&)> additionalPenalties =
-        [smoothnessLambda](const std::vector<Time>& times, const std::vector<Real>& data) {
-            Array p(times.size() - 1);
-            for (Size i = 0; i < times.size() - 2; ++i) {
-                p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
-            }
-            return p;
-        };
+    auto additionalPenalties = getPenaltyFunction(smoothnessLambda);
 
     // Get configuration values for parametric smile
     std::vector<std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
@@ -371,8 +374,6 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> optionletStripper;
     VolatilityType volType = volatilityType(config.volatilityType());
     bool onOpt = interpOnOpt(config);
-
-    bool flatFirstPeriod = true;
 
     VolatilityType optVolType = volType;
     Real optDisplacement = shift;
