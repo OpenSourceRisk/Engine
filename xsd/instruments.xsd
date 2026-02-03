@@ -4358,6 +4358,7 @@
       <xs:element type="stFreeStyleEventSchedule" name="FloatingSchedule"/>
       <xs:element type="stFreeStyleIndex" name="RangeAccrualIndex"/>
       <xs:element type="stFreeStyleBool" name="RangeAccrualPayer"/>
+      <xs:element type="stFreeStyleNumber" name="RangeAccrualCoupon"/>
       <xs:element type="stFreeStyleNumber" name="RangeAccrualNotional"/>
       <xs:element type="stFreeStyleDayCounter" name="RangeAccrualDayCounter"/>
       <xs:element type="stFreeStyleEventSchedule" name="RangeAccrualSchedule"/>
