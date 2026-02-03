@@ -96,6 +96,7 @@ public:
     void initialise(const std::vector<QuantLib::Date>& dates) override {}
     void reset() override {}
     QuantLib::Real NPV() const override;
+    std::vector<std::tuple<Real, Real, Real, Real>> NPVBreakDown();
     const std::map<std::string,QuantLib::ext::any>& additionalResults() const override;
     void updateQlInstruments() override {}
 
