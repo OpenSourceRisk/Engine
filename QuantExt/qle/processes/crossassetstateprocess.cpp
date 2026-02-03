@@ -59,7 +59,8 @@ inline Array getProjectedArray(const Array& source, Size start, Size length) {
                                                     << source.size() << ", start" << start << ", length " << length);
     return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
 }
-}
+
+} // namespace
 
 CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model)
     : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
