@@ -216,6 +216,7 @@ models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
+models/fxlvparametrization.cpp
 models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
 models/hullwhitebucketing.cpp
@@ -439,6 +440,7 @@ time/dateutilities.cpp
 time/monthcounter.cpp
 time/yearcounter.cpp
 utilities/barrier.cpp
+utilities/callablebond.cpp
 utilities/cashflows.cpp
 utilities/commodity.cpp
 utilities/creditcurves.cpp
@@ -732,7 +734,6 @@ models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
-models/crlgmvectorised.hpp
 models/cmscaphelper.hpp
 models/commoditymodel.hpp
 models/commodityschwartzconstantparametrization.hpp
@@ -743,6 +744,7 @@ models/constantlosslatentmodel.hpp
 models/cpicapfloorhelper.hpp
 models/crcirpp.hpp
 models/crlgm1fparametrization.hpp
+models/crlgmvectorised.hpp
 models/crossassetanalytics.hpp
 models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
@@ -766,6 +768,8 @@ models/fxbsmodel.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
+models/fxlvmodel.hpp
+models/fxlvparametrization.hpp
 models/fxmodel.hpp
 models/gaussian1dcrossassetadaptor.hpp
 models/gaussianlhplossmodel.hpp
