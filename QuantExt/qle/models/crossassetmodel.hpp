@@ -59,7 +59,7 @@ using namespace QuantLib;
 class CrossAssetModel : public LinkableCalibratedModel, public QuantLib::ext::enable_shared_from_this<CrossAssetModel> {
 public:
     enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5, CrState = 6 };
-    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB, GENERIC };
+    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GENERIC };
     enum class Discretization { Euler, Exact };
 
     static constexpr Size numberOfAssetTypes = 7;
