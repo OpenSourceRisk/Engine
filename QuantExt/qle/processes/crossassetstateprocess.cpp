@@ -34,7 +34,8 @@ using namespace QuantLib;
 
 namespace {
 
-inline void setValue(Matrix& m, const Real& value, const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
+inline void setValue(Matrix& m, const Real& value,
+                     const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
                      const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                      const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                      const Size& offset2 = 0) {
@@ -43,7 +44,8 @@ inline void setValue(Matrix& m, const Real& value, const QuantLib::ext::shared_p
     m[i][j] = m[j][i] = value;
 }
 
-inline void setValue2(Matrix& m, const Real& value, const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
+inline void setValue2(Matrix& m, const Real& value,
+                      const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
                       const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                       const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                       const Size& offset2 = 0) {
@@ -51,7 +53,13 @@ inline void setValue2(Matrix& m, const Real& value, const QuantLib::ext::shared_
     Size j = model->wIdx(t2, i2, offset2);
     m[i][j] = value;
 }
-} // anonymous namespace
+
+inline Array getProjectedArray(const Array& source, Size start, Size length) {
+    QL_REQUIRE(source.size() >= start + length, "getProjectedArray(): internal errors: source size "
+                                                    << source.size() << ", start" << start << ", length " << length);
+    return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
+}
+}
 
 CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model)
     : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
@@ -96,7 +104,7 @@ void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
 }
 
 void CrossAssetStateProcess::updateSqrtCorrelation() const {
-    if (model_->discretization() != CrossAssetModel::Discretization::Euler)
+    if (model_->discretization() == CrossAssetModel::Discretization::Exact)
         return;
     sqrtCorrelation_ = pseudoSqrt(model_->correlation(), model_->salvagingAlgorithm());
 }
@@ -154,7 +162,9 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 res[model_->pIdx(CrossAssetModel::AssetType::IR, i, 1)] = 0.0;
             }
             if (i > 0) {
-                Real sigmai = model_->fxbs(i - 1)->sigma(t);
+                Real sigmai = model_->fxModel(i - 1)->volatility(
+                    t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                         model_->fxModel(i - 1)->n()));
                 // ir-ir
                 Real rhozz0i =
                     model_->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::IR, i);
@@ -188,7 +198,11 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
             // eq vol
             Real sigmask = model_->eqbs(k)->sigma(t);
             // fx vol (eq ccy / base ccy)
-            Real sigmaxi = (i == 0) ? 0.0 : model_->fxbs(i - 1)->sigma(t);
+            Real sigmaxi = (i == 0)
+                               ? 0.0
+                               : model_->fxModel(i - 1)->volatility(
+                                     t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                                          model_->fxModel(i - 1)->n()));
             // ir-eq corr
             // Real rhozsik = model_->correlation(EQ, k, CrossAssetModel::AssetType::IR, i); // eq cur
             Real rhozs0k =
@@ -218,7 +232,11 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
             // com vol
             Real sigmack = cm->parametrization()->sigma(t);
             // fx vol (eq ccy / base ccy)
-            Real sigmaxi = (i == 0) ? 0.0 : model_->fxbs(i - 1)->sigma(t);
+            Real sigmaxi = (i == 0)
+                               ? 0.0
+                               : model_->fxModel(i - 1)->volatility(
+                                     t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                                          model_->fxModel(i - 1)->n()));
 
             Real eps_ccy = (i == 0) ? 0.0 : 1.0;
             res[model_->pIdx(CrossAssetModel::AssetType::COM, k, 0)] = 
@@ -259,7 +277,9 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                                rho_yc_ij * alpha_y_j * sigma_c_j;
 
                 if (i_j > 0) {
-                    Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);
+                    Real sigma_x_i_j = model_->fxModel(i_j - 1)->volatility(
+                        t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i_j - 1, 0),
+                                             model_->fxModel(i_j - 1)->n()));
                     Real rho_yx_j_i_j = model_->correlation(CrossAssetModel::AssetType::INF, j,
                                                             CrossAssetModel::AssetType::FX, i_j - 1, 0, 0);
                     rrDrift -= rho_yx_j_i_j * alpha_y_j * sigma_x_i_j;
@@ -283,7 +303,9 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 indexDrift += std::log(1 + z_t) + (t / (1 + z_t)) * ((z_t2 - z_t1) / dt);
 
                 if (i_j > 0) {
-                    Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);
+                    Real sigma_x_i_j = model_->fxModel(i_j - 1)->volatility(
+                        t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i_j - 1, 0),
+                                             model_->fxModel(i_j - 1)->n()));
                     Real rho_cx_j_i_j = model_->correlation(CrossAssetModel::AssetType::INF, j,
                                                             CrossAssetModel::AssetType::FX, i_j - 1, 1, 0);
                     indexDrift -= rho_cx_j_i_j * sigma_c_j * sigma_x_i_j;
@@ -382,7 +404,7 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrownians(Time t, const Arra
     }
 }
 
-Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const Array&) const {
+Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const {
     Matrix res(model_->dimension(), model_->brownians(), 0.0);
     Size n = model_->components(CrossAssetModel::AssetType::IR);
     Size m = model_->components(CrossAssetModel::AssetType::FX);
@@ -398,7 +420,8 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
     }
     // fx-fx
     for (Size i = 0; i < m; ++i) {
-        Real sigmai = model_->fxbs(i)->sigma(t);
+        Real sigmai = model_->fxModel(i)->volatility(
+            t, getProjectedArray(x, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n()));
         setValue2(res, sigmai, model_, CrossAssetModel::AssetType::FX, i, CrossAssetModel::AssetType::FX, i, 0, 0);
     }
     // inf-inf
@@ -460,14 +483,8 @@ Matrix CrossAssetStateProcess::diffusionOnCorrelatedBrowniansImpl(Time t, const 
 }
 
 namespace {
-Array getProjectedArray(const Array& source, Size start, Size length) {
-    QL_REQUIRE(source.size() >= start + length, "getProjectedArray(): internal errors: source size "
-                                                    << source.size() << ", start" << start << ", length " << length);
-    return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
-}
-
-void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const CrossAssetModel>& model, Size i, Time t0,
-                            Time dt) {
+void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const CrossAssetModel>& model, Size i,
+                            Time t0, Time dt) {
 
     // the specifics depend on the ir and fx model types and their discretizations
 
@@ -481,7 +498,11 @@ void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const 
             corrTmp(k, 0) =
                 model->correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::FX, i - 1, k, 0);
         }
-        Matrix driftAdj = dt * model->fxbs(i - 1)->sigma(t0) * (transpose(model->irhw(i)->sigma_x(t0)) * corrTmp);
+        Matrix driftAdj = dt *
+                          model->fxModel(i - 1)->volatility(
+                              t0, getProjectedArray(state, model->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0),
+                                                    model->fxModel(i - 1)->n())) *
+                          (transpose(model->irhw(i)->sigma_x(t0)) * corrTmp);
         auto s = std::next(state.begin(), model->pIdx(CrossAssetModel::AssetType::IR, i, 0));
         for (auto c = driftAdj.column_begin(0); c != driftAdj.column_end(0); ++c, ++s) {
             *s += *c;
