@@ -56,13 +56,16 @@ public:
               ParamType aType, std::vector<Time> aTimes, std::vector<Real> aValues, Real shiftHorizon = 0.0,
               Real scaling = 1.0, std::vector<std::string> optionExpiries = std::vector<std::string>(),
               std::vector<std::string> optionTerms = std::vector<std::string>(),
-              std::vector<std::string> optionStrikes = std::vector<std::string>())
+              std::vector<std::string> optionStrikes = std::vector<std::string>(),
+              const std::string& currency = "")
         : LgmData(name, calibrationType, revType, volType, calibrateH, hType, hTimes, hValues, calibrateA, aType,
-                  aTimes, aValues, shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes), name_(name) {}
+                  aTimes, aValues, shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes),
+          name_(name), currencyStr_(currency) {}
 
     //! \name Setters/Getters
     //@{
     std::string& name() { return name_; }
+    const std::string& currency() { return currencyStr_; }
     //@}
 
     //! \name Serialisation
@@ -75,9 +78,11 @@ public:
         LgmData::reset();
         name_ = "";
     }
-    
+
 private:
     std::string name_;
+    std::string currencyStr_;
+    
 };
 } // namespace data
 } // namespace ore

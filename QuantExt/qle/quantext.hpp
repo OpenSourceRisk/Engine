@@ -297,6 +297,7 @@
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
+#include <qle/models/crlgmvectorised.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -437,6 +438,7 @@
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/intrinsicascotengine.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
+#include <qle/pricingengines/mccamcallablebondengine.hpp>
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
@@ -603,6 +605,7 @@
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/survivalprobabilitycurvefromyield.hpp>
 #include <qle/termstructures/swaptionsabrcube.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
@@ -624,6 +627,7 @@
 #include <qle/time/monthcounter.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/barrier.hpp>
+#include <qle/utilities/callablebond.hpp>
 #include <qle/utilities/cashflows.hpp>
 #include <qle/utilities/commodity.hpp>
 #include <qle/utilities/creditcurves.hpp>
