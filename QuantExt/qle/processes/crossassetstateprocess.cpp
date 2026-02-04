@@ -277,11 +277,14 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 // Use the same dt below that is used in yield forward rate calculations.
                 // Take the simulation lag into account
                 auto ts = p->realRate()->termStructure();
-                auto effectiveDayCounter = gridDayCounter_.value_or(ts->dayCounter());
-                auto lag = effectiveDayCounter.yearFraction(ts->baseDate(), ts->referenceDate());
-                auto laggedObservationDate = lowerDate(t - lag, ts->referenceDate(), effectiveDayCounter);
-                Time laggedt = ts->dayCounter().yearFraction(ts->referenceDate(), laggedObservationDate);
-                Time tau = ts->dayCounter().yearFraction(ts->baseDate(), laggedObservationDate);
+                // Use grid day counter for time-to-date conversion since t is in grid time
+                auto gridDc = gridDayCounter_.value_or(ts->dayCounter());
+                auto lagInGridDc = gridDc.yearFraction(ts->baseDate(), ts->referenceDate());
+                auto laggedObservationDate = lowerDate(t - lagInGridDc, ts->referenceDate(), gridDc);
+                // Use inflation day counter for tau and seasonality
+                const auto& infDayCounter = ts->dayCounter();
+                Time laggedt = infDayCounter.yearFraction(ts->referenceDate(), laggedObservationDate);
+                Time tau = infDayCounter.yearFraction(ts->baseDate(), laggedObservationDate);
 
                 Time dt = 0.0001;
                 Time t1 = std::max(laggedt - dt / 2.0, 0.0);
@@ -289,12 +292,20 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 auto z_t = ts->zeroRate(laggedt);
                 auto z_t1 = ts->zeroRate(t1);
                 auto z_t2 = ts->zeroRate(t2);
-                // Seasonality adjustment, if any
+                // Seasonality adjustment for continuous JY model - don't snap to period start
                 if(ts->hasSeasonality()){
-                    auto seasonality = ts->seasonality();
-                    z_t = seasonality->correctZeroRate(laggedObservationDate, z_t, *(ts.currentLink()));
-                    z_t1 = seasonality->correctZeroRate(laggedObservationDate, z_t1, *(ts.currentLink()));
-                    z_t2 = seasonality->correctZeroRate(laggedObservationDate, z_t2, *(ts.currentLink()));
+                    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+                    if (seasonCurve) {
+                        // Compute seasonality factor ratio directly without snapping to period start
+                        Real baseFactor = seasonCurve->seasonalityFactor(ts->baseDate());
+                        Real obsFactor = seasonCurve->seasonalityFactor(laggedObservationDate);
+                        Real seasonalityAt = obsFactor / baseFactor;
+                        // For continuous model, use actual tau, not snapped to period
+                        Real f = std::pow(seasonalityAt, 1.0 / tau);
+                        z_t = (z_t + 1.0) * f - 1.0;
+                        z_t1 = (z_t1 + 1.0) * f - 1.0;
+                        z_t2 = (z_t2 + 1.0) * f - 1.0;
+                    }
                 }
                 indexDrift += std::log(1 + z_t) + (tau / (1 + z_t)) * ((z_t2 - z_t1) / dt);
 

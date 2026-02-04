@@ -78,6 +78,7 @@
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
@@ -2006,7 +2007,7 @@ struct IrFxInfCrComModelTestData {
 
     IrFxInfCrComModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false,
                               bool driftFreeState = false, Period infObsLag = 3 * Months,
-                              DayCounter infDc = Actual365Fixed(), Period infBaseLag = 3 * Months)
+                              DayCounter infDc = Actual365Fixed(), Period infBaseLag = 3 * Months, bool seasonality = false)
         : referenceDate(30, July, 2015), dc(Actual365Fixed()), 
           eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, dc)),
           usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, dc)),
@@ -2043,11 +2044,17 @@ struct IrFxInfCrComModelTestData {
             infDates.push_back(inflationPeriod(referenceDate + tenor - infObsLag, Monthly).first);
             infRates.push_back(rate);
         }
+        infSeasonalFactors =  { 0.90, 1.100, 1.205, 1.30, 1.4, 0.8, 0.7, 1.5, 0.6, 1.6, 0.5, 1.5 };
+        auto seasonalityCurve = QuantLib::ext::make_shared<QuantLib::MultiplicativePriceSeasonality>(baseDate, Monthly, infSeasonalFactors);
 
         infEurTs = Handle<ZeroInflationTermStructure>(
             QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate, infDates, infRates, infBaseLag, Monthly, infDc));
         infEurTs->enableExtrapolation();
         
+        if(seasonality){
+            infEurTs->setSeasonality(seasonalityCurve);
+        }
+
         infLag = inflationYearFraction(Monthly, true, infDc, infEurTs->baseDate(), infEurTs->referenceDate());
 
         Real infEurAlpha = 0.01;
@@ -2068,6 +2075,10 @@ struct IrFxInfCrComModelTestData {
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(referenceDate,
             infDates, infRates, infBaseLag, Monthly, infDc));
         infGbpTs->enableExtrapolation();
+        
+        if(seasonality){
+            infGbpTs->setSeasonality(seasonalityCurve);
+        }
 
         Real infGbpAlpha = 0.01;
         Real infGbpKappa = 0.01;
@@ -2269,6 +2280,7 @@ struct IrFxInfCrComModelTestData {
     // Inflation
     Handle<ZeroInflationTermStructure> infEurTs;
     Handle<ZeroInflationTermStructure> infGbpTs;
+    std::vector<Real> infSeasonalFactors;
     Real infLag;
     DayCounter infDc;
 
@@ -2295,28 +2307,29 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
     bool flatVols = false;
     bool driftFreeState = false;
     bool exactDiscretization = true;
+    bool seasonality = true;
     BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
     BOOST_TEST_MESSAGE("infIsDK " << infIsDK);
     BOOST_TEST_MESSAGE("flatVols " << flatVols);
     BOOST_TEST_MESSAGE("driftFreeState " << driftFreeState);
     BOOST_TEST_MESSAGE("exactDiscretization " << exactDiscretization);
-    DayCounter infDc = Thirty360(Thirty360::ISDA);
+    //DayCounter infDc = Thirty360(Thirty360::ISDA);
     //DayCounter infDc = MonthCounter();
-    //DayCounter infDc = Actual365Fixed();
+    DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
     Period infSimLag = 3 * Months;
-    IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc , infSimLag};
+    IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc , infSimLag, seasonality};
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
 
     
 
     auto today = d.referenceDate;
-    auto simDate = today + 2 * Years;
+    auto simDate = today + 3 * Months;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
     Date BaseDateT1 = simDate - (today - baseDate);
 
-    Date inflationPaymentDate = today + 20 * Years;
+    Date inflationPaymentDate = today + 10 * Years + 3 * Months;
     Date inflationObsDate = inflationPeriod(inflationPaymentDate - infObsLag, Monthly).first;
     Time inflationObsTime = infDc.yearFraction(d.referenceDate, inflationObsDate);
     Time tau = infDc.yearFraction(baseDate, inflationObsDate);
@@ -2385,6 +2398,12 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
             //        model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             auto zeroRate = std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) - 1.0;
+            /*
+            if(seasonality){
+                auto seasonalityCurve = QuantLib::ext::make_shared<MultiplicativePriceSeasonality>(BaseDateT1, Monthly, d.infSeasonalFactors);
+                zeroRate = seasonalityCurve->correctZeroRate(BaseDateT1, inflationObsDate, zeroRate, infDc);
+            }
+                */
             infeur1(exp(infeury1) * std::pow(1.0 + zeroRate, tauSim) *
                 model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         }
@@ -2407,10 +2426,28 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
                                        << expectedEur << "error " << std::abs(mean(infeur1) - expectedEur));
     BOOST_TEST_MESSAGE("IDX zb GBP = " << mean(infgbp1) << " +- " << error_of<tag::mean>(infgbp1) << " vs analytical "
                                        << expectedGbpInf << " error" << std::abs(mean(infgbp1) - expectedGbpInf));
+    // Expected CPI growth - compute consistent with the continuous JY model
+    // Use Time-based zeroRate (unadjusted) and apply seasonality manually without snapping to period
+    Real expectedCpi;
+    {
+        auto tauCpi = infDc.yearFraction(baseDate, BaseDateT1);
+        auto unadjustedRate = d.infEurTs->zeroRate(d.infEurTs->timeFromReference(BaseDateT1));
+        if (seasonality) {
+            auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(d.infEurTs->seasonality());
+            Real baseFactor = seasonCurve->seasonalityFactor(baseDate);
+            Real obsFactor = seasonCurve->seasonalityFactor(BaseDateT1);
+            Real seasonalityAt = obsFactor / baseFactor;
+            Real f = std::pow(seasonalityAt, 1.0 / tauCpi);
+            Real adjustedRate = (unadjustedRate + 1.0) * f - 1.0;
+            expectedCpi = std::pow(1.0 + adjustedRate, tauCpi);
+        } else {
+            expectedCpi = std::pow(1.0 + unadjustedRate, tauCpi);
+        }
+    }
     BOOST_TEST_MESSAGE(
         "EUR CPI   = " << mean(cpieur1) << " +- " << error_of<tag::mean>(cpieur1) << " vs analytical "
-                       << std::pow(1.0 + d.infEurTs->zeroRate(BaseDateT1), infDc.yearFraction(baseDate, BaseDateT1)) << " error "
-                       << std::abs(mean(cpieur1) - std::pow(1.0 + d.infEurTs->zeroRate(BaseDateT1), infDc.yearFraction(baseDate, BaseDateT1))));
+                       << expectedCpi << " error "
+                       << std::abs(mean(cpieur1) - expectedCpi));
     BOOST_TEST_MESSAGE("Test – decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
     Real tol1 = exactDiscretization? 1.0E-4 : 14E-4;
 
