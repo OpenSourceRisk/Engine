@@ -459,7 +459,7 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionDoubleK
 \begin{itemize}
   \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to receiving the settlement amount at expiry. \\
   Allowable values: \emph{Long, Short}.
-  \item{}[index] \lstinline!Underlying!: Underlying index. For FX, where the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should be \lstinline!CCY2!\\
+  \item{}[index] \lstinline!Underlying!: Underlying index. For FX, where the underlying is provided in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data})\\
   Allowable values: See Section \ref{data_index} for allowable values.
   \item{}[event] \lstinline!ValuationSchedule!: The base schedule which defines the start dates of the variance accrual schedule. This node is also used to derive the variance accrual schedule and defines the observation dates of the SPOT KO. \\
   Allowable values: See Section \ref{ss:schedule_data}.
@@ -472,12 +472,12 @@ The meanings and allowable values for the \lstinline!DualEuroBinaryOptionDoubleK
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!SettlementAmount!: The settlement amount. \\
   Allowable values: Any non-negative real number.
-  \item{}[boolean] \lstinline!isTerminalOnly!: Determine if the Spot Barrier occurs on every valuation date (false) or at expiry (true). \\
+  \item{}[boolean] \lstinline!isTerminalOnly!: Determines if the Spot Barrier occurs on every valuation date (\emph{false}) or at expiry (\emph{true}). \\
   Allowable values: Boolean node, the set of allowable values is given in Table \ref{tab:boolean_allowable}.
   \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-  \item{}[event] \lstinline!Expiry!: The option expiration date. \\
-  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!Expiry!: The option expiration date. When isTerminalOnly is \emph{true} the Expiry is also the Spot Barrier observation date.\\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Must be on or after the valuation end date, and must be on or before the SettlementDate.
   \item{}[event] \lstinline!PremiumDate!: The date on which the option premium is paid. \\
   Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   \item{}[number] \lstinline!Premium!: The option premium. \\
