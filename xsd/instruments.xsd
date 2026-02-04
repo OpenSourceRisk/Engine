@@ -3126,6 +3126,7 @@
       <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
       <xs:element type="stFreeStyleNumber" name="SettlementAmount"/>
       <xs:element type="stFreeStyleEvent" name="Expiry"/>
+      <xs:element type="stFreeStyleBool" name="isTerminalOnly"/>
       <xs:element type="stFreeStyleNumber" name="Premium"/>
       <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
       <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
