@@ -85,7 +85,7 @@ public:
         Real theta = fixed_[0] ? initialValues_[0] : x[0];
         Real kappa = fixed_[1] ? initialValues_[1] : x[1];
         Real v0 = fixed_[2] ? initialValues_[2] : x[2];
-        return theta + (v0 - theta) * (1.0 - exp(-kappa * t)) / (kappa * t);
+        return theta + (v0 - theta) * (1.0 - std::exp(-kappa * t)) / (kappa * t);
     }
 
     // sum of error^2 across all time points
@@ -93,7 +93,7 @@ public:
         QL_REQUIRE(x.size() == 3, "3 parameters expected");
         Real res = 0;
         for (Size i = 0; i < times_.size(); ++i)
-            res += pow(annualisedModelVariance(times_[i], x) - annualisedMarketVariances_[i], 2);
+            res += std::pow(annualisedModelVariance(times_[i], x) - annualisedMarketVariances_[i], 2);
         return res;
     }
 
@@ -224,7 +224,7 @@ void HestonModelCalibration::logCalibration(AssetModelCalibrationResults& result
             results.data.push_back(result);
         }
     }
-    results.rmse = sqrt(results.rmse / helpers_.size());
+    results.rmse = std::sqrt(results.rmse / helpers_.size());
 
     DLOG("rmse: " << results.rmse);
 }
@@ -267,7 +267,7 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model() {
     results_.constantParameters.push_back(std::make_pair("sigma", model->sigma()));
     results_.constantParameters.push_back(std::make_pair("rho", model->rho()));
     results_.constantParameters.push_back(std::make_pair("v0", model->v0()));
-    Real feller = 2.0 * model->theta() * model->kappa() / pow(model->sigma(), 2);
+    Real feller = 2.0 * model->theta() * model->kappa() / std::pow(model->sigma(), 2);
     results_.constantParameters.push_back(std::make_pair("feller", feller));
 
     DLOG("Model Calibration Results:");
@@ -338,11 +338,11 @@ QuantLib::ext::shared_ptr<HestonModel> HestonModelCalibration::model1() {
             theta = fixedValues_[0] ? initialValues_[0] : result[0];
             kappa = fixedValues_[1] ? initialValues_[1] : result[1];
             v0 = fixedValues_[4] ? initialValues_[4] : result[2];
-            DLOG("theta, kappa, sigma_max: " << theta << " " << kappa << " " << sqrt(2.0 * kappa * theta));
+            DLOG("theta, kappa, sigma_max: " << theta << " " << kappa << " " << std::sqrt(2.0 * kappa * theta));
 
             // If initial sigma does not satisfy the (relaxed) feller condition, then modify it
             if (fixedValues_[2] == false && 2.0 * kappa * theta / (sigma * sigma) < relaxedFellerConstraint_) {
-                sigma = 0.5 * sqrt(2.0 * kappa * theta / relaxedFellerConstraint_);
+                sigma = 0.5 * std::sqrt(2.0 * kappa * theta / relaxedFellerConstraint_);
                 WLOG("update sigma to satisfy Feller: " << initialValues_[2] << " -> " << sigma);
             }
 
@@ -664,7 +664,7 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
         kappa[i] = ptdModel->kappa(time + QL_EPSILON);
         sigma[i] = ptdModel->sigma(time + QL_EPSILON);
         rho[i] = ptdModel->rho(time + QL_EPSILON);
-	feller[i] = 2.0 * theta[i] * kappa[i] / pow(sigma[i], 2);
+	feller[i] = 2.0 * theta[i] * kappa[i] / std::pow(sigma[i], 2);
         if (feller[i] < 1) {
             ALOG("Feller constraint 2*theta*kappa/sigma^2 violated at time " << time << ": " << feller[i]);
         }
