@@ -25,7 +25,7 @@
 
 #include <map>
 #include <vector>
-
+#include <ql/any.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 namespace ore {
@@ -48,17 +48,23 @@ public:
 
     bool hasGroup(const string& groupName) const;
     bool has(const string& groupName, const string& paramName) const;
-    string get(const string& groupName, const string& paramName, bool fail = true) const;
-    void set(const string& groupName, const string& paramName, const string& val) {
+    QuantLib::ext::any get(const string& groupName, const string& paramName, bool fail = true) const;
+    string getString(const string& groupName, const string& paramName, bool fail = true) const {
+		return QuantLib::ext::any_cast<string>(get(groupName, paramName, fail));
+	}
+    template <class T> T getParameter(const string& groupName, const string& paramName, bool fail = true) const {
+		return QuantLib::ext::any_cast<T>(get(groupName, paramName, fail));
+	}
+    void set(const string& groupName, const string& paramName, const QuantLib::ext::any& val) {
         data_[groupName][paramName] = val;
     }
-    const map<string, string>& data(const string& groupName) const;
-    const map<string, string>& markets() const;
+    const map<string, QuantLib::ext::any>& data(const string& groupName) const;
+    map<string, string> markets() const;
     
     void log();
 
 private:
-    map<string, map<string, string>> data_;
+    map<string, map<string, QuantLib::ext::any>> data_;
 };
 } // namespace analytics
 } // namespace ore
