@@ -624,6 +624,7 @@ public:
     void setDvaName(const std::string& s) { parameters_.set("xva", "dvaName", s); }
     // FIXME: remove this from the base class?
     void setRawCubeOutputFile(const std::string& s) { parameters_.set("xva", "rawCubeOutputFile", s); }
+    void setNetCubeOutput(bool b) { parameters_.set("xva", "setNetCubeOutput", b); };
     void setNetCubeOutputFile(const std::string& s) { parameters_.set("xva", "netCubeOutputFile", s); }
     void setTimeAveragedNettedExposureOutputFile(const std::string& s) { parameters_.set("xva", "timeAveragedNettedExposureOutputFile", s); }
     // funding value adjustment details
