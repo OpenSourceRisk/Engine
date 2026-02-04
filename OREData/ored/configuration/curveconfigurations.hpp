@@ -154,7 +154,7 @@ public:
   
     /*! Return an inflation curveconfig based on a name lookup */
     QuantLib::ext::shared_ptr<CurveConfig> findInflationCurveConfig(const string& id,
-        InflationCurveConfig::Type type);
+        InflationCurveConfig::Type type) const;
     QuantLib::ext::shared_ptr<CurveConfig> findInflationVolCurveConfig(const string& id, 
         InflationCapFloorVolatilityCurveConfig::Type type);
 
