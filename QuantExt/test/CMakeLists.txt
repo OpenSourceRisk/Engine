@@ -84,7 +84,7 @@ pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
 quadraticinterpolation.cpp
-#quantohestonprocess.cpp
+quantohestonprocess.cpp
 randomvariable.cpp
 randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
