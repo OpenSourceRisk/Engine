@@ -19,6 +19,7 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
@@ -274,14 +275,28 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
 
                 // Add on the f_n(0, t) - f_r(0, t) piece using the initial zero inflation term structure.
                 // Use the same dt below that is used in yield forward rate calculations.
+                // Take the simulation lag into account
                 auto ts = p->realRate()->termStructure();
+                auto effectiveDayCounter = gridDayCounter_.value_or(ts->dayCounter());
+                auto lag = effectiveDayCounter.yearFraction(ts->baseDate(), ts->referenceDate());
+                auto laggedObservationDate = lowerDate(t - lag, ts->referenceDate(), effectiveDayCounter);
+                Time laggedt = ts->dayCounter().yearFraction(ts->referenceDate(), laggedObservationDate);
+                Time tau = ts->dayCounter().yearFraction(ts->baseDate(), laggedObservationDate);
+
                 Time dt = 0.0001;
-                Time t1 = std::max(t - dt / 2.0, 0.0);
+                Time t1 = std::max(laggedt - dt / 2.0, 0.0);
                 Time t2 = t1 + dt;
-                auto z_t = ts->zeroRate(t);
+                auto z_t = ts->zeroRate(laggedt);
                 auto z_t1 = ts->zeroRate(t1);
                 auto z_t2 = ts->zeroRate(t2);
-                indexDrift += std::log(1 + z_t) + (t / (1 + z_t)) * ((z_t2 - z_t1) / dt);
+                // Seasonality adjustment, if any
+                if(ts->hasSeasonality()){
+                    auto seasonality = ts->seasonality();
+                    z_t = seasonality->correctZeroRate(laggedObservationDate, z_t, *(ts.currentLink()));
+                    z_t1 = seasonality->correctZeroRate(laggedObservationDate, z_t1, *(ts.currentLink()));
+                    z_t2 = seasonality->correctZeroRate(laggedObservationDate, z_t2, *(ts.currentLink()));
+                }
+                indexDrift += std::log(1 + z_t) + (tau / (1 + z_t)) * ((z_t2 - z_t1) / dt);
 
                 if (i_j > 0) {
                     Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);

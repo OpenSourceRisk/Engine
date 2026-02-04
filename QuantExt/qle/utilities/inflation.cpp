@@ -85,7 +85,8 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const
     if (ts->seasonality() != nullptr)
         seasonalityAdjustedRate=  ts->seasonality()->correctZeroRate(inflaggedObservationDate, unadjustedZeroRate, *(ts.currentLink()));
     auto tau = ts->dayCounter().yearFraction(ts->baseDate(), laggedObservationDate);
-    /*std::cout << "inflationGrowth: t=" << t << " lag=" << lag << " laggedFixingTime=" << laggedFixingTime
+    /*
+    std::cout << "inflationGrowth: t=" << t << " lag=" << lag << " laggedFixingTime=" << laggedFixingTime
               << " laggedObservationDate=" << QuantLib::io::iso_date(laggedObservationDate) 
               << " inflation period start = " << QuantLib::io::iso_date(inflaggedObservationDate) 
               << " obsDate in t" << ts->timeFromReference(laggedObservationDate) << std::endl;

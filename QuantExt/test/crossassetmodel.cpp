@@ -2294,15 +2294,20 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
     bool infIsDK = false;
     bool flatVols = false;
     bool driftFreeState = false;
+    bool exactDiscretization = true;
     BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
-
+    BOOST_TEST_MESSAGE("infIsDK " << infIsDK);
+    BOOST_TEST_MESSAGE("flatVols " << flatVols);
+    BOOST_TEST_MESSAGE("driftFreeState " << driftFreeState);
+    BOOST_TEST_MESSAGE("exactDiscretization " << exactDiscretization);
     DayCounter infDc = Thirty360(Thirty360::ISDA);
     //DayCounter infDc = MonthCounter();
     //DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
     Period infSimLag = 3 * Months;
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc , infSimLag};
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
+    auto model = exactDiscretization ? d.modelExact : d.modelEuler;
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
 
     
 
@@ -2343,8 +2348,9 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
     //T2_discount = 20.0;
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
-    LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * 1, seed);
-    TimeGrid grid1(T, 1);
+    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 40); // number of time steps
+    LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * steps, seed);
+    TimeGrid grid1(T, steps);
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
@@ -2362,45 +2368,40 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
         Real infeury1 = path1.value[6][l1];
         Real infgbpz1 = path1.value[7][l1];
         Real infgbpy1 = path1.value[8][l1];
-        eurzb1(d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+        eurzb1(model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         // GBP zerobond
-        gbpzb1(d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+        gbpzb1(model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
         
         if (infIsDK) {
-            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
-            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur1 = model->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur2 = model->infdkI(0, T, T, infeurz1, infeury1, d.dc);
             cpieur1(sinfeur2.first);
             test(sinfeur2.second);
             infeur1(sinfeur1.first * sinfeur1.second *
-                    d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+                    model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         } else {
             cpieur1(exp(infeury1));
-            //infeur1(exp(infeury1) * inflationGrowth(d.modelExact, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated) *
-            //        d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+            //infeur1(exp(infeury1) * inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated) *
+            //        model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
-            auto zeroRate = std::pow(inflationGrowth(d.modelExact, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) - 1.0;
+            auto zeroRate = std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) - 1.0;
             infeur1(exp(infeury1) * std::pow(1.0 + zeroRate, tauSim) *
-                d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+                model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
         if (infIsDK) {
-            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
+            std::pair<Real, Real> sinfgbp1 = model->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
             infgbp1(sinfgbp1.first * sinfgbp1.second *
-                d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+                model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
-                d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+            infgbp1(exp(infgbpy1) * inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
+                model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
         }
     }
     
     Real expectedEur = std::pow(1.0 + d.infEurTs->zeroRate(inflationObsDate), tau) * d.eurYts->discount(inflationPaymentDate);
     Real expectedGbpInf =
         std::pow(1.0 + d.infGbpTs->zeroRate(inflationObsDate), tau) * d.gbpYts->discount(inflationPaymentDate) * d.fxEurGbp->value();
-    /*
-   Real expectedEur = std::pow(1.0 + d.infEurTs->zeroRate(T2_index-d.infLag), T2_index) * d.eurYts->discount(T2_discount);
-    Real expectedGbpInf =
-        std::pow(1.0 + d.infGbpTs->zeroRate(T2_index-d.infLag), T2_index) * d.gbpYts->discount(T2_discount) * d.fxEurGbp->value();
-    */
     BOOST_TEST_MESSAGE("EXACT:");
     BOOST_TEST_MESSAGE("IDX zb EUR = " << mean(infeur1) << " +- " << error_of<tag::mean>(infeur1) << " vs analytical "
                                        << expectedEur << "error " << std::abs(mean(infeur1) - expectedEur));
@@ -2411,15 +2412,15 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
                        << std::pow(1.0 + d.infEurTs->zeroRate(BaseDateT1), infDc.yearFraction(baseDate, BaseDateT1)) << " error "
                        << std::abs(mean(cpieur1) - std::pow(1.0 + d.infEurTs->zeroRate(BaseDateT1), infDc.yearFraction(baseDate, BaseDateT1))));
     BOOST_TEST_MESSAGE("Test – decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
-    Real tol1 = 5.0E-4; // EXACT
+    Real tol1 = exactDiscretization? 1.0E-4 : 14E-4;
 
     if (std::abs(mean(infeur1) - expectedEur) > tol1)
-        BOOST_TEST_ERROR("Martingale test failed for idx eurzb (Euler discr.),"
+        BOOST_TEST_ERROR("Martingale test failed for idx eurzb (" << (exactDiscretization ? "Exact" : "Euler")  <<"),"
                          "expected "
                          << expectedEur << ", got " << mean(infeur1) << ", tolerance " << tol1);
 
     if (std::abs(mean(infgbp1) - expectedGbpInf) > tol1)
-        BOOST_TEST_ERROR("Martingale test failed for idx gbpzb (Euler discr.),"
+        BOOST_TEST_ERROR("Martingale test failed for idx gbpzb (" << (exactDiscretization ? "Exact" : "Euler")  <<"),"
                          "expected "
                          << expectedGbpInf << ", got " << mean(infgbp1) << ", tolerance " << tol1);
 }
@@ -2430,19 +2431,21 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty3) {
     bool infIsDK = false;
     bool flatVols = false;
     bool driftFreeState = false;
+    bool exactDiscretization = false;
     BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
 
-    // DayCounter infDc = Thirty360(Thirty360::ISDA);
+    DayCounter infDc = Thirty360(Thirty360::ISDA);
     // DayCounter infDc = MonthCounter();
-    DayCounter infDc = Actual365Fixed();
+    // DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
     Period infSimLag = 3 * Months;
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag};
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 = d.modelExact->stateProcess();
-
+    auto model = exactDiscretization ? d.modelExact : d.modelEuler;
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 =  model->stateProcess(d.dc);
     Time T = 2.0;
     Time T2_discount = 20.0;
     Time T2_index = 20.0;
+    
     BOOST_TEST_MESSAGE("today = " << io::iso_date(d.referenceDate) << "\n"
                                   << " T = " << T << "\n"
                                   << " T2_discount = " << T2_discount << "\n"
@@ -2453,8 +2456,9 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty3) {
     // T2_discount = 20.0;
     Size n = 10000; // number of paths
     Size seed = 18; // rng seed
-    LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * 1, seed);
-    TimeGrid grid1(T, 1);
+    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 40);
+    LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * steps, seed);
+    TimeGrid grid1(T, steps);
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
@@ -2472,36 +2476,36 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty3) {
         Real infeury1 = path1.value[6][l1];
         Real infgbpz1 = path1.value[7][l1];
         Real infgbpy1 = path1.value[8][l1];
-        eurzb1(d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+        eurzb1(model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         // GBP zerobond
-        gbpzb1(d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+        gbpzb1(model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
 
         if (infIsDK) {
-            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
-            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur1 = model->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur2 = model->infdkI(0, T, T, infeurz1, infeury1, d.dc);
             cpieur1(sinfeur2.first);
             test(sinfeur2.second);
-            infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2_discount, zeur1) /
-                    d.modelExact->numeraire(0, T, zeur1));
+            infeur1(sinfeur1.first * sinfeur1.second * model->discountBond(0, T, T2_discount, zeur1) /
+                    model->numeraire(0, T, zeur1));
         } else {
             cpieur1(exp(infeury1));
             auto tauSim = 18.0;
             auto zeroRate =
-                std::pow(inflationGrowth(d.modelExact, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated),
+                std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated),
                          1.0 / tauSim) -
                 1.0;
             infeur1(exp(infeury1) * std::pow(1.0 + zeroRate, tauSim) *
-                    d.modelExact->discountBond(0, T, T2_discount, zeur1) / d.modelExact->numeraire(0, T, zeur1));
+                    model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
         if (infIsDK) {
-            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
-            infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 /
-                    d.modelExact->numeraire(0, T, zeur1));
+            std::pair<Real, Real> sinfgbp1 = model->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
+            infgbp1(sinfgbp1.first * sinfgbp1.second * model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 /
+                    model->numeraire(0, T, zeur1));
         } else {
             infgbp1(
-                exp(infgbpy1) * inflationGrowth(d.modelExact, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
-                d.modelExact->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
+                exp(infgbpy1) * inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
+                model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
         }
     }
 
@@ -2516,15 +2520,16 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty3) {
     BOOST_TEST_MESSAGE("IDX zb GBP = " << mean(infgbp1) << " +- " << error_of<tag::mean>(infgbp1) << " vs analytical "
                                        << expectedGbpInf << " error" << std::abs(mean(infgbp1) - expectedGbpInf));
     BOOST_TEST_MESSAGE("Test – decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
-    Real tol1 = 5.0E-4; // EXACT
+
+    Real tol1 = exactDiscretization? 1.0E-4 : 14E-4;
 
     if (std::abs(mean(infeur1) - expectedEur) > tol1)
-        BOOST_TEST_ERROR("Martingale test failed for idx eurzb (Euler discr.),"
+        BOOST_TEST_ERROR("Martingale test failed for idx eurzb (" << (exactDiscretization ? "Exact" : "Euler")  <<"),"
                          "expected "
                          << expectedEur << ", got " << mean(infeur1) << ", tolerance " << tol1);
 
     if (std::abs(mean(infgbp1) - expectedGbpInf) > tol1)
-        BOOST_TEST_ERROR("Martingale test failed for idx gbpzb (Euler discr.),"
+        BOOST_TEST_ERROR("Martingale test failed for idx gbpzb (" << (exactDiscretization ? "Exact" : "Euler")  <<"),"
                          "expected "
                          << expectedGbpInf << ", got " << mean(infgbp1) << ", tolerance " << tol1);
 }
@@ -2619,7 +2624,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         // EUR CPI indexed bond
         bool indexIsInterpolated = true;
         if (infEurIsDk) {
-            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
+            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1, d.dc);
             infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
@@ -2628,7 +2633,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         }
         // GBP CPI indexed bond
         if (infGbpIsDk) {
-            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1);
+            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1, d.dc);
             infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
@@ -2647,7 +2652,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         gbpzb2(d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.modelExact->numeraire(0, T, zeur2));
         // EUR CPI indexed bond
         if (infEurIsDk) {
-            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2);
+            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2, d.dc);
             infeur2(sinfeur2.first * sinfeur2.second * d.modelExact->discountBond(0, T, T2, zeur2) /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
@@ -2656,7 +2661,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         }
         // GBP CPI indexed bond
         if (infGbpIsDk) {
-            std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2);
+            std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2, d.dc);
             infgbp2(sinfgbp2.first * sinfgbp2.second * d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
@@ -2774,17 +2779,17 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     if (std::abs(mean(infeur2) - ev) > tol2)
         BOOST_TEST_ERROR("Martingale test failed for idx eurzb (Euler discr.),"
                    "expected "
-                   << ev << ", got " << mean(infeur2) << ", tolerance " << tol1);
+                   << ev << ", got " << mean(infeur2) << ", tolerance " << tol2);
     ev = d.gbpYts->discount(T2) * std::pow(1.0 + d.infGbpTs->zeroRate(T2 - d.infLag), T2) * d.fxEurGbp->value();
     if (std::abs(mean(infgbp2) - ev) > tol2)
         BOOST_TEST_ERROR("Martingale test failed for idx gbpzb (Euler discr.),"
                    "expected "
-                   << ev << ", got " << mean(infgbp2) << ", tolerance " << tol1);
+                   << ev << ", got " << mean(infgbp2) << ", tolerance " << tol2);
     ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur2) - ev) > tol2)
         BOOST_TEST_ERROR("Martingale test failed for def eurzb (Euler discr.),"
                    "expected "
-                   << ev << ", got " << mean(n1eur1) << ", tolerance " << tol1);
+                   << ev << ", got " << mean(n1eur2) << ", tolerance " << tol2);
 
     // commodity A forward prices
     Real tol;
@@ -2911,7 +2916,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMoments,
     }
     BOOST_TEST_MESSAGE("==================");
 
-    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 1E-4, 10.1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 1E-4, 10.5E-4 };
+    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 1E-4, 10.1E-4, 1E-4, 10.0E-4, 1E-4, 1E-4, 1E-4, 10.5E-4 };
 
     for (Size i = 0; i < n; ++i) {
         // check expectation against analytical calculation (Euler)
@@ -2978,24 +2983,23 @@ struct IrFxInfCrEqModelTestData {
 
         std::vector<Date> infDates;
         std::vector<Real> infRates;
-        auto baseDate = inflationPeriod(referenceDate - baseDateLag, Monthly).first;
-        std::map<Period, Real> inflationTenors { {1 * Years, 0.01} , {2 * Years, 0.015}, {5 * Years, 0.02}, {10 * Years, 0.0275}, {20 * Years, 0.04} };
+        auto baseDate = inflationPeriod(referenceDate- 3 * Months, Monthly).first;
         infDates.push_back(baseDate);
+        infDates.push_back(Date(30, April, 2015));
+        infDates.push_back(Date(30, July, 2015));
         infRates.push_back(0.01);
-        for (const auto& [tenor, rate] : inflationTenors) {
-            infDates.push_back(inflationPeriod(referenceDate + tenor - baseDateLag, Monthly).first);
-            infRates.push_back(rate);
-        }
+        infRates.push_back(0.01);
+        infRates.push_back(0.01);
         infEurTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Thirty360(Thirty360::EurobondBasis)));
+            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
         infGbpTs = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurve>(
-            referenceDate, infDates, infRates, 3 * Months, Monthly, Thirty360(Thirty360::EurobondBasis)));
+            referenceDate, infDates, infRates, 3 * Months, Monthly, Actual365Fixed()));
         infEurTs->enableExtrapolation();
         infGbpTs->enableExtrapolation();
         // same for eur and gbp (doesn't matter anyway, since we are
         // using flat ts here)
         infLag =
-            inflationYearFraction(Monthly, false, Thirty360(Thirty360::EurobondBasis), infEurTs->baseDate(), infEurTs->referenceDate());
+            inflationYearFraction(Monthly, false, Actual365Fixed(), infEurTs->baseDate(), infEurTs->referenceDate());
 
         Settings::instance().evaluationDate() = referenceDate;
         volstepdates.push_back(Date(15, July, 2016));
@@ -3194,7 +3198,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     Time T = 2.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
     Size steps = static_cast<Size>(T * 24); // number of steps taken (euler)
-
+    DayCounter dc = Actual365Fixed();
     // this can be made more accurate by using LowDiscrepancy instead
     // of PseudoRandom, but we use an error estimator for the check
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * 1, seed);
@@ -3255,11 +3259,11 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
         // GBP zerobond
         gbpzb1(d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         // EUR CPI indexed bond
-        std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
+        std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1, dc);
         infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
                 d.modelExact->numeraire(0, T, zeur1));
         // GBP CPI indexed bond
-        std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1);
+        std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1, dc);
         infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.modelExact->numeraire(0, T, zeur1));
         // EUR defaultable zerobond
@@ -3276,11 +3280,11 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
         // GBP zerobond
         gbpzb2(d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.modelExact->numeraire(0, T, zeur2));
         // EUR CPI indexed bond
-        std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2);
+        std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2, dc);
         infeur2(sinfeur2.first * sinfeur2.second * d.modelExact->discountBond(0, T, T2, zeur2) /
                 d.modelExact->numeraire(0, T, zeur2));
         // GBP CPI indexed bond
-        std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2);
+        std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2, dc);
         infgbp2(sinfgbp2.first * sinfgbp2.second * d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.modelExact->numeraire(0, T, zeur2));
         // EUR defaultable zerobond
@@ -4650,7 +4654,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     SavedSettings backup;
     Date refDate(30, July, 2015);
     Settings::instance().evaluationDate() = Date(30, July, 2015);
-
+    DayCounter dc = Actual365Fixed();
     // IR
     Handle<YieldTermStructure> eurYts(QuantLib::ext::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
     QuantLib::ext::shared_ptr<Parametrization> ireur_p =
@@ -4749,7 +4753,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
         Real irz = path.value[0][l];
         Real infz = path.value[1][l];
         Real infy = path.value[2][l];
-        Real I = model->infdkI(0, T, T, infz, infy).first;
+        Real I = model->infdkI(0, T, T, infz, infy, dc).first;
         floor(std::max(-(I - K), 0.0) / model->numeraire(0, T, irz));
     }
 
@@ -4785,7 +4789,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     SavedSettings backup;
     Date refDate(30, July, 2015);
     Settings::instance().evaluationDate() = Date(30, July, 2015);
-
+    DayCounter dc = Actual365Fixed();
     // IR
     Handle<YieldTermStructure> eurYts(QuantLib::ext::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
     QuantLib::ext::shared_ptr<Parametrization> ireur_p =
@@ -4889,7 +4893,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
         Real irz = path.value[0][l];
         Real infz = path.value[1][l];
         Real infy = path.value[2][l];
-        Real I = model->infdkI(0, T, T, infz, infy).first;
+        Real I = model->infdkI(0, T, T, infz, infy, dc).first;
         floor(std::max(-(I - K), 0.0) / model->numeraire(0, T, irz));
     }
 
