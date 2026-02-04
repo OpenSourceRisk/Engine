@@ -145,14 +145,18 @@ public:
         const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData);
     void setRefDataManager(const std::string& xml);
     void setConventions(const std::string& xml);
-    void setConventions(const ext::shared_ptr<Conventions>& convs);
+    void setConventions(const ext::shared_ptr<Conventions>& convs);    
+    void setConventionsFromFile(const std::string& fileName);
     void setMporConventions(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
     void setCurveConfigs(const std::string& xml, std::string id = std::string());
     void setCurveConfigs(const ext::shared_ptr<CurveConfigurations>& cc, std::string id = std::string());
+    void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
+    void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCalendarAdjustment(const std::string& xml);
-    void setCurrencyConfig(const std::string& xml);
+    void setCurrencyConfig(const std::string& xml);    
+    void setCurrencyConfigFromFile(const std::string& fileName);
     void setPricingEngine(const std::string& xml);
     void setPricingEngine(const ext::shared_ptr<EngineData>& ed);
     void setScriptLibrary(const std::string& xml);
@@ -219,6 +223,7 @@ public:
     void setSensitivityStreamFromBuffer(const std::string& buffer);
     void setBenchmarkVarPeriod(const std::string& period);
     void setScenarioReader(const std::string& fileName);
+    void setHistVarSimMarketParamsFromFile(const std::string& fileName);
     void setOutputHistoricalScenarios(const bool b);
     // Setters for exposure simulation
     void setSimmVersion(const std::string& s);
@@ -288,6 +293,7 @@ public:
     void setDvaName(const std::string& s);
     // FIXME: remove this from the base class?
     void setRawCubeOutputFile(const std::string& s);
+    void setNetCubeOutput(bool b);
     void setNetCubeOutputFile(const std::string& s);
     // funding value adjustment details
     void setFvaBorrowingCurve(const std::string& s);
