@@ -342,13 +342,13 @@ Array MultiAssetQuantoHestonProcess::evolve(Time t0, const Array& x0, Time dt, c
     Size idx = isPTD_ ? locate(t0) : 1;
     // k0 is the index for picking up the correlation matrices relevant for this segment
     Size k0 = idx - 1;
-    // mid point of the segment that contains t0
-    Real t1 = grid_[idx - 1];
-    Real t2 = grid_[idx];
-    Real tm = 0.5 * (t1 + t2);
-
-    // if (isPTD_)
-    //     std::cout << "evolve: t0=" << t0 << " tm=" << tm << " t1=" << t1 << " t2=" << t2 << std::endl;
+    // mid point of the segment that contains t0 (for the piecewise case)
+    Real tm = t0;
+    if (isPTD_) {
+        Real t1 = grid_[idx - 1];
+        Real t2 = grid_[idx];
+        tm = 0.5 * (t1 + t2);
+    }
 
     Array a = isPTD_ ? ptdDriftAdjustment(tm, x0) : driftAdjustment(t0, x0);
 
