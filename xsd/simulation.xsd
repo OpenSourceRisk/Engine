@@ -158,7 +158,7 @@
             <xs:element type="localVol" name="LocalVol" maxOccurs="unbounded" minOccurs="0"/>
             </xs:sequence>
           </xs:choice>
-        <xs:complexType>
+        </xs:complexType>
       </xs:element>
       <xs:element name="EquityModels" maxOccurs="1" minOccurs="0">
         <xs:complexType>
