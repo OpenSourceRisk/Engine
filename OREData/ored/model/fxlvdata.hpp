@@ -34,10 +34,10 @@ using namespace QuantLib;
     \ingroup models */
 class FxLvData : public FxData {
 public:
-    FxLvData() = default;
+    FxLvData() : FxData({}, {}, "LocalVol") {}
     FxLvData(std::string foreignCcy, std::string domesticCcy, std::string model, std::string stochasticRatesCorrection,
              std::string calibrationMoneyness, std::string calibrationGrid)
-        : FxData(foreignCcy, domesticCcy, "CrossCcyLgm"), model_(model),
+        : FxData(foreignCcy, domesticCcy, "LocalVol"), model_(model),
           stochasticRatesCorrection_(stochasticRatesCorrection), calibrationMoneyness_(calibrationMoneyness),
           calibrationGrid_(calibrationGrid) {}
 

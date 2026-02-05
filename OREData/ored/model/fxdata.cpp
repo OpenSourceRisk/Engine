@@ -24,6 +24,7 @@ namespace ore {
 namespace data {
 
 void FxData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, name_);
     foreignCcy_ = XMLUtils::getAttribute(node, "foreignCcy");
     domesticCcy_ = XMLUtils::getChildValue(node, "DomesticCcy", true);
     DLOG("foreignCcy = " << foreignCcy_ << ", domesticCcy = " << domesticCcy_);

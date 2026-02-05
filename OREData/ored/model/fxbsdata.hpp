@@ -39,12 +39,12 @@ using namespace QuantLib;
 */
 class FxBsData : public FxData {
 public:
-    FxBsData() = default;
+    FxBsData() : FxData({}, {}, "CrossCcyLGM") {}
     FxBsData(std::string foreignCcy, std::string domesticCcy, CalibrationType calibrationType, bool calibrateSigma,
              ParamType sigmaType, const std::vector<Time>& sigmaTimes, const std::vector<Real>& sigmaValues,
              std::vector<std::string> optionExpiries = std::vector<std::string>(),
              std::vector<std::string> optionStrikes = std::vector<std::string>())
-        : FxData(foreignCcy, domesticCcy, "CrossCcyLgm"), calibrationType_(calibrationType),
+        : FxData(foreignCcy, domesticCcy, "CrossCcyLGM"), calibrationType_(calibrationType),
           calibrateSigma_(calibrateSigma), sigmaType_(sigmaType), sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues),
           optionExpiries_(optionExpiries), optionStrikes_(optionStrikes) {}
 
