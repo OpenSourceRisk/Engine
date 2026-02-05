@@ -44,7 +44,7 @@ using namespace QuantLib;
 /*!  Base class for specification of a FX model component in the cross asset model.
   \ingroup models
 */
-class FxData : public XMLSerializable {
+class FxData {
 public:
     FxData() = default;
     virtual ~FxData() = default;
@@ -62,8 +62,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc) const;
     //@}
 
     bool operator==(const FxData& rhs) const = default;
