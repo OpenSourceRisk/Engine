@@ -120,6 +120,9 @@ public:
     //! Parse from XML string
     std::string toXMLString() const;
     std::string toXMLStringUnformatted() const;
+
+    //! enable default comparison operators in derived classes
+    auto operator<=>(const XMLSerializable& rhs) const = default;
 };
 
 //! XML Utilities Class
