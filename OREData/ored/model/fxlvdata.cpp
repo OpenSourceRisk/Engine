@@ -31,7 +31,7 @@ void FxLvData::fromXML(XMLNode* node) {
     std::string calibrationGrid_ = XMLUtils::getChildValue(node, "CalibrationGrid");
 }
 
-XMLNode* FxLvData::toXML(XMLDocument& doc) {
+XMLNode* FxLvData::toXML(XMLDocument& doc) const {
     XMLNode* baseNode = FxData::toXML(doc);
     XMLUtils::addGenericChild(doc, baseNode, "Model", model_);
     XMLUtils::addGenericChild(doc, baseNode, "StochasitcRatesCorrection", stochasticRatesCorrection_);

@@ -29,7 +29,7 @@ void FxData::fromXML(XMLNode* node) {
     DLOG("foreignCcy = " << foreignCcy_ << ", domesticCcy = " << domesticCcy_);
 }
 
-XMLNode* FxData::toXML(XMLDocument& doc) {
+XMLNode* FxData::toXML(XMLDocument& doc) const {
     XMLNode* baseNode = doc.allocNode(name_);
     XMLUtils::addAttribute(doc, baseNode, "foreignCcy", foreignCcy_);
     XMLUtils::addChild(doc, baseNode, "DomesticCcy", domesticCcy_);

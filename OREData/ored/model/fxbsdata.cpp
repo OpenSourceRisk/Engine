@@ -57,7 +57,7 @@ void FxBsData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* FxBsData::toXML(XMLDocument& doc) {
+XMLNode* FxBsData::toXML(XMLDocument& doc) const {
 
     XMLNode* crossCcyLGMNode = FxData::toXML(doc);
 
