@@ -661,6 +661,38 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:complexType name="crossAssetLGM">
+    <xs:all>
+      <!-- FIXME: Why is this here every time?? -->
+      <xs:element type="currencyCode" name="Currency" />
+      <!-- FIXME: Currency not Ccy -->
+      <xs:element type="xs:string" name="CalibrationType"/>
+      <xs:element name="Sigma">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="xs:string" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/>
+            <!-- FIXME: comma delimited lists -->
+            <xs:element type="xs:string" name="InitialValue"/>
+            <!-- FIXME: comma delimited lists -->
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationOptions" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Expiries"/>
+            <!-- FIXME: comma delimited lists -->
+            <xs:element type="xs:string" name="Strikes"/>
+            <!-- FIXME: comma delimited lists -->
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
   <xs:complexType name="crossCurrencyLGM">
     <xs:all>
       <xs:element type="currencyCode" name="DomesticCcy"/>
