@@ -77,35 +77,55 @@ Time inflationTime(const Date& date,
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc, bool indexIsInterpolated) {
     // compute the simulationLag
     auto effectiveDayCounter = dc.has_value() && dc.value() != DayCounter() ? dc.value() : ts->dayCounter();
-    auto lag = inflationTime(ts->referenceDate(), *ts, indexIsInterpolated, effectiveDayCounter);
-    auto laggedFixingTime = t - lag;
-    auto laggedObservationDate = lowerDate(laggedFixingTime, ts->referenceDate(), effectiveDayCounter);
-    //auto inflaggedObservationDate = inflationPeriod(laggedObservationDate, ts->frequency()).first;
-    auto unadjustedZeroRate = ts->zeroRate(ts->timeFromReference(laggedObservationDate));
-    auto seasonalityAdjustedRate = unadjustedZeroRate;
-    auto tau = ts->dayCounter().yearFraction(ts->baseDate(), laggedObservationDate);
-    if (ts->seasonality() != nullptr) {
-        auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
-        double baseFactor = seasonCurve->seasonalityFactor(ts->baseDate());
-        double obsFactor = seasonCurve->seasonalityFactor(laggedObservationDate);
-        Real seasonalityAt = obsFactor / baseFactor;
-        auto f = std::pow(seasonalityAt, 1./tau);
-        seasonalityAdjustedRate = (unadjustedZeroRate + 1) * f - 1.0;
-    }
-    
+    auto lag = effectiveDayCounter.yearFraction(ts->baseDate(), ts->referenceDate());
+    auto laggedTime = t - lag;  
+    auto laggedObservationDate = lowerDate(laggedTime, ts->referenceDate(), effectiveDayCounter);
+    auto laggedObservationTime = ts->dayCounter().yearFraction(ts->referenceDate(), laggedObservationDate);
+    auto zeroRate = ts->zeroRate(laggedObservationTime);
+    auto tau = ts->dayCounter().yearFraction(ts->baseDate(), laggedObservationDate);    
     /*
-    std::cout << "inflationGrowth: t=" << t << " lag=" << lag << " laggedFixingTime=" << laggedFixingTime
-              << " laggedObservationDate=" << QuantLib::io::iso_date(laggedObservationDate) 
-              << " inflation period start = " << QuantLib::io::iso_date(inflaggedObservationDate) 
-              << " obsDate in t" << ts->timeFromReference(laggedObservationDate) << std::endl;
-    std::cout << "  unadjustedZeroRate=" << unadjustedZeroRate << " seasonalityAdjustedRate=" << seasonalityAdjustedRate 
-            << " zeroRate(obsDate)= " << ts->zeroRate(laggedObservationDate) << std::endl;
+    std::cout << "inflationGrowth: t=" << t << " laggedTime=" << laggedTime << " zeroRate=" << zeroRate
+              << " tau=" << tau << " indexIsInterpolated=" << indexIsInterpolated << std::endl;
     */
-    return pow(1.0 + seasonalityAdjustedRate, tau);
+    
+    return pow(1.0 + zeroRate, tau);
 }
 
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool indexIsInterpolated) {
     return inflationGrowth(ts, t, ts->dayCounter(), indexIsInterpolated);
+}
+
+Real continuousSeasonalityAdjustment(const Date& baseDate, const Date& observationDate, Rate unadjustedZeroRate,
+                                     Time tau, const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return unadjustedZeroRate;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    double baseFactor = seasonCurve->seasonalityFactor(baseDate);
+    double obsFactor = seasonCurve->seasonalityFactor(observationDate);
+    Real seasonalityAt = obsFactor / baseFactor;
+    auto f = std::pow(seasonalityAt, 1. / tau);
+    return (unadjustedZeroRate + 1) * f - 1.0;
+}
+
+Real applySimLagAndConvertToInflationTime(const QuantLib::Time t, const QuantLib::DayCounter simDc,
+                                          const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts) {
+    auto lag = simDc.yearFraction(ts->baseDate(), ts->referenceDate());
+    auto laggedTimeInSimTime = t - lag;
+    auto laggedObservationDate = lowerDate(laggedTimeInSimTime, ts->referenceDate(), simDc);
+    return ts->dayCounter().yearFraction(ts->referenceDate(), laggedObservationDate);
+}
+
+Real seasonalizeCPI(const Date& baseDate, const Date& observationDate, const Real deasonalizedCPI,
+                            const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return deasonalizedCPI;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    double baseFactor = seasonCurve->seasonalityFactor(baseDate);
+    double obsFactor = seasonCurve->seasonalityFactor(observationDate);
+    Real seasonalityAt = obsFactor / baseFactor;
+    return deasonalizedCPI * seasonalityAt;
 }
 
 Real inflationLinkedBondQuoteFactor(const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond) {

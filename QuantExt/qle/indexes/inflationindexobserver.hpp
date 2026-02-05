@@ -24,16 +24,21 @@
 #ifndef quantext_inflation_index_observer_hpp
 #define quantext_inflation_index_observer_hpp
 
+#include <ql/indexes/inflationindex.hpp>
+#include <qle/utilities/inflation.hpp>
+
 namespace QuantExt {
 
 //! Inflation Index observer
 /*! \ingroup indexes */
 class InflationIndexObserver : public TermStructure {
 public:
-    InflationIndexObserver(const QuantLib::ext::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote,
-                           const Period& observationLag, const DayCounter& dayCounter = DayCounter())
-        : TermStructure(dayCounter), index_(index), quote_(quote), observationLag_(observationLag) {
+    InflationIndexObserver(const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index, const Handle<Quote>& quote,
+                           const Size& simulationLag, const DayCounter& dayCounter = DayCounter())
+        : TermStructure(dayCounter), index_(index), quote_(quote), simulationLag_(simulationLag) {
         registerWith(quote_);
+        QL_REQUIRE(index_, "index is null");
+        QL_REQUIRE(!index_->zeroInflationTermStructure().empty(), "index does not have an associated zero inflation term structure");
     }
 
     void update() override { // called when the quote changes
@@ -49,14 +54,20 @@ private:
     void setFixing() {
         // something like this
         Date today = Settings::instance().evaluationDate();
-        Date fixingDate = today - observationLag_;
+        Date fixingDate = today - simulationLag_;
+        auto zits = index_->zeroInflationTermStructure();
+        // In the CAM we simulate the cpi without seasonality adjustment, so we need to apply the seasonality adjustment
+        // here to get the correct fixing for the index. If this risk factor will be used in future for other purposes
+        // than exposure simulation in CAM, we might want to make the application of seasonality adjustment optional via
+        // a flag in the constructor.
+        auto cpi = seasonalizeCPI(index_->zeroInflationTermStructure()->baseDate(), fixingDate, quote_->value(), zits.currentLink());
         // overwrite the current fixing in the QuantLib::FixingManager
-        index_->addFixing(fixingDate, quote_->value(), true);
+        index_->addFixing(fixingDate, cpi, true);
     }
 
-    QuantLib::ext::shared_ptr<InflationIndex> index_;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> index_;
     Handle<Quote> quote_;
-    Period observationLag_;
+    Size simulationLag_;
 };
 } // namespace QuantExt
 

@@ -2313,21 +2313,19 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
     BOOST_TEST_MESSAGE("flatVols " << flatVols);
     BOOST_TEST_MESSAGE("driftFreeState " << driftFreeState);
     BOOST_TEST_MESSAGE("exactDiscretization " << exactDiscretization);
-    //DayCounter infDc = Thirty360(Thirty360::ISDA);
+    DayCounter infDc = Thirty360(Thirty360::ISDA);
     //DayCounter infDc = MonthCounter();
-    DayCounter infDc = Actual365Fixed();
+    //DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
-    Period infSimLag = 3 * Months;
+    Period infSimLag = 2 * Months;
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc , infSimLag, seasonality};
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
-
-    
-
     auto today = d.referenceDate;
     auto simDate = today + 3 * Months;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
     Date BaseDateT1 = simDate - (today - baseDate);
+    Date BaseDateT1_adj = inflationPeriod(BaseDateT1 - infObsLag, Monthly).first;
 
     Date inflationPaymentDate = today + 10 * Years + 3 * Months;
     Date inflationObsDate = inflationPeriod(inflationPaymentDate - infObsLag, Monthly).first;
@@ -2361,7 +2359,7 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
     //T2_discount = 20.0;
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
-    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 40); // number of time steps
+    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 200); // number of time steps
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * steps, seed);
     TimeGrid grid1(T, steps);
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
@@ -2393,18 +2391,17 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
             infeur1(sinfeur1.first * sinfeur1.second *
                     model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         } else {
-            cpieur1(exp(infeury1));
+            
             //infeur1(exp(infeury1) * inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated) *
             //        model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
+            auto baseCPI = seasonalizeCPI(baseDate, BaseDateT1, exp(infeury1), d.infEurTs.currentLink());
+            cpieur1(baseCPI);
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             auto zeroRate = std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) - 1.0;
-            /*
-            if(seasonality){
-                auto seasonalityCurve = QuantLib::ext::make_shared<MultiplicativePriceSeasonality>(BaseDateT1, Monthly, d.infSeasonalFactors);
-                zeroRate = seasonalityCurve->correctZeroRate(BaseDateT1, inflationObsDate, zeroRate, infDc);
-            }
-                */
-            infeur1(exp(infeury1) * std::pow(1.0 + zeroRate, tauSim) *
+            
+            auto adjZeroRate = continuousSeasonalityAdjustment(BaseDateT1, inflationObsDate, zeroRate, tauSim, d.infEurTs.currentLink());
+        
+            infeur1(baseCPI * std::pow(1.0 + adjZeroRate, tauSim) *
                 model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
@@ -2413,7 +2410,14 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty){
             infgbp1(sinfgbp1.first * sinfgbp1.second *
                 model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
+
+            auto baseCPI = seasonalizeCPI(baseDate, BaseDateT1, exp(infgbpy1), d.infGbpTs.currentLink());
+            auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
+            auto zeroRate = std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated), 1.0 / tauSim) - 1.0;
+            auto adjZeroRate = continuousSeasonalityAdjustment(BaseDateT1, inflationObsDate, zeroRate, tauSim, d.infGbpTs.currentLink());
+
+        
+            infgbp1(baseCPI * std::pow(1.0 + adjZeroRate, tauSim) *
                 model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
         }
     }

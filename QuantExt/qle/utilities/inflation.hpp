@@ -54,6 +54,29 @@ QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTer
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
     QuantLib::Time t, bool indexIsInterpolated);
 
+/*! Compute a seasonality-adjusted zero rate for a given observation date.
+    It takes the time tau between the term structure base date and the observation date as
+    given and dont adjust it internally based on the frequency of the inflation curve.
+    \param observationDate  date at which the seasonality factor is evaluated
+    \param unadjustedZeroRate the zero inflation rate before seasonality
+    \param tau the year fraction between the term structure base date and the observation date
+    \param ts the zero inflation term structure that may contain seasonality
+    \return the seasonality-adjusted zero inflation rate
+*/
+QuantLib::Real continuousSeasonalityAdjustment(const QuantLib::Date& baseDate, const QuantLib::Date& observationDate, QuantLib::Rate unadjustedZeroRate,
+                                     QuantLib::Time tau,
+                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+/*! Applies seasonality adjustment to a given CPI value assuming the CPI doesnt include the seasonality
+    This method is used to seasonalize the CPI fixings for the Cross-AssetModel, where the inflation is modelled without
+   seasonality, and the seasonality is applied on top of the model.
+*/
+QuantLib::Real seasonalizeCPI(const QuantLib::Date& baseDate, const QuantLib::Date& observationDate, QuantLib::Rate cpi,
+                    const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+QuantLib::Real applySimLagAndConvertToInflationTime(const QuantLib::Time t, const QuantLib::DayCounter simDc,
+                                          const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
 /*! Calculate the Compound Factor to compute the nominal price from the real price
    I(t_s)/I(t_0) with I(t_s) the CPI at settlement date and I(t_0) the bond's base CPI
 */

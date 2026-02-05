@@ -2396,13 +2396,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         DLOG("adding " << name << " base CPI price");
-                        QuantLib::ext::shared_ptr<InflationSwapConvention> conv =
-                            getInflationSwapConvention(curveConfigs, name, InflationCurveConfig::Type::ZC);
 
                         Handle<ZeroInflationIndex> zeroInflationIndex =
                             initMarket->zeroInflationIndex(name, configuration);
-                        Period obsLag = conv->observationLag();
-                        Date fixingDate = zeroInflationIndex->zeroInflationTermStructure()->baseDate();
+                        auto zits = zeroInflationIndex->zeroInflationTermStructure();
+                        Period simulationLag = zits->referenceDate() - zits->baseDate();
+                        Date fixingDate = zits->baseDate();
                         Real baseCPI = zeroInflationIndex->fixing(fixingDate);
 
                         QuantLib::ext::shared_ptr<InflationIndex> inflationIndex =
@@ -2416,12 +2415,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     inflationIndex,
                                     Handle<Quote>(
                                         QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(Handle<Quote>(q), m)),
-                                    obsLag));
+                                    simulationLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         } else {
                             Handle<InflationIndexObserver> inflObserver(
                                 QuantLib::ext::make_shared<InflationIndexObserver>(inflationIndex, Handle<Quote>(q),
-                                                                                   obsLag));
+                                                                                   simulationLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         }
                         simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
