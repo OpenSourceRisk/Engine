@@ -155,6 +155,7 @@ public:
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
     void setCalendarAdjustment(const std::string& xml);
+    void setCalendarAdjustmentFromFile(const std::string& fileName);
     void setCurrencyConfig(const std::string& xml);    
     void setCurrencyConfigFromFile(const std::string& fileName);
     void setPricingEngine(const std::string& xml);
@@ -203,6 +204,7 @@ public:
     void setSensiPricingEngine(const ext::shared_ptr<EngineData>& engineData);
     // Setters for scenario
     void setScenarioSimMarketParams(const std::string& xml);
+    void setScenarioSimMarketParamsFromFile(const std::string& fileName);
     void setScenarioOutputFile(const std::string& filename);
     // Setters for stress testing
     void setStressThreshold(Real r);

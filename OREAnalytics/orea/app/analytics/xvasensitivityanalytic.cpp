@@ -336,7 +336,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
     std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
     auto simMarketParams = analytic()->configurations().simMarketParams;
 
-    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
+    auto xvaAnalytic = dependentAnalytic("XVA");
     auto xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
 
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
