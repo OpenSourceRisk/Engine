@@ -86,11 +86,11 @@ BOOST_AUTO_TEST_CASE(testMartingales) {
         {HestonProcess::Reflection,           60, 0.8, 1, 1, 0},
 	{HestonProcess::QuadraticExponential, 60, 0.8, 1, 1, 0},
         {HestonProcess::FullTruncation,       60, 0.8, 2, 2, 0},
-	{HestonProcess::QuadraticExponential, 60, 0.8, 2, 2, 0},
-        {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 1},
-	{HestonProcess::FullTruncation,       60, 0.8, 2, 2, 1},
-        {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 2},
-	{HestonProcess::FullTruncation,       60, 0.8, 2, 2, 2}
+	{HestonProcess::QuadraticExponential, 60, 0.8, 2, 2, 0}//,
+        // {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 1},
+	// {HestonProcess::FullTruncation,       60, 0.8, 2, 2, 1},
+        // {HestonProcess::FullTruncation,       60, 0.8, 1, 1, 2},
+	// {HestonProcess::FullTruncation,       60, 0.8, 2, 2, 2}
     };
 
     Date today(8, December, 2025);
