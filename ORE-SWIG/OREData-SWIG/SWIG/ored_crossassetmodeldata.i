@@ -26,7 +26,9 @@
 %{
 using ore::data::CrossAssetModelData;
 using ore::data::IrModelData;
+using ore::data::FxData;
 using ore::data::FxBsData;
+using ore::data::FxLvData;
 using ore::data::EqBsData;
 using ore::data::InflationModelData;
 using ore::data::CrLgmData;
@@ -51,7 +53,7 @@ public:
 };
 
 %shared_ptr(FxBsData)
-class FxBsData {
+class FxBsData : public FxData {
 public:
     FxBsData();
     FxBsData(std::string foreignCcy, std::string domesticCcy, CalibrationType calibrationType, bool calibrateSigma,
@@ -75,7 +77,7 @@ public:
 };
 
 %template(IrModelDataMap) std::map<std::string, ext::shared_ptr<IrModelData>>;
-%template(FxBsDataMap) std::map<std::string, ext::shared_ptr<FxBsData>>;
+%template(FxDataMap) std::map<std::string, ext::shared_ptr<FxData>>;
 %template(EqBsDataMap) std::map<std::string, ext::shared_ptr<EqBsData>>;
 %template(InflationModelDataMap) std::map<std::string, ext::shared_ptr<InflationModelData>>;
 %template(CrLgmDataMap) std::map<std::string, ext::shared_ptr<CrLgmData>>;
@@ -83,7 +85,7 @@ public:
 %template(CommoditySchwartzDataMap) std::map<std::string, ext::shared_ptr<CommoditySchwartzData>>;
 
 %template(IrModelDataVector) std::vector<ext::shared_ptr<IrModelData>>;
-%template(FxBsDataVector) std::vector<ext::shared_ptr<FxBsData>>;
+%template(FxBsDataVector) std::vector<ext::shared_ptr<FxData>>;
 %template(EqBsDataVector) std::vector<ext::shared_ptr<EqBsData>>;
 %template(InflationModelDataVector) std::vector<ext::shared_ptr<InflationModelData>>;
 %template(CrLgmDataVector) std::vector<ext::shared_ptr<CrLgmData>>;
@@ -97,7 +99,7 @@ public:
 
     CrossAssetModelData(
         const std::vector<ext::shared_ptr<IrModelData>>& irConfigs,
-        const std::vector<ext::shared_ptr<FxBsData>>& fxConfigs,
+        const std::vector<ext::shared_ptr<FxData>>& fxConfigs,
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         QuantLib::Real tolerance = 1e-4,
         const std::string& measure = "LGM",
@@ -106,7 +108,7 @@ public:
 
     CrossAssetModelData(
         const std::vector<ext::shared_ptr<IrModelData>>& irConfigs,
-        const std::vector<ext::shared_ptr<FxBsData>>& fxConfigs,
+        const std::vector<ext::shared_ptr<FxData>>& fxConfigs,
         const std::vector<ext::shared_ptr<EqBsData>>& eqConfigs,
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         QuantLib::Real tolerance = 1e-4,
@@ -116,7 +118,7 @@ public:
 
     CrossAssetModelData(
         const std::vector<ext::shared_ptr<IrModelData>>& irConfigs,
-        const std::vector<ext::shared_ptr<FxBsData>>& fxConfigs,
+        const std::vector<ext::shared_ptr<FxData>>& fxConfigs,
         const std::vector<ext::shared_ptr<EqBsData>>& eqConfigs,
         const std::vector<ext::shared_ptr<InflationModelData>>& infConfigs,
         const std::vector<ext::shared_ptr<CrLgmData>>& crLgmConfigs,
@@ -138,7 +140,7 @@ public:
     const std::vector<std::string>& creditNames() const;
     const std::vector<std::string>& commodities() const;
     const std::vector<ext::shared_ptr<IrModelData>>& irConfigs() const;
-    const std::vector<ext::shared_ptr<FxBsData>>& fxConfigs() const;
+    const std::vector<ext::shared_ptr<FxData>>& fxConfigs() const;
     const std::vector<ext::shared_ptr<EqBsData>>& eqConfigs() const ;
     const std::vector<ext::shared_ptr<InflationModelData>>& infConfigs() const;
     const std::vector<ext::shared_ptr<CrLgmData>>& crLgmConfigs() const;
@@ -163,7 +165,7 @@ public:
     bool operator!=(const CrossAssetModelData& rhs);;
 
     void buildIrConfigs(std::map<std::string, ext::shared_ptr<IrModelData>>& irMap);
-    void buildFxConfigs(std::map<std::string, ext::shared_ptr<FxBsData>>& fxMap);
+    void buildFxConfigs(std::map<std::string, ext::shared_ptr<FxData>>& fxMap);
     void buildEqConfigs(std::map<std::string, ext::shared_ptr<EqBsData>>& eqMap);
     void buildInfConfigs(const std::map<std::string, ext::shared_ptr<InflationModelData>>& mp);
     void buildCrConfigs(std::map<std::string, ext::shared_ptr<CrLgmData>>& crLgmMap,
@@ -215,7 +217,7 @@ public:
           self->irConfigs() = i;
       }
       
-      void setFxConfigs(std::vector<ext::shared_ptr<FxBsData>> i) {
+      void setFxConfigs(std::vector<ext::shared_ptr<FxData>> i) {
           self->fxConfigs() = i;
       }
 
