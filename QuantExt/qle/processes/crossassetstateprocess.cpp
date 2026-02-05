@@ -83,6 +83,15 @@ CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const C
             crCirpp_.push_back(QuantLib::ext::shared_ptr<CrCirppStateProcess>());
         }
     }
+
+    /* Check whether we can cache path-independent parts for drift and diffusion. To keep it simple, we disable the cache for all components
+       as soon as we find one component that does not allow path-independent caching. The cache is for the legacy evolution of the process
+       anyway, the new model-component based evolution handles its own caching. */
+    cacheApplicable_ = true;
+    for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
+        cacheApplicable_ =
+            cacheApplicable_ && model_->modelType(CrossAssetModel::AssetType::FX, i) != CrossAssetModel::ModelType::LV;
+    }
 }
 
 Size CrossAssetStateProcess::size() const { return model_->dimension(); }
@@ -90,6 +99,9 @@ Size CrossAssetStateProcess::size() const { return model_->dimension(); }
 Size CrossAssetStateProcess::factors() const { return model_->brownians() + model_->auxBrownians(); }
 
 void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
+    updateSqrtCorrelation();
+    if (!cacheApplicable_)
+        return;
     cacheNotReady_m_ = cacheNotReady_d_ = true;
     timeStepsToCache_m_ = timeStepsToCache_d_ = timeSteps;
     timeStepCache_m_ = timeStepCache_d_ = 0;
@@ -101,7 +113,6 @@ void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
         if (auto p = QuantLib::ext::dynamic_pointer_cast<IrHwStateProcess>(model_->irModel(i)->stateProcess()))
             p->resetCache(timeSteps);
     }
-    updateSqrtCorrelation();
 }
 
 void CrossAssetStateProcess::updateSqrtCorrelation() const {
