@@ -421,6 +421,7 @@ void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKe
 void XvaAnalyticImpl::reset() { 
     model_.reset();
     scenarioGenerator_.reset();
+    dimCalculator_.reset();
 }
 
 void XvaAnalyticImpl::setUpConfigurations() {
