@@ -58,8 +58,8 @@ public:
              ParamType sigmaType, const std::vector<QuantLib::Time>& sigmaTimes, const std::vector<QuantLib::Real>& sigmaValues,
              std::vector<std::string> optionExpiries = std::vector<std::string>(),
              std::vector<std::string> optionStrikes = std::vector<std::string>());
-    const std::string& foreignCcy();
-    const std::string& domesticCcy();
+    const std::string& foreignCcy() const;
+    const std::string& domesticCcy() const;
 };
 
 %shared_ptr(EqBsData)

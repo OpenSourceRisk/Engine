@@ -374,7 +374,7 @@ void CrossAssetModelBuilder::buildModel() const {
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization>> fxParametrizations;
     for (Size i = 0; i < config_->fxConfigs().size(); i++) {
         DLOG("FX Parametrization " << i);
-        QuantLib::ext::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
+        QuantLib::ext::shared_ptr<FxBsData> fx = QuantLib::ext::dynamic_pointer_cast<FxBsData>(config_->fxConfigs()[i]);
         QuantLib::Currency ccy = ore::data::parseCurrency(fx->foreignCcy());
         QuantLib::Currency domCcy = ore::data::parseCurrency(fx->domesticCcy());
 
@@ -629,7 +629,7 @@ void CrossAssetModelBuilder::buildModel() const {
      */
 
     for (Size i = 0; i < fxParametrizations.size(); i++) {
-        QuantLib::ext::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
+        QuantLib::ext::shared_ptr<FxBsData> fx = QuantLib::ext::dynamic_pointer_cast<FxBsData>(config_->fxConfigs()[i]);
 
         if (fx->calibrationType() == CalibrationType::None || !fx->calibrateSigma()) {
             DLOG("FX Calibration " << i << " skipped");

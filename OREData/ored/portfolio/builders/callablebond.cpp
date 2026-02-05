@@ -300,7 +300,7 @@ Handle<QuantExt::CrossAssetModel> CallableBondCamEngineBuilder::model(const std:
     
     
     //! Vector of FX model specifications
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
     //! Vector of EQ model specifications
     std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
     //! Vector of INF model specifications
