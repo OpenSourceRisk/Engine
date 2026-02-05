@@ -392,7 +392,7 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
 
         constexpr Size dampingSteps = 5;
 
-        // 2.2 boostrap h0 and sigma functions
+        // 2.2 bootstrap h0 and sigma functions
 
         // 2.2.1 set integration length dy for each grid point (= center of integration interval) and initial condition
 
