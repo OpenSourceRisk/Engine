@@ -140,7 +140,8 @@ public:
     void setResultsPath(std::filesystem::path resultsPath);
     void setRefDataManager(const ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager);
     void setBaselTrafficLight(const ext::shared_ptr<ore::data::BaselTrafficLightData>& baselTrafficLight);
-    void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);
+    void setTodaysMarketParams(const ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);    
+    void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setSensitivityScenarioData(
         const ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData);
     void setRefDataManager(const std::string& xml);
@@ -150,6 +151,7 @@ public:
     void setMporConventions(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfig(const std::string& xml);
+    void setIborFallbackConfigFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml, std::string id = std::string());
     void setCurveConfigs(const ext::shared_ptr<CurveConfigurations>& cc, std::string id = std::string());
     void setCurveConfigsFromFile(const std::string& fileName, std::string id = std::string());
@@ -160,10 +162,12 @@ public:
     void setCurrencyConfigFromFile(const std::string& fileName);
     void setPricingEngine(const std::string& xml);
     void setPricingEngine(const ext::shared_ptr<EngineData>& ed);
+    void setPricingEngineFromFile(const std::string& fileName);
     void setScriptLibrary(const std::string& xml);
     void setTodaysMarketParams(const std::string& xml);
     void setPortfolio(const std::string& xml);
     void setPortfolio(const ext::shared_ptr<Portfolio>& portfolio);
+    void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath);
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i);
     void setEntireMarket(bool b);

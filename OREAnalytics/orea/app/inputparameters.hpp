@@ -426,6 +426,7 @@ public:
     void setIncludePastCashflows(bool b) { setupVariables_.includePastCashflows_ = b; }
 
     // Setters for curves/markets
+
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
     void setTodaysMarketCalibrationPrecision(std::size_t p) { todaysMarketCalibrationPrecision_ = p; }
     void setCalendarAdjustment(const std::string& xml);
@@ -524,9 +525,7 @@ public:
     void setXvaCgRegressionOrderDynamicIm(Size r) { parameters_.set("simulation", "xvaCgRegressionOrderDynamicIm", r); }
     void setXvaCgRegressionVarianceCutoffDynamicIm(double c) { parameters_.set("simulation", "xvaCgRegressionVarianceCutoffDynamicIm", c); }
     void setXvaCgTradeLevelBreakdown(bool b) { parameters_.set("simulation", "xvaCgTradeLevelBreakDown", b); }
-    void setXvaCgRegressionReportTimeStepsDynamicIM(const std::vector<Size>& s) {
-        parameters_.set("simulation", "xvaCgRegressionReportTimeStepsDynamicIM", s);
-    }
+    void setXvaCgRegressionReportTimeStepsDynamicIM(const std::vector<Size>& s) { parameters_.set("simulation", "xvaCgRegressionReportTimeStepsDynamicIM", s); }
     void setXvaCgUseRedBlocks(bool b) { parameters_.set("simulation", "xvaCgUseRedBlocks", b); }
     void setXvaCgUseExternalComputeDevice(bool b) { parameters_.set("simulation", "xvaCgUseExternalComputeDevice", b); }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { parameters_.set("simulation", "xvaCgExternalDeviceCompatibilityMode", b); }

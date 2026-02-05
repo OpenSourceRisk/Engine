@@ -33,6 +33,10 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    
+}
+
 void PnlExplainAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simulationConfigRequired = true;
     analytic()->configurations().sensitivityConfigRequired = true;

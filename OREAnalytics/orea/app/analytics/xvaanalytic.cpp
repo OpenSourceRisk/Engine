@@ -115,7 +115,6 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     exposureBaseCurrency_ = inputs->setupVariables().baseCurrency_;
     inputs->loadParameter<string>(exposureBaseCurrency_, "simulation", "baseCurrency", false);
 
-    exposureObservationModel_ = inputs->setupVariables().observationModel_;
     inputs->loadParameter<string>(exposureObservationModel_, "simulation", "observationModel", false);
 
     inputs->loadParameter<bool>(storeFlows_, "simulation", "storeFlows", false, parseBool);
@@ -226,14 +225,19 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(dimOutputNettingSet_, "xva", "dimOutputNettingSet", false);
     inputs->loadParameter<Size>(dimLocalRegressionEvaluations_, "xva", "dimLocalRegressionEvaluations", false, parseInteger);
     inputs->loadParameter<Real>(dimLocalRegressionBandwidth_, "xva", "dimLocalRegressionBandwidth", false, parseReal);
-    inputs->loadParameter<string>(dimModel_, "xva", "dimModel", false);
-    QL_REQUIRE(
-        dimModel_ == "Regression" || dimModel_ == "Flat" || dimModel_ == "DeltaVaR" ||
-            dimModel_ == "DeltaGammaNormalVaR" || dimModel_ == "DeltaGammaVaR" || dimModel_ == "DynamicIM" ||
-            dimModel_ == "SimmAnalytic",
-        "DIM model "
-            << dimModel_ << " not supported, "
-            << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM, SimmAnalytic");
+    string dimModel;
+    inputs->loadParameter<string>(dimModel, "xva", "dimModel", false);
+    if (!dimModel.empty()) {
+        dimModel_ = dimModel;
+        dimAnalytic_ = true;
+        QL_REQUIRE(
+            dimModel_ == "Regression" || dimModel_ == "Flat" || dimModel_ == "DeltaVaR" ||
+                dimModel_ == "DeltaGammaNormalVaR" || dimModel_ == "DeltaGammaVaR" || dimModel_ == "DynamicIM" ||
+                dimModel_ == "SimmAnalytic",
+            "DIM model "
+                << dimModel_ << " not supported, "
+                << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR, DeltaGammaVaR, DynamicIM, SimmAnalytic");
+    }
 
     string deterministicInitialMarginFile;
     inputs->loadParameter<string>(deterministicInitialMarginFile, "xva", "deterministicInitialMarginFile", false);

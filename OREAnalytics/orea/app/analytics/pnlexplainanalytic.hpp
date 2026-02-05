@@ -30,13 +30,18 @@
 namespace ore {
 namespace analytics {
 
+struct PnlExplainVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+};
+
 class PnlExplainAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PNL_EXPLAIN";
     static constexpr const char* sensiLookupKey = "SENSI";
     static constexpr const char* pnlLookupKey = "PNL";
     PnlExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<PnlExplainVariables>()) {
         setLabel(LABEL);
     }
 

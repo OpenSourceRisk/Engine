@@ -49,8 +49,7 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
 
     inputs->loadParameter<Date>(asof_, "setup", "asofDate", true, parseDate);
     Settings::instance().evaluationDate() = asof_;
-
-    
+        
     inputs->loadParameter<std::filesystem::path>(inputPath_, "setup", "inputPath");
     inputs->loadParameter<std::filesystem::path>(resultsPath_, "setup", "outputPath");
     if (resultsPath_.empty())
@@ -386,6 +385,11 @@ void InputParameters::setIborFallbackConfig(const std::string& xml) {
     setupVariables_.iborFallbackConfig_->fromXMLString(xml);
 }
 
+void InputParameters::setIborFallbackConfigFromFile(const std::string& fileName) {
+    setupVariables_.iborFallbackConfig_ = ext::make_shared<IborFallbackConfig>();
+    setupVariables_.iborFallbackConfig_->fromFile(fileName);
+}
+
 void InputParameters::setPricingEngine(const std::string& xml) {
     setupVariables_.pricingEngine_ = ext::make_shared<EngineData>();
     setupVariables_.pricingEngine_->fromXMLString(xml);
@@ -393,9 +397,19 @@ void InputParameters::setPricingEngine(const std::string& xml) {
 
 void InputParameters::setPricingEngine(const ext::shared_ptr<EngineData>& ed) { setupVariables_.pricingEngine_ = ed; }
 
+void InputParameters::setPricingEngineFromFile(const std::string& fileName) {
+    setupVariables_.pricingEngine_ = ext::make_shared<EngineData>();
+    setupVariables_.pricingEngine_->fromFile(fileName);
+}
+
 void InputParameters::setTodaysMarketParams(const std::string& xml) {
     setupVariables_.todaysMarketParams_ = ext::make_shared<TodaysMarketParameters>();
     setupVariables_.todaysMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setTodaysMarketParamsFromFile(const std::string& fileName) {
+    setupVariables_.todaysMarketParams_ = ext::make_shared<TodaysMarketParameters>();
+    setupVariables_.todaysMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setPortfolio(const ext::shared_ptr<Portfolio>& portfolio) {
@@ -406,6 +420,16 @@ void InputParameters::setPortfolio(const ext::shared_ptr<Portfolio>& portfolio) 
 void InputParameters::setPortfolio(const std::string& xml) {
     setupVariables_.portfolio_ = ext::make_shared<Portfolio>(setupVariables_.buildFailedTrades_);
     setupVariables_.portfolio_->fromXMLString(xml);
+    scaleUpPortfolio(setupVariables_.portfolio_);
+}
+
+void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
+    vector<string> files = getFileNames(fileNameString, inputPath);
+    setupVariables_.portfolio_ = ext::make_shared<Portfolio>(setupVariables_.buildFailedTrades_);
+    for (auto file : files) {
+        LOG("Loading portfolio from file: " << file);
+        setupVariables_.portfolio_->fromFile(file);
+    }
     scaleUpPortfolio(setupVariables_.portfolio_);
 }
 
