@@ -93,22 +93,25 @@ void BlackCdsOptionEngine::calculate() const {
     results_.additionalResults["callPut"] = callPut == Option::Call ? string("Call") : string("Put");
 
     // Adjusted strike spread. K' in O'Kane 2008, Section 11.7.
+    // expecting sp in denominator of Kp but missing in rpv01,
+    // also disc missing in rpv01 so we add disc in numerator
+    DiscountFactor disc = discount_->discount(exerciseDate);
+    Probability sp = probability_->survivalProbability(exerciseDate);
     Real runningSpread = cds.runningSpread();
     Real Kp = close_enough(strike, 0.0)
                   ? 0.0
-                  : runningSpread + forwardRiskyAnnuityStrike() * (strike - runningSpread) / rpv01;
+                  : runningSpread + forwardRiskyAnnuityStrike() * (strike - runningSpread) * disc / rpv01;
 
     // NPV, Section 9.3.7 O'Kane 2008.
+    // use fwd risky annuity as numeraire, the coefficient becomes = rpv01 * sp * disc
+    // but dis and sp missing in rpv01 -> cancel out ...
     results_.value = rpv01 * cds.notional() * blackFormula(callPut, Kp, forward, stdDev, 1.0);
 
     // If it is non-knockout and a payer, add the value of the default payout.
     // Section 2.2 of Richard J.Martin, 2019 or Section 9.3.7 O'Kane 2008.
     if (!arguments_.knocksOut && cds.side() == Protection::Buyer) {
 
-        DiscountFactor disc = discount_->discount(exerciseDate);
         results_.additionalResults["discountToExercise"] = disc;
-
-        Probability sp = probability_->survivalProbability(exerciseDate);
         results_.additionalResults["survivalProbabilityToExercise"] = sp;
 
         Real nonKoPv = disc * sp * (1 - recovery_);
@@ -173,10 +176,10 @@ Real BlackCdsOptionEngine::forwardRiskyAnnuityStrike() const {
     // Survival to exercise
     const Date& exerciseDate = arguments_.exercise->dates().front();
     Probability spToExercise = dph->survivalProbability(exerciseDate);
-    // Real discToExercise = discount_->discount(exerciseDate);
+    Real discToExercise = discount_->discount(exerciseDate);
 
     // Forward risky annuity strike (divides out the survival probability and discount to exercise)
-    Real rpv01_K_fwd = rpv01_K / spToExercise; // / discToExercise;
+    Real rpv01_K_fwd = rpv01_K / spToExercise / discToExercise;
 
     // if (generateAdditionalResults_) {
     //     results_.additionalResults["riskyAnnuityStrike"] = rpv01_K;
