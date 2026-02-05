@@ -140,7 +140,7 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::swaptionVol(const stri
     }
     // check if we have a curve for the ccy in the default config
     if (configuration != Market::defaultConfiguration) {
-        require(MarketObject::SwaptionVol, ccy, configuration);
+        require(MarketObject::SwaptionVol, ccy, Market::defaultConfiguration);
         auto it4 = swaptionCurves_.find(make_pair(Market::defaultConfiguration, ccy));
         if (it4 != swaptionCurves_.end())
             return it4->second;
