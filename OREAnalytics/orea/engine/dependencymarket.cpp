@@ -468,7 +468,7 @@ Handle<ZeroInflationIndex> DependencyMarket::zeroInflationIndex(const string& na
     }
     QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroCurve =
         QuantLib::ext::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(
-            new ZeroInflationCurveObserverMoving<Linear>(0, WeekendsOnly(), dc, Period(2, Months), Period(2, Months),
+            new ZeroInflationCurveObserverMoving<Linear>(0, WeekendsOnly(), dc, 60, Period(2, Months),
                                                          QuantLib::Frequency::Semiannual, false,
                                                          {0 * Days, 1 * Years, 2 * Years}, quotes));
     its.linkTo(zeroCurve);

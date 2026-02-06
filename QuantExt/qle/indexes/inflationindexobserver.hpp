@@ -33,11 +33,11 @@ namespace QuantExt {
 /*! \ingroup indexes */
 class InflationIndexObserver : public TermStructure {
 public:
-    InflationIndexObserver(const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index, const Handle<Quote>& quote,
+    InflationIndexObserver(const QuantLib::Handle<ZeroInflationIndex>& index, const Handle<Quote>& quote,
                            const Size& simulationLag, const DayCounter& dayCounter = DayCounter())
         : TermStructure(dayCounter), index_(index), quote_(quote), simulationLag_(simulationLag) {
         registerWith(quote_);
-        QL_REQUIRE(index_, "index is null");
+        QL_REQUIRE(!index_.empty(), "index is null");
         QL_REQUIRE(!index_->zeroInflationTermStructure().empty(), "index does not have an associated zero inflation term structure");
     }
 
@@ -65,7 +65,7 @@ private:
         index_->addFixing(fixingDate, cpi, true);
     }
 
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> index_;
+    QuantLib::Handle<ZeroInflationIndex> index_;
     Handle<Quote> quote_;
     Size simulationLag_;
 };

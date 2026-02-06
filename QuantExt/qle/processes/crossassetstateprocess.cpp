@@ -19,6 +19,7 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
+#include <qle/utilities/inflation.hpp>
 #include <qle/utilities/time.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
@@ -285,28 +286,15 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 const auto& infDayCounter = ts->dayCounter();
                 Time laggedt = infDayCounter.yearFraction(ts->referenceDate(), laggedObservationDate);
                 Time tau = infDayCounter.yearFraction(ts->baseDate(), laggedObservationDate);
-
+                // Use unadjusted zero rates (no seasonality) - seasonality is applied when 
+                // computing CPI fixings from the simulated state. This avoids issues with
+                // discontinuous seasonality factors in the discrete Euler scheme.
                 Time dt = 0.0001;
                 Time t1 = std::max(laggedt - dt / 2.0, 0.0);
                 Time t2 = t1 + dt;
                 auto z_t = ts->zeroRate(laggedt);
                 auto z_t1 = ts->zeroRate(t1);
                 auto z_t2 = ts->zeroRate(t2);
-                // Seasonality adjustment for continuous JY model - don't snap to period start
-                if(ts->hasSeasonality()){
-                    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
-                    if (seasonCurve) {
-                        // Compute seasonality factor ratio directly without snapping to period start
-                        Real baseFactor = seasonCurve->seasonalityFactor(ts->baseDate());
-                        Real obsFactor = seasonCurve->seasonalityFactor(laggedObservationDate);
-                        Real seasonalityAt = obsFactor / baseFactor;
-                        // For continuous model, use actual tau, not snapped to period
-                        Real f = std::pow(seasonalityAt, 1.0 / tau);
-                        z_t = (z_t + 1.0) * f - 1.0;
-                        z_t1 = (z_t1 + 1.0) * f - 1.0;
-                        z_t2 = (z_t2 + 1.0) * f - 1.0;
-                    }
-                }
                 indexDrift += std::log(1 + z_t) + (tau / (1 + z_t)) * ((z_t2 - z_t1) / dt);
 
                 if (i_j > 0) {
