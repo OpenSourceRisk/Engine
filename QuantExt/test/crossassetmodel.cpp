@@ -75,7 +75,7 @@
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
-#include <qle/termstructures/jyimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/processes/commodityschwartzstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
@@ -2493,9 +2493,9 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty){
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
     auto today = d.referenceDate;
-    auto simDate = today + 3 * Months;
-    Size simLag = today - baseDate;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
+    Size simLag = today - baseDate;
+    auto simDate = today + 3 * Months;
     Date BaseDateT1 = simDate - simLag;
 
     std::vector<Period>inflationTenors = { 1 * Years, 2 * Years, 3 * Years, 5 * Years};
@@ -2510,15 +2510,16 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty){
     }
     auto inflationIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>(d.infEurTs);
 
-    auto simulatedZeroCurve = Handle<ZeroInflationTermstructure>(QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
-                                0, d.infEurTs->fixingCalendar(), infDc, simLag, infObsLag,
+    auto simulatedZeroCurve = Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
+                                0, d.infEurTs->calendar(), infDc, simLag, infObsLag,
                                 d.infEurTs->frequency(), false, inflationTenors, inflationQuotes,
                                 d.infEurTs->seasonality()));
 
     auto simInflationIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>(simulatedZeroCurve);
+    auto T = d.dc.yearFraction(d.referenceDate, simDate);
     //T = 2;
-    //T2_index = 20;
-    //T2_discount = 20.0;
+    auto T2_index = 20;
+    auto T2_discount = 20.0;
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
     Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 200); // number of time steps
@@ -2527,7 +2528,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty){
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
         tmp->resetCache(grid1.size() - 1);
     }
-    eurzb1, gbpzb1, infeur1, infgbp1, cpieur1, test;
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>> eurzb1, gbpzb1, infeur1, infgbp1, cpieur1, test;
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
     for (Size j = 0; j < n; ++j) {
         Sample<MultiPath> path1 = pg1.next();
