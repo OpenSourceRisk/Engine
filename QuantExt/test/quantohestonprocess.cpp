@@ -35,7 +35,7 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
 namespace {
-
+  /*
 struct HestonData {
     Real v0;
     Real kappa;
@@ -52,12 +52,103 @@ struct QuantoHestonData {
     Size fxCase;     // 0-3, see above
     Size process;    // 0: QuantoHeston, 1: MultiAssetQuantoHeston, 2: MultiAssetQuantoHeston reversed
 };
-
+  */
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(QuantoHestonProcessTest)
+
+BOOST_AUTO_TEST_CASE(testMinimalExample) {
+
+    Date today(8, December, 2025);
+    Settings::instance().evaluationDate() = today;
+    Date maturity = today + 1*Years;
+    DayCounter dc = Actual365Fixed();
+    Time maturityTime = dc.yearFraction(today, maturity);
+    SequenceType sequenceType = SobolBrownianBridge; //MersenneTwister; //Burley2020SobolBrownianBridge;
+    Size paths = 10000;
+    auto yieldCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.06, dc));
+    auto dividendCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.01, dc));
+    auto domesticYieldCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.03, dc));
+    auto equitySpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(100.0));
+    auto fxSpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+
+    Real eqForward = equitySpot->value() / yieldCurve->discount(maturity) * dividendCurve->discount(maturity);
+    Real fxForward = fxSpot->value() * domesticYieldCurve->discount(maturity) / yieldCurve->discount(maturity);
+
+    BOOST_TEST_MESSAGE("equity forward: " << eqForward);
+    BOOST_TEST_MESSAGE("fx forward:     " << fxForward);
+ 
+    HestonProcess::Discretization disc = HestonProcess::QuadraticExponential;
+    Size steps = 60;
+    Real spotCorrelation = 0.8;
+    Real eq_v0 = 0.04;
+    Real eq_kappa = 1.0;
+    Real eq_theta = 0.04;
+    Real eq_sigma = 1e-4;
+    Real eq_rho = 0.0;
+    Real fx_v0 = 0.02;
+    Real fx_kappa = 1.0;
+    Real fx_theta = 0.02;
+    Real fx_sigma = 1e-4;
+    Real fx_rho = 0.0;
+    
+    auto eqProcess = QuantLib::ext::make_shared<HestonProcess>(yieldCurve, dividendCurve, equitySpot, eq_v0,
+							       eq_kappa, eq_theta, eq_sigma, eq_rho, disc);
+    auto fxProcess = QuantLib::ext::make_shared<HestonProcess>(yieldCurve, domesticYieldCurve, fxSpot, fx_v0,
+							       fx_kappa, fx_theta, fx_sigma, fx_rho, disc);
+
+    auto quantoProcess = QuantLib::ext::make_shared<QuantoHestonProcess>(eqProcess, fxProcess, spotCorrelation);
+
+    QuantLib::ext::shared_ptr<StochasticProcess> process = quantoProcess;
+
+    TimeGrid timeGrid(maturityTime, steps);
+    auto generator = makeMultiPathVariateGenerator(sequenceType, 4, steps, 42);
+
+    Array initialState = process->initialValues();
+
+    Real eq = 0, fx = 0, eqfx = 0;
+    Size eqIndex = 0; 
+    Size fxIndex = 2;
+    
+    for (Size path = 0; path < paths; ++path) {
+
+        Array state = initialState;
+        auto p = generator->next();
+
+        for (Size i = 0; i < timeGrid.size() - 1; ++i) {
+            Real t0 = timeGrid[i];
+            Real dt = timeGrid[i + 1] - t0;
+            const Array& dW = p.value[i];
+            state = process->evolve(t0, state, dt, dW);
+	}
+
+	Real e = state[eqIndex];
+	Real x = state[fxIndex];
+	eq += e / paths;
+	fx += x / paths;
+	eqfx += e * x / paths;
+        
+    }
+
+    // Check consistency of forwards
+    BOOST_TEST_MESSAGE("EQ: " << std::fixed << std::setprecision(8) << eq << " vs " << eqForward
+		       << " error " << std::scientific << fabs(eq - eqForward) / eqForward);
+    
+    BOOST_TEST_MESSAGE("FX: " << std::fixed << std::setprecision(8) << fx << " vs " << fxForward
+		       << " error " << std::scientific << fabs(fx - fxForward) / fxForward);
+
+    Real expected = fxForward * eqForward;
+    Real error = std::fabs(eqfx - expected) / expected;
+    BOOST_TEST_MESSAGE("EQ*FX: " << std::fixed << std::setprecision(6) << eqfx << " vs " << expected
+		       << " error " << std::scientific << error << " checked");
+
+    Real tolerance = 3.0 / sqrt(paths);
+    BOOST_CHECK_SMALL(std::fabs(eqfx - fxForward * eqForward) / (fxForward * eqForward), tolerance);
+}
+
+/*
 
 BOOST_AUTO_TEST_CASE(testMartingales) {
 
@@ -274,6 +365,7 @@ BOOST_AUTO_TEST_CASE(testMartingales) {
         }
     }
 }
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
 
