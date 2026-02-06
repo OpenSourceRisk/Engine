@@ -336,6 +336,7 @@
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/swaptionstraddle.hpp>
 #include <ored/portfolio/tarf.hpp>
 #include <ored/portfolio/tlockdata.hpp>
 #include <ored/portfolio/trade.hpp>
