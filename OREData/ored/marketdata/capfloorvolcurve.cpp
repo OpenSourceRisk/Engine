@@ -1269,7 +1269,9 @@ vector<Date> CapFloorVolCurve::populateFixingDates(const QuantLib::Date& asof, C
         QuantLib::ext::make_shared<BlackCapFloorEngine>(iborIndex->forwardingTermStructure(), 0.20, config.dayCounter());
     for (Size i = 0; i < configTenors.size(); i++) {
         if (isOis) {
-            Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, configTenors[i],
+            Period effTenor =
+                config.optionletTenorInArrears() ? configTenors[i] : configTenors[i] + config.rateComputationPeriod();
+            Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, effTenor,
                                            QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
                                            config.rateComputationPeriod(), 0.04)
                                .withTelescopicValueDates(true)
@@ -1279,8 +1281,10 @@ vector<Date> CapFloorVolCurve::populateFixingDates(const QuantLib::Date& asof, C
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
             fixingDates.push_back(std::max(asof + 1, lastCoupon->underlying()->fixingDates().front()));
         } else {
+            Period effTenor =
+                config.optionletTenorInArrears() ? configTenors[i] : configTenors[i] + iborIndex->tenor();
             CapFloor dummyCap =
-                MakeCapFloor(CapFloor::Cap, configTenors[i], iborIndex, 0.04, 0 * Days).withPricingEngine(dummyEngine);
+                MakeCapFloor(CapFloor::Cap, effTenor, iborIndex, 0.04, 0 * Days).withPricingEngine(dummyEngine);
             QuantLib::ext::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
             fixingDates.push_back(std::max(asof + 1, lastCoupon->fixingDate()));
         }

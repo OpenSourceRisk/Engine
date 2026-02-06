@@ -584,6 +584,9 @@ Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extr
 \item \lstinline!InputType!:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing ATM curve on optionlet volatilities, this should be set to \lstinline!OptionletVolatilities! as shown in Listing \ref{lst:capfloorvol_optionlet_atm_configuration}.
 
+\item \lstinline!OptionletTenorInArrears!:
+If true, the tenor in the market data is the maturiy of the optionlet, if false, it is the start date of the optionlet instead. Default is true.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -609,6 +612,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <TimeInterpolation>...</TimeInterpolation>
   <BootstrapConfig>...</BootstrapConfig>
   <InputType>OptionletVolatilities</InputType>
+  <OptionletTenorInArrears>...</OptionletTenorInArrears>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with optionlet volatilities input.}
@@ -685,6 +689,9 @@ If true, the quote labels that are looked up in the market data to build the sur
 \item \lstinline!InputType!:
 The type of the marketdata input. Allowable values are \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. As we are describing ATM curve on optionlet volatilities, this should be set to \lstinline!OptionletVolatilities! as shown in Listing \ref{lst:capfloorvol_optionlet_surface_configuration}.
 
+\item \lstinline!OptionletTenorInArrears!:
+If true, the tenor in the market data is the maturiy of the optionlet, if false, it is the start date of the optionlet instead. Default is true.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -711,6 +718,7 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
   <StrikeInterpolation>...</StrikeInterpolation>
   <QuoteIncludesIndexName>...</QuoteIncludesIndexName>
   <InputType>OptionletVolatilities</InputType>
+  <OptionletTenorInArrears>...</OptionletTenorInArrears>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with optionlet volatilities input.}
