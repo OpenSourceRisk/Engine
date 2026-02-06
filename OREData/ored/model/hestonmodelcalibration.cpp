@@ -182,7 +182,7 @@ void HestonModelCalibration::buildExpectedVariances() {
     Handle<BlackVolTermStructure> vts = process_->blackVolatility();
     DayCounter dc = vts->dayCounter();
     Calendar cal = vts->calendar();
-    Real current, previous;
+    Real current, previous = 0.0;
     auto varianceCalculator = QuantLib::ext::make_shared<VarianceCalculator>(process_);
     for (auto p : varianceTerms_) {
         Date mat = cal.advance(vts->referenceDate(), p);
