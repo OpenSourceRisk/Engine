@@ -63,6 +63,7 @@ Date ZeroInflationModelTermStructure::baseDate() const {
 
 void ZeroInflationModelTermStructure::referenceDate(const Date& d) {
     referenceDate_ = d;
+    // we use the simulation day counter, otherwise both times could be from different times
     relativeTime_ = simulationDayCounter_.value_or(dayCounter())
                         .yearFraction(inflationTermStructure(model_, index_)->referenceDate(), referenceDate_);
     update();
