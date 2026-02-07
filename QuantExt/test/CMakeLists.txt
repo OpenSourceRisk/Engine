@@ -101,7 +101,7 @@ transitionmatrix.cpp)
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite ${QL_LIB_NAME})
 target_link_libraries(quantext-test-suite ${QLE_LIB_NAME})
-target_link_libraries(quantext-test-suite ${Boost_LIBRARIES} ${RT_LIBRARY})
+target_link_libraries(quantext-test-suite ${RT_LIBRARY})
 
 add_test(NAME quantext-test-suite COMMAND quantext-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
