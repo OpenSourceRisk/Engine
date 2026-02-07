@@ -242,44 +242,71 @@ public:
         QuantLib::ext::shared_ptr<T>& obj, const std::string& analytic, 
             const std::string& param, const bool mandatory = false, Args... args) {
 
+        string str;
         // first check if we have a parameter of correct type stored in the Parameters object
         if (parameters_.hasGroup(analytic) && parameters_.has(analytic, param)) {
             try {            
                 obj = parameters_.getParameter<QuantLib::ext::shared_ptr<T>>(analytic, param, false);
+                return true;
+            } catch (...) {
+            }
+
+            try {
+                str = parameters_.getString(analytic, param, false);
             } catch (...) {
             }
         }
 
-        // first get the string provided
-        string str = loadParameterString(analytic, param, mandatory);
+        // first get the string provided if needed
         if (str.empty()) {
-            if (mandatory)
-                QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
-                        ") could not be found");
-            else
-                return false;
+            str = loadParameterString(analytic, param, mandatory);
+            if (str.empty()) {
+                if (mandatory)
+                    QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
+                            ") could not be found");
+                else
+                    return false;
+            }
         }
 
-        // else check for a string and load from XML
+        if (!obj)
+            obj = QuantLib::ext::make_shared<T>(args...);
+
+        // if the string sarts with a '<' we assume it's an XML string and try to load directly from it, otherwise we
+        // treat it as a file name or reference and try to load the XML string from it
+        auto first = str.find_first_not_of(" \t\r\n");
+        if (first != std::string::npos && str[first] == '<') {
+            try {
+                obj->fromXMLString(str);
+                return true;
+            } catch (...) {
+            }
+        }
+
+        // else take the string and retrieve the XML based on the string
         vector<string> xmlStr;
         try {
             xmlStr = loadParameterXMLString(str);
         }
         catch (const std::exception& e) {
+            LOG("InputParameters::loadParameterXML(): Failed loading parameter ("
+                << analytic << "," << param << ") from XML string: " << str << " , error: " << +e.what());
             if (mandatory)
 			    QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
             						") XML parsing failed, with error: " + e.what());
         }
 
         if (xmlStr.size() == 0)
-                return false;
-        
-        if (!obj)
-            obj = QuantLib::ext::make_shared<T>(args...);
+            return false;
+
+        LOG("InputParameters::loadParameterXML(): loading parameter (" << analytic << "," << param
+                                                                       << ") from XML string: " << xmlStr[0]);
         for (const auto& s : xmlStr) {            
             try {
                 obj->fromXMLString(s);
             } catch (const std::exception& e) {
+                LOG("InputParameters::loadParameterXML(): Failed loading parameter (" << analytic << "," << param
+                                                                               << ") from XML string: " << s << " , error: " << + e.what());
                 if (mandatory)
                     QL_FAIL("InputParameters::loadParameterXML(): mandatory parameter (" + analytic + "," + param +
                                 ") parsing failed, with error: " + e.what());
@@ -323,7 +350,9 @@ public:
     virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory);
         
     //! virtual function to load an XML string for the given (analytic, param) pair
-    virtual std::vector<std::string> loadParameterXMLString(const string& rawStr) { return {rawStr}; };
+    virtual std::vector<std::string> loadParameterXMLString(const string& rawStr) {
+        return std::vector<std::string>({rawStr});
+    };
 
     void setParameter(std::string analytic, std::string parameter, std::string val) { 
         parameters_.set(analytic, parameter, val);
@@ -623,7 +652,7 @@ public:
     void setDvaName(const std::string& s) { parameters_.set("xva", "dvaName", s); }
     // FIXME: remove this from the base class?
     void setRawCubeOutputFile(const std::string& s) { parameters_.set("xva", "rawCubeOutputFile", s); }
-    void setNetCubeOutput(bool b) { parameters_.set("xva", "setNetCubeOutput", b); };
+    void setNetCubeOutput(bool b) { parameters_.set("xva", "netCubeOutput", b); };
     void setNetCubeOutputFile(const std::string& s) { parameters_.set("xva", "netCubeOutputFile", s); }
     void setTimeAveragedNettedExposureOutputFile(const std::string& s) { parameters_.set("xva", "timeAveragedNettedExposureOutputFile", s); }
     // funding value adjustment details

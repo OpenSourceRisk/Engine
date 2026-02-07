@@ -103,9 +103,16 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (!crossAssetModelData_)
         // load default if not provided
         inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "simulation", "simulationConfigFile");
+    //string testXml =
+    //    "<Simulation><Parameters><Discretization>"
+    //    "Exact</Discretization><Grid>81,3M</Grid><Calendar>EUR</Calendar><Sequence>SobolBrownianBridge</Sequence>"
+    //    "<Scenario>Simple</Scenario><Seed>42</Seed><Samples>1000</Samples></Parameters></Simulation>";
+    //inputs->setScenarioGeneratorData(testXml);
     inputs->loadParameterXML<ScenarioGeneratorData>(scenarioGeneratorData_, "simulation", "scenarioGeneratorData");
-    if (!scenarioGeneratorData_)
+    if (!scenarioGeneratorData_) {
+        LOG("ScenarioGenerator data not found")
         inputs->loadParameterXML<ScenarioGeneratorData>(scenarioGeneratorData_, "simulation", "simulationConfigFile");
+    }
     inputs->loadParameter<Size>(maxScenario_, "simulation", "maxScenario", false, parseInteger);
     if (scenarioGeneratorData_ && maxScenario_ != QuantLib::Null<QuantLib::Size>() &&
         scenarioGeneratorData_->samples() > maxScenario_) {
@@ -114,7 +121,6 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
 
     exposureBaseCurrency_ = inputs->setupVariables().baseCurrency_;
     inputs->loadParameter<string>(exposureBaseCurrency_, "simulation", "baseCurrency", false);
-    exposureObservationModel_ = inputs->setupVariables().observationModel_;
     inputs->loadParameter<string>(exposureObservationModel_, "simulation", "observationModel", false);
 
     inputs->loadParameter<bool>(storeFlows_, "simulation", "storeFlows", false, parseBool);
@@ -189,7 +195,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<string>(rawCubeOutputFile_, pfeAnalytics, "rawCubeOutputFile", false);
     if (!rawCubeOutputFile_.empty())
         rawCubeOutput_ = true;
-        
+
+    inputs->loadParameter<bool>(netCubeOutput_, "xva", "netCubeOutput", false, parseBool);
     inputs->loadParameter<string>(netCubeOutputFile_, pfeAnalytics, "netCubeOutputFile", false);
     if (!netCubeOutputFile_.empty())
         netCubeOutput_ = true;
@@ -421,6 +428,7 @@ void XvaAnalyticImpl::feedCorrelationToCAM(const std::map<std::pair<RiskFactorKe
 void XvaAnalyticImpl::reset() { 
     model_.reset();
     scenarioGenerator_.reset();
+    scenarioData_.reset();
     dimCalculator_.reset();
 }
 
@@ -1169,6 +1177,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     bool firstMporCollateralAdjustment = xvaVars->firstMporCollateralAdjustment_;
     checkConfigurations(analytic()->portfolio());
     applyConfigurationFallback(analytic()->portfolio());
+
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         LOG("dim calculator not set, create one");
