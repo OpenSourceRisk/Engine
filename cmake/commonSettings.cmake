@@ -199,9 +199,6 @@ else()
     # disable warnings from boost
     add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
 
-    add_compile_options("-Werror=unused-variable")
-    add_compile_options("-Werror=uninitialized")
-
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     # if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
