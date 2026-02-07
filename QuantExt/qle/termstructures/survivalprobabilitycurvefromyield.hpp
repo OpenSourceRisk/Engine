@@ -57,11 +57,11 @@ private:
     QuantLib::Handle<QuantLib::Quote> rr_;
 };
 
-Date SurvivalProbabilityCurveFromYield::maxDate() const {
+inline Date SurvivalProbabilityCurveFromYield::maxDate() const {
     return yieldTermStructure_->maxDate();
 }
 
-Probability SurvivalProbabilityCurveFromYield::survivalProbabilityImpl(Time t) const {
+inline Probability SurvivalProbabilityCurveFromYield::survivalProbabilityImpl(Time t) const {
     auto df = yieldTermStructure_->discount(t);
     return std::pow(df, 1.0 / (1.0 - rr_->value()));
 }
