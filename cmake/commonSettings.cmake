@@ -203,6 +203,9 @@ else()
     # if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 
+    #add_compile_options("-Werror=unused-variable")
+    #add_compile_options("-Werror=uninitialized")
+
 endif()
 
 # Boost #
