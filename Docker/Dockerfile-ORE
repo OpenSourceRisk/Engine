@@ -38,7 +38,6 @@ RUN cd /ore \
  
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ ccache -z \
-  && ccache -C \
   && cmake --build . -- -j ${NUM_CORES} install \
   && ccache -s \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
