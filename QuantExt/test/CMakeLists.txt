@@ -60,6 +60,7 @@ formulabasedcoupon.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 fxvoltimeweighting.cpp
+generictest.cpp
 hullwhitebucketing.cpp
 hwpiecewiseparametrization.cpp
 index.cpp
