@@ -188,7 +188,7 @@ else()
     #add_compiler_flag("-Werror=uninitialized" supportsUninitialized)
     add_compiler_flag("-Werror=unused-lambda-capture" supportsUnusedLambdaCapture)
     add_compiler_flag("-Werror=return-type" supportsReturnType)
-    add_compiler_flag("-Werror=unused-function" supportsUnusedFunction)
+    #add_compiler_flag("-Werror=unused-function" supportsUnusedFunction)
     # the line below breaks the linux build
     #add_compiler_flag("-Werror=suggest-override" supportsSuggestOverride)
     add_compiler_flag("-Werror=inconsistent-missing-override" supportsInconsistentMissingOverride)
@@ -205,6 +205,9 @@ else()
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     # if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
+
+    #add_compile_options("-Werror=unused-variable")
+    #add_compile_options("-Werror=uninitialized")
 
 endif()
 

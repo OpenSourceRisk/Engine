@@ -27,9 +27,14 @@
 namespace ore {
 namespace data {
 
+/*!
+  Path generation for multiple assets using the Heston model  
+*/
 class Heston final : public AssetModel {
 public:
     using AssetModel::AssetModel;
+
+    Real extractT0Result(const RandomVariable& value) const override;
 
 private:
     void performModelCalculations() const override;
@@ -41,13 +46,22 @@ private:
     void performCalculationsFd() const;
     void generatePaths() const;
     void populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
+			    std::map<Date, std::vector<RandomVariable>>& auxPaths,
                             const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                             const Matrix& correlation, const Matrix& sqrtCorr,
-                            const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
-                            const std::vector<Real>& t, const std::vector<Real>& dt,
-                            const std::vector<Real>& sqrtdt) const;
+                            const std::vector<Size>& eqComIdx) const;
     void setAdditionalResults() const;
+};
+
+
+struct MultiAssetHestonPaths {
+    Size samples;
+    std::vector<std::string> indexNames;
+    std::vector<Date> dates;
+    std::map<Date, std::vector<std::vector<Real>>> data;
 };
 
 } // namespace data
 } // namespace ore
+
+

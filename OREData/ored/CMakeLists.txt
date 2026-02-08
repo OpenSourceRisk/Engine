@@ -88,6 +88,7 @@ model/eqbsdata.cpp
 model/fxbsbuilder.cpp
 model/fxbsdata.cpp
 model/hestonmodelbuilder.cpp
+model/hestonmodelcalibration.cpp
 model/hwbuilder.cpp
 model/hwhistoricalcalibrationmodelbuilder.cpp
 model/hwhistoricalcalibrationmodeldata.cpp
@@ -503,6 +504,7 @@ model/eqbsdata.hpp
 model/fxbsbuilder.hpp
 model/fxbsdata.hpp
 model/hestonmodelbuilder.hpp
+model/hestonmodelcalibration.hpp
 model/hwbuilder.hpp
 model/hwhistoricalcalibrationmodelbuilder.hpp
 model/hwhistoricalcalibrationmodeldata.hpp

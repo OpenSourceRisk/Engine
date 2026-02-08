@@ -264,6 +264,12 @@ public:
 
     virtual void writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut);
 
+    void writeModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+
+    void writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+
+    void writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio);
+
 protected:
     std::string nullString_;
     void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,
