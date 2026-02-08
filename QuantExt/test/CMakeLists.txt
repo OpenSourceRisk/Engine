@@ -98,6 +98,13 @@ swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)
 
+find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono unit_
+test_framework)
+
+if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
+    find_library(RT_LIBRARY rt REQUIRED)
+endif()
+
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite ${QL_LIB_NAME})
 target_link_libraries(quantext-test-suite ${QLE_LIB_NAME})

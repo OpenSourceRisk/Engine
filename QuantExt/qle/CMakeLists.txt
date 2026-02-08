@@ -1089,8 +1089,11 @@ utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 
+find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono)
+
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
+
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
 
 if(ORE_ENABLE_OPENCL)
