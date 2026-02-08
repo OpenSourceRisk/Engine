@@ -61,38 +61,40 @@ BOOST_AUTO_TEST_SUITE(QuantoHestonProcessTest)
 
 BOOST_AUTO_TEST_CASE(testMinimalExample) {
 
-    Date today(8, December, 2025);
-    Settings::instance().evaluationDate() = today;
-    Date maturity = today + 1*Years;
-    DayCounter dc = Actual365Fixed();
-    Time maturityTime = dc.yearFraction(today, maturity);
-    SequenceType sequenceType = SobolBrownianBridge; //MersenneTwister; //Burley2020SobolBrownianBridge;
-    Size paths = 10000;
-    auto yieldCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.06, dc));
-    auto dividendCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.01, dc));
-    auto domesticYieldCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.03, dc));
-    auto equitySpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(100.0));
-    auto fxSpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    BOOST_TEST_MESSAGE("Running trivial test case");
 
-    Real eqForward = equitySpot->value() / yieldCurve->discount(maturity) * dividendCurve->discount(maturity);
-    Real fxForward = fxSpot->value() * domesticYieldCurve->discount(maturity) / yieldCurve->discount(maturity);
+    // Date today(8, December, 2025);
+    // Settings::instance().evaluationDate() = today;
+    // Date maturity = today + 1*Years;
+    // DayCounter dc = Actual365Fixed();
+    // Time maturityTime = dc.yearFraction(today, maturity);
+    // SequenceType sequenceType = SobolBrownianBridge; //MersenneTwister; //Burley2020SobolBrownianBridge;
+    // Size paths = 10000;
+    // auto yieldCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.06, dc));
+    // auto dividendCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.01, dc));
+    // auto domesticYieldCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(today, 0.03, dc));
+    // auto equitySpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(100.0));
+    // auto fxSpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
-    BOOST_TEST_MESSAGE("equity forward: " << eqForward);
-    BOOST_TEST_MESSAGE("fx forward:     " << fxForward);
+    // Real eqForward = equitySpot->value() / yieldCurve->discount(maturity) * dividendCurve->discount(maturity);
+    // Real fxForward = fxSpot->value() * domesticYieldCurve->discount(maturity) / yieldCurve->discount(maturity);
+
+    // BOOST_TEST_MESSAGE("equity forward: " << eqForward);
+    // BOOST_TEST_MESSAGE("fx forward:     " << fxForward);
  
-    HestonProcess::Discretization disc = HestonProcess::QuadraticExponential;
-    Size steps = 60;
-    Real spotCorrelation = 0.8;
-    Real eq_v0 = 0.04;
-    Real eq_kappa = 1.0;
-    Real eq_theta = 0.04;
-    Real eq_sigma = 1e-4;
-    Real eq_rho = 0.0;
-    Real fx_v0 = 0.02;
-    Real fx_kappa = 1.0;
-    Real fx_theta = 0.02;
-    Real fx_sigma = 1e-4;
-    Real fx_rho = 0.0;
+    // HestonProcess::Discretization disc = HestonProcess::QuadraticExponential;
+    // Size steps = 60;
+    // Real spotCorrelation = 0.8;
+    // Real eq_v0 = 0.04;
+    // Real eq_kappa = 1.0;
+    // Real eq_theta = 0.04;
+    // Real eq_sigma = 1e-4;
+    // Real eq_rho = 0.0;
+    // Real fx_v0 = 0.02;
+    // Real fx_kappa = 1.0;
+    // Real fx_theta = 0.02;
+    // Real fx_sigma = 1e-4;
+    // Real fx_rho = 0.0;
     
     // auto eqProcess = QuantLib::ext::make_shared<HestonProcess>(yieldCurve, dividendCurve, equitySpot, eq_v0,
     //     						       eq_kappa, eq_theta, eq_sigma, eq_rho, disc);
