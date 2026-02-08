@@ -16,22 +16,22 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
-#include <test/toplevelfixture.hpp>
 
-#include <qle/processes/quantohestonprocess.hpp>
-#include <qle/processes/multiassetquantohestonprocess.hpp>
-#include <qle/methods/multipathvariategenerator.hpp>
+// #include <qle/processes/quantohestonprocess.hpp>
+// #include <qle/processes/multiassetquantohestonprocess.hpp>
+// #include <qle/methods/multipathvariategenerator.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/models/equity/hestonmodel.hpp>
-#include <ql/pricingengines/vanilla/analytichestonengine.hpp>
-#include <boost/timer/timer.hpp>
+// #include <ql/time/calendars/target.hpp>
+// #include <ql/time/daycounters/actual365fixed.hpp>
+// #include <ql/termstructures/yield/flatforward.hpp>
+// #include <ql/models/equity/hestonmodel.hpp>
+// #include <ql/pricingengines/vanilla/analytichestonengine.hpp>
+// #include <boost/timer/timer.hpp>
 
 using namespace QuantLib;
-using namespace QuantExt;
+// using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
 namespace {
@@ -60,6 +60,8 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(QuantoHestonProcessTest)
 
 BOOST_AUTO_TEST_CASE(testMinimalExample) {
+
+    SavedSettings backup;
 
     BOOST_TEST_MESSAGE("Running trivial test case");
 
