@@ -43,8 +43,9 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const std::string& referenceCalibrationGrid,
-    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
-    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
+                            observeContinuum),
       lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
       dontCalibrate_(dontCalibrate) {
     // we have to observe the whole vol surface for the Dupire implementation unfortunately; we can specify the time
