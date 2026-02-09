@@ -18,6 +18,7 @@
 
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
@@ -33,19 +34,54 @@ using RFType = ore::analytics::RiskFactorKey::KeyType;
 namespace ore {
 namespace analytics {
 
+void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inputs) {
+
+    vector<string> pnlParams = {"pnl", "pnlExplain"};
+    
+    inputs->loadParameter<Date>(pnlDate_, pnlParams, vector<string>({"mporDate", "pnlDate"}), false, parseDate);
+    inputs->loadParameter<Size>(horizonDays_, pnlParams, vector<string>({"horizonDays", "mporDays"}), false, parseInteger);
+    inputs->loadParameter<Calendar>(horizonCalendar_, pnlParams, vector<string>({"horizonCalendar", "mporCalendar"}), false, parseCalendar);
+    inputs->loadParameter<bool>(horizonOverlappingPeriods_, pnlParams, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
+
+    inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, pnlParams, "simulationConfigFile");
+       
+    pnlConventions_ = ext::make_shared<Conventions>();
+    InstrumentConventions::instance().setConventions(pnlConventions_, pnlDate_);
+    inputs->loadParameterXML<Conventions>(pnlConventions_, pnlParams, vector<string>({"conventionsMporFile", "conventionsPnlFile"}));
+    ext::shared_ptr<Conventions> conventionsOverride;
+    inputs->loadParameterXML<Conventions>(conventionsOverride, pnlParams, "conventionsPnlOverride");
+    if (pnlConventions_ && conventionsOverride)
+        pnlConventions_->setConventionsOverride(conventionsOverride);
+
+    inputs->loadParameterXML<CurveConfigurations>(
+        pnlCurveConfig_, pnlParams, vector<string>({"curveConfigMporFile", "curveConfigPnlFile"}), false, 
+        inputs->setupVariables().refDataManager_, inputs->setupVariables().iborFallbackConfig_);
+    ext::shared_ptr<CurveConfigurations> ccOverride;
+    inputs->loadParameterXML<CurveConfigurations>(ccOverride, pnlParams, vector<string>({"curveConfigMporOverride", "curveConfigPnlOverride"}), false,
+        inputs->setupVariables().refDataManager_, inputs->setupVariables().iborFallbackConfig_);
+    if (pnlCurveConfig_ && ccOverride)
+        pnlCurveConfig_->setCurveConfigOverride(ccOverride);
+    
+    inputs->loadParameterXML<Portfolio>(pnlPortfolio_, pnlParams,  vector<string>({"pnlPortfolioFile", "portfolioFile"}));    
+    inputs->loadParameter<vector<RiskFactorKey::KeyType>>(pnlDateAdjustedRiskFactors_, pnlParams, "dateAdjustedRiskFactors", false, parseListOfRiskFactorKeyValues);    
+
+}
+
 void PnlAnalyticImpl::setUpConfigurations() {
+    auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
     analytic()->configurations().simulationConfigRequired = true;
 
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
+    analytic()->configurations().simMarketParams = pnlVars->simMarketParams_;
 
     setGenerateAdditionalResults(true);
 }
 
 void PnlAnalyticImpl::buildDependencies() {
+    auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
     auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs_, analytic()->analyticsManager(), false);
     if (mporAnalytic.second) {
-        mporAnalytic.second->configurations().curveConfig = inputs_->curveConfigs().get("mpor");
+        mporAnalytic.second->configurations().curveConfig = pnlVars->pnlCurveConfig_;
         auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
         sai->setUseSpreadedTermStructures(true);
         addDependentAnalytic(mporLookupKey, mporAnalytic.second);
@@ -58,6 +94,11 @@ void PnlAnalyticImpl::buildDependencies() {
 
 void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const std::set<std::string>& runTypes) {
+    auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
+
+    if (pnlVars->pnlDate_ == Date())
+        pnlVars->pnlDate_ = calculateMporDate(pnlVars->horizonDays_, inputs_->asof(), pnlVars->horizonCalendar_);
+
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
@@ -135,22 +176,22 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *******************************************************************************************/
 
     // Set evaluationDate to t1 > t0
-    Settings::instance().evaluationDate() = mporDate();
+    Settings::instance().evaluationDate() = pnlVars->pnlDate_;
 
     // Set the configurations asof date for the mpor analytic to t1, too
     auto mporAnalytic = dependentAnalytic(mporLookupKey);
-    mporAnalytic->configurations().asofDate = mporDate();
+    mporAnalytic->configurations().asofDate = pnlVars->pnlDate_;
     mporAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> mporSimMarketParams = analytic()->configurations().simMarketParams;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> mporSimMarketParams = analytic()->configurations().simMarketParams;
 
-    std::vector<RFType> dateAdjustedRiskFactors = inputs_->pnlDateAdjustedRiskFactors();
+    std::vector<RFType> dateAdjustedRiskFactors = pnlVars->pnlDateAdjustedRiskFactors_;
     if (dateAdjustedRiskFactors.size() > 0) {
         std::vector<QuantLib::Period> shiftedTenors;
         for (const auto& rt : dateAdjustedRiskFactors) {
             if (rt == RFType::CommodityCurve){
                 DLOG("PnlAnalytic::run: Using date adjusted risk factors for " << rt);
                 for (const auto& commodityName : mporSimMarketParams->commodityNames()) {
-                    shiftedTenors = getShiftedTenors(mporSimMarketParams->commodityCurveTenors(commodityName), inputs_->asof(), mporDate());
+                    shiftedTenors = getShiftedTenors(mporSimMarketParams->commodityCurveTenors(commodityName), inputs_->asof(), pnlVars->pnlDate_);
                     mporSimMarketParams->setCommodityCurveTenors(commodityName, shiftedTenors);
                 }
             }
@@ -324,7 +365,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // remove existing trades from t1 portfolio
     auto mporPortfolioNew = QuantLib::ext::make_shared<Portfolio>();
     if (inputs_->mporPortfolio())
-        for (const auto& [tradeId, trade] : inputs_->mporPortfolio()->trades())
+        for (const auto& [tradeId, trade] : pnlVars->pnlPortfolio_->trades())
             if (!inputs_->portfolio()->has(tradeId))
                 mporPortfolioNew->add(trade);
 
@@ -358,7 +399,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     QuantLib::ext::shared_ptr<InMemoryReport> t1m1p1NpvReport;
     QuantLib::ext::shared_ptr<InMemoryReport> t1m1p1AddReport;
-    if (inputs_->mporPortfolio()) {
+    if (pnlVars->pnlPortfolio_) {
 
         analytic()->setPortfolio(inputs_->mporPortfolio());
         analytic()->buildPortfolio();

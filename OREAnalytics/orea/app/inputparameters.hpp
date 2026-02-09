@@ -1165,18 +1165,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& zeroToParShiftSensitivityScenarioData() const {
         return zeroToParShiftSensitivityScenarioData_;
     }
-
-    /****************************
-     * Getters for pnl analytics
-     ****************************/
-    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors() const { return pnlDateAdjustedRiskFactors_; }
-
-    /****************************
-     * Getters for pnl explain analytics
-     ****************************/
-    bool riskFactorLevel() const { return riskFactorLevel_; }
-
-    
+        
     /*************************************
      * List of analytics that shall be run
      *************************************/
@@ -1419,16 +1408,6 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaExplainSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
     double xvaExplainShiftThreshold_ = 0;
-
-    /*****************
-     * PNL analytic
-     *****************/
-    vector<RiskFactorKey::KeyType> pnlDateAdjustedRiskFactors_;
-
-    /*****************
-     * PNL explain analytic
-     *****************/
-    bool riskFactorLevel_ = false; 
 };
 
 std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);

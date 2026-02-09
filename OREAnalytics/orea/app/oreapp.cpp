@@ -1168,130 +1168,16 @@ void OREAppInputParameters::loadParameters() {
      *************/
 
     tmp = params_->getString("pnl", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("PNL");
-
-        tmp = params_->getString("pnl", "mporDate", false);
-        if (tmp != "")
-            setMporDate(parseDate(tmp));
-
-        tmp = params_->getString("pnl", "mporDays", false);
-        if (tmp != "")
-            setMporDays(parseInteger(tmp));
-
-        tmp = params_->getString("pnl", "mporCalendar", false);
-        if (tmp != "")
-            setMporCalendar(tmp);
-
-        tmp = params_->getString("pnl", "simulationConfigFile", false);
-        if (tmp != "") {
-            string simulationConfigFile = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading scenario simulation config from file" << simulationConfigFile);
-            // Should we check whether other analytics are setting this, too?
-            setScenarioSimMarketParamsFromFile(simulationConfigFile);
-        } else
-            ALOG("Scenario Simulation market data not loaded");
-
-        tmp = params_->getString("pnl", "conventionsMporFile", false);
-        if (tmp != "") {
-            filesystem::path conventionsMporFile = setupVariables_.inputPath_ / params_->getString("pnl", "conventionsMporFile");
-            LOG("Loading mpor conventions from file: " << conventionsMporFile);
-
-            // Initialize the conventions singleton before loading the conventions from file,
-            // so that a convention can use a custom index that is defined further up in the file.
-            QuantLib::ext::shared_ptr<Conventions> mporConventions = QuantLib::ext::make_shared<Conventions>();
-            ore::data::InstrumentConventions::instance().setConventions(mporConventions, mporDate());
-            mporConventions->fromFile(conventionsMporFile.generic_string());
-        }
-
-        tmp = params_->getString("pnl", "curveConfigMporFile", false);
-        if (tmp != "") {
-            filesystem::path curveConfigFile = setupVariables_.inputPath_ / params_->getString("pnl", "curveConfigMporFile");
-            LOG("Load curve configurations from file: ");
-            setCurveConfigsFromFile(curveConfigFile.generic_string(), "mpor");
-        }
-
-        tmp = params_->getString("pnl", "portfolioMporFile", false);
-        if (tmp != "")
-            setMporPortfolioFromFile(tmp, setupVariables_.inputPath_);
-
-
-        tmp = params_->getString("pnl", "dateAdjustedRiskFactors", false);
-        if (tmp != "")
-            setPnlDateAdjustedRiskFactors(tmp);
-    }
 
     /****************
      * PNL Explain
      ****************/
     tmp = params_->getString("pnlExplain", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("PNL_EXPLAIN");
 
-        tmp = params_->getString("pnlExplain", "mporDate", false);
-        if (tmp != "")
-            setMporDate(parseDate(tmp));
-
-        tmp = params_->getString("pnlExplain", "historicalScenarioFile", false);
-        if (tmp != "") {
-            std::string scenarioFile = (setupVariables_.inputPath_ / tmp).generic_string();
-            setScenarioReader(scenarioFile);
-        }
-
-        tmp = params_->getString("pnlExplain", "simulationConfigFile", false);
-        if (tmp != "") {
-            string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading sensitivity scenario sim market parameters from file" << file);
-            setSensiSimMarketParamsFromFile(file);
-            setScenarioSimMarketParamsFromFile(file);
-        } else {
-            WLOG("ScenarioSimMarket parameters for sensitivity not loaded");
-        }
-
-        tmp = params_->getString("pnlExplain", "sensitivityConfigFile", false);
-        if (tmp != "") {
-            string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
-            setSensiScenarioDataFromFile(file);
-        } else {
-            WLOG("Sensitivity scenario data not loaded");
-        }
-
-        tmp = params_->getString("pnlExplain", "parSensitivity", false);
-        if (tmp != "")
-            setParSensi(parseBool(tmp));
-
-        tmp = params_->getString("pnlExplain", "conventionsMporFile", false);
-        if (tmp != "") {
-            filesystem::path conventionsMporFile = setupVariables_.inputPath_ / tmp;
-            LOG("Loading mpor conventions from file: " << conventionsMporFile);
-
-            // Initialize the conventions singleton before loading the conventions from file,
-            // so that a convention can use a custom index that is defined further up in the file.
-            QuantLib::ext::shared_ptr<Conventions> mporConventions = QuantLib::ext::make_shared<Conventions>();
-            ore::data::InstrumentConventions::instance().setConventions(mporConventions, mporDate());
-            mporConventions->fromFile(conventionsMporFile.generic_string());
-        }
-
-        tmp = params_->getString("pnlExplain", "curveConfigMporFile", false);
-        if (tmp != "") {
-            filesystem::path curveConfigFile = setupVariables_.inputPath_ / tmp;
-            LOG("Load curve configurations from file: ");
-            setCurveConfigsFromFile(curveConfigFile.generic_string(), "mpor");
-        }
-
-        tmp = params_->getString("pnlExplain", "portfolioMporFile", false);
-        if (tmp != "")
-            setMporPortfolioFromFile(tmp, setupVariables_.inputPath_);
-
-        tmp = params_->getString("pnlExplain", "dateAdjustedRiskFactors", false);
-        if (tmp != "")
-            setPnlDateAdjustedRiskFactors(tmp);
-
-        tmp = params_->getString("pnlExplain", "riskFactorLevelReporting", false);
-        if (tmp != "")
-            setRiskFactorLevel(parseBool(tmp));
-    }
     /****************
      * SIMM and IM Schedule
      ****************/

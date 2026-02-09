@@ -23,7 +23,6 @@
 namespace ore {
 namespace analytics {
 
-
 std::set<std::string> parseListOfValuesToSet(const std::string& s);
 
 QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& s, const std::filesystem::path& inputPath = std::filesystem::path());
@@ -32,6 +31,7 @@ std::vector<QuantLib::Real> parseListOfRealValues(const std::string& s);
 std::vector<QuantLib::Size> parseListOfIntegerValues(const std::string& s);
 std::vector<QuantLib::Period> parseListOfPeriodValues(const std::string& s);
 std::vector<std::string> parseListOfStringValues(const std::string& s);
+std::vector<RiskFactorKey::KeyType> parseListOfRiskFactorKeyValues(const std::string& s);
 
 std::map<std::string, QuantLib::TimeSeries<QuantLib::Real>>
 loadDeterministicInitialMarginFromFile(const std::string& fileName);

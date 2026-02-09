@@ -18,6 +18,7 @@
 
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -34,7 +35,15 @@ namespace ore {
 namespace analytics {
 
 void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+        
+    string scenarioFile;
+    inputs->loadParameter<string>(scenarioFile, "pnlExplain", "historicalScenarioFile", false);
+    if (!scenarioFile.empty())
+        scenarioReader_ = loadScenarioReader(scenarioFile, inputs->setupVariables().inputPath_);
     
+    inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, "pnlExplain", "sensitivityConfigFile");
+    inputs->loadParameter<bool>(parSensitivity_, "pnlExplain", "parSensitivity", false, parseBool);
+    inputs->loadParameter<bool>(riskFactorLevel_, "pnlExplain", "riskFactorLevelReporting", false, parseBool);
 }
 
 void PnlExplainAnalyticImpl::setUpConfigurations() {
@@ -54,11 +63,14 @@ void PnlExplainAnalyticImpl::buildDependencies() {
     auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
     if (pnlAnalytic.second)
         addDependentAnalytic(pnlLookupKey, pnlAnalytic.second, true);
+
+    pnlVariables_ = pnlAnalytic.second->impl()->inputVariablesAs<PnlVariables>();
 }
 
 void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
-    
+
+    auto pnlExVars = ext::dynamic_pointer_cast<PnlExplainVariables>(inputVariables_);
     CONSOLEW("PNL Explain: Build Market");
     analytic()->buildMarket(loader);
     CONSOLE("OK");
@@ -127,7 +139,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
         zeroScenarios->baseScenario() = t0Scenario;
 
-        if (inputs_->parSensi()) {
+        if (pnlExVars->parSensitivity_) {
 
             // we must take the simMarket from the sensiAnalysis, since this is the market our parInstruments are registered with
             auto sensiImpl = static_cast<PricingAnalyticImpl*>(sensiAnalytic->impl().get());
@@ -159,7 +171,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     } else {
         auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
         auto scenarios = buildHistoricalScenarioGenerator(
-            inputs_->scenarioReader(), adjFactors, pnlDates, analytic()->configurations().simMarketParams,
+            pnlExVars->scenarioReader_, adjFactors, pnlDates, analytic()->configurations().simMarketParams,
             analytic()->configurations().todaysMarketParams, defaultReturnConfig);
         scenarios->baseScenario() = t0Scenario;
     }
@@ -171,8 +183,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator);
 
     auto pnlExplainReport =
-        ext::make_shared<PnlExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
-                                           period, pnlReport, scenarios, std::move(sensiArgs), nullptr, nullptr, true, inputs_->riskFactorLevel());
+        ext::make_shared<PnlExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), period, pnlReport, scenarios,
+        std::move(sensiArgs), nullptr, nullptr, true, pnlExVars->riskFactorLevel_);
 
     LOG("Call PNL Explain calculation");
     CONSOLEW("Risk: PNL Explain Calculation");

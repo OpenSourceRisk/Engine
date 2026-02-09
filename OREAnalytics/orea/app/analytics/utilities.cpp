@@ -110,5 +110,9 @@ std::vector<std::string> parseListOfStringValues(const std::string& s) {
     return parseListOfValues(s); 
 };
 
+std::vector<RiskFactorKey::KeyType> parseListOfRiskFactorKeyValues(const std::string& s) {
+    return parseListOfValues<RiskFactorKey::KeyType>(s, &parseRiskFactorKeyType);
+};
+
 } // namespace analytics
 } // namespace ore

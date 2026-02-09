@@ -472,11 +472,18 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
     }
 }
 
-QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf, std::string mporCalendar) {
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf, const std::string& mporCalendar) {
     QuantLib::Calendar mporCal = parseCalendar(mporCalendar);
-    if (asOf == Date())
-        asOf = Settings::instance().evaluationDate();
-    return mporCal.advance(asOf, mporDays, QuantExt::Days);
+    return calculateMporDate(mporDays, asOf, mporCal);
+}
+
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf,
+                                 const QuantLib::Calendar& mporCalendar) {
+    Date d = asOf;
+    if (d == Date())
+        d = Settings::instance().evaluationDate();
+    return mporCalendar.advance(d, mporDays, QuantExt::Days);
+
 }
 
 Exercise::Type parseExerciseType(const std::string& s) {

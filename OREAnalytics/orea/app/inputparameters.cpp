@@ -858,11 +858,11 @@ void InputParameters::insertAnalytic(const std::string& s) {
 void InputParameters::removeAnalytic(const std::string& s) { analytics_.erase(s); }
 
 void InputParameters::setPnlDateAdjustedRiskFactors(const std::string& s) {
-    pnlDateAdjustedRiskFactors_ = parseListOfValues<RiskFactorKey::KeyType>(s, &parseRiskFactorKeyType);
+    parameters_.set("pnl", "dateAdjustedRiskFactors", s);
 }
 
 void InputParameters::setRiskFactorLevel(bool b) {
-    riskFactorLevel_ = b;
+    parameters_.set("pnl", "riskFactorLevelReporting", b);
 }
 
 void InputParameters::setCalibrationModel(const std::string& s) {
