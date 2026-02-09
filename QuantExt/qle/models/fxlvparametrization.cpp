@@ -21,7 +21,7 @@
 namespace QuantExt {
 
 FxLvParametrization::FxLvParametrization(const Currency& foreignCurrency, const Handle<Quote>& fxSpotToday,
-                                         const QuantLib::ext::shared_ptr<QuantLib::LocalVolTermStructure>& lv)
+                                         const QuantLib::Handle<QuantLib::LocalVolTermStructure>& lv)
     : Parametrization(foreignCurrency), fxSpotToday_(fxSpotToday), lv_(lv) {}
 
 } // namespace QuantExt

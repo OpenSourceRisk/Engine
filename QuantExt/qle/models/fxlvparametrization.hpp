@@ -37,7 +37,7 @@ public:
     /*! The currency refers to the foreign currency, the spot
         is as of today (i.e. the discounted spot) */
     FxLvParametrization(const Currency& foreignCurrency, const Handle<Quote>& fxSpotToday,
-                        const QuantLib::ext::shared_ptr<QuantLib::LocalVolTermStructure>& lv);
+                        const QuantLib::Handle<QuantLib::LocalVolTermStructure>& lv);
 
     /*! is supposed to be positive */
     Real sigma(const Time t, const Real s) const;
@@ -47,7 +47,7 @@ public:
 
 private:
     Handle<Quote> fxSpotToday_;
-    QuantLib::ext::shared_ptr<LocalVolTermStructure> lv_;
+    QuantLib::Handle<LocalVolTermStructure> lv_;
 };
 
 // inline

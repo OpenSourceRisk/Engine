@@ -215,5 +215,16 @@ AssetModelWrapper::ProcessType LocalVolModelBuilder::processType() const {
     return AssetModelWrapper::ProcessType::LocalVol;
 }
 
+LocalVolModelBuilder::Type parseLocalVolType(const std::string& s) {
+    static const std::map<std::string, LocalVolModelBuilder::Type> str2LvType = {
+        {"Dupire", LocalVolModelBuilder::Type::Dupire},
+        {"DupireFloored", LocalVolModelBuilder::Type::DupireFloored},
+        {"AndreasenHuge", LocalVolModelBuilder::Type::AndreasenHuge}};
+    auto mdl = str2LvType.find(s);
+    QL_REQUIRE(mdl != str2LvType.end(),
+               "local vol type '" << s << "' not recognized, expected Dupire, DupireFloored, AndreasenHuge.");
+    return mdl->second;
+}
+
 } // namespace data
 } // namespace ore

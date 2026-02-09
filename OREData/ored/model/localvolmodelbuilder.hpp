@@ -67,5 +67,7 @@ private:
     bool dontCalibrate_;
 };
 
+LocalVolModelBuilder::Type parseLocalVolType(const std::string& s);
+
 } // namespace data
 } // namespace ore
