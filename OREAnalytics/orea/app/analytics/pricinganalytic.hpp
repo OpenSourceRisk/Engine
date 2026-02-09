@@ -52,6 +52,8 @@ public:
         offsetSimMarketParams_ = offsetSimMarketParams;
     }
 
+    void overwriteResultCurrency(const std::string& ccy);
+
 private:
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
@@ -59,6 +61,7 @@ private:
 protected:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
+    std::optional<std::string> overwriteResultCurrency_;
 };
 
 static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};

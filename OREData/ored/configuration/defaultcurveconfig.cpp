@@ -41,7 +41,8 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveId, const string& curv
 
 void DefaultCurveConfig::populateRequiredIds(const std::string& discountCurveID, const std::string& benchmarkCurveID,
                                              const std::string& sourceCurveID,
-                                             const std::vector<std::string>& multiSectionSourceCurveIds) const {
+                                             const std::vector<std::string>& multiSectionSourceCurveIds,
+                                             const std::string& reinterpretedYieldCurveID) const {
     if (!discountCurveID.empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurveID)->curveConfigID());
     if (!benchmarkCurveID.empty())
@@ -52,12 +53,15 @@ void DefaultCurveConfig::populateRequiredIds(const std::string& discountCurveID,
         if (!s.empty())
             requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(s)->curveConfigID());
     }
+    if (!reinterpretedYieldCurveID.empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(reinterpretedYieldCurveID)->curveConfigID());
 }
 
 void DefaultCurveConfig::populateRequiredIds() const {
     for (auto const& config : configs_) {
         populateRequiredIds(config.second.discountCurveID(), config.second.benchmarkCurveID(),
-                            config.second.sourceCurveID(), config.second.multiSectionSourceCurveIds());
+                            config.second.sourceCurveID(), config.second.multiSectionSourceCurveIds(),
+                            config.second.reinterpretedYieldCurveID());
     }
 }
 
@@ -139,6 +143,8 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         type_ = Type::HazardRate;
     } else if (type == "Price") {
         type_ = Type::Price;
+    } else if (type == "ConvSpreadCDS") {
+        type_ = Type::ConvSpreadCDS;
     } else if (type == "Benchmark") {
         type_ = Type::Benchmark;
     } else if (type == "MultiSection") {
@@ -147,6 +153,8 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         type_ = Type::TransitionMatrix;
     } else if (type == "Null") {
         type_ = Type::Null;
+    } else if (type == "YieldCurve") {
+        type_ = Type::YieldCurve;
     } else {
         QL_FAIL("Type " << type << " not recognized");
     }
@@ -182,6 +190,10 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
             }
         }
         recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+    } else if (type_ == Type::YieldCurve) {
+        discountCurveID_ = conventionID_ = "";
+        recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+        reinterpretedYieldCurveID_ = XMLUtils::getChildValue(node, "ReinterpretedYieldCurve", true);
     } else {
         discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
         conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
@@ -201,10 +213,10 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
         // Read the optional start date
         string d = XMLUtils::getChildValue(node, "StartDate", false);
         if (d != "") {
-            if (type_ == Type::SpreadCDS || type_ == Type::Price) {
+            if (type_ == Type::SpreadCDS || type_ == Type::Price || type_ == Type::ConvSpreadCDS) {
                 startDate_ = parseDate(d);
             } else {
-                WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price'");
+                WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price' or 'ConvSpreadCDS'");
             }
         }
         string s = XMLUtils::getChildValue(node, "RunningSpread", false);
@@ -230,9 +242,11 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
 XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Configuration");
     XMLUtils::addAttribute(doc, node, "priority", std::to_string(priority_));
-    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price) {
+    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price || type_ == Type::ConvSpreadCDS) {
         if (type_ == Type::SpreadCDS) {
             XMLUtils::addChild(doc, node, "Type", "SpreadCDS");
+        } else if (type_ == Type::ConvSpreadCDS){
+            XMLUtils::addChild(doc, node, "Type", "ConvSpreadCDS");
         } else if (type_ == Type::HazardRate) {
             XMLUtils::addChild(doc, node, "Type", "HazardRate");
         } else {
@@ -270,6 +284,12 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Type", "Null");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+    } else if (type_ == Type::YieldCurve) {
+        XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
+        XMLUtils::addChild(doc, node, "Type", "YieldCurve");
+        XMLUtils::addChild(doc, node, "ReinterpretedYieldCurve", reinterpretedYieldCurveID_);
+        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+        
     } else {
         QL_FAIL("Unknown type in DefaultCurveConfig::toXML()");
     }

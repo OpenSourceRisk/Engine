@@ -31,7 +31,8 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(
     const QuantLib::ext::shared_ptr<IborIndex>& receiveIndex, const Handle<YieldTermStructure>& discountingCurve,
     const bool payIndexGiven, const bool receiveIndexGiven, const bool discountingGiven, const bool spreadOnRec,
     const bool includeSpread, const Period& payFrequency, const Period& recFrequency, const bool telescopicValueDates,
-    const QuantExt::SubPeriodsCoupon1::Type type, QuantLib::Pillar::Choice pillarChoice)
+    const QuantExt::SubPeriodsCoupon1::Type type, QuantLib::Pillar::Choice pillarChoice,
+    const QuantLib::Date& customPillarDate)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), payIndex_(payIndex), receiveIndex_(receiveIndex),
       payIndexGiven_(payIndexGiven), receiveIndexGiven_(receiveIndexGiven), discountingGiven_(discountingGiven),
       spreadOnRec_(spreadOnRec), includeSpread_(includeSpread), payFrequency_(payFrequency),
@@ -121,6 +122,9 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(
     registerWith(payIndex_);
     registerWith(receiveIndex_);
     registerWith(discountHandle_);
+
+    pillarDate_ = customPillarDate;
+
     initializeDates();
 }
 
@@ -137,9 +141,11 @@ void TenorBasisSwapHelper::initializeDates() {
 
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
-    swap_ = QuantLib::ext::make_shared<TenorBasisSwap>(effectiveDate, 1.0, swapTenor_, payIndex_, 0.0, payFrequency_,
-                                                       receiveIndex_, 0.0, recFrequency_, DateGeneration::Backward,
-                                                       includeSpread_, spreadOnRec_, type_, telescopicValueDates_);
+    swap_ = QuantLib::ext::make_shared<TenorBasisSwap>(
+        effectiveDate, 1.0, swapTenor_, payIndex_,
+        quote().empty() || !quote()->isValid() || spreadOnRec_ ? 0.0 : quote()->value(), payFrequency_, receiveIndex_,
+        quote().empty() || !quote()->isValid() || !spreadOnRec_ ? 0.0 : quote()->value(), recFrequency_,
+        DateGeneration::Backward, includeSpread_, spreadOnRec_, type_, telescopicValueDates_);
 
     auto engine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_);
     swap_->setPricingEngine(engine);
@@ -150,7 +156,8 @@ void TenorBasisSwapHelper::initializeDates() {
     latestRelevantDate_ = determineLatestRelevantDate(
         swap_->legs(), {(spreadOnRec_ && payIndexGiven_) || (!spreadOnRec_ && !payIndexGiven_),
                         (spreadOnRec_ && !payIndexGiven_) || (!spreadOnRec_ && payIndexGiven_)});
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {

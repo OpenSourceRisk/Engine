@@ -1,0 +1,11 @@
+
+ARG WHEEL_IMG
+FROM ${WHEEL_IMG}
+
+RUN \
+curl -O -L https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz && \
+tar xfz boost_1_83_0.tar.gz && \
+cd boost_1_83_0 && \
+./bootstrap.sh --with-libraries=date_time,filesystem,iostreams,log,regex,serialization,system,thread,timer && \
+./b2 install
+

@@ -44,7 +44,8 @@ public:
                   DateGeneration::Rule rule = DateGeneration::Backward,
                   const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                   bool discountCurveGiven = false, bool telescopicValueDates = false,
-                  Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date());
+                  Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date(),
+                  const Calendar& paymentCalendar = Calendar());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -73,6 +74,7 @@ protected:
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention paymentAdjustment_;
     DateGeneration::Rule rule_;
+    Calendar paymentCalendar_;
 
     QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
@@ -96,12 +98,17 @@ public:
                        DateGeneration::Rule rule = DateGeneration::Backward,
                        const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                        const bool discountCurveGiven = false, bool telescopicValueDates = false,
-                       Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date());
+                       Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date(),
+                       const Calendar& paymentCalendar = Calendar());
 
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
     void setTermStructure(YieldTermStructure*) override;
+    //@}
+    //! \name inspectors
+    //@{
+    QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -117,6 +124,7 @@ protected:
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention paymentAdjustment_;
     DateGeneration::Rule rule_;
+    Calendar paymentCalendar_;
 
     QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;

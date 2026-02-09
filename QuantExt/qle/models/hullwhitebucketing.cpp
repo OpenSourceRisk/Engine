@@ -39,8 +39,8 @@ Bucketing::Bucketing(const Real lowerBound, const Real upperBound, const Size n)
 
 Size Bucketing::index(const Real x) const {
     if (uniformBuckets_) {
-        return std::min<Size>(buckets_.size() - 1,
-                              std::max(0, static_cast<int>(std::floor((x - lowerBound_) / h_) + 1)));
+        return static_cast<Size>(std::min(static_cast<double>(buckets_.size()) - 1.0,
+                                          std::max(0.0, std::floor((x - lowerBound_) / h_) + 1)));
     } else {
         return std::upper_bound(buckets_.begin(), buckets_.end(), x) - buckets_.begin();
     }

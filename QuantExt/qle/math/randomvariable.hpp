@@ -25,7 +25,7 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
-#include <ql/functional.hpp>
+#include <functional>
 
 #include <boost/timer/timer.hpp>
 #include <boost/serialization/array.hpp>
@@ -203,9 +203,11 @@ struct RandomVariable {
     friend RandomVariable max(RandomVariable, const RandomVariable&);
     friend RandomVariable min(RandomVariable, const RandomVariable&);
     friend RandomVariable pow(RandomVariable, const RandomVariable&);
+    friend RandomVariable round(RandomVariable, const RandomVariable&);
     friend RandomVariable operator-(RandomVariable);
     friend RandomVariable abs(RandomVariable);
     friend RandomVariable exp(RandomVariable);
+    friend RandomVariable frac(RandomVariable);
     friend RandomVariable log(RandomVariable);
     friend RandomVariable sqrt(RandomVariable);
     friend RandomVariable sin(RandomVariable);
@@ -270,9 +272,11 @@ RandomVariable operator/(RandomVariable, const RandomVariable&);
 RandomVariable max(RandomVariable, const RandomVariable&);
 RandomVariable min(RandomVariable, const RandomVariable&);
 RandomVariable pow(RandomVariable, const RandomVariable&);
+RandomVariable round(RandomVariable, const RandomVariable&);
 RandomVariable operator-(RandomVariable);
 RandomVariable abs(RandomVariable);
 RandomVariable exp(RandomVariable);
+RandomVariable frac(RandomVariable);
 RandomVariable log(RandomVariable);
 RandomVariable sqrt(RandomVariable);
 RandomVariable sin(RandomVariable);

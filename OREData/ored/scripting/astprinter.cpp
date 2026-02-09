@@ -39,6 +39,8 @@ class ASTPrinter : public AcyclicVisitor,
                    public Visitor<FunctionNormalPdfNode>,
                    public Visitor<FunctionMinNode>,
                    public Visitor<FunctionMaxNode>,
+                   public Visitor<FunctionFractionNode>,
+                   public Visitor<FunctionRoundNode>,
                    public Visitor<FunctionPowNode>,
                    public Visitor<FunctionBlackNode>,
                    public Visitor<FunctionDcfNode>,
@@ -92,6 +94,8 @@ public:
     void visit(FunctionNormalPdfNode& n) override { print("FunctionNormalPdf", n); }
     void visit(FunctionMinNode& n) override { print("FunctionMin", n); }
     void visit(FunctionMaxNode& n) override { print("FunctionMax", n); }
+    void visit(FunctionFractionNode& n) override { print("FunctionFraction", n); }
+    void visit(FunctionRoundNode& n) override { print("FunctionRound", n); }
     void visit(FunctionPowNode& n) override { print("FunctionPow", n); }
     void visit(FunctionBlackNode& n) override { print("FunctionBlack", n); }
     void visit(FunctionDcfNode& n) override { print("FunctionDcf", n); }

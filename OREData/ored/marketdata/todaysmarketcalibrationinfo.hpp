@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/portfolio/cashflowutils.hpp>
+
 #include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
@@ -46,14 +48,19 @@ struct YieldCurveCalibrationInfo {
     std::string dayCounter;
     std::string currency;
 
+    // these are all curve pillar dates used for interpolation or overwritten by report config date list
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
-};
 
-struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
-    // ... add instrument types?
+    // a rate helper can have 0...n pillar dates associated to it in general
+    std::vector<std::set<QuantLib::Date>> rateHelperPillarDates;
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
+    std::vector<std::string> rateHelperTypes;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
+    std::vector<double> rateHelperQuoteErrors;
 };
 
 struct FittedBondCurveCalibrationInfo : public YieldCurveCalibrationInfo {
@@ -79,6 +86,10 @@ struct InflationCurveCalibrationInfo {
     QuantLib::Date baseDate;
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> times;
+    std::vector<std::string> mdQuoteLabels;
+    std::vector<double> mdQuoteValues;
+    std::vector<std::string> rateHelperTypes;
+    std::vector<std::vector<TradeCashflowReportData>> rateHelperCashflows;
 };
 
 struct ZeroInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {

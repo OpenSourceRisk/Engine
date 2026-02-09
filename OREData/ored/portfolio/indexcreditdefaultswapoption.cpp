@@ -82,8 +82,10 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
         asof = Settings::instance().evaluationDate();
     }
 
+    bool defaultTradeDateIsUsed = false;
     if (tradeDate_ == Date()) {
         tradeDate_ = asof;
+        defaultTradeDateIsUsed = true;
     } else {
         QL_REQUIRE(tradeDate_ <= asof, "Trade date (" << io::iso_date(tradeDate_) << ") should be on or "
                                                       << "before the valuation date (" << io::iso_date(asof) << ")");
@@ -182,10 +184,23 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
 
     // Populate the constituents and determine the various notional amounts.
     constituents_.clear();
+    defaultHasOccured_ = false;
     if (swap_.basket().constituents().size() > 1) {
         fromBasket(asof, constituents_);
     } else {
         fromReferenceData(asof, constituents_, engineFactory->referenceData());
+    }
+
+    // Check if a default trade date might lead to an inaccurate valuation
+    if (defaultTradeDateIsUsed && defaultHasOccured_) {
+        StructuredTradeWarningMessage(id(), tradeType(), "Results might be inaccurate, because no trade date is given.",
+                                      "No trade date is given and there were defaults in the underlying index. This "
+                                      "might lead to wrong notional and realized fep amounts. The trade date is "
+                                      "assumed to be the valuation date (" +
+                                          ore::data::to_string(tradeDate_) +
+                                          "). If this is not correct, consider "
+                                          "populating the trade date.")
+            .log();
     }
 
     // Transfer to vectors for ctors below
@@ -287,8 +302,9 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
 
     // for cash settlement build the underlying swap with the inccy discount curve
     Settlement::Type settleType = parseSettlementType(option_.settlement());
-    cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
-                                                    swap_.recoveryRate(), settleType == Settlement::Cash));
+    cds->setPricingEngine(iCdsEngineBuilder->engine(
+        ccy, creditCurveId, constituentIds, overrideCurve, iCdsOptionEngineBuilder->calibrateUnderlyingCurves(),
+        constituentNtls, swap_.recoveryRate(), settleType == Settlement::Cash));
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -312,7 +328,8 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // the vol curve id is the credit curve id stripped by a term, if the credit curve id should contain one
     auto p = splitCurveIdWithTenor(swap_.creditCurveId());
     volCurveId_ = p.first;
-    option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds));
+    option->setPricingEngine(
+        iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds, constituentNtls));
     setSensitivityTemplate(*iCdsOptionEngineBuilder);
     addProductModelEngine(*iCdsOptionEngineBuilder);
 
@@ -508,6 +525,8 @@ void IndexCreditDefaultSwapOption::fromBasket(const Date& asof, map<string, Real
                 notionals_.realisedFep += fepAmount;
             }
 
+            defaultHasOccured_ = true;
+
         } else if (ntl > 0.0) {
 
             // Entity is still in the index.
@@ -617,6 +636,8 @@ void IndexCreditDefaultSwapOption::fromReferenceData(const Date& asof, map<strin
                                         << "FEP by amount " << fepAmount);
                 notionals_.realisedFep += fepAmount;
             }
+
+            defaultHasOccured_ = true;
 
         } else if (weight > 0.0) {
 

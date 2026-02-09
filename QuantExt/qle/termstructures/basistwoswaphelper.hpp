@@ -49,7 +49,8 @@ public:
                        // Discount curve
                        const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                        bool discountCurveGiven = false,
-                       const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
+                       const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+                       const QuantLib::Date& customPillarDate = Date());
 
     //! \name RateHelper interface
     //@{
@@ -65,6 +66,7 @@ public:
     //@{
     void accept(AcyclicVisitor&) override;
     //@}
+    RelinkableHandle<YieldTermStructure> discountHandle() const { return discountRelinkableHandle_; }
 
 protected:
     void initializeDates() override;

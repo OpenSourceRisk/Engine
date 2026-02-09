@@ -26,19 +26,17 @@
 
 namespace QuantExt {
 
-BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period& swapTenor, const Calendar& calendar,
-                                       // Long tenor swap
-                                       Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
-                                       const DayCounter& longFixedDayCount,
-                                       const QuantLib::ext::shared_ptr<IborIndex>& longIndex, bool longIndexGiven,
-                                       // Short tenor swap
-                                       Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
-                                       const DayCounter& shortFixedDayCount,
-                                       const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort,
-                                       bool shortIndexGiven,
-                                       // Discount curve
-                                       const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven,
-                                       const QuantLib::Pillar::Choice pillarChoice)
+BasisTwoSwapHelper::BasisTwoSwapHelper(
+    const Handle<Quote>& spread, const Period& swapTenor, const Calendar& calendar,
+    // Long tenor swap
+    Frequency longFixedFrequency, BusinessDayConvention longFixedConvention, const DayCounter& longFixedDayCount,
+    const QuantLib::ext::shared_ptr<IborIndex>& longIndex, bool longIndexGiven,
+    // Short tenor swap
+    Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention, const DayCounter& shortFixedDayCount,
+    const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort, bool shortIndexGiven,
+    // Discount curve
+    const Handle<YieldTermStructure>& discountingCurve, bool discountCurveGiven,
+    const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), calendar_(calendar),
       longFixedFrequency_(longFixedFrequency), longFixedConvention_(longFixedConvention),
       longFixedDayCount_(longFixedDayCount), longIndex_(longIndex), longIndexGiven_(longIndexGiven),
@@ -63,6 +61,8 @@ BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period
         QL_FAIL("Need at least one of the indices to have a valid curve.");
     }
 
+    pillarDate_ = customPillarDate;
+
     registerWith(longIndex_);
     registerWith(shortIndex_);
     registerWith(discountHandle_);
@@ -75,7 +75,8 @@ void BasisTwoSwapHelper::initializeDates() {
        of the atm swap rate in MakeVanillaSwap operator ...(). If it is
        Null, you get an exception because the discountRelinkableHandle_
        is initially empty. */
-    longSwap_ = MakeVanillaSwap(swapTenor_, longIndex_, 0.0)
+    longSwap_ = MakeVanillaSwap(swapTenor_, longIndex_,
+                                quote().empty() || !quote()->isValid() || !longMinusShort_ ? 0.0 : quote()->value())
                     .withDiscountingTermStructure(discountRelinkableHandle_)
                     .withFixedLegDayCount(longFixedDayCount_)
                     .withFixedLegTenor(Period(longFixedFrequency_))
@@ -84,7 +85,8 @@ void BasisTwoSwapHelper::initializeDates() {
                     .withFixedLegCalendar(calendar_)
                     .withFloatingLegCalendar(calendar_);
 
-    shortSwap_ = MakeVanillaSwap(swapTenor_, shortIndex_, 0.0)
+    shortSwap_ = MakeVanillaSwap(swapTenor_, shortIndex_,
+                                 quote().empty() || !quote()->isValid() || longMinusShort_ ? 0.0 : quote()->value())
                      .withDiscountingTermStructure(discountRelinkableHandle_)
                      .withFixedLegDayCount(shortFixedDayCount_)
                      .withFixedLegTenor(Period(shortFixedFrequency_))
@@ -98,7 +100,8 @@ void BasisTwoSwapHelper::initializeDates() {
     latestRelevantDate_ =
         std::max(determineLatestRelevantDate(shortSwap_->legs(), {!shortIndexGiven_, !shortIndexGiven_}),
                  determineLatestRelevantDate(longSwap_->legs(), {!longIndexGiven_, !longIndexGiven_}));
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 }
 
 void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {

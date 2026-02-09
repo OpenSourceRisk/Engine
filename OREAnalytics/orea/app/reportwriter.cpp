@@ -377,7 +377,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     report.end();
 }
 
-void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+void addTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                        const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -391,18 +391,6 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
     const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
     const vector<Real>& epe_b = postProcess->tradeEPE_B_timeWeighted(tradeId);
     const vector<Real>& eepe_b = postProcess->tradeEEPE_B_timeWeighted(tradeId);
-    report.addColumn("TradeId", string())
-        .addColumn("Date", Date())
-        .addColumn("Time", double(), 6)
-        .addColumn("EPE", double())
-        .addColumn("ENE", double())
-        .addColumn("AllocatedEPE", double())
-        .addColumn("AllocatedENE", double())
-        .addColumn("PFE", double())
-        .addColumn("BaselEE", double())
-        .addColumn("BaselEEE", double())
-        .addColumn("TimeWeightedBaselEPE", double(), 2)
-        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     report.next()
         .add(tradeId)
         .add(today)
@@ -432,6 +420,54 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
             .add(eee_b[j + 1])
             .add(epe_b[j + 1])
             .add(eepe_b[j + 1]);
+    }
+}
+
+void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                       const string& tradeId) {
+    report.addColumn("TradeId", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double())
+        .addColumn("ENE", double())
+        .addColumn("AllocatedEPE", double())
+        .addColumn("AllocatedENE", double())
+        .addColumn("PFE", double())
+        .addColumn("BaselEE", double())
+        .addColumn("BaselEEE", double())
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
+    
+    addTradeExposures(report, postProcess, tradeId);
+    report.end();
+}
+
+void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("TradeId", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double())
+        .addColumn("ENE", double())
+        .addColumn("AllocatedEPE", double())
+        .addColumn("AllocatedENE", double())
+        .addColumn("PFE", double())
+        .addColumn("BaselEE", double())
+        .addColumn("BaselEEE", double())
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
+
+    for (const auto& [tradeId, _] : postProcess->tradeIds()) {
+        try {
+            addTradeExposures(report, postProcess, tradeId);
+        }
+        catch (const std::exception& e) {
+            QuantLib::ext::shared_ptr<Trade> failedTrade = postProcess->portfolio()->trades().find(tradeId)->second;
+            map<string, string> subfields;
+            subfields.insert({"tradeId", tradeId});
+            subfields.insert({"tradeType", failedTrade->tradeType()});
+            StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(), subfields).log();
+            report.end();
+        }
     }
     report.end();
 }
@@ -491,6 +527,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib:
         .addColumn("BaselEEE", double(), 2)
         .addColumn("TimeWeightedBaselEPE", double(), 2)
         .addColumn("TimeWeightedBaselEEPE", double(), 2);
+
     addNettingSetExposure(report, postProcess, nettingSetId);
     report.end();
 }
@@ -504,30 +541,63 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib:
         .addColumn("PFE", double(), 2)
         .addColumn("ExpectedCollateral", double(), 2)
         .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
+        .addColumn("BaselEEE", double(), 2)
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
 
-    for (const auto& [n,_] : postProcess->nettingSetIds()) {
-        addNettingSetExposure(report, postProcess, n);
+    for (const auto& [nettingSetId, _] : postProcess->nettingSetIds()) {
+        try {
+            addNettingSetExposure(report, postProcess, nettingSetId);
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.", e.what(),
+                                            {{"nettingSetId", nettingSetId}}).log();
+            report.end();
+        }
     }
     report.end();
 }
 
-void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
-                                                   QuantLib::ext::shared_ptr<PostProcess> postProcess,
-                                                   const string& nettingSetId) {
+void addNettingSetCvaSensitivities(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                   const string& nettingSetId) {
     const vector<Real> grid = postProcess->spreadSensitivityTimes();
     const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
     const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
-    report.addColumn("NettingSet", string())
-        .addColumn("Time", double(), 6)
-        .addColumn("CvaHazardRateSensitivity", double(), 6)
-        .addColumn("CvaSpreadSensitivity", double(), 6);
 
     if (sensiHazardRate.size() == 0 || sensiCdsSpread.size() == 0)
         return;
 
     for (Size j = 0; j < grid.size(); ++j) {
         report.next().add(nettingSetId).add(grid[j]).add(sensiHazardRate[j]).add(sensiCdsSpread[j]);
+    }
+}
+
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                   QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                                   const string& nettingSetId) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6)
+        .addColumn("CvaSpreadSensitivity", double(), 6);
+
+    addNettingSetCvaSensitivities(report, postProcess, nettingSetId);
+    report.end();
+}
+
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                   QuantLib::ext::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6)
+        .addColumn("CvaSpreadSensitivity", double(), 6);
+
+    for (const auto& [nettingSetId, _] : postProcess->nettingSetIds()) {
+        try {
+            addNettingSetCvaSensitivities(report, postProcess, nettingSetId);
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
+                                            {{"nettingSetId", nettingSetId}}).log();
+            report.end();
+        }
     }
     report.end();
 }
@@ -632,7 +702,7 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
     report.end();
 }
 
-void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+void addNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
                                         const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -642,16 +712,6 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext
     const vector<Real>& floorInc = postProcess->collateralFloorIncrements(nettingSetId);
     Real colva = postProcess->nettingSetCOLVA(nettingSetId);
     Real floorValue = postProcess->nettingSetCollateralFloor(nettingSetId);
-
-    report.addColumn("NettingSet", string())
-        .addColumn("Date", Date())
-        .addColumn("Time", double(), 4)
-        .addColumn("CollateralBalance", double(), 4)
-        .addColumn("COLVA Increment", double(), 4)
-        .addColumn("COLVA", double(), 4)
-        .addColumn("CollateralFloor Increment", double(), 4)
-        .addColumn("CollateralFloor", double(), 4);
-
     report.next()
         .add(nettingSetId)
         .add(Null<Date>())
@@ -676,6 +736,42 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext
             .add(colvaSum)
             .add(floorInc[j + 1])
             .add(floorSum);
+    }
+}
+
+void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess,
+                                        const string& nettingSetId) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 4)
+        .addColumn("CollateralBalance", double(), 4)
+        .addColumn("COLVA Increment", double(), 4)
+        .addColumn("COLVA", double(), 4)
+        .addColumn("CollateralFloor Increment", double(), 4)
+        .addColumn("CollateralFloor", double(), 4);
+
+    addNettingSetColva(report, postProcess, nettingSetId);
+    report.end();
+}
+
+void ReportWriter::writeNettingSetColva(ore::data::Report& report, QuantLib::ext::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 4)
+        .addColumn("CollateralBalance", double(), 4)
+        .addColumn("COLVA Increment", double(), 4)
+        .addColumn("COLVA", double(), 4)
+        .addColumn("CollateralFloor Increment", double(), 4)
+        .addColumn("CollateralFloor", double(), 4);
+
+    for (const auto& [nettingSetId, _] : postProcess->nettingSetIds()) {
+        try {
+            addNettingSetColva(report, postProcess, nettingSetId);
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.", e.what(),
+                                            {{"nettingSetId", nettingSetId}}).log();
+            report.end();
+        }
     }
     report.end();
 }
@@ -2798,6 +2894,46 @@ void ReportWriter::writeCapitalCrifReport(ore::data::Report& report,
     }
 
     report.end();
+}
+  
+
+void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
+                             const Size& principalComponent, ore::data::Report& reportOut){
+    QL_REQUIRE((eigenValue.size() == eigenVector.columns() && eigenVector.rows() == eigenVector.columns()),
+                "EigenVector and EigenValue size not match.");
+    reportOut.addColumn("PrincipalComponent", Size())
+        .addColumn("EigenValue", double(), 15);
+    for (Size i = 0; i < eigenValue.size(); ++i) {
+        reportOut.addColumn("EigenVector_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < principalComponent; ++i) {
+        reportOut.next().add(i).add(eigenValue[i]);
+        for (Size j = 0; j < eigenValue.size(); ++j) {
+            reportOut.add(eigenVector[j][i]);
+        }
+    }
+    reportOut.end();
+}
+
+void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa, ore::data::Report& reportOut) {
+    QL_REQUIRE(v.rows() == kappa.rows(), "v and kappa must have same rows.");
+    reportOut.addColumn("PrincipalComponent", Size());
+    for (Size i = 0; i < v.columns(); ++i) {
+        reportOut.addColumn("v_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < kappa.columns(); ++i) {
+        reportOut.addColumn("kappa_" + std::to_string(i), double(), 15);
+    }
+    for (Size i = 0; i < v.rows(); ++i) {
+        reportOut.next().add(i);
+        for (Size j = 0; j < v.columns(); ++j) {
+            reportOut.add(v[i][j]);
+        }
+        for (Size j = 0; j < kappa.columns(); ++j) {
+            reportOut.add(kappa[i][j]);
+        }
+    }
+    reportOut.end();
 }
   
 } // namespace analytics

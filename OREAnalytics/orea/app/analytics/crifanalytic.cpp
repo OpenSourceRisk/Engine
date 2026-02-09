@@ -55,9 +55,9 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
         sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
             portfolio, analytic->market(), Market::defaultConfiguration, inputs->pricingEngine(),
             analytic->configurations().simMarketParams, analytic->configurations().sensiScenarioData,
-            inputs->sensiRecalibrateModels(), inputs->sensiLaxFxConversion(),
-            analytic->configurations().curveConfig, analytic->configurations().todaysMarketParams, false,
-            inputs->refDataManager(), inputs->iborFallbackConfig(), true, inputs->dryRun());
+            inputs->sensiRecalibrateModels(), inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
+            analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
+            inputs->iborFallbackConfig(), true, inputs->dryRun(), inputs->useAtParCouponsTrades());
     } else {
         sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
             inputs->nThreads(), inputs->asof(), analytic->loader(), portfolio, Market::defaultConfiguration,
@@ -65,7 +65,8 @@ computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalys
             analytic->configurations().sensiScenarioData, inputs->sensiRecalibrateModels(),
             inputs->sensiLaxFxConversion(), analytic->configurations().curveConfig,
             analytic->configurations().todaysMarketParams, false, inputs->refDataManager(),
-            inputs->iborFallbackConfig(), true, inputs->dryRun(), "analytic/" + analytic->label());
+            inputs->iborFallbackConfig(), true, inputs->dryRun(), "analytic/" + analytic->label(),
+            inputs->useAtParCouponsCurves(), inputs->useAtParCouponsTrades());
     }
 
     LOG("Sensitivity analysis initialised");
@@ -170,7 +171,10 @@ void CrifAnalyticImpl::setUpConfigurations() {
     QL_REQUIRE(analytic()->configurations().simMarketParams, "CrifAnalytic: simMarketParams not set");
     QL_REQUIRE(analytic()->configurations().sensiScenarioData, "CrifAnalytic: sensiScenarioData not set");
     QL_REQUIRE(analytic()->configurations().todaysMarketParams, "CrifAnalytic: todaysMarketParams not set");
-    
+
+    inputs_->loadParameter<bool>(applySimmExemptions_, "crif", "applySimmExemptions", false,
+                                 std::function<bool(const string&)>(parseBool));
+
     setGenerateAdditionalResults(true);
 }
 
@@ -207,14 +211,19 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->addReport(LABEL, "npv_no_simm_exemptions", npvWithoutReport);
 
     std::set<std::string> removedTrades, modifiedTrades;
-    analytic()->startTimer("applySimmExemptions()");
-    try {
-        std::tie(removedTrades, modifiedTrades) =
-            applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides());
-    } catch (std::exception& e) {
-        QL_FAIL(e.what());
+    if (applySimmExemptions_) {
+        analytic()->startTimer("applySimmExemptions()");
+        try {
+            std::tie(removedTrades, modifiedTrades) =
+                applySimmExemptions(*analytic()->portfolio(), engineFactory(), crifAnalytic->simmExemptionOverrides(),
+                                    inputs_->useAtParCouponsTrades());
+        } catch (std::exception& e) {
+            QL_FAIL(e.what());
+        }
+        analytic()->stopTimer("applySimmExemptions()");
+    } else {
+        WLOG("Skipping application of SIMM exemptions as applySimmExemptions is set to false");
     }
-    analytic()->stopTimer("applySimmExemptions()");
 
     // If we have an empty portfolio, then quit the CRIF analytic
     if (analytic()->portfolio()->size() == 0) {

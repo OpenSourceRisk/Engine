@@ -74,7 +74,20 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     Real rebate = barrier_.rebate() / tradeMultiplier();
     QL_REQUIRE(rebate >= 0, "rebate must be non-negative");
 
-    
+    auto delegatingBldr = getDelegatingBuilder(engineFactory);
+    if (delegatingBldr) {
+        delegatingTrade_  = delegatingBldr->build(this, engineFactory);
+        instrument_ = delegatingTrade_->instrument();
+        maturity_ = delegatingTrade_->maturity();
+        npvCurrency_ = delegatingTrade_->npvCurrency();
+        additionalData_ = delegatingTrade_->additionalData();
+        requiredFixings_ = delegatingTrade_->requiredFixings();
+        setSensitivityTemplate(delegatingTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingTrade_->productModelEngine());
+        // notional and notional currency are defined in overriden methods!
+        return;
+    }
+
     // set the maturity
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), payDate);
     maturityType_ = maturity_ == payDate ? "Pay Date" : "Option's Latest Premium Date";
@@ -186,6 +199,13 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
                 tradeCurrency(), discountCurve, engineFactory, engineFactory->configuration(MarketContext::pricing));
 }
 
+QuantLib::Real BarrierOption::notional() const {
+    return delegatingTrade_ != nullptr ? delegatingTrade_->notional() : Trade::notional();
+}
+
+string BarrierOption::notionalCurrency() const {
+    return delegatingTrade_ != nullptr ? delegatingTrade_->notionalCurrency() : Trade::notionalCurrency();
+}
 
 void BarrierOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
@@ -221,6 +241,19 @@ std::string FxOptionWithBarrier::indexFixingName() {
         return boughtCurrency_ + soldCurrency_;
     else
         return fxIndexStr_;
+}
+
+QuantLib::ext::shared_ptr<DelegatingEngineBuilder>
+FxOptionWithBarrier::getDelegatingBuilder(const QuantLib::ext::shared_ptr<EngineFactory>& ef) {
+    QuantLib::ext::shared_ptr<FxBarrierOptionScriptedEngineBuilder> fxEuropeanBarrierOptionBuilder;
+    try {
+        fxEuropeanBarrierOptionBuilder =
+            QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionScriptedEngineBuilder>(ef->builder("FxBarrierOption"));
+        DLOG("FxEuropeanBarrierOptionScriptedEngineBuilder found for trade " << tradeType_);
+    } catch (...) {
+        // no delegating builder found
+    }
+    return fxEuropeanBarrierOptionBuilder;
 }
 
 void FxOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& ef) { 

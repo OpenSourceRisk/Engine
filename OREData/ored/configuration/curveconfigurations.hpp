@@ -62,8 +62,9 @@ class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
     CurveConfigurations(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refDataManager = nullptr,
-                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig = nullptr)
-        : refDataManager_(refDataManager), iborFallbackConfig_(iborFallbackConfig) {}
+                        const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig = nullptr,
+                        const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride = nullptr)
+        : refDataManager_(refDataManager), iborFallbackConfig_(iborFallbackConfig), curveConfigOverride_(curveConfigOverride) {}
 
     //! \name Setters and Getters
     //@{
@@ -74,6 +75,10 @@ public:
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
     const ReportConfig& reportConfigYieldCurves() const { return reportConfigYieldCurves_; }
     const ReportConfig& reportConfigInflationCapFloorVols() const { return reportConfigInflationCapFloorVols_; }
+
+    void setCurveConfigOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride) {
+        curveConfigOverride_ = curveConfigOverride;
+    }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
     QuantLib::ext::shared_ptr<YieldCurveConfig> yieldCurveConfig(const string& curveID) const;
@@ -181,6 +186,7 @@ public:
  private:
     QuantLib::ext::shared_ptr<ReferenceDataManager> refDataManager_;
     QuantLib::ext::shared_ptr<IborFallbackConfig> iborFallbackConfig_;
+    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigOverride_;
 
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
@@ -206,9 +212,10 @@ public:
 
 class CurveConfigurationsManager {
 public:
-    CurveConfigurationsManager() {}
+    CurveConfigurationsManager(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride = nullptr) : override_(curveConfigOverride) {}
 
     // add a curve config, if no id provided it gets added as a default
+    void setOverride(const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigOverride);
     void add(const QuantLib::ext::shared_ptr<CurveConfigurations>& config, std::string id = std::string());
     const QuantLib::ext::shared_ptr<CurveConfigurations>& get(std::string id = std::string()) const;
     const bool has(std::string id = std::string()) const;
@@ -217,6 +224,7 @@ public:
 
 private:
     std::map<std::string, QuantLib::ext::shared_ptr<CurveConfigurations>> configs_;
+    QuantLib::ext::shared_ptr<CurveConfigurations> override_;
 };
 
 } // namespace data

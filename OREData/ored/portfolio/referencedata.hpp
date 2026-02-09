@@ -479,6 +479,8 @@ public:
         QuantLib::Date successorImplementationDate;
         QuantLib::Date predecessorImplementationDate;
         string entityType;
+        string primaryPriceType;
+        Real runningSpread;
     };
     CreditReferenceDatum() {}
 
@@ -604,7 +606,15 @@ public:
 class BasicReferenceDataManager : public ReferenceDataManager, public XMLSerializable {
 public:
     BasicReferenceDataManager() {}
-    BasicReferenceDataManager(const string& filename) { fromFile(filename); }
+    BasicReferenceDataManager(const string& filename,
+                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& rdmOverride = nullptr)
+        : rdmOverride_(rdmOverride) {
+        fromFile(filename);
+    }
+
+    void setRDMOverride(const QuantLib::ext::shared_ptr<ReferenceDataManager>& rdmOverride) {
+        rdmOverride_ = rdmOverride;
+    }
 
     // Load extra data and append to this manger
     void appendData(const string& filename) { fromFile(filename); }
@@ -633,6 +643,9 @@ protected:
     map<std::pair<string, string>, std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ReferenceDatum>>> data_;
     std::set<std::tuple<string, string, QuantLib::Date>> duplicates_;
     map<std::pair<string, string>, std::map<QuantLib::Date, string>> buildErrors_;
+
+private:
+    QuantLib::ext::shared_ptr<ReferenceDataManager> rdmOverride_;
 };
 
 } // namespace data

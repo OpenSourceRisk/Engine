@@ -81,6 +81,8 @@ class ASTRunner : public AcyclicVisitor,
                   public Visitor<FunctionNormalPdfNode>,
                   public Visitor<FunctionMinNode>,
                   public Visitor<FunctionMaxNode>,
+                  public Visitor<FunctionFractionNode>,
+                  public Visitor<FunctionRoundNode>,
                   public Visitor<FunctionPowNode>,
                   public Visitor<FunctionBlackNode>,
                   public Visitor<FunctionDcfNode>,
@@ -188,7 +190,7 @@ public:
         checkpoint(v);
         if (v.isCached) {
             if (v.isScalar) {
-                return std::make_pair(QuantLib::ext::ref(*v.cachedScalar), 0);
+                return std::make_pair(std::ref(*v.cachedScalar), 0);
             } else {
                 QL_REQUIRE(v.args[0], "array subscript required for variable '" << v.name << "'");
                 v.args[0]->accept(*this);
@@ -201,7 +203,7 @@ public:
                 long il = std::lround(i.at(0));
                 QL_REQUIRE(static_cast<long>(v.cachedVector->size()) >= il && il >= 1,
                            "array index " << il << " out of bounds 1..." << v.cachedVector->size());
-                return std::make_pair(QuantLib::ext::ref(v.cachedVector->operator[](il - 1)), il - 1);
+                return std::make_pair(std::ref(v.cachedVector->operator[](il - 1)), il - 1);
             }
         } else {
             auto scalar = context_.scalars.find(v.name);
@@ -210,7 +212,7 @@ public:
                 v.isCached = true;
                 v.isScalar = true;
                 v.cachedScalar = &scalar->second;
-                return std::make_pair(QuantLib::ext::ref(scalar->second), 0);
+                return std::make_pair(std::ref(scalar->second), 0);
             }
             auto array = context_.arrays.find(v.name);
             if (array != context_.arrays.end()) {
@@ -338,6 +340,14 @@ public:
 
     void visit(FunctionMaxNode& n) override {
         binaryOp<ValueType>(n, "max", max, [this](std::size_t a, std::size_t b) { return cg_max(this->g_, a, b); });
+    }
+
+    void visit(FunctionFractionNode& n) override {
+        unaryOp<ValueType>(n, "frac", frac, [this](std::size_t a) { return cg_frac(this->g_, a); });
+    }
+
+    void visit(FunctionRoundNode& n) override {
+        binaryOp<ValueType>(n, "round", round, [this](std::size_t a, std::size_t b) { return cg_round(this->g_, a, b); });
     }
 
     void visit(FunctionPowNode& n) override {

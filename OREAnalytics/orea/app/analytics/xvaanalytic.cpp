@@ -27,6 +27,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
+#include <orea/cube/overlaynpvcube.hpp>
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sparsenpvcube.hpp>
@@ -92,6 +93,13 @@ void XvaAnalyticImpl::buildDependencies() {
                 AnalyticFactory::instance().build("CORRELATION", inputs_, analytic()->analyticsManager(), false);
             if (correlationAnalytic.second)
                 addDependentAnalytic(corrLookupKey, correlationAnalytic.second);
+    }
+    if (inputs_->cubeNpvOverlay()) {
+        if (auto pricingAnalytic =
+                AnalyticFactory::instance().build("PRICING", inputs_, analytic()->analyticsManager(), false);
+            pricingAnalytic.second) {
+            addDependentAnalytic("PRICING", pricingAnalytic.second);
+        }
     }
 }
 
@@ -464,7 +472,7 @@ XvaAnalyticImpl::classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfoli
         classicPortfolio_->add(trade);
     QL_REQUIRE(analytic()->market(), "today's market not set");
     QuantLib::ext::shared_ptr<EngineFactory> factory = engineFactory();
-    classicPortfolio_->build(factory, "analytic/" + label());
+    classicPortfolio_->build(factory, "analytic/" + label(), true, inputs_->useAtParCouponsTrades());
     Date maturityDate = inputs_->asof();
     if (inputs_->portfolioFilterDate() != Null<Date>())
         maturityDate = inputs_->portfolioFilterDate();
@@ -592,7 +600,8 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
             analytic()->configurations().todaysMarketParams, inputs_->marketConfig("simulation"),
             analytic()->configurations().simMarketParams, false, false, QuantLib::ext::make_shared<ScenarioFilter>(),
             inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, false, false, cubeFactory, {},
-            cptyCubeFactory, "xva-simulation", offsetScenario_);
+            cptyCubeFactory, "xva-simulation", offsetScenario_, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades());
 
         engine.setAggregationScenarioData(scenarioData_);
         engine.registerProgressIndicator(progressBar);
@@ -663,7 +672,8 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             if (inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
                 auto t = trade;
-                auto [ft, success] = buildTrade(t, factory, "analytic/" + label(), false, true, true);
+                auto [ft, success] =
+                    buildTrade(t, factory, "analytic/" + label(), false, true, true, inputs_->useAtParCouponsTrades());
                 if (success)
                     amcPortfolio_->add(trade);
                 else
@@ -731,7 +741,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
-            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
@@ -793,7 +804,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
                 inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
                 inputs_->amcIndividualTrainingInput(), inputs_->amcIndividualTrainingOutput(),
                 inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
-                simMarketParams, continueOnCalibrationError, allowModelFallbacks);
+                simMarketParams, continueOnCalibrationError, allowModelFallbacks, inputs_->useAtParCouponsCurves(),
+                inputs_->useAtParCouponsTrades());
 
             amcEngine.registerProgressIndicator(progressBar);
             amcEngine.registerProgressIndicator(progressLog);
@@ -965,6 +977,21 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
     LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
 
+    std::map<std::string, double> cubeNpvOverlay;
+    if (inputs_->cubeNpvOverlay()) {
+        auto pricingAnalytic = dependentAnalytic("PRICING");
+        static_cast<PricingAnalyticImpl*>(pricingAnalytic->impl().get())
+            ->overwriteResultCurrency(analytic()->configurations().simMarketParams->baseCcy());
+        pricingAnalytic->runAnalytic(loader,{"NPV"});
+        auto npvReport = pricingAnalytic->reports().at("NPV").at("npv");
+        std::size_t colTradeId = npvReport->columnPosition("TradeId");
+        std::size_t colNpvBase = npvReport->columnPosition("NPV(Base)");
+        for (Size r = 0; r < npvReport->rows(); ++r) {
+            cubeNpvOverlay[boost::get<std::string>(npvReport->data(colTradeId, r))] =
+                boost::get<double>(npvReport->data(colNpvBase, r));
+        }
+    }
+
     if(inputs_->generateCorrelations()){
         auto corrAnalytic = dependentAnalytic(corrLookupKey);
         corrAnalytic->runAnalytic(loader,{"CORRELATION"});
@@ -1016,7 +1043,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgUseRedBlocks(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), inputs_->xvaCgUsePythonIntegration(),
-            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, "xva analytic");
+            inputs_->xvaCgUsePythonIntegrationDynamicIm(), true, true, true, inputs_->useAtParCouponsCurves(),
+            inputs_->useAtParCouponsTrades(), "xva analytic");
 
         engine.run();
 
@@ -1103,10 +1131,18 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             LOG("We have generated an AMC cube only");
             cube_ = amcCube_;
         } else {
-            WLOG("We have generated a classic cube only");
+            LOG("We have generated a classic cube only");
         }
 
         LOG("NPV cube generation completed");
+
+        /************************************************************
+         * Apply correction pricing t0 npv - sim t0 npv if requested
+         ************************************************************/
+
+        if (!cubeNpvOverlay.empty()) {
+            cube_ = QuantLib::ext::make_shared<OverlayNPVCube>(cube_, cubeNpvOverlay);
+        }
 
         /***********************************************************************
          * We may have two non-empty portfolios to be merged for post processing
@@ -1212,59 +1248,110 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         ProgressMessage(msg, 0, 1).log();
         LOG("Generating " + runStr + " reports and cube outputs");
 
+        // By default, will write all exposure reports individually (one report per trade, nettingset, etc.), but when 
+        // writeIndividualExposureReports is set to false, it will combine the reports of the same type into a single file.
+
         if (inputs_->exposureProfilesByTrade()) {
-            for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
+            if (inputs_->writeIndividualExposureReports()) {
+                for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
+                    auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                    try {
+                        ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
+                        analytic()->addReport(LABEL, "exposure_trade_" + tradeId, report);
+                    } catch (const std::exception& e) {
+                        QuantLib::ext::shared_ptr<Trade> failedTrade =
+                            postProcess_->portfolio()->trades().find(tradeId)->second;
+                        map<string, string> subfields;
+                        subfields.insert({"tradeId", tradeId});
+                        subfields.insert({"tradeType", failedTrade->tradeType()});
+                        StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(),
+                                                        subfields)
+                            .log();
+                    }
+                }
+            } else {
                 auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
-                    ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
-                    analytic()->addReport(LABEL, "exposure_trade_" + tradeId, report);
+                    ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_);
                 } catch (const std::exception& e) {
-                    QuantLib::ext::shared_ptr<Trade> failedTrade = postProcess_->portfolio()->trades().find(tradeId)->second;
-                    map<string, string> subfields;
-                    subfields.insert({"tradeId", tradeId});
-                    subfields.insert({"tradeType", failedTrade->tradeType()});
-                    StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing trade.", e.what(),
-                                                    subfields)
-                        .log();
+                    StructuredAnalyticsErrorMessage("Trade Exposure Report", "Error processing report.", e.what()).log();
                 }
+                analytic()->addReport(LABEL, "exposure_trade", report);
             }
         }
 
         if (inputs_->exposureProfiles() || runPFE_) {
-            for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
-                auto exposureReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                try {
-                    ReportWriter(inputs_->reportNaString())
-                        .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
-                    analytic()->addReport(LABEL, "exposure_nettingset_" + nettingSet, exposureReport);
-                } catch (const std::exception& e) {
-                    StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
-                                                    e.what(), {{"nettingSetId", nettingSet}})
-                        .log();
-                }
-                if (runXva_) {
-                    auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+            if (inputs_->writeIndividualExposureReports()) {
+                for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
+                    auto exposureReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     try {
                         ReportWriter(inputs_->reportNaString())
-                            .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
-                        analytic()->addReport(LABEL, "colva_nettingset_" + nettingSet, colvaReport);
+                            .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
+                        analytic()->addReport(LABEL, "exposure_nettingset_" + nettingSet, exposureReport);
                     } catch (const std::exception& e) {
-                        StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
+                        StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
                                                         e.what(), {{"nettingSetId", nettingSet}})
                             .log();
                     }
+                    if (runXva_) {
+                        auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                        try {
+                            ReportWriter(inputs_->reportNaString())
+                                .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
+                            analytic()->addReport(LABEL, "colva_nettingset_" + nettingSet, colvaReport);
+                        } catch (const std::exception& e) {
+                            StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
+                                                            e.what(), {{"nettingSetId", nettingSet}})
+                                .log();
+                        }
 
-                    auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                    try {
-                        ReportWriter(inputs_->reportNaString())
-                            .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
-                        analytic()->addReport(LABEL, "cva_sensitivity_nettingset_" + nettingSet, cvaSensiReport);
-                    } catch (const std::exception& e) {
-                        StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.", e.what(),
-                                                        {{"nettingSetId", nettingSet}})
-                            .log();
+                        auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                        try {
+                            ReportWriter(inputs_->reportNaString())
+                                .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
+                            analytic()->addReport(LABEL, "cva_sensitivity_nettingset_" + nettingSet, cvaSensiReport);
+                        } catch (const std::exception& e) {
+                            StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.",
+                                                            e.what(), {{"nettingSetId", nettingSet}})
+                                .log();
+                        }
                     }
                 }
+            } else {
+                auto exposureReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+
+                try {
+                    ReportWriter(inputs_->reportNaString())
+                        .writeNettingSetExposures(*exposureReport, postProcess_);
+                } catch (const std::exception& e) {
+                    StructuredAnalyticsErrorMessage("Netting Set Exposure Report", "Error processing netting set.",
+                                                    e.what()).log();
+                }
+                if (runXva_) {
+                    try {
+                        ReportWriter(inputs_->reportNaString())
+                            .writeNettingSetColva(*colvaReport, postProcess_);
+                    } catch (const std::exception& e) {
+                        StructuredAnalyticsErrorMessage("Netting Set Colva Report", "Error processing netting set.",
+                                                        e.what()).log();
+                    }
+                    try {
+                        ReportWriter(inputs_->reportNaString())
+                            .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_);
+                    } catch (const std::exception& e) {
+                        StructuredAnalyticsErrorMessage("Cva Sensi Report", "Error processing netting set.",
+                                                        e.what()).log();
+                    }
+                }
+
+                analytic()->addReport(LABEL, "exposure_nettingset", exposureReport);
+                if (runXva_) {
+                    analytic()->addReport(LABEL, "colva_nettingset", colvaReport);
+                    analytic()->addReport(LABEL, "cva_sensitivity_nettingset", cvaSensiReport);
+                }
+
             }
         }
 
