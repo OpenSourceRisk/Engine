@@ -29,7 +29,6 @@
 #include <ql/models/marketmodels/browniangenerators/mtbrowniangenerator.hpp>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/timer/timer.hpp>
 
 namespace QuantExt {
 

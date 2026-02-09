@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 include(CheckCXXCompilerFlag)
 include(CheckLinkerFlag)
 
@@ -71,6 +73,7 @@ endif()
 
 # set compiler macro if zlib is enabled
 if(ORE_USE_ZLIB)
+  find_package(ZLIB REQUIRED)
   add_compile_definitions(ORE_USE_ZLIB)
 endif()
 
@@ -239,8 +242,20 @@ endif()
 
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 
+# Avoid using Boost auto-linking
+add_compile_definitions(BOOST_ALL_NO_LIB)
+
+# Find Boost components.
+set(BOOST_COMPONENT_LIST filesystem serialization timer log)
+if(ORE_BUILD_TESTS)
+    list(APPEND BOOST_COMPONENT_LIST unit_test_framework)
+endif()
+if(ORE_USE_ZLIB)
+    list(APPEND BOOST_COMPONENT_LIST iostreams)
+endif()
+find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
+
 if (MSVC)
-    find_package(Boost)
     if(Boost_VERSION_STRING LESS 1.84.0)
         add_compile_definitions(_WINVER=0x0601)
         add_compile_definitions(_WIN32_WINNT=0x0601)
@@ -261,7 +276,6 @@ get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest"
 get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
 
 # parallel unit test runner
-option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
 if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
     add_definitions(-DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
 endif()
@@ -309,6 +323,7 @@ macro(set_ql_library_name)
     set(QL_LIB_NAME ql_library)
   else()
     get_library_name("QuantLib" QL_LIB_NAME)
+    set(QL_LIB_NAME "${QL_LIB_NAME}$<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>")
   endif()
 endmacro()
 
@@ -319,4 +334,23 @@ function(generate_git_hash custom_target_name)
     COMMAND ${CMAKE_COMMAND} -D IN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -D OUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp
                              -P ${QUANTEXT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endfunction()
+
+find_package(Doxygen)
+if(ORE_BUILD_DOC AND NOT Doxygen_FOUND)
+    message("Doxygen needs to be installed to generate the doxygen documentation.")
+endif()
+
+function(generate_doxy_docs doxy_filename)
+    # Set the Doxygen input and output files.
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/${doxy_filename}.doxy)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+    add_custom_target("doc_${doxy_filename}" ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating API documentation for ${doxy_filename} with Doxygen."
+        VERBATIM
+    )
 endfunction()
