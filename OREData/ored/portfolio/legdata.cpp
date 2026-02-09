@@ -1231,7 +1231,7 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
 void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
                             const std::string& roundingTypeStr, const std::string& roundingPrecisionStr,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const bool useOriginalIndexCurve, const Size accrualDays) {
+                            const bool useOriginalIndexCurve, const Size accrualDays, const Size fixingDays) {
     if (shortIndexStr.empty() && longIndexStr.empty()) {
         return;
     }
