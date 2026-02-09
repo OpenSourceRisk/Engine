@@ -97,7 +97,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
 
     if (pnlVars->pnlDate_ == Date())
-        pnlVars->pnlDate_ = calculateMporDate(pnlVars->horizonDays_, inputs_->asof(), pnlVars->horizonCalendar_);
+        pnlVars->pnlDate_ = calculateMporDate(pnlVars->horizonDays_, pnlVars->horizonCalendar_, inputs_->asof());
 
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
