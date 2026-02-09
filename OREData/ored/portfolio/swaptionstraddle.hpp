@@ -24,10 +24,6 @@
 #pragma once
 
 #include <ored/portfolio/optiondata.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/trade.hpp>
-
-#include <ql/instruments/nonstandardswap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/trade.hpp>
 
