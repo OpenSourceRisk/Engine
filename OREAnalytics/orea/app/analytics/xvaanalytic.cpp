@@ -121,6 +121,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
 
     exposureBaseCurrency_ = inputs->setupVariables().baseCurrency_;
     inputs->loadParameter<string>(exposureBaseCurrency_, "simulation", "baseCurrency", false);
+    exposureObservationModel_ = inputs->setupVariables().observationModel_;
     inputs->loadParameter<string>(exposureObservationModel_, "simulation", "observationModel", false);
 
     inputs->loadParameter<bool>(storeFlows_, "simulation", "storeFlows", false, parseBool);
