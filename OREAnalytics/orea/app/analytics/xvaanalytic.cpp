@@ -130,13 +130,8 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<bool>(allowPartialScenarios_, "simulation", "allowPartialScenarios", false, parseBool);
     inputs->loadParameter<Size>(storeCreditStateNPVs_, "simulation", "storeCreditStateNPVs", false, parseInteger);
     inputs->loadParameter<bool>(storeSurvivalProbabilities_, "simulation", "storeSurvivalProbabilities", false, parseBool);
-    string writeCube, writeScenarios;
-    inputs->loadParameter<string>(writeCube, "simulation", "cubeFile", false);
-    if (!writeCube.empty())
-        writeCube_ = true;
-    inputs->loadParameter<string>(writeScenarios, "simulation", "scenariodump", false);
-    if (!writeScenarios.empty())
-        writeScenarios_ = true;
+    inputs->loadParameter<bool>(writeCube_, "simulation", vector<string>({"cubeFile", "writeCube"}), false, parseBool);
+    inputs->loadParameter<bool>(writeScenarios_, "simulation", vector<string>({"scenariodump", "writeScenarios"}), false, parseBool);
     inputs->loadParameter<bool>(xvaCgBumpSensis_, "simulation", "xvaCgBumpSensis", false, parseBool);
     inputs->loadParameter<bool>(xvaCgUseExternalComputeDevice_, "simulation", "xvaCgUseExternalComputeDevice", false, parseBool);
     inputs->loadParameter<string>(xvaCgExternalComputeDevice_, "simulation", "xvaCgExternalComputeDevice", false);

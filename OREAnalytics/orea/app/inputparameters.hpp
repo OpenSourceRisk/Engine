@@ -576,8 +576,8 @@ public:
     void setAllowPartialScenarios(bool b) { parameters_.set("simulation", "allowPartialScenarios", b); };
     void setStoreCreditStateNPVs(Size states) { parameters_.set("simulation", "storeCreditStateNPVs", states); };
     void setStoreSurvivalProbabilities(bool b) { parameters_.set("simulation", "storeSurvivalProbabilities", b); };
-    void setWriteCube(bool b) { parameters_.set("simulation", "cubeFile", b); };
-    void setWriteScenarios(bool b) { parameters_.set("simulation", "scenariodump", b); };
+    void setWriteCube(bool b) { parameters_.set("simulation", "writeCube", b); };
+    void setWriteScenarios(bool b) { parameters_.set("simulation", "writeScenarios", b); };
     void setExposureSimMarketParams(const std::string& xml) { parameters_.set("simulation", "simulationConfigFile", xml); };
     void setExposureSimMarketParams(const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& xml) { parameters_.set("simulation", "simulationConfigFile", xml); };
     void setScenarioGeneratorData(const std::string& xml) { parameters_.set("simulation", "scenarioGeneratorData", xml); };
