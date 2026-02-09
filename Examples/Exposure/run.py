@@ -23,7 +23,9 @@ cases = [ "run_swapflat.py",  # 1, 11
           "run_hw2f.py",      # 37 and 38
           "run_wwr.py",       # 34
           "run_flipview.py",   # 35
-          "run_xva_corr.py"
+          "run_xva_corr.py",
+          "run_hwhistoricalcalibration.py",
+          "run_callable_bond.py"
          ]
 
 # Get max parallel from environment variable, default to 1

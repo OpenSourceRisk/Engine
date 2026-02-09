@@ -118,7 +118,8 @@ public:
         : hisScenGen_(hisScenGen), sensitivityStream_(ss) {}
     
     void populateSensiShifts(QuantLib::ext::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,
-                             QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator);
+                             QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator,
+                             const bool& supressError = false);
 
     void calculateSensiPnl(const std::set<SensitivityRecord>& srs,
         const std::vector<RiskFactorKey>& rfKeys,

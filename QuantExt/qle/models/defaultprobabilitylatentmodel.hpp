@@ -213,7 +213,7 @@ public:
     */
     Probability probAtLeastNEvents(Size n, const Date& date) const {
         return integratedExpectedValue(std::function<Real(const std::vector<Real>& v1)>(std::bind(
-            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, QuantLib::ext::cref(date), std::placeholders::_1)));
+            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, std::cref(date), std::placeholders::_1)));
     }
 };
 

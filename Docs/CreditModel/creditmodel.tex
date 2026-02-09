@@ -74,8 +74,8 @@
 \begin{document}
 
 \title{ORE Credit Migration Model}
-\author{Acadia Inc.}
-\date{30 October 2025}
+%\author{Acadia Inc.}
+\date{30 January 2026}
 \maketitle
 
 \newpage
@@ -120,7 +120,7 @@ Here:
 
 \begin{itemize}
 \item $Y_i$ is the systematic part of the credit risk driven by global credit factors $G_j$ (shared between entities),
-  which are standard Brownian motions with correlation $dG_k\,dG_l = \rho_{kl}\,dt$. The $\beta_{ij}$ are entity-specifc
+  which are standard Brownian motions with correlation $dG_k\,dG_l = \rho_{kl}\,dt$. The $\beta_{ij}$ are entity-specific
   loadings.
 \item $Z_i$ is the idiosyncratic part of the credit risk of entity $i$, driven by standard Brownian motions $W_i$ which are independent of all
   global factors $G_j$
@@ -494,7 +494,7 @@ The computation of the credit migration pnl in the last step is done as follows:
   \item computing the conditional transition matrices
   \item generating the issuer-risk pnl at the simulation horizon based on the conditional matrices and the NPVs for all
     credit states computed with multi-state pricing engines
-  \item generating the counterparty-risk pnl at the simulation horizon based on the conditional migration probabilty to
+  \item generating the counterparty-risk pnl at the simulation horizon based on the conditional migration probability to
     default and the usual NPV for relevant derivative trades
   \end{itemize}
 \item Evaluation $\neq$ Analytic: generate the credit-risk pnl using calls to
@@ -502,7 +502,7 @@ The computation of the credit migration pnl in the last step is done as follows:
   \item \verb+initEntityStateSimulation()+: Compute conditional transition matrices for large step (TerminalSimulation)
   \item for each ``inner'' simulation path: simulate the entity state using \verb+simulateEntityStates()+
   \item for each ``inner'' simulation path: generate credit-risk pnl using \verb+generateMigrationPnl()+ based on the
-    simulated entity state at the terminal time step and for issuer and counterparty risk (this is donw similar to
+    simulated entity state at the terminal time step and for issuer and counterparty risk (this is done similar to
     Evaluation = Analytic described above)
   \end{itemize}
 \end{itemize}

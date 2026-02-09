@@ -87,8 +87,8 @@ private:
     QuantLib::ext::shared_ptr<SimpleDynamicSimm> imCalculator_;
     std::vector<IrDeltaParConverter> irDeltaConverter_;
 
-    QuantLib::ext::shared_ptr<QuantExt::RandomVariable> irDeltaIM_, irVegaIM_, irCurvatureIM_;
-    QuantLib::ext::shared_ptr<QuantExt::RandomVariable> fxDeltaIM_, fxVegaIM_, fxCurvatureIM_;
+    QuantExt::RandomVariable irDeltaIM_, irVegaIM_, irCurvatureIM_;
+    QuantExt::RandomVariable fxDeltaIM_, fxVegaIM_, fxCurvatureIM_;
 
     Real totalMargin_;
     Real deltaMargin_;

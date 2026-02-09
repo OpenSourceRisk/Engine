@@ -89,6 +89,10 @@ public:
 
     const std::vector<CalibrationResult>& calibrationResults() const { return calibrationResults_; }
 
+    QuantLib::ext::shared_ptr<SabrParametricVolatility> clone(
+        const std::vector<ParametricVolatility::MarketSmile>& marketSmiles,
+        const std::vector<ParameterCalibration>& calibrationTypes) const;
+
 private:
     static constexpr double eps1 = .0000001;
     static constexpr double eps2 = .9999;

@@ -385,7 +385,7 @@ def compare_files_df(name, file_1, file_2, config=None):
             if comp.matches():
                 logger.debug('The columns, %s, in the files match.', str(names))
             else:
-                logger.warning('The columns, %s, in the files do not match.', str(names))
+                logger.warning('The columns, %s, in the files do not match, %s, %s, %s', str(names), name, file_1, file_2)
                 is_match = False
                 logger.warning(comp.report())
 

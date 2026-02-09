@@ -182,9 +182,10 @@ MomentMatchingResults matchFirstTwoMomentsTurnbullWakeman(
 } // namespace CommodityAveragePriceOptionMomementMatching
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
-    const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::BlackScholesModelWrapper>& model,
+    const Handle<YieldTermStructure>& discountCurve, const QuantLib::Handle<QuantExt::AssetModelWrapper>& model,
     QuantLib::Real beta, DiffusionModelType modelType, Real displacement)
-    : discountCurve_(discountCurve), volStructure_(model->processes().front()->blackVolatility()), beta_(beta), 
+    : discountCurve_(discountCurve),
+      volStructure_(model->generalizedBlackScholesProcesses().front()->blackVolatility()), beta_(beta),
       modelType_(modelType), displacement_(displacement) {
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(model);

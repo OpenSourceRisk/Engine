@@ -74,6 +74,17 @@ void handle_rapidxml_parse_error(const rapidxml::parse_error& e) {
 XMLDocument::XMLDocument() : _doc(new rapidxml::xml_document<char>()), _buffer(NULL) {}
 
 XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_document<char>()), _buffer(NULL) {
+    fromFile(fileName);
+}
+
+XMLDocument::~XMLDocument() {
+    if (_buffer != NULL)
+        delete[] _buffer;
+    if (_doc != NULL)
+        delete _doc;
+}
+
+void XMLDocument::fromFile(const string& fileName) {
     // Need to load the entire file into memory to pass to doc.parse().
     ifstream t(fileName.c_str());
     QL_REQUIRE(t.is_open(), "Failed to open file " << fileName);
@@ -90,13 +101,6 @@ XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_docume
     } catch (const rapidxml::parse_error& pe) {
         handle_rapidxml_parse_error(pe);
     }
-}
-
-XMLDocument::~XMLDocument() {
-    if (_buffer != NULL)
-        delete[] _buffer;
-    if (_doc != NULL)
-        delete _doc;
 }
 
 void XMLDocument::fromXMLString(const string& xmlString) {
@@ -183,6 +187,13 @@ string XMLSerializable::toXMLStringUnformatted() const {
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
     return doc.toStringUnformatted();
+}
+
+void XMLUtils::checkAnyNode(XMLNode* node, const vector<string> expectedNames) {
+    QL_REQUIRE(node, "XML Node is NULL (expected any of " << boost::algorithm::join(expectedNames, ", ") << ")");
+    bool found = std::find(expectedNames.begin(), expectedNames.end(), node->name()) != expectedNames.end();
+    QL_REQUIRE(found, "XML Node name " << node->name() << " does not match expected names "
+                                       << boost::algorithm::join(expectedNames, ", "));
 }
 
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {
@@ -286,6 +297,19 @@ void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& name
         addChild(doc, n, secondName, it->second);
     }
 }
+
+string XMLUtils::getAnyChildValue(XMLNode* node, const vector<string> names, bool mandatory, const string& defaultValue) {
+    
+    for (string name : names) {
+        xml_node<>* child = node->first_node(name.c_str());
+        if (child)
+            return getNodeValue(child);
+    }
+    QL_REQUIRE(!mandatory, "XMLNode is NULL (was looking for any child from " << boost::algorithm::join(names, ",") << ")");
+    return defaultValue;   
+    
+}
+
 
 string XMLUtils::getChildValue(XMLNode* node, const string& name, bool mandatory, const string& defaultValue) {
     QL_REQUIRE(node, "XMLNode is NULL (was looking for child " << name << ")");
@@ -445,6 +469,15 @@ vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
     const char* p = name.empty() ? nullptr : name.c_str();
     for (xml_node<>* c = node->first_node(p); c; c = c->next_sibling(p))
         res.push_back(c);
+    return res;
+}
+
+vector<XMLNode*> XMLUtils::getAnyChildrenNodes(XMLNode* node, const std::vector<string>& names) {
+    vector<XMLNode*> res;
+    for (auto const& n : names) {
+        auto tmp = getChildrenNodes(node, n);
+        res.insert(res.end(), tmp.begin(), tmp.end());
+    }
     return res;
 }
 

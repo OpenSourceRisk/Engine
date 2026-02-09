@@ -96,8 +96,8 @@
 \begin{document}
 
 \title{ORE AMC Module 1.8.14}
-\author{Quaternion Risk Management}
-\date{30 October 2025}
+%\author{Quaternion Risk Management}
+\date{30 January 2026}
 \maketitle
 
 \newpage
@@ -191,7 +191,7 @@ model consistency: While the conditional NPVs computed with AMC are by construct
 evolution model driving the XVA simulation, the scenario NPVs in the classic approach are in general not consistent in
 this sense unless the market scenarios are fully implied by the cross asset model. Here ``fully implied'' means that not
 only rate curves, but also market volatility and correlation term structures like FX volatility surfaces, swaption
-volatilties or CMS correlation term structures as well as other parmeters used by the single trade pricers have to be
+volatilities or CMS correlation term structures as well as other parameters used by the single trade pricers have to be
 deduced from the cross asset model, e.g. the mean reversion of the Hull White 1F model and a sutaible model volatility
 feeding into a Bermudan swaption pricer.
 
@@ -613,7 +613,7 @@ Model Parameters special to that product are
 \item \verb+IrCalibrationStrategy+ can be \verb+None+, \verb+CoterminalATM+, \verb+UnderlyingATM+
 \item \verb+FXCalibration+ can be \verb+None+ or \verb+Bootstrap+
 \item \verb+ExtrapolateFxVolatility+ can be \verb+true+ or \verb+false+; if false, no calibration instruments are used
-  that require extrapolation of the market fx volatilty surface in option expiry direction
+  that require extrapolation of the market fx volatility surface in option expiry direction
 \item \verb+Corr_Key1_Key2+: These entries describe the cross asset model correlations to be used; the syntax for
   \verb+Key1+ and \verb+Key2+ is the same as in the simulation configuration for the cross asset model, see \cite{oreug}.
 \end{enumerate}

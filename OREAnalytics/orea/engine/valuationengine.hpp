@@ -111,10 +111,10 @@ public:
         bool dryRun = false,
         //! errors
         Errors* errors = nullptr);
-
+        
 private:
     void recalibrateModels();
-    std::pair<double, double>
+    std::tuple<double, double, double>
     populateCube(const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
                  bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades,
                  const ErrorPolicy errorPolicy, std::vector<bool>& tradeHasT0Error,

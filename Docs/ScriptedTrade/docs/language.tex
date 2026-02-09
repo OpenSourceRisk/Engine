@@ -41,6 +41,8 @@ variable identifiers.
     \verb+max+ & \\
     \verb+min+ & \\
     \verb+pow+ & \\
+    \verb+frac+ & \\
+    \verb+round+ & \\
     \verb+black+ & \\
     \verb+dcf+ & \\
     \verb+days+ & \\ \hline
@@ -398,21 +400,21 @@ If the condition {\tt C} is not true, a runtime error is thrown. Examples:
 \item {\tt REQUIRE Strike >= 0;}
 \end{itemize}
 
-% ====================================================
-\stsubsection{Functions {\tt min}, {\tt max}, {\tt pow}}
-% ====================================================
+% =========================================================================
+\stsubsection{Functions {\tt min}, {\tt max}, {\tt pow}}, {\tt round(x,y)}
+% =========================================================================
 
-Binary functions {\tt min(x,y)}, {\tt max(x,y)}, {\tt pow(x,y)}, applicable to numbers only.
+Binary functions {\tt min(x,y)}, {\tt max(x,y)}, {\tt pow(x,y)}, {\tt round(x,y)}, applicable to numbers only.
 
-% ====================================================
-\stsubsection{Functions {\tt -}, abs, exp, ln, sqrt}
-% ====================================================
+% ========================================================
+\stsubsection{Functions {\tt -}, abs, exp, ln, sqrt, frac}
+% ========================================================
 
-Unary functions {\tt -x}, {\tt abs(x)}, {\tt exp(x)}, {\tt ln(x)}, {\tt sqrt(x)}, applicable to numbers only.
+Unary functions {\tt -x}, {\tt abs(x)}, {\tt exp(x)}, {\tt ln(x)}, {\tt sqrt(x)}, {\tt frac(x)} which take the fractional part of a float, applicable to numbers only.
 
-% ====================================================
+% =======================================================
 \stsubsection{Functions {\tt normalPdf}, {\tt normalCdf}}
-% ====================================================
+% =======================================================
 
 Returns the standard normal pdf $\phi(x)$ resp. cdf $\Phi(x)$, applicable to numbers only.
 

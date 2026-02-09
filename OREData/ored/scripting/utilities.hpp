@@ -20,7 +20,7 @@
     \brief some utility functions
     \ingroup utilities
 */
-#include <ql/tuple.hpp>
+#include <tuple>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/context.hpp>
@@ -117,7 +117,8 @@ public:
     QuantLib::ext::shared_ptr<FallbackIborIndex> irIborFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
                                                         const Date& asof = QuantLib::Date::maxDate()) const;
     // nullptr if it is no overnight fallback index
-    QuantLib::ext::shared_ptr<FallbackOvernightIndex> irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
+    QuantLib::ext::shared_ptr<FallbackOvernightIndex>
+    irOvernightFallback(const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
 								  const Date& asof = QuantLib::Date::maxDate()) const;
     QuantLib::ext::shared_ptr<SwapIndex> irSwap() const { return irSwap_; }
     QuantLib::ext::shared_ptr<ZeroInflationIndex> inf() const { return inf_; }

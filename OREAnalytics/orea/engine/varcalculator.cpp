@@ -27,14 +27,15 @@ VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::share
                      QuantLib::ext::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
                      std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs,
-                     const bool breakdown)
+                     const bool breakdown, const bool useAtParCouponsCurves, const bool useAtParCouponsTrades, 
+                     const bool tradePnl, const bool riskFactorBreakdown)
     : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs),
-                       std::move(fullRevalArgs), nullptr, breakdown),
-      p_(p) {}
+                       std::move(fullRevalArgs), nullptr, breakdown, tradePnl, riskFactorBreakdown, useAtParCouponsCurves,
+                       useAtParCouponsTrades), p_(p) {}
 
 void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
     int s = reports->reports().size();
-    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
+    QL_REQUIRE(s >= 1 && s <= 3, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
     // prepare report
     writeHeader(report);
@@ -49,7 +50,7 @@ void VarReport::writeReports(const ext::shared_ptr<MarketRiskReport::Reports>& r
                              const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
 
     int s = reports->reports().size();
-    QL_REQUIRE(s >= 1 && s <= 2, "We should only report for VAR report");
+    QL_REQUIRE(s >= 1 && s <= 3, "We should only report for VAR report");
     QuantLib::ext::shared_ptr<Report> report = reports->reports().at(0);
 
     auto rg = ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);

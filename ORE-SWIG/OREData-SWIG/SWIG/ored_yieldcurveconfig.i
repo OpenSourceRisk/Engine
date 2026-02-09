@@ -73,7 +73,6 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     Type type() const;
-    const std::string& typeID() const;
     const std::string& conventionsID() const;
     const QuantLib::Pillar::Choice pillarChoice() const;
     Size priority() const;
@@ -260,6 +259,7 @@ public:
                      const std::string& discountCurveID, const std::vector<ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const std::string& interpolationVariable = "Discount", const std::string& interpolationMethod = "LogLinear",
                      const std::string& zeroDayCounter = "A365", bool extrapolation = true,
+                     const std::string& extrapolationMethod = "ContinuousForward",
                      const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
                      const QuantLib::Size mixedInterpolationCutoff = 1);
 

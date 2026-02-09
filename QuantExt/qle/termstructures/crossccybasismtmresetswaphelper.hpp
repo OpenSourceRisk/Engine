@@ -64,14 +64,21 @@ public:
         const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
         bool spreadOnForeignCcy = true, QuantLib::ext::optional<QuantLib::Period> foreignTenor = QuantLib::ext::nullopt,
         QuantLib::ext::optional<QuantLib::Period> domesticTenor = QuantLib::ext::nullopt, Size foreignPaymentLag = 0,
-        Size domesticPaymentLag = 0, QuantLib::ext::optional<bool> foreignIncludeSpread = QuantLib::ext::nullopt,
-        QuantLib::ext::optional<Period> foreignLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> foreignFixingDays = QuantLib::ext::nullopt,
-        QuantLib::ext::optional<Size> foreignRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> foreignIsAveraged = QuantLib::ext::nullopt,
+        Size domesticPaymentLag = 0, const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
+        const std::vector<Calendar>& spotFXSettleCalendarVec = std::vector<Calendar>(),
+        QuantLib::ext::optional<bool> foreignIncludeSpread = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> foreignLookback = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> foreignFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> foreignRateCutoff = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> foreignIsAveraged = QuantLib::ext::nullopt,
         QuantLib::ext::optional<bool> domesticIncludeSpread = QuantLib::ext::nullopt,
-        QuantLib::ext::optional<Period> domesticLookback = QuantLib::ext::nullopt, QuantLib::ext::optional<Size> domesticFixingDays = QuantLib::ext::nullopt,
-        QuantLib::ext::optional<Size> domesticRateCutoff = QuantLib::ext::nullopt, QuantLib::ext::optional<bool> domesticIsAveraged = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Period> domesticLookback = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> domesticFixingDays = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<Size> domesticRateCutoff = QuantLib::ext::nullopt,
+        QuantLib::ext::optional<bool> domesticIsAveraged = QuantLib::ext::nullopt,
         const bool telescopicValueDates = false,
-        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate);
+        const QuantLib::Pillar::Choice pillarChoice = QuantLib::Pillar::LastRelevantDate,
+        const QuantLib::Date& customPillarDate = Date());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -110,6 +117,10 @@ protected:
 
     Size foreignPaymentLag_;
     Size domesticPaymentLag_;
+
+    std::vector<Natural> spotFXSettleDaysVec_;
+    std::vector<Calendar> spotFXSettleCalendarVec_;
+
     // OIS only
     QuantLib::ext::optional<bool> foreignIncludeSpread_;
     QuantLib::ext::optional<QuantLib::Period> foreignLookback_;

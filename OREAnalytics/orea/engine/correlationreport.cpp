@@ -35,12 +35,15 @@ void CorrelationReport::calculate(const ext::shared_ptr<Report>& report) {
     ext::shared_ptr<Scenario> sc = hisScenGen_->next(hisScenGen_->baseScenario()->asof());
     std::vector<RiskFactorKey> deltaKeys = sc->keys();
 
+    // Discrepancy between scenario risk factors and shift risk factors
+    bool supressError = true;
+
     ext::shared_ptr<NPVCube>cube;
     ext::shared_ptr<CovarianceCalculator> covCalculator;
     covCalculator = ext::make_shared<CovarianceCalculator>(covariancePeriod());
 
     sensiPnlCalculator_ = ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, nullptr);
-    sensiPnlCalculator_->populateSensiShifts(cube, deltaKeys, shiftCalc_);
+    sensiPnlCalculator_->populateSensiShifts(cube, deltaKeys, shiftCalc_, supressError);
     sensiPnlCalculator_->calculateSensiPnl({}, deltaKeys, cube, pnlCalculators_, covCalculator, {},
                                            false, false, false);
 

@@ -120,8 +120,8 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
         Rate quote = cd.zeroCouponQuotes[i];
         QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
             QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, cd.fixingCalendar, bdc, dc,
-                index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(cd.discountTS), start);
+                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, start, maturity, cd.fixingCalendar, bdc, dc,
+                index, isInterpolated ? CPI::Linear : CPI::Flat);
         helpers.push_back(instrument);
     }
     Date baseDate =

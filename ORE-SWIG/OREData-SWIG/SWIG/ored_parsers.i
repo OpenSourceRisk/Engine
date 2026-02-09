@@ -74,6 +74,7 @@ using ore::data::parseBusinessDayConvention;
 using ore::data::parseDate;
 using ore::data::fxDominance;
 using ore::data::isGenericIborIndex;
+using ore::data::calculateMporDate;
 %}
 bool isGenericIborIndex(const std::string& indexName);
 ext::shared_ptr<IborIndex> parseIborIndex(const std::string& s,
@@ -103,6 +104,7 @@ QuantLib::Settlement::Type parseSettlementType(const std::string& s);
 QuantLib::Exercise::Type parseExerciseType(const std::string& s);
 QuantLib::Option::Type parseOptionType(const std::string& s);
 QuantLib::Date parseDate(const std::string& s);
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf = QuantLib::Date(), std::string mporCalendar = "US");
 
 %template(StringCalMap) std::map<std::string, Calendar>;
 

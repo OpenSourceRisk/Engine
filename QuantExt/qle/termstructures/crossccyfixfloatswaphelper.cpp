@@ -39,13 +39,16 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
     const Handle<Quote>& spread, bool endOfMonth, bool telescopicValueDates, QuantLib::Pillar::Choice pillarChoice,
-    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
+    const QuantLib::Date& customPillarDate, const std::vector<Natural>& spotFXSettleDaysVec,
+    const std::vector<Calendar>& spotFXSettleCalendarVec, QuantLib::ext::optional<bool> includeSpread,
+    QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays,
     QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
       floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth),
       telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice),
+      spotFXSettleDaysVec_(spotFXSettleDaysVec), spotFXSettleCalendarVec_(spotFXSettleCalendarVec),
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
       isAveraged_(isAveraged) {
 
@@ -56,6 +59,8 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     registerWith(index_);
     registerWith(floatDiscount_);
     registerWith(spread_);
+
+    pillarDate_ = customPillarDate;
 
     initializeDates();
 }
@@ -101,6 +106,14 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     Date start = paymentCalendar_.advance(referenceDate, settlementDays_ * Days);
     Date end = start + tenor_;
 
+    // calc spotFXSettleDate
+    Date spotFXSettleDate = referenceDate;
+    Size numSpotFXSettleDays = spotFXSettleDaysVec_.size(); // guaranteed to be at least 1
+    for (Size i = 0; i < numSpotFXSettleDays; i++) {
+        // Guaranteed here that spotFXSettleDaysVec_ and spotFXSettleCalendarVec_ have the same size
+        spotFXSettleDate = spotFXSettleCalendarVec_[i].advance(spotFXSettleDate, spotFXSettleDaysVec_[i], Days);
+    }
+
     // Nominals
     Real floatNominal = 1.0;
     Real fixedNominal = spotFx_->value();
@@ -116,8 +129,9 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     // Create the swap
     Natural paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
-    swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule, 0.0,
-                                         fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
+    swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule,
+                                         quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), fixedDayCount_,
+                                         paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
                                          index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
                                          paymentLag, paymentCalendar_, telescopicValueDates_, includeSpread_, lookback_,
                                          fixingDays_, rateCutoff_, isAveraged_));
@@ -126,11 +140,13 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     maturityDate_ = swap_->maturityDate();
 
     latestRelevantDate_ = determineLatestRelevantDate(swap_->legs(), {false, false});
-    latestDate_ = pillarDate_ = determinePillarDate(pillarChoice_, maturityDate_, latestRelevantDate_);
+    latestDate_ = pillarDate_ =
+        determinePillarDate(pillarDate_, pillarChoice_, earliestDate_, maturityDate_, latestRelevantDate_);
 
     // Attach engine
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
-        fixedCurrency_, termStructureHandle_, index_->currency(), floatDiscount_, spotFx_);
+        fixedCurrency_, termStructureHandle_, index_->currency(), floatDiscount_, spotFx_, QuantLib::ext::nullopt,
+        Date(), Date(), spotFXSettleDate);
     swap_->setPricingEngine(engine);
 }
 

@@ -44,7 +44,7 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
     const Type lvType, const std::vector<Real>& calibrationMoneyness, const std::string& referenceCalibrationGrid,
     const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
-    : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
       lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), referenceCalibrationGrid_(referenceCalibrationGrid),
       dontCalibrate_(dontCalibrate) {
     // we have to observe the whole vol surface for the Dupire implementation unfortunately; we can specify the time
@@ -56,7 +56,7 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     }
 }
 
-std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolModelBuilder::getCalibratedProcesses() const {
+std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::getCalibratedProcesses() const {
 
     QL_REQUIRE(lvType_ != Type::AndreasenHuge || !calibrationMoneyness_.empty(), "no calibration moneyness provided");
 
@@ -67,7 +67,7 @@ std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolM
         referenceCalibrationDates = ore::data::DateGrid(referenceCalibrationGrid_).dates();
     Date lastRefCalDate = Date::minDate();
 
-    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes;
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> processes;
 
     for (Size l = 0; l < processes_.size(); ++l) {
 
@@ -145,8 +145,8 @@ std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> LocalVolM
                  << l
                  << ": "
                     "calibration error min="
-                 << std::scientific << std::setprecision(6) << QuantLib::ext::get<0>(ah->calibrationError()) << " max="
-                 << QuantLib::ext::get<1>(ah->calibrationError()) << " avg=" << QuantLib::ext::get<2>(ah->calibrationError()));
+                 << std::scientific << std::setprecision(6) << std::get<0>(ah->calibrationError()) << " max="
+                 << std::get<1>(ah->calibrationError()) << " avg=" << std::get<2>(ah->calibrationError()));
         } else if (lvType_ == Type::Dupire) {
             localVol = Handle<LocalVolTermStructure>(
                 QuantLib::ext::make_shared<LocalVolSurface>(processes_[l]->blackVolatility(), processes_[l]->riskFreeRate(),
@@ -208,6 +208,10 @@ std::vector<std::vector<std::pair<Real, Real>>> LocalVolModelBuilder::getVolTime
         }
     }
     return volTimesStrikes;
+}
+
+AssetModelWrapper::ProcessType LocalVolModelBuilder::processType() const {
+    return AssetModelWrapper::ProcessType::LocalVol;
 }
 
 } // namespace data

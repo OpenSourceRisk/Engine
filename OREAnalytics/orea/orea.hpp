@@ -57,6 +57,7 @@
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/dummymarketdataloader.hpp>
+#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
 #include <orea/app/initbuilders.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
@@ -82,6 +83,7 @@
 #include <orea/cube/jointnpvsensicube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/npvsensicube.hpp>
+#include <orea/cube/overlaynpvcube.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/cube/sparsenpvcube.hpp>

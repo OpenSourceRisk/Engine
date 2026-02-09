@@ -33,7 +33,7 @@ AverageOIS::AverageOIS(Type type, Real nominal, const Schedule& fixedLegSchedule
                        const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(std::vector<Real>(1, nominal)), fixedRates_(std::vector<Rate>(1, fixedRate)),
       fixedDayCounter_(fixedDCB), fixedPaymentAdjustment_(fixedLegPaymentAdjustment),
-      fixedPaymentCalendar_(fixedLegPaymentCalendar), overnightIndex_(overnightIndex),
+      fixedPaymentCalendar_(fixedLegPaymentCalendar), onSchedule_(onLegSchedule), overnightIndex_(overnightIndex),
       onPaymentAdjustment_(onLegPaymentAdjustment), onPaymentCalendar_(onLegPaymentCalendar), rateCutoff_(rateCutoff),
       onSpreads_(std::vector<Spread>(1, onLegSpread)), onGearings_(std::vector<Real>(1, onLegGearing)),
       onDayCounter_(onLegDCB), onCouponPricer_(onLegCouponPricer), telescopicValueDates_(telescopicValueDates) {
@@ -51,7 +51,7 @@ AverageOIS::AverageOIS(Type type, std::vector<Real> nominals, const Schedule& fi
                        const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(nominals), fixedRates_(fixedRates), fixedDayCounter_(fixedDCB),
       fixedPaymentAdjustment_(fixedLegPaymentAdjustment), fixedPaymentCalendar_(fixedLegPaymentCalendar),
-      overnightIndex_(overnightIndex), onPaymentAdjustment_(onLegPaymentAdjustment),
+      onSchedule_(onLegSchedule), overnightIndex_(overnightIndex), onPaymentAdjustment_(onLegPaymentAdjustment),
       onPaymentCalendar_(onLegPaymentCalendar), rateCutoff_(rateCutoff), onSpreads_(onLegSpreads),
       onGearings_(onLegGearings), onDayCounter_(onLegDCB), onCouponPricer_(onLegCouponPricer),
       telescopicValueDates_(telescopicValueDates) {

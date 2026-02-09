@@ -65,18 +65,19 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CPICapFloorTest)
 
-template <class T, class U, class I>
-std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<T> > > makeHelpers(Datum iiData[], Size N, const QuantLib::ext::shared_ptr<I>& ii,
-                                                                 const Period& observationLag, const Calendar& calendar,
-                                                                 const BusinessDayConvention& bdc, const DayCounter& dc,
-                                                                 Handle<YieldTermStructure> yts) {
 
-    std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<T> > > instruments;
+std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>>> makeHelpers(Datum iiData[], Size N, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& ii,
+                                                                 Date startDate, 
+                                                                 const Period& observationLag, const Calendar& calendar,
+                                                                 const BusinessDayConvention& bdc, const DayCounter& dc) {
+
+    std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > instruments;
     for (Size i = 0; i < N; i++) {
         Date maturity = iiData[i].date;
         Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(iiData[i].rate / 100.0)));
-        QuantLib::ext::shared_ptr<BootstrapHelper<T> > anInstrument(
-            new U(quote, observationLag, maturity, calendar, bdc, dc, ii, CPI::AsIndex, yts));
+        QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument =
+            ext::make_shared<ZeroCouponInflationSwapHelper>(quote, observationLag, startDate, maturity, calendar, bdc,
+                                                            dc, ii, CPI::AsIndex);
         instruments.push_back(anInstrument);
     }
 
@@ -233,9 +234,8 @@ struct CommonVars {
 
         // now build the helpers ...
         std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > helpers =
-            makeHelpers<ZeroInflationTermStructure, ZeroCouponInflationSwapHelper, ZeroInflationIndex>(
-                zciisData, zciisDataLength, ii, observationLag, calendar, convention, dcZCIIS,
-                Handle<YieldTermStructure>(nominalTS));
+            makeHelpers(
+                zciisData, zciisDataLength, ii, today, observationLag, calendar, convention, dcZCIIS);
 
         // we can use historical or first ZCIIS for this
         // we know historical is WAY off market-implied, so use market implied flat.
