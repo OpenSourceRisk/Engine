@@ -99,8 +99,7 @@ swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)
 
-find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono unit_
-test_framework)
+find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono unit_test_framework)
 
 if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
     find_library(RT_LIBRARY rt REQUIRED)

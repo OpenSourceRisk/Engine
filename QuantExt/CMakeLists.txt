@@ -1,9 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-
-project(QuantExt CXX)
-
-enable_testing()
-
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 

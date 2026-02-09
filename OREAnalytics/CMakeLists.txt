@@ -1,9 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-
-project(OREAnalytics CXX)
-
-enable_testing()
-
 get_library_name("OREAnalytics" OREA_LIB_NAME)
 get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
