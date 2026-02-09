@@ -103,11 +103,11 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
     updateBaseDate();
     this->times_.resize(tenors_.size());
     this->times_[0] = dayCounter.yearFraction(
-        referenceDate(), inflationPeriod(baseDate_ + tenors_[0] - observationLag_, frequency).first);
+        referenceDate(), inflationPeriod(referenceDate() + tenors_[0] - observationLag_, frequency).first);
     for (Size i = 1; i < tenors_.size(); i++) {
 
         this->times_[i] = dayCounter.yearFraction(
-            referenceDate(), inflationPeriod(baseDate_ + tenors_[i] - observationLag_, frequency).first);
+            referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency).first);
         QL_REQUIRE(this->times_[i] > this->times_[i - 1],
                    "non increasing times: " << this->times_[i - 1] << " vs " << this->times_[i]);
     }
@@ -178,7 +178,8 @@ template <class T> inline void ZeroInflationCurveObserverMoving<T>::updateBaseDa
     baseDate_ = d0;
     for (Size i = 0; i < tenors_.size(); i++) {
         this->times_[i] = dayCounter().yearFraction(
-            referenceDate(), inflationPeriod(baseDate_ + tenors_[i] - observationLag_, frequency()).first);
+            referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency()).first);
+        
     }
 }
 
