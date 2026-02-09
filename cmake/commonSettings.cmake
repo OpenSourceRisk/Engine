@@ -308,7 +308,7 @@ macro(set_ql_library_name)
   if(USE_GLOBAL_ORE_BUILD)
     set(QL_LIB_NAME ql_library)
   else()
-    get_library_name("QuantLib" QL_LIB_NAME)
+    set(QL_LIB_NAME "${QL_LIB_NAME}$<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>")
   endif()
 endmacro()
 
