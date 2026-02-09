@@ -52,8 +52,10 @@ public:
         QuantLib::Real quantile = 0.99,
         //! VaR holding period in calendar days
         QuantLib::Size horizonCalendarDays = 14,
-	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
-	const Size& simmCubeDepth = 4);
+        //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+        const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
+        //! SIMM cube depth, default 4
+        const Size& simmCubeDepth = 4);
 
     const std::map<std::string, QuantLib::Real>& unscaledCurrentDIM() const override;
     void build() override;

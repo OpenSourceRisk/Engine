@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/serializationperiod.hpp
+/*! \file qle/utilities/serializationperiod.hpp
     \brief support for QuantLib::Period serialization
     \ingroup utilities
 */

@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file orepcapital/orea/engine/saccrtradedata.hpp
+/*! \file orea/engine/saccrtradedata.hpp
     \brief Class for holding SA-CCR trade data
 */
 

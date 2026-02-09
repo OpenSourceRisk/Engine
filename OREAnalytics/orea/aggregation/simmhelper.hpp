@@ -18,8 +18,7 @@
 
 /*! \file orea/aggregation/simmhelper.hpp
     \brief Dynamic initial margin helper returning Simple SIMM
-
-    \ingroup dim
+    \ingroup analytics
 */
 
 #pragma once

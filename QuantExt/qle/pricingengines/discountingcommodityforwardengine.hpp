@@ -47,6 +47,7 @@ public:
         \param includeSettlementDateFlows If true (false), cashflows on the forward maturity
                                           are (are not) included in the NPV.
         \param npvDate                    Discount to this date. If not given, is set to the evaluation date
+        \param npvFxConversion            FX rate for NPV conversion.
     */
     DiscountingCommodityForwardEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                       QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,

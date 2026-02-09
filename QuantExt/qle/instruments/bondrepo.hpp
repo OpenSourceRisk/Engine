@@ -70,6 +70,4 @@ private:
     void setupExpired() const override;
 };
 
-//! %Arguments for Bond repo
-
 } // namespace QuantExt

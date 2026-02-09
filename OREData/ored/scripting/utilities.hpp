@@ -161,21 +161,21 @@ std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
 
 /*! This method tries to parse an commodity index name used in the scripting context
 
+    \verbatim
     0) COMM-name
     1) COMM-name-YYYY-MM-DD
     2) COMM-name-YYYY-MM
-    ===
     3) CMMM-name#N#D#Cal
     4) COMM-name#N#D
     5) COMM-name#N
-    ===
     6) COMM-name!N
+    \endverbatim
 
     Here 0) - 2) are corresponding to the usual ORE conventions while 3) - 6) are specific to the scripting
     module: Expressions of the form 3) - 5) are resolved to one of the forms 1) and 2) using a given commodity
     future expiry calculator as follows:
 
-    3) COMM-name#N#D#Cal is resolved to the (N+1)th future with expiry greater than the given obsDate advanced by D
+    3) COMM-name\#N\#D\#Cal is resolved to the (N+1)th future with expiry greater than the given obsDate advanced by D
                          business days w.r.t. Calendar Cal, N >= 0
     4) as 3), Cal is taken as the commodity index's fixing calendar
     5) as 4), D is set to 0 if not given
@@ -196,16 +196,17 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
                                                                         const QuantLib::Date& obsDate = Date());
 
 /*! This method tries to parse an inflation index name used in the scripting context
-
+  \verbatim
   1) EUHICPXT
   2) EUHICPXT#F
   3) EUHICPXT#L
+  \endverbatim
 
   Here 1)   is the original form used in ORE. This represents a non-interpolated index.
        2,3) is the extended form including a flag indicating the interpolation F (flat, =1) or L (linear)
 
   The function returns a ql inflation index accounting for the interpolation (but without ts attached),
-  and the ORE index name without the #F, #L suffix.
+  and the ORE index name without the \#F, \#L suffix.
 */
 std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName);

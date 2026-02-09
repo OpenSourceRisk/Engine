@@ -69,7 +69,8 @@ public:
         Size horizonCalendarDays = 14,
         //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
         const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
-	Size dimCubeDepth = 1);
+        //! Depth of the DIM cube, default is 1
+        Size dimCubeDepth = 1);
 
     virtual ~DynamicInitialMarginCalculator() {}
 
