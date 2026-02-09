@@ -640,8 +640,8 @@ MporCashFlowMode parseMporCashFlowMode(const std::string& s);
 QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf = QuantLib::Date(),
                                  const std::string& mporCalendar = "US");
 
-QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf = QuantLib::Date(),
-                                 const QuantLib::Calendar& mporCalendar = QuantLib::WeekendsOnly());
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Calendar& mporCalendar,
+                                 const QuantLib::Date& asOf = QuantLib::Date());
 
 //! Write MporCashFlowMode to stream
 /*!

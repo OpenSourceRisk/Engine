@@ -477,8 +477,8 @@ QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib:
     return calculateMporDate(mporDays, asOf, mporCal);
 }
 
-QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf,
-                                 const QuantLib::Calendar& mporCalendar) {
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Calendar& mporCalendar,
+                                 const QuantLib::Date& asOf) {
     Date d = asOf;
     if (d == Date())
         d = Settings::instance().evaluationDate();
