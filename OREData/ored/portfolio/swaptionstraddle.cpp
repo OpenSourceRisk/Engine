@@ -16,12 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
-#include <ql/instruments/compositeinstrument.hpp>
-
-#include <ored/portfolio/builders/swap.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/compositeinstrumentwrapper.hpp>
 #include <ored/portfolio/swaptionstraddle.hpp>
 
 namespace ore {
@@ -33,16 +28,22 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     QL_REQUIRE(!legData_.empty(), "SwaptionStraddle requires at least one leg");
     npvCurrency_ = notionalCurrency_ = legData_[0].currency();
 
-    // Create payer swaption (Long Payer)
+    // Create payer swaption (Payer)
     OptionData payerOptionData = optionData_;
     payerOptionData.setCallPut("Call");
+    payerOptionData.setLongShort(longShort_);
     payerSwaption_ = QuantLib::ext::make_shared<Swaption>(envelope(), payerOptionData, legData_);
+    // we need to do set the id manually because it otherwise remains blank - it is essential because the engine is stored by id if the option style is Bermudan
+    payerSwaption_->setId(id() + "_PayerSwaption");
     payerSwaption_->build(engineFactory);
 
-    // Create receiver swaption (Long Receiver)
+    // Create receiver swaption (Receiver)
     OptionData receiverOptionData = optionData_;
     receiverOptionData.setCallPut("Put");
+    receiverOptionData.setLongShort(longShort_);
     receiverSwaption_ = QuantLib::ext::make_shared<Swaption>(envelope(), receiverOptionData, legData_);
+    // we need to do set the id manually because it otherwise remains blank - it is essential because the engine is stored by id if the option style is Bermudan
+    receiverSwaption_->setId(id() + "_ReceiverSwaption");
     receiverSwaption_->build(engineFactory);
 
     // They both have the same maturity
@@ -53,12 +54,8 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     legPayers_ = payerSwaption_->legPayers();
 
     // Combine both swaptions in a composite instrument
-    auto composite = QuantLib::ext::make_shared<CompositeInstrument>();
-    double weight = longShort_ == "Long" ? 1.0 : -1.0;
-    composite->add(payerSwaption_->instrument()->qlInstrument(), weight);
-    composite->add(receiverSwaption_->instrument()->qlInstrument(), weight);
-
-    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(composite);
+    instrument_ = QuantLib::ext::make_shared<CompositeInstrumentWrapper>(
+        std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>{payerSwaption_->instrument(), receiverSwaption_->instrument()});
 
     requiredFixings_.addData(payerSwaption_->requiredFixings());
     requiredFixings_.addData(receiverSwaption_->requiredFixings());
