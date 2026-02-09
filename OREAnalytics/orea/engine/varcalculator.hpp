@@ -46,6 +46,7 @@ public:
               QuantLib::ext::optional<ore::data::TimePeriod> period,
               const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
               std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr,
+              std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr,
               const bool breakdown = false, const bool useAtParCouponsCurves = true,
               const bool useAtParCouponsTrades = true, const bool tradePnl = false, const bool riskFactorBreakdown = false);
 
