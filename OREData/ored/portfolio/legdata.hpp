@@ -1259,7 +1259,8 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
 void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
                             const std::string& roundingTypeStr, const std::string& roundingPrecisionStr,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const bool useOriginalIndexCurve, const Size accrualDays = Null<Size>());
+                            const bool useOriginalIndexCurve, const Size accrualDays = Null<Size>(),
+                            const Size fixingDays = Null<Size>());
 
 } // namespace data
 } // namespace ore
