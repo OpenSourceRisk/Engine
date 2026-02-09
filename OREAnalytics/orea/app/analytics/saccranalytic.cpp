@@ -24,7 +24,7 @@
 #include <orea/engine/saccrcalculator.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
@@ -71,7 +71,7 @@ void SaCcrAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
         }
 
         LOG("Write cashflow report for SA-CCR");
-        boost::filesystem::path cfReportPath = inputs_->resultsPath() / "cashflow.csv";
+        std::filesystem::path cfReportPath = inputs_->resultsPath() / "cashflow.csv";
         CSVFileReport cfReport(cfReportPath.string(), ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString(),
                                false);
         ReportWriter(inputs_->reportNaString())

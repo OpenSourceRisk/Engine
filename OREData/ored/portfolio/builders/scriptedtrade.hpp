@@ -31,6 +31,7 @@
 #include <qle/models/crossassetmodel.hpp>
 
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/processes/hestonprocess.hpp>
 
 namespace ore {
 namespace data {
@@ -120,6 +121,9 @@ protected:
     // gets comm ccy from market
     std::string getCommCcy(const IndexInfo& e);
 
+    // Check whether the list of indices contains at least one that needs a quanto adjustment
+    bool containsQuanto();
+  
     // input data (for amc, amcCam_, amcCgModel_ are mutually exclusive)
     bool buildingAmc_ = false;
     bool buildingAmcCg_ = false;
@@ -184,6 +188,21 @@ protected:
     bool includePastCashflows_;
     bool staticNpvMem_;
     Real indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_;
+    // Heston related
+    std::vector<Period> hestonCalibrationExpiries_;
+    std::vector<Period> hestonCalibrationVarianceTerms_;
+    std::vector<Real> hestonInitialValues_; // order: theta, kappa, sigma, rho, v0
+    std::vector<bool> hestonFixedValues_; // same order as above
+    Real hestonRelaxedFellerConstraint_; // in [0,1], 0 means no constraint, 1 means Feller
+    Size hestonMaxCalibrationAttempts_; // Max. number of initial value sets
+    std::vector<Real> hestonMaximumInitialValues_;
+    std::string hestonCalibrationMethod_; 
+    Real hestonEarlyExitThreshold_; // Stop search when this is reached
+    Real hestonMaxAcceptableError_; // Throw if best solution's error exceeds this
+    HestonProcess::Discretization hestonProcessDiscretization_;
+    Size hestonQuantoTimeStepsPerYear_;
+    HestonProcess::Discretization hestonQuantoProcessDiscretization_;
+    bool debug_;
 };
 
 } // namespace data

@@ -102,6 +102,7 @@
 #include <ored/model/fxdata.hpp>
 #include <ored/model/fxlvdata.hpp>
 #include <ored/model/hestonmodelbuilder.hpp>
+#include <ored/model/hestonmodelcalibration.hpp>
 #include <ored/model/hwbuilder.hpp>
 #include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 #include <ored/model/hwhistoricalcalibrationmodeldata.hpp>

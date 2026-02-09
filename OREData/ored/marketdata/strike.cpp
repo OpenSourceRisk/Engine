@@ -32,6 +32,45 @@ using std::ostringstream;
 using std::string;
 using std::vector;
 
+namespace QuantLib {
+ostream& operator<<(ostream& os, DeltaVolQuote::DeltaType type) {
+    switch (type) {
+    case DeltaVolQuote::Spot:
+        return os << "Spot";
+    case DeltaVolQuote::Fwd:
+        return os << "Fwd";
+    case DeltaVolQuote::PaSpot:
+        return os << "PaSpot";
+    case DeltaVolQuote::PaFwd:
+        return os << "PaFwd";
+    default:
+        QL_FAIL("Unknown delta type");
+    }
+}
+
+ostream& operator<<(ostream& os, DeltaVolQuote::AtmType type) {
+    switch (type) {
+    case DeltaVolQuote::AtmNull:
+        return os << "AtmNull";
+    case DeltaVolQuote::AtmSpot:
+        return os << "AtmSpot";
+    case DeltaVolQuote::AtmFwd:
+        return os << "AtmFwd";
+    case DeltaVolQuote::AtmDeltaNeutral:
+        return os << "AtmDeltaNeutral";
+    case DeltaVolQuote::AtmVegaMax:
+        return os << "AtmVegaMax";
+    case DeltaVolQuote::AtmGammaMax:
+        return os << "AtmGammaMax";
+    case DeltaVolQuote::AtmPutCall50:
+        return os << "AtmPutCall50";
+    default:
+        QL_FAIL("Unknown atm type");
+    }
+}
+
+}
+
 namespace ore {
 namespace data {
 
@@ -204,41 +243,6 @@ bool MoneynessStrike::equal_to(const BaseStrike& other) const {
 
 ostream& operator<<(ostream& os, const BaseStrike& strike) { return os << strike.toString(); }
 
-ostream& operator<<(ostream& os, DeltaVolQuote::DeltaType type) {
-    switch (type) {
-    case DeltaVolQuote::Spot:
-        return os << "Spot";
-    case DeltaVolQuote::Fwd:
-        return os << "Fwd";
-    case DeltaVolQuote::PaSpot:
-        return os << "PaSpot";
-    case DeltaVolQuote::PaFwd:
-        return os << "PaFwd";
-    default:
-        QL_FAIL("Unknown delta type");
-    }
-}
-
-ostream& operator<<(ostream& os, DeltaVolQuote::AtmType type) {
-    switch (type) {
-    case DeltaVolQuote::AtmNull:
-        return os << "AtmNull";
-    case DeltaVolQuote::AtmSpot:
-        return os << "AtmSpot";
-    case DeltaVolQuote::AtmFwd:
-        return os << "AtmFwd";
-    case DeltaVolQuote::AtmDeltaNeutral:
-        return os << "AtmDeltaNeutral";
-    case DeltaVolQuote::AtmVegaMax:
-        return os << "AtmVegaMax";
-    case DeltaVolQuote::AtmGammaMax:
-        return os << "AtmGammaMax";
-    case DeltaVolQuote::AtmPutCall50:
-        return os << "AtmPutCall50";
-    default:
-        QL_FAIL("Unknown atm type");
-    }
-}
 
 ostream& operator<<(ostream& os, MoneynessStrike::Type type) {
     switch (type) {
