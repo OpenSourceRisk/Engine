@@ -48,10 +48,7 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     // They both have the same maturity
     maturity_ = payerSwaption_->maturity();
-
-    legs_ = payerSwaption_->legs();
-    legCurrencies_ = payerSwaption_->legCurrencies();
-    legPayers_ = payerSwaption_->legPayers();
+    notionalCurrency_ = payerSwaption_->notionalCurrency();
 
     // Combine both swaptions in a composite instrument
     instrument_ = QuantLib::ext::make_shared<CompositeInstrumentWrapper>(
