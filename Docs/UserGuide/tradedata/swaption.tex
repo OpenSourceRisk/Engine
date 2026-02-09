@@ -342,6 +342,7 @@ The structure of an example \lstinline!SwaptionStraddleData! node is shown in Li
 \begin{tabular} {|l|p{10cm}|}
     \hline
         & \bfseries{A Swaption Straddle requires:} \\  \hline
+    \lstinline!LongShort!: & \emph{Long} or \emph{Short} \\ \hline
     \lstinline!OptionData! & One \lstinline!OptionData! sub-node  \\  \hline
     \lstinline!Style! &  \emph{European} or \emph{Bermudan} or \emph{American} \\ \hline
     \lstinline!ExerciseDates! & \emph{European} swaption straddles can only have one \lstinline!ExerciseDate! child element. \emph{American} swaption straddles must have two \lstinline!ExerciseDate! child elements. \emph{Bermudan} swaption straddles must have at least two \lstinline!ExerciseDate! child elements, or a Rules or Dates based exercise schedule. \\ \hline
@@ -357,7 +358,6 @@ The \lstinline!OptionData! trade component sub-node is outlined in section \ref{
 The relevant fields in the \lstinline!OptionData! node for a Swaption Straddle are:
 
 \begin{itemize}
-\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}.
 
 \item \lstinline!OptionType![Optional]: This flag is optional for swaption straddles. Allowable values are \emph{Call} or \emph{Put}.
 

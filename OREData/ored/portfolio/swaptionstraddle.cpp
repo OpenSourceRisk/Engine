@@ -31,8 +31,7 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     DLOG("SwaptionStraddle::build() for " << id());
 
     QL_REQUIRE(!legData_.empty(), "SwaptionStraddle requires at least one leg");
-     npvCurrency_ = notionalCurrency_ = legData_[0].currency();
-
+    npvCurrency_ = notionalCurrency_ = legData_[0].currency();
 
     // Create payer swaption (Long Payer)
     OptionData payerOptionData = optionData_;
@@ -46,25 +45,20 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     receiverSwaption_ = QuantLib::ext::make_shared<Swaption>(envelope(), receiverOptionData, legData_);
     receiverSwaption_->build(engineFactory);
 
-    // Determine maturity as the later of the two swaption maturities
+    // They both have the same maturity
     maturity_ = payerSwaption_->maturity();
-    if (receiverSwaption_->maturity() > maturity_) {
-        maturity_ = receiverSwaption_->maturity();
-    }
 
-    // Copy leg structure from payer swaption for reporting purposes
     legs_ = payerSwaption_->legs();
     legCurrencies_ = payerSwaption_->legCurrencies();
     legPayers_ = payerSwaption_->legPayers();
 
     // Combine both swaptions in a composite instrument
     auto composite = QuantLib::ext::make_shared<CompositeInstrument>();
-    composite->add(payerSwaption_->instrument()->qlInstrument(), 1.0);
-    composite->add(receiverSwaption_->instrument()->qlInstrument(), 1.0);
+    double weight = longShort_ == "Long" ? 1.0 : -1.0;
+    composite->add(payerSwaption_->instrument()->qlInstrument(), weight);
+    composite->add(receiverSwaption_->instrument()->qlInstrument(), weight);
 
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(composite);
-
-    sensitivityTemplate_ = payerSwaption_->sensitivityTemplate();
 
     requiredFixings_.addData(payerSwaption_->requiredFixings());
     requiredFixings_.addData(receiverSwaption_->requiredFixings());
@@ -73,6 +67,7 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     additionalData_["isdaBaseProduct"] = std::string("Option");
     additionalData_["isdaSubProduct"] = std::string("SwaptionStraddle");
     additionalData_["isdaTransaction"] = std::string("");
+    additionalData_["longShort"] = longShort_;
 }
 
 void SwaptionStraddle::fromXML(XMLNode* node) {
@@ -86,12 +81,15 @@ void SwaptionStraddle::fromXML(XMLNode* node) {
         ld.fromXML(nodes[i]);
         legData_.push_back(ld);
     }
+    longShort_ = XMLUtils::getChildValue(swapNode, "LongShort", false, "Long");
 }
 
 XMLNode* SwaptionStraddle::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swaptionNode = doc.allocNode("SwaptionStraddleData");
     XMLUtils::appendNode(node, swaptionNode);
+
+    XMLUtils::addChild(doc, swaptionNode, "LongShort", longShort_);
 
     XMLUtils::appendNode(swaptionNode, optionData_.toXML(doc));
     for (Size i = 0; i < legData_.size(); i++)
@@ -115,6 +113,7 @@ const std::map<std::string, QuantLib::ext::any>& SwaptionStraddle::additionalDat
             }
         }
     }
+    additionalData_["longShort"] = longShort_;
     return additionalData_;
 }
 

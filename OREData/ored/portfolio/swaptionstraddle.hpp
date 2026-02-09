@@ -67,6 +67,7 @@ private:
 
     QuantLib::ext::shared_ptr<Swaption> payerSwaption_;
     QuantLib::ext::shared_ptr<Swaption> receiverSwaption_;
+    string longShort_;
 };
 
 } // namespace data
