@@ -21,14 +21,14 @@
     <Script>
       <Code>
         <![CDATA[
-          NUMBER Payoff, CurrentNotional;
+          NUMBER Payoff, currentNotional;
           Payoff = PutCall * (Underlying(Expiry) - Strike);
           Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
-          CurrentNotional = Strike * Quantity;
+          currentNotional = Strike * Quantity;
         ]]></Code>
       <NPV>Option</NPV>
       <Results>
-        <Result>CurrentNotional</Result>
+        <Result>currentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
       </Results>
       <CalibrationSpec>
@@ -43,14 +43,14 @@
     <Script purpose = "FD">
       <Code>
         <![CDATA[
-          NUMBER Payoff, CurrentNotional;
+          NUMBER Payoff, currentNotional;
           Payoff = PutCall * (Underlying(Expiry) - Strike);
           Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
-          CurrentNotional = Strike * Quantity;
+          currentNotional = Strike * Quantity;
         ]]></Code>
       <NPV>Option</NPV>
       <Results>
-        <Result>CurrentNotional</Result>
+        <Result>currentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
       </Results>
       <CalibrationSpec>
@@ -97,7 +97,7 @@
       <Code><![CDATA[
         REQUIRE PayoffType == 0 OR PayoffType == 1;
         NUMBER KnockedIn, KnockedOut, Active, Rebate;
-        NUMBER U, i, d, CurrentNotional;
+        NUMBER U, i, d, currentNotional;
 
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
 
@@ -144,14 +144,14 @@
 	END;
 
         IF PayoffType == 0 THEN
-          CurrentNotional = Quantity * Strike;
+          currentNotional = Quantity * Strike;
         ELSE
-          CurrentNotional = Amount;
+          currentNotional = Amount;
         END;
         ]]></Code>
       <NPV>value</NPV>
       <Results>
-        <Result>CurrentNotional</Result>
+        <Result>currentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
 	<Result>Active</Result>
       </Results>
@@ -174,7 +174,7 @@
       <Code><![CDATA[
         REQUIRE PayoffType == 0 OR PayoffType == 1;
         NUMBER KnockedIn, KnockedOut, Active, Rebate;
-        NUMBER U, i, d, CurrentNotional, Alive;
+        NUMBER U, i, d, currentNotional, Alive;
         Alive = 1;
 
         FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO
@@ -238,14 +238,14 @@
 	END;
 
         IF PayoffType == 0 THEN
-          CurrentNotional = Quantity * Strike;
+          currentNotional = Quantity * Strike;
         ELSE
-          CurrentNotional = Amount;
+          currentNotional = Amount;
         END;
         ]]></Code>
       <NPV>value</NPV>
       <Results>
-        <Result>CurrentNotional</Result>
+        <Result>currentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
 	<Result>Active</Result>
       </Results>
@@ -291,7 +291,7 @@
     <Script>
       <Code><![CDATA[
             REQUIRE KnockOutType == 3 OR KnockOutType == 4;
-            NUMBER Payoff, fix, d, r, Alive, CurrentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
+            NUMBER Payoff, fix, d, r, Alive, currentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
             Alive = 1;
             FOR d IN (1, SIZE(FixingDates), 1) DO
                 fix = Underlying(FixingDates[d]);
@@ -339,11 +339,11 @@
                 END;
             END;
             value = LongShort * Payoff;
-            CurrentNotional = FixingAmount * Strike;
+            currentNotional = FixingAmount * Strike;
         ]]></Code>
       <NPV>value</NPV>
       <Results>
-        <Result>CurrentNotional</Result>
+        <Result>currentNotional</Result>
         <Result rename="notionalCurrency">PayCcy</Result>
         <Result>Alive</Result>
         <Result>Fixing</Result>
@@ -359,5 +359,53 @@
       </CalibrationSpec>
     </Script>
   </Script>
+
+  <!-- Rainbow Option: Worst of Asset or Cash Option, EQ, FX, COM 
+
+       Inputs:
+       Expiry                          option expiry date
+       Settlement                      option payoff settlement date
+       LongShort                       1 for a long, -1 for a short position
+       Notional                        multiplier, number of option contracts, etc.
+       Strike                          option strike
+       Underlyings                     vector of underlying indices
+       Weights                         vector of underlying weights
+       PayCcy                          payment currency
+
+       Results:
+       Option                          npv of the option
+       currentNotional                 current notional
+       notionalCurrency                notional currency
+       expectedUnderlyingValue         vector of expected values of the underlyings at expiry
+  -->
+  <Script>
+    <Name>RainbowOption</Name>
+    <ProductTag>MultiAssetOption({AssetClass})</ProductTag>
+    <Script>
+      <Code><![CDATA[
+      REQUIRE SIZE(Underlyings) == SIZE(Weights);
+      NUMBER u, thisPrice, worstPrice, Payoff, currentNotional;
+      NUMBER expUnderValue[SIZE(Underlyings)];
+      worstPrice = Strike;
+      FOR u IN (1, SIZE(Underlyings), 1) DO
+          expUnderValue[u] = Underlyings[u](Expiry);
+          thisPrice = Underlyings[u](Expiry) * Weights[u];
+          IF thisPrice < worstPrice THEN
+              worstPrice = thisPrice;
+          END;
+      END;
+      Option = LongShort * Notional * PAY(worstPrice, Expiry, Settlement, PayCcy);
+      currentNotional = Notional * Strike;
+      ]]>
+      </Code>
+      <NPV>Option</NPV>
+      <Results>
+        <Result>currentNotional</Result>
+        <Result rename="notionalCurrency">PayCcy</Result>
+        <Result rename="expectedUnderlyingValue">expUnderValue</Result>
+      </Results>
+    </Script>
+  </Script>
+
   
 </ScriptLibrary>

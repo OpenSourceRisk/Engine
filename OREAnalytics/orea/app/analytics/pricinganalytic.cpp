@@ -109,12 +109,30 @@ void PricingAnalyticImpl::runAnalytic(
             analytic()->addReport(type, "npv", report);
             CONSOLE("OK");
             if (inputs_->outputAdditionalResults()) {
-                CONSOLEW("Pricing: Additional Results");
+                CONSOLEW("Pricing: Additional Results Report");
                 QuantLib::ext::shared_ptr<InMemoryReport> addReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());;
                 ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
                                                   marketConfig, effectiveResultCurrency, inputs_->additionalResultsReportPrecision());
                 analytic()->addReport(type, "additional_results", addReport);
+                CONSOLE("OK");
+
+		CONSOLEW("Pricing: Model Calibration Reports");
+                auto calReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString())
+                    .writeModelCalibrationReport(*calReport, analytic()->portfolio());
+                analytic()->addReport(type, "assetmodel_calibration", calReport);
+
+                auto calDetailReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString())
+                    .writeModelCalibrationDetailReport(*calDetailReport, analytic()->portfolio());
+                analytic()->addReport(type, "assetmodel_calibration_detail", calDetailReport);
+                CONSOLE("OK");
+
+		CONSOLEW("Pricing: Model Path Report");
+                auto pathReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                ReportWriter(inputs_->reportNaString()).writeModelPathReport(*pathReport, analytic()->portfolio());
+                analytic()->addReport(type, "assetmodel_paths", pathReport);
                 CONSOLE("OK");
             }
             if (outputCurves_) {
@@ -129,17 +147,15 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "curves", curvesReport);
                 CONSOLE("OK");
             }
-        }
-        else if (type == "CASHFLOW") {
+
+        } else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
             ReportWriter(inputs_->reportNaString())
-                .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
-                               analytic()->market(),
+                .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(), analytic()->market(),
                                marketConfig, inputs_->includePastCashflows());
             analytic()->addReport(type, "cashflow", report);
             CONSOLE("OK");
-        }
-        else if (type == "CASHFLOWNPV") {
+        } else if (type == "CASHFLOWNPV") {
             CONSOLEW("Pricing: Cashflow NPV report");
             ReportWriter(inputs_->reportNaString())
                 .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
@@ -150,8 +166,7 @@ void PricingAnalyticImpl::runAnalytic(
                                   effectiveResultCurrency, inputs_->cashflowHorizon());
             analytic()->addReport(type, "cashflownpv", report);
             CONSOLE("OK");
-        }
-        else if (type == "SENSITIVITY") {
+        } else if (type == "SENSITIVITY") {
             CONSOLEW("Risk: Sensitivity Report");
             LOG("Sensi Analysis - Initialise");
             bool ccyConv = false;
@@ -297,8 +312,7 @@ void PricingAnalyticImpl::runAnalytic(
         
             LOG("Sensi Analysis - Completed");
             CONSOLE("OK");
-        }
-        else {
+        } else {
             QL_FAIL("PricingAnalytic type " << type << " invalid");
         }
     }
