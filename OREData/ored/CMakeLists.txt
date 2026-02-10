@@ -312,6 +312,7 @@ portfolio/scriptedtrade.cpp
 portfolio/strikeresettableoption.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
+portfolio/swaptionstraddle.cpp
 portfolio/tarf.cpp
 portfolio/tlockdata.cpp
 portfolio/trade.cpp
@@ -741,6 +742,7 @@ portfolio/structuredtradeerror.hpp
 portfolio/structuredtradewarning.hpp
 portfolio/swap.hpp
 portfolio/swaption.hpp
+portfolio/swaptionstraddle.hpp
 portfolio/tarf.hpp
 portfolio/tlockdata.hpp
 portfolio/trade.hpp
