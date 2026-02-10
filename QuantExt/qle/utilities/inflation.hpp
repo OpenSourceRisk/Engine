@@ -54,6 +54,9 @@ QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTer
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
     QuantLib::Time t, bool indexIsInterpolated);
 
+/*! Utility for to find the simulationLag between referenceDate and baseDate of a zero inflation curve*/
+QuantLib::Period simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+
 /*! Compute a seasonality-adjusted zero rate for a given observation date.
     It takes the time tau between the term structure base date and the observation date as
     given and dont adjust it internally based on the frequency of the inflation curve.

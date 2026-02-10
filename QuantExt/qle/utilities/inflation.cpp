@@ -95,6 +95,19 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool 
     return inflationGrowth(ts, t, ts->dayCounter(), indexIsInterpolated);
 }
 
+Period simulationLag(const Handle<ZeroInflationTermStructure>& ts) {
+    auto baseDate = ts->baseDate();
+    auto refDate = ts->referenceDate();
+    auto frequency = ts->frequency();
+    for (size_t i = 0; i < 12; i++) {
+        Period simLag = i * QuantLib::Months;
+        if (inflationPeriod(refDate - simLag, frequency).first == baseDate) {
+            return simLag;
+        }
+    }
+    return Period(refDate - baseDate, QuantLib::Days);
+}
+
 Real continuousSeasonalityAdjustment(const Date& baseDate, const Date& observationDate, Rate unadjustedZeroRate,
                                      Time tau, const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
     if (ts->seasonality() == nullptr) {

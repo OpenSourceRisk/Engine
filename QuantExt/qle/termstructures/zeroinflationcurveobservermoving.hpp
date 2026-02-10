@@ -41,7 +41,7 @@ class ZeroInflationCurveObserverMoving : public ZeroInflationTermStructure,
                                          public LazyObject {
 public:
     ZeroInflationCurveObserverMoving(
-        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Size& simulationLag,
+        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& simulationLag,
         const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
         const std::vector<Handle<Quote>>& rates,
         const QuantLib::ext::shared_ptr<Seasonality>& seasonality = QuantLib::ext::shared_ptr<Seasonality>(),
@@ -84,14 +84,14 @@ protected:
     std::vector<Period> tenors_;
     mutable Date baseDate_;
     Period observationLag_;
-    Size simulationLag_;
+    Period simulationLag_;
 };
 
 // template definitions
 
 template <class Interpolator>
 ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving(
-    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Size& simulationLag,
+    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& simulationLag,
     const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
@@ -100,8 +100,12 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
       tenors_(tenors), observationLag_(observationLag), simulationLag_(simulationLag) {
 
     QL_REQUIRE(tenors.size() > 1, "too few tenors: " << tenors.size());
-    updateBaseDate();
+    //std::cout << "update base date"<<std::endl;
     this->times_.resize(tenors_.size());
+    updateBaseDate();
+    //std::cout << "base date: " << baseDate_ << std::endl;
+    //std::cout << "calculate times with dayCounter " << dayCounter << std::endl;
+    
     this->times_[0] = dayCounter.yearFraction(
         referenceDate(), inflationPeriod(referenceDate() + tenors_[0] - observationLag_, frequency).first);
     for (Size i = 1; i < tenors_.size(); i++) {
@@ -174,8 +178,8 @@ template <class T> inline void ZeroInflationCurveObserverMoving<T>::performCalcu
 
 template <class T> inline void ZeroInflationCurveObserverMoving<T>::updateBaseDate() const {
     Date d = Settings::instance().evaluationDate();
-    Date d0 = d - this->simulationLag_;
-    baseDate_ = d0;
+    baseDate_ = inflationPeriod(d - simulationLag_, frequency()).first;
+    //std::cout << "updateBaseDate: evaluation date " << d << ", simulation lag " << this->simulationLag_ << ", base date " << baseDate_ << std::endl;
     for (Size i = 0; i < tenors_.size(); i++) {
         this->times_[i] = dayCounter().yearFraction(
             referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency()).first);

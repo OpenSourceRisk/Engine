@@ -2400,7 +2400,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<ZeroInflationIndex> zeroInflationIndex =
                             initMarket->zeroInflationIndex(name, configuration);
                         auto zits = zeroInflationIndex->zeroInflationTermStructure();
-                        Size simulationLag = zits->referenceDate() - zits->baseDate();
+                        QuantLib::Period simLag = simulationLag(zits);
                         Date fixingDate = zits->baseDate();
                         Real baseCPI = zeroInflationIndex->fixing(fixingDate);
 
@@ -2412,12 +2412,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     zeroInflationIndex,
                                     Handle<Quote>(
                                         QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(Handle<Quote>(q), m)),
-                                    simulationLag));
+                                    simLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         } else {
                             Handle<InflationIndexObserver> inflObserver(
                                 QuantLib::ext::make_shared<InflationIndexObserver>(zeroInflationIndex, Handle<Quote>(q),
-                                                                                   simulationLag));
+                                                                                   simLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         }
                         simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
@@ -2502,7 +2502,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             zeroCurve =
                                 QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs, zeroCurveTimes, quotes);
                         } else {
-                            Size simLag = inflationTs->referenceDate() - inflationTs->baseDate();
+                            Period simLag = simulationLag(inflationTs);
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, simLag, obsLag,
                                 inflationTs->frequency(), false, parameters->zeroInflationTenors(name), quotes,

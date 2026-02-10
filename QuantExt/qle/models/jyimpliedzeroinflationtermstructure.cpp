@@ -33,21 +33,29 @@ JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
     : ZeroInflationModelTermStructure(model, index, simulationDayCounter) {}
 
 Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
-    std::cout << "JyImpliedZeroInflationTermStructure::zeroRateImpl called with t=" << t << std::endl;
-    QL_REQUIRE(t >= 0.0, "JyImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
+    // Return the desired z(S) = \left( \frac{P_r(S, T)}{P_n(S, T)} \right)^{\frac{1}{t}} - 1
 
+    auto irDayCounter =
+        model_->irlgm1f(model_->ccyIndex(model_->infjy(index_)->currency()))->termStructure()->dayCounter(); 
+    auto tDate = lowerDate(t, referenceDate_, simulationDayCounter_.value_or(irDayCounter));  
+    auto tau = dayCounter().yearFraction(baseDate(), tDate);
+    return std::pow(indexGrowth(t), 1 / tau) - 1;
+}
+
+Real JyImpliedZeroInflationTermStructure::indexGrowth(Time t) const {
+    std::cout << "JyImpliedZeroInflationTermStructure::inflationGrowthImpl called with t=" << t << std::endl;
+    QL_REQUIRE(t >= 0.0, "JyImpliedZeroInflationTermStructure::inflationGrowthImpl: negative time (" << t
+                                                                                                 << ") given");
     // Zero rate is calculated from the relation: P_n(S, T) (1 + z(S))^t = P_r(S, T)
     // Here, S in the relation is given by relativeTime_ and T := S + t.
     // ratio holds \frac{P_r(S, T)}{P_n(S, T)}.
-    auto irDayCounter =
-        model_->irlgm1f(model_->ccyIndex(model_->infjy(index_)->currency()))->termStructure()->dayCounter();
-    auto tDate = lowerDate(t, referenceDate_, simulationDayCounter_.value_or(irDayCounter));
+    std::cout << "JyImpliedZeroInflationTermStructure::inflationGrowthImpl: relativeTime_ = " << relativeTime_ << std::endl;
+   
     auto S = relativeTime_;
     auto T = relativeTime_ + t;
-    auto tau = dayCounter().yearFraction(baseDate(), tDate);
+  
     auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], true);
-    // Return the desired z(S) = \left( \frac{P_r(S, T)}{P_n(S, T)} \right)^{\frac{1}{t}} - 1
-    return std::pow(ratio, 1 / tau) - 1;
+    return ratio;
 }
 
 void JyImpliedZeroInflationTermStructure::checkState() const {
