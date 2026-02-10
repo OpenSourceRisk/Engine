@@ -25,10 +25,10 @@ namespace data {
 
 void FxLvData::fromXML(XMLNode* node) {
     FxData::fromXML(node);
-    std::string model_ = XMLUtils::getChildValue(node, "Model");
-    std::string stochasticRatesCorrection_ = XMLUtils::getChildValue(node, "StochasticRatesCorrection");
-    std::string calibrationMoneyness_ = XMLUtils::getChildValue(node, "CalibrationMoneyness");
-    std::string calibrationGrid_ = XMLUtils::getChildValue(node, "CalibrationGrid");
+    model_ = XMLUtils::getChildValue(node, "Model");
+    stochasticRatesCorrection_ = XMLUtils::getChildValue(node, "StochasticRatesCorrection");
+    calibrationMoneyness_ = XMLUtils::getChildValue(node, "CalibrationMoneyness");
+    calibrationGrid_ = XMLUtils::getChildValue(node, "CalibrationGrid");
 }
 
 XMLNode* FxLvData::toXML(XMLDocument& doc) const {
