@@ -346,6 +346,19 @@ public:
         return loadParameterXML<T>(obj, analytics, params, false, args...);
     }
 
+    virtual QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& analytic,
+                                                                         const std::string& param,
+                                                                         const Date& startDate, const Date& endDate);
+    QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& analytic,
+                                                                         const std::vector<std::string>& params,
+                                                                         const Date& startDate, const Date& endDate);
+    QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::vector<std::string>& analytics,
+                                                                         const std::string& param,
+                                                                         const Date& startDate, const Date& endDate);
+    QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::vector<std::string>& analytics,
+                                                                         const std::vector<std::string>& params,
+                                                                         const Date& startDate, const Date& endDate);
+
     //! virtual function to load a parameter string for the given (analytic, param) pair
     virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory);
         

@@ -250,6 +250,42 @@ std::string InputParameters::loadParameterString(const std::string& analytic, co
         return std::string();
 }
 
+ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::string& analytic, const std::string& param, 
+     const Date& startDate, const Date& endDate) {
+    string s;
+    loadParameter<string>(s, analytic, param);
+    std::filesystem::path baseScenarioPath(setupVariables_.inputPath_ / s);
+    if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
+        return ext::make_shared<ScenarioFileReader>(baseScenarioPath.string(), ext::make_shared<SimpleScenarioFactory>(false));
+    } else {
+        // If the file does not exist or fails, assume it is a scenario string
+        return ext::make_shared<ScenarioBufferReader>(s, ext::make_shared<SimpleScenarioFactory>(true));
+    }
+}
+ 
+QuantLib::ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::vector<std::string>& analytics,
+                                                                              const std::vector<std::string>& params,
+                                                                              const Date& startDate,
+                                                                              const Date& endDate) {
+    for (const auto& a : analytics) {
+        for (const auto& p : params) {
+            return loadScenarioReader(a, p, startDate, endDate);
+        }
+    }
+}
+  
+QuantLib::ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::string& analytic,
+    const std::vector<std::string>& params,
+    const Date& startDate, const Date& endDate) {
+    return loadScenarioReader(vector<string>({analytic}), params, startDate, endDate);
+}
+
+ QuantLib::ext::shared_ptr<ScenarioReader>
+ InputParameters::loadScenarioReader(const std::vector<std::string>& analytics, const std::string& param, 
+     const Date& startDate, const Date& endDate) {
+    return loadScenarioReader(analytics, vector<string>({param}), startDate, endDate);
+}
+
  const std::string& InputParameters::marketConfig(const std::string& context) {
     auto it = marketConfigs_.find(context);
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
