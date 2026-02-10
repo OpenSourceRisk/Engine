@@ -1,0 +1,361 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Page geometry
+\geometry{margin=1in}
+
+% Code listing settings
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!10}
+}
+
+% Custom commands
+\newcommand{\code}[1]{\texttt{#1}}
+
+% Document metadata
+\title{Inflation Simulation in ORE}
+\author{Matthias Groncki}
+\date{2025-02-09}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document describes the desired theory and practical approach for simulating inflation in ORE with the CrossAssetModel. It focuses on how seasonality, day-count differences and observation lags should be handled.
+\end{abstract}
+
+\section{Conventions and Terminology}
+
+Before discussing simulation, we establish the t=0 market curve conventions that must be preserved throughout the exposure simulation.
+
+\subsection{Key Dates and Lags}
+
+\begin{itemize}[leftmargin=*]
+
+\item \textbf{Reference date:} The valuation date, denoted \code{today} or $t=0$.
+
+\item \textbf{Curve base date ($\text{baseDate}_{\text{curve}}$):} The date of the last known published CPI fixing. Always the \textbf{first day of an inflation period} (typically the 1st of a month for monthly frequency indices). This is the anchor for the zero-inflation curve.
+
+\item \textbf{Simulation lag (simLag):} The difference between the curve base date and reference date.
+  
+  Example: today = 9-Feb-2026 and last published CPI is Dec-2025, so simLag $\approx$ 2M + 8d.
+
+\item \textbf{Published fixings:} CPI indices publish one fixing per calendar month, always assigned to the \textbf{first day of the month} (the start of the inflation period). There are no intra-month fixings. Forward CPI are flat throughout the month.
+
+\item \textbf{Flat forward rule:} Between published fixings (within a calendar month), forward CPI values remain \textbf{constant}—the forward CPI for any date within month M equals the forward CPI for the 1st of month M.
+
+\item \textbf{Interpolation:} When instruments require interpolated CPI (e.g., \code{CPI::Linear} interpolation), the interpolation is performed \textbf{by the instrument/index} between the two monthly fixings that bracket the observation date. The interpolation uses the current calendar date within the month (not lagged time).
+\end{itemize}
+
+\subsection{T0 Zero-Inflation Curves}
+
+Zero-coupon inflation index swaps (ZCIIS) are used for bootstrapping the zero-inflation curve:
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{Observation lag (obsLag):} A \textbf{contractual convention} specified in zero-coupon inflation swap (ZCIIS) instruments. For a swap with payment at date T, the CPI observation occurs at \code{T - obsLag}, then moved to the start of the inflation period. Example: obsLag = 3 months.
+\end{itemize}
+
+Assume:
+\begin{itemize}
+\item \textbf{Today} (reference date): 9-Feb-2026
+\item \textbf{ZCIIS tenor:} 2 years
+\item \textbf{Observation lag:} 3 months
+\item \textbf{Index frequency:} monthly (first-of-month fixings)
+\end{itemize}
+
+Then:
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{ZCIIS base date ($t_\text{base} = \text{baseDate}_{\text{ZCIIS}}$):}
+    \begin{itemize}
+    \item First, lag today by obsLag: 9-Feb-2026 - 3M = 9-Nov-2025
+    \item Then move to first-of-month: \textbf{1-Nov-2025}
+    \end{itemize}
+
+\item \textbf{Maturity (payment date T):} 9-Feb-2026 + 2Y = 9-Feb-2028
+
+\item \textbf{Observation date ($t_\text{obs}$):}
+    \begin{itemize}
+    \item First, lag maturity by obsLag: 9-Feb-2028 - 3M = 9-Nov-2027
+    \item Then discretized to first-of-month: \textbf{1-Nov-2027}
+    \end{itemize}
+
+\item \textbf{ZCIIS structure:} A ZCIIS with maturity T and start date \code{today} pays $I(T_{\text{obs}}) / I(\text{baseDate}_{\text{ZCIIS}}) - 1$ at maturity T, where $T_{\text{obs}} = \text{firstOfInflationPeriod}(T - \text{obsLag})$ and $\text{baseDate}_{\text{ZCIIS}} = \text{firstOfInflationPeriod}(\text{today} - \text{obsLag})$.
+
+\item \textbf{Pillar dates:} For a ZCIIS with tenor (e.g., 1Y, 2Y, 5Y), the pillar observation date is computed as:
+\begin{lstlisting}
+maturity = today + tenor
+t_obs = firstOfInflationPeriod(maturity - obsLag)
+\end{lstlisting}
+The curve is bootstrapped with pillars at these \code{t\_obs} dates.
+\end{itemize}
+
+\subsection{Simplified Timeline}
+
+Below is a conceptual timeline illustrating the key dates and lags for a ZCIIS with 2Y tenor and 3M observation lag. The example uses the dates from sections 1.1 and 1.2 (today = 9-Feb-2026, last CPI = Dec-2025), where the simulation lag and observation lag differ:
+
+\begin{verbatim}
+Time axis (calendar dates):
+
+  |------|------|------|---------- ... ----------|------|------|------|
+  Nov    Dec    Jan    Feb                       Nov    Dec    Jan    Feb
+  2025   2025   2026   2026                      2027   2027   2028   2028
+  ↑      ↑             ↑                         ↑                    ↑
+baseDate baseDate      today                     t_obs              maturity (T)
+_ZCIS   _curve         (reference                (ZCIIS              (payment date)
+         (curve         date)                     observation)
+          anchor)
+1-Nov   1-Dec          9-Feb                     1-Nov              9-Feb
+-2025   -2025          -2026                     -2027              -2028
+
+  <-------obsLag------->                          <-------obsLag------->
+           = 3M                                            = 3M
+         <--simLag----->
+           ≈ 2M + 8d
+\end{verbatim}
+
+\noindent\textbf{Curve anchor:}  
+$\text{baseDate}_\text{curve} = \text{1-Dec-2025}$ (last known published CPI fixing)
+
+\noindent\textbf{ZCIIS base:}  
+$\text{baseDate}_\text{ZCIIS} = \text{1-Nov-2025}$ (firstOfMonth(today - obsLag))
+
+\noindent\textbf{Pillar date:}  
+$t_\text{obs} = \text{1-Nov-2027}$ (firstOfMonth(maturity - obsLag))
+
+\noindent\textbf{Fair ZCIIS rate:}
+\begin{equation}
+\frac{I(t_\text{obs})}{I(\text{baseDate}_\text{ZCIIS})} = (1 + z_\text{fair})^{\tau_0} \quad \text{paid at maturity } T
+\end{equation}
+where $\tau_0 = \text{yearFraction}(\text{baseDate}_\text{ZCIIS}, t_\text{obs})$
+
+\noindent\textbf{Curve zero rate:} given by this equation:
+\begin{equation}
+I(t_\text{obs}) = I(\text{baseDate}_\text{curve}) \cdot (1 + z_0)^{\tau_1}
+\end{equation}
+where $\tau_1 = \text{yearFraction}(\text{baseDate}_\text{curve}, t_\text{obs})$
+
+\noindent\textbf{Key observations:}
+\begin{itemize}
+\item \code{simLag = 2M + 8d} (today is about 2 months and 8 days after the curve anchor $\text{baseDate}_{\text{curve}}$ = 1-Dec-2025).
+\item \code{obsLag = 3M} (contractual lag in the ZCIIS). \textbf{simLag $\neq$ obsLag} in general.
+\item The $\text{baseDate}_{\text{curve}}$ (1-Dec-2025, last known fixing) differs from $\text{baseDate}_{\text{ZCIIS}}$ (1-Nov-2025, derived from obsLag). The curve stores zero rates relative to $\text{baseDate}_{\text{curve}}$, while swap payoffs reference $\text{baseDate}_{\text{ZCIIS}}$.
+\item The ZCIIS pillar is at $T_{\text{obs}}$ = 1-Nov-2027.
+\item During any calendar month, all forward CPIs for dates within that month are identical.
+\item Interpolation methods: linear in zeroRate or log-linear in CPI
+\end{itemize}
+
+\subsection{Multiplicative Price Seasonality}
+
+Consumer price indices exhibit deterministic seasonal patterns. The observed (market) CPI is modelled as the product of a \textbf{deseasonalised index} $I(d)$ and a \textbf{seasonal factor} $s(d)$:
+
+\begin{equation}
+\text{CPI}_{\text{market}}(d) = s(d) \cdot I(d)
+\end{equation}
+
+The seasonal factors $\{s_0, s_1, \ldots, s_{11}\}$ are periodic (one per calendar month, repeating each year) and purely deterministic. They capture the ratio between the observed price level and the underlying trend, so that $I(d)$ is free of calendar-driven oscillations.
+
+\subsubsection{The Seasonality-Corrected Zero Rate}
+
+The zero-inflation curve stores deseasonalised zero rates $z_0$. By definition, the deseasonalised index grows from $\text{baseDate}_{\text{curve}}$ to observation date $d$ as:
+
+\begin{equation}
+I(d) = I(\text{baseDate}_{\text{curve}}) \cdot (1 + z_0)^{\tau}, \qquad \tau = \text{infDc.yearFraction}(\text{baseDate}_{\text{curve}}, d)
+\end{equation}
+
+Multiplying both sides by the respective seasonal factors gives the market CPI relationship:
+
+\begin{equation}
+s(d) \cdot I(d) = s(\text{baseDate}_{\text{curve}}) \cdot I(\text{baseDate}_{\text{curve}}) \cdot (1 + z_0)^{\tau}
+\end{equation}
+
+We want the market-observed (seasonally-adjusted) zero rate $z$ to satisfy:
+
+\begin{equation}
+s(d) \cdot I(d) = s(\text{baseDate}_{\text{curve}}) \cdot I(\text{baseDate}_{\text{curve}}) \cdot (1 + z)^{\tau}
+\end{equation}
+
+This gives us the seasonality adjusted zero rate $z$:
+
+\begin{equation}
+\boxed{1 + z = (1 + z_0) \cdot \left(\frac{s(d)}{s(\text{baseDate}_{\text{curve}})}\right)^{1/\tau}}
+\end{equation}
+
+\subsubsection{Seasonality and the Simulation Drift}
+
+Because seasonality is \textbf{deterministic}, it does not need to be included in the stochastic simulation. The model simulates only the deseasonalised index $I(t)$; seasonality is applied afterwards — at the publishing stage — exactly as it is at $t=0$. This means:
+
+\begin{itemize}
+\item The model drift is computed using the \textbf{deseasonalised} zero-inflation curve (i.e. after stripping seasonality). The stochastic dynamics and drift corrections (e.g. the JY real-rate/index cross-terms) operate on smooth, deseasonalised quantities only.
+\item After simulating to time $t_S$, the deseasonalised CPI $I(t_S)$ is converted to a market CPI by multiplying with $s(d)/s(\text{baseDate}_{\text{curve}})$ (the seasonal ratio relative to the curve anchor), and deseasonalised zero rates are converted to market zero rates using the formula from section 1.4. This is identical to how the $t=0$ curve applies seasonality when queried.
+\end{itemize}
+
+\textbf{Problem: drift computation with a step-function seasonality curve.} In a discrete-time simulation scheme (e.g. Euler), the drift at each time step involves the instantaneous forward rate of the zero-inflation curve. With seasonality attached, the market zero-inflation curve is a \textbf{step function} in time (it jumps at each month boundary due to the multiplicative seasonal factors). Numerical differentiation of a step function produces spikes at month boundaries and zeros elsewhere.
+
+The solution is to compute the drift from the \textbf{deseasonalised} curve, which is smooth and well-behaved under numerical differentiation. Seasonality is then re-applied only at the output/publishing stage. This separation is essential for stable discrete-time simulation.
+
+\subsection{Remarks About the Current Implementation}
+
+\begin{itemize}[leftmargin=*]
+\item \code{ZeroInflationCurve} stores deseasonalised zero rates.
+\item \code{zeroRate(d)} discretizes $d$ to the first day of the inflation period, applies seasonality, and returns the seasonality-corrected zero rate.
+\item \code{zeroRate(t)} returns the continuous, deseasonalised zero rate (interpolated within a month using the same scheme).
+\item \code{correctZeroRate(...)} in the seasonality curve also applies discretization.
+\item \code{ZeroInflationIndex}:
+  \begin{itemize}
+  \item Adding a fixing stores a flat fixing for the full inflation period (from period start to period end).
+  \item Past fixings are discretized and moved to the first day of the inflation period.
+  \item Forecast fixings use the base fixing (discrete), discretize the fixing date, and compute
+    \begin{equation}
+    \text{baseFixing} \cdot (1 + z(\text{obsDate}))^{\tau}
+    \end{equation}
+    where $\tau = \text{yearFraction}(\text{baseDate}_\text{curve}, \text{obsDate})$.
+  \end{itemize}
+\end{itemize}
+
+\section{Inflation Simulation}
+
+Our goal is to produce simulated inflation paths that are consistent with the model state and the t=0 zero-inflation curve, reproducing the correct forward CPI forecasts. The simulated zero-inflation curve must satisfy the \textbf{martingale property}: when expressed in terms of the numeraire, the expected value of any inflation-linked cashflow must equal its value computed from the t=0 market curve.
+
+\subsection{Continuous-Time Evolution and Simulation Lag}
+
+The inflation models (JY, DK) evolve the index in \textbf{continuous time}: the model state is defined for every real $t \geq 0$, not only at the start of an inflation period. At model time $t$, the model implies a deseasonalised CPI level $I(t)$ (e.g. under JY: $I(t) = \exp(y(t))$; under DK the mapping differs but the principle is the same).
+
+The relationship between model time and calendar dates is set up so that model time $t = 0$ corresponds to the curve's $\text{baseDate}_{\text{curve}}$ (not to today). In other words, model time $t_0 = \text{today} - \text{baseDate}_{\text{curve}}$ (in days).
+
+When we simulate to calendar date $S$, the model time is simply:
+
+\begin{equation}
+t_S = S - \text{simLag}
+\end{equation}
+
+and the model implies the deseasonalised CPI $I(t_S)$ at calendar date $S$—in continuous time, \textbf{not discretized} to the inflation periods.
+
+We keep the simulation lag constant throughout the simulation.
+
+\textbf{The firstOfMonth rounding is not part of the model.} It only arises when we convert continuous model output into discrete monthly fixings for pricing. Specifically:
+\begin{itemize}
+\item Instruments request CPI fixings at first-of-month dates (the inflation period convention).
+\item For the simulated zero-inflation curve, pillar dates $T_{\text{obs}}$ must be aligned to first-of-month to ensure \textbf{consistency with the t=0 curve}. For example: if we simulate 1Y forward, the 1Y pillar on the simulated curve must correspond to the same first-of-month observation date as the 2Y pillar on today's curve. If pillar dates were not aligned, interpolation between pillars would introduce spurious differences between the simulated forward CPI and the t=0 forward CPI.
+\end{itemize}
+
+\subsection{Martingale Property for Inflation-Indexed Cashflows}
+
+Consider an inflation-indexed cashflow that pays $I(T_{\text{obs}}) / I(\text{baseDate}_{\text{ZCIIS}})$ at maturity $T$. The two date conventions from section 1.2 must be distinguished:
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{$\text{baseDate}_{\text{ZCIIS}}$, $T_{\text{obs}}$:} the CPI observation dates of the ZCIIS, derived from the \textbf{contractual obsLag}:
+\begin{equation}
+T_{\text{obs}} = \text{firstOfInflationPeriod}(T - \text{obsLag}), \quad \text{baseDate}_{\text{ZCIIS}} = \text{firstOfInflationPeriod}(\text{today} - \text{obsLag})
+\end{equation}
+
+\item \textbf{$\text{baseDate}_{\text{curve}}$:} the curve's anchor date (last known published CPI fixing), derived from \textbf{simLag}:
+\begin{equation}
+\text{baseDate}_{\text{curve}} = \text{today} - \text{simLag}
+\end{equation}
+\end{itemize}
+
+In general $\text{baseDate}_{\text{ZCIIS}} \neq \text{baseDate}_{\text{curve}}$ because $\text{obsLag} \neq \text{simLag}$ (section 1.3).
+
+We require $T_{\text{obs}}$ to lie in the future of the simulated curve at time $S$. The simulated curve's base date moves to $\text{baseDate}_{\text{curve},S} = S - \text{simLag}$ (section 2.1), so the condition is $S - \text{simLag} < T_{\text{obs}}$, i.e. $S < T_{\text{obs}} + \text{simLag}$.
+
+\subsubsection{Inflation Growths (Zero-Inflation Curve Encoding)}
+
+At $t=0$, we compute the forward CPI growth from $\text{baseDate}_{\text{curve}}$ to $T_{\text{obs}}$:
+
+\begin{equation}
+\frac{I(T_{\text{obs}})}{I(\text{baseDate}_{\text{curve}})} = (1 + z_0(T_{\text{obs}}))^{\tau_0}, \qquad \tau_0 = \text{infDc.yearFraction}(\text{baseDate}_{\text{curve}}, T_{\text{obs}})
+\end{equation}
+
+At simulation time $S$, the simulated curve's base date \textbf{moves} to $\text{baseDate}_{\text{curve},S} = S - \text{simLag}$ (cf. \code{ZeroInflationCurveObserverMoving}). The simulated zero rate $z_S$ is defined relative to this new anchor:
+
+\begin{equation}
+\frac{I_S(T_{\text{obs}})}{I_S(\text{baseDate}_{\text{curve},S})} = (1 + z_S(T_{\text{obs}}))^{\tau_S}, \qquad \tau_S = \text{infDc.yearFraction}(\text{baseDate}_{\text{curve},S}, T_{\text{obs}})
+\end{equation}
+
+Note $\tau_S < \tau_0$ since $\text{baseDate}_{\text{curve},S} > \text{baseDate}_{\text{curve}}$.
+
+\subsubsection{Martingale Condition}
+
+The bond payoff $I(T_{\text{obs}}) / I(\text{baseDate}_{\text{ZCIIS}})$ involves $\text{baseDate}_{\text{ZCIIS}}$ (the contractual CPI base) which is a \textbf{known constant} (a published fixings), so it cancels between the two sides. Writing the martingale in terms of curve quantities only, we get:
+
+\begin{equation}
+\boxed{\mathbb{E}^{\mathbb{Q}}_0 \left[ I_S(\text{baseDate}_{\text{curve},S}) \cdot (1 + z_S(T_{\text{obs}}))^{\tau_S} \cdot \frac{P(S,T)}{N(S)} \right] = I(\text{baseDate}_{\text{curve}}) \cdot (1 + z_0(T_{\text{obs}}))^{\tau_0} \cdot P(0,T)}
+\end{equation}
+
+where:
+\begin{itemize}
+\item $\text{baseDate}_{\text{curve}} = \text{today} - \text{simLag}$: the t=0 curve base date (last known CPI at $t=0$)
+\item $\text{baseDate}_{\text{curve},S} = S - \text{simLag}$: the simulated curve's base date at time $S$
+\item $z_0(T_{\text{obs}})$: the t=0 zero rate from $\text{baseDate}_{\text{curve}}$ to $T_{\text{obs}}$
+\item $z_S(T_{\text{obs}})$: the simulated zero rate from $\text{baseDate}_{\text{curve},S}$ to $T_{\text{obs}}$
+\item $\tau_0 = \text{infDc.yearFraction}(\text{baseDate}_{\text{curve}}, T_{\text{obs}})$
+\item $\tau_S = \text{infDc.yearFraction}(\text{baseDate}_{\text{curve},S}, T_{\text{obs}})$
+\item $I_S(\text{baseDate}_{\text{curve},S})$: the model-implied CPI at the simulated curve's base date
+\item $P(S,T)$: the nominal zero-coupon bond price at $S$ for maturity $T$
+\item $N(S)$: the nominal numeraire at $S$
+\end{itemize}
+
+\subsection{Seasonality in the Simulation}
+
+This follows directly from sections 1.4 and 2.1:
+
+\begin{itemize}
+\item The model simulates only the \textbf{deseasonalised} index $I(t)$. The seasonal factors $s(d)$ are deterministic and applied at the publishing stage.
+\end{itemize}
+
+\subsection{Scenario Generation: Computing Zero Rates for the Simulated Curves}
+
+Assume there are two model-dependent functions:
+\begin{enumerate}
+\item $I(S, \text{state}(S))$: computes the deseasonalised CPI at time $t_S = S - \text{simLag}$, given the time $S$ and the model state at time $S$.
+\item $G(S, T, \text{state}(S))$: computes the deseasonalised forward growth from model time $S - \text{simLag}$ to $T - \text{simLag}$, given the simulated state at time $S$.
+\end{enumerate}
+
+Then the simulated zero rate is:
+\begin{equation}
+z_S(T_{\text{obs}}) = G(S, T_{\text{obs}} + \text{simLag}, \text{state}(S))^{1/\tau_S} - 1
+\end{equation}
+
+and the simulated base CPI is:
+\begin{equation}
+I_S(S - simLag) = I(S, \text{state}(S))
+\end{equation}
+
+\textbf{Note:} The observation date, simulation base date and simLag needs to converted to times with the simulation grid day counter, to be consistent to the generated paths.
+
+\subsection{Remarks:}
+\begin{itemize}[leftmargin=*]
+\item \textbf{Day counter alignment:} If the simulation grid day counter differs from the inflation day counter (\code{infDc}): (i) compute \code{simLag} using the simulation grid day counter, (ii) convert simulation times to \code{infDc} when querying zero rates from the t=0 curve.
+
+\item \textbf{Pillar dates:} Must be discretized to first-of-month as described in section 2.1 to ensure consistency with the t=0 curve structure.
+
+\item \textbf{Moving base date:} The simulated zero curve requires a continuously moving base date $\text{baseDate}_{\text{curve},S} = S - \text{simLag}$, which generally does \textbf{not} align with start date of the inflation periods. This differs from the t=0 curve where the base date is fixed at the last published first-of-month fixing.
+
+\item \textbf{Fixings at arbitrary dates:} The current \code{ZeroInflationIndex} implementation stores only flat monthly fixings (constant for the entire inflation period, section 1.6). However, for simulation, the curve's base date $\text{baseDate}_{\text{curve},S}$ can fall on any calendar date (e.g., 9-Feb-2026), not just the first of a month. To compute forward CPIs correctly using the simulated zero rates, the inflation index must provide the \textbf{continuous} (non-discretized) CPI value at $\text{baseDate}_{\text{curve},S} = S - \text{simLag}$. Specifically:
+  \begin{itemize}
+  \item The simulated curve computes zero rates $z_S(T_{\text{obs}})$ relative to the continuous base date $\text{baseDate}_{\text{curve},S}$.
+  \item Forward CPI computation uses: $I_S(T_{\text{obs}}) = I_S(\text{baseDate}_{\text{curve},S}) \cdot (1 + z_S(T_{\text{obs}}))^{\tau_S}$
+  \item Therefore, $I_S(\text{baseDate}_{\text{curve},S})$ must be stored at the exact arbitrary date, not rounded to the first of the month.
+  \end{itemize}
+
+\end{itemize}
+
+
+\end{document}
