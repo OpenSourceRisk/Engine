@@ -41,7 +41,7 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, correlationAnalytics, "marketConfigFile");
     inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, correlationAnalytics, "sensitivityConfigFile");
 
-    inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics, vector<string>({"lookbackPeriod", "historicalPeriod"}), false);
+    inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics, vector<string>({"lookbackPeriod", "historicalPeriod", "benchmarkPeriod"}), false);
     inputs->loadParameter<string>(correlationMethod_, correlationAnalytics, vector<string>({"correlationMethod", "correlation_method"}), false);
     inputs->loadParameter<Size>(horizonDays_, correlationAnalytics, vector<string>({"horizonDays", "mporDays"}), false, parseInteger);
     inputs->loadParameter<Calendar>(horizonCalendar_, correlationAnalytics, vector<string>({"horizonCalendar", "mporCalendar"}), false, parseCalendar);
