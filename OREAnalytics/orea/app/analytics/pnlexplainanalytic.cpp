@@ -42,7 +42,11 @@ void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inpu
         scenarioReader_ = loadScenarioReader(scenarioFile, inputs->setupVariables().inputPath_);
     
     inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, "pnlExplain", "sensitivityConfigFile");
+    if (!sensiScenarioData_)
+        sensiScenarioData_ = inputs->sensiScenarioData();
     inputs->loadParameter<bool>(parSensitivity_, "pnlExplain", "parSensitivity", false, parseBool);
+    if (parSensitivity_)
+        inputs->setParSensi(parSensitivity_);
     inputs->loadParameter<bool>(riskFactorLevel_, "pnlExplain", "riskFactorLevelReporting", false, parseBool);
 }
 
