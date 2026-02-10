@@ -125,11 +125,11 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
             QuantExt::CarrMadanSurface cmCheck(checkMaturities, checkMoneynesses, processes_[l]->x0(), atmForwards,
                                                callPrices);
             if (!cmCheck.arbitrageFree()) {
-                WLOG("Andreasen-Huge local vol calibration for process #" << l << ": input vol is not arbitrage free.");
-                DLOG("time,moneyness,callSpread,butterfly,calendar");
+                DLOG("Andreasen-Huge local vol calibration for process #" << l << ": input vol is not arbitrage free.");
+                TLOG("time,moneyness,callSpread,butterfly,calendar");
                 for (Size i = 0; i < checkMaturities.size(); ++i)
                     for (Size j = 0; j < checkMoneynesses.size(); ++j)
-                        DLOG(checkMaturities[i] << "," << checkMoneynesses[i] << "," << std::boolalpha
+                        TLOG(checkMaturities[i] << "," << checkMoneynesses[j] << "," << std::boolalpha
                                                 << cmCheck.callSpreadArbitrage()[i][j] << ","
                                                 << cmCheck.butterflyArbitrage()[i][j] << ","
                                                 << cmCheck.calendarArbitrage()[i][j]);
@@ -141,7 +141,7 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                 AndreasenHugeVolatilityInterpl::CubicSpline, AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(),
                 Null<Real>());
             localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<AndreasenHugeLocalVolAdapter>(ah));
-            //localVol->enableExtrapolation();
+            localVol->enableExtrapolation();
             DLOG("Andreasen-Huge local vol calibration for process #"
                  << l
                  << ": "
