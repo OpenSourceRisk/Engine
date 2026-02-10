@@ -188,6 +188,7 @@
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/swaptionstraddle.hpp>
 #include <ored/portfolio/trs.hpp>
 #include <ored/portfolio/trsunderlyingbuilder.hpp>
 #include <ored/portfolio/trswrapper.hpp>
@@ -300,6 +301,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("FxAsianOption", FxAsianOption, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityAsianOption", CommodityAsianOption, false)
     ORE_REGISTER_TRADE_BUILDER("Swaption", Swaption, false)
+    ORE_REGISTER_TRADE_BUILDER("SwaptionStraddle", SwaptionStraddle, false)
     ORE_REGISTER_TRADE_BUILDER("EquityVarianceSwap", EqVarSwap, false)
     ORE_REGISTER_TRADE_BUILDER("FxVarianceSwap", FxVarSwap, false)
     ORE_REGISTER_TRADE_BUILDER("CommodityVarianceSwap", ComVarSwap, false)
