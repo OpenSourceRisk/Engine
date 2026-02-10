@@ -563,8 +563,8 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                     sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, j, 1)][gridIndexInPath_[i + 1]]);
             } else if (model_->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::DK) {
                 auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
-                Date baseDate = index->zeroInflationTermStructure()->baseDate();
                 auto zts = index->zeroInflationTermStructure();
+                Date baseDate = zts->baseDate();
                 Time relativeTime = inflationYearFraction(zts->frequency(), false, zts->dayCounter(), baseDate,
                                                           dates_[i] - zts->observationLag());
                 std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y, dateGrid_->dayCounter());
@@ -595,11 +595,23 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             // Update the term structure's date and state.
             auto ts = std::get<3>(tup);
             ts->move(dates_[i], state);
+            
+
 
             // Populate the zero inflation scenario values based on the current date and state.
             for (Size k = 0; k < ten_zinf_[j].size(); k++) {
-                Time T = dc.yearFraction(dates_[i], dates_[i] + ten_zinf_[j][k]);
-                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], ts->zeroRate(T));
+                auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
+                auto zts = index->zeroInflationTermStructure();
+                // Use same logic as in the zero inflation observer moving curve
+                Date inflationObsDate = inflationPeriod(dates_[i] + ten_zinf_[j][k], ts->frequency()).first;
+                Time simLag = dc.yearFraction(zts->baseDate(), zts->referenceDate());
+                Time T = dc.yearFraction(dates_[i], inflationObsDate) + simLag;
+                //ts->indexGrowth(T); // need to get the growth to get the correct and scale it by the baseDate;
+                Time tau_continouous = ts->dayCounter().yearFraction(ts->baseDate(), inflationObsDate); // not sure if that the correct tau here.
+                auto simBaseDate = inflationPeriod(dates_[i] - simulationLag(zts)).first;
+                Time tau_discrete = zts->dayCounter().yearFraction(simBaseDate, inflationObsDate);
+                auto zeroRate = std::pow(1 + ts->zeroRate(T), tau_continouous / tau_discrete) - 1;
+                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], zeroRate);
             }
         }
 
