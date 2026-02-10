@@ -44,11 +44,13 @@ void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inp
     inputs->loadParameter<bool>(horizonOverlappingPeriods_, pnlParams, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
 
     inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, pnlParams, "simulationConfigFile");
-    if (simMarketParams_)
+    if (!simMarketParams_)
         simMarketParams_ = inputs->scenarioSimMarketParams();
-    pnlConventions_ = ext::make_shared<Conventions>();
-    InstrumentConventions::instance().setConventions(pnlConventions_, pnlDate_);
+    
     inputs->loadParameterXML<Conventions>(pnlConventions_, pnlParams, vector<string>({"conventionsMporFile", "conventionsPnlFile"}));
+    if (pnlConventions_)
+        InstrumentConventions::instance().setConventions(pnlConventions_, pnlDate_);
+
     ext::shared_ptr<Conventions> conventionsOverride;
     inputs->loadParameterXML<Conventions>(conventionsOverride, pnlParams, "conventionsPnlOverride");
     if (pnlConventions_ && conventionsOverride)
@@ -62,6 +64,8 @@ void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inp
         inputs->setupVariables().refDataManager_, inputs->setupVariables().iborFallbackConfig_);
     if (pnlCurveConfig_ && ccOverride)
         pnlCurveConfig_->setCurveConfigOverride(ccOverride);
+    if (!pnlCurveConfig_)
+        pnlCurveConfig_ = inputs->curveConfigs().get();
     
     inputs->loadParameterXML<Portfolio>(pnlPortfolio_, pnlParams,  vector<string>({"portfolioPnlFile", "portfolioMporFile"}));    
     inputs->loadParameter<vector<RiskFactorKey::KeyType>>(pnlDateAdjustedRiskFactors_, pnlParams, "dateAdjustedRiskFactors", false, parseListOfRiskFactorKeyValues);    
@@ -76,6 +80,9 @@ void PnlAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simMarketParams = pnlVars->simMarketParams_;
 
     setGenerateAdditionalResults(true);
+
+    if (pnlVars->pnlDate_ == Date())
+        pnlVars->pnlDate_ = calculateMporDate(pnlVars->horizonDays_, pnlVars->horizonCalendar_, inputs_->asof());
 }
 
 void PnlAnalyticImpl::buildDependencies() {
@@ -96,9 +103,6 @@ void PnlAnalyticImpl::buildDependencies() {
 void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const std::set<std::string>& runTypes) {
     auto pnlVars = ext::dynamic_pointer_cast<PnlVariables>(inputVariables_);
-
-    if (pnlVars->pnlDate_ == Date())
-        pnlVars->pnlDate_ = calculateMporDate(pnlVars->horizonDays_, pnlVars->horizonCalendar_, inputs_->asof());
 
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
