@@ -455,6 +455,7 @@ void InputParameters::setMarketConfigs(const std::map<std::string, std::string>&
     
 void InputParameters::setMporCalendar(const std::string& s) {
     mporCalendar_ = parseCalendar(s);
+    parameters_.set("pnl", "mporCalendar", s);
 }
 
 void InputParameters::setSensiSimMarketParams(const std::string& xml) {

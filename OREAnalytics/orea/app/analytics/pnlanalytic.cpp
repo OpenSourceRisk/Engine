@@ -44,7 +44,8 @@ void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inp
     inputs->loadParameter<bool>(horizonOverlappingPeriods_, pnlParams, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
 
     inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, pnlParams, "simulationConfigFile");
-       
+    if (simMarketParams_)
+        simMarketParams_ = inputs->scenarioSimMarketParams();
     pnlConventions_ = ext::make_shared<Conventions>();
     InstrumentConventions::instance().setConventions(pnlConventions_, pnlDate_);
     inputs->loadParameterXML<Conventions>(pnlConventions_, pnlParams, vector<string>({"conventionsMporFile", "conventionsPnlFile"}));
@@ -62,7 +63,7 @@ void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inp
     if (pnlCurveConfig_ && ccOverride)
         pnlCurveConfig_->setCurveConfigOverride(ccOverride);
     
-    inputs->loadParameterXML<Portfolio>(pnlPortfolio_, pnlParams,  vector<string>({"pnlPortfolioFile", "portfolioFile"}));    
+    inputs->loadParameterXML<Portfolio>(pnlPortfolio_, pnlParams,  vector<string>({"portfolioPnlFile", "portfolioMporFile"}));    
     inputs->loadParameter<vector<RiskFactorKey::KeyType>>(pnlDateAdjustedRiskFactors_, pnlParams, "dateAdjustedRiskFactors", false, parseListOfRiskFactorKeyValues);    
 
 }
@@ -337,9 +338,9 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     QuantLib::ext::shared_ptr<InMemoryReport> t1m0p1NpvReport;
     QuantLib::ext::shared_ptr<InMemoryReport> t1m0p1AddReport;
-    if (inputs_->mporPortfolio()) {
+    if (pnlVars->pnlPortfolio_) {
 
-        analytic()->setPortfolio(inputs_->mporPortfolio());
+        analytic()->setPortfolio(pnlVars->pnlPortfolio_);
         analytic()->buildPortfolio();
 
         t1m0p1NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -364,7 +365,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // remove existing trades from t1 portfolio
     auto mporPortfolioNew = QuantLib::ext::make_shared<Portfolio>();
-    if (inputs_->mporPortfolio())
+    if (pnlVars->pnlPortfolio_)
         for (const auto& [tradeId, trade] : pnlVars->pnlPortfolio_->trades())
             if (!inputs_->portfolio()->has(tradeId))
                 mporPortfolioNew->add(trade);
@@ -401,7 +402,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     QuantLib::ext::shared_ptr<InMemoryReport> t1m1p1AddReport;
     if (pnlVars->pnlPortfolio_) {
 
-        analytic()->setPortfolio(inputs_->mporPortfolio());
+        analytic()->setPortfolio(pnlVars->pnlPortfolio_);
         analytic()->buildPortfolio();
 
         t1m1p1NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());

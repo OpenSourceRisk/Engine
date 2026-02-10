@@ -443,9 +443,15 @@ public:
     void setCsvSeparator(const char& c) { setupVariables_.csvSeparator_ = c; }
     void setCsvCommentCharacter(const char& c) { setupVariables_.csvCommentCharacter_ = c; }
     void setDryRun(bool b) { setupVariables_.dryRun_ = b; }
-    void setMporDays(Size s) { mporDays_ = s; }
+    void setMporDays(Size s) {
+        mporDays_ = s;
+        parameters_.set("pnl", "mporDays", s);
+    }
     void setMporOverlappingPeriods(bool b) { mporOverlappingPeriods_ = b; }
-    void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
+    void setMporDate(const QuantLib::Date& d) { 
+        mporDate_ = d;
+        parameters_.set("pnl", "mporDate", d);
+    }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
     void setMarketDataLoaderOutput(const std::string& s) { setupVariables_.marketDataLoaderOutput_ = s; }

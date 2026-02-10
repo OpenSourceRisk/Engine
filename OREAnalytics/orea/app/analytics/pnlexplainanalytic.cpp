@@ -47,14 +47,16 @@ void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inpu
 }
 
 void PnlExplainAnalyticImpl::setUpConfigurations() {
+    auto pnlExVars = ext::dynamic_pointer_cast<PnlExplainVariables>(inputVariables_);
     analytic()->configurations().simulationConfigRequired = true;
     analytic()->configurations().sensitivityConfigRequired = true;
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
-    analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
+    analytic()->configurations().simMarketParams = pnlVariables_->simMarketParams_;
+    analytic()->configurations().sensiScenarioData = pnlExVars->sensiScenarioData_;
 }
 
 void PnlExplainAnalyticImpl::buildDependencies() {
+    auto pnlExVars = ext::dynamic_pointer_cast<PnlExplainVariables>(inputVariables_);
     auto sensiAnalytic =
         AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), false);
     if (sensiAnalytic.second)
@@ -63,8 +65,10 @@ void PnlExplainAnalyticImpl::buildDependencies() {
     auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), false);
     if (pnlAnalytic.second)
         addDependentAnalytic(pnlLookupKey, pnlAnalytic.second, true);
-
     pnlVariables_ = pnlAnalytic.second->impl()->inputVariablesAs<PnlVariables>();
+    
+    sensiAnalytic.second->configurations().simMarketParams = pnlVariables_->simMarketParams_;
+    sensiAnalytic.second->configurations().sensiScenarioData = pnlExVars->sensiScenarioData_;
 }
 
 void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
