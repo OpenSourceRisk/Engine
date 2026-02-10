@@ -36,8 +36,9 @@ using ore::data::XMLUtils;
 using namespace QuantExt;
 
 void Trade::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "Trade");
-    tradeType_ = XMLUtils::getChildValue(node, "TradeType", true);
+    XMLUtils::checkAnyNode(node, {"Trade", "SubTrade"});
+    std::vector<string> names = {"TradeType", "SubTradeType"};
+    tradeType_ = XMLUtils::getAnyChildValue(node, names, true);
     if (XMLNode* envNode = XMLUtils::getChildNode(node, "Envelope")) {
         envelope_.fromXML(envNode);
     }
@@ -49,10 +50,10 @@ void Trade::fromXML(XMLNode* node) {
 
 XMLNode* Trade::toXML(XMLDocument& doc) const {
     // Crete Trade Node with Id attribute.
-    XMLNode* node = doc.allocNode("Trade");
+    XMLNode* node = doc.allocNode(isSubTrade() ? "SubTrade" : "Trade");
     QL_REQUIRE(node, "Failed to create trade node");
     XMLUtils::addAttribute(doc, node, "id", id_);
-    XMLUtils::addChild(doc, node, "TradeType", tradeType_);
+    XMLUtils::addChild(doc, node, isSubTrade() ? "SubTradeType" : "TradeType", tradeType_);
     XMLUtils::appendNode(node, envelope_.toXML(doc));
     if (!tradeActions_.empty())
         XMLUtils::appendNode(node, tradeActions_.toXML(doc));

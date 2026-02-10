@@ -89,7 +89,7 @@ public:
         const bool generateDifferenceScenarios = false,
         const bool riskFactorBreakdown = false);
 
-    //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scneario
+    //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scenario
     HistoricalScenarioGenerator(
         //! Historical Scenario Loader containing all scenarios
         const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,

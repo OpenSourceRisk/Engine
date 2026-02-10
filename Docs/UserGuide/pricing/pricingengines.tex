@@ -171,6 +171,8 @@ Available Model/Engine pairs:
 \begin{itemize}
 \item LGM/Grid
 \item LGM/FD
+\item CrossAssetModel/MC
+\item CrossAssetModel/AMC
 \end{itemize}
 
 Engine description:
@@ -286,6 +288,134 @@ The parameters have the following meaning:
 \caption{Configuration for Product CallableBond, Model LGM, Engine FD}
 \label{lst:peconfig_CallableBond_LGM_FD}
 \end{longlisting}
+
+CrossAssetModel/MC builds a McCamCallableBondEngine using Longstaff-Schwartz Monte Carlo method. A sample
+configuration is shown in listing \ref{lst:peconfig_CallableBond_CAM_MC}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item Calibration: Bootstrap, BestFit, None
+\item CalibrationStrategy: CoterminalATM
+\item ReferenceCalibrationGrid: Mandatory calibration grid
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
+\item ExerciseTimeStepsPerYear: number of time steps per year assumed for american style exercise
+\item Reversion: The mean reversion
+\item ReversionType: Hagan, HullWhite
+\item Volatility: The volatility (start value for calibration if calibrated)
+\item VolatilityType: Hagan, HullWhite
+\item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
+\item EnableCredit: Enable Credit LGM model for the credit curve. It uses constant parameter for alpha and sigma.
+\item Credit\_Volatility:  The volatility of the CrLGM process, only needed when enable credit is true.
+\item Credit\_Reversion: The mean reversion of the CrLGM process, only needed if enable credit is true.
+\item Tolerance: Error tolerance for calibration
+\item Training.Sequence: The sequence type for the training phase, can be MersenneTwister, MersenneTwisterAntithetc,
+  Sobol, Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge
+\item Training.Seed: The seed for the random number generation in the training phase
+\item Training.Samples: The number of samples to be used for the training phase
+\item Pricing.Sequence: The sequence type for the pricing phase, same values allowed as for training
+\item Training.BasisFunction: The type of basis function system to be used for the regression analysis, can be
+  Monomial, Laguerre, Hermite, Hyperbolic, Legendre, Chbyshev, Chebyshev2nd
+\item BasisFunctionOrder: The order of the basis function system to be used
+\item Pricing.Seed: The seed for the random number generation in the pricing
+\item Pricing.Samples: The number of samples to be used for the pricing phase. If this number is zero, no pricing run is
+  performed, instead the (T0) NPV is estimated from the training phase (this result is used to fill the T0 slice of the
+  NPV cube)
+\item BrownianBridgeOrdering: variate ordering for Brownian bridges, can be Steps, Factors, Diagonal
+\item SobolDirectionIntegers: direction integers for Sobol generator, can be Unit, Jaeckel, SobolLevitan,
+  SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo, Kuo2, Kuo3
+\item MinObsDate: if true the conditional expectation of each cashflow is taken from the minimum possible observation
+  date (i.e. the latest exercise or simulation date before the cashflow's event date); recommended setting is true
+\item RegressorModel: Simple, LaggedFX. If not given, it defaults to Simple. Depending on the choice the regressor is
+  built as follows:
+  \begin{itemize}
+    \item Simple: For an observation date the full model state observed on this date is included in the regressor. No
+      past states are included though.
+    \item LaggedFX: For an observation date the full model state observed on this date is included in the regressor. In
+      addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
+      cashflow the FX state observed on the FX reset date is included.
+  \end{itemize}
+\item RegressionVarianceCutoff: Optional. If given, a coordinate transform and (possibly) a factor reduction is
+  applied to the regressors, such that $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the
+  given parameter. This helps dealing with collinearity and also reducing the dimensionality of the regression model.
+\item RecalibrateOnStickyCloseOutDates: Optional, defaults to false. If true, the amc regression models are
+  retrained on close-out dates in a sticky-date simulation. Otherwise the regression model from the valuation date is
+  reused for the sticky run. If the valuation date is close to today (e.g. today  1D) and the close-out date is
+  relatively speaking further out (e.g. today  15D), recalibration on close-out dates might be necessary to ensure
+  stable results.
+\item ReevaluateExerciseInStickyRun: Optional, defaults to false. If true, the exercise decision is updated for
+  the run on sticky close-out dates, otherwise the exercise indicator from the valuation date is reused on the close-out
+  date.
+\item CashflowGeneration.OnCpnMaxSimTimes [optional]: The maximum number of IR states used in calculation of
+  Overnight Indexed cashflow value in the training phase. If not given, it defaults to 1. If set to 0, there is no limit
+  to number of states per model.
+\item CashflowGeneration.OnCpnAddSimTimesCutoff [optional]: The cutoff time for IR states being included in
+  calculation of Overnight Indexed cashflow value in the training phase, expressed in Period relative to today.
+  If not given, it defaults to 0D.
+\item Regression.MaxSimTimesIR [optional]: The maximum number of regressors per IR model for the regression analysis.
+  If not given, it defaults to 0. If set to 0, there is no limit to number of regressors per model. This setting is only
+  relevant when RegressorModel is Lagged or LaggedIR.
+\item Regression.MaxSimTimesFX [optional]: The maximum number of regressors per FX model for the regression analysis.
+  If not given, it defaults to 0. If set to 0, there is no limit to number of regressors per model. This setting is only
+  relevant when RegressorModel is Lagged or LaggedFX.
+\item Regression.MaxSimTimesEQ [optional]: The maximum number of regressors per EQ model for the regression analysis.
+  If not given, it defaults to 0. If set to 0, there is no limit to number of regressors per model. This setting is only
+  relevant when RegressorModel is Lagged or LaggedEQ
+\item Regression.VarGroupMode [optional]: Global, Trivial. If not given, it defaults to Global.
+  Depending on the choice the regressors are assigned to var groups as follows:
+    \begin{itemize}
+    \item Global: All regressors are assigned to a single var group
+    \item Trivial: Every regressor is assigned to a group that consists of a single element
+  \end{itemize}
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="CallableBond">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
+      <Parameter name="Reversion">0.01</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.02</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
+      <Parameter name="Tolerance">0.1</Parameter>
+      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
+      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
+      <Parameter name="EnableCredit">false</Parameter>
+      <Parameter name="Credit_Volatility">0.005</Parameter>
+      <Parameter name="Credit_Reversion">0.005</Parameter>
+    </ModelParameters>
+    <Engine>MC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">SobolBrownianBridge</Parameter>
+	  <Parameter name="Training.Seed">42</Parameter>
+	  <Parameter name="Training.Samples">20000</Parameter>
+	  <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+	  <Parameter name="Pricing.Seed">17</Parameter>
+	  <Parameter name="Pricing.Samples">20000</Parameter>
+	  <Parameter name="Training.BasisFunction">Monomial</Parameter>
+	  <Parameter name="Training.BasisFunctionOrder">3</Parameter>
+	  <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+	  <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+\caption{Configuration for Product CallableBond, Model CrossAssetModel, Engine MC}
+\label{lst:peconfig_CallableBond_CAM_MC}
+\end{longlisting}
+
+CrossAssetModel/AMC builds a McCamCallableBondEngine for use in AMC simulations. We refer to the AMC module documentation for further
+details.
 
 %--------------------------------------------------------
 \subsection{Product Type: ConvertibleBond}
