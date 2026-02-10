@@ -65,11 +65,11 @@ inline Array getProjectedArray(const Array& source, Size start, Size length) {
 CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model)
     : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
 
-    if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
+    if (model_->discretization() != CrossAssetModel::Discretization::Exact) {
         discretization_ = QuantLib::ext::make_shared<EulerDiscretization>();
     } else {
-        discretization_ =
-            QuantLib::ext::make_shared<CrossAssetStateProcess::ExactDiscretization>(model_, model_->salvagingAlgorithm());
+        discretization_ = QuantLib::ext::make_shared<CrossAssetStateProcess::ExactDiscretization>(
+            model_, model_->salvagingAlgorithm());
     }
 
     updateSqrtCorrelation();
@@ -125,8 +125,8 @@ Array CrossAssetStateProcess::initialValues() const {
     Array res(model_->dimension(), 0.0);
     /* irlgm1f / irhw processes have initial value 0 */
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
-        /* fxbs processes are in log spot */
-        res[model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)] = std::log(model_->fxbs(i)->fxSpotToday()->value());
+        /* fx processes are in log spot */
+        res[model_->pIdx(CrossAssetModel::AssetType::FX, i, 0)] = std::log(model_->fxModel(i)->fxSpotToday()->value());
     }
     for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::EQ); ++i) {
         /* eqbs processes are in log spot */
@@ -503,8 +503,8 @@ void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const 
     if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW &&
         model->modelType(CrossAssetModel::AssetType::FX, i - 1) == CrossAssetModel::ModelType::BS) {
 
-        QL_REQUIRE(model->discretization() == CrossAssetModel::Discretization::Euler,
-                   "applyFxDrifAdjustment(): can only handle discretization Euler at the moment.");
+        QL_REQUIRE(model->discretization() != CrossAssetModel::Discretization::Exact,
+                   "applyFxDrifAdjustment(): can not handle exact discretization.");
         Matrix corrTmp(model->irModel(i)->m(), 1);
         for (Size k = 0; k < model->irModel(i)->m(); ++k) {
             corrTmp(k, 0) =
@@ -534,8 +534,8 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
 
     if (model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::HW) {
 
-        QL_REQUIRE(model_->discretization() == CrossAssetModel::Discretization::Euler,
-                   "CrossAssetStateProcess::evolve(): hw-based model only supports Euler discretization.");
+        QL_REQUIRE(model_->discretization() != CrossAssetModel::Discretization::Exact,
+                   "CrossAssetStateProcess::evolve(): hw-based model does not support exact discretization.");
 
         const Array dz = sqrtCorrelation_ * dw;
 
@@ -597,7 +597,8 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
 
     // handle LGM1F based model
 
-    if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
+    if (model_->discretization() != CrossAssetModel::Discretization::Exact) {
+
         const Array dz = sqrtCorrelation_ * dw;
         const Matrix df = diffusionOnCorrelatedBrownians(t0, x0);
         res = apply(expectation(t0, x0, dt), df * dz * std::sqrt(dt));

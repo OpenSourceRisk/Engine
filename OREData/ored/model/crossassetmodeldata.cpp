@@ -858,7 +858,8 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) const {
 QuantExt::CrossAssetModel::Discretization parseDiscretization(const string& s) {
     static std::map<string, QuantExt::CrossAssetModel::Discretization> m = {
         {"Exact", QuantExt::CrossAssetModel::Discretization::Exact},
-        {"Euler", QuantExt::CrossAssetModel::Discretization::Euler}};
+        {"Euler", QuantExt::CrossAssetModel::Discretization::Euler},
+        {"BestMarginalDiscretization", QuantExt::CrossAssetModel::Discretization::BestMarginalDiscretization}};
 
     auto it = m.find(s);
     if (it != m.end()) {

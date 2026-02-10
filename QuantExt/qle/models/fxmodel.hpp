@@ -43,7 +43,7 @@ public:
     /*! number of Brownians to evolve the state */
     virtual Size m() const = 0;
 
-    /*! get spot volatility at time t for state s*/
+    /*! get spot volatility at time t for state s */
     virtual double volatility(const Time t, const Array& s) const = 0;
 
     /*! perform an Euler step given short rates for the rates */

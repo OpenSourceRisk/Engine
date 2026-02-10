@@ -39,7 +39,7 @@ public:
     FxLvParametrization(const Currency& foreignCurrency, const Handle<Quote>& fxSpotToday,
                         const QuantLib::Handle<QuantLib::LocalVolTermStructure>& lv);
 
-    /*! is supposed to be positive */
+    /*! is supposed to be positive, s is log strike */
     Real sigma(const Time t, const Real s) const;
     const Handle<Quote> fxSpotToday() const;
 
@@ -52,7 +52,10 @@ private:
 
 // inline
 
-inline Real FxLvParametrization::sigma(const Time t, const Real s) const { return lv_->localVol(t, s); }
+inline Real FxLvParametrization::sigma(const Time t, const Real s) const {
+    QL_REQUIRE(!lv_.empty(), "FxLvParametrization::sigma(): handle empty");
+    return lv_->localVol(t, std::exp(s));
+}
 
 inline const Handle<Quote> FxLvParametrization::fxSpotToday() const { return fxSpotToday_; }
 

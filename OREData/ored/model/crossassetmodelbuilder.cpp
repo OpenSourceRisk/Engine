@@ -313,7 +313,6 @@ void CrossAssetModelBuilder::buildModel() const {
     std::vector<QuantLib::ext::shared_ptr<HwBuilder>> hwBuilder;
     std::vector<QuantLib::ext::shared_ptr<ModelBuilder>> fxBuilder;
     std::vector<QuantLib::RelinkableHandle<QuantLib::LocalVolTermStructure>> fxLocalVolHandle;
-    std::vector<QuantLib::ext::shared_ptr<LocalVolModelBuilder>> fxLvBuilder;
     std::vector<QuantLib::ext::shared_ptr<EqBsBuilder>> eqBuilder;
     std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzModelBuilder>> csBuilder;
 
@@ -408,13 +407,15 @@ void CrossAssetModelBuilder::buildModel() const {
         } else if(auto fx = QuantLib::ext::dynamic_pointer_cast<FxLvData>(config_->fxConfigs()[i])) {
             if (!buildersAreInitialized) {
                 auto fxVol = market_.value()->fxVol(pair, configurationFxCalibration_);
-                DateGrid calibrationGrid(fx->calibrationGrid(), fxVol->calendar());
+                DateGrid calibrationGrid(fx->calibrationGrid(),
+                                         fxVol->calendar().empty() ? NullCalendar() : fxVol->calendar());
                 auto tmp = calibrationGrid.dates();
                 std::set<QuantLib::Date> calibrationDates(tmp.begin(), tmp.end());
                 subBuilders_[CrossAssetModel::AssetType::FX][i] = QuantLib::ext::make_shared<LocalVolModelBuilder>(
                     market_.value()->discountCurve(domCcy.code(), configurationFxCalibration_),
                     QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
-                        Handle<Quote>(), market_.value()->discountCurve(ccy.code(), configurationFxCalibration_),
+                        market_.value()->fxSpot(pair, configurationFxCalibration_),
+                        market_.value()->discountCurve(ccy.code(), configurationFxCalibration_),
                         market_.value()->discountCurve(domCcy.code(), configurationFxCalibration_), fxVol),
                     calibrationDates, std::set<QuantLib::Date>{}, 0, parseLocalVolType(fx->model()),
                     parseListOfValues<Real>(fx->calibrationMoneyness(), parseReal), std::string(), dontCalibrate_,
@@ -422,7 +423,7 @@ void CrossAssetModelBuilder::buildModel() const {
             }
             auto builder =
                 QuantLib::ext::dynamic_pointer_cast<LocalVolModelBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
-            fxLvBuilder.push_back(builder);
+            fxBuilder.push_back(builder);
             fxLocalVolHandle.push_back(RelinkableHandle<QuantLib::LocalVolTermStructure>());
             fxOptionBaskets_[i].clear();
             fxParametrizations.push_back(QuantLib::ext::make_shared<FxLvParametrization>(
@@ -719,9 +720,7 @@ void CrossAssetModelBuilder::buildModel() const {
             builder->setCalibrationDone();
 
         } else if (auto builder = QuantLib::ext::dynamic_pointer_cast<ore::data::LocalVolModelBuilder>(fxBuilder[i])) {
-
             fxLocalVolHandle[i].linkTo(*builder->model()->generalizedBlackScholesProcesses().front()->localVolatility());
-
         }
     }
 
