@@ -37,7 +37,9 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, correlationAnalytics, "marketConfigFile");
     inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, correlationAnalytics, "sensitivityConfigFile");
 
-    inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics, vector<string>({"lookbackPeriod", "historicalPeriod", "benchmarkVarPeriod"}), false);
+    inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics,
+                                  vector<string>({"lookbackPeriod", "historicalPeriod", "benchmarkVarPeriod", "benchmarkPeriod"}),
+                                  false);
     inputs->loadParameter<string>(correlationMethod_, correlationAnalytics, vector<string>({"correlationMethod", "correlation_method"}), false);
     inputs->loadParameter<Size>(horizonDays_, correlationAnalytics, vector<string>({"horizonDays", "mporDays"}), false, parseInteger);
     inputs->loadParameter<Calendar>(horizonCalendar_, correlationAnalytics, vector<string>({"horizonCalendar", "mporCalendar"}), false, parseCalendar);
@@ -50,7 +52,7 @@ void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inp
     TimePeriod hsPeriod = totalTimePeriod(vector<string>({lookbackPeriod_}), horizonDays_, horizonCalendar_);
     QL_REQUIRE(hsPeriod.numberOfContiguousParts() == 1,
                "JSON Body: Historical scenarios period must consist of one contiguous part");
-    scenarioReader_ = inputs->loadScenarioReader(correlationAnalytics, "historicalScenarioFile",
+    scenarioReader_ = inputs->loadScenarioReader(correlationAnalytics, vector<string>({"historicalScenarioFile", "scenarioFile"}),
                                                  hsPeriod.startDates().front(),
                                                  hsPeriod.endDates().front());
 }

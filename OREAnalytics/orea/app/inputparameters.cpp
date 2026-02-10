@@ -254,6 +254,8 @@ ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::s
      const Date& startDate, const Date& endDate) {
     string s;
     loadParameter<string>(s, analytic, param);
+    if (s.empty())
+        return nullptr;
     std::filesystem::path baseScenarioPath(setupVariables_.inputPath_ / s);
     if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
         return ext::make_shared<ScenarioFileReader>(baseScenarioPath.string(), ext::make_shared<SimpleScenarioFactory>(false));
@@ -269,9 +271,12 @@ QuantLib::ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(co
                                                                               const Date& endDate) {
     for (const auto& a : analytics) {
         for (const auto& p : params) {
-            return loadScenarioReader(a, p, startDate, endDate);
+            auto sr = loadScenarioReader(a, p, startDate, endDate);
+            if (sr)
+				return sr;
         }
     }
+    return nullptr;
 }
   
 QuantLib::ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::string& analytic,
