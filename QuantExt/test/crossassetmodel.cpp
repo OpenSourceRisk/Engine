@@ -2314,7 +2314,7 @@ struct IrFxInfCrComModelTestData {
 BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
     BOOST_TEST_MESSAGE("Testing martingale property for inflation JY in classical simulation");
     bool indexIsInterpolated = true;
-    bool infIsDK = false;
+    bool infIsDK = true;
     bool flatVols = false;
     bool driftFreeState = false;
     bool exactDiscretization = true;
@@ -2325,10 +2325,10 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
     BOOST_TEST_MESSAGE("driftFreeState " << driftFreeState);
     BOOST_TEST_MESSAGE("exactDiscretization " << exactDiscretization);
     DayCounter infDc = Thirty360(Thirty360::ISDA);
-    // DayCounter infDc = MonthCounter();
-     //DayCounter infDc = Actual365Fixed();
+    
+    //DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
-    Period infSimLag = 2* Months;
+    Period infSimLag = 2 * Months;
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag, seasonality};
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
@@ -2396,10 +2396,11 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
         if (infIsDK) {
             std::pair<Real, Real> sinfeur1 = model->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
             std::pair<Real, Real> sinfeur2 = model->infdkI(0, T, T, infeurz1, infeury1, d.dc);
-            cpieur1(sinfeur2.first);
+            auto deseasonalizedT0BaseCPI = deseasonalizeCPI(baseDate, 1., d.infEurTs);
+            cpieur1(seasonalizeCPI(BaseDateT1, deseasonalizedT0BaseCPI * sinfeur2.first, d.infEurTs));
             test(sinfeur2.second);
-            infeur1(sinfeur1.first * sinfeur1.second * model->discountBond(0, T, T2_discount, zeur1) /
-                    model->numeraire(0, T, zeur1));
+            infeur1(seasonalizeCPI(inflationObsDate, deseasonalizedT0BaseCPI * sinfeur1.first * sinfeur1.second, d.infEurTs) *
+                    model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
         } else {
 
             // infeur1(exp(infeury1) * inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated) *
@@ -2411,18 +2412,16 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
             auto zeroRate =
                 std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) -
                 1.0;
-
-            auto adjZeroRate = continuousSeasonalityAdjustment(BaseDateT1, inflationObsDate, zeroRate, tauSim,
-                                                               d.infEurTs.currentLink());
-
-            infeur1(baseCPI * std::pow(1.0 + adjZeroRate, tauSim) * model->discountBond(0, T, T2_discount, zeur1) /
+            infeur1(seasonalizeCPI(inflationObsDate, exp(infeury1) * std::pow(1.0 + zeroRate, tauSim), d.infEurTs) * model->discountBond(0, T, T2_discount, zeur1) /
                     model->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
         if (infIsDK) {
             std::pair<Real, Real> sinfgbp1 = model->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
-            infgbp1(sinfgbp1.first * sinfgbp1.second * model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 /
-                    model->numeraire(0, T, zeur1));
+            auto deseasonalizedT0BaseCPI = deseasonalizeCPI(baseDate, 1., d.infGbpTs);
+            infgbp1(seasonalizeCPI(inflationObsDate, deseasonalizedT0BaseCPI * sinfgbp1.first * sinfgbp1.second,
+                                   d.infGbpTs) *
+                    model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
         } else {
 
             auto baseCPI = seasonalizeCPI(BaseDateT1, exp(infgbpy1), d.infGbpTs);
