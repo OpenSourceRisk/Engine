@@ -3,8 +3,8 @@
   <Setup>
     <Parameter name="asofDate">2025-09-30</Parameter>
     <Parameter name="inputPath">Input/fx_localvol</Parameter>
-    <Parameter name="outputPath">Output/fx</Parameter>
-    <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="outputPath">Output/fx_localvol</Parameter>
+    <Parameter name="logFile">log_npv.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
     <Parameter name="fixingDataFile">fixings.txt</Parameter>
@@ -12,7 +12,7 @@
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_npv.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
     <Parameter name="continueOnError">false</Parameter>
