@@ -502,7 +502,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
                 // Real fairSpreadClean = fixedCpnTrade->fairSpreadClean();
                 Rate calcUpfront = fixedCpnTrade->fairUpfront();
-                std::cout<<"calcUpfront = "<<calcUpfront<<std::endl;
 
                 auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
                     calcUpfront, fixedCoupon, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
