@@ -45,6 +45,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Exact"/>
       <xs:enumeration value="Euler"/>
+      <xs:enumeration value="BestMarginalDiscretization"/>
     </xs:restriction>
   </xs:simpleType>
 
