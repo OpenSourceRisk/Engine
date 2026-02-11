@@ -40,7 +40,7 @@ public:
     JyImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
                                         const std::optional<QuantLib::DayCounter>& simulationDayCounter = std::nullopt);
 
-    Real indexGrowth(Time t) const;
+    std::pair<QuantLib::Real, QuantLib::Real> indexGrowth(Time t) const override;
 
 protected:
     //! \name ZeroInflationTermStructure interface
@@ -54,12 +54,13 @@ protected:
     //@}
 };
 
-/*! Calculation of inflation growth between two times given the Jarrow Yildrim (JY) real rate state, \p rrState, and 
+/*! Calculation of inflation growth between two times given the Jarrow Yildrim (JY) real rate state, \p rrState, and
     the nominal interest rate state, \p irState.
 */
 QuantLib::Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
-    QuantLib::Time S, QuantLib::Time T, QuantLib::Real irState, QuantLib::Real rrState, bool indexIsInterpolated);
-
-}
+                               QuantLib::Time S, QuantLib::Time T, QuantLib::Real irState, QuantLib::Real rrState,
+                               bool indexIsInterpolated,
+                               std::optional<QuantLib::DayCounter> simulationDayCounter = std::nullopt);
+} // namespace QuantExt
 
 #endif

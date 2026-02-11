@@ -129,16 +129,26 @@ Real applySimLagAndConvertToInflationTime(const QuantLib::Time t, const QuantLib
     return ts->dayCounter().yearFraction(ts->referenceDate(), laggedObservationDate);
 }
 
-Real seasonalizeCPI(const Date& baseDate, const Date& observationDate, const Real deasonalizedCPI,
-                            const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+Real seasonalizeCPI(const Date& observationDate, const Real CPI,
+                    const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
     if (ts->seasonality() == nullptr) {
-        return deasonalizedCPI;
+        return CPI;
     }
     auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
-    double baseFactor = seasonCurve->seasonalityFactor(baseDate);
-    double obsFactor = seasonCurve->seasonalityFactor(observationDate);
-    Real seasonalityAt = obsFactor / baseFactor;
-    return deasonalizedCPI * seasonalityAt;
+    QL_REQUIRE(seasonCurve != nullptr, "Seasonality curve is not of type MultiplicativePriceSeasonality");
+    return CPI * seasonCurve->seasonalityFactor(observationDate);
+}
+
+Real deseasonalizeCPI(const Date& observationDate, const Real CPI,
+                      const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return CPI;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    QL_REQUIRE(seasonCurve != nullptr, "Seasonality curve is not of type MultiplicativePriceSeasonality");
+    QL_REQUIRE(!QuantLib::close_enough(seasonCurve->seasonalityFactor(observationDate), 0.0),
+               "Seasonality factor is zero for date " << observationDate);
+    return CPI / seasonCurve->seasonalityFactor(observationDate);
 }
 
 Real inflationLinkedBondQuoteFactor(const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond) {

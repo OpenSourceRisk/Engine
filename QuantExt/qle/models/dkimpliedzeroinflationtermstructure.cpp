@@ -30,11 +30,14 @@ DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
 
 Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
-    
-    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1], simulationDayCounter_);
-    
+    auto growth = indexGrowth(t);
+    return std::pow(growth, 1 / t) - 1;
+}
 
-    return std::pow(p.second, 1 / t) - 1;
+Real DkImpliedZeroInflationTermStructure::indexGrowth(Time t) const {
+    QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::indexGrowth: negative time (" << t << ") given");
+    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1], simulationDayCounter_);
+    return p.second;
 }
 
 void DkImpliedZeroInflationTermStructure::checkState() const {

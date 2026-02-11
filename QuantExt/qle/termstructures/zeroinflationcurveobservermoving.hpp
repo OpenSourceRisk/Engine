@@ -179,7 +179,6 @@ template <class T> inline void ZeroInflationCurveObserverMoving<T>::performCalcu
 template <class T> inline void ZeroInflationCurveObserverMoving<T>::updateBaseDate() const {
     Date d = Settings::instance().evaluationDate();
     baseDate_ = inflationPeriod(d - simulationLag_, frequency()).first;
-    //std::cout << "updateBaseDate: evaluation date " << d << ", simulation lag " << this->simulationLag_ << ", base date " << baseDate_ << std::endl;
     for (Size i = 0; i < tenors_.size(); i++) {
         this->times_[i] = dayCounter().yearFraction(
             referenceDate(), inflationPeriod(referenceDate() + tenors_[i] - observationLag_, frequency()).first);

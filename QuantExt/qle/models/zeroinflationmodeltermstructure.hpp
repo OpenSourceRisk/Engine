@@ -74,11 +74,19 @@ public:
 
     void enableCache(const bool b = true) const { enableCache_ = b; }
     virtual void clearCache() const {}
-    
-    Size simulationLagDays() const {
+
+    QuantLib::Time simulationLag(const std::optional<QuantLib::DayCounter>& dc) const {
+        auto its = inflationTermStructure(model_, index_);
+        return dc.value_or(dayCounter()).yearFraction(its->baseDate(), its->referenceDate());
+    }
+
+    QuantLib::Size simulationLagDays() const {
         auto its = inflationTermStructure(model_, index_);
         return its->referenceDate() - its->baseDate();
     }
+
+    //! Returns the baseCPI at simulation time S and the inflation growth between S and S+t.
+    virtual std::pair<QuantLib::Real, QuantLib::Real> indexGrowth(QuantLib::Time t) const = 0;
 
 protected:
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;

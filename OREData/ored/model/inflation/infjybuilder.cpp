@@ -723,9 +723,16 @@ QuantLib::ext::shared_ptr<FxBsParametrization> InfJyBuilder::createIndexParam() 
     // Create the index portion of the parameterization
     QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> indexParam;
 
-    Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(
+    Date baseDate = zeroInflationIndex_->zeroInflationTermStructure()->baseDate();
+    QuantLib::Real baseCpi = 
         dontCalibrate_ ? 100
-                       : zeroInflationIndex_->fixing(zeroInflationIndex_->zeroInflationTermStructure()->baseDate())));
+                       : zeroInflationIndex_->fixing(baseDate);
+    
+    // Seasonality is determinsitc and not in the dynamic and applied later
+    if (zeroInflationIndex_->zeroInflationTermStructure()->seasonality() != nullptr) {
+        baseCpi = deseasonalizeCPI(baseDate, baseCpi, zeroInflationIndex_->zeroInflationTermStructure());
+    }
+    QuantLib::Handle<QuantLib::Quote> baseCpiQuote(QuantLib::ext::make_shared<QuantLib::SimpleQuote>(baseCpi);
 
     // Index volatility parameter constraints
     const auto& cc = data_->calibrationConfiguration();

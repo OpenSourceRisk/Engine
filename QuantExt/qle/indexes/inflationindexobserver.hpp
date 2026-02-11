@@ -34,7 +34,7 @@ namespace QuantExt {
 class InflationIndexObserver : public TermStructure {
 public:
     InflationIndexObserver(const QuantLib::Handle<ZeroInflationIndex>& index, const Handle<Quote>& quote,
-                           const Size& simulationLag, const DayCounter& dayCounter = DayCounter())
+                           const Period& simulationLag, const DayCounter& dayCounter = DayCounter())
         : TermStructure(dayCounter), index_(index), quote_(quote), simulationLag_(simulationLag) {
         registerWith(quote_);
         QL_REQUIRE(!index_.empty(), "index is null");
@@ -54,20 +54,18 @@ private:
     void setFixing() {
         // something like this
         Date today = Settings::instance().evaluationDate();
-        Date fixingDate = today - simulationLag_;
+        Date fixingDate = inflationPeriod(today - simulationLag_, index_->frequency()).first;
+        
         auto zits = index_->zeroInflationTermStructure();
-        // In the CAM we simulate the cpi without seasonality adjustment, so we need to apply the seasonality adjustment
-        // here to get the correct fixing for the index. If this risk factor will be used in future for other purposes
-        // than exposure simulation in CAM, we might want to make the application of seasonality adjustment optional via
-        // a flag in the constructor.
-        auto cpi = seasonalizeCPI(index_->zeroInflationTermStructure()->baseDate(), fixingDate, quote_->value(), zits.currentLink());
         // overwrite the current fixing in the QuantLib::FixingManager
+        //std::cout << "InflationIndexObserver::setFixing: setting fixing for " << index_->name() << " at date " << fixingDate
+        //          << " to value " << cpi << std::endl;
         index_->addFixing(fixingDate, cpi, true);
     }
 
     QuantLib::Handle<ZeroInflationIndex> index_;
     Handle<Quote> quote_;
-    Size simulationLag_;
+    Period simulationLag_;
 };
 } // namespace QuantExt
 

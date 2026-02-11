@@ -27,13 +27,13 @@ using QuantLib::Time;
 namespace QuantExt {
 
 ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, const std::optional<QuantLib::DayCounter>& simulationDayCounter)
-    : ZeroInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
-                                 inflationTermStructure(model, index)->observationLag(),
-                                 inflationTermStructure(model, index)->frequency(),
-                                 inflationTermStructure(model, index)->dayCounter()),
-      model_(model), index_(index), simulationDayCounter_(simulationDayCounter), referenceDate_(inflationTermStructure(model_, index_)->referenceDate()),
-      relativeTime_(0.0) {
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index,
+    const std::optional<QuantLib::DayCounter>& simulationDayCounter)
+    : ZeroInflationTermStructure(
+          inflationTermStructure(model, index)->baseDate(), inflationTermStructure(model, index)->observationLag(),
+          inflationTermStructure(model, index)->frequency(), inflationTermStructure(model, index)->dayCounter()),
+      model_(model), index_(index), simulationDayCounter_(simulationDayCounter),
+      referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
