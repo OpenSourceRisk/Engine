@@ -855,12 +855,14 @@ target_include_directories(${ORED_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..
 target_link_libraries(${ORED_LIB_NAME}
     PRIVATE
         rapidxml
+        Boost::iostreams
     PUBLIC
         ${QLE_LIB_NAME}
         Boost::log
 )
 
 if(ORE_USE_ZLIB)
+    target_link_libraries(${ORED_LIB_NAME} PRIVATE ZLIB::ZLIB)
     target_compile_definitions(${ORED_LIB_NAME} PRIVATE ORE_USE_ZLIB)
 endif()
 

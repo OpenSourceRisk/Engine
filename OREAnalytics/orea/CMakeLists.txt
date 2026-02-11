@@ -447,12 +447,17 @@ version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
 add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} ${OREAnalytics_HDR})
-target_link_libraries(${OREA_LIB_NAME} PUBLIC ${ORED_LIB_NAME})
+target_link_libraries(${OREA_LIB_NAME}
+    PUBLIC
+        ${ORED_LIB_NAME}
+    PRIVATE
+        Boost::iostreams
+)
 
 target_include_directories(${OREA_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
 
 if(ORE_USE_ZLIB)
-    target_link_libraries(${OREA_LIB_NAME} PRIVATE Boost::iostreams ZLIB::ZLIB)
+    target_link_libraries(${OREA_LIB_NAME} PRIVATE ZLIB::ZLIB)
     target_compile_definitions(${OREA_LIB_NAME} PRIVATE ORE_USE_ZLIB)
 endif()
 

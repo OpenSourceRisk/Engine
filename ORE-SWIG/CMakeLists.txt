@@ -49,9 +49,10 @@ endforeach()
 set_property(TARGET OREP APPEND PROPERTY SWIG_COMPILE_OPTIONS -fastdispatch -includeall -small)
 
 # Add all libraries to link with
-target_link_libraries(OREP ${OREA_LIB_NAME})
+target_link_libraries(OREP PRIVATE ${OREA_LIB_NAME} Boost::iostreams)
 
 if(ORE_USE_ZLIB)
+    target_link_libraries(OREP PRIVATE ZLIB::ZLIB)
     target_compile_definitions(OREP PRIVATE ORE_USE_ZLIB)
 endif()
 

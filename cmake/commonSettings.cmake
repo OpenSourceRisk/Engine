@@ -226,12 +226,9 @@ endif()
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 
 # Find Boost components.
-list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log)
+list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams)
 if(ORE_BUILD_TESTS)
     list(APPEND BOOST_COMPONENT_LIST unit_test_framework)
-endif()
-if(ORE_USE_ZLIB)
-    list(APPEND BOOST_COMPONENT_LIST iostreams)
 endif()
 find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
 
