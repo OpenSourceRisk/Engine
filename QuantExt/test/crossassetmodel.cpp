@@ -2510,14 +2510,17 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
+    BOOST_TEST_MESSAGE("Got model and process");
     auto today = d.referenceDate;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
     int simLag = simulationLag(d.infEurTs);
+    BOOST_TEST_MESSAGE("Simulation lag in days = " << simLag);
     double simLagTime = simulationLagTime(d.infEurTs, d.dc);
+    BOOST_TEST_MESSAGE("Simulation lag in simulation time = " << simLagTime);
     auto simDate = today + 3 * Months;
     Time T = d.dc.yearFraction(today, simDate);
     Date ModelBaseDateT = simDate - simLag;
-    Time ModelBaseTimeTinInfDc = d.infDc.yearFraction(baseDate, ModelBaseDateT);
+    Time ModelBaseTimeTinInfDc = infDc.yearFraction(baseDate, ModelBaseDateT);
     Date CurveBaseDateT = inflationPeriod(ModelBaseDateT, d.infEurTs->frequency()).first;
     std::vector<Period> inflationTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     std::vector<Date> inflationObsDates;
