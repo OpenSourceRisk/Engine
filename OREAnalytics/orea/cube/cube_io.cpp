@@ -60,9 +60,9 @@ std::string getMetaData(const std::string& line, const std::string& tag, const b
 
 } // namespace
 
-NPVCubeWithMetaData loadCube(const std::string& filename) {
+QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filename) {
 
-    NPVCubeWithMetaData result;
+    QuantLib::ext::shared_ptr<NPVCubeWithMetaData> result = QuantLib::ext::make_shared<NPVCubeWithMetaData>();
 
     // open file
 
@@ -110,20 +110,23 @@ NPVCubeWithMetaData loadCube(const std::string& filename) {
 
     std::getline(in, line);
     if (std::string md = getMetaData(line, "scenGenDta", false); !md.empty()) {
-        result.scenarioGeneratorData = QuantLib::ext::make_shared<ScenarioGeneratorData>();
-        result.scenarioGeneratorData->fromXMLString(md);
+        auto scenarioGeneratorData = QuantLib::ext::make_shared<ScenarioGeneratorData>();
+        scenarioGeneratorData->fromXMLString(md);
+        result->setScenarioGeneratorData(scenarioGeneratorData);
         std::getline(in, line);
         DLOG("overwrite scenario generator data with meta data from cube: " << md);
     }
 
     if (std::string md = getMetaData(line, "storeFlows", false); !md.empty()) {
-        result.storeFlows = parseBool(md);
+        bool storeFlows = parseBool(md);
+        result->setStoreFlows(storeFlows);
         std::getline(in, line);
         DLOG("overwrite storeFlows with meta data from cube: " << md);
     }
 
     if (std::string md = getMetaData(line, "storeCrSt", false); !md.empty()) {
-        result.storeCreditStateNPVs = parseInteger(md);
+        Size storeCreditStateNPVs = parseInteger(md);
+        result->storeCreditStateNPVs(storeCreditStateNPVs);
         std::getline(in, line);
         DLOG("overwrite storeCreditStateNPVs with meta data from cube: " << md);
     }
@@ -134,7 +137,7 @@ NPVCubeWithMetaData loadCube(const std::string& filename) {
     } else {
         cube = QuantLib::ext::make_shared<InMemoryCubeOpt<float>>(asof, ids, dates, samples, depth, 0.0);
     }
-    result.cube = cube;
+    result->setCube(cube);
 
     vector<string> tokens;
     Size nData = 0;
@@ -177,40 +180,40 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
 
     // write meta data (tag width is hardcoded and used in getMetaData())
 
-    out << "# asof       : " << ore::data::to_string(cube.cube->asof()) << "\n";
-    out << "# numIds     : " << std::to_string(cube.cube->numIds()) << "\n";
-    out << "# numDates   : " << std::to_string(cube.cube->numDates()) << "\n";
-    out << "# samples    : " << ore::data::to_string(cube.cube->samples()) << "\n";
-    out << "# depth      : " << ore::data::to_string(cube.cube->depth()) << "\n";
-    out << "# usesDblPrc : " << std::boolalpha << cube.cube->usesDoublePrecision() << "\n";
+    out << "# asof       : " << ore::data::to_string(cube.cube()->asof()) << "\n";
+    out << "# numIds     : " << std::to_string(cube.cube()->numIds()) << "\n";
+    out << "# numDates   : " << std::to_string(cube.cube()->numDates()) << "\n";
+    out << "# samples    : " << ore::data::to_string(cube.cube()->samples()) << "\n";
+    out << "# depth      : " << ore::data::to_string(cube.cube()->depth()) << "\n";
+    out << "# usesDblPrc : " << std::boolalpha << cube.cube()->usesDoublePrecision() << "\n";
     out << "# dates      : \n";
-    for (auto const& d : cube.cube->dates())
+    for (auto const& d : cube.cube()->dates())
         out << "# " << ore::data::to_string(d) << "\n";
 
     out << "# ids        : \n";
     std::map<Size, std::string> ids;
-    for (auto const& d : cube.cube->idsAndIndexes()) {
+    for (auto const& d : cube.cube()->idsAndIndexes()) {
         ids[d.second] = d.first;
     }
     for (auto const& d : ids) {
         out << "# " << d.second << "\n";
     }
 
-    if (cube.scenarioGeneratorData) {
+    if (cube.scenarioGeneratorData()) {
         std::string scenGenDataXml =
-            std::regex_replace(cube.scenarioGeneratorData->toXMLString(), std::regex("\\r\\n|\\r|\\n|\\t"), "");
+            std::regex_replace(cube.scenarioGeneratorData()->toXMLString(), std::regex("\\r\\n|\\r|\\n|\\t"), "");
         out << "# scenGenDta : " << scenGenDataXml << "\n";
     }
-    if (cube.storeFlows) {
-        out << "# storeFlows : " << std::boolalpha << *cube.storeFlows << "\n";
+    if (cube.storeFlows()) {
+        out << "# storeFlows : " << std::boolalpha << *cube.storeFlows() << "\n";
     }
-    if (cube.storeCreditStateNPVs) {
-        out << "# storeCrSt  : " << *cube.storeCreditStateNPVs << "\n";
+    if (cube.storeCreditStateNPVs()) {
+        out << "# storeCrSt  : " << *cube.storeCreditStateNPVs() << "\n";
     }
 
     // set precision
 
-    out << std::setprecision(cube.cube->usesDoublePrecision() ? std::numeric_limits<double>::max_digits10
+    out << std::setprecision(cube.cube()->usesDoublePrecision() ? std::numeric_limits<double>::max_digits10
                                                               : std::numeric_limits<float>::max_digits10);
 
     // write cube data
@@ -220,15 +223,15 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
     char buf[4 * maxLen + 1];
 
     out << "#id,date,sample,depth,value\n";
-    for (Size i = 0; i < cube.cube->numIds(); ++i) {
-        out << i << ",0,0,0," << cube.cube->getT0(i) << "\n";
+    for (Size i = 0; i < cube.cube()->numIds(); ++i) {
+        out << i << ",0,0,0," << cube.cube()->getT0(i) << "\n";
         len0 = snprintf(buf, maxLen, "%u,", (unsigned int)i);
-        for (Size j = 0; j < cube.cube->numDates(); ++j) {
+        for (Size j = 0; j < cube.cube()->numDates(); ++j) {
             len1 = snprintf(buf + len0, maxLen, "%u,", (unsigned int)(j + 1));
-            for (Size k = 0; k < cube.cube->samples(); ++k) {
+            for (Size k = 0; k < cube.cube()->samples(); ++k) {
                 len2 = snprintf(buf + len0 + len1, maxLen, "%u,", (unsigned int)k);
-                for (Size d = 0; d < cube.cube->depth(); ++d) {
-                    double value = cube.cube->get(i, j, k, d);
+                for (Size d = 0; d < cube.cube()->depth(); ++d) {
+                    double value = cube.cube()->get(i, j, k, d);
                     if (value != 0.0) {
                         snprintf(buf + len0 + len1 + len2, maxLen, "%u,", (unsigned int)d);
                         out << buf << value << "\n";

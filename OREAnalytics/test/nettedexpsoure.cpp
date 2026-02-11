@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         QuantLib::ext::shared_ptr<InputParameters> inputs = QuantLib::ext::make_shared<TestInputParameters>();
         QuantLib::ext::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator =
             QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
-                inputs, portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
+                portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
 
         BOOST_TEST_MESSAGE("initial NPV at "<< QuantLib::io::iso_date(referenceDate)<<": "<<cube->getT0(0));
         for (Size i = 0; i<cube->dates().size(); i++)

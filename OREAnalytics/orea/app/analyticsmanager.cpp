@@ -37,7 +37,7 @@ void AnalyticsManager::initialise() {
 
     // create all the analytics
     for (const auto& a : inputs_->analytics())
-        auto ap = AnalyticFactory::instance().build(a, inputs_, shared_from_this(), true);
+        AnalyticFactory::instance().build(a, inputs_, shared_from_this(), true);
 
     initialised_ = true;
 }
