@@ -12,6 +12,7 @@
       <xs:element type="callableSwapData" name="CallableSwapData"/>
       <xs:element type="arcOptionData" name="ArcOptionData"/>
       <xs:element type="swaptionData" name="SwaptionData"/>
+      <xs:element type="swaptionStraddleData" name="SwaptionStraddleData"/>
       <xs:element type="varianceSwapData" name="VarianceSwapData"/>
       <xs:element type="varianceSwapData" name="EquityVarianceSwapData"/>
       <xs:element type="varianceSwapData" name="FxVarianceSwapData"/>
@@ -271,6 +272,21 @@
       <xs:sequence>
         <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="optionData" name="OptionData"/>
+      </xs:sequence>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="swaptionStraddleData">
+    <xs:choice>
+      <xs:sequence>
+        <xs:element type="xs:string" name="LongShort" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="optionData" name="OptionData"/>
+        <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+      </xs:sequence>
+      <xs:sequence>
+        <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+        <xs:element type="optionData" name="OptionData"/>
+        <xs:element type="xs:string" name="LongShort" maxOccurs="unbounded" minOccurs="0"/>
       </xs:sequence>
     </xs:choice>
   </xs:complexType>
@@ -1260,6 +1276,7 @@
       <xs:enumeration value="InflationSwap"/>
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
+      <xs:enumeration value="SwaptionStraddle"/>
       <xs:enumeration value="ForwardRateAgreement"/>
       <xs:enumeration value="FxAverageForward"/>
       <xs:enumeration value="FxForward"/>
