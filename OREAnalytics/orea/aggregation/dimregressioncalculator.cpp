@@ -45,16 +45,18 @@ namespace ore {
 namespace analytics {
 
 RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculator(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
     const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     Size regressionOrder, std::vector<std::string> regressors, Size localRegressionEvaluations,
-    Real localRegressionBandWidth, const std::map<std::string, Real>& currentIM)
-: DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
-                                 currentIM),
+    Real localRegressionBandWidth,
+    const std::map<std::string, Real>& currentIM,
+    const std::map<std::string, TimeSeries<Real>>& deterministicInitialMargin)
+    : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
+                                     currentIM),
       regressionOrder_(regressionOrder), regressors_(regressors),
-      localRegressionEvaluations_(localRegressionEvaluations), localRegressionBandWidth_(localRegressionBandWidth) {
+      localRegressionEvaluations_(localRegressionEvaluations), localRegressionBandWidth_(localRegressionBandWidth),
+      deterministicInitialMargin_(deterministicInitialMargin) {
     Size dates = cube_->dates().size();
     Size samples = cube_->samples();
     for (const auto& nettingSetId : nettingSetIds_) {
@@ -191,42 +193,40 @@ void RegressionDynamicInitialMarginCalculator::build() {
     Size nettingSetCount = 0;
     for (auto n : nettingSetIds_) {
         DLOG("Process netting set " << n);
-
-        if (inputs_) {
-            // Check whether a deterministic IM evolution was provided for this netting set
-            // If found then we use this external data to overwrite the following
-            // - nettingSetExpectedDIM_  by nettingSet and date
-            // - nettingSetZeroOrderDIM_ by nettingSet and date
-            // - nettingSetSimpleDIMh_   by nettingSet and date
-            // - nettingSetSimpleDIMp_   by nettingSet and date
-            // - nettingSetDIM_          by nettingSet, date and sample
-            // - dimCube_                by nettingSet, date and sample
-            TimeSeries<Real> im = inputs_->deterministicInitialMargin(n);
-            DLOG("External IM evolution for netting set " << n << " has size " << im.size());
-            if (im.size() > 0) {
-                DLOG("Try overriding DIM with externally provided IM evolution for netting set " << n);
-                for (Size j = 0; j < stopDatesLoop; ++j) {
-                    Date d = cube_->dates()[j];
-                    try {
-                        Real value = im[d];
-                        nettingSetExpectedDIM_[n][j] = value;
-                        nettingSetZeroOrderDIM_[n][j] = value;
-                        nettingSetSimpleDIMh_[n][j] = value;
-                        nettingSetSimpleDIMp_[n][j] = value;
-                        for (Size k = 0; k < samples; ++k) {
-                            dimCube_->set(value, nettingSetCount, j, k);
-                            nettingSetDIM_[n][j][k] = value;
-                        }
-                    } catch(std::exception& ) {
-                        QL_FAIL("Failed to lookup external IM for netting set " << n
-                                << " at date " << io::iso_date(d));
+        
+        // Check whether a deterministic IM evolution was provided for this netting set
+        // If found then we use this external data to overwrite the following
+        // - nettingSetExpectedDIM_  by nettingSet and date
+        // - nettingSetZeroOrderDIM_ by nettingSet and date
+        // - nettingSetSimpleDIMh_   by nettingSet and date
+        // - nettingSetSimpleDIMp_   by nettingSet and date
+        // - nettingSetDIM_          by nettingSet, date and sample
+        // - dimCube_                by nettingSet, date and sample
+        TimeSeries<Real> im = deterministicInitialMargin_[n];
+        DLOG("External IM evolution for netting set " << n << " has size " << im.size());
+        if (im.size() > 0) {
+            DLOG("Try overriding DIM with externally provided IM evolution for netting set " << n);
+            for (Size j = 0; j < stopDatesLoop; ++j) {
+                Date d = cube_->dates()[j];
+                try {
+                    Real value = im[d];
+                    nettingSetExpectedDIM_[n][j] = value;
+                    nettingSetZeroOrderDIM_[n][j] = value;
+                    nettingSetSimpleDIMh_[n][j] = value;
+                    nettingSetSimpleDIMp_[n][j] = value;
+                    for (Size k = 0; k < samples; ++k) {
+                        dimCube_->set(value, nettingSetCount, j, k);
+                        nettingSetDIM_[n][j][k] = value;
                     }
+                } catch(std::exception& ) {
+                    QL_FAIL("Failed to lookup external IM for netting set " << n
+                            << " at date " << io::iso_date(d));
                 }
-                DLOG("Overriding DIM for netting set " << n << " succeeded");
-                // continue to the next netting set
-                continue;
             }
-        }
+            DLOG("Overriding DIM for netting set " << n << " succeeded");
+            // continue to the next netting set
+            continue;
+    }
         
         if (currentIM_.find(n) != currentIM_.end()) {
             Real t0im = currentIM_[n];

@@ -47,12 +47,11 @@ namespace ore {
 namespace analytics {
 
 DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
     const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     const std::map<std::string, Real>& currentIM, Size dimCubeDepth)
-    : inputs_(inputs), portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
+    : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
       quantile_(quantile), horizonCalendarDays_(horizonCalendarDays), currentIM_(currentIM) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");

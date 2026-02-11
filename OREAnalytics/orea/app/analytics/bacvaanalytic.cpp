@@ -25,6 +25,10 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void BaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "bacva", "csaFile");
+}
+
 void BaCvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().simulationConfigRequired = false;
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
@@ -39,7 +43,7 @@ void BaCvaAnalyticImpl::buildDependencies() {
 void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                 const std::set<std::string>& runTypes) {
     LOG("BaCvaAnalytic::runAnalytic called");
-
+    auto bacvaVars = ext::dynamic_pointer_cast<BaCvaVariables>(inputVariables_);
     analytic()->buildMarket(loader);
 
     auto bacvaAnalytic = static_cast<BaCvaAnalytic*>(analytic());
@@ -49,7 +53,8 @@ void BaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoad
     saccrAnalytic->runAnalytic(loader);
 
     LOG("Running BA-CVA calculation");
-    QL_REQUIRE(inputs_->nettingSetManager() != nullptr, "No netting set configuration provided for BA-CVA calculation");
+    QL_REQUIRE(bacvaVars->nettingSetManager_ != nullptr,
+               "No netting set configuration provided for BA-CVA calculation");
 
     // build BA-CVA calculator
     QuantLib::ext::shared_ptr<BaCvaCalculator> baCvaCalculator = QuantLib::ext::make_shared<BaCvaCalculator>(

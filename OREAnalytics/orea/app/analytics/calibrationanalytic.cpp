@@ -42,18 +42,30 @@ namespace analytics {
  * CalibrationAnalytic: Cross Asset Model calibration and reporting
  ******************************************************************/
 
+void CalibrationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    pricingEngine_ = inputs->setupVariables().pricingEngine_;
+    inputs->loadParameterXML<EngineData>(pricingEngine_, "calibration", "pricingEnginesFile");
+
+    inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "calibration", "crossAssetModelData");
+    if (!crossAssetModelData_)
+        // load default if not provided
+        inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "calibration", "configFile");
+}
+
 void CalibrationAnalyticImpl::setUpConfigurations() {
     LOG("CalibrationAnalytic::setUpConfigurations() called");
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(inputVariables_);
     if (inputs_->calibrationModel() == "CAM") {
         analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-        analytic()->configurations().crossAssetModelData = inputs_->crossAssetModelData();
+        analytic()->configurations().crossAssetModelData = calibrationVars->crossAssetModelData_;
     }
 }
 
 QuantLib::ext::shared_ptr<EngineFactory> CalibrationAnalyticImpl::engineFactory() {
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(inputVariables_);
     LOG("CalibrationAnalytic::engineFactory() called");
     QuantLib::ext::shared_ptr<EngineData> edCopy =
-        QuantLib::ext::make_shared<EngineData>(*inputs_->simulationPricingEngine());
+        QuantLib::ext::make_shared<EngineData>(*calibrationVars->pricingEngine_);
     edCopy->globalParameters()["GenerateAdditionalResults"] = inputs_->outputAdditionalResults() ? "true" : "false";
     edCopy->globalParameters()["RunType"] = "Exposure";
     map<MarketContext, string> configurations;
@@ -124,6 +136,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                                           const std::set<std::string>& runTypes) {
 
     SavedSettings settings;
+    auto calibrationVars = ext::dynamic_pointer_cast<CalibrationVariables>(inputVariables_);
 
     string msg = "Running Calibration Analytic";
     LOG(msg << " with asof " << io::iso_date(inputs_->asof()));
@@ -147,7 +160,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
         ProgressMessage(msg, 0, 1).log();
         auto continueOnErr = false;
         auto allowModelFallbacks = false;
-        auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
+        auto globalParams = calibrationVars->pricingEngine_->globalParameters();
         if (auto c = globalParams.find("ContinueOnCalibrationError"); c != globalParams.end())
             continueOnErr = parseBool(c->second);
         if (auto c = globalParams.find("AllowModelFallbacks"); c != globalParams.end())
