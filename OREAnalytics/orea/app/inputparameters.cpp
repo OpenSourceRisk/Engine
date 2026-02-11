@@ -100,6 +100,9 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     if (ccOverride)
         curveConfigs_.setOverride(ccOverride);
 
+    inputs->loadParameterXML<CurrencyConfig>(currencyConfig_, "setup", "currencyConfiguration");
+    inputs->loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment");
+
     // Convention loading
     conventions_ = ext::make_shared<Conventions>();
     InstrumentConventions::instance().setConventions(conventions_);
@@ -114,8 +117,6 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     scaleUpPortfolio(portfolio_);
     inputs->loadParameterXML<EngineData>(pricingEngine_, "setup", "pricingEnginesFile");
     inputs->loadParameterXML<TodaysMarketParameters>(todaysMarketParams_, "setup", "marketConfigFile");
-    inputs->loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment");
-    inputs->loadParameterXML<CurrencyConfig>(currencyConfig_, "setup", "currencyConfiguration");
     inputs->loadParameterXML<BaselTrafficLightData>(baselTrafficLightConfig_, "setup", "baselTrafficLightConfig");
     inputs->loadParameterXML<CounterpartyManager>(counterpartyManager_, "setup", "counterpartyFile");
 
