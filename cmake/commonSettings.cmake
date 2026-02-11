@@ -335,7 +335,7 @@ endfunction()
 # Add RT library in certain cases.
 function(add_rt_library target_name)
     if(DEFINED RT_LIBRARY AND NOT "${RT_LIBRARY}" MATCHES ".*NOTFOUND$")
-        target_link_libraries(${target_name} ${RT_LIBRARY})
+        target_link_libraries(${target_name} PRIVATE ${RT_LIBRARY})
     endif()
 endfunction()
 
