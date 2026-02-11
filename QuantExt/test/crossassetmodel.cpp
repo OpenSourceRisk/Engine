@@ -2067,7 +2067,11 @@ struct IrFxInfCrComModelTestData {
                 EURCurrency(), infEurTs, infEurAlpha, infEurKappa));
         } else {
             Real infEurSigma = 0.15;
-            Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+            Real eurBaseCPI = 1.0;
+            if (seasonality) {
+                eurBaseCPI = deseasonalizeCPI(baseDate, eurBaseCPI, infEurTs);
+            }
+            Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(eurBaseCPI));
             auto index = QuantLib::ext::make_shared<EUHICP>();
             auto realRateParam = QuantLib::ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
                 EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
@@ -2090,7 +2094,11 @@ struct IrFxInfCrComModelTestData {
                 GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa));
         } else {
             Real infGbpSigma = 0.10;
-            Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+            Real gbpBaseCPI = 1.0;
+            if (seasonality) {
+                gbpBaseCPI = deseasonalizeCPI(baseDate, gbpBaseCPI, infGbpTs);
+            }
+            Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(gbpBaseCPI));
             auto index = QuantLib::ext::make_shared<UKRPI>();
             auto realRateParam = QuantLib::ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
                 GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
@@ -2310,20 +2318,20 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
     bool flatVols = false;
     bool driftFreeState = false;
     bool exactDiscretization = true;
-    bool seasonality = false;
+    bool seasonality = true;
     BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
     BOOST_TEST_MESSAGE("infIsDK " << infIsDK);
     BOOST_TEST_MESSAGE("flatVols " << flatVols);
     BOOST_TEST_MESSAGE("driftFreeState " << driftFreeState);
     BOOST_TEST_MESSAGE("exactDiscretization " << exactDiscretization);
-    //DayCounter infDc = Thirty360(Thirty360::ISDA);
+    DayCounter infDc = Thirty360(Thirty360::ISDA);
     // DayCounter infDc = MonthCounter();
-     DayCounter infDc = Actual365Fixed();
+     //DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
-    Period infSimLag = 3 * Months;
+    Period infSimLag = 2* Months;
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag, seasonality};
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
     auto today = d.referenceDate;
     auto simDate = today + 1 * Years;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
@@ -2396,9 +2404,10 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
 
             // infeur1(exp(infeury1) * inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated) *
             //         model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
-            auto baseCPI = seasonalizeCPI(baseDate, BaseDateT1, exp(infeury1), d.infEurTs.currentLink());
+            auto baseCPI = seasonalizeCPI(BaseDateT1, exp(infeury1), d.infEurTs);
             cpieur1(baseCPI);
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
+            BOOST_TEST_MESSAGE("tauSim " << tauSim);
             auto zeroRate =
                 std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated), 1.0 / tauSim) -
                 1.0;
@@ -2416,7 +2425,7 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
                     model->numeraire(0, T, zeur1));
         } else {
 
-            auto baseCPI = seasonalizeCPI(baseDate, BaseDateT1, exp(infgbpy1), d.infGbpTs.currentLink());
+            auto baseCPI = seasonalizeCPI(BaseDateT1, exp(infgbpy1), d.infGbpTs);
             auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
             auto zeroRate =
                 std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated), 1.0 / tauSim) -
@@ -2459,7 +2468,7 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
     }
     BOOST_TEST_MESSAGE("EUR CPI   = " << mean(cpieur1) << " +- " << error_of<tag::mean>(cpieur1) << " vs analytical "
                                       << expectedCpi << " error " << std::abs(mean(cpieur1) - expectedCpi));
-    BOOST_TEST_MESSAGE("Test – decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
+    BOOST_TEST_MESSAGE("Test - decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
     Real tol1 = exactDiscretization ? 1.0E-4 : 14E-4;
 
     if (std::abs(mean(infeur1) - expectedEur) > tol1)
@@ -2484,7 +2493,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     bool flatVols = false;
     bool driftFreeState = false;
     bool exactDiscretization = true;
-    bool seasonality = false;
+    bool seasonality = true;
     bool debug = false;
     DayCounter infDc = Thirty360(Thirty360::ISDA);
     //DayCounter infDc = Actual365Fixed();
@@ -2498,82 +2507,83 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     BOOST_TEST_MESSAGE("seasonality " << seasonality);
     BOOST_TEST_MESSAGE("infDc " << infDc.name());
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag, seasonality};
+    
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
     auto today = d.referenceDate;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
-
-    Size simLag = today - baseDate;
-
+    int simLag = simulationLag(d.infEurTs);
+    double simLagTime = simulationLagTime(d.infEurTs, d.dc);
     auto simDate = today + 3 * Months;
-    Date BaseDateAtSimDate = simDate - simLag;
-    Time BaseTimeAtSimDateinInfDc = infDc.yearFraction(d.referenceDate, BaseDateAtSimDate);
+    Time T = d.dc.yearFraction(today, simDate);
+    Date ModelBaseDateT = simDate - simLag;
+    Time ModelBaseTimeTinInfDc = d.infDc.yearFraction(baseDate, ModelBaseDateT);
+    Date CurveBaseDateT = inflationPeriod(ModelBaseDateT, d.infEurTs->frequency()).first;
     std::vector<Period> inflationTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    std::vector<Date> inflationDates;
+    std::vector<Date> inflationObsDates;
     std::vector<Date> inflationPaymentDates;
     std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> inflationQuotes;
-    std::vector<Real> expectedInflationGrowths;
+    
     BOOST_TEST_MESSAGE("Today = " << io::iso_date(today) << ", simDate = " << io::iso_date(simDate)
                                   << ", baseDate = " << io::iso_date(baseDate)
-                                  << ", BaseDateAtSimDate = " << io::iso_date(BaseDateAtSimDate)
-                                  << ", BaseTimeAtSimDateinInfDc = " << BaseTimeAtSimDateinInfDc);
-
-    double expectedBaseCPIatT =
-        std::pow(1.0 + d.infEurTs->zeroRate(BaseTimeAtSimDateinInfDc), infDc.yearFraction(baseDate, BaseDateAtSimDate));
-    expectedBaseCPIatT = seasonalizeCPI(baseDate, BaseDateAtSimDate, expectedBaseCPIatT, d.infEurTs.currentLink());
+                                  << ", ModelBaseDateT = " << io::iso_date(ModelBaseDateT)
+                                  << ", ModelBaseTimeTinInfDc = " << ModelBaseTimeTinInfDc 
+                                  << ", CurveBaseDateT = " << io::iso_date(CurveBaseDateT)
+                                  << ", simLag (days) = " << simLag << ", simLag (simulation time) = " << simLagTime);
+    
     auto inflationIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>(d.infEurTs);
-    inflationIndex->addFixing(baseDate, 1.0);
+    double baseCPI = 1.0;
+    inflationIndex->addFixing(baseDate, baseCPI);
+    double expectedGrowthToSimBaseDate =
+        std::pow(1.0 + d.infEurTs->zeroRate(ModelBaseTimeTinInfDc), infDc.yearFraction(baseDate, ModelBaseDateT));
+
+    double deseasonalizedBaseCPI = deseasonalizeCPI(baseDate, baseCPI, d.infEurTs);
+
+    double expectedBaseCPIatT = seasonalizeCPI(ModelBaseDateT, deseasonalizedBaseCPI * expectedGrowthToSimBaseDate, d.infEurTs);
+    
+    
+    std::vector<Real> expectedInflationCashflows;
     std::vector<accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>>> simulatedGrowths(
         inflationTenors.size());
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>> simulatedBaseCPI;
-    BOOST_TEST_MESSAGE("Building inflation dates and expected growths");
+    BOOST_TEST_MESSAGE("Building inflation dates and expected cashflows");
     for (auto t : inflationTenors) {
         auto inflationPaymentDate = simDate + t;
         inflationPaymentDates.push_back(inflationPaymentDate);
-        inflationDates.push_back(inflationPeriod(inflationPaymentDate - infObsLag, Monthly).first);
-        auto time = infDc.yearFraction(baseDate, inflationDates.back());
-        expectedInflationGrowths.push_back(inflationIndex->fixing(inflationDates.back()) *
+        inflationObsDates.push_back(inflationPeriod(inflationPaymentDate - infObsLag, Monthly).first);
+        auto time = infDc.yearFraction(baseDate, inflationObsDates.back());
+        expectedInflationCashflows.push_back(inflationIndex->fixing(inflationObsDates.back()) *
                                            d.eurYts->discount(inflationPaymentDate));
-        inflationQuotes.push_back(QuantLib::ext::make_shared<SimpleQuote>(d.infEurTs->zeroRate(inflationDates.back())));
-        BOOST_TEST_MESSAGE("Inflation date " << io::iso_date(inflationDates.back()) << ", time from base " << time
-                                             << ", expected growth " << expectedInflationGrowths.back());
+        inflationQuotes.push_back(QuantLib::ext::make_shared<SimpleQuote>(d.infEurTs->zeroRate(inflationObsDates.back())));
+        BOOST_TEST_MESSAGE("Inflation date " << io::iso_date(inflationObsDates.back()) << ", time from base " << time
+                                             << ", expected cashflow " << expectedInflationCashflows.back());
     }
     BOOST_TEST_MESSAGE("Creating observer curves and indices");
 
-    QuantLib::Period simLagPeriod = simulationLag(d.infEurTs);
     std::vector<Handle<Quote>> inflationQuoteHandles;
     std::transform(inflationQuotes.begin(), inflationQuotes.end(), std::back_inserter(inflationQuoteHandles),
                    [](const auto& q) { return Handle<Quote>(q); });
-    auto simLagTime = d.dc.yearFraction(baseDate, today);
     BOOST_TEST_MESSAGE("size(inflationTenors) = " << inflationTenors.size() << ", size(inflationQuoteHandles) = "
                                                   << inflationQuoteHandles.size());
-    BOOST_TEST_MESSAGE("Simulated zero curve observer with lag " << simLagPeriod << " and obs lag " << infObsLag
-                                                                 << " with Simlag (days)" << simLag
-                                                                 << " and Simlag (time) " << simLagTime);
     auto simulatedZeroCurve =
         Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
-            0, TARGET(), infDc, simLagPeriod, infObsLag, d.infEurTs->frequency(), false, inflationTenors,
+            0, TARGET(), infDc, simLag, infObsLag, d.infEurTs->frequency(), false, inflationTenors,
             inflationQuoteHandles, d.infEurTs->seasonality()));
     simulatedZeroCurve->setAdjustReferenceDate(false);
     simulatedZeroCurve->enableExtrapolation();
     auto simInflationIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>(simulatedZeroCurve);
-    for (size_t i = 0; i < inflationDates.size(); ++i) {
-        auto obsDate = inflationDates[i];
+    for (size_t i = 0; i < inflationObsDates.size(); ++i) {
+        auto obsDate = inflationObsDates[i];
         auto inflationPaymentDate = inflationPaymentDates[i];
         BOOST_TEST_MESSAGE("Inflation date " << io::iso_date(obsDate) << ", time from base " << time
-                                             << ", expected growth " << inflationIndex->fixing(obsDate) *
+                                             << ", expected cashflow " << simInflationIndex->fixing(obsDate) *
                                                 d.eurYts->discount(inflationPaymentDate));
     }
-
-
-
     BOOST_TEST_MESSAGE("Simulated zero curve has baseDate " << io::iso_date(simulatedZeroCurve->baseDate()));
     BOOST_TEST_MESSAGE("CPI observer with lag " << simLag);
     auto cpiQuote = QuantLib::ext::make_shared<SimpleQuote>(1.0);
     auto cpiObserver = ext::make_shared<InflationIndexObserver>(Handle<ZeroInflationIndex>(inflationIndex),
-                                                                Handle<Quote>(cpiQuote), simLagPeriod, d.dc);
-
-    auto T = d.dc.yearFraction(d.referenceDate, simDate);
+                                                                Handle<Quote>(cpiQuote), simLag, d.dc);
     BOOST_TEST_MESSAGE("Set evaluation date to " << io::iso_date(simDate));
     BOOST_TEST_MESSAGE("Simulated zero curve has baseDate " << io::iso_date(simulatedZeroCurve->baseDate()));
     Settings::instance().evaluationDate() = simDate;
@@ -2591,128 +2601,68 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     BOOST_TEST_MESSAGE(
         "Simulating paths and checking martingale property of the zero-coupon bond and the inflation index");
     for (Size j = 0; j < n; ++j) {
+        if (debug && j % 1000 == 0)
+            BOOST_TEST_MESSAGE("Simulating path " << j << " / " << n);
         Sample<MultiPath> path1 = pg1.next();
         Size l1 = path1.value[0].length() - 1;
         Real zeur1 = path1.value[0][l1];
-        // Real zgbp1 = path1.value[2][l1];
-        // Real fxgbp1 = std::exp(path1.value[4][l1]);
         Real infeurz1 = path1.value[5][l1];
         Real infeury1 = path1.value[6][l1];
-        // Real infgbpz1 = path1.value[7][l1];
-        // Real infgbpy1 = path1.value[8][l1];
-        // eurzb1(model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
-        //  GBP zerobond
-        // gbpzb1(model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
-
+        QuantLib::ext::shared_ptr<QuantExt::ZeroInflationModelTermStructure> infModelTs;
         if (infIsDK) {
-            /*
-            std::pair<Real, Real> sinfeur1 = model->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
-            std::pair<Real, Real> sinfeur2 = model->infdkI(0, T, T, infeurz1, infeury1, d.dc);
-            cpieur1(sinfeur2.first);
-            test(sinfeur2.second);
-            infeur1(sinfeur1.first * sinfeur1.second *
-                    model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
-                    */
+            infModelTs = ext::make_shared<QuantExt::DkImpliedZeroInflationTermStructure>(model, 0, d.dc);
+            infModelTs->move(simDate, Array{infeurz1, infeury1});
         } else {
-            if (debug)
-                BOOST_TEST_MESSAGE("Path " << j << ", simDate = " << io::iso_date(simDate)
-                                           << ", simulated inflation growth " << std::exp(infeury1));
-            cpiQuote->setValue(exp(infeury1)); // set the observed CPI for the CPI observer
-            for (Size i = 0; i < inflationDates.size(); ++i) {
-                auto simBaseFixing = simInflationIndex->fixing(simulatedZeroCurve->baseDate()); // seasonalized
-                if (debug) {
-                    BOOST_TEST_MESSAGE("Path " << j << ", inflation date " << io::iso_date(inflationDates[i]));
-                    BOOST_TEST_MESSAGE(
-                        "simDate = " << io::iso_date(simDate) << "\n"
-                                     << " inflationPaymentDate = " << io::iso_date(simDate + inflationTenors[i]) << "\n"
-                                     << " simCurveBaseDate" << io::iso_date(simulatedZeroCurve->baseDate()) << "\n"
-                                     << " simCurveBaseDate fixing " << simBaseFixing);
-                }
-                // Deseasonalize the base fixing
-                Real deseasonalizedSimBaseFixing = simBaseFixing;
-                if (seasonality) {
-                    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(
-                        d.infEurTs->seasonality());
-                    Real baseFactor = seasonCurve->seasonalityFactor(baseDate);
-                    Real obsFactor = seasonCurve->seasonalityFactor(BaseDateAtSimDate);
-                    Real seasonalityAt = obsFactor / baseFactor;
-                    deseasonalizedSimBaseFixing /= seasonalityAt;
-                }
-                // BOOST_TEST_MESSAGE(" deseasonalizedBaseFixing " << deseasonalizedSimBaseFixing);
-                //
-
-                // build JY impliead zero
-                auto T = d.dc.yearFraction(d.referenceDate, simDate);
-                auto T2_discount = d.dc.yearFraction(d.referenceDate, simDate + inflationTenors[i]);
-                auto jyCurve = ext::make_shared<QuantExt::JyImpliedZeroInflationTermStructure>(model, 0, d.dc);
-                Array state(3);
-                state[0] = infeurz1;
-                state[1] = infeury1;
-                state[2] = zeur1;
-                jyCurve->move(simDate, state);
-                auto T2_fixing = d.dc.yearFraction(simDate, inflationDates[i]) + simLagTime;
-                auto growth = jyCurve->inflationGrowthImpl(T2_fixing);
-                // convert forward CPI into scenario
-
-                auto tau =
-                    simulatedZeroCurve->dayCounter().yearFraction(simulatedZeroCurve->baseDate(), inflationDates[i]);
-
-                auto zeroRate = std::pow(growth, 1 / tau) - 1.0;
-                inflationQuotes[i]->setValue(zeroRate); // set the observed inflation quote for the observer curve
-                auto simulatedGrowth = simInflationIndex->fixing(inflationDates[i]) * model->discountBond(0, T, T2_discount, zeur1) /
-                    model->numeraire(0, T, zeur1); // trigger update of the simulated inflation index
-                simulatedBaseCPI(simInflationIndex->fixing(BaseDateAtSimDate));
-
-                if (debug) {
-                    BOOST_TEST_MESSAGE("Path " << j << ", inflation date " << io::iso_date(inflationDates[i]) << "\n"
-                                               << "T= " << T << "\n"
-                                               << "T2_index" << T2_fixing << "\n"
-                                               << "T2_discounting << " << T2_discount << "\n"
-                                               << ", simulated baseFxing " << simInflationIndex->fixing(BaseDateAtSimDate) << "\n"
-                                               << ", simulatedForwardCPI = " << growth << "\n"
-                                               << "simulatedForwardCPIIndex = "<< simInflationIndex->fixing(inflationDates[i]) <<"\n"
-                                               << "deseasonalizedSimBaseFixing " << deseasonalizedSimBaseFixing << "\n");
-                }
-                simulatedGrowths[i](simulatedGrowth);
-            }
+            infModelTs = ext::make_shared<QuantExt::JyImpliedZeroInflationTermStructure>(model, 0, d.dc);
+            infModelTs->move(simDate, Array{infeurz1, infeury1, zeur1});
         }
-        /*
-        // GBP CPI indexed bond
-        if (infIsDK) {
-            std::pair<Real, Real> sinfgbp1 = model->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
-            infgbp1(sinfgbp1.first * sinfgbp1.second *
-                model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
-        } else {
-
-            auto baseCPI = seasonalizeCPI(baseDate, BaseDateT1, exp(infgbpy1), d.infGbpTs.currentLink());
-            auto tauSim = infDc.yearFraction(BaseDateT1, inflationObsDate);
-            auto zeroRate = std::pow(inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated), 1.0 /
-        tauSim) - 1.0; auto adjZeroRate = continuousSeasonalityAdjustment(BaseDateT1, inflationObsDate, zeroRate,
-        tauSim, d.infGbpTs.currentLink());
-
-
-            infgbp1(baseCPI * std::pow(1.0 + adjZeroRate, tauSim) *
-                model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
+        for (Size i = 0; i < inflationObsDates.size(); ++i) {
+            auto T2_discount = d.dc.yearFraction(d.referenceDate, simDate + inflationTenors[i]);
+            auto T2_fixing = d.dc.yearFraction(simDate, inflationObsDates[i]);
+            auto [baseCPI, growth] = infModelTs->indexGrowth(T2_fixing);
+            baseCPI *= (infIsDK) ? deseasonalizedBaseCPI : 1.0;
+            cpiQuote->setValue(seasonalizeCPI(simulatedZeroCurve->baseDate(), baseCPI, d.infEurTs));
+            
+            auto simBaseFixing = simInflationIndex->fixing(simulatedZeroCurve->baseDate()); 
+            auto simBaseFixingDeseasonalized = deseasonalizeCPI(simulatedZeroCurve->baseDate(), simBaseFixing, d.infEurTs);
+            auto tau = simulatedZeroCurve->dayCounter().yearFraction(simulatedZeroCurve->baseDate(), inflationObsDates[i]);
+            
+            
+            auto zeroRate = std::pow(baseCPI * growth / simBaseFixingDeseasonalized, 1.0 / tau) - 1.0;
+            if (debug && j % 1000 == 0)
+                BOOST_TEST_MESSAGE("Path " << j << ", obs date " << io::iso_date(inflationObsDates[i]) << 
+                ", simCurveBaseDate = " << io::iso_date(simulatedZeroCurve->baseDate()) <<
+                ", simCurveBaseFixing = " << simBaseFixing<< 
+                ", deseasonalized = " << simBaseFixingDeseasonalized <<
+                ", T2_discount = " << T2_discount <<
+                ", T2_fixing = " << T2_fixing <<
+                " simulated base CPI " << baseCPI <<
+                " growth = " << growth <<
+                " zeroRate = " << zeroRate);
+            inflationQuotes[i]->setValue(zeroRate);
+            // get simulated cashflow
+            simulatedBaseCPI(simInflationIndex->fixing(simulatedZeroCurve->baseDate()));
+            simulatedGrowths[i](simInflationIndex->fixing(inflationObsDates[i]) * model->discountBond(0, T, T2_discount, zeur1) /
+                    model->numeraire(0, T, zeur1));
         }
-                */
     }
     BOOST_TEST_MESSAGE("Simulation done, checking results...");
     Real tol1 = exactDiscretization ? 1.0E-4 : 14E-4;
     BOOST_TEST_MESSAGE("Expected base CPI = "
                        << mean(simulatedBaseCPI) << " +- " << error_of<tag::mean>(simulatedBaseCPI) << " vs analytical "
                        << expectedBaseCPIatT << " error " << std::abs(mean(simulatedBaseCPI) - expectedBaseCPIatT));
-    BOOST_TEST_MESSAGE("Expected inflation growths:");
+    BOOST_TEST_MESSAGE("Expected inflation cashflows:");
     for (Size i = 0; i < inflationTenors.size(); ++i) {
         BOOST_TEST_MESSAGE("Inflation growth " << inflationTenors[i] << "y = " << mean(simulatedGrowths[i]) << " +- "
                                                << error_of<tag::mean>(simulatedGrowths[i]) << " vs analytical "
-                                               << expectedInflationGrowths[i] << " error "
-                                               << std::abs(mean(simulatedGrowths[i]) - expectedInflationGrowths[i]));
-        if (std::abs(mean(simulatedGrowths[i]) - expectedInflationGrowths[i]) > tol1)
+                                               << expectedInflationCashflows[i] << " error "
+                                               << std::abs(mean(simulatedGrowths[i]) - expectedInflationCashflows[i]));
+        if (std::abs(mean(simulatedGrowths[i]) - expectedInflationCashflows[i]) > tol1)
             BOOST_TEST_ERROR("Martingale test failed for inflation growth ("
                              << (exactDiscretization ? "Exact" : "Euler")
                              << "),"
                                 "expected "
-                             << expectedInflationGrowths[i] << ", got " << mean(simulatedGrowths[i]) << ", tolerance "
+                             << expectedInflationCashflows[i] << ", got " << mean(simulatedGrowths[i]) << ", tolerance "
                              << tol1);
     }
 }

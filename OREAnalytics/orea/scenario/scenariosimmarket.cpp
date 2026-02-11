@@ -2400,7 +2400,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<ZeroInflationIndex> zeroInflationIndex =
                             initMarket->zeroInflationIndex(name, configuration);
                         auto zits = zeroInflationIndex->zeroInflationTermStructure();
-                        QuantLib::Period simLag = simulationLag(zits);
+                        int simLag = simulationLag(zits);
                         Date fixingDate = zits->baseDate();
                         Real baseCPI = zeroInflationIndex->fixing(fixingDate);
 
@@ -2502,7 +2502,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             zeroCurve =
                                 QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs, zeroCurveTimes, quotes);
                         } else {
-                            Period simLag = simulationLag(inflationTs);
+                            int simLag = simulationLag(inflationTs);
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, simLag, obsLag,
                                 inflationTs->frequency(), false, parameters->zeroInflationTenors(name), quotes,

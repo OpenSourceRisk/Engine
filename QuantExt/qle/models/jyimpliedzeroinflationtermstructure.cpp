@@ -39,7 +39,8 @@ Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
         model_->irlgm1f(model_->ccyIndex(model_->infjy(index_)->currency()))->termStructure()->dayCounter(); 
     auto tDate = lowerDate(t, referenceDate_, simulationDayCounter_.value_or(irDayCounter));  
     auto tau = dayCounter().yearFraction(baseDate(), tDate);
-    return std::pow(indexGrowth(t), 1 / tau) - 1;
+    auto [_, growth] = indexGrowth(t);
+    return std::pow(growth, 1 / tau) - 1;
 }
 
 std::pair<QuantLib::Real, QuantLib::Real> JyImpliedZeroInflationTermStructure::indexGrowth(Time t) const {

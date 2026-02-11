@@ -54,8 +54,15 @@ QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTer
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
     QuantLib::Time t, bool indexIsInterpolated);
 
-/*! Utility for to find the simulationLag between referenceDate and baseDate of a zero inflation curve*/
-QuantLib::Period simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+
+int simulationLag(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
+
+double simulationLagTime(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
 
 /*! Compute a seasonality-adjusted zero rate for a given observation date.
     It takes the time tau between the term structure base date and the observation date as
@@ -75,13 +82,16 @@ QuantLib::Real continuousSeasonalityAdjustment(const QuantLib::Date& baseDate, c
    seasonality, and the seasonality is applied on top of the model.
 */
 QuantLib::Real seasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                    const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+
+QuantLib::Real seasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
                       const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
 
 QuantLib::Real deseasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
-                      const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+                      const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
 
-QuantLib::Real applySimLagAndConvertToInflationTime(const QuantLib::Time t, const QuantLib::DayCounter simDc,
-                                          const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+QuantLib::Real deseasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                      const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
 
 /*! Calculate the Compound Factor to compute the nominal price from the real price
    I(t_s)/I(t_0) with I(t_s) the CPI at settlement date and I(t_0) the bond's base CPI

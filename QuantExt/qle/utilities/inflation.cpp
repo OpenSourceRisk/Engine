@@ -18,11 +18,11 @@
 
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/seasonality.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/time.hpp>
-#include <ql/termstructures/inflation/interpolatedzeroinflationcurve.hpp>
-#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
-#include <ql/termstructures/inflation/seasonality.hpp>
 
 using QuantLib::Date;
 using QuantLib::DayCounter;
@@ -56,38 +56,35 @@ void checkIfFixingAvailable(const Date& maturity, const Period obsLag, bool inte
     if (interpolated)
         throwExceptionIfHistoricalFixingMissing(fixingPeriod.second + 1 * Days, index);
 }
-}
+} // namespace
 
 namespace QuantExt {
 
-Time inflationTime(const Date& date,
-    const QuantLib::ext::shared_ptr<InflationTermStructure>& inflationTs,
-    bool indexIsInterpolated,               
-    const DayCounter& dayCounter) {
-    
+Time inflationTime(const Date& date, const QuantLib::ext::shared_ptr<InflationTermStructure>& inflationTs,
+                   bool indexIsInterpolated, const DayCounter& dayCounter) {
+
     DayCounter dc = inflationTs->dayCounter();
     if (dayCounter != DayCounter())
         dc = dayCounter;
-    //std::cout << "inflationTime: date=" << date << " baseDate=" << inflationTs->baseDate()
-    //          << " dayCounter=" << dc.name() << " indexIsInterpolated=" << indexIsInterpolated << std::endl;
-    return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, 
-        dc, inflationTs->baseDate(), date);
+    // std::cout << "inflationTime: date=" << date << " baseDate=" << inflationTs->baseDate()
+    //           << " dayCounter=" << dc.name() << " indexIsInterpolated=" << indexIsInterpolated << std::endl;
+    return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, dc, inflationTs->baseDate(), date);
 }
 
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const std::optional<DayCounter>& dc, bool indexIsInterpolated) {
-    // compute the simulationLag
-    auto effectiveDayCounter = dc.has_value() && dc.value() != DayCounter() ? dc.value() : ts->dayCounter();
-    auto lag = effectiveDayCounter.yearFraction(ts->baseDate(), ts->referenceDate());
-    auto laggedTime = t - lag;  
-    auto laggedObservationDate = lowerDate(laggedTime, ts->referenceDate(), effectiveDayCounter);
-    auto laggedObservationTime = ts->dayCounter().yearFraction(ts->referenceDate(), laggedObservationDate);
-    auto zeroRate = ts->zeroRate(laggedObservationTime);
-    auto tau = ts->dayCounter().yearFraction(ts->baseDate(), laggedObservationDate);    
-    /*
-    std::cout << "inflationGrowth: t=" << t << " laggedTime=" << laggedTime << " zeroRate=" << zeroRate
-              << " tau=" << tau << " indexIsInterpolated=" << indexIsInterpolated << std::endl;
-    */
-    
+    // in the simulation at time t we effectively observe the inflation zero rate at time t - simLag
+    // this is due to the publishing lag of CPI indices, the simulation lag is the difference between
+    // the last known cpi fixing date and today (t0).
+    if(!dc.has_value())
+        QL_REQUIRE(dc.value() != DayCounter(), "inflationGrowth: invalid day counter given");
+    auto effectiveDayCounter = dc.value_or(ts->dayCounter());
+    // TODO refactor this code once we refactored the yoy model curves and can get rid of the indexIsInterpolated flag
+    auto lag = inflationTime(ts->referenceDate(), ts.currentLink(), indexIsInterpolated, effectiveDayCounter);
+    auto effectiveObservationTime = t - lag;
+    auto effectiveObservationDate = lowerDate(effectiveObservationTime, ts->referenceDate(), effectiveDayCounter);
+    auto observationTime = ts->dayCounter().yearFraction(ts->referenceDate(), effectiveObservationDate);
+    auto zeroRate = ts->zeroRate(observationTime);
+    auto tau = ts->dayCounter().yearFraction(ts->baseDate(), effectiveObservationDate);
     return pow(1.0 + zeroRate, tau);
 }
 
@@ -95,17 +92,24 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool 
     return inflationGrowth(ts, t, ts->dayCounter(), indexIsInterpolated);
 }
 
-Period simulationLag(const Handle<ZeroInflationTermStructure>& ts) {
-    auto baseDate = ts->baseDate();
-    auto refDate = ts->referenceDate();
-    auto frequency = ts->frequency();
-    for (size_t i = 0; i < 12; i++) {
-        Period simLag = i * QuantLib::Months;
-        if (inflationPeriod(refDate - simLag, frequency).first == baseDate) {
-            return simLag;
-        }
-    }
-    return Period(refDate - baseDate, QuantLib::Days);
+int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts) {
+    return simulationLag(ts.currentLink());
+}
+
+int simulationLag(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return ts->referenceDate() - ts->baseDate();
+}
+
+double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc) {
+    return simulationLagTime(ts.currentLink(), dc);
+}
+
+double simulationLagTime(const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc) {
+    QL_REQUIRE(ts != nullptr, "simulationLag can not be computed, no curve given");
+    return dc.value_or(ts->dayCounter()).yearFraction(ts->baseDate(), ts->referenceDate());
 }
 
 Real continuousSeasonalityAdjustment(const Date& baseDate, const Date& observationDate, Rate unadjustedZeroRate,
@@ -121,12 +125,9 @@ Real continuousSeasonalityAdjustment(const Date& baseDate, const Date& observati
     return (unadjustedZeroRate + 1) * f - 1.0;
 }
 
-Real applySimLagAndConvertToInflationTime(const QuantLib::Time t, const QuantLib::DayCounter simDc,
-                                          const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts) {
-    auto lag = simDc.yearFraction(ts->baseDate(), ts->referenceDate());
-    auto laggedTimeInSimTime = t - lag;
-    auto laggedObservationDate = lowerDate(laggedTimeInSimTime, ts->referenceDate(), simDc);
-    return ts->dayCounter().yearFraction(ts->referenceDate(), laggedObservationDate);
+Real seasonalizeCPI(const Date& observationDate, const Real CPI,
+                    const QuantLib::Handle<ZeroInflationTermStructure>& ts) {
+    return seasonalizeCPI(observationDate, CPI, ts.currentLink());
 }
 
 Real seasonalizeCPI(const Date& observationDate, const Real CPI,
@@ -137,6 +138,11 @@ Real seasonalizeCPI(const Date& observationDate, const Real CPI,
     auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
     QL_REQUIRE(seasonCurve != nullptr, "Seasonality curve is not of type MultiplicativePriceSeasonality");
     return CPI * seasonCurve->seasonalityFactor(observationDate);
+}
+
+Real deseasonalizeCPI(const Date& observationDate, const Real CPI,
+                      const QuantLib::Handle<ZeroInflationTermStructure>& ts) {
+    return deseasonalizeCPI(observationDate, CPI, ts.currentLink());
 }
 
 Real deseasonalizeCPI(const Date& observationDate, const Real CPI,
@@ -155,30 +161,30 @@ Real inflationLinkedBondQuoteFactor(const QuantLib::ext::shared_ptr<QuantLib::Bo
     QuantLib::Real inflFactor = 1;
     for (auto& cf : bond->cashflows()) {
         if (auto inflCpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
-            const auto& inflationIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(inflCpn->index());
+            const auto& inflationIndex =
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(inflCpn->index());
             Date settlementDate = bond->settlementDate();
             std::pair<Date, Date> currentInflationPeriod = inflationPeriod(settlementDate, inflationIndex->frequency());
-            std::pair<Date, Date> settlementFixingPeriod = inflationPeriod(settlementDate - inflCpn->observationLag(), inflationIndex->frequency());
+            std::pair<Date, Date> settlementFixingPeriod =
+                inflationPeriod(settlementDate - inflCpn->observationLag(), inflationIndex->frequency());
             Date curveBaseDate = settlementFixingPeriod.first;
-            //Date curveBaseDate = inflationIndex->zeroInflationTermStructure()->baseDate();
+            // Date curveBaseDate = inflationIndex->zeroInflationTermStructure()->baseDate();
             Real todaysCPI = inflationIndex->fixing(curveBaseDate);
             if (inflCpn->observationInterpolation() == QuantLib::CPI::Linear) {
-                
+
                 std::pair<Date, Date> observationPeriod = inflationPeriod(curveBaseDate, inflationIndex->frequency());
-                
+
                 Real indexStart = inflationIndex->fixing(observationPeriod.first);
                 Real indexEnd = inflationIndex->fixing(observationPeriod.second + 1 * QuantLib::Days);
-                
-                todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) *
-                                             (indexEnd - indexStart) /
+
+                todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) * (indexEnd - indexStart) /
                                              (Real)(currentInflationPeriod.second - currentInflationPeriod.first);
             }
             QuantLib::Rate baseCPI = inflCpn->baseCPI();
             if (baseCPI == QuantLib::Null<QuantLib::Rate>()) {
                 baseCPI =
                     QuantLib::CPI::laggedFixing(inflCpn->cpiIndex(), inflCpn->baseDate() + inflCpn->observationLag(),
-                                                inflCpn->observationLag(),
-                                                inflCpn->observationInterpolation());
+                                                inflCpn->observationLag(), inflCpn->observationInterpolation());
             }
             inflFactor = todaysCPI / baseCPI;
             break;
@@ -234,8 +240,8 @@ QuantLib::Date lastAvailableFixing(const QuantLib::InflationIndex& index, const 
     }
 }
 
-QuantLib::Rate cpiFixing(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index, const QuantLib::Date& maturity,
-                         const QuantLib::Period& obsLag, bool interpolated) {
+QuantLib::Rate cpiFixing(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+                         const QuantLib::Date& maturity, const QuantLib::Period& obsLag, bool interpolated) {
     QuantLib::CPI::InterpolationType interpolation = interpolated ? QuantLib::CPI::Linear : QuantLib::CPI::Flat;
     return QuantLib::CPI::laggedFixing(index, maturity, obsLag, interpolation);
 }
@@ -260,16 +266,18 @@ QuantLib::Date fixingDate(const QuantLib::Date& d, const QuantLib::Period obsLag
 }
 
 QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const QuantLib::Date& swapStart,
-                                  const QuantLib::Date& asof,
-                                  const QuantLib::Period& swapTenor, const QuantLib::DayCounter& swapZCLegDayCounter,
-                                  const QuantLib::Period& swapObsLag, const QuantLib::Rate zeroCouponRate,
-                                  const QuantLib::Period& curveObsLag, const QuantLib::DayCounter& curveDayCounter,
-                                  const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index, const bool interpolated,
+                                  const QuantLib::Date& asof, const QuantLib::Period& swapTenor,
+                                  const QuantLib::DayCounter& swapZCLegDayCounter, const QuantLib::Period& swapObsLag,
+                                  const QuantLib::Rate zeroCouponRate, const QuantLib::Period& curveObsLag,
+                                  const QuantLib::DayCounter& curveDayCounter,
+                                  const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index,
+                                  const bool interpolated,
                                   const QuantLib::ext::shared_ptr<QuantLib::Seasonality>& seasonality) {
     QuantLib::ext::shared_ptr<QuantLib::MultiplicativePriceSeasonality> multiplicativeSeasonality =
-        seasonality ? QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(seasonality) : nullptr;  
-    
-    QL_REQUIRE(seasonality ==  nullptr || multiplicativeSeasonality,
+        seasonality ? QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(seasonality)
+                    : nullptr;
+
+    QL_REQUIRE(seasonality == nullptr || multiplicativeSeasonality,
                "Only multiplicative seasonality supported at the moment");
 
     Date swapBaseDate = ZeroInflation::fixingDate(swapStart, swapObsLag, index->frequency(), interpolated);
@@ -280,10 +288,10 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
     // If the baseDate in Curve is today - obsLag then the quoted zeroRate should be used
     if (!baseDateLastKnownFixing && swapBaseDate == curveBaseDate)
         return zeroCouponRate;
-    
+
     QL_REQUIRE(index, "can not compute base cpi of the zero coupon swap");
-    // Otherwise we need to take into account the accrued inflation between rate helper base date and curve base date
-    // Check if historical fixings available
+    // Otherwise we need to take into account the accrued inflation between rate helper base date and curve base
+    // date Check if historical fixings available
     try {
         checkIfFixingAvailable(swapStart, swapObsLag, interpolated, *index);
     } catch (const std::exception& e) {
@@ -306,7 +314,7 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         Time timeFromCurveBase = inflationYearFraction(index->frequency(), interpolated, curveDayCounter, curveBaseDate,
                                                        swapObservationDate);
         double rateWithSeasonality = std::pow(fwdCPI / curveBaseFixing, 1.0 / timeFromCurveBase) - 1.0;
-        
+
         if (multiplicativeSeasonality) {
             double factorAt = multiplicativeSeasonality->seasonalityFactor(swapObservationDate);
             double factorBase = multiplicativeSeasonality->seasonalityFactor(curveBaseDate);
@@ -323,7 +331,7 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         Time timeToFixing1 =
             inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate, fixingPeriod.first);
         Time timeToFixing2 = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate,
-                                        fixingPeriod.second + 1 * Days);
+                                                   fixingPeriod.second + 1 * Days);
 
         // Time interpolation
         Time timeToPayment =
@@ -331,7 +339,7 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
         Time timeToStartPaymentPeriod =
             inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate, paymentPeriod.first);
         Time timeToEndPaymenetPeriod = inflationYearFraction(index->frequency(), false, curveDayCounter, curveBaseDate,
-                                        paymentPeriod.second + 1 * Days);
+                                                             paymentPeriod.second + 1 * Days);
         Time interpolationFactor =
             (timeToPayment - timeToStartPaymentPeriod) / (timeToEndPaymenetPeriod - timeToStartPaymentPeriod);
 
@@ -349,10 +357,9 @@ QuantLib::Rate guessCurveBaseRate(const bool baseDateLastKnownFixing, const Quan
             seasonalityFactor2 = factorAt2 / factorBase;
         }
 
-
         std::function<double(double)> objectiveFunction = [&timeToFixing1, &timeToFixing2, &interpolationFactor,
                                                            &target, &seasonalityFactor1, &seasonalityFactor2](Rate r) {
-            return target - (std::pow(1 + r, timeToFixing1) * seasonalityFactor1  +
+            return target - (std::pow(1 + r, timeToFixing1) * seasonalityFactor1 +
                              (std::pow(1 + r, timeToFixing2) * seasonalityFactor2 -
                               std::pow(1 + r, timeToFixing1) * seasonalityFactor1) *
                                  interpolationFactor);

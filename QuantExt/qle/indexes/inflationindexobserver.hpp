@@ -34,7 +34,7 @@ namespace QuantExt {
 class InflationIndexObserver : public TermStructure {
 public:
     InflationIndexObserver(const QuantLib::Handle<ZeroInflationIndex>& index, const Handle<Quote>& quote,
-                           const Period& simulationLag, const DayCounter& dayCounter = DayCounter())
+                           const int simulationLag, const DayCounter& dayCounter = DayCounter())
         : TermStructure(dayCounter), index_(index), quote_(quote), simulationLag_(simulationLag) {
         registerWith(quote_);
         QL_REQUIRE(!index_.empty(), "index is null");
@@ -62,7 +62,7 @@ private:
 
     QuantLib::Handle<ZeroInflationIndex> index_;
     Handle<Quote> quote_;
-    Period simulationLag_;
+    int simulationLag_;
 };
 } // namespace QuantExt
 
