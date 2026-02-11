@@ -1,85 +1,14 @@
-set(CMAKE_SWIG_FLAGS "-fastdispatch")
-option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
-
-# Append /bigobj to compiler flags on Windows for this target
-if (MSVC)
-   # FIXME: Add the other compiler flags from QuantLib-SWIG/Python/setup.py (/GR /FD /Zm250 /EHsc)?
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-   message(STATUS CMAKE_CXX_FLAGS "=" "${CMAKE_CXX_FLAGS}")
-
-   foreach (cfg "DEBUG" "RELEASE" "MINSIZEREL" "RELWITHDEBINFO")
-      foreach (flag "CXX" "C")
-         set(CMAKE_${flag}_FLAGS_${cfg} "${CMAKE_${flag}_FLAGS_${cfg}} /bigobj")
-         message(STATUS CMAKE_${flag}_FLAGS_${cfg} "=" "${CMAKE_${flag}_FLAGS_${cfg}}")
-      endforeach ()
-   endforeach ()
-endif()
-
-# The module depends on a number of libraries in the ORE project: determine their exact names
-get_library_name("OREAnalytics" OREA_LIB_NAME)
-get_library_name("OREData" ORED_LIB_NAME)
-get_library_name("QuantExt" QLE_LIB_NAME)
-set_ql_library_name()
-
-# To build the module, we moreover need Boost, Swig, Python
-set(BOOST_COMPONENT_LIST serialization date_time timer thread log)
-
-
-if(ORE_USE_ZLIB)
-    list(APPEND BOOST_COMPONENT_LIST iostreams)
-    if(MSVC)
-        list(APPEND BOOST_COMPONENT_LIST zlib)
-    endif()
-endif()
-find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST} OPTIONAL_COMPONENTS system)
 find_package(SWIG REQUIRED)
 find_package(Python REQUIRED COMPONENTS Development)
-if(ORE_USE_ZLIB)
-    find_package(ZLIB REQUIRED)
-endif()
 
 # Load the UseSWIG module from the cmake installation
 include(${SWIG_USE_FILE})
 
-# Add to the list of include directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/QuantLib-SWIG/SWIG)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/QuantExt-SWIG/SWIG)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/OREData-SWIG/SWIG)
-
-#include_directories(${ORE_BUILD}/QuantLib)
-
-include_directories(${QUANTLIB_SOURCE_DIR})
-include_directories(${QUANTEXT_SOURCE_DIR})
-include_directories(${OREDATA_SOURCE_DIR})
-include_directories(${OREANALYTICS_SOURCE_DIR})
-
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${Python_INCLUDE_DIRS})
-
-# Add to the list of link directories
-link_directories(${Python_LIBRARY_DIRS})
-add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
-add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
-add_link_directory_if_exists("${OREDATA_SOURCE_DIR}/build/ored")
-add_link_directory_if_exists("${OREANALYTICS_SOURCE_DIR}/build/orea")
-
-add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib")
-add_link_directory_if_exists("${CMAKE_BINARY_DIR}/ore/QuantLib")
-
-if(EXISTS "${CMAKE_BINARY_DIR}/ore/QuantLib/")
-    include_directories("${CMAKE_BINARY_DIR}/ore/QuantLib")
-endif()
-
-if(EXISTS "${CMAKE_BINARY_DIR}/QuantLib/")
-    include_directories("${CMAKE_BINARY_DIR}/QuantLib")
-endif()
+# Path to the top level .i file.
+set(OREA_SWIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i)
 
 # Tell SWIG to compile in C++ mode
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES CPLUSPLUS ON)
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-includeall")
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-small")
-#set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/../SWIG/oreanalytics.i PROPERTIES SWIG_FLAGS "-py3")
+set_property(SOURCE ${OREA_SWIG_FILE} PROPERTY CPLUSPLUS ON)
 
 # Tell SWIG to build a Python module, to be called "ORE"
 # NB: Variable CMAKE_DEBUG_POSTFIX holds the suffix of the lib name on disk.
@@ -90,38 +19,60 @@ set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/o
 #    package not getting loaded at runtime.
 # So unset the variable before calling swig_add_library().
 # Then restore the variable after because it is required by the calls to target_link_libraries() below.
-set(TEMP_CMAKE_DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-unset(CMAKE_DEBUG_POSTFIX)
-swig_add_library(OREP TYPE MODULE LANGUAGE python SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i)
 
-set(CMAKE_DEBUG_POSTFIX ${TEMP_CMAKE_DEBUG_POSTFIX})
+# Need to do the unset & restore all CMAKE_<CONFIG>_POSTFIX after update.
+set(configs DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+
+# Store original and unset.
+foreach(cfg IN LISTS configs)
+    set(var_name "CMAKE_${cfg}_POSTFIX")
+    set(orig_postfix_${cfg} "${${var_name}}")
+    unset(${var_name})
+endforeach()
+
+# Run the command.
+swig_add_library(OREP TYPE MODULE LANGUAGE python SOURCES ${OREA_SWIG_FILE})
+
+# Restore.
+foreach(cfg IN LISTS configs)
+    set(var_name "CMAKE_${cfg}_POSTFIX")
+    set(${var_name} "${orig_postfix_${cfg}}")
+endforeach()
+
+# Add to the list of SWIG include directories
+foreach(swig_dir OREAnalytics OREData QuantExt QuantLib)
+    set_property(TARGET OREP APPEND PROPERTY
+        SWIG_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/${swig_dir}-SWIG/SWIG
+    )
+endforeach()
+
+set_property(TARGET OREP APPEND PROPERTY SWIG_COMPILE_OPTIONS -fastdispatch -includeall -small)
 
 # Add all libraries to link with
-target_link_libraries(OREP ${Boost_LIBRARIES})
-target_link_libraries(OREP ${QL_LIB_NAME})
-target_link_libraries(OREP ${QLE_LIB_NAME})
-target_link_libraries(OREP ${ORED_LIB_NAME})
 target_link_libraries(OREP ${OREA_LIB_NAME})
+
 if(ORE_USE_ZLIB)
-    target_link_libraries(OREP ${ZLIB_LIBRARIES})
+    target_compile_definitions(OREP PRIVATE ORE_USE_ZLIB)
 endif()
+
 # On windows, do not tell the build which python libs to use.  It automatically
 # looks for python release libs, even in debug, and invoking the line below
 # breaks the debug build.
-if(NOT MSVC)
-    target_link_libraries(OREP ${Python_LIBRARIES})
-endif()
+if(MSVC)
+    # Append /bigobj to compiler flags on Windows for this target (only).
+    target_compile_options(OREP PRIVATE /bigobj)
+    target_include_directories(OREP PRIVATE ${Python_INCLUDE_DIRS})
+    target_link_directories(OREP PRIVATE ${Python_LIBRARY_DIRS})
 
-if (MSVC)
-	get_target_property(target_options OREP COMPILE_OPTIONS)
-	list(REMOVE_ITEM target_options "/we4189")
-	set_property(TARGET OREP PROPERTY COMPILE_OPTIONS ${target_options})
+    get_target_property(target_options OREP COMPILE_OPTIONS)
+    list(REMOVE_ITEM target_options "/we4189")
+    set_property(TARGET OREP PROPERTY COMPILE_OPTIONS ${target_options})
 else()
-        get_target_property(target_options OREP COMPILE_OPTIONS)
-        # Need to remove those, clang throws errors with the autogenerated swig c++ wrapper code
-	list(REMOVE_ITEM target_options "-Werror=unused-variable")
-        list(REMOVE_ITEM target_options "-Werror=uninitialized")
-	set_property(TARGET OREP PROPERTY COMPILE_OPTIONS ${target_options})
+    target_link_libraries(OREP Python::Python)
+
+    get_target_property(target_options OREP COMPILE_OPTIONS)
+    # Need to remove those, clang throws errors with the autogenerated swig c++ wrapper code
+    list(REMOVE_ITEM target_options "-Werror=unused-variable")
+    list(REMOVE_ITEM target_options "-Werror=uninitialized")
+    set_property(TARGET OREP PROPERTY COMPILE_OPTIONS ${target_options})
 endif()
-
-

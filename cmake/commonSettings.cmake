@@ -20,6 +20,11 @@ option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runne
 option(ORE_ENABLE_OPENCL "Enable OpenCL" OFF)
 option(ORE_ENABLE_CUDA "Enable CUDA" OFF)
 
+# Set ORE library target names.
+set(QLE_LIB_NAME "QuantExt")
+set(ORED_LIB_NAME "OREData")
+set(OREA_LIB_NAME "OREAnalytics")
+
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2")
 
@@ -56,31 +61,9 @@ if (CMAKE_POSITION_INDEPENDENT_CODE)
     check_pie_supported()
 endif()
 
-# set compiler macro if open cl is enabled
-if (ORE_ENABLE_OPENCL)
-  add_compile_definitions(ORE_ENABLE_OPENCL)
-endif()
-
-# set compiler macro if CUDA is enabled
-if (ORE_ENABLE_CUDA)
-  add_compile_definitions(ORE_ENABLE_CUDA)
-endif()
-
-# set compiler macro if ORE_PYTHON_INTEGRATION is set
-if (ORE_PYTHON_INTEGRATION)
-  add_compile_definitions(ORE_PYTHON_INTEGRATION)
-endif()
-
-# set compiler macro if zlib is enabled
 if(ORE_USE_ZLIB)
-  add_compile_definitions(ORE_USE_ZLIB)
+  find_package(ZLIB REQUIRED)
 endif()
-
-# set compiler macro if cpu affinity
-if(ORE_MULTITHREADING_CPU_AFFINITY)
-  add_compile_definitions(ORE_MULTITHREADING_CPU_AFFINITY)
-endif()
-
 
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -91,8 +74,6 @@ if(NOT DONT_SET_QL_INCLUDE_DIR_FIRST)
    # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     include_directories("${PROJECT_BINARY_DIR}/QuantLib")
 endif()
-
-
 
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
@@ -236,20 +217,31 @@ if(NOT Boost_USE_STATIC_LIBS)
 endif()
 
 if(ORE_BOOST_AUTO_LINK_SYSTEM)
-    add_definitions(-DBOOST_AUTO_LINK_SYSTEM)
+    add_compile_definitions(BOOST_AUTO_LINK_SYSTEM)
+else()
+    # Avoid using Boost auto-linking unless it was explicitly asked for.
+    add_compile_definitions(BOOST_ALL_NO_LIB)
 endif()
 
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 
+# Find Boost components.
+list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log)
+if(ORE_BUILD_TESTS)
+    list(APPEND BOOST_COMPONENT_LIST unit_test_framework)
+endif()
+if(ORE_USE_ZLIB)
+    list(APPEND BOOST_COMPONENT_LIST iostreams)
+endif()
+find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
+
 if (MSVC)
-    find_package(Boost)
     if(Boost_VERSION_STRING LESS 1.84.0)
         add_compile_definitions(_WINVER=0x0601)
         add_compile_definitions(_WIN32_WINNT=0x0601)
         add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
     endif()
 endif()
-# Boost end #
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
 add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
@@ -259,13 +251,12 @@ get_filename_component(QUANTLIB_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantLi
 get_filename_component(QUANTEXT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantExt" ABSOLUTE)
 get_filename_component(OREDATA_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREData" ABSOLUTE)
 get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREAnalytics" ABSOLUTE)
-get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest" ABSOLUTE)
-get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
 
 # parallel unit test runner
-option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
 if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
-    add_definitions(-DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
+    if(UNIX AND NOT APPLE)
+        find_library(RT_LIBRARY rt REQUIRED)
+    endif()
 endif()
 
 # convenience function that adds a link directory dir, but only if it exists
@@ -275,50 +266,90 @@ function(add_link_directory_if_exists dir)
   endif()
 endfunction()
 
-macro(get_library_name LIB_NAME OUTPUT_NAME)
-
-    # modified version of quantlib.cmake / get_quantlib_library_name
-
-    # message(STATUS "${LIB_NAME} Library name tokens:")
-    # MSVC: Give built library different names following code in 'ql/autolink.hpp'
-    if(MSVC)
-        if (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-            set(LIB_PLATFORM "-x64")
-            set(LIB_PLATFORM "-x64")
-        endif()
-        # - thread linkage
-        set(LIB_THREAD_OPT "-mt")  # _MT is defined for /MD and /MT runtimes (https://docs.microsoft.com/es-es/cpp/build/reference/md-mt-ld-use-run-time-library)
-        #message(STATUS " - Thread opt: ${LIB_THREAD_OPT}")
-
-        if (NOT BUILD_SHARED_LIBS AND (MSVC AND NOT MSVC_LINK_DYNAMIC_RUNTIME))
-            set(LIB_RT_OPT "-s")
-            set(CMAKE_DEBUG_POSTFIX "gd")
-        else()
-            set(CMAKE_DEBUG_POSTFIX "-gd")
-        endif()
-
-
-        set(${OUTPUT_NAME} "${LIB_NAME}${LIB_PLATFORM}${LIB_THREAD_OPT}${LIB_RT_OPT}")
-    else()
-        set(${OUTPUT_NAME} ${LIB_NAME})
+# In QuantLib, this is guarded by QL_TAGGED_LAYOUT.
+# We may want to later add ORE_TAGGED_LAYOUT to have this control also.
+if (MSVC)
+    if (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+        set(DEBUG_POSTFIX "-x64")
+        set(RELEASE_POSTFIX "-x64")
     endif()
+    set(DEBUG_POSTFIX ${DEBUG_POSTFIX}-mt)
+    set(RELEASE_POSTFIX ${RELEASE_POSTFIX}-mt)
+    if (MSVC_LINK_DYNAMIC_RUNTIME)
+        set(DEBUG_POSTFIX ${DEBUG_POSTFIX}-gd)
+    else()
+        set(DEBUG_POSTFIX ${DEBUG_POSTFIX}-sgd)
+        set(RELEASE_POSTFIX ${RELEASE_POSTFIX}-s)
+    endif()
+    set(CMAKE_DEBUG_POSTFIX ${DEBUG_POSTFIX})
+    set(CMAKE_RELEASE_POSTFIX ${RELEASE_POSTFIX})
+    set(CMAKE_RELWITHDEBINFO_POSTFIX ${RELEASE_POSTFIX})
+    set(CMAKE_MINSIZEREL_POSTFIX ${RELEASE_POSTFIX})
+endif()
 
-    message(STATUS "${LIB_NAME} library name: ${${OUTPUT_NAME}}[${CMAKE_DEBUG_POSTFIX}]")
-endmacro(get_library_name)
-
-macro(set_ql_library_name)
-  if(USE_GLOBAL_ORE_BUILD)
+if(USE_GLOBAL_ORE_BUILD)
     set(QL_LIB_NAME ql_library)
-  else()
-    set(QL_LIB_NAME "${QL_LIB_NAME}$<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>")
-  endif()
-endmacro()
+else() 
+    set(QL_LIB_NAME 
+        "${QL_LIB_NAME}
+        $<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>
+        $<$<CONFIG:Release>:${CMAKE_RELEASE_POSTFIX}>
+        $<$<CONFIG:RelWithDebInfo>:${CMAKE_RELWITHDEBINFO_POSTFIX}>
+        $<$<CONFIG:MinSizeRel>:${CMAKE_MINSIZEREL_POSTFIX}>"
+    )
+endif()
 
 function(generate_git_hash custom_target_name)
-  file(WRITE ${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp)
+  # Only write the file if it does not exist to prevent unnecessary rebuilds.
+  set(GIT_VER_FILE "${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp")
+  if(NOT EXISTS "${GIT_VER_FILE}")
+    file(WRITE "${GIT_VER_FILE}")
+  endif()
+
   add_custom_target(
     ${custom_target_name} ALL
     COMMAND ${CMAKE_COMMAND} -D IN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -D OUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp
                              -P ${QUANTEXT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endfunction()
+
+find_package(Doxygen)
+if(ORE_BUILD_DOC AND NOT Doxygen_FOUND)
+    message("Doxygen needs to be installed to generate the doxygen documentation.")
+endif()
+
+function(generate_doxy_docs doxy_filename)
+    # Set the Doxygen input and output files.
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/${doxy_filename}.doxy)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+    add_custom_target("doc_${doxy_filename}" ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating API documentation for ${doxy_filename} with Doxygen."
+        VERBATIM
+    )
+endfunction()
+
+# Add RT library in certain cases.
+function(add_rt_library target_name)
+    if(DEFINED RT_LIBRARY AND NOT "${RT_LIBRARY}" MATCHES ".*NOTFOUND$")
+        target_link_libraries(${target_name} ${RT_LIBRARY})
+    endif()
+endfunction()
+
+# Used in multiple places so add as function here.
+function(msvc_wpo_options target_name)
+    set(configs ${ARGN})
+    if(MSVC AND MSVC_WHOLE_PROGRAM_OPTIMIZATION)
+        foreach(cfg IN LISTS configs)
+            target_compile_options(${target_name} PRIVATE
+                "$<$<CONFIG:${cfg}>:/GL>"
+            )
+            target_link_options(${target_name} PRIVATE
+                "$<$<CONFIG:${cfg}>:/INCREMENTAL:NO;/LTCG;/OPT:REF;/OPT:ICF>"
+            )
+        endforeach()
+    endif()
 endfunction()

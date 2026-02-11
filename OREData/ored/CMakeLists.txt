@@ -846,11 +846,21 @@ utilities/xmlutils.hpp
 version.hpp)
 
 writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
-add_library(${ORED_LIB_NAME} ${OREData_SRC})
-target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
+add_library(${ORED_LIB_NAME} ${OREData_SRC} ${OREData_HDR})
 
+target_include_directories(${ORED_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+
+target_link_libraries(${ORED_LIB_NAME}
+    PRIVATE
+        rapidxml
+    PUBLIC
+        ${QLE_LIB_NAME}
+        Boost::log
+)
+
+if(ORE_USE_ZLIB)
+    target_compile_definitions(${ORED_LIB_NAME} PRIVATE ORE_USE_ZLIB)
+endif()
 
 if (QL_USE_PCH)
 target_precompile_headers(${ORED_LIB_NAME}
@@ -868,4 +878,3 @@ install(TARGETS ${ORED_LIB_NAME}
         LIBRARY DESTINATION lib
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
         )
-

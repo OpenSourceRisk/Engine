@@ -1100,33 +1100,56 @@ utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 
-find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono)
-
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
-add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
+add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR})
 
-target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
+target_include_directories(${QLE_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+
+target_link_libraries(${QLE_LIB_NAME}
+    PUBLIC
+        ${QL_LIB_NAME}
+        Boost::boost
+        Boost::serialization
+        Boost::timer
+)
 
 if(ORE_ENABLE_OPENCL)
-  if(APPLE)
-    target_link_libraries(${QLE_LIB_NAME} "-framework OpenCL")
-  else()
     find_package(OpenCL REQUIRED)
-    target_link_libraries(${QLE_LIB_NAME} OpenCL::OpenCL)
-  endif()
+    target_link_libraries(${QLE_LIB_NAME} PUBLIC OpenCL::OpenCL)
+    target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_ENABLE_OPENCL)
 endif()
 
 if (ORE_ENABLE_CUDA)
-  find_package(CUDAToolkit REQUIRED)
-  target_link_libraries(${QLE_LIB_NAME} CUDA::cuda_driver)
-  target_link_libraries(${QLE_LIB_NAME} CUDA::cudart)
-  target_link_libraries(${QLE_LIB_NAME} CUDA::nvrtc)
-  target_link_libraries(${QLE_LIB_NAME} CUDA::curand)
-  target_link_libraries(${QLE_LIB_NAME} CUDA::cusolver)
+    find_package(CUDAToolkit REQUIRED)
+    target_link_libraries(${QLE_LIB_NAME}
+        PRIVATE
+            CUDA::cuda_driver
+            CUDA::cudart
+            CUDA::nvrtc
+            CUDA::curand
+            CUDA::cusolver
+    )
+    target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_ENABLE_CUDA)
 endif()
 
 if (ORE_PYTHON_INTEGRATION)
-  target_link_libraries(${QLE_LIB_NAME} ${Python_LIBRARIES})
+    # manylinux environments do not have Development.Embed which will cause failure, but all other platforms require it
+    if(MANYLINUX)
+        find_package(Python COMPONENTS Interpreter Development.Module)
+    else()
+        find_package(Python COMPONENTS Interpreter Development)
+    endif()
+    target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Python)
+    target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_PYTHON_INTEGRATION)
+endif()
+
+find_package(Eigen3 3.3 NO_MODULE)
+if(TARGET Eigen3::Eigen)
+    target_link_libraries(${QLE_LIB_NAME} PRIVATE Eigen3::Eigen)
+    target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_USE_EIGEN)
+else()
+    message([WARNING] " -- Could not find Eigen3. Building without Eigen3. 
+        Please set 'Eigen3_DIR' when configuring.")
 endif()
 
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)

@@ -446,14 +446,18 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
-target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} ${OREAnalytics_HDR})
+target_link_libraries(${OREA_LIB_NAME} PUBLIC ${ORED_LIB_NAME})
+
+target_include_directories(${OREA_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
 
 if(ORE_USE_ZLIB)
-    target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
+    target_link_libraries(${OREA_LIB_NAME} PRIVATE Boost::iostreams ZLIB::ZLIB)
+    target_compile_definitions(${OREA_LIB_NAME} PRIVATE ORE_USE_ZLIB)
+endif()
+
+if(ORE_MULTITHREADING_CPU_AFFINITY)
+    target_compile_definitions(${OREA_LIB_NAME} PRIVATE ORE_MULTITHREADING_CPU_AFFINITY)
 endif()
 
 if (QL_USE_PCH)
