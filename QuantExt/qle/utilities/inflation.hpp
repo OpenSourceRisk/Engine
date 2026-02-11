@@ -74,8 +74,11 @@ QuantLib::Real continuousSeasonalityAdjustment(const QuantLib::Date& baseDate, c
     This method is used to seasonalize the CPI fixings for the Cross-AssetModel, where the inflation is modelled without
    seasonality, and the seasonality is applied on top of the model.
 */
-QuantLib::Real seasonalizeCPI(const QuantLib::Date& baseDate, const QuantLib::Date& observationDate, QuantLib::Rate cpi,
-                    const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+QuantLib::Real seasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                      const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+QuantLib::Real deseasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                      const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
 
 QuantLib::Real applySimLagAndConvertToInflationTime(const QuantLib::Time t, const QuantLib::DayCounter simDc,
                                           const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);

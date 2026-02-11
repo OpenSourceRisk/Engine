@@ -55,11 +55,8 @@ private:
         // something like this
         Date today = Settings::instance().evaluationDate();
         Date fixingDate = inflationPeriod(today - simulationLag_, index_->frequency()).first;
-        
-        auto zits = index_->zeroInflationTermStructure();
         // overwrite the current fixing in the QuantLib::FixingManager
-        //std::cout << "InflationIndexObserver::setFixing: setting fixing for " << index_->name() << " at date " << fixingDate
-        //          << " to value " << cpi << std::endl;
+        Real cpi = quote_->value();
         index_->addFixing(fixingDate, cpi, true);
     }
 

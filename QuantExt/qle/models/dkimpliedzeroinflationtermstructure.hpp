@@ -40,7 +40,7 @@ public:
     DkImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
                                         const std::optional<QuantLib::DayCounter>& simulationDayCounter = std::nullopt);
 
-    Real indexGrowth(Time t) const override;                                        
+    std::pair<QuantLib::Real, QuantLib::Real> indexGrowth(Time t) const override;                                        
 protected:
     //! \name ZeroInflationTermStructure interface
     //@{
