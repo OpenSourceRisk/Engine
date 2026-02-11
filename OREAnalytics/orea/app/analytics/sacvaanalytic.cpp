@@ -28,6 +28,10 @@ using RFType = ore::analytics::RiskFactorKey::KeyType;
 namespace ore {
 namespace analytics {
 
+void SaCvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    inputs->loadParameterXML<NettingSetManager>(nettingSetManager_, "bacva", "csaFile");
+}
+
 void SaCvaAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
@@ -46,6 +50,8 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 
     LOG("SaCvaAnalyticImpl::runAnalytic called");
     SaCvaNetSensitivities cvaSensis = inputs_->saCvaNetSensitivities();
+
+    auto sacvaVars = ext::dynamic_pointer_cast<SaCvaVariables>(inputVariables_);
 
     // Generate sensitivities here if not provided
     if (cvaSensis.size() == 0) {

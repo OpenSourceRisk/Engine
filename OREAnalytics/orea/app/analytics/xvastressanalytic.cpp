@@ -37,36 +37,25 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
         return;
     }
 
-    if (inputs_->rawCubeOutput()) {
+    if (xvaVariables_->rawCubeOutput_) {
         DLOG("Write raw cube under scenario " << label);
         xvaAnalytic->getReport("XVA", "rawcube")->toFile(inputs_->resultsPath().string() + "/rawcube_" + label +
                                                          ".csv");
     }
 
-    if (inputs_->netCubeOutput()) {
+    if (xvaVariables_->netCubeOutput_) {
         DLOG("Write raw cube under scenario " << label);
         xvaAnalytic->getReport("XVA", "netcube")->toFile(inputs_->resultsPath().string() + "/netcube_" + label +
                                                          ".csv");
     }
 
-    if (inputs_->writeCube()) {
+    if (xvaVariables_->writeCube_) {
         const auto& cubes = xvaAnalytic->npvCubes()["XVA"];
-        for (const auto& [name, cube] : cubes) {
-            DLOG("Write cube under scenario " << name << " for scenario" << label);
-            // analytic()->npvCubes()["XVA_STRESS"][name + "_" + label] = cube;
-            NPVCubeWithMetaData r;
-            r.cube = cube;
-            if (name == "cube") {
-                // store meta data together with npv cube
-                r.scenarioGeneratorData = inputs_->scenarioGeneratorData();
-                r.storeFlows = inputs_->storeFlows();
-                r.storeCreditStateNPVs = inputs_->storeCreditStateNPVs();
-            }
-            saveCube(inputs_->resultsPath().string() + "/" + name + "_" + label + ".csv.gz", r);
-        }
+        for (const auto& [name, cube] : cubes)
+            analytic()->npvCubes()[LABEL][name] = cube;
     }
 
-    if (inputs_->writeScenarios()) {
+    if (xvaVariables_->writeScenarios_) {
         DLOG("Write scenario report under scenario " << label);
         // analytic()->addReport("XVA_STRESS"]["scenario" + label] = xvaAnalytic->reports()["XVA"]["scenario"];
         xvaAnalytic->getReport("XVA", "scenario")->toFile(inputs_->resultsPath().string() + "/scenario" + label +
@@ -81,6 +70,10 @@ XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<Inp
 }
 
 void XvaStressAnalyticImpl::buildDependencies() {
+    auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
+    addDependentAnalytic("XVA", xvaAnalytic);
+
+    xvaVariables_ = xvaAnalytic->impl()->inputVariablesAs<XvaVariables>();
 }
 
 void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -92,14 +85,14 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     SavedSettings settings;
     
-    optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
+    optional<bool> localIncTodaysCashFlows = xvaVariables_->exposureIncludeTodaysCashFlows_;
     Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
     LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
     if (localIncTodaysCashFlows) {
         LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
     }
     
-    bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
+    bool localIncRefDateEvents = xvaVariables_->exposureIncludeReferenceDateEvents_.value();
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
     LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
     
@@ -165,21 +158,22 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
                                           const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> xvaReports;
+    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
+    auto xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
         try {
+            xvaAnalytic->reset();
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
-            auto newAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
-            auto xvaImpl = static_cast<XvaAnalyticImpl*>(newAnalytic->impl().get());
             xvaImpl->setOffsetScenario(scenario);
             xvaImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
 
-            CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
-            newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
+            CONSOLE("XVA_STRESS: Calculate Exposure and XVA");
+            xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            auto rpts = newAnalytic->reports();
+            auto rpts = xvaAnalytic->reports();
             auto it = rpts.find("XVA");
             QL_REQUIRE(it != rpts.end(), "XVA report not found in XVA analytic reports");
             for (auto [name, rpt] : it->second) { 
@@ -189,10 +183,10 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
                     xvaReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                 }
             }
-            writeCubes(label, newAnalytic);
+            writeCubes(label, xvaAnalytic);
             // FIXME: If the XVA analytic above is a dependent analytic, then we do not have to add this timer,
             // otherwise we have to manually add the XvaAnalytic::timer
-            analytic()->addTimer("XVA analytic", newAnalytic->getTimer());
+            analytic()->addTimer("XVA analytic", xvaAnalytic->getTimer());
         } catch (const std::exception& e) {
             StructuredAnalyticsErrorMessage("XvaStress", "XVACalc",
                                             "Error during XVA calc under scenario " + label + ", got " + e.what() +

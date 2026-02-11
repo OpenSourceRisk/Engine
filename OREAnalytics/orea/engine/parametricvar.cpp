@@ -139,7 +139,7 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          QuantLib::ext::optional<ore::data::TimePeriod> period,
                                          std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown,
                                          const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown,
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, nullptr, breakdown,
                 useAtParCouponsCurves, useAtParCouponsTrades),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
@@ -154,7 +154,7 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          QuantLib::ext::optional<ore::data::TimePeriod> period,
                                          std::unique_ptr<SensiRunArgs> sensiArgs, const bool breakdown,
                                          const bool useAtParCouponsCurves, const bool useAtParCouponsTrades)
-    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr,
+    : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr, nullptr,
                 breakdown, useAtParCouponsCurves, useAtParCouponsTrades),
       parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
