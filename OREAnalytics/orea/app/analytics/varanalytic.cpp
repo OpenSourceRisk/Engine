@@ -193,9 +193,15 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
         simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
 
+    std::unique_ptr<MarketRiskReport::MultiThreadArgs> multiThreadsArgs;
+    if(inputs_->nThreads()>1)
+        multiThreadsArgs = std::make_unique<MarketRiskReport::MultiThreadArgs>(inputs_->nThreads(), inputs_->asof(), analytic()->loader(), 
+                                                                                analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams,
+                                                                                inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, "histstimvar-simulation");
+
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown(),
+        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), inputs_->varBreakDown(),
         inputs_->includeExpectedShortfall(), inputs_->tradePnl(), riskFactorBreakdown_, inputs_->useAtParCouponsCurves(),
         inputs_->useAtParCouponsTrades());
 }

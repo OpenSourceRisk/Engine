@@ -49,8 +49,7 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
 
     inputs->loadParameter<Date>(asof_, "setup", "asofDate", true, parseDate);
     Settings::instance().evaluationDate() = asof_;
-
-    
+        
     inputs->loadParameter<std::filesystem::path>(inputPath_, "setup", "inputPath");
     inputs->loadParameter<std::filesystem::path>(resultsPath_, "setup", "outputPath");
     if (resultsPath_.empty())
@@ -101,6 +100,9 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     if (ccOverride)
         curveConfigs_.setOverride(ccOverride);
 
+    inputs->loadParameterXML<CurrencyConfig>(currencyConfig_, "setup", "currencyConfiguration");
+    inputs->loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment");
+
     // Convention loading
     conventions_ = ext::make_shared<Conventions>();
     InstrumentConventions::instance().setConventions(conventions_);
@@ -115,8 +117,6 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     scaleUpPortfolio(portfolio_);
     inputs->loadParameterXML<EngineData>(pricingEngine_, "setup", "pricingEnginesFile");
     inputs->loadParameterXML<TodaysMarketParameters>(todaysMarketParams_, "setup", "marketConfigFile");
-    inputs->loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment");
-    inputs->loadParameterXML<CurrencyConfig>(currencyConfig_, "setup", "currencyConfiguration");
     inputs->loadParameterXML<BaselTrafficLightData>(baselTrafficLightConfig_, "setup", "baselTrafficLightConfig");
     inputs->loadParameterXML<CounterpartyManager>(counterpartyManager_, "setup", "counterpartyFile");
 
@@ -251,6 +251,47 @@ std::string InputParameters::loadParameterString(const std::string& analytic, co
         return std::string();
 }
 
+ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::string& analytic, const std::string& param, 
+     const Date& startDate, const Date& endDate) {
+    string s;
+    loadParameter<string>(s, analytic, param);
+    if (s.empty())
+        return nullptr;
+    std::filesystem::path baseScenarioPath(setupVariables_.inputPath_ / s);
+    if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
+        return ext::make_shared<ScenarioFileReader>(baseScenarioPath.string(), ext::make_shared<SimpleScenarioFactory>(false));
+    } else {
+        // If the file does not exist or fails, assume it is a scenario string
+        return ext::make_shared<ScenarioBufferReader>(s, ext::make_shared<SimpleScenarioFactory>(true));
+    }
+}
+ 
+QuantLib::ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::vector<std::string>& analytics,
+                                                                              const std::vector<std::string>& params,
+                                                                              const Date& startDate,
+                                                                              const Date& endDate) {
+    for (const auto& a : analytics) {
+        for (const auto& p : params) {
+            auto sr = loadScenarioReader(a, p, startDate, endDate);
+            if (sr)
+				return sr;
+        }
+    }
+    return nullptr;
+}
+  
+QuantLib::ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::string& analytic,
+    const std::vector<std::string>& params,
+    const Date& startDate, const Date& endDate) {
+    return loadScenarioReader(vector<string>({analytic}), params, startDate, endDate);
+}
+
+ QuantLib::ext::shared_ptr<ScenarioReader>
+ InputParameters::loadScenarioReader(const std::vector<std::string>& analytics, const std::string& param, 
+     const Date& startDate, const Date& endDate) {
+    return loadScenarioReader(analytics, vector<string>({param}), startDate, endDate);
+}
+
  const std::string& InputParameters::marketConfig(const std::string& context) {
     auto it = marketConfigs_.find(context);
     return (it != marketConfigs_.end() ? it->second : Market::defaultConfiguration);
@@ -381,11 +422,6 @@ void InputParameters::setCounterpartyManager(const std::string& xml) {
     setupVariables_.counterpartyManager_->fromXMLString(xml);
 }
 
-void InputParameters::setCounterpartyManagerFromFile(const std::string& fileName) {
-    setupVariables_.counterpartyManager_ = ext::make_shared<CounterpartyManager>();
-    setupVariables_.counterpartyManager_->fromFile(fileName);
-}
-
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
     setupVariables_.iborFallbackConfig_ = ext::make_shared<IborFallbackConfig>();
     setupVariables_.iborFallbackConfig_->fromXMLString(xml);
@@ -461,6 +497,7 @@ void InputParameters::setMarketConfigs(const std::map<std::string, std::string>&
     
 void InputParameters::setMporCalendar(const std::string& s) {
     mporCalendar_ = parseCalendar(s);
+    parameters_.set("pnl", "mporCalendar", s);
 }
 
 void InputParameters::setSensiSimMarketParams(const std::string& xml) {
@@ -556,66 +593,6 @@ void InputParameters::setStressPricingEngine(const std::string& xml) {
 void InputParameters::setStressPricingEngineFromFile(const std::string& fileName) {
     stressPricingEngine_ = ext::make_shared<EngineData>();
     stressPricingEngine_->fromFile(fileName);
-}
-
-void InputParameters::setExposureSimMarketParams(const std::string& xml) {
-    exposureSimMarketParams_ = ext::make_shared<ScenarioSimMarketParameters>();
-    exposureSimMarketParams_->fromXMLString(xml);
-}
-    
-void InputParameters::setExposureSimMarketParamsFromFile(const std::string& fileName) {
-    exposureSimMarketParams_ = ext::make_shared<ScenarioSimMarketParameters>();
-    exposureSimMarketParams_->fromFile(fileName);
-}
-
-void InputParameters::setScenarioGeneratorData(const std::string& xml) {
-    scenarioGeneratorData_ = ext::make_shared<ScenarioGeneratorData>();
-    scenarioGeneratorData_->fromXMLString(xml);
-}
-
-void InputParameters::setScenarioGeneratorDataFromFile(const std::string& fileName) {
-    scenarioGeneratorData_ = ext::make_shared<ScenarioGeneratorData>();
-    scenarioGeneratorData_->fromFile(fileName);
-}
-
-void InputParameters::setCrossAssetModelData(const std::string& xml) {
-    crossAssetModelData_ = ext::make_shared<CrossAssetModelData>();
-    crossAssetModelData_->fromXMLString(xml);
-}
-
-void InputParameters::setCrossAssetModelDataFromFile(const std::string& fileName) {
-    crossAssetModelData_ = ext::make_shared<CrossAssetModelData>();
-    crossAssetModelData_->fromFile(fileName);
-}
-
-void InputParameters::setSimulationPricingEngine(const std::string& xml) {
-    simulationPricingEngine_ = ext::make_shared<EngineData>();
-    simulationPricingEngine_->fromXMLString(xml);
-}
-
-void InputParameters::setSimulationPricingEngineFromFile(const std::string& fileName) {
-    simulationPricingEngine_ = ext::make_shared<EngineData>();
-    simulationPricingEngine_->fromFile(fileName);
-}
-
-void InputParameters::setAmcPricingEngine(const std::string& xml) {
-    amcPricingEngine_ = ext::make_shared<EngineData>();
-    amcPricingEngine_->fromXMLString(xml);
-}
-
-void InputParameters::setAmcCgPricingEngine(const std::string& xml) {
-    amcCgPricingEngine_ = ext::make_shared<EngineData>();
-    amcCgPricingEngine_->fromXMLString(xml);
-}
-
-void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
-    xvaCgSensiScenarioData_ = ext::make_shared<SensitivityScenarioData>();
-    xvaCgSensiScenarioData_->fromXMLString(xml);
-}
-
-void InputParameters::setXvaCgSensiScenarioDataFromFile(const std::string& fileName) {
-    xvaCgSensiScenarioData_ = ext::make_shared<SensitivityScenarioData>();
-    xvaCgSensiScenarioData_->fromFile(fileName);
 }
 
 void InputParameters::setXvaStressSimMarketParams(const std::string& xml) {
@@ -795,63 +772,6 @@ void InputParameters::setXvaExplainSensitivityScenarioDataFromFile(const std::st
     xvaExplainSensitivityScenarioData_->fromFile(fileName);
 }
 
-void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
-    amcPricingEngine_ = ext::make_shared<EngineData>();
-    amcPricingEngine_->fromFile(fileName);
-}
-
-void InputParameters::setAmcCgPricingEngineFromFile(const std::string& fileName) {
-    amcCgPricingEngine_ = ext::make_shared<EngineData>();
-    amcCgPricingEngine_->fromFile(fileName);
-}
-
-void InputParameters::setNettingSetManager(const std::string& xml) {
-    nettingSetManager_ = ext::make_shared<NettingSetManager>();
-    nettingSetManager_->fromXMLString(xml);
-}
-
-void InputParameters::setNettingSetManagerFromFile(const std::string& fileName) {
-    nettingSetManager_ = ext::make_shared<NettingSetManager>();
-    nettingSetManager_->fromFile(fileName);
-}
-
-void InputParameters::setCollateralBalances(const std::string& xml) {
-    collateralBalances_ = ext::make_shared<CollateralBalances>();
-    collateralBalances_->fromXMLString(xml);
-}
-
-void InputParameters::setCollateralBalancesFromFile(const std::string& fileName) {
-    collateralBalances_ = ext::make_shared<CollateralBalances>();
-    collateralBalances_->fromFile(fileName);
-}
-
-void InputParameters::setCubeFromFile(const std::string& file) {
-    auto r = ore::analytics::loadCube(file);
-    cube_ = r.cube;
-    if(r.scenarioGeneratorData)
-        scenarioGeneratorData_ = r.scenarioGeneratorData;
-    if(r.storeFlows)
-        storeFlows_ = *r.storeFlows;
-    if(r.storeCreditStateNPVs)
-        storeCreditStateNPVs_ = *r.storeCreditStateNPVs;
-}
-
-void InputParameters::setCube(const ext::shared_ptr<NPVCube>& cube) {
-    cube_ = cube;
-}
-
-void InputParameters::setNettingSetCubeFromFile(const std::string& file) {
-    nettingSetCube_ = ore::analytics::loadCube(file).cube;
-}
-
-void InputParameters::setCptyCubeFromFile(const std::string& file) {
-    cptyCube_ = ore::analytics::loadCube(file).cube;
-}
-
-void InputParameters::setMarketCubeFromFile(const std::string& file) { mktCube_ = loadAggregationScenarioData(file); }
-
-void InputParameters::setMarketCube(const ext::shared_ptr<AggregationScenarioData>& cube) { mktCube_ = cube; }
-
 void InputParameters::setVarQuantiles(const std::string& s) {
     // parse to vector<Real>
     varQuantiles_ = parseListOfValues<Real>(s, &parseReal);
@@ -883,32 +803,6 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
     setCovarianceData(reader);
 }
 
-void InputParameters::setCorrelationDataFromFile(const std::string& fileName) {
-    ore::data::CSVFileReader reader(fileName, true);
-    std::vector<std::string> dummy;
-    while (reader.next()) {
-        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
-                                       *parseRiskFactorKey(reader.get(1), dummy))] =
-            ore::data::parseReal(reader.get(2));
-    }
-    LOG("Read " << correlationData_.size() << " valid correlation data lines from " << fileName);
-}
-
-void InputParameters::setCorrelationData(ore::data::CSVReader& reader) {
-    std::vector<std::string> dummy;
-    while (reader.next()) {
-        correlationData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
-                                       *parseRiskFactorKey(reader.get(1), dummy))] =
-            ore::data::parseReal(reader.get(2));
-    }
-    LOG("Read " << correlationData_.size() << " valid covariance data lines");
-}
-
-void InputParameters::setCorrelationDataFromBuffer(const std::string& xml) {
-    ore::data::CSVBufferReader reader(xml, false);
-    setCorrelationData(reader);
-}
-
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
     sensitivityStream_ = ext::make_shared<SensitivityFileStream>(fileName, setupVariables_.csvSeparator_, setupVariables_.csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
 }
@@ -936,65 +830,6 @@ void InputParameters::setScenarioReader(const std::string& fileName) {
     }
 }
 
-void InputParameters::setAmcTradeTypes(const std::string& s) {
-    // parse to set<string>
-    auto v = parseListOfValues(s);
-    amcTradeTypes_ = std::set<std::string>(v.begin(), v.end());
-}
-
-void InputParameters::setAmcPathDataInput(const std::string& s) { amcPathDataInput_ = s; }
-
-void InputParameters::setAmcPathDataOutput(const std::string& s) { amcPathDataOutput_ = s; }
-
-void InputParameters::setCvaSensiGrid(const std::string& s) {
-    // parse to vector<Period>
-    cvaSensiGrid_ = parseListOfValues<Period>(s, &parsePeriod);
-}
-    
-void InputParameters::setDeterministicInitialMarginFromFile(const std::string& fileName) {
-    // Minimum requirement: The file has a header line and contains at least
-    // columns "Date", "NettingSet" and "InitialMargin".
-    // We don't assume that data is sorted by netting set or date.
-    ore::data::CSVFileReader reader(fileName, true);
-    std::map<std::string, std::map<Date, Real>> data;
-    while (reader.next()) {
-        Date date = parseDate(reader.get("Date"));
-        std::string nettingSet = reader.get("NettingSet");
-        Real initialMargin = parseReal(reader.get("InitialMargin"));        
-        // LOG("IM Evolution NettingSet " << nettingSet << ": "
-        //     << io::iso_date(date) << " " << initialMargin);
-        if (data.find(nettingSet) == data.end())
-            data[nettingSet] = std::map<Date,Real>();
-        std::map<Date,Real>& evolution = data[nettingSet];
-        evolution[date] = initialMargin;
-    }
-    for (auto d : data) {
-        std::string n = d.first;
-        LOG("Loading IM evolution for netting set " << n << ", size " << d.second.size());
-        vector<Real> im;
-        vector<Date> date;
-        for (auto row : d.second) {
-            im.push_back(row.second);
-            date.push_back(row.first);
-        }
-        TimeSeries<Real> ts(date.begin(), date.end(), im.begin());
-        // for (auto d : ts.dates())
-        //     LOG("TimeSeries " << io::iso_date(d) << " " << ts[d]);
-        setDeterministicInitialMargin(n, ts);
-        WLOG("External IM evolution for NettingSet " << n << " loaded");
-    }
-}
-
-void InputParameters::setDimRegressors(const std::string& s) {
-    // parse to vector<string>
-    dimRegressors_ = parseListOfValues(s);
-}
-    
-void InputParameters::setDimOutputGridPoints(const std::string& s) {
-    // parse to vector<Size>
-    dimOutputGridPoints_ = parseListOfValues<Size>(s, &parseInteger);
-}
-    
 void InputParameters::setCashflowHorizon(const std::string& s) {
     // parse to Date
     cashflowHorizon_ = parseDate(s);
@@ -1004,16 +839,6 @@ void InputParameters::setPortfolioFilterDate(const std::string& s) {
     // parse to Date
     portfolioFilterDate_ = parseDate(s);
 }
-
-void InputParameters::setCreditSimulationParametersFromFile(const std::string& fileName) {
-    creditSimulationParameters_ = ext::make_shared<CreditSimulationParameters>();
-    creditSimulationParameters_->fromFile(fileName);
-}
-
-void InputParameters::setCreditSimulationParametersFromBuffer(const std::string& xml) {
-    creditSimulationParameters_ = ext::make_shared<CreditSimulationParameters>();
-    creditSimulationParameters_->fromXMLString(xml);
-} 
     
 void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
     bool updateMappings = true;
@@ -1076,11 +901,11 @@ void InputParameters::insertAnalytic(const std::string& s) {
 void InputParameters::removeAnalytic(const std::string& s) { analytics_.erase(s); }
 
 void InputParameters::setPnlDateAdjustedRiskFactors(const std::string& s) {
-    pnlDateAdjustedRiskFactors_ = parseListOfValues<RiskFactorKey::KeyType>(s, &parseRiskFactorKeyType);
+    parameters_.set("pnl", "dateAdjustedRiskFactors", s);
 }
 
 void InputParameters::setRiskFactorLevel(bool b) {
-    riskFactorLevel_ = b;
+    parameters_.set("pnl", "riskFactorLevelReporting", b);
 }
 
 void InputParameters::setCalibrationModel(const std::string& s) {

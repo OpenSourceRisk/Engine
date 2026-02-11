@@ -43,6 +43,7 @@ app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
 app/analytics/stresstestanalytic.cpp
+app/analytics/utilities.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
 app/analytics/xvaexplainanalytic.cpp
@@ -257,6 +258,7 @@ app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
 app/analytics/stresstestanalytic.hpp
+app/analytics/utilities.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
 app/analytics/xvaexplainanalytic.hpp

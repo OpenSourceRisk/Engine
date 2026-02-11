@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/correlationanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <ored/portfolio/trade.hpp>
@@ -30,10 +31,38 @@ using namespace QuantLib::ext;
 namespace ore {
 namespace analytics {
 
+void CorrelationVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    vector<string> correlationAnalytics = {"correlation", "xva"};
+
+    inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, correlationAnalytics, "marketConfigFile");
+    inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, correlationAnalytics, "sensitivityConfigFile");
+
+    inputs->loadParameter<string>(lookbackPeriod_, correlationAnalytics,
+                                  vector<string>({"lookbackPeriod", "historicalPeriod", "benchmarkVarPeriod", "benchmarkPeriod"}),
+                                  false);
+    inputs->loadParameter<string>(correlationMethod_, correlationAnalytics, vector<string>({"correlationMethod", "correlation_method"}), false);
+    inputs->loadParameter<Size>(horizonDays_, correlationAnalytics, vector<string>({"horizonDays", "mporDays"}), false, parseInteger);
+    inputs->loadParameter<Calendar>(horizonCalendar_, correlationAnalytics, vector<string>({"horizonCalendar", "mporCalendar"}), false, parseCalendar);
+    if (horizonCalendar_.empty())
+        horizonCalendar_ = parseCalendar(inputs->setupVariables().baseCurrency_);
+
+    inputs->loadParameter<bool>(horizonOverlappingPeriods_, correlationAnalytics, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
+    inputs->loadParameter<bool>(allowPartialScenarios_, correlationAnalytics, "allowPartialScenarios", false, parseBool);
+    
+    TimePeriod hsPeriod = totalTimePeriod(vector<string>({lookbackPeriod_}), horizonDays_, horizonCalendar_);
+    QL_REQUIRE(hsPeriod.numberOfContiguousParts() == 1,
+               "JSON Body: Historical scenarios period must consist of one contiguous part");
+    scenarioReader_ = inputs->loadScenarioReader(correlationAnalytics, vector<string>({"historicalScenarioFile", "scenarioFile"}),
+                                                 hsPeriod.startDates().front(),
+                                                 hsPeriod.endDates().front());
+}
+
 void CorrelationAnalyticImpl::setUpConfigurations() {
+
+    auto corrVars = ext::dynamic_pointer_cast<CorrelationVariables>(inputVariables_);
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();    
-    analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
+    analytic()->configurations().sensiScenarioData = corrVars->sensiScenarioData_;
+    analytic()->configurations().simMarketParams = corrVars->simMarketParams_;
 }
 
 void CorrelationAnalyticImpl::buildDependencies() { }
@@ -80,9 +109,10 @@ void CorrelationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
     LOG("Build Correlation Calculator");
-    QL_REQUIRE(inputs_->benchmarkVarPeriod()!=std::string(), "BenchmarkVarPeriod Required.");
-    TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
-                                      inputs_->mporDays(), inputs_->mporCalendar());
+    auto corrVars = ext::dynamic_pointer_cast<CorrelationVariables>(inputVariables_);
+    QL_REQUIRE(corrVars->lookbackPeriod_ != std::string(), "Correlation LookbackPeriod Required.");
+    TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(corrVars->lookbackPeriod_, &parseDate),
+                                  corrVars->horizonDays_, corrVars->horizonCalendar_);
 
     QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
     if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader)) {
@@ -97,14 +127,14 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
         analytic()->market(), analytic()->configurations().simMarketParams,
         QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
         *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), false, true,
-        inputs_->allowPartialScenarios(), inputs_->iborFallbackConfig(), false, nullptr);
+        corrVars->allowPartialScenarios_, inputs_->iborFallbackConfig(), false, nullptr);
     
-    QL_REQUIRE(inputs_->scenarioReader(), "ScenarioReader Required.");
+    QL_REQUIRE(corrVars->scenarioReader_, "ScenarioReader Required.");
     
     auto scenarios = buildHistoricalScenarioGenerator(
-        inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+        corrVars->scenarioReader_, adjFactors, benchmarkVarPeriod, corrVars->horizonCalendar_, corrVars->horizonDays_,
         analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-        defaultReturnConfig, inputs_->mporOverlappingPeriods());
+        defaultReturnConfig, corrVars->horizonOverlappingPeriods_);
 
     simMarket->scenarioGenerator() = scenarios;
     scenarios->baseScenario() = simMarket->baseScenario();
@@ -113,8 +143,8 @@ void CorrelationAnalyticImpl::setCorrelationReport(const QuantLib::ext::shared_p
             QuantLib::ext::make_shared<ScenarioShiftCalculator>(analytic()->configurations().sensiScenarioData,
                                                                 analytic()->configurations().simMarketParams);
         
-    correlationReport_ = ext::make_shared<CorrelationReport>(inputs_->scenarioReader(),
-            inputs_->correlationMethod(), benchmarkVarPeriod, scenarios, shiftCalculator);
+    correlationReport_ = ext::make_shared<CorrelationReport>(corrVars->scenarioReader_, corrVars->correlationMethod_,
+                                                             benchmarkVarPeriod, scenarios, shiftCalculator);
 }
 
 } //namespace analytics
