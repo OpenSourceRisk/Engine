@@ -48,7 +48,7 @@
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_logger.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <ql/shared_ptr.hpp>
 #include <map>
 #include <ql/qldefines.hpp>
@@ -305,7 +305,7 @@ public:
     //! Destructor
     virtual void removeSinks() override;
     void setCoutLog(bool flag);
-    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
+    void setFileLog(const std::string& filepath, const std::filesystem::path& dir, QuantLib::Size rotationSize = 0);
 
 private:
     boost::shared_ptr<file_sink> fileSink_;
@@ -326,7 +326,7 @@ public:
     const boost::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
     //! Destructor
     virtual void removeSinks() override;
-    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
+    void setFileLog(const std::string& filepath, const std::filesystem::path& dir, QuantLib::Size rotationSize = 0);
 
 private:
     boost::shared_ptr<file_sink> fileSink_;
@@ -462,11 +462,11 @@ public:
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         mask_ = mask;
     }
-    const boost::filesystem::path& rootPath() {
+    const std::filesystem::path& rootPath() {
         boost::shared_lock<boost::shared_mutex> lock(mutex());
         return rootPath_;
     }
-    void setRootPath(const boost::filesystem::path& pth) {
+    void setRootPath(const std::filesystem::path& pth) {
         boost::unique_lock<boost::shared_mutex> lock(mutex());
         rootPath_ = pth;
     }
@@ -510,7 +510,7 @@ private:
     std::map<std::string, QuantLib::ext::shared_ptr<IndependentLogger>> independentLoggers_;
     bool enabled_;
     unsigned mask_;
-    boost::filesystem::path rootPath_;
+    std::filesystem::path rootPath_;
     std::ostringstream ls_;
 
     int maxLen_ = 45;

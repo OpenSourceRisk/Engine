@@ -37,8 +37,6 @@ namespace analytics {
 class DynamicDeltaVaRCalculator : public ore::analytics::DynamicInitialMarginCalculator {
 public:
     DynamicDeltaVaRCalculator(
-        //! Global input parameters,
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop

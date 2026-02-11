@@ -23,7 +23,7 @@
 
 #include <boost/core/null_deleter.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/log/expressions.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>
 #include <boost/log/utility/setup/file.hpp>
@@ -36,7 +36,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using namespace boost::posix_time;
 using namespace std;
 
