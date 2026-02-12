@@ -47,17 +47,15 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
         ovs = market_->capFloorVol(index, configuration);
     }
 
-    // We use FlatSmileSections based on the ATM vol from the optionlet vol surface.
-    // The RangeAccrualPricerByBgm requires per-coupon smile sections (at expiry and payment dates),
-    // but the CachingCouponPricerBuilder pattern provides a single pricer per index.
-    // We create smile sections at a representative date (reference date) from the cap/floor vol surface.
-    // The actual per-coupon smile sections are set when setCouponPricer dispatches via the visitor pattern.
+    // RangeAccrualPricerByBgm requires smile sections, but they are only used when withSmile=true.
+    // When withSmile=false (default), the pricer uses digitalPriceWithoutSmile() which ignores them.
+    // We create dummy flat smile sections here; if withSmile support is needed in the future,
+    // a per-coupon pricer approach would be required (smile sections at each coupon's expiry/payment).
     Date refDate = ovs->referenceDate();
-    Volatility atmVol = ovs->volatility(1.0, 0.03); // 1Y, 3% as representative point
     DayCounter dc = ovs->dayCounter();
 
-    auto smileOnExpiry = QuantLib::ext::make_shared<FlatSmileSection>(refDate, atmVol, dc);
-    auto smileOnPayment = QuantLib::ext::make_shared<FlatSmileSection>(refDate, atmVol, dc);
+    auto smileOnExpiry = QuantLib::ext::make_shared<FlatSmileSection>(refDate, 0.0, dc);
+    auto smileOnPayment = QuantLib::ext::make_shared<FlatSmileSection>(refDate, 0.0, dc);
 
     return QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(correlation, smileOnExpiry, smileOnPayment,
                                                                 withSmile, byCallSpread);
