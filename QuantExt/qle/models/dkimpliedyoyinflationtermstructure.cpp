@@ -71,10 +71,10 @@ map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
                     // directly - I(t) * Itilde(t,T).
                     Time t1 = dayCounter().yearFraction(model_->infdk(index_)->termStructure()->baseDate(),
                         schedule.dates()[i - 1]);
-                    Real I1 = model_->infdkI(index_, t1, t1, state_[0], state_[1], std::nullopt).first;
+                    Real I1 = model_->infdkI(index_, t1, t1, state_[0], state_[1]).first;
                     Time t2 = dc.yearFraction(baseDate(), schedule.dates()[i]);
                     std::pair<Real, Real> II2 =
-                        model_->infdkI(index_, relativeTime_, relativeTime_ + t2, state_[0], state_[1], std::nullopt);
+                        model_->infdkI(index_, relativeTime_, relativeTime_ + t2, state_[0], state_[1]);
                     Real I2 = II2.first * II2.second;
                     discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_,
                         relativeTime_ + t2, state_[2]);

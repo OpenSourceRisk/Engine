@@ -87,7 +87,7 @@ double scenarioBaseCpi(const Real y, const Real z, const QuantLib::Date& date,
     } else if (modelType == CrossAssetModel::ModelType::DK) {
         Date baseDate = zits->baseDate();
         Time relativeTime = simulationDc.yearFraction(zits->referenceDate(), date);
-        std::tie(cpi, std::ignore) = model->infdkI(modelIdx, relativeTime, relativeTime, z, y, simulationDc);
+        std::tie(cpi, std::ignore) = model->infdkI(modelIdx, relativeTime, relativeTime, z, y);
         cpi *= deseasonalizeCPI(baseDate, index->fixing(baseDate), zits);
 
     } else {

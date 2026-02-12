@@ -2335,7 +2335,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
     Period infObsLag = 3 * Months;
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag, seasonality};
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
     auto today = d.referenceDate;
     auto simDate = today + 3 * Months;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
@@ -2398,8 +2398,8 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
         gbpzb1(model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
 
         if (infIsDK) {
-            std::pair<Real, Real> sinfeur1 = model->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
-            std::pair<Real, Real> sinfeur2 = model->infdkI(0, T, T, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur1 = model->infdkI(0, T, T2_index, infeurz1, infeury1);
+            std::pair<Real, Real> sinfeur2 = model->infdkI(0, T, T, infeurz1, infeury1);
             auto deseasonalizedT0BaseCPI = deseasonalizeCPI(baseDate, 1., d.infEurTs);
             cpieur1(seasonalizeCPI(BaseDateT1, deseasonalizedT0BaseCPI * sinfeur2.first, d.infEurTs));
             test(sinfeur2.second);
@@ -2421,7 +2421,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
         }
         // GBP CPI indexed bond
         if (infIsDK) {
-            std::pair<Real, Real> sinfgbp1 = model->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
+            std::pair<Real, Real> sinfgbp1 = model->infdkI(1, T, T2_index, infgbpz1, infgbpy1);
             auto deseasonalizedT0BaseCPI = deseasonalizeCPI(baseDate, 1., d.infGbpTs);
             infgbp1(seasonalizeCPI(inflationObsDate, deseasonalizedT0BaseCPI * sinfgbp1.first * sinfgbp1.second,
                                    d.infGbpTs) *
@@ -2506,7 +2506,7 @@ BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTestWithModelTermstructures,
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag, seasonality};
     
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
+    QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess();
     auto today = d.referenceDate;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
     int simLag = simulationLag(d.infEurTs);
@@ -2716,7 +2716,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         // EUR CPI indexed bond
         bool indexIsInterpolated = true;
         if (infEurIsDk) {
-            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1, d.dc);
+            std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
             infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
@@ -2725,7 +2725,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         }
         // GBP CPI indexed bond
         if (infGbpIsDk) {
-            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1, d.dc);
+            std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1);
             infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.modelExact->numeraire(0, T, zeur1));
         } else {
@@ -2744,7 +2744,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         gbpzb2(d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.modelExact->numeraire(0, T, zeur2));
         // EUR CPI indexed bond
         if (infEurIsDk) {
-            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2, d.dc);
+            std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2);
             infeur2(sinfeur2.first * sinfeur2.second * d.modelExact->discountBond(0, T, T2, zeur2) /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
@@ -2753,7 +2753,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
         }
         // GBP CPI indexed bond
         if (infGbpIsDk) {
-            std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2, d.dc);
+            std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2);
             infgbp2(sinfgbp2.first * sinfgbp2.second * d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.modelExact->numeraire(0, T, zeur2));
         } else {
@@ -3351,11 +3351,11 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
         // GBP zerobond
         gbpzb1(d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.modelExact->numeraire(0, T, zeur1));
         // EUR CPI indexed bond
-        std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1, dc);
+        std::pair<Real, Real> sinfeur1 = d.modelExact->infdkI(0, T, T2, infeurz1, infeury1);
         infeur1(sinfeur1.first * sinfeur1.second * d.modelExact->discountBond(0, T, T2, zeur1) /
                 d.modelExact->numeraire(0, T, zeur1));
         // GBP CPI indexed bond
-        std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1, dc);
+        std::pair<Real, Real> sinfgbp1 = d.modelExact->infdkI(1, T, T2, infgbpz1, infgbpy1);
         infgbp1(sinfgbp1.first * sinfgbp1.second * d.modelExact->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.modelExact->numeraire(0, T, zeur1));
         // EUR defaultable zerobond
@@ -3372,11 +3372,11 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
         // GBP zerobond
         gbpzb2(d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.modelExact->numeraire(0, T, zeur2));
         // EUR CPI indexed bond
-        std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2, dc);
+        std::pair<Real, Real> sinfeur2 = d.modelExact->infdkI(0, T, T2, infeurz2, infeury2);
         infeur2(sinfeur2.first * sinfeur2.second * d.modelExact->discountBond(0, T, T2, zeur2) /
                 d.modelExact->numeraire(0, T, zeur2));
         // GBP CPI indexed bond
-        std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2, dc);
+        std::pair<Real, Real> sinfgbp2 = d.modelExact->infdkI(1, T, T2, infgbpz2, infgbpy2);
         infgbp2(sinfgbp2.first * sinfgbp2.second * d.modelExact->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.modelExact->numeraire(0, T, zeur2));
         // EUR defaultable zerobond
@@ -4845,7 +4845,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
         Real irz = path.value[0][l];
         Real infz = path.value[1][l];
         Real infy = path.value[2][l];
-        Real I = model->infdkI(0, T, T, infz, infy, dc).first;
+        Real I = model->infdkI(0, T, T, infz, infy).first;
         floor(std::max(-(I - K), 0.0) / model->numeraire(0, T, irz));
     }
 
@@ -4985,7 +4985,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
         Real irz = path.value[0][l];
         Real infz = path.value[1][l];
         Real infy = path.value[2][l];
-        Real I = model->infdkI(0, T, T, infz, infy, dc).first;
+        Real I = model->infdkI(0, T, T, infz, infy).first;
         floor(std::max(-(I - K), 0.0) / model->numeraire(0, T, irz));
     }
 

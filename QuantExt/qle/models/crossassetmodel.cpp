@@ -113,16 +113,8 @@ CrossAssetModel::CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<IrM
 
 QuantLib::ext::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess() const {
     if (stateProcess_ == nullptr) {
-        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this());
+        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this(), dayCounter());
     }
-    return stateProcess_;
-}
-
-QuantLib::ext::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess(DayCounter gridDayCounter) const {
-    if (stateProcess_ == nullptr) {
-        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this(), gridDayCounter);
-    }
-    stateProcess_->setGridDayCounter(gridDayCounter);
     return stateProcess_;
 }
 
@@ -937,7 +929,7 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
     return std::make_pair(V0, V_tilde);
 }
 
-std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y, const std::optional<DayCounter>& dc) {
+std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
     
     QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
     Real V0, V_tilde;
@@ -950,7 +942,8 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     // TODO account for seasonality ...
     // compute final results depending on z and y
     const auto& zts = infdk(i)->termStructure();
-    auto relevantDc = dc.value_or(irlgm1f(ccyIndex(infdk(i)->currency()))->termStructure()->dayCounter());
+    auto relevantDc = dayCounter();
+    QL_REQUIRE(relevantDc.has_value(), "internal error, daycounter should be available, contact dev");
     bool indexIsInterpolated = true; // the model is continous so we need to compute time in a continous way
     Real growth_t = inflationGrowth(zts, t, relevantDc, indexIsInterpolated);
     Real It = growth_t * std::exp(Hyt * z - y - V0);
@@ -971,8 +964,8 @@ Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Ti
     // TODO: Add calculation for DK convexity adjustment
     Real C_tilde = 1;
 
-    Real I_tildeS = infdkI(i, t, S, z, y, std::nullopt).second;
-    Real I_tildeT = infdkI(i, t, T, z, y, std::nullopt).second;
+    Real I_tildeS = infdkI(i, t, S, z, y).second;
+    Real I_tildeT = infdkI(i, t, T, z, y).second;
     Real Pn_t_T = lgm(ccy)->discountBond(t, T, irz);
 
     Real yySwaplet = (I_tildeT / I_tildeS) * Pn_t_T * C_tilde - Pn_t_T;

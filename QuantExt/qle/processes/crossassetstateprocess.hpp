@@ -56,7 +56,6 @@ public:
     // get sqrt correlation matrix (only available for Euler discretization, empty otherwise)
     const Matrix& sqrtCorrelation() const { return sqrtCorrelation_; }
     const std::optional<DayCounter>& gridDayCounter() const { return gridDayCounter_; }
-    void setGridDayCounter(const DayCounter& dc) const { gridDayCounter_ = dc; }
 protected:
     virtual Matrix diffusionOnCorrelatedBrownians(Time t, const Array& x) const;
     virtual Matrix diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const;
