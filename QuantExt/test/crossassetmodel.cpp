@@ -2574,22 +2574,10 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     simulatedZeroCurve->setAdjustReferenceDate(false);
     simulatedZeroCurve->enableExtrapolation();
     auto simInflationIndex = QuantLib::ext::make_shared<QuantLib::EUHICPXT>(simulatedZeroCurve);
-    for (size_t i = 0; i < inflationObsDates.size(); ++i) {
-        auto obsDate = inflationObsDates[i];
-        auto inflationPaymentDate = inflationPaymentDates[i];
-        BOOST_TEST_MESSAGE("Inflation date " << io::iso_date(obsDate) << ", time from base " << time
-                                             << ", expected cashflow " << simInflationIndex->fixing(obsDate) *
-                                                d.eurYts->discount(inflationPaymentDate));
-    }
-    BOOST_TEST_MESSAGE("Simulated zero curve has baseDate " << io::iso_date(simulatedZeroCurve->baseDate()));
-    BOOST_TEST_MESSAGE("CPI observer with lag " << simLag);
     auto cpiQuote = QuantLib::ext::make_shared<SimpleQuote>(1.0);
     auto cpiObserver = ext::make_shared<InflationIndexObserver>(Handle<ZeroInflationIndex>(inflationIndex),
                                                                 Handle<Quote>(cpiQuote), simLag, d.dc);
-    BOOST_TEST_MESSAGE("Set evaluation date to " << io::iso_date(simDate));
-    BOOST_TEST_MESSAGE("Simulated zero curve has baseDate " << io::iso_date(simulatedZeroCurve->baseDate()));
     Settings::instance().evaluationDate() = simDate;
-
     Size n = 20000;                                                        // number of paths
     Size seed = 18;                                                    // rng seed
     Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 200); // number of time steps
@@ -2620,27 +2608,10 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
         }
         for (Size i = 0; i < inflationObsDates.size(); ++i) {
             auto T2_discount = d.dc.yearFraction(d.referenceDate, simDate + inflationTenors[i]);
-            auto T2_fixing = d.dc.yearFraction(simDate, inflationObsDates[i]);
-            auto [baseCPI, growth] = infModelTs->indexGrowth(T2_fixing);
-            baseCPI *= (infIsDK) ? deseasonalizedBaseCPI : 1.0;
-            cpiQuote->setValue(seasonalizeCPI(simulatedZeroCurve->baseDate(), baseCPI, d.infEurTs));
-            
-            auto simBaseFixing = simInflationIndex->fixing(simulatedZeroCurve->baseDate()); 
-            auto simBaseFixingDeseasonalized = deseasonalizeCPI(simulatedZeroCurve->baseDate(), simBaseFixing, d.infEurTs);
-            auto tau = simulatedZeroCurve->dayCounter().yearFraction(simulatedZeroCurve->baseDate(), inflationObsDates[i]);
-            
-            
-            auto zeroRate = std::pow(baseCPI * growth / simBaseFixingDeseasonalized, 1.0 / tau) - 1.0;
-            if (debug && j % 1000 == 0)
-                BOOST_TEST_MESSAGE("Path " << j << ", obs date " << io::iso_date(inflationObsDates[i]) << 
-                ", simCurveBaseDate = " << io::iso_date(simulatedZeroCurve->baseDate()) <<
-                ", simCurveBaseFixing = " << simBaseFixing<< 
-                ", deseasonalized = " << simBaseFixingDeseasonalized <<
-                ", T2_discount = " << T2_discount <<
-                ", T2_fixing = " << T2_fixing <<
-                " simulated base CPI " << baseCPI <<
-                " growth = " << growth <<
-                " zeroRate = " << zeroRate);
+            auto cpi = scenarioBaseCpi(infeury1, infeurz1, simDate, model, 0, d.dc, inflationIndex);
+            cpiQuote->setValue(seasonalizeCPI(simulatedZeroCurve->baseDate(), cpi, d.infEurTs));
+            auto zeroRate = scenarioInflationZeroRateFromModelTs(simDate, inflationTenors[i], infObsLag, inflationIndex,
+                infModelTs, (infIsDK ? CrossAssetModel::ModelType::DK : CrossAssetModel::ModelType::JY), d.dc);
             inflationQuotes[i]->setValue(zeroRate);
             // get simulated cashflow
             simulatedBaseCPI(simInflationIndex->fixing(simulatedZeroCurve->baseDate()));

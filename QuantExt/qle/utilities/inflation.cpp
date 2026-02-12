@@ -60,6 +60,43 @@ void checkIfFixingAvailable(const Date& maturity, const Period obsLag, bool inte
 
 namespace QuantExt {
 
+double scenarioInflationZeroRateFromModelTs(const Date& simDate, const Period tenor, const Period observationLag,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationIndex> index,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> modelTs,
+                                            const CrossAssetModel::ModelType modelType, const DayCounter simulationDc) {
+    auto zits = index->zeroInflationTermStructure();
+    auto fixingDate = inflationPeriod(simDate + tenor- observationLag, zits->frequency()).first;
+    auto T2_fixing = simulationDc.yearFraction(simDate, fixingDate);
+    auto [baseCpi, growth] = modelTs->indexGrowth(T2_fixing);
+    auto baseCpiT0 = deseasonalizeCPI(zits->baseDate(), index->fixing(zits->baseDate()), zits);
+    baseCpi *= (modelType == CrossAssetModel::ModelType::DK) ? baseCpiT0 : 1.0;
+    auto baseDateT1 = inflationPeriod(simDate - simulationLag(zits), zits->frequency()).first;
+    auto baseCPIT1 = deseasonalizeCPI(baseDateT1, index->fixing(baseDateT1), zits);
+    auto tau = zits->dayCounter().yearFraction(baseDateT1, fixingDate);
+    return std::pow(baseCpi * growth / baseCPIT1, 1.0 / tau) - 1.0;
+}
+
+double scenarioBaseCpi(const Real y, const Real z, const QuantLib::Date& date,
+                       const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size modelIdx,
+                       const DayCounter& simulationDc, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index) {
+    auto cpi = 1.0;
+    auto zits = index->zeroInflationTermStructure();
+    auto modelType = model->modelType(CrossAssetModel::AssetType::INF, modelIdx);
+    if (modelType == CrossAssetModel::ModelType::JY) {
+        cpi = std::exp(y);
+    } else if (modelType == CrossAssetModel::ModelType::DK) {
+        Date baseDate = zits->baseDate();
+        int simLagDays = simulationLag(zits);
+        Time relativeTime = simulationDc.yearFraction(zits->referenceDate(), date - simLagDays);
+        std::tie(cpi, std::ignore) = model->infdkI(modelIdx, relativeTime, relativeTime, z, y, simulationDc);
+        cpi *= deseasonalizeCPI(baseDate, index->fixing(baseDate), zits);
+
+    } else {
+        QL_FAIL("CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
+    }
+    return cpi;
+}
+
 Time inflationTime(const Date& date, const QuantLib::ext::shared_ptr<InflationTermStructure>& inflationTs,
                    bool indexIsInterpolated, const DayCounter& dayCounter) {
 

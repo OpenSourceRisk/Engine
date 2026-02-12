@@ -24,6 +24,7 @@
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -551,28 +552,14 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
 
         // Inflation index values
         for (Size j = 0; j < n_inf_; j++) {
-
             // Depending on type of model, i.e. DK or JY, z and y mean different things.
             Real z = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, j, 0)][gridIndexInPath_[i + 1]];
             Real y = sample.value[model_->pIdx(CrossAssetModel::AssetType::INF, j, 1)][gridIndexInPath_[i + 1]];
-
-            // Could possibly cache the model type outside the loop to improve performance.
-            Real cpi = 0.0;
             auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
             auto zts = index->zeroInflationTermStructure();
-            if (model_->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::JY) {
-                cpi = std::exp(y);
-            } else if (model_->modelType(CrossAssetModel::AssetType::INF, j) == CrossAssetModel::ModelType::DK) {
-                Date simLagDays = zts->referenceDate() - zts->baseDate();    
-                Time relativeTime = inflationYearFraction(zts->frequency(), false, zts->dayCounter(), baseDate,
-                                                          dates_[i] - simLagDays);
-                std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y, dateGrid_->dayCounter());
-                cpi *= index->fixing(baseDate);
-
-            } else {
-                QL_FAIL("CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
-            }
-            cpi = seasonalizeCPI(baseDate, dates_[i] - simLagDays, zts->frequency(), zts->dayCounter(), cpi);
+            Real cpi = scenarioBaseCpi(y, z, dates_[i], model_, j, dateGrid_->dayCounter(), index);
+            Date fixingDate = inflationPeriod(dates_[i] - simulationLag(zts), zts->frequency()).first;
+            cpi = seasonalizeCPI(fixingDate, cpi, zts);
             scenarios[i]->add(cpiKeys_[j], cpi);
         }
 
@@ -598,26 +585,9 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             // Populate the zero inflation scenario values based on the current date and state.
             for (Size k = 0; k < ten_zinf_[j].size(); k++) {
                 auto index = *initMarket_->zeroInflationIndex(model_->inf(idx)->name());
-                auto zts = index->zeroInflationTermStructure();
-                // Use same logic as in the zero inflation observer moving curve
-                Date inflationObsDate = inflationPeriod(dates_[i] + ten_zinf_[j][k], ts->frequency()).first;
-                // We want the inflation growth from dates_[i] to inflationObsDate, because of the is simulation lag
-                // of the inflation index, we need to compute the zero rate at simulation time T+simLag (this is handled inside the model implied zero curve)
-                Time T = dc.yearFraction(dates_[i], inflationObsDate);
-                auto [baseCPI, growth] = ts->indexGrowth(T);
-                growth *= baseCPI;
-                if (modelType == CrossAssetModel::ModelType::DK) {
-                    growth *= index->fixing(zts->baseDate());
-                }
-                // We need to convert the growth into a zero rate for the zero inflation observer moving curve.
-                // the observer curve has not a continous base date but a discrete one (the start of the inflation period), 
-                // so we need to annualize the growth accordingly, to the different daycounter and base cpi.
-                auto baseDateObserverCurve = inflationPeriod(dates_[i] - simulationLag(zts)).first;
-                auto baseCPIObserverCurve = index->fixing(baseDateObserverCurve);
-                baseCPIObserverCurve = deseasonalizeCPI(zts->baseDate(), baseDateObserverCurve, zts->frequency(), zts->dayCounter());
-                // need to deseasonalize the CPI, seasonality is handled inside the curve
-                auto tauObserverCurve = zts->dayCounter().yearFraction(baseDateObserverCurve, inflationObsDate);
-                auto zeroRate = std::pow(growth / baseCPIObserverCurve, 1.0 / tauObserverCurve) - 1.0;
+                auto obsLag = 3 * Months;
+                auto zeroRate =
+                    scenarioInflationZeroRateFromModelTs(dates_[i], ten_zinf_[j][k], obsLag, index, ts, modelType, dc);
                 scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], zeroRate);
             }
         }

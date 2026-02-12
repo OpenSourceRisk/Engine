@@ -29,6 +29,8 @@
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/time/period.hpp>
+#include <qle/models/zeroinflationmodeltermstructure.hpp>
+#include <qle/models/crossassetmodel.hpp>
 namespace QuantExt {
 
 /*! Utility function for calculating the time to a given \p date based on a given inflation index,
@@ -93,6 +95,15 @@ QuantLib::Real deseasonalizeCPI(const QuantLib::Date& observationDate, const Qua
 QuantLib::Real deseasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
                       const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
 
+double scenarioInflationZeroRateFromModelTs(const Date& simDate, const Period tenor, const Period observationLag,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationIndex> index,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> modelTs,
+                                            const CrossAssetModel::ModelType modelType, const DayCounter simulationDc);
+
+double scenarioBaseCpi(const Real y, const Real z, const QuantLib::Date& date,
+                       const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size modelIdx,
+                       const DayCounter& simulationDc, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index);
+
 /*! Calculate the Compound Factor to compute the nominal price from the real price
    I(t_s)/I(t_0) with I(t_s) the CPI at settlement date and I(t_0) the bond's base CPI
 */
@@ -146,6 +157,7 @@ bool isCPIVolSurfaceLogNormal(const QuantLib::ext::shared_ptr<QuantLib::CPIVolat
 
 
 }
+
 
 } // namespace QuantExt
 
