@@ -2312,6 +2312,7 @@ to generate exposures in ORE.
 \item Forward Bond with AMC, run with: {\tt python run\_forwardbond.py}
 \item Overlapping Close-Out Grid, run with: {\tt python run\_overlapping.py}
 \item Scenario Statistics, run with: {\tt python run\_scenariostatistics.py}
+\item FX Local Vol exposure generation, run with {\tt python run\_fx\_localvol.py}, this is the amc-variant of example \ref{example:fx_localvol_detrates}
 \end{itemize}
 
 \subsubsection{Benchmarking AMC vs Classic Simulation}
@@ -2738,6 +2739,16 @@ Calling
 
 \medskip
 \centerline {\tt python run\_scenariostatistics.py}
+
+\subsubsection{FX LocalVol exposure generation}
+
+Calling
+
+\medskip
+\centerline {\tt python run\_fx\_localvol.py}
+
+runs exposure simulation under a local vol model, this is the amc-variant of example \ref{example:fx_localvol_detrates}
+
 
 \medskip
 demonstrates a basic statistical anylsis of the simulated raw scenario data (simulated yield curve discount factors, FX spot rates etc), generating a report
