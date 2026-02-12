@@ -48,7 +48,7 @@ DecomposedSensitivityStream::DecomposedSensitivityStream(
         if (itAddFields != additionalFields.end() && !itAddFields->second.empty()) {
             try {
                 decomposeEquityCommodities = ore::data::parseBool(itAddFields->second);
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 StructuredAnalyticsWarningMessage("DecomposedSensitivityStream",
                                                   "index_decomposition field parse error",
                                                   "Cannot parse index_decomposition field for trade: " + tradeId +

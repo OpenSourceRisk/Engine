@@ -337,6 +337,19 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     index == nullptr ? "na" : IndexNameTranslator::instance().oreName(index->name());
                 additionalData_["indexingMultiplier" + label] = multiplier;
             }
+            // Convexity adjustment
+            if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
+                auto arc = eqc->pricer()->additionalResultCache();
+                auto label = "[" + legID + "][" + std::to_string(j) + "]";
+                if (arc.equityVolatility != Null<Real>())
+                    additionalData_["equityVolatility" + label] = arc.equityVolatility;
+                if (arc.fxVolatility != Null<Real>())
+                    additionalData_["fxVolatility" + label] = arc.fxVolatility;
+                if (arc.equityFxCorrelation != Null<Real>())
+                    additionalData_["equityFxCorrelation" + label] = arc.equityFxCorrelation;
+                if (arc.convexityAdjustment != Null<Real>())
+                    additionalData_["convexityAdjustment" + label] = arc.convexityAdjustment;
+            }
         }
     }
 }

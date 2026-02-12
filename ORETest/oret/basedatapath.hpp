@@ -23,19 +23,17 @@
 #pragma once
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/lexical_cast.hpp>
 #include <ql/errors.hpp>
 #include <string>
 
-using boost::filesystem::exists;
-using boost::filesystem::is_directory;
-using boost::filesystem::path;
+using std::filesystem::exists;
+using std::filesystem::is_directory;
+using std::filesystem::path;
 
 #ifdef BOOST_MSVC
 #define BOOST_LIB_NAME boost_system
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
 #include <boost/config/auto_link.hpp>
 #endif
 

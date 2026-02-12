@@ -1121,8 +1121,10 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
                        const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                        const bool attachPricer = true);
 Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
-                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
-                  const QuantLib::Date& openEndDateReplacement = Null<Date>());
+                  const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                  const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr, const bool attachPricer = true,
+                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                  std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
 Real currentNotional(const Leg& leg);
 Real originalNotional(const Leg& leg);
 

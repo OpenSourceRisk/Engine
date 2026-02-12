@@ -439,6 +439,7 @@ static const map<string, CrifRecord::ProductClass> tradeProductClassMap = {
     {"RiskParticipationAgreement", CrifRecord::ProductClass::Credit},
     {"Swap", CrifRecord::ProductClass::Rates},
     {"Swaption", CrifRecord::ProductClass::Rates},
+    {"SwaptionStraddle", CrifRecord::ProductClass::Rates},
     {"SyntheticCDO", CrifRecord::ProductClass::Credit},
     {"TotalReturnSwap", CrifRecord::ProductClass::Rates}};
 

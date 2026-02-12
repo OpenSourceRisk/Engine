@@ -40,8 +40,6 @@ using namespace std;
 class RegressionDynamicInitialMarginCalculator : public DynamicInitialMarginCalculator {
 public:
     RegressionDynamicInitialMarginCalculator(
-        //! Global input parameters
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
         //! Driving portfolio consistent with the cube below
         const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
@@ -62,8 +60,10 @@ public:
         Size localRegressionEvaluations = 0,
         //! Local regression band width in standard deviations of the regression variable
         Real localRegressionBandWidth = 0,
-	//! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
-	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
+	    //! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+	    const std::map<std::string, Real>& currentIM = std::map<std::string, Real>(),
+        //! Deterministic Intitial Margin time series by netting set
+        const std::map<std::string, TimeSeries<Real>>& deterministicInitialMargin = {});
 
     const map<string, Real>& unscaledCurrentDIM() const override;
     void build() override;
@@ -96,6 +96,7 @@ private:
     map<string, vector<Real>> nettingSetSimpleDIMp_;
 
     map<string, Real> currentDIM_;
+    std::map<std::string, TimeSeries<Real>> deterministicInitialMargin_;
 };
 
 inline bool lessThan(const Array& a, const Array& b) {

@@ -177,9 +177,12 @@ private:
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
+    Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection,
+                             std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const;
 
     // return underlying #i npv on today
     Real getUnderlyingNPV(const Size i) const;
+    Real getUnderlyingNPV(const Size i, std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const;
 
     // additional inspectors
     QuantLib::Real currentNotional() const;

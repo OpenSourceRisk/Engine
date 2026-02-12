@@ -178,6 +178,7 @@ methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmhestonop.cpp
 methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
 methods/irdeltaparconverter.cpp
@@ -339,8 +340,12 @@ pricingengines/volatilityfromvarianceswapengine.cpp
 processes/commodityschwartzstateprocess.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
+processes/hestonprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+processes/ptdhestonprocess.cpp
+processes/quantohestonprocess.cpp
+processes/multiassetquantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
@@ -712,6 +717,7 @@ methods/fdmblackscholesmesher.hpp
 methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmhestonop.hpp
 methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
 methods/irdeltaparconverter.hpp
@@ -913,8 +919,12 @@ pricingengines/volatilityfromvarianceswapengine.hpp
 processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
+processes/hestonprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+processes/ptdhestonprocess.hpp
+processes/quantohestonprocess.hpp
+processes/multiassetquantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
@@ -988,6 +998,7 @@ termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/implieddefaulttermstructure.hpp
+termstructures/impliedtermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpicurve.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
@@ -1089,8 +1100,11 @@ utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 
+find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono)
+
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
+
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
 
 if(ORE_ENABLE_OPENCL)

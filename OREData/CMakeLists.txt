@@ -26,7 +26,7 @@ if(MSVC AND ORE_USE_ZLIB)
     LIST(APPEND COMPONENT_LIST zlib)
 endif()
 
-find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log filesystem OPTIONAL_COMPONENTS system chrono iostreams)
+find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono iostreams)
 
 
 include_directories(${Boost_INCLUDE_DIRS})

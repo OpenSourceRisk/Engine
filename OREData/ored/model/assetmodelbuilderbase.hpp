@@ -31,6 +31,7 @@
 #include <qle/models/assetmodelwrapper.hpp>
 
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/any.hpp>
 
 namespace ore {
 namespace data {
@@ -90,6 +91,9 @@ protected:
     std::vector<Handle<BlackVolTermStructure>> vols_;
     std::vector<Handle<YieldTermStructure>> allCurves_;
     mutable CalibrationPointCache cache_;
+    //mutable std::map<std::string, CalibrationResults> calibrationResults_;
+    mutable std::vector<AssetModelCalibrationResults> calibrationResults_;
+
 };
 
 } // namespace data

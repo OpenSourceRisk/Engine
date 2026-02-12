@@ -28,13 +28,19 @@
 namespace ore {
 namespace analytics {
 
+struct BaCvaVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+};
+
 class BaCvaAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "BA_CVA";
     static constexpr const char* saccrLookupKey = "SA_CCR";
 
     BaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<BaCvaVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

@@ -29,6 +29,12 @@
 namespace ore {
 namespace analytics {
 
+struct SaCvaVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+};
+
 class SaCvaAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SA_CVA";

@@ -518,7 +518,6 @@ void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
 
         auto portfolio = QuantLib::ext::make_shared<Portfolio>();
         auto c = XMLUtils::getAnyChildrenNodes(componentsNode, {"Trade", "SubTrade"});
-        std::cout << "" << c.size() << " trades found in fromXML:521\n";
         int k = 0;
         for (auto const n : c) {
 

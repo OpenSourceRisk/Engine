@@ -30,11 +30,28 @@
 namespace ore {
 namespace analytics {
 
+struct CorrelationVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+        
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
+    string lookbackPeriod_;
+    // Pearson, Kendall-Rank
+    std::string correlationMethod_ = "Pearson";
+    QuantLib::Size horizonDays_ = 10;
+    QuantLib::Calendar horizonCalendar_;
+    bool horizonOverlappingPeriods_ = true;
+    bool allowPartialScenarios_ = false;
+};
+
 class CorrelationAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CORRELATION";
     CorrelationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) { setLabel(LABEL); }
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<CorrelationVariables>()) {
+        setLabel(LABEL);
+    }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;

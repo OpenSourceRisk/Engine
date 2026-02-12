@@ -35,4 +35,10 @@
       <Parameter name="IntegrationPoints">16</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="EquityLeg">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>EquityCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
 </PricingEngines>

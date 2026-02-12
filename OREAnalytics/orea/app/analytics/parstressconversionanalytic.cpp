@@ -21,7 +21,7 @@
 #include <orea/engine/parstressconverter.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {

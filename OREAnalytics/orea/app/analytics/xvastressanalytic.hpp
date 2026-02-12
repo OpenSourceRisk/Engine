@@ -46,6 +46,7 @@ private:
     void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports);
 
     QuantLib::ext::shared_ptr<StressTestScenarioData> stressScenarios_;
+    QuantLib::ext::shared_ptr<XvaVariables> xvaVariables_;
 };
 
 class XvaStressAnalytic : public Analytic {

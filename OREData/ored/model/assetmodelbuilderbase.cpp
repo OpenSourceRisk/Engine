@@ -18,6 +18,7 @@
 
 #include <ored/model/assetmodelbuilderbase.hpp>
 #include <ored/model/utilities.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace data {
@@ -121,8 +122,9 @@ void AssetModelBuilderBase::performCalculations() const {
 
         // setup model
 
-        model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(
-            processType(), getCalibratedProcesses(), effectiveSimulationDates_, discretisationTimeGrid_));
+        model_.linkTo(QuantLib::ext::make_shared<AssetModelWrapper>(processType(), getCalibratedProcesses(),
+                                                                    effectiveSimulationDates_, discretisationTimeGrid_,
+                                                                    calibrationResults_));
 
         // notify model observers
         model_->notifyObservers();

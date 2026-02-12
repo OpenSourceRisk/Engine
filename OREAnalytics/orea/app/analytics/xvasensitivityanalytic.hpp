@@ -81,6 +81,7 @@ public:
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+    void buildDependencies() override;
 
     void setParCvaSensiCubeStream(const QuantLib::ext::shared_ptr<ParSensitivityCubeStream>& parCvaSensiCubeStream) {
         parCvaSensiCubeStream_ = parCvaSensiCubeStream;
@@ -118,6 +119,7 @@ private:
     const std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>>& xvaReports);
 
     QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parCvaSensiCubeStream_;
+    QuantLib::ext::shared_ptr<XvaVariables> xvaVariables_;
 };
 
 class XvaSensitivityAnalytic : public Analytic {

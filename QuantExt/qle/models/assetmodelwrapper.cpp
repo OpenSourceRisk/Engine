@@ -29,9 +29,10 @@ AssetModelWrapper::AssetModelWrapper() {}
 AssetModelWrapper::AssetModelWrapper(const ProcessType processType,
                                      const std::vector<QuantLib::ext::shared_ptr<StochasticProcess>>& processes,
                                      const std::set<Date>& effectiveSimulationDates,
-                                     const TimeGrid& discretisationTimeGrid)
+                                     const TimeGrid& discretisationTimeGrid,
+				     const std::vector<AssetModelCalibrationResults>& calibration)
     : processType_(processType), processes_(processes), effectiveSimulationDates_(effectiveSimulationDates),
-      discretisationTimeGrid_(discretisationTimeGrid) {
+      discretisationTimeGrid_(discretisationTimeGrid), calibration_(calibration) {
 
     for (auto const& p : processes_) {
         switch (processType_) {
@@ -42,6 +43,9 @@ AssetModelWrapper::AssetModelWrapper(const ProcessType processType,
             break;
         case ProcessType::Heston:
             hestonProcesses_.push_back(QuantLib::ext::dynamic_pointer_cast<HestonProcess>(p));
+            break;
+        case ProcessType::PiecewiseHeston:
+            ptdHestonProcesses_.push_back(QuantLib::ext::dynamic_pointer_cast<PiecewiseTimeDependentHestonProcess>(p));
             break;
         case ProcessType::None:
             break;
@@ -66,9 +70,17 @@ AssetModelWrapper::generalizedBlackScholesProcesses() const {
 }
 
 const std::vector<QuantLib::ext::shared_ptr<HestonProcess>>& AssetModelWrapper::hestonProcesses() const {
-    QL_REQUIRE(processType_ == ProcessType::Heston, "BlackScholesModelWrapper::hestonProcesses(): process type ("
+    QL_REQUIRE(processType_ == ProcessType::Heston, "AssetModelWrapper::hestonProcesses(): process type ("
                                                         << static_cast<int>(processType_) << ") is not Heston");
     return hestonProcesses_;
+}
+
+const std::vector<QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonProcess>>&
+AssetModelWrapper::ptdHestonProcesses() const {
+    QL_REQUIRE(processType_ == ProcessType::PiecewiseHeston, "AssetModelWrapper::ptdHestonProcesses(): process type ("
+                                                                 << static_cast<int>(processType_)
+                                                                 << ") is not PiecewiseHeston");
+    return ptdHestonProcesses_;
 }
 
 void AssetModelWrapper::update() { notifyObservers(); }

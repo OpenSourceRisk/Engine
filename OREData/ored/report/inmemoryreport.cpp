@@ -17,6 +17,7 @@
 */
 
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/utilities/fileio.hpp>
 #include <qle/utilities/serializationdate.hpp>
 #include <qle/utilities/serializationperiod.hpp>
 
@@ -26,7 +27,6 @@
 #include <boost/serialization/variant.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
-#include <boost/filesystem.hpp>
 
 #include <boost/iostreams/device/file_descriptor.hpp>
 #ifdef ORE_USE_ZLIB
@@ -35,6 +35,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 
 #include <fstream>
+#include <filesystem>
 
 namespace ore {
 namespace data {
@@ -66,7 +67,7 @@ Report& InMemoryReport::next() {
             cache_.clear();
             cacheIndex_ = 0;
         }
-        boost::filesystem::path p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        std::filesystem::path p = std::filesystem::temp_directory_path() / unique_path();
         std::string s = p.string();
         std::ofstream os(s.c_str(), std::ios::binary);
         boost::archive::binary_oarchive oa(os, boost::archive::no_header);
@@ -207,7 +208,7 @@ bool use_compression(const std::string& filename) {
 #ifdef ORE_USE_ZLIB
     // assume compression for all filenames that do not end with csv or txt
 
-    std::string extension = boost::filesystem::path(filename).extension().string();
+    std::string extension = std::filesystem::path(filename).extension().string();
     return extension != ".csv" && extension != ".txt";
 #else
     return false;

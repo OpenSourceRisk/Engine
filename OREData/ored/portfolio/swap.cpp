@@ -119,7 +119,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     }
 
     /* determine whether we have a xccy and whether to use the special xbs curves */
-
     isXCCY_ = isXCCY_ || currenciesWithIndexing.size() > 1;
 
     static std::set<LegType> eligibleForXbs = {LegType::Fixed, LegType::Floating};

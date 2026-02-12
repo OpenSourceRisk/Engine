@@ -30,12 +30,12 @@ namespace ore {
 namespace analytics {
 
 DirectDynamicInitialMarginCalculator::DirectDynamicInitialMarginCalculator(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs, const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
     const QuantLib::ext::shared_ptr<NPVCube>& imCube, const std::map<std::string, Real>& currentIM)
-    : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, Null<Real>(), 0,
+    : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, Null<Real>(), 0,
                                      currentIM, imCube->depth()),
       imCube_(imCube) {}
 

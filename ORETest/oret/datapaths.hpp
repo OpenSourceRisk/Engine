@@ -22,17 +22,15 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
-using boost::filesystem::create_directories;
-using boost::filesystem::exists;
-using boost::filesystem::path;
+using std::filesystem::create_directories;
+using std::filesystem::exists;
+using std::filesystem::path;
 using std::string;
 
 #ifdef BOOST_MSVC
 #define BOOST_LIB_NAME boost_system
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
 #include <boost/config/auto_link.hpp>
 #endif
 

@@ -75,6 +75,7 @@ protected:
         if (!securitySpread.empty())
             yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
+
         return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(yts);
     }
 };

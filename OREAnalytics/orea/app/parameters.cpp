@@ -37,14 +37,14 @@ bool Parameters::has(const string& groupName, const string& paramName) const {
     return (it->second.find(paramName) != it->second.end());
 }
 
-string Parameters::get(const string& groupName, const string& paramName, bool fail) const {
+QuantLib::ext::any Parameters::get(const string& groupName, const string& paramName, bool fail) const {
     if (fail) {    
         QL_REQUIRE(has(groupName, paramName), "parameter " << paramName << " not found in param group " << groupName);
         auto it = data_.find(groupName);
         return it->second.find(paramName)->second;
     } else {
         if (!hasGroup(groupName) || !has(groupName,paramName))
-            return "";
+            return string();
         else {
             auto it = data_.find(groupName);
             return it->second.find(paramName)->second;
@@ -52,14 +52,20 @@ string Parameters::get(const string& groupName, const string& paramName, bool fa
     }
 }
 
-const map<string, string>& Parameters::data(const string& groupName) const {
+const map<string, QuantLib::ext::any>& Parameters::data(const string& groupName) const {
     auto it = data_.find(groupName);
     QL_REQUIRE(it != data_.end(), "param group '" << groupName << "' not found");
     return it->second;
 }
     
-const map<string, string>& Parameters::markets() const {
-    return data("markets");
+map<string, string> Parameters::markets() const {
+    map<string, string> mp;
+    auto it = data_.find("markets");
+    if (it != data_.end()) {
+        for (const auto& p : it->second)
+            mp[p.first] = QuantLib::ext::any_cast<string>(p.second);
+    }
+    return mp;
 }
 
 void Parameters::fromFile(const string& fileName) {
@@ -77,7 +83,7 @@ void Parameters::fromXML(XMLNode* node) {
 
     XMLNode* setupNode = XMLUtils::getChildNode(node, "Setup");
     QL_REQUIRE(setupNode, "node Setup not found in parameter file");
-    map<string, string> setupMap;
+    map<string, QuantLib::ext::any> setupMap;
     for (XMLNode* child = XMLUtils::getChildNode(setupNode); child; child = XMLUtils::getNextSibling(child)) {
         string key = XMLUtils::getAttribute(child, "name");
         string value = XMLUtils::getNodeValue(child);
@@ -87,7 +93,7 @@ void Parameters::fromXML(XMLNode* node) {
 
     XMLNode* loggingNode = XMLUtils::getChildNode(node, "Logging");
     if (loggingNode) {
-        map<string, string> loggingMap;
+        map<string, QuantLib::ext::any> loggingMap;
         for (XMLNode* child = XMLUtils::getChildNode(loggingNode); child; child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "name");
             string value = XMLUtils::getNodeValue(child);
@@ -98,7 +104,7 @@ void Parameters::fromXML(XMLNode* node) {
 
     XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
     if (marketsNode) {
-        map<string, string> marketsMap;
+        map<string, QuantLib::ext::any> marketsMap;
         for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child; child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "name");
             string value = XMLUtils::getNodeValue(child);
@@ -111,7 +117,7 @@ void Parameters::fromXML(XMLNode* node) {
     if (analyticsNode) {
         for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child; child = XMLUtils::getNextSibling(child)) {
             string groupName = XMLUtils::getAttribute(child, "type");
-            map<string, string> analyticsMap;
+            map<string, QuantLib::ext::any> analyticsMap;
             for (XMLNode* paramNode = XMLUtils::getChildNode(child); paramNode;
                  paramNode = XMLUtils::getNextSibling(paramNode)) {
                 string key = XMLUtils::getAttribute(paramNode, "name");
@@ -132,8 +138,11 @@ XMLNode* Parameters::toXML(XMLDocument& doc) const {
 void Parameters::log() {
     LOG("Parameters:");
     for (auto p : data_)
-        for (auto pp : p.second)
-            LOG("group = " << p.first << " : " << pp.first << " = " << pp.second);
+        for (auto pp : p.second) {
+            auto val = QuantLib::ext::any_cast<string>(&pp.second);
+            if (val)
+                LOG("group = " << p.first << " : " << pp.first << " = " << *val);
+        }
 }
 } // namespace analytics
 } // namespace ore

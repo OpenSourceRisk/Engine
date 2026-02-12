@@ -44,7 +44,6 @@ namespace ore {
 namespace analytics {
 
 DynamicDeltaVaRCalculator::DynamicDeltaVaRCalculator(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
     const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
     const QuantLib::ext::shared_ptr<NPVCube>& cube,
     const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
@@ -52,7 +51,7 @@ DynamicDeltaVaRCalculator::DynamicDeltaVaRCalculator(
     Real quantile, Size horizonCalendarDays,
     const QuantLib::ext::shared_ptr<DimHelper>& dimHelper, const Size ddvOrder,
     const std::map<std::string, Real>& currentIM)
-  : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays, currentIM),
+  : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays, currentIM),
     dimHelper_(dimHelper), ddvOrder_(ddvOrder) {}
 
 const map<string, Real>& DynamicDeltaVaRCalculator::unscaledCurrentDIM() const { return currentDIM_; }

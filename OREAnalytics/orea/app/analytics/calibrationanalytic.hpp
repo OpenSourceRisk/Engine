@@ -29,12 +29,19 @@
 namespace ore {
 namespace analytics {
 
+struct CalibrationVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
+    QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
+};
+
 class CalibrationAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CALIBRATION";
 
     explicit CalibrationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<CalibrationVariables>()) {
         setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

@@ -26,6 +26,9 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/model/assetmodelbuilderbase.hpp>
+#include <ored/scripting/models/assetmodel.hpp>
+#include <ored/scripting/models/heston.hpp>
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/math/distributioncount.hpp>
@@ -2895,7 +2898,6 @@ void ReportWriter::writeCapitalCrifReport(ore::data::Report& report,
 
     report.end();
 }
-  
 
 void ReportWriter::writePcaReport(const std::string& ccy, const Array& eigenValue, const Matrix& eigenVector,
                              const Size& principalComponent, ore::data::Report& reportOut){
@@ -2935,6 +2937,123 @@ void ReportWriter::writeMeanReversionReport(const Matrix& v, const Matrix& kappa
     }
     reportOut.end();
 }
+
+void ReportWriter::writeModelCalibrationReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeID", string())
+        .addColumn("Index", string())
+        .addColumn("Name", string())
+        .addColumn("Value", string());
+
+    for (const auto& [id, trade] : portfolio->trades()) {
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
+                DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+                const std::vector<AssetModelCalibrationResults>& results =
+                    QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
+                for (const auto& result : results) {
+                    if (result.constantParameters.size() > 0) {
+                        Size n = result.constantParameters.size();
+                        DLOG("constant paramters: " << n);
+                        for (Size i = 0; i < n; ++i)
+                            report.next()
+                                .add(id)
+                                .add(result.indexName)
+                                .add(result.constantParameters[i].first)
+                                .add(to_string(result.constantParameters[i].second));
+                    } else if (result.piecewiseParameters.size() > 0) {
+                        Size n = result.piecewiseParameters.size();
+                        DLOG("piecewise paramters: " << n);
+                        for (Size i = 0; i < n; ++i)
+                            report.next()
+                                .add(id)
+                                .add(result.indexName)
+                                .add(result.piecewiseParameters[i].first)
+                                .add(result.piecewiseParameters[i].second);
+                    }
+                    report.next().add(id).add(result.indexName).add("Error").add(to_string(result.rmse));
+                }
+            }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
+        }
+    }
+    report.end();
+}
+
+void ReportWriter::writeModelCalibrationDetailReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeID", string())
+        .addColumn("Index", string())
+        .addColumn("Expiry", Period())
+        .addColumn("Moneyness", double(), 4)
+        .addColumn("MarketValue", double(), 4)
+        .addColumn("ModelValue", double(), 4)
+        .addColumn("MarketVol", double(), 4)
+        .addColumn("ModelVol", double(), 4)
+        .addColumn("VolDifference", double(), 4);
+
+    for (const auto& [id, trade] : portfolio->trades()) {
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.calibration"); r != additionalResults.end()) {
+                DLOG("MultiAssetHeston calibration found in additional results for trade " << id);
+                const std::vector<AssetModelCalibrationResults>& results =
+                    QuantLib::ext::any_cast<const std::vector<AssetModelCalibrationResults>&>(r->second);
+                for (const auto& result : results) {
+                    for (const auto& helper : result.data) {
+                        report.next()
+                            .add(id)
+                            .add(result.indexName)
+                            .add(helper.expiry)
+                            .add(helper.moneyness)
+                            .add(helper.marketValue)
+                            .add(helper.modelValue)
+                            .add(helper.marketVol)
+                            .add(helper.modelVol)
+                            .add(helper.modelVol - helper.marketVol);
+                    }
+                }
+            }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
+        }
+    }
+    report.end();
+}
   
+void ReportWriter::writeModelPathReport(ore::data::Report& report, const ext::shared_ptr<Portfolio>& portfolio) {
+    report.addColumn("TradeId", string())
+        .addColumn("Index", string())
+        .addColumn("Date", Date())
+        .addColumn("Sample", Size())
+        .addColumn("Value", double(), 6);
+
+    Date today = Settings::instance().evaluationDate();
+    for (const auto& [id, trade] : portfolio->trades()) {
+        try {
+            const auto& additionalResults = trade->instrument()->additionalResults();
+            if (auto r = additionalResults.find("Heston.paths"); r != additionalResults.end()) {
+                DLOG("MultiAssetHestonPaths found for trade " << id);
+                const MultiAssetHestonPaths& paths = QuantLib::ext::any_cast<const MultiAssetHestonPaths&>(r->second);
+                DLOG("MultiAssetHestonPaths copied");
+                for (Size d = 0; d < paths.dates.size(); ++d) {
+                    Date date = paths.dates[d];
+                    if (date == today)
+                        continue;
+                    auto it = paths.data.find(date);
+                    for (Size i = 0; i < paths.indexNames.size(); ++i) {
+                        for (Size j = 0; j < paths.samples; ++j) {
+                            report.next().add(id).add(paths.indexNames[i]).add(date).add(j).add(it->second[i][j]);
+                        }
+                    }
+                }
+            }
+        } catch (std::exception& e) {
+            ALOG("error getting results for trade " << id << ": " << e.what());
+        }
+    }
+    report.end();
+}
+
 } // namespace analytics
 } // namespace ore

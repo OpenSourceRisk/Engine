@@ -38,6 +38,7 @@ class PiecewiseOptionletStripper : public QuantExt::OptionletStripper {
 
 public:
     typedef typename PiecewiseOptionletCurve<Interpolator, Bootstrap>::this_curve optionlet_curve;
+    typedef Bootstrap<optionlet_curve> bootstrap_type;
 
     PiecewiseOptionletStripper(const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
                                const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,

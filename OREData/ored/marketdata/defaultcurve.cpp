@@ -487,7 +487,8 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     )
                 );
 
-                Rate fixedCoupon = config.runningSpread() == QuantLib::Null<Real>() ? 100 / 10000.0 : config.runningSpread();
+                QL_REQUIRE(config.runningSpread() != Null<Real>(), "RunningSpread required with ConvSpread.");
+                Rate fixedCoupon = config.runningSpread();
 
                 // Fixed-coupon CDS; ask for fairUpfront
                 Date upfrontSettle = cdsConv->calendar().advance(asof, cdsConv->upfrontSettlementDays() * Days);

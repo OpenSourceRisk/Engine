@@ -1,0 +1,665 @@
+<Portfolio>
+
+  <Trade id="05:ScriptedEuropeanEquityCallOptionMC">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ProductTag>MC</ProductTag>
+      <!--<ScriptName>EuropeanOption</ScriptName>-->
+      <Script>
+	<Code>
+          <![CDATA[
+	    NUMBER Payoff, currentNotional;
+	    Payoff = PutCall * (Underlying(Expiry) - Strike);
+	    Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
+	    currentNotional = Strike * Quantity;
+          ]]></Code>
+	  <NPV>Option</NPV>
+	  <Results>
+            <Result>currentNotional</Result>
+            <Result rename="notionalCurrency">PayCcy</Result>
+	  </Results>
+	  <CalibrationSpec>
+            <Calibration>
+              <Index>Underlying</Index>
+              <Strikes>
+		<Strike>Strike</Strike>
+              </Strikes>
+            </Calibration>
+	  </CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="06:ScriptedEuropeanEquityCallOptionFD">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ProductTag>FD</ProductTag>
+      <!--<ScriptName>EuropeanOption</ScriptName>-->
+      <Script>
+	<Code>
+          <![CDATA[
+	    NUMBER Payoff, currentNotional;
+	    Payoff = PutCall * (Underlying(Expiry) - Strike);
+	    Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
+	    currentNotional = Strike * Quantity;
+          ]]></Code>
+	  <NPV>Option</NPV>
+	  <Results>
+            <Result>currentNotional</Result>
+            <Result rename="notionalCurrency">PayCcy</Result>
+	  </Results>
+	  <CalibrationSpec>
+            <Calibration>
+              <Index>Underlying</Index>
+              <Strikes>
+		<Strike>Strike</Strike>
+              </Strikes>
+            </Calibration>
+	  </CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="07:ScriptedEuropeanEquityPutOptionMC">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ProductTag>MC</ProductTag>
+      <!--<ScriptName>EuropeanOption</ScriptName>-->
+      <Script>
+	<Code>
+          <![CDATA[
+	    NUMBER Payoff, currentNotional;
+	    Payoff = PutCall * (Underlying(Expiry) - Strike);
+	    Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
+	    currentNotional = Strike * Quantity;
+          ]]></Code>
+	  <NPV>Option</NPV>
+	  <Results>
+            <Result>currentNotional</Result>
+            <Result rename="notionalCurrency">PayCcy</Result>
+	  </Results>
+	  <CalibrationSpec>
+            <Calibration>
+              <Index>Underlying</Index>
+              <Strikes>
+		<Strike>Strike</Strike>
+              </Strikes>
+            </Calibration>
+	  </CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>-1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="08:ScriptedEuropeanEquityPutOptionFD">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ProductTag>FD</ProductTag>
+      <!--<ScriptName>EuropeanOption</ScriptName>-->
+      <Script>
+	<Code>
+          <![CDATA[
+	    NUMBER Payoff, currentNotional;
+	    Payoff = PutCall * (Underlying(Expiry) - Strike);
+	    Option = LOGPAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy, 1, OptionFlow);
+	    currentNotional = Strike * Quantity;
+          ]]></Code>
+	  <NPV>Option</NPV>
+	  <Results>
+            <Result>currentNotional</Result>
+            <Result rename="notionalCurrency">PayCcy</Result>
+	  </Results>
+	  <CalibrationSpec>
+            <Calibration>
+              <Index>Underlying</Index>
+              <Strikes>
+		<Strike>Strike</Strike>
+              </Strikes>
+            </Calibration>
+	  </CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>-1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="09:ScriptedAmericanEquityPutOptionMC">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ProductTag>MC</ProductTag>
+      <Script>
+	<Code><![CDATA[
+        NUMBER Payoff, d, ContinuationValue, currentNotional;
+        Option = 0 * Underlying(ExerciseDates[SIZE(ExerciseDates)]);
+        FOR d IN (SIZE(ExerciseDates), 1, -1) DO
+          IF ExerciseDates[d] > TODAY THEN
+            Payoff = PAY( PutCall * (Underlying(ExerciseDates[d]) - Strike), ExerciseDates[d], ExerciseDates[d], PayCcy);
+            ContinuationValue = NPV( Option, ExerciseDates[d], Payoff > 0 );
+            IF Payoff > 0 AND Payoff > ContinuationValue THEN
+              Option = Payoff;
+            END;
+          END;
+        END;
+        Option = Option * Quantity * LongShort;
+	currentNotional = Strike * Quantity;
+	]]></Code>
+	<NPV>Option</NPV>
+	<Results>
+          <Result>currentNotional</Result>
+          <Result rename="notionalCurrency">PayCcy</Result>
+	</Results>
+	<CalibrationSpec>
+          <Calibration>
+            <Index>Underlying</Index>
+            <Strikes>
+              <Strike>Strike</Strike>
+            </Strikes>
+          </Calibration>
+	</CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>ExerciseDates</Name>
+          <ScheduleData>
+            <Rules>
+              <StartDate>20230605</StartDate>
+              <EndDate>20230905</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth/>
+              <FirstDate/>
+              <LastDate/>
+            </Rules>
+          </ScheduleData>
+        </Event>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>-1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+
+  <Trade id="10:ScriptedAmericanEquityPutOptionFD">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ProductTag>FD</ProductTag>
+      <Script>
+	<Code><![CDATA[
+        NUMBER Payoff, d, ContinuationValue, currentNotional;
+        Option = 0 * Underlying(ExerciseDates[SIZE(ExerciseDates)]);
+        FOR d IN (SIZE(ExerciseDates), 1, -1) DO
+          IF ExerciseDates[d] > TODAY THEN
+            Payoff = PAY( PutCall * (Underlying(ExerciseDates[d]) - Strike), ExerciseDates[d], ExerciseDates[d], PayCcy);
+            ContinuationValue = NPV( Option, ExerciseDates[d] );
+            IF Payoff > 0 AND Payoff > ContinuationValue THEN
+              Option = Payoff;
+            ELSE
+              Option = ContinuationValue;
+            END;
+          END;
+        END;
+        Option = Option * Quantity * LongShort;
+	currentNotional = Strike * Quantity;
+	]]></Code>
+	<NPV>Option</NPV>
+	<Results>
+          <Result>currentNotional</Result>
+          <Result rename="notionalCurrency">PayCcy</Result>
+	</Results>
+	<CalibrationSpec>
+          <Calibration>
+            <Index>Underlying</Index>
+            <Strikes>
+              <Strike>Strike</Strike>
+            </Strikes>
+          </Calibration>
+	</CalibrationSpec>
+      </Script>
+      <Data>
+        <Event>
+          <Name>ExerciseDates</Name>
+          <ScheduleData>
+            <Rules>
+              <StartDate>20230605</StartDate>
+              <EndDate>20230905</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth/>
+              <FirstDate/>
+              <LastDate/>
+            </Rules>
+          </ScheduleData>
+        </Event>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>-1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+  
+  <!--
+  <Trade id="ScriptedEquityOptionDAX">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>EuropeanOption</ScriptName>
+      <Data>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>16000</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+        </Number>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.GDAXI</Value>
+        </Index>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+  -->
+
+  <!-- Equity Barrier Option as scripted trade with daily observations -->
+
+  <Trade id="11:ScriptedEquityBarrierOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>SingleBarrierOption</ScriptName>
+      <Data>
+        <Index>
+          <Name>Underlying</Name>
+          <Value>EQ-RIC:.STOXX50E</Value>
+        </Index>
+        <Event>
+          <Name>StartDate</Name>
+          <Value>2023-06-05</Value>
+        </Event>
+        <Number>
+          <Name>Strike</Name>
+          <Value>4350</Value>
+        </Number>
+        <Number>
+          <Name>PutCall</Name>
+          <Value>1</Value> 
+        </Number>
+        <Number>
+          <Name>LongShort</Name>
+          <Value>1</Value> 
+        </Number>
+        <Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+        </Event>
+        <Number>
+          <Name>Quantity</Name>
+          <Value>1000</Value>
+        </Number>       
+        <Number>
+          <Name>PayoffType</Name>
+          <Value>0</Value>
+        </Number>
+        <Number>
+          <Name>Amount</Name>
+          <Value>0</Value>
+        </Number>
+        <Number>
+          <Name>BarrierLevel</Name>
+          <Value>5000</Value>
+        </Number>
+        <Number>
+          <Name>BarrierType</Name>
+          <Value>4</Value> 
+        </Number>
+        <Number>
+          <Name>BarrierRebate</Name>
+          <Value>0</Value>
+        </Number>
+        <Currency>
+          <Name>BarrierRebateCurrency</Name>
+          <Value>EUR</Value>
+        </Currency>
+        <Number>
+          <Name>BarrierRebatePayTime</Name>
+          <Value>1</Value> 
+        </Number>
+        <Event>
+          <Name>BarrierMonitoringDates</Name>
+          <ScheduleData>
+            <Rules>
+              <StartDate>2023-06-05</StartDate>
+              <EndDate>2023-09-05</EndDate>
+              <Tenor>1D</Tenor>
+              <Calendar>TARGET</Calendar>
+              <Convention>F</Convention>
+              <TermConvention>F</TermConvention>
+              <Rule>Forward</Rule>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
+            </Rules>
+          </ScheduleData>
+        </Event>       
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+  
+  <Trade id="12:ScriptedRainbowOption">
+    <TradeType>ScriptedTrade</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+    </Envelope>
+    <ScriptedTradeData>
+      <ScriptName>RainbowOption</ScriptName>
+      <Data>
+	<Event>
+          <Name>Expiry</Name>
+          <Value>2023-09-05</Value>
+	</Event>
+	<Event>
+          <Name>Settlement</Name>
+          <Value>2023-09-05</Value>
+	</Event>
+	<Number>
+          <Name>LongShort</Name>
+          <Value>1</Value>
+	</Number>
+	<Number>
+          <Name>Notional</Name>
+          <Value>1</Value>
+	</Number>
+	<Number>
+          <Name>Strike</Name>
+          <Value>4000</Value>
+	</Number>
+	<Index>
+          <Name>Underlyings</Name>
+          <Values>
+	    <Value>EQ-RIC:.STOXX50E</Value>
+	    <Value>EQ-RIC:.GDAXI</Value>
+            <Value>EQ-RIC:.SPX</Value>
+          </Values>
+	</Index>
+	<Number>
+          <Name>Weights</Name>
+          <Values>
+            <Value>1.0</Value>
+	    <Value>0.25</Value>
+            <Value>1.0</Value>
+          </Values>
+	</Number>
+	<Currency>
+          <Name>PayCcy</Name>
+          <Value>EUR</Value>
+	</Currency>
+      </Data>
+    </ScriptedTradeData>
+  </Trade>
+  
+</Portfolio>

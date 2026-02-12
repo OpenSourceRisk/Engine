@@ -100,6 +100,7 @@
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/fxbsdata.hpp>
 #include <ored/model/hestonmodelbuilder.hpp>
+#include <ored/model/hestonmodelcalibration.hpp>
 #include <ored/model/hwbuilder.hpp>
 #include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 #include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
@@ -180,6 +181,7 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/portfolio/builders/deltagammaengines.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
+#include <ored/portfolio/builders/equity.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
 #include <ored/portfolio/builders/equitybarrieroption.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
@@ -336,6 +338,7 @@
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/swaptionstraddle.hpp>
 #include <ored/portfolio/tarf.hpp>
 #include <ored/portfolio/tlockdata.hpp>
 #include <ored/portfolio/trade.hpp>

@@ -22,6 +22,7 @@
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
+#include <ored/marketdata/strike.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>

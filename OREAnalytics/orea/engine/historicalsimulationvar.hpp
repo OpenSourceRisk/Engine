@@ -73,8 +73,9 @@ public:
                                   const std::string& portfolioFilter, const vector<Real>& p,
                                   QuantLib::ext::optional<ore::data::TimePeriod> period,
                                   const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
-                                  std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false,
-                                  const bool includeExpectedShortfall = false,
+                                  std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, 
+                                  std::unique_ptr<MultiThreadArgs> multiThreadArgs = nullptr,
+                                  const bool breakdown = false, const bool includeExpectedShortfall = false,
                                   const bool tradePnl = false, const bool riskFactorBreakdown = false,
                                   const bool useAtParCouponsCurves = true, const bool useAtParCouponsTrades = true);
 
