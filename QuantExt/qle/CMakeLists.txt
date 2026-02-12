@@ -1141,18 +1141,22 @@ endif()
 if (ORE_PYTHON_INTEGRATION)
     # manylinux environments do not have Development.Embed which will cause failure, but all other platforms require it
     if(MANYLINUX)
-        find_package(Python COMPONENTS Interpreter Development.Module)
+        find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
     else()
-        find_package(Python COMPONENTS Interpreter Development)
+        find_package(Python REQUIRED COMPONENTS Interpreter Development)
     endif()
     target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Python)
     target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_PYTHON_INTEGRATION)
 endif()
 
+# ORE_EIGEN_WAS_FOUND is recorded here to be used in OreConfig.cmake.in.
+# Need CACHE because configure_file is called from the top level ORE CMakeLists.txt file.
+SET(ORE_EIGEN_WAS_FOUND FALSE CACHE INTERNAL "Record if Eigen was found.")
 find_package(Eigen3 3.3 NO_MODULE)
 if(TARGET Eigen3::Eigen)
     target_link_libraries(${QLE_LIB_NAME} PRIVATE Eigen3::Eigen)
     target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_USE_EIGEN)
+    SET(ORE_EIGEN_WAS_FOUND TRUE CACHE INTERNAL "Record if Eigen was found.")
 else()
     message([WARNING] " -- Could not find Eigen3. Building without Eigen3. 
         Please set 'Eigen3_DIR' when configuring.")

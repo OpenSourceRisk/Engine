@@ -51,9 +51,15 @@ write_basic_package_version_file(
     COMPATIBILITY AnyNewerVersion
 )
 
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${ORE_PACKAGE_NAME}Config.cmake.in"
+    "${PROJECT_BINARY_DIR}/cmake/${ORE_PACKAGE_NAME}Config.cmake"
+    @ONLY
+)
+
 install(
     FILES
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${ORE_PACKAGE_NAME}Config.cmake"
+        "${PROJECT_BINARY_DIR}/cmake/${ORE_PACKAGE_NAME}Config.cmake"
         "${PROJECT_BINARY_DIR}/cmake/${ORE_PACKAGE_NAME}ConfigVersion.cmake"
     DESTINATION
         "${CMAKE_INSTALL_LIBDIR}/cmake/${ORE_PACKAGE_NAME}"
