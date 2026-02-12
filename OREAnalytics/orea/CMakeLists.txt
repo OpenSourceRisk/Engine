@@ -448,15 +448,19 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} ${OREAnalytics_HDR})
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} ${OREAnalytics_HDR} "orea.hpp")
+add_library(${ORE_PACKAGE_NAME}::${OREA_LIB_NAME} ALIAS ${OREA_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME}
     PUBLIC
-        ${ORED_LIB_NAME}
+        ${ORE_PACKAGE_NAME}::${ORED_LIB_NAME}
     PRIVATE
         Boost::iostreams
 )
 
-target_include_directories(${OREA_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+target_include_directories(${OREA_LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 if(ORE_USE_ZLIB)
     target_link_libraries(${OREA_LIB_NAME} PRIVATE ZLIB::ZLIB)
@@ -474,11 +478,11 @@ target_precompile_headers(${OREA_LIB_NAME}
     <orea/scenario/scenariosimmarketparameters.hpp>)
 endif()
 
-install(DIRECTORY . DESTINATION include/orea
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+# Installation properties.
+install(TARGETS ${OREA_LIB_NAME} EXPORT ${ORE_PACKAGE_NAME}Targets)
 
-install(TARGETS ${OREA_LIB_NAME}
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

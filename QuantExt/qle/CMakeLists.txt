@@ -1101,9 +1101,15 @@ utilities/time.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
-add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR})
+add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
+# This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build 
+# (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.
+add_library(${ORE_PACKAGE_NAME}::${QLE_LIB_NAME} ALIAS ${QLE_LIB_NAME})
 
-target_include_directories(${QLE_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+target_include_directories(${QLE_LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 target_link_libraries(${QLE_LIB_NAME}
     PUBLIC
@@ -1152,7 +1158,7 @@ else()
         Please set 'Eigen3_DIR' when configuring.")
 endif()
 
-if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
+if(ORE_BUILD_QL_SEPARATELY AND QL_USE_PCH)
  target_precompile_headers(${QLE_LIB_NAME}
    PUBLIC
     <ql/any.hpp>
@@ -1170,11 +1176,12 @@ if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
     <ql/termstructure.hpp>)
 endif()
 
-install(DIRECTORY . DESTINATION include/qle
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+# Installation properties.
+install(TARGETS ${QLE_LIB_NAME} EXPORT ${ORE_PACKAGE_NAME}Targets)
 
-install(TARGETS ${QLE_LIB_NAME}
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
+# If we change cmake min version to 3.23 or above, we should consider using target_sources and FILE_SET instead of this.
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

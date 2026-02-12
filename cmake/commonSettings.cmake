@@ -3,6 +3,13 @@ include_guard(GLOBAL)
 include(CheckCXXCompilerFlag)
 include(CheckLinkerFlag)
 
+# Information to help with install.
+set(ORE_PACKAGE_NAME    "Ore")
+set(ORE_PACKAGE_VERSION "1.8.15")
+
+# Used to define installation directories.
+include(GNUInstallDirs)
+
 include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
 
 option(ORE_BUILD_DOC "Build documentation" ON)
@@ -20,10 +27,18 @@ option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runne
 option(ORE_ENABLE_OPENCL "Enable OpenCL" OFF)
 option(ORE_ENABLE_CUDA "Enable CUDA" OFF)
 
+# Implies that we have built QuantLib (our fork thereof) separately and that we are importing it.
+option(ORE_BUILD_QL_SEPARATELY "Enable when building ORE separately." OFF)
+
+# This should resolve to a target on mono-repo builds and on the CI build.
+set(QL_LIB_NAME "QuantLib::QuantLib")
+
 # Set ORE library target names.
 set(QLE_LIB_NAME "QuantExt")
 set(ORED_LIB_NAME "OREData")
 set(OREA_LIB_NAME "OREAnalytics")
+set(RAPIDXML_NAME "RapidXml")
+set(ORE_TEST_SUPPORT_NAME "TestSupport")
 
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
 set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2")
@@ -68,11 +83,6 @@ endif()
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo")
-endif()
-
-if(NOT DONT_SET_QL_INCLUDE_DIR_FIRST)
-   # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
-    include_directories("${PROJECT_BINARY_DIR}/QuantLib")
 endif()
 
 if(MSVC)
@@ -282,18 +292,6 @@ if (MSVC)
     set(CMAKE_RELEASE_POSTFIX ${RELEASE_POSTFIX})
     set(CMAKE_RELWITHDEBINFO_POSTFIX ${RELEASE_POSTFIX})
     set(CMAKE_MINSIZEREL_POSTFIX ${RELEASE_POSTFIX})
-endif()
-
-if(USE_GLOBAL_ORE_BUILD)
-    set(QL_LIB_NAME ql_library)
-else() 
-    set(QL_LIB_NAME 
-        "${QL_LIB_NAME}
-        $<$<CONFIG:Debug>:${CMAKE_DEBUG_POSTFIX}>
-        $<$<CONFIG:Release>:${CMAKE_RELEASE_POSTFIX}>
-        $<$<CONFIG:RelWithDebInfo>:${CMAKE_RELWITHDEBINFO_POSTFIX}>
-        $<$<CONFIG:MinSizeRel>:${CMAKE_MINSIZEREL_POSTFIX}>"
-    )
 endif()
 
 function(generate_git_hash custom_target_name)

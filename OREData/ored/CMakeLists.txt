@@ -848,16 +848,20 @@ utilities/xmlutils.hpp
 version.hpp)
 
 writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
-add_library(${ORED_LIB_NAME} ${OREData_SRC} ${OREData_HDR})
+add_library(${ORED_LIB_NAME} ${OREData_SRC} ${OREData_HDR} "ored.hpp")
+add_library(${ORE_PACKAGE_NAME}::${ORED_LIB_NAME} ALIAS ${ORED_LIB_NAME})
 
-target_include_directories(${ORED_LIB_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/..")
+target_include_directories(${ORED_LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 target_link_libraries(${ORED_LIB_NAME}
     PRIVATE
-        rapidxml
+        ${RAPIDXML_NAME}
         Boost::iostreams
     PUBLIC
-        ${QLE_LIB_NAME}
+        ${ORE_PACKAGE_NAME}::${QLE_LIB_NAME}
         Boost::log
 )
 
@@ -874,11 +878,11 @@ target_precompile_headers(${ORED_LIB_NAME}
     <ored/utilities/parsers.hpp>)
 endif()
 
-install(DIRECTORY . DESTINATION include/ored
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+# Installation properties.
+install(TARGETS ${ORED_LIB_NAME} EXPORT ${ORE_PACKAGE_NAME}Targets)
 
-install(TARGETS ${ORED_LIB_NAME}
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

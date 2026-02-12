@@ -103,7 +103,7 @@ add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite
     PRIVATE
         ${QLE_LIB_NAME}
-        oretest_support
+        ${ORE_TEST_SUPPORT_NAME}
         Boost::log
 )
 
@@ -117,7 +117,6 @@ endif()
 add_test(NAME quantext-test-suite COMMAND quantext-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
 install(TARGETS quantext-test-suite
-        RUNTIME DESTINATION bin
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        OPTIONAL
-        )
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    OPTIONAL
+)
