@@ -153,6 +153,7 @@ portfolio/builders/commodityapomodelbuilder.cpp
 portfolio/builders/commodityasianoption.cpp
 portfolio/builders/commodityforward.cpp
 portfolio/builders/commodityoption.cpp
+portfolio/builders/rangeaccrualleg.cpp
 portfolio/builders/commodityspreadoption.cpp
 portfolio/builders/commodityswap.cpp
 portfolio/builders/commodityswaption.cpp
@@ -571,6 +572,7 @@ portfolio/builders/commodityapomodelbuilder.hpp
 portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
+portfolio/builders/rangeaccrualleg.hpp
 portfolio/builders/commodityspreadoption.hpp
 portfolio/builders/commodityswap.hpp
 portfolio/builders/commodityswaption.hpp

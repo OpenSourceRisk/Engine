@@ -25,6 +25,7 @@
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -76,6 +77,7 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/cashflows/rangeaccrual.hpp>
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
@@ -114,7 +116,8 @@ const boost::bimap<string, LegType> legTypeMap =
     ("CommodityFloating", LegType::CommodityFloating)
     ("CommodityFixed", LegType::CommodityFixed)
     ("EquityMargin", LegType::EquityMargin)
-    ("YY", LegType::YY);
+    ("YY", LegType::YY)
+    ("RangeAccrual", LegType::RangeAccrual);
 // clang-format on
 
 LegType parseLegType(const std::string& legType)  {
@@ -329,6 +332,30 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) const {
         (!backStubShortIndex_.empty() && !backStubLongIndex_.empty())) {
         XMLUtils::addChild(doc, node, "StubUseOriginalCurve", stubUseOriginalCurve_);
     }
+    return node;
+}
+
+void RangeAccrualLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+
+    XMLNode* underlyingNode = XMLUtils::getChildNode(node, "FloatingLegData");
+    underlying_ = QuantLib::ext::make_shared<FloatingLegData>();
+    underlying_->fromXML(underlyingNode);
+    indices_ = underlying_->indices();
+
+    coupon_ = XMLUtils::getChildValueAsDouble(node, "Coupon", false, 0.0);
+    lowerBound_ = XMLUtils::getChildValueAsDouble(node, "LowerBound", false, QuantLib::Null<double>());
+    upperBound_ = XMLUtils::getChildValueAsDouble(node, "UpperBound", false, QuantLib::Null<double>());
+}
+
+XMLNode* RangeAccrualLegData::toXML(XMLDocument& doc) const {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::appendNode(node, underlying_->toXML(doc));
+    XMLUtils::addChild(doc, node, "Coupon", coupon_);
+    if (lowerBound_ != QuantLib::Null<double>())
+        XMLUtils::addChild(doc, node, "LowerBound", lowerBound_);
+    if (upperBound_ != QuantLib::Null<double>())
+        XMLUtils::addChild(doc, node, "UpperBound", upperBound_);
     return node;
 }
 
@@ -2309,6 +2336,74 @@ Leg makeYoYLeg(const LegData& data, const QuantLib::ext::shared_ptr<InflationInd
             }
         }
     }
+    return leg;
+}
+
+Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>& index,
+                       const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                       const QuantLib::Date& openEndDateReplacement, const bool attachPricer) {
+    auto rangeAccrualData = QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegData>(data.concreteLegData());
+    QL_REQUIRE(rangeAccrualData, "Wrong LegType, expected RangeAccrual, got " << data.legType());
+    auto floatData = rangeAccrualData->underlying();
+    QL_REQUIRE(floatData, "makeRangeAccrualLeg: no underlying FloatingLegData");
+
+    auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
+    QL_REQUIRE(iborIndex, "makeRangeAccrualLeg: expected IborIndex for " << floatData->index());
+
+    // Build the schedule from the leg data
+    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+
+    // Build notionals
+    vector<double> notionals =
+        buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
+
+    // Apply amortization
+    applyAmortization(notionals, data, schedule, true);
+
+    // Day counter and payment convention
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+
+    // Fixing days from the underlying floating leg data
+    Size fixingDays = floatData->fixingDays() == Null<Size>() ? iborIndex->fixingDays() : floatData->fixingDays();
+
+    // Build gearings and spreads from the underlying floating leg data
+    vector<double> gearings =
+        buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
+    vector<double> spreads =
+        buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
+
+    // Get the range accrual specific parameters
+    double coupon = rangeAccrualData->coupon();
+    double lowerBound = rangeAccrualData->lowerBound();
+    double upperBound = rangeAccrualData->upperBound();
+
+    // Build the QuantLib RangeAccrualLeg
+    // The RangeAccrualFloatersCoupon computes: (gearing * indexFixing + spread) * (n/N)
+    // For a standard range accrual: Rate = Coupon * (n/N), the coupon is passed as spread.
+    Leg leg = QuantLib::RangeAccrualLeg(schedule, iborIndex)
+                      .withNotionals(notionals)
+                      .withPaymentDayCounter(dc)
+                      .withPaymentAdjustment(bdc)
+                      .withFixingDays(static_cast<Natural>(fixingDays))
+                      .withSpreads(coupon)
+                      .withGearings(gearings)
+                      .withLowerTriggers(lowerBound)
+                      .withUpperTriggers(upperBound)
+                      .withObservationTenor(1 * Days)
+                      .withObservationConvention(ModifiedFollowing);
+
+    // Attach the range accrual pricer
+    if (attachPricer) {
+        auto builder = engineFactory->builder("RangeAccrualLeg");
+        QL_REQUIRE(builder, "No builder found for RangeAccrualLeg");
+        auto raBuilder =
+            QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
+        QL_REQUIRE(raBuilder, "Expected RangeAccrualLegEngineBuilder");
+        auto couponPricer = raBuilder->engine(IndexNameTranslator::instance().oreName(iborIndex->name()));
+        QuantLib::setCouponPricer(leg, couponPricer);
+    }
+
     return leg;
 }
 

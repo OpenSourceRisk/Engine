@@ -557,6 +557,16 @@
       </xs:all>
     </xs:complexType>
   </xs:element>
+  <xs:element name="RangeAccrualLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:all>
+        <xs:element ref="FloatingLegData"/>
+        <xs:element type="xs:float" name="Coupon" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:float" name="LowerBound" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:float" name="UpperBound" minOccurs="0" maxOccurs="1"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="CPILegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">

@@ -72,7 +72,8 @@ enum class LegType {
     CommodityFloating,
     CommodityFixed,
     EquityMargin,
-    YY
+    YY,
+    RangeAccrual
 };
 
 LegType parseLegType(const std::string& legType);
@@ -334,6 +335,42 @@ private:
     string backStubRoundingType_;
     string backStubRoundingPrecision_;
     bool stubUseOriginalCurve_;
+};
+
+//! Serializable Range Accrual Leg Data
+/*!
+  \ingroup tradedata
+*/
+class RangeAccrualLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    RangeAccrualLegData() : LegAdditionalData(LegType::RangeAccrual, true) {}
+    //! Constructor
+    RangeAccrualLegData(const QuantLib::ext::shared_ptr<FloatingLegData>& underlying,
+                        double coupon = 0.0,
+                        double lowerBound = QuantLib::Null<double>(),
+                        double upperBound = QuantLib::Null<double>())
+        : LegAdditionalData(LegType::RangeAccrual, true), underlying_(underlying),
+          coupon_(coupon), lowerBound_(lowerBound), upperBound_(upperBound) { }
+
+    //! \name Inspectors
+    //@{
+    const QuantLib::ext::shared_ptr<FloatingLegData>& underlying() const { return underlying_; }
+    double coupon() const { return coupon_; }
+    double lowerBound() const { return lowerBound_; }
+    double upperBound() const { return upperBound_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+private:
+    QuantLib::ext::shared_ptr<FloatingLegData> underlying_;
+    double coupon_ = 0.0;
+    double lowerBound_ = QuantLib::Null<double>();
+    double upperBound_ = QuantLib::Null<double>();
 };
 
 //! Serializable CPI Leg Data
@@ -1079,6 +1116,10 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             const QuantLib::Date& openEndDateReplacement = Null<Date>(), const bool attachPricer = true,
                             std::set<std::tuple<std::set<std::string>, std::string, std::string>>* = nullptr);
+Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>& index,
+                       const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                       const QuantLib::Date& openEndDateReplacement = Null<Date>(),
+                       const bool attachPricer = true);
 Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve,
                   const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                   const QuantLib::Date& openEndDateReplacement = Null<Date>());

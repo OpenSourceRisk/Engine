@@ -210,6 +210,7 @@
 #include <ored/portfolio/builders/pairwisevarianceswap.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
+#include <ored/portfolio/builders/rangeaccrualleg.hpp>
 #include <ored/portfolio/builders/riskparticipationagreement.hpp>
 #include <ored/portfolio/builders/scriptedtrade.hpp>
 #include <ored/portfolio/builders/swap.hpp>
