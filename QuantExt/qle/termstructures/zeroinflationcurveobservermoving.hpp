@@ -41,7 +41,7 @@ class ZeroInflationCurveObserverMoving : public ZeroInflationTermStructure,
                                          public LazyObject {
 public:
     ZeroInflationCurveObserverMoving(
-        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& simulationLag,
+        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const int simulationLag,
         const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
         const std::vector<Handle<Quote>>& rates,
         const QuantLib::ext::shared_ptr<Seasonality>& seasonality = QuantLib::ext::shared_ptr<Seasonality>(),
@@ -84,14 +84,14 @@ protected:
     std::vector<Period> tenors_;
     mutable Date baseDate_;
     Period observationLag_;
-    Period simulationLag_;
+    int simulationLag_;
 };
 
 // template definitions
 
 template <class Interpolator>
 ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving(
-    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& simulationLag,
+    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const int simulationLag,
     const Period& observationLag, Frequency frequency, bool indexIsInterpolated, const std::vector<Period>& tenors,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)

@@ -55,7 +55,7 @@ std::pair<QuantLib::Real, QuantLib::Real> JyImpliedZeroInflationTermStructure::i
     // simulate lag is needed to ensure that the growth is calculated for the correct inflation observation date.
     // at time t, we effectivly observe the inflation at time t - simulationLag, so we need to add the simulation lag to
     // get the correct T.
-    auto T = relativeTime_ + t + simulationLag(simulationDayCounter_);
+    auto T = relativeTime_ + t + simulationLag();
     auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], true);
     return std::make_pair(std::exp(state_[1]), ratio);
 }

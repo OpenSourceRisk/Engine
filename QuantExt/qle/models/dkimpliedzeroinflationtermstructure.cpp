@@ -36,7 +36,8 @@ Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
 
 std::pair<QuantLib::Real, QuantLib::Real> DkImpliedZeroInflationTermStructure::indexGrowth(Time t) const {
     QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::indexGrowth: negative time (" << t << ") given");
-    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1], simulationDayCounter_);
+    auto T = relativeTime_ + t + simulationLag();
+    auto p = model_->infdkI(index_, relativeTime_, T, state_[0], state_[1], simulationDayCounter_);
     return p;
 }
 

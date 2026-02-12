@@ -2488,7 +2488,7 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
 BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     BOOST_TEST_MESSAGE("Testing martingale property for inflation in classical simulation");
     bool indexIsInterpolated = true;
-    bool infIsDK = false;
+    bool infIsDK = true;
     bool flatVols = false;
     bool driftFreeState = false;
     bool exactDiscretization = true;
