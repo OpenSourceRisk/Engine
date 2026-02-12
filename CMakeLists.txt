@@ -14,6 +14,7 @@ if(ORE_BUILD_QL_SEPARATELY)
     find_package(QuantLib REQUIRED CONFIG)
 else()
     add_subdirectory("QuantLib")
+    install(TARGETS ql_library EXPORT ${ORE_PACKAGE_NAME}Targets)
 endif()
 
 add_subdirectory("QuantExt")
