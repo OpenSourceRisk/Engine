@@ -37,7 +37,7 @@ endif()
 
 # Installation
 install(
-  EXPORT OreTargets
+  EXPORT ${ORE_PACKAGE_NAME}Targets
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${ORE_PACKAGE_NAME}"
   NAMESPACE ${ORE_PACKAGE_NAME}::
 )
