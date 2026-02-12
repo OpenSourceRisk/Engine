@@ -110,7 +110,7 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const
     // this is due to the publishing lag of CPI indices, the simulation lag is the difference between
     // the last known cpi fixing date and today (t0).
     if(!dc.has_value())
-        QL_REQUIRE(dc.value() != DayCounter(), "inflationGrowth: invalid day counter given");
+        QL_FAIL("Not simulation day counter given");
     auto effectiveDayCounter = dc.value_or(ts->dayCounter());
     // TODO refactor this code once we refactored the yoy model curves and can get rid of the indexIsInterpolated flag
     auto lag = inflationTime(ts->referenceDate(), ts.currentLink(), indexIsInterpolated, effectiveDayCounter);
