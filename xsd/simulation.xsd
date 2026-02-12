@@ -295,11 +295,8 @@
         <xs:complexType>
           <xs:all>
             <xs:element type="xs:string" name="Expiries"/>
-            <!-- FIXME: comma delimited list -->
             <xs:element type="xs:string" name="Terms"/>
-            <!-- FIXME: comma delimited list -->
-            <xs:element type="xs:string" name="Strikes"/>
-            <!-- FIXME: comma delimited list -->
+            <xs:element type="xs:string" name="Strikes" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
