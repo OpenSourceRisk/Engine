@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/portfolio/builders/rangeaccrualleg.hpp
-    \brief builder that returns a pricer for range accrual legs
+    \brief builder that provides parameters for range accrual leg pricers
     \ingroup builders
 */
 
@@ -27,22 +27,26 @@
 #include <ored/portfolio/enginefactory.hpp>
 
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
 namespace ore {
 namespace data {
 
-//! CouponPricer Builder for RangeAccrualLeg
-/*! The coupon pricers are cached by index name
+//! Engine Builder for RangeAccrualLeg
+/*! Provides the OptionletVolatilityStructure and pricer parameters.
+    Per-coupon pricers are created in makeRangeAccrualLeg using the vol surface
+    to build smile sections at each coupon's expiry and payment dates.
     \ingroup builders
 */
-class RangeAccrualLegEngineBuilder : public CachingCouponPricerBuilder<string, const string&> {
+class RangeAccrualLegEngineBuilder : public EngineBuilder {
 public:
     RangeAccrualLegEngineBuilder()
-        : CachingEngineBuilder("BlackOrBachelier", "RangeAccrualPricer", {"RangeAccrualLeg"}) {}
+        : EngineBuilder("BlackOrBachelier", "RangeAccrualPricer", {"RangeAccrualLeg"}) {}
 
-protected:
-    string keyImpl(const string& index) override { return index; }
-    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index) override;
+    Handle<OptionletVolatilityStructure> optionletVolatilityStructure(const std::string& index);
+    Real correlation(const std::string& index);
+    bool withSmile(const std::string& index);
+    bool byCallSpread(const std::string& index);
 };
 
 } // namespace data

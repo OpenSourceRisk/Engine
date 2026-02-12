@@ -2393,15 +2393,30 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
                       .withObservationTenor(1 * Days)
                       .withObservationConvention(ModifiedFollowing);
 
-    // Attach the range accrual pricer
+    // Attach per-coupon range accrual pricers with correct expiry/payment smile sections
     if (attachPricer) {
         auto builder = engineFactory->builder("RangeAccrualLeg");
         QL_REQUIRE(builder, "No builder found for RangeAccrualLeg");
         auto raBuilder =
             QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
         QL_REQUIRE(raBuilder, "Expected RangeAccrualLegEngineBuilder");
-        auto couponPricer = raBuilder->engine(IndexNameTranslator::instance().oreName(iborIndex->name()));
-        QuantLib::setCouponPricer(leg, couponPricer);
+        std::string indexName = IndexNameTranslator::instance().oreName(iborIndex->name());
+        auto ovs = raBuilder->optionletVolatilityStructure(indexName);
+        Real correlation = raBuilder->correlation(indexName);
+        bool withSmile = raBuilder->withSmile(indexName);
+        bool byCallSpread = raBuilder->byCallSpread(indexName);
+        for (auto& cf : leg) {
+            auto raCoupon = QuantLib::ext::dynamic_pointer_cast<RangeAccrualFloatersCoupon>(cf);
+            if (raCoupon) {
+                // Per the QuantLib test-suite: smilesOnExpiry at coupon start date,
+                // smilesOnPayment at coupon end date (accrual end, not payment date)
+                auto smileOnExpiry = ovs->smileSection(raCoupon->accrualStartDate(), true);
+                auto smileOnPayment = ovs->smileSection(raCoupon->accrualEndDate(), true);
+                auto pricer = QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
+                    correlation, smileOnExpiry, smileOnPayment, withSmile, byCallSpread);
+                raCoupon->setPricer(pricer);
+            }
+        }
     }
 
     return leg;
