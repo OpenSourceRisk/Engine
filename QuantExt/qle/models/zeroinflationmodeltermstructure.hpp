@@ -75,6 +75,8 @@ public:
     void enableCache(const bool b = true) const { enableCache_ = b; }
     virtual void clearCache() const {}
     //! Returns the baseCPI at simulation time S and the inflation growth between S and S+t.
+    //! Parameter t should be fixing observation date (after applying the contractional observation lag) in simulation
+    //! grid time
     virtual std::pair<QuantLib::Real, QuantLib::Real> indexGrowth(QuantLib::Time t) const = 0;
 
 protected:
