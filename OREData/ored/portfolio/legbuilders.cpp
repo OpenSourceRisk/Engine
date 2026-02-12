@@ -172,7 +172,6 @@ Leg RangeAccrualLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::s
     auto floatData = rangeAccrualData->underlying();
     QL_REQUIRE(floatData, "RangeAccrualLegBuilder: no underlying FloatingLegData");
 
-    // Get the index from the underlying floating leg data
     string indexName = floatData->index();
     auto index = *engineFactory->market()->iborIndex(indexName, configuration);
 

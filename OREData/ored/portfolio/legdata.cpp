@@ -2350,35 +2350,27 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
     auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
     QL_REQUIRE(iborIndex, "makeRangeAccrualLeg: expected IborIndex for " << floatData->index());
 
-    // Build the schedule from the leg data
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
 
-    // Build notionals
     vector<double> notionals =
         buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
 
-    // Apply amortization
     applyAmortization(notionals, data, schedule, true);
 
-    // Day counter and payment convention
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
-    // Fixing days from the underlying floating leg data
     Size fixingDays = floatData->fixingDays() == Null<Size>() ? iborIndex->fixingDays() : floatData->fixingDays();
 
-    // Build gearings and spreads from the underlying floating leg data
     vector<double> gearings =
         buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
 
-    // Get the range accrual specific parameters
     double coupon = rangeAccrualData->coupon();
     double lowerBound = rangeAccrualData->lowerBound();
     double upperBound = rangeAccrualData->upperBound();
 
-    // Build the QuantLib RangeAccrualLeg
     // The RangeAccrualFloatersCoupon computes: (gearing * indexFixing + spread) * (n/N)
     // For a standard range accrual: Rate = Coupon * (n/N), the coupon is passed as spread.
     Leg leg = QuantLib::RangeAccrualLeg(schedule, iborIndex)
@@ -2391,7 +2383,7 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
                       .withLowerTriggers(lowerBound)
                       .withUpperTriggers(upperBound)
                       .withObservationTenor(1 * Days)
-                      .withObservationConvention(ModifiedFollowing);
+                      .withObservationConvention(bdc);
 
     // Attach per-coupon range accrual pricers with correct expiry/payment smile sections
     if (attachPricer) {
@@ -2408,8 +2400,6 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
         for (auto& cf : leg) {
             auto raCoupon = QuantLib::ext::dynamic_pointer_cast<RangeAccrualFloatersCoupon>(cf);
             if (raCoupon) {
-                // Per the QuantLib test-suite: smilesOnExpiry at coupon start date,
-                // smilesOnPayment at coupon end date (accrual end, not payment date)
                 auto smileOnExpiry = ovs->smileSection(raCoupon->accrualStartDate(), true);
                 auto smileOnPayment = ovs->smileSection(raCoupon->accrualEndDate(), true);
                 auto pricer = QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
