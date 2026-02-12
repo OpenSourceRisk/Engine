@@ -30,8 +30,7 @@ namespace QuantExt {
                                                                     const RandomVariable& z,
                                                                     const RandomVariable& y,
                                                                     bool indexIsInterpolated) const {
-            //
-            std::cout << "InfDkVectorised::infdkI called with i=" << i << ", t=" << t << ", T=" << T << std::endl;
+            
             Size n_samples = z.size();
 
             std::pair<Real, Real> Vs = cam_->infdkV(i, t, T);

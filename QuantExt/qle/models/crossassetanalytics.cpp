@@ -43,7 +43,6 @@ Real ir_expectation_1(const CrossAssetModel& x, const Size i, const Time t0, con
 Real ir_expectation_2(const CrossAssetModel&, const Size, const Real zi_0) { return zi_0; }
 
 pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel& x, Size i, Time t0, Real dt, const std::optional<DayCounter>& gridDayCounter) {
-    std::cout << "inf_jy_expectation_1 i=" << i << " t0=" << t0 << " dt=" << dt << std::endl;
     QL_REQUIRE(x.modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::JY,
                "inf_jy_expectation_1: should only be used for JY CAM inflation component.");
 
@@ -62,7 +61,8 @@ pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel& x, Size i, Time t0,
 
     // 2) Inflation index process drift
     const auto& zts = x.infjy(i)->realRate()->termStructure();
-    bool indexIsInterpolated = true; // FIXME, see also crossassetmodel.cpp line 706ff
+    bool indexIsInterpolated = true; // model is continouous time, so interpolated = true
+                                     // TODO:remove it later, once we refactored the yoy
     res.second = std::log(inflationGrowth(zts, t0 + dt, gridDayCounter, indexIsInterpolated) /
                           inflationGrowth(zts, t0, gridDayCounter, indexIsInterpolated));
 

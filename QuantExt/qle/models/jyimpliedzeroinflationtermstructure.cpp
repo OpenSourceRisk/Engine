@@ -44,13 +44,11 @@ Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
 }
 
 std::pair<QuantLib::Real, QuantLib::Real> JyImpliedZeroInflationTermStructure::indexGrowth(Time t) const {
-    std::cout << "JyImpliedZeroInflationTermStructure::inflationGrowthImpl called with t=" << t << std::endl;
     QL_REQUIRE(t >= 0.0, "JyImpliedZeroInflationTermStructure::inflationGrowthImpl: negative time (" << t
                                                                                                  << ") given");
     // Zero rate is calculated from the relation: P_n(S, T) (1 + z(S))^t = P_r(S, T)
     // Here, S in the relation is given by relativeTime_ and T := S + t.
     // ratio holds \frac{P_r(S, T)}{P_n(S, T)}.
-    std::cout << "JyImpliedZeroInflationTermStructure::inflationGrowthImpl: relativeTime_ = " << relativeTime_ << std::endl;
     auto S = relativeTime_;
     // simulate lag is needed to ensure that the growth is calculated for the correct inflation observation date.
     // at time t, we effectivly observe the inflation at time t - simulationLag, so we need to add the simulation lag to
@@ -68,8 +66,6 @@ void JyImpliedZeroInflationTermStructure::checkState() const {
 
 Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T, Real irState,
                      Real rrState, bool indexIsInterpolated, std::optional<QuantLib::DayCounter> simulationDayCounter) {
-    std::cout << "inflationGrowth called with index=" << index << ", S=" << S << ", T=" << T << ", irState=" << irState
-              << ", rrState=" << rrState << std::endl;
     QL_REQUIRE(T >= S, "inflationGrowth: end time (" << T << ") must be >= start time (" << S << ")");
 
     // After this step, p_n holds P_n(S, T) * P_n(0, S) / P_n(0, T)

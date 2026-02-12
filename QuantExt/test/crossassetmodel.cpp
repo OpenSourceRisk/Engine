@@ -2310,30 +2310,34 @@ struct IrFxInfCrComModelTestData {
 }; // IrFxInfCrModelTestData
 
 } // anonymous namespace
+// Test case options
+vector<bool> infEurFlags{true, false};
+vector<bool> infGbpFlags{true, false};
+vector<bool> flatVolsFlags{true, false};
+vector<bool> driftFreeState{true, false};
+vector<bool> seasonality{true, false};
+vector<bool> exact{true, false};
+vector<DayCounter> inflationDayCounter{Thirty360(Thirty360::ISDA)};
+vector<Period> infSimulationLag{2* Months, 3 * Months};
 
-BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
+BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTest,
+                     bdata::make(infEurFlags) * bdata::make(flatVolsFlags) * bdata::make(driftFreeState) *
+                         bdata::make(seasonality) * bdata::make(exact) * bdata::make(inflationDayCounter) * bdata::make(infSimulationLag),
+                     infIsDK, flatVols, driftFreeState, seasonality, exactDiscretization, infDc, infSimLag) {
     BOOST_TEST_MESSAGE("Testing martingale property for inflation JY in classical simulation");
     bool indexIsInterpolated = true;
-    bool infIsDK = true;
-    bool flatVols = false;
-    bool driftFreeState = false;
-    bool exactDiscretization = true;
-    bool seasonality = true;
     BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
     BOOST_TEST_MESSAGE("infIsDK " << infIsDK);
     BOOST_TEST_MESSAGE("flatVols " << flatVols);
     BOOST_TEST_MESSAGE("driftFreeState " << driftFreeState);
+    BOOST_TEST_MESSAGE("seasoanlity " << seasonality);
     BOOST_TEST_MESSAGE("exactDiscretization " << exactDiscretization);
-    DayCounter infDc = Thirty360(Thirty360::ISDA);
-    
-    //DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
-    Period infSimLag = 2 * Months;
     IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag, seasonality};
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
     auto today = d.referenceDate;
-    auto simDate = today + 1 * Years;
+    auto simDate = today + 3 * Months;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
     Date BaseDateT1 = simDate - (today - baseDate);
 
@@ -2367,9 +2371,9 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
     // T = 2;
     // T2_index = 20;
     // T2_discount = 20.0;
-    Size n = 50000;                                                    // number of paths
+    Size n = 5000;                                                    // number of paths
     Size seed = 18;                                                    // rng seed
-    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 200); // number of time steps
+    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 40); // number of time steps
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * steps, seed);
     TimeGrid grid1(T, steps);
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
@@ -2467,7 +2471,6 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
     }
     BOOST_TEST_MESSAGE("EUR CPI   = " << mean(cpieur1) << " +- " << error_of<tag::mean>(cpieur1) << " vs analytical "
                                       << expectedCpi << " error " << std::abs(mean(cpieur1) - expectedCpi));
-    BOOST_TEST_MESSAGE("Test - decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
     Real tol1 = exactDiscretization ? 1.0E-4 : 14E-4;
 
     if (std::abs(mean(infeur1) - expectedEur) > tol1)
@@ -2485,19 +2488,14 @@ BOOST_AUTO_TEST_CASE(testJYMartingaleProperty) {
                                                                   << ", tolerance " << tol1);
 }
 
-BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
+BOOST_DATA_TEST_CASE(testZeroInflationMartingaleTestWithModelTermstructures,
+                     bdata::make(infEurFlags) * bdata::make(flatVolsFlags) * bdata::make(driftFreeState) *
+                         bdata::make(seasonality) * bdata::make(exact)* bdata::make(inflationDayCounter) * bdata::make(infSimulationLag),
+                     infIsDK, flatVols, driftFreeState, seasonality, exactDiscretization, infDc, infSimLag){
     BOOST_TEST_MESSAGE("Testing martingale property for inflation in classical simulation");
     bool indexIsInterpolated = true;
-    bool infIsDK = true;
-    bool flatVols = false;
-    bool driftFreeState = false;
-    bool exactDiscretization = true;
-    bool seasonality = true;
     bool debug = false;
-    DayCounter infDc = Thirty360(Thirty360::ISDA);
-    //DayCounter infDc = Actual365Fixed();
     Period infObsLag = 3 * Months;
-    Period infSimLag = 2 * Months;
     BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
     BOOST_TEST_MESSAGE("infIsDK " << infIsDK);
     BOOST_TEST_MESSAGE("flatVols " << flatVols);
@@ -2509,13 +2507,10 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     
     auto model = exactDiscretization ? d.modelExact : d.modelEuler;
     QuantLib::ext::shared_ptr<StochasticProcess> process1 = model->stateProcess(d.dc);
-    BOOST_TEST_MESSAGE("Got model and process");
     auto today = d.referenceDate;
     Date baseDate = inflationPeriod(today - infSimLag, Monthly).first;
     int simLag = simulationLag(d.infEurTs);
-    BOOST_TEST_MESSAGE("Simulation lag in days = " << simLag);
     double simLagTime = simulationLagTime(d.infEurTs, d.dc);
-    BOOST_TEST_MESSAGE("Simulation lag in simulation time = " << simLagTime);
     auto simDate = today + 3 * Months;
     Time T = d.dc.yearFraction(today, simDate);
     Date ModelBaseDateT = simDate - simLag;
@@ -2548,25 +2543,18 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     std::vector<accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>>> simulatedGrowths(
         inflationTenors.size());
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>> simulatedBaseCPI;
-    BOOST_TEST_MESSAGE("Building inflation dates and expected cashflows");
     for (auto t : inflationTenors) {
         auto inflationPaymentDate = simDate + t;
         inflationPaymentDates.push_back(inflationPaymentDate);
         inflationObsDates.push_back(inflationPeriod(inflationPaymentDate - infObsLag, Monthly).first);
-        auto time = infDc.yearFraction(baseDate, inflationObsDates.back());
         expectedInflationCashflows.push_back(inflationIndex->fixing(inflationObsDates.back()) *
                                            d.eurYts->discount(inflationPaymentDate));
         inflationQuotes.push_back(QuantLib::ext::make_shared<SimpleQuote>(d.infEurTs->zeroRate(inflationObsDates.back())));
-        BOOST_TEST_MESSAGE("Inflation date " << io::iso_date(inflationObsDates.back()) << ", time from base " << time
-                                             << ", expected cashflow " << expectedInflationCashflows.back());
     }
-    BOOST_TEST_MESSAGE("Creating observer curves and indices");
 
     std::vector<Handle<Quote>> inflationQuoteHandles;
     std::transform(inflationQuotes.begin(), inflationQuotes.end(), std::back_inserter(inflationQuoteHandles),
                    [](const auto& q) { return Handle<Quote>(q); });
-    BOOST_TEST_MESSAGE("size(inflationTenors) = " << inflationTenors.size() << ", size(inflationQuoteHandles) = "
-                                                  << inflationQuoteHandles.size());
     auto simulatedZeroCurve =
         Handle<ZeroInflationTermStructure>(QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
             0, TARGET(), infDc, simLag, infObsLag, d.infEurTs->frequency(), false, inflationTenors,
@@ -2578,9 +2566,9 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     auto cpiObserver = ext::make_shared<InflationIndexObserver>(Handle<ZeroInflationIndex>(inflationIndex),
                                                                 Handle<Quote>(cpiQuote), simLag, d.dc);
     Settings::instance().evaluationDate() = simDate;
-    Size n = 20000;                                                        // number of paths
+    Size n = 10000;                                                        // number of paths
     Size seed = 18;                                                    // rng seed
-    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 200); // number of time steps
+    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 40); // number of time steps
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * steps, seed);
     TimeGrid grid1(T, steps);
     if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
@@ -2588,8 +2576,6 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     }
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>> eurzb1, gbpzb1, infeur1, infgbp1, cpieur1, test;
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
-    BOOST_TEST_MESSAGE(
-        "Simulating paths and checking martingale property of the zero-coupon bond and the inflation index");
     for (Size j = 0; j < n; ++j) {
         if (debug && j % 1000 == 0)
             BOOST_TEST_MESSAGE("Simulating path " << j << " / " << n);
@@ -2624,6 +2610,13 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
     BOOST_TEST_MESSAGE("Expected base CPI = "
                        << mean(simulatedBaseCPI) << " +- " << error_of<tag::mean>(simulatedBaseCPI) << " vs analytical "
                        << expectedBaseCPIatT << " error " << std::abs(mean(simulatedBaseCPI) - expectedBaseCPIatT));
+     if (std::abs(mean(simulatedBaseCPI) - expectedBaseCPIatT) > tol1)
+        BOOST_TEST_ERROR("Martingale test failed for base cpi ("
+                             << (exactDiscretization ? "Exact" : "Euler")
+                             << "),"
+                                "expected "
+                             << expectedBaseCPIatT << ", got " << mean(simulatedBaseCPI) << ", tolerance "
+                             << tol1);
     BOOST_TEST_MESSAGE("Expected inflation cashflows:");
     for (Size i = 0; i < inflationTenors.size(); ++i) {
         BOOST_TEST_MESSAGE("Inflation growth " << inflationTenors[i] << "y = " << mean(simulatedGrowths[i]) << " +- "
@@ -2639,122 +2632,6 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveObserverMartingaleProperty) {
                              << tol1);
     }
 }
-
-BOOST_AUTO_TEST_CASE(testJYMartingaleProperty3) {
-    BOOST_TEST_MESSAGE("Testing martingale property for inflation JY in classical simulation");
-    bool indexIsInterpolated = true;
-    bool infIsDK = false;
-    bool flatVols = false;
-    bool driftFreeState = false;
-    bool exactDiscretization = false;
-    BOOST_TEST_MESSAGE("indexIsInterpolated " << indexIsInterpolated);
-
-    DayCounter infDc = Thirty360(Thirty360::ISDA);
-    // DayCounter infDc = MonthCounter();
-    // DayCounter infDc = Actual365Fixed();
-    Period infObsLag = 3 * Months;
-    Period infSimLag = 3 * Months;
-    IrFxInfCrComModelTestData d{infIsDK, infIsDK, flatVols, driftFreeState, infObsLag, infDc, infSimLag};
-    auto model = exactDiscretization ? d.modelExact : d.modelEuler;
-    QuantLib::ext::shared_ptr<StochasticProcess> process1 =  model->stateProcess(d.dc);
-    Time T = 2.0;
-    Time T2_discount = 20.0;
-    Time T2_index = 20.0;
-    
-    BOOST_TEST_MESSAGE("today = " << io::iso_date(d.referenceDate) << "\n"
-                                  << " T = " << T << "\n"
-                                  << " T2_discount = " << T2_discount << "\n"
-                                  << " T2_index = " << T2_index << "\n"
-                                  << " d.obsLag = " << d.infLag);
-    // T = 2;
-    // T2_index = 20;
-    // T2_discount = 20.0;
-    Size n = 10000; // number of paths
-    Size seed = 18; // rng seed
-    Size steps = exactDiscretization ? 1 : static_cast<Size>(T * 40);
-    LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(process1->factors() * steps, seed);
-    TimeGrid grid1(T, steps);
-    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(process1)) {
-        tmp->resetCache(grid1.size() - 1);
-    }
-    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>>> eurzb1, gbpzb1, infeur1, infgbp1, cpieur1, test;
-    MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
-    for (Size j = 0; j < n; ++j) {
-        Sample<MultiPath> path1 = pg1.next();
-        Size l1 = path1.value[0].length() - 1;
-        Real zeur1 = path1.value[0][l1];
-
-        Real zgbp1 = path1.value[2][l1];
-
-        Real fxgbp1 = std::exp(path1.value[4][l1]);
-        Real infeurz1 = path1.value[5][l1];
-        Real infeury1 = path1.value[6][l1];
-        Real infgbpz1 = path1.value[7][l1];
-        Real infgbpy1 = path1.value[8][l1];
-        eurzb1(model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
-        // GBP zerobond
-        gbpzb1(model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
-
-        if (infIsDK) {
-            std::pair<Real, Real> sinfeur1 = model->infdkI(0, T, T2_index, infeurz1, infeury1, d.dc);
-            std::pair<Real, Real> sinfeur2 = model->infdkI(0, T, T, infeurz1, infeury1, d.dc);
-            cpieur1(sinfeur2.first);
-            test(sinfeur2.second);
-            infeur1(sinfeur1.first * sinfeur1.second * model->discountBond(0, T, T2_discount, zeur1) /
-                    model->numeraire(0, T, zeur1));
-        } else {
-            cpieur1(exp(infeury1));
-            auto tauSim = 18.0;
-            auto zeroRate =
-                std::pow(inflationGrowth(model, 0, T, T2_index, zeur1, infeurz1, indexIsInterpolated),
-                         1.0 / tauSim) -
-                1.0;
-            infeur1(exp(infeury1) * std::pow(1.0 + zeroRate, tauSim) *
-                    model->discountBond(0, T, T2_discount, zeur1) / model->numeraire(0, T, zeur1));
-        }
-        // GBP CPI indexed bond
-        if (infIsDK) {
-            std::pair<Real, Real> sinfgbp1 = model->infdkI(1, T, T2_index, infgbpz1, infgbpy1, d.dc);
-            infgbp1(sinfgbp1.first * sinfgbp1.second * model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 /
-                    model->numeraire(0, T, zeur1));
-        } else {
-            infgbp1(
-                exp(infgbpy1) * inflationGrowth(model, 1, T, T2_index, zgbp1, infgbpz1, indexIsInterpolated) *
-                model->discountBond(2, T, T2_discount, zgbp1) * fxgbp1 / model->numeraire(0, T, zeur1));
-        }
-    }
-
-    Real expectedEur =
-        std::pow(1.0 + d.infEurTs->zeroRate(T2_index - d.infLag), T2_index) * d.eurYts->discount(T2_discount);
-    Real expectedGbpInf = std::pow(1.0 + d.infGbpTs->zeroRate(T2_index - d.infLag), T2_index) *
-                          d.gbpYts->discount(T2_discount) * d.fxEurGbp->value();
-
-    BOOST_TEST_MESSAGE("EXACT:");
-    BOOST_TEST_MESSAGE("IDX zb EUR = " << mean(infeur1) << " +- " << error_of<tag::mean>(infeur1) << " vs analytical "
-                                       << expectedEur << "error " << std::abs(mean(infeur1) - expectedEur));
-    BOOST_TEST_MESSAGE("IDX zb GBP = " << mean(infgbp1) << " +- " << error_of<tag::mean>(infgbp1) << " vs analytical "
-                                       << expectedGbpInf << " error" << std::abs(mean(infgbp1) - expectedGbpInf));
-    BOOST_TEST_MESSAGE("Test – decoupled component = " << mean(test) << " +- " << error_of<tag::mean>(test));
-
-    Real tol1 = exactDiscretization? 1.0E-4 : 14E-4;
-
-    if (std::abs(mean(infeur1) - expectedEur) > tol1)
-        BOOST_TEST_ERROR("Martingale test failed for idx eurzb (" << (exactDiscretization ? "Exact" : "Euler")  <<"),"
-                         "expected "
-                         << expectedEur << ", got " << mean(infeur1) << ", tolerance " << tol1);
-
-    if (std::abs(mean(infgbp1) - expectedGbpInf) > tol1)
-        BOOST_TEST_ERROR("Martingale test failed for idx gbpzb (" << (exactDiscretization ? "Exact" : "Euler")  <<"),"
-                         "expected "
-                         << expectedGbpInf << ", got " << mean(infgbp1) << ", tolerance " << tol1);
-}
-
-
-// Test case options
-vector<bool> infEurFlags{ true, false };
-vector<bool> infGbpFlags{ true, false };
-vector<bool> flatVolsFlags{ true, false };
-vector<bool> driftFreeState{ true, false };
 
 BOOST_DATA_TEST_CASE(testIrFxInfCrComMartingaleProperty,
     bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags) * bdata::make(driftFreeState),

@@ -86,8 +86,7 @@ double scenarioBaseCpi(const Real y, const Real z, const QuantLib::Date& date,
         cpi = std::exp(y);
     } else if (modelType == CrossAssetModel::ModelType::DK) {
         Date baseDate = zits->baseDate();
-        int simLagDays = simulationLag(zits);
-        Time relativeTime = simulationDc.yearFraction(zits->referenceDate(), date - simLagDays);
+        Time relativeTime = simulationDc.yearFraction(zits->referenceDate(), date);
         std::tie(cpi, std::ignore) = model->infdkI(modelIdx, relativeTime, relativeTime, z, y, simulationDc);
         cpi *= deseasonalizeCPI(baseDate, index->fixing(baseDate), zits);
 
@@ -103,8 +102,6 @@ Time inflationTime(const Date& date, const QuantLib::ext::shared_ptr<InflationTe
     DayCounter dc = inflationTs->dayCounter();
     if (dayCounter != DayCounter())
         dc = dayCounter;
-    // std::cout << "inflationTime: date=" << date << " baseDate=" << inflationTs->baseDate()
-    //           << " dayCounter=" << dc.name() << " indexIsInterpolated=" << indexIsInterpolated << std::endl;
     return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, dc, inflationTs->baseDate(), date);
 }
 
