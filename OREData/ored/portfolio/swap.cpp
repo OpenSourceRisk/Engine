@@ -21,13 +21,16 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/swap.hpp>
+#include <ored/utilities/fairrate.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 #include <ql/time/calendars/target.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -47,7 +50,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     DLOG("Swap::build() called for trade " << id());
 
     setIsdaTaxonomyFields();
-    
+
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
     const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
@@ -65,7 +68,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     isXCCY_ = false;
     isResetting_ = false;
     allLegsAreSimmPlainVanillaIrLegs_ = true;
-    
+
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -77,9 +80,9 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
-        
+
         if(!legData_[i].isSimmPlainVanillaIrLeg()){
-            
+
             allLegsAreSimmPlainVanillaIrLegs_ = false;
         }
     }
@@ -241,11 +244,53 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             startDate = std::min(startDate, l.front()->date());
             QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
             if (coupon)
-                startDate = std::min(startDate, coupon->accrualStartDate());                
+                startDate = std::min(startDate, coupon->accrualStartDate());
         }
     }
 
     additionalData_["startDate"] = to_string(startDate);
+
+    // Store discount curves and FX spots for fair rate calculation
+    discountCurves_.resize(numLegs);
+    fxSpots_.resize(numLegs);
+
+    if (isXCCY_) {
+        // Cross-currency swap: per-leg curves and FX spots
+        bool useXccyYieldCurves = allLegsAreSimmPlainVanillaIrLegs_;
+        for (Size i = 0; i < numLegs; ++i) {
+            string ccyCode = currencies[i].code();
+            if (useXccyYieldCurves) {
+                discountCurves_[i] = (xccyYieldCurve)(market, ccyCode, configuration);
+            } else {
+                discountCurves_[i] = market->discountCurve(ccyCode, configuration);
+            }
+            // FX spot: convert leg currency to NPV currency
+            if (ccyCode == npvCcy.code()) {
+                fxSpots_[i] = 1.0;
+            } else {
+                string pair = ccyCode + npvCcy.code();
+                fxSpots_[i] = market->fxRate(pair, configuration)->value();
+            }
+        }
+    } else {
+        // Single-currency swap: same curve for all legs, FX spots = 1.0
+        std::string discountCurveName = envelope().additionalField("discount_curve", false);
+        std::string securitySpread = envelope().additionalField("security_spread", false);
+
+        Handle<YieldTermStructure> yts =
+            discountCurveName.empty() ? market->discountCurve(npvCcy.code(), configuration)
+                                      : indexOrYieldCurve(market, discountCurveName, configuration);
+
+        if (!securitySpread.empty()) {
+            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+                yts, market->securitySpread(securitySpread, configuration)));
+        }
+
+        for (Size i = 0; i < numLegs; ++i) {
+            discountCurves_[i] = yts;
+            fxSpots_[i] = 1.0;
+        }
+    }
 }
 
 void Swap::setIsdaTaxonomyFields() {
@@ -273,14 +318,14 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
             if (swap) {
                 additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
                 if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Floating)
-                    floatingNpv = swap->legNPV(i);            
+                    floatingNpv = swap->legNPV(i);
                 if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == LegType::Fixed) {
                     additionalData_["PV01[" + legID + "]"] = std::abs(swap->legBPS(i));
                     fixedBps = swap->legBPS(i);
                 }
             } else
                 ALOG("single currency swap underlying instrument not set, skip leg npv reporting");
-        } 
+        }
         else {
             if (cswap) {
                 // The currency swap has more legs than the swap wrapper (additional notional legs), so aggregate by currency
@@ -295,13 +340,49 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
                 additionalData_["legNPV[" + legID + "]"] = legNpv;
                 additionalData_["legNPVCCY[" + legID + "]"] = legNpvInCcy;
             }
-            else 
+            else
                 ALOG("cross currency swap underlying instrument not set, skip leg npv reporting");
         }
         setLegBasedAdditionalData(i);
     }
-    if (swap && allLegsAreSimmPlainVanillaIrLegs_ && fixedBps != 0.0) {
-        additionalData_["atmForward"] = (-floatingNpv / fixedBps) / 1E4;
+
+    // Compute fair rate using the new utility function
+    // Restrict to SIMM plain-vanilla IR legs, but allow multi-leg and cross-currency within that scope
+    if (allLegsAreSimmPlainVanillaIrLegs_ && !legs_.empty() && !discountCurves_.empty() &&
+        discountCurves_.size() == numLegs) {
+        try {
+            // Step 1: Determine reference leg and legs to exclude
+            auto [refIdx, excludeIndices] = selectReferenceLeg(legData_);
+
+            // Build inputs for fairRate() - filter out excluded legs
+            std::vector<Leg> fairRateLegs;
+            std::vector<bool> fairRateIsPayer;
+            std::vector<Handle<YieldTermStructure>> fairRateDcs;
+            std::vector<Real> fairRateFx;
+            Size mappedRefIdx = 0;
+
+            std::set<Size> excludeSet(excludeIndices.begin(), excludeIndices.end());
+
+            for (Size i = 0; i < numLegs; ++i) {
+                if (excludeSet.count(i))
+                    continue;
+                if (i == refIdx)
+                    mappedRefIdx = fairRateLegs.size();
+
+                fairRateLegs.push_back(legs_[i]);
+                fairRateIsPayer.push_back(legData_[i].isPayer());
+                fairRateDcs.push_back(discountCurves_[i]);
+                fairRateFx.push_back(fxSpots_[i]);
+            }
+
+            // Compute the fair rate
+            if (!fairRateLegs.empty()) {
+                additionalData_["atmForward"] = fairRate(
+                    fairRateLegs, fairRateIsPayer, fairRateDcs, fairRateFx, mappedRefIdx);
+            }
+        } catch (const std::exception& e) {
+            DLOG("Could not compute atmForward using fairRate utility: " << e.what());
+        }
     }
     return additionalData_;
 }
@@ -393,9 +474,9 @@ std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>
     }
 
     if (nFixed == 0)
-        return string("Basis");  
+        return string("Basis");
     else if (nFloating >= 1)
-        return string("Fixed Float");  
+        return string("Fixed Float");
     else
         return string("Fixed Fixed");
 }

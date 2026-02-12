@@ -25,6 +25,8 @@
 
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ql/handle.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace ore {
 namespace data {
@@ -87,6 +89,10 @@ private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
     bool allLegsAreSimmPlainVanillaIrLegs_ = false;
+    
+    // For fair rate calculation
+    mutable std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>> discountCurves_;
+    mutable std::vector<QuantLib::Real> fxSpots_;
 };
 
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData);
