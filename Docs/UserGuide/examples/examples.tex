@@ -1062,6 +1062,7 @@ The examples can be run individually (see below) or all together with {\tt pytho
 \item Commodity Forward, Option, Swaption, APO: {\tt python run\_commodity.py}
 \item Inflation CPI and YOY Swap, the simulation is run twice using a Dodgson-Kainth and Jarrow-Yildirim model: {\tt python run\_inflation.py}
 \item Credit Default Swap: {\tt python run\_credit.py}
+\item FX Forward Exposure with LocalVol FX process and deterministic interest rate
 \end{itemize}
 
 Somewhat more complex single-trade examples:
@@ -1499,6 +1500,20 @@ Correlation & NettingSetId & CVA & DVA & FBA & FCA \\
 \caption{CDS XVA results with LGM model}
 \end{center}
 \end{table}
+
+\subsubsection{FX Forward Exposure with LocalVol FX process and deterministic interest rate}\label{example:fx_localvol_detrates}
+
+Calling
+
+\medskip
+\centerline{\tt python run\_fx\_localvol.py }
+\medskip
+
+runs pricing of FX Options with smile and exosure simulation with local vol and deterministic rates. The EPE / ENE match
+the T0 pricing with smile volas. Using a Black Scholes fx process underestimates the EPE / ENE on the other hand. You
+can run with Black Scholes by using the outcommented sections in the simulation configuration. You can also switch to
+stochastic rates there. If the local vol process is not corrected for stochastic rates, the resulting EPE / ENE will be
+too high compared to the T0 pricing.
 
 \subsubsection{Capped/Floored (Digital) CMS Spread}\label{example:exposure_cmsspread}
 

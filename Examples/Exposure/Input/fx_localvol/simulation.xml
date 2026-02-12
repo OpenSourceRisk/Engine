@@ -20,6 +20,8 @@
     <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
 
+      <!-- calibrate stochastic vol interest rate processes -->
+
       <!-- <LGM ccy="default"> -->
       <!--   <CalibrationType>Bootstrap</CalibrationType> -->
       <!--   <Volatility> -->
@@ -45,6 +47,8 @@
       <!--     <Scaling>1.0</Scaling> -->
       <!--   </ParameterTransformation> -->
       <!-- </LGM> -->
+
+      <!-- use zero vol interest rate processes  -->
 
       <LGM ccy="default">
         <CalibrationType>None</CalibrationType>
@@ -75,6 +79,7 @@
     </InterestRateModels>
     <ForeignExchangeModels>
 
+      <!-- Black Scholes for FX -->
 
       <!-- <CrossCcyLGM foreignCcy="default"> -->
       <!--   <DomesticCcy>USD</DomesticCcy> -->
@@ -91,6 +96,7 @@
       <!--   </CalibrationOptions> -->
       <!-- </CrossCcyLGM> -->
 
+      <!-- LocalVol for FX -->
 
       <LocalVol foreignCcy="default">
         <DomesticCcy>USD</DomesticCcy>
@@ -101,7 +107,6 @@
         <CalibrationMoneyness>-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0</CalibrationMoneyness>
         <CalibrationGrid>40,3M</CalibrationGrid>
       </LocalVol>
-
 
     </ForeignExchangeModels>
 
