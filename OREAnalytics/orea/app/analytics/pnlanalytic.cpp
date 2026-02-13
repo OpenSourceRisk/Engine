@@ -19,6 +19,7 @@
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
@@ -28,6 +29,7 @@
 #include <orea/scenario/scenarioutilities.hpp>
 
 #include <ored/marketdata/structuredcurveerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using RFType = ore::analytics::RiskFactorKey::KeyType;
 

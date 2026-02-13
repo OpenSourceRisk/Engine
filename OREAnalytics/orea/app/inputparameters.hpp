@@ -22,62 +22,49 @@
 
 #pragma once
 
-#include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/app/parameters.hpp>
-#include <orea/cube/npvcube.hpp>
+#include <orea/app/inputvariables.hpp>
+
 #include <orea/engine/sacvasensitivityrecord.hpp>
 #include <orea/engine/cvasensitivityrecord.hpp>
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
-#include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/sensitivityscenariodata.hpp>
-#include <orea/scenario/stressscenariodata.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
-#include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/scenario/historicalscenariogenerator.hpp>
-#include <orea/simm/crifloader.hpp>
-#include <orea/simm/simmcalibration.hpp>
-#include <orea/simm/crif.hpp>
-#include <orea/simm/simmbasicnamemapper.hpp>
-#include <orea/simm/simmbucketmapper.hpp>
-#include <orea/simm/simmconfiguration.hpp>
-#include <ored/configuration/curveconfigurations.hpp>
-#include <ored/configuration/iborfallbackconfig.hpp>
-#include <ored/configuration/baseltrafficlightconfig.hpp>
-#include <ored/marketdata/csvloader.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/model/crossassetmodeldata.hpp>
-#include <ored/portfolio/collateralbalance.hpp>
-#include <ored/portfolio/nettingsetmanager.hpp>
-#include <ored/portfolio/portfolio.hpp>
-#include <ored/portfolio/referencedata.hpp>
-#include <ored/portfolio/counterpartymanager.hpp>
-#include <ored/utilities/calendaradjustmentconfig.hpp>
-#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <filesystem>
+
+namespace ore { 
+namespace data { 
+
+class Portfolio; 
+class BasicReferenceDataManager; 
+class Conventions; 
+class IborFallbackConfig; 
+class EngineData; 
+class TodaysMarketParameters; 
+class CounterpartyManager;
+class BaselTrafficLightData;
+class CalendarAdjustmentConfig;
+class CurrencyConfig;
+class CrossAssetModelData;
+class CollateralBalances;
+class NettingSetManager;
+}
+}
 
 namespace ore {
 namespace analytics {
 using namespace ore::data;
 
 class InputParameters;
-
-struct InputVariableInfo {
-    std::vector<std::string> altNames;
-    std::optional<std::string> defaultValue;
-
-    InputVariableInfo(std::vector<std::string> an = {}, std::optional<std::string> dv = std::nullopt)
-        : altNames(std::move(an)), defaultValue(std::move(dv)) {}
-};
-
-struct InputVariables {
-    virtual ~InputVariables() = default;
-    virtual void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) = 0;
-    void loadVariables(const QuantLib::ext::weak_ptr<InputParameters>& inputs);
-};
+class SimmBasicNameMapper;
+class SimmBucketMapper;
+class SensitivityStream;
+class Crif;
+class CreditSimulationParameters;
+class SensitivityScenarioData;
+class StressTestScenarioData;
+class NPVCube;
+class SimmCalibrationData;
+class SimmConfiguration;
 
 struct SetupVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
@@ -1048,23 +1035,23 @@ public:
     const std::string& pcaOutputFileName() const { return pcaOutputFileName_; }
     const std::string& meanReversionOutputFileName() const { return meanReversionOutputFileName_; }
 
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& xvaStressSimMarketParams() const {
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& xvaStressSimMarketParams() const {
         return xvaStressSimMarketParams_;
     }
-    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& xvaStressScenarioData() const {
+    const QuantLib::ext::shared_ptr<StressTestScenarioData>& xvaStressScenarioData() const {
         return xvaStressScenarioData_;
     }
-    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaStressSensitivityScenarioData() const {
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& xvaStressSensitivityScenarioData() const {
         return xvaStressSensitivityScenarioData_;
     }
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>&
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>&
     sensitivityStressSimMarketParams() const {
         return sensitivityStressSimMarketParams_;
     }
-    const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& sensitivityStressScenarioData() const {
+    const QuantLib::ext::shared_ptr<StressTestScenarioData>& sensitivityStressScenarioData() const {
         return sensitivityStressScenarioData_;
     }
-    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>&
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>&
     sensitivityStressSensitivityScenarioData() const {
         return sensitivityStressSensitivityScenarioData_;
     }
@@ -1072,10 +1059,10 @@ public:
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
 
     // Getters for XVA Explain
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& xvaExplainSimMarketParams() const {
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& xvaExplainSimMarketParams() const {
         return xvaExplainSimMarketParams_;
     }
-    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaExplainSensitivityScenarioData() const {
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& xvaExplainSensitivityScenarioData() const {
         return xvaExplainSensitivityScenarioData_;
     }
 
@@ -1092,10 +1079,10 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() const { return simmVersion_; }
-    const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() const { return crif_; }
-    const QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() const { return simmNameMapper_; }
-    const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() const { return simmBucketMapper_; }
-    const QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() const { return simmCalibrationData_; }
+    const QuantLib::ext::shared_ptr<Crif>& crif() const { return crif_; }
+    const QuantLib::ext::shared_ptr<SimmBasicNameMapper>& simmNameMapper() const { return simmNameMapper_; }
+    const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper() const { return simmBucketMapper_; }
+    const QuantLib::ext::shared_ptr<SimmCalibrationData>& simmCalibrationData() const { return simmCalibrationData_; }
     const std::string& simmCalculationCurrencyCall() const { return simmCalculationCurrencyCall_; }
     const std::string& simmCalculationCurrencyPost() const { return simmCalculationCurrencyPost_; }
     const std::string& simmResultCurrency() const { return simmResultCurrency_; }

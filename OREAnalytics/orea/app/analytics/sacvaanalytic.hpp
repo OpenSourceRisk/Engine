@@ -29,6 +29,9 @@
 namespace ore {
 namespace analytics {
 
+
+class InputParameters;
+
 struct SaCvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 

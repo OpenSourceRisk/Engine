@@ -17,20 +17,21 @@
 */
 
 #include <orea/app/analytics/calibrationanalytic.hpp>
-
+#include <orea/app/inputparameters.hpp>
+#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
+#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
 
-#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
-#include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
-#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;
