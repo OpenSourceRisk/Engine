@@ -1,4 +1,7 @@
 include_guard(GLOBAL)
+# In version 3.17+, we can get rid of this and use:
+# https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_FUNCTION_LIST_DIR.html
+set(_THIS_MODULE_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 include(CheckCXXCompilerFlag)
 include(CheckLinkerFlag)
@@ -258,13 +261,12 @@ function(generate_git_hash custom_target_name file_dir)
     file(WRITE "${GIT_VER_FILE}")
   endif()
 
-  set(GIT_VER_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/generateGitVersion.cmake")
   add_custom_target(
     ${custom_target_name} ALL
     COMMAND ${CMAKE_COMMAND}
             -D IN_FILE=${file_dir}/gitversion.hpp.in
             -D OUT_FILE=${file_dir}/gitversion.hpp
-            -P ${GIT_VER_SCRIPT}
+            -P "${_THIS_MODULE_BASE_DIR}/generateGitVersion.cmake"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 endfunction()
