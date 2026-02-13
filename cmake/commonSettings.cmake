@@ -139,8 +139,12 @@ else()
 
     # The add_compiler_flag and add_linker_flag call is generally unnecessary for these.
     # If there are unusual options or specific issues, we can add back the call to either one.
+    # CMake supported compiler IDs are documented here:
+    # https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html
+    set(clangs_to_check "AppleClang,Clang")
     add_link_options(
         -pthread
+        $<$<AND:$<BOOL:${APPLE}>,$<CXX_COMPILER_ID:${clangs_to_check}>>:-flat_namespace>
     )
 
     add_compile_options(
@@ -155,24 +159,13 @@ else()
         --system-header-prefix=boost/
         -Werror=unused-variable
         -Werror=uninitialized
+        "$<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:${clangs_to_check}>>:-Xclang -fno-pch-timestamp>"
+        $<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:GNU>>:-fpch-preprocess>
+        $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Wsometimes-uninitialized>
+        $<$<CXX_COMPILER_ID:GNU>:-Wmaybe-uninitialized>
+        $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Wunused-lambda-capture>
+        $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Winconsistent-missing-override>
     )
-
-    # Flags that are either gcc or clang specific or should be checked.
-    if (APPLE)
-        add_linker_flag("-flat_namespace" supportsFlatNameSpace)
-    endif()
-
-    if(QL_USE_PCH)
-      # see https://ccache.dev/manual/4.8.3.html#_precompiled_headers
-      add_compiler_flag("-Xclang -fno-pch-timestamp" supportsNoPchTimestamp)
-      # needed for gcc, although the ccache documentation does not strictly require this
-      add_compiler_flag("-fpch-preprocess" supportsPchPreprocess)
-    endif()
-
-    add_compiler_flag("-Wsometimes-uninitialized" supportsSometimesUninitialized)
-    add_compiler_flag("-Wmaybe-uninitialized" supportsMaybeUninitialized)
-    add_compiler_flag("-Werror=unused-lambda-capture" supportsUnusedLambdaCapture)
-    add_compiler_flag("-Werror=inconsistent-missing-override" supportsInconsistentMissingOverride)
 endif()
 
 # link against static boost libraries
