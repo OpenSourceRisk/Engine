@@ -39,72 +39,76 @@ DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, c
 
     today_ = Settings::instance().evaluationDate();
 
-    if (grid == "ALPHA") {
-        // ALPHA is
-        // quarterly up to 10Y,
-        // annual up to 30Y,
-        // quinquennial up to 100Y
-        for (Size i = 1; i < 40; i++) { // 3M up to 39*3M = 117M = 9Y9M
-            Period p(i * 3, Months);
-            p.normalize();
-            tenors_.push_back(p);
-        }
-        for (Size i = 10; i < 30; i++) // 10Y up to 29Y
-            tenors_.push_back(Period(i, Years));
-        for (Size i = 30; i < 105; i += 5) // 30Y up to 100Y
-            tenors_.push_back(Period(i, Years));
-    } else if (grid == "BETA") {
-        // BETA is
-        // monthly up to 10Y,
-        // quarterly up to 20Y,
-        // annually up to 50Y,
-        // quinquennial up to 100Y
-        for (Size i = 1; i < 119; i++) {
-            Period p = i * Months;
-            p.normalize();
-            tenors_.push_back(p);
-        }
-        for (Size i = 40; i < 80; i++) {
-            Period p = i * 3 * Months;
-            p.normalize();
-            tenors_.push_back(p);
-        }
-        for (Size i = 20; i < 50; i++)
-            tenors_.push_back(i * Years);
-        for (Size i = 50; i <= 100; i += 5)
-            tenors_.push_back(i * Years);
-    } else { // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
-        vector<string> tokens;
-        boost::split(tokens, grid, boost::is_any_of(","));
-        QL_REQUIRE(!tokens.empty(), "DateGrid(): no tokens in grid spec '" << grid << "'");
-        QuantLib::Integer gridSize;
-        if (tokens.size() <= 2 &&
-            tryParse(tokens[0], gridSize, std::function<QuantLib::Integer(const std::string& s)>(parseInteger))) {
-            // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
-            Period gridTenor = 1 * Years; // default
-            QL_REQUIRE(gridSize > 0, "DateGrid(): gridSize is zero, spec is '" << grid << "'");
-            if (tokens.size() == 2)
-                gridTenor = data::parsePeriod(tokens[1]);
-            if (gridTenor == Period(1, Days)) {
-                // we have a daily grid. Period and Calendar are not consistent with
-                // working & actual days, so we set the tenor grid
-                Date d = today_;
-                for (Size i = 0; i < gridSize; i++) {
-                    d = gridCalendar.advance(d, Period(1, Days), Following); // next working day
-                    Size n = d - today_;
-                    tenors_.push_back(Period(n, Days));
+    try {
+        if (grid == "ALPHA") {
+            // ALPHA is
+            // quarterly up to 10Y,
+            // annual up to 30Y,
+            // quinquennial up to 100Y
+            for (Size i = 1; i < 40; i++) { // 3M up to 39*3M = 117M = 9Y9M
+                Period p(i * 3, Months);
+                p.normalize();
+                tenors_.push_back(p);
+            }
+            for (Size i = 10; i < 30; i++) // 10Y up to 29Y
+                tenors_.push_back(Period(i, Years));
+            for (Size i = 30; i < 105; i += 5) // 30Y up to 100Y
+                tenors_.push_back(Period(i, Years));
+        } else if (grid == "BETA") {
+            // BETA is
+            // monthly up to 10Y,
+            // quarterly up to 20Y,
+            // annually up to 50Y,
+            // quinquennial up to 100Y
+            for (Size i = 1; i < 119; i++) {
+                Period p = i * Months;
+                p.normalize();
+                tenors_.push_back(p);
+            }
+            for (Size i = 40; i < 80; i++) {
+                Period p = i * 3 * Months;
+                p.normalize();
+                tenors_.push_back(p);
+            }
+            for (Size i = 20; i < 50; i++)
+                tenors_.push_back(i * Years);
+            for (Size i = 50; i <= 100; i += 5)
+                tenors_.push_back(i * Years);
+        } else { // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
+            vector<string> tokens;
+            boost::split(tokens, grid, boost::is_any_of(","));
+            QL_REQUIRE(!tokens.empty(), "DateGrid(): no tokens in grid spec '" << grid << "'");
+            QuantLib::Integer gridSize;
+            if (tokens.size() <= 2 &&
+                tryParse(tokens[0], gridSize, std::function<QuantLib::Integer(const std::string& s)>(parseInteger))) {
+                // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
+                Period gridTenor = 1 * Years; // default
+                QL_REQUIRE(gridSize > 0, "DateGrid(): gridSize is zero, spec is '" << grid << "'");
+                if (tokens.size() == 2)
+                    gridTenor = data::parsePeriod(tokens[1]);
+                if (gridTenor == Period(1, Days)) {
+                    // we have a daily grid. Period and Calendar are not consistent with
+                    // working & actual days, so we set the tenor grid
+                    Date d = today_;
+                    for (Size i = 0; i < gridSize; i++) {
+                        d = gridCalendar.advance(d, Period(1, Days), Following); // next working day
+                        Size n = d - today_;
+                        tenors_.push_back(Period(n, Days));
+                    }
+                } else {
+                    for (Size i = 0; i < gridSize; i++)
+                        tenors_.push_back((i + 1) * gridTenor);
                 }
             } else {
-                for (Size i = 0; i < gridSize; i++)
-                    tenors_.push_back((i + 1) * gridTenor);
+                // New style : 1D,2D,1W,2W,3Y,5Y,....
+                for (Size i = 0; i < tokens.size(); i++)
+                    tenors_.push_back(data::parsePeriod(tokens[i]));
             }
-        } else {
-            // New style : 1D,2D,1W,2W,3Y,5Y,....
-            for (Size i = 0; i < tokens.size(); i++)
-                tenors_.push_back(data::parsePeriod(tokens[i]));
         }
+        buildDates(gridCalendar, dayCounter);
+    } catch (const std::exception& e) {
+        QL_FAIL("DateGrid: error during build: " << e.what());
     }
-    buildDates(gridCalendar, dayCounter);
 }
 
 DateGrid::DateGrid(const vector<Period>& tenors, const QuantLib::Calendar& gridCalendar,

@@ -322,6 +322,8 @@
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/fxlvmodel.hpp>
+#include <qle/models/fxlvparametrization.hpp>
 #include <qle/models/fxmodel.hpp>
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
 #include <qle/models/gaussianlhplossmodel.hpp>

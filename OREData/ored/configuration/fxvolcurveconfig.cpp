@@ -187,7 +187,8 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         bool curvesRequired = dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta ||
                               dimension_ == Dimension::SmileBFRR;
         fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", curvesRequired);
-        fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", curvesRequired);
+        // the domestic curve id is always optional, if not given / empty it is set in the curve builder
+        fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", false);
     }
 
     timeInterpolation_ =

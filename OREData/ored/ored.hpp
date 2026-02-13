@@ -99,6 +99,8 @@
 #include <ored/model/eqbsdata.hpp>
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <ored/model/fxdata.hpp>
+#include <ored/model/fxlvdata.hpp>
 #include <ored/model/hestonmodelbuilder.hpp>
 #include <ored/model/hestonmodelcalibration.hpp>
 #include <ored/model/hwbuilder.hpp>
