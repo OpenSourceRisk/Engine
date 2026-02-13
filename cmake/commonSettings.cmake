@@ -4,8 +4,12 @@ include(CheckCXXCompilerFlag)
 include(CheckLinkerFlag)
 
 # Information to help with install.
-set(ORE_PACKAGE_NAME    "Ore")
-set(ORE_PACKAGE_VERSION "1.8.15")
+set(ORE_VERSION_MAJOR 1)
+set(ORE_VERSION_MINOR 8)
+set(ORE_VERSION_PATCH 15)
+set(ORE_VERSION_TWEAK 0)
+set(ORE_PACKAGE_VERSION ${ORE_VERSION_MAJOR}.${ORE_VERSION_MINOR}.${ORE_VERSION_PATCH}.${ORE_VERSION_TWEAK})
+set(ORE_PACKAGE_NAME "Ore")
 
 # Used to define installation directories.
 include(GNUInstallDirs)
@@ -87,70 +91,70 @@ endif()
 
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
+
     # build static libs always
     set(CMAKE_MSVC_RUNTIME_LIBRARY
-        "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
+        "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>"
+    )
 
-    add_compile_options(/external:env:BOOST)
-    add_compile_options(/external:W0)
-    add_compile_definitions(_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-    add_compile_definitions(_SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING)
-    add_compile_definitions(_SCL_SECURE_NO_DEPRECATE)
-    add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
-    add_compile_definitions(BOOST_ENABLE_ASSERT_HANDLER)
-    add_compile_options(/bigobj)
-    add_compile_options(/W3)
-    #add_compile_options(/we4265) #no-virtual-destructor
-    #add_compile_options(/we4388) # 'equality-operator' : signed/unsigned mismatch
-    add_compile_options(/we5038) # reorder
-    # add_compile_options(/we4101) # unreferenced local variable (too strict)
-    add_compile_options(/we4189) # 'identifier' : local variable is initialized but not referenced
-    add_compile_options(/we4700) # uninitialized local variable 'name' used
-    add_compile_options(/we5233) # unused lambda
-    add_compile_options(/we4508) # 'function' : function should return a value; 'void' return type assumed
-    add_compile_options(/wd4834)
-    add_compile_options(/we26815) # dangling references/pointer
-    # add_compiler_flag("/we4389" signed_compare_mscv)
+    # For info on MSVC compile options /we<NUM> see:
+    # https://learn.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/c-cpp-build-errors?view=msvc-180
+    add_compile_options(
+        /external:env:BOOST
+        /external:W0
+        /bigobj # This should really be scoped to targets that need it.
+        /W3
+        /we5038 /we4189 /we4700 /we5233 /we4508 /wd4834 /we26815
+        "$<$<CONFIG:Release>:/GF;/Gy;/Ot;/GT>"
+        "$<$<CONFIG:RelWithDebInfo>:/GF;/Gy;/Ot;/GT;Oi>"
+        $<$<BOOL:${MSVC_PARALLELBUILD}>:/MP>
+    )
 
-    add_link_options(/LARGEADDRESSAWARE)
+    add_compile_definitions(
+        _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
+        _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
+        _SCL_SECURE_NO_DEPRECATE
+        _CRT_SECURE_NO_DEPRECATE
+        BOOST_ENABLE_ASSERT_HANDLER
+    )
 
-    add_compile_options("$<$<CONFIG:Release>:/GF>")
-    add_compile_options("$<$<CONFIG:Release>:/Gy>")
-    add_compile_options("$<$<CONFIG:Release>:/Ot>")
-    add_compile_options("$<$<CONFIG:Release>:/GT>")
-
-    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GF>")
-    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Gy>")
-    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/GT>")
-    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Oi>")
-    add_compile_options("$<$<CONFIG:RelWithDebInfo>:/Ot>")
-
-    if(MSVC_PARALLELBUILD)
-        add_compile_options(/MP)
-    endif()
+    add_link_options(
+        /LARGEADDRESSAWARE
+    )
 
 else()
     if (NOT DEFINED BUILD_SHARED_LIBS)
-        # build shared libs always
         set(BUILD_SHARED_LIBS ON)
     endif()
 
-    # Issue with Boost CMake finder introduced in version 1.70
-    set(Boost_NO_BOOST_CMAKE         ON)
+    add_compile_definitions(
+        # avoid a crash in valgrind that sometimes occurs if this flag is not defined
+        BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+        $<$<NOT:$<CONFIG:Debug>>:BOOST_UBLAS_NDEBUG>
+        BOOST_ENABLE_ASSERT_HANDLER
+    )
 
-    # avoid a crash in valgrind that sometimes occurs if this flag is not defined
-    add_definitions(-DBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
+    # The add_compiler_flag and add_linker_flag call is generally unnecessary for these.
+    # If there are unusual options or specific issues, we can add back the call to either one.
+    add_link_options(
+        -pthread
+    )
 
-    # switch off blas debug for build types release
-    if(NOT("${CMAKE_BUILD_TYPE}" STREQUAL "Debug"))
-        add_definitions(-DBOOST_UBLAS_NDEBUG)
-    endif()
+    add_compile_options(
+        -pthread
+        -Wall
+        -Werror=non-virtual-dtor
+        -Werror=reorder
+        -Werror=unused-but-set-variable
+        -Werror=return-type
+        -Werror=unused-function
+        -Wno-unknown-pragmas
+        --system-header-prefix=boost/
+        -Werror=unused-variable
+        -Werror=uninitialized
+    )
 
-    # add pthread flag
-    add_compiler_flag("-pthread" usePThreadCompilerFlag)
-    add_linker_flag("-pthread" usePThreadLinkerFlag)
-
-    # use flat namespace to fix symbol lookup issues and align with linux more closely
+    # Flags that are either gcc or clang specific or should be checked.
     if (APPLE)
         add_linker_flag("-flat_namespace" supportsFlatNameSpace)
     endif()
@@ -162,46 +166,12 @@ else()
       add_compiler_flag("-fpch-preprocess" supportsPchPreprocess)
     endif()
 
-    # enable boost assert handler
-    add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
-
-    # add some warnings
-    add_compiler_flag("-Wall" supportsWall)
     add_compiler_flag("-Wsometimes-uninitialized" supportsSometimesUninitialized)
     add_compiler_flag("-Wmaybe-uninitialized" supportsMaybeUninitialized)
-
-    # turn the following warnings into errors
-    add_compiler_flag("-Werror=non-virtual-dtor" supportsNonVirtualDtor)
-    # the line below breaks the linux build
-    #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
-    #add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
-    add_compiler_flag("-Werror=reorder" supportsReorder)
-    #add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
-    add_compiler_flag("-Werror=unused-but-set-variable" supportsUnusedButSetVariable)
-    #add_compiler_flag("-Werror=uninitialized" supportsUninitialized)
     add_compiler_flag("-Werror=unused-lambda-capture" supportsUnusedLambdaCapture)
-    add_compiler_flag("-Werror=return-type" supportsReturnType)
-    add_compiler_flag("-Werror=unused-function" supportsUnusedFunction)
-    # the line below breaks the linux build
-    #add_compiler_flag("-Werror=suggest-override" supportsSuggestOverride)
     add_compiler_flag("-Werror=inconsistent-missing-override" supportsInconsistentMissingOverride)
-
-    # disable some warnings
-    add_compiler_flag("-Wno-unknown-pragmas" supportsNoUnknownPragmas)
-
-    # disable warnings from boost
-    add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
-
-    add_compile_options("-Werror=unused-variable")
-    add_compile_options("-Werror=uninitialized")
-
-    # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
-    # if QuantLib is build separately
-    include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
-
 endif()
 
-# Boost #
 # link against static boost libraries
 if(NOT DEFINED Boost_USE_STATIC_LIBS)
     if(BUILD_SHARED_LIBS)
@@ -213,7 +183,7 @@ endif()
 
 # Boost static runtime. ON for MSVC
 if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
-    if(BUILD_SHARED_LIBS OR(MSVC AND MSVC_LINK_DYNAMIC_RUNTIME))
+    if(BUILD_SHARED_LIBS OR (MSVC AND MSVC_LINK_DYNAMIC_RUNTIME))
         set(Boost_USE_STATIC_RUNTIME OFF)
     else()
         set(Boost_USE_STATIC_RUNTIME ON)
@@ -253,25 +223,12 @@ endif()
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
 add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
 
-# set library locations
-get_filename_component(QUANTLIB_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantLib" ABSOLUTE)
-get_filename_component(QUANTEXT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantExt" ABSOLUTE)
-get_filename_component(OREDATA_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREData" ABSOLUTE)
-get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREAnalytics" ABSOLUTE)
-
 # parallel unit test runner
 if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
     if(UNIX AND NOT APPLE)
         find_library(RT_LIBRARY rt REQUIRED)
     endif()
 endif()
-
-# convenience function that adds a link directory dir, but only if it exists
-function(add_link_directory_if_exists dir)
-  if(EXISTS "${dir}")
-    link_directories("${dir}")
-  endif()
-endfunction()
 
 # In QuantLib, this is guarded by QL_TAGGED_LAYOUT.
 # We may want to later add ORE_TAGGED_LAYOUT to have this control also.
@@ -294,23 +251,29 @@ if (MSVC)
     set(CMAKE_MINSIZEREL_POSTFIX ${RELEASE_POSTFIX})
 endif()
 
-function(generate_git_hash custom_target_name)
+function(generate_git_hash custom_target_name file_dir)
   # Only write the file if it does not exist to prevent unnecessary rebuilds.
-  set(GIT_VER_FILE "${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp")
+  set(GIT_VER_FILE "${file_dir}/gitversion.hpp")
   if(NOT EXISTS "${GIT_VER_FILE}")
     file(WRITE "${GIT_VER_FILE}")
   endif()
 
+  set(GIT_VER_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/generateGitVersion.cmake")
   add_custom_target(
     ${custom_target_name} ALL
-    COMMAND ${CMAKE_COMMAND} -D IN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -D OUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp
-                             -P ${QUANTEXT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    COMMAND ${CMAKE_COMMAND}
+            -D IN_FILE=${file_dir}/gitversion.hpp.in
+            -D OUT_FILE=${file_dir}/gitversion.hpp
+            -P ${GIT_VER_SCRIPT}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
 endfunction()
 
-find_package(Doxygen)
-if(ORE_BUILD_DOC AND NOT Doxygen_FOUND)
-    message("Doxygen needs to be installed to generate the doxygen documentation.")
+if(ORE_BUILD_DOC)
+    find_package(Doxygen)
+    if(NOT Doxygen_FOUND)
+        message("Doxygen needs to be installed to generate the doxygen documentation.")
+    endif()
 endif()
 
 function(generate_doxy_docs doxy_filename)
