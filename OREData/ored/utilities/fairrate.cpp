@@ -92,7 +92,8 @@ Real fairRate(const std::vector<Leg>& legs,
               const std::vector<bool>& isPayer,
               const std::vector<Handle<YieldTermStructure>>& discountCurves,
               const std::vector<Real>& fxSpotToBase,
-              Size referenceLegIdx) {
+              Size referenceLegIdx,
+              Real* spreadCorrection) {
 
     // --- Input validation ---
     Size n = legs.size();
@@ -116,14 +117,35 @@ Real fairRate(const std::vector<Leg>& legs,
     }
 
     // Step 3 — Compute signed NPV in base ccy for all non-reference legs
+    // after stripping floating spread contributions
     Real totalNpvNonRef = 0.0;
+    Real spreadNpvNonRefBase = 0.0;
+    Date settl = Settings::instance().evaluationDate();
+
     for (Size l = 0; l < n; ++l) {
         if (l == referenceLegIdx)
             continue;
+
         auto [npv, bps] = CashFlows::npvbps(
             legs[l], *discountCurves[l].operator->());
+
+        Real spreadNpv = 0.0;
+        const YieldTermStructure& dc = *discountCurves[l].operator->();
+        for (const auto& cf : legs[l]) {
+            if (cf->hasOccurred(settl) || cf->tradingExCoupon(settl))
+                continue;
+            if (auto frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf)) {
+                spreadNpv += frc->nominal() * frc->accrualPeriod() * frc->spread() * dc.discount(cf->date());
+            }
+        }
+        DiscountFactor npvDateDf = dc.discount(settl);
+        if (std::fabs(npvDateDf) > QL_EPSILON)
+            spreadNpv /= npvDateDf;
+
+        Real strippedNpv = npv - spreadNpv;
         Real dir = isPayer[l] ? -1.0 : 1.0;
-        totalNpvNonRef += npv * dir * fxSpotToBase[l];
+        totalNpvNonRef += strippedNpv * dir * fxSpotToBase[l];
+        spreadNpvNonRefBase += spreadNpv * dir * fxSpotToBase[l];
     }
 
     // --- Fixed reference leg ---
@@ -135,15 +157,16 @@ Real fairRate(const std::vector<Leg>& legs,
         Real annuityBase = (bpsRef / basisPoint)
                          * dirRef * fxSpotToBase[referenceLegIdx];
 
-        QL_REQUIRE(std::fabs(annuityBase) > QL_EPSILON,
-                   "fairRate: zero annuity on fixed reference leg");
-        return -totalNpvNonRef / annuityBase;
+            QL_REQUIRE(std::fabs(annuityBase) > QL_EPSILON,
+                       "fairRate: zero annuity on fixed reference leg");
+            if (spreadCorrection)
+                *spreadCorrection = spreadNpvNonRefBase / annuityBase;
+            return -totalNpvNonRef / annuityBase;
     }
 
     // --- Floating reference leg ---
     const auto& refLeg = legs[referenceLegIdx];
     const YieldTermStructure& dc = *discountCurves[referenceLegIdx].operator->();
-    Date settl = Settings::instance().evaluationDate();
 
     Real strippedNpv = 0.0;
     Real annuityRaw  = 0.0;
@@ -159,7 +182,7 @@ Real fairRate(const std::vector<Leg>& legs,
             // Use the pricer-computed rate if available (includes adjustments),
             // otherwise fall back to raw index fixing
             Real effectiveRate;
-            
+
             if (frc->pricer()) {
                 try {
                     // rate() returns: gearing * adjustedFixing + spread
@@ -175,7 +198,7 @@ Real fairRate(const std::vector<Leg>& legs,
                 // No pricer attached, use raw fixing
                 effectiveRate = frc->gearing() * frc->indexFixing();
             }
-            
+
             Real amt = frc->nominal() * frc->accrualPeriod() * effectiveRate;
             strippedNpv += amt * df;
             annuityRaw  += frc->nominal()
@@ -205,6 +228,8 @@ Real fairRate(const std::vector<Leg>& legs,
 
     QL_REQUIRE(std::fabs(annuityBase) > QL_EPSILON,
                "fairRate: zero annuity on floating reference leg");
+    if (spreadCorrection)
+        *spreadCorrection = spreadNpvNonRefBase / annuityBase;
     return -totalNpv / annuityBase;
 }
 

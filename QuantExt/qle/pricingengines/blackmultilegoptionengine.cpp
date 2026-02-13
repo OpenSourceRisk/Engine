@@ -362,10 +362,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     underlyingNpv_ = fixedNpv + floatingNpv + simpleCfNpv;
 
-    additionalResults_["spreadCorrection"] = spreadCorrection;
     additionalResults_["simpleCashflowCorrection"] = simpleCfCorrection;
     additionalResults_["strike"] = effectiveFixedRate;
-    additionalResults_["atmForward"] = effectiveAtmForward;
     additionalResults_["underlyingNPV"] = underlyingNpv_;
     additionalResults_["annuity"] = annuity;
     additionalResults_["timeToExpiry"] = exerciseTime;

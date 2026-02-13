@@ -69,7 +69,8 @@ QuantLib::Real fairRate(const std::vector<QuantLib::Leg>& legs,
                         const std::vector<bool>& isPayer,
                         const std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>>& discountCurves,
                         const std::vector<QuantLib::Real>& fxSpotToBase,
-                        QuantLib::Size referenceLegIdx);
+                        QuantLib::Size referenceLegIdx,
+                        QuantLib::Real* spreadCorrection = nullptr);
 
 } // namespace data
 } // namespace ore

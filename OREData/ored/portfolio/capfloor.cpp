@@ -861,8 +861,10 @@ const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() cons
     if (legData_.legType() == LegType::Floating &&
         !plainFloatingLeg_.empty() && !discountCurve_.empty()) {
         try {
+            Real spreadCorrection = 0.0;
             additionalData_["atmForward"] = std::abs(fairRate(
-                {plainFloatingLeg_}, {false}, {discountCurve_}, {1.0}, 0));
+                {plainFloatingLeg_}, {false}, {discountCurve_}, {1.0}, 0, &spreadCorrection));
+            additionalData_["spreadCorrection"] = spreadCorrection;
         } catch (const std::exception& e) {
             DLOG("Could not compute atmForward for CapFloor " << id() << ": " << e.what());
         }

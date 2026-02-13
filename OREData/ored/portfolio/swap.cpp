@@ -377,8 +377,10 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
 
             // Compute the fair rate
             if (!fairRateLegs.empty()) {
+                Real spreadCorrection = 0.0;
                 additionalData_["atmForward"] = fairRate(
-                    fairRateLegs, fairRateIsPayer, fairRateDcs, fairRateFx, mappedRefIdx);
+                    fairRateLegs, fairRateIsPayer, fairRateDcs, fairRateFx, mappedRefIdx, &spreadCorrection);
+                additionalData_["spreadCorrection"] = spreadCorrection;
             }
         } catch (const std::exception& e) {
             DLOG("Could not compute atmForward using fairRate utility: " << e.what());
