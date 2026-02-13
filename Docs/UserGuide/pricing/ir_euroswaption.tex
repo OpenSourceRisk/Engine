@@ -1,25 +1,16 @@
 \subsubsection{European Swaption}
 \label{pricing:ir_euroswaption}
 
-Standard European Swaptions are priced using the Black model for log-normal and shifted
+European Swaptions are priced using the Black model for log-normal and shifted
 log-normal volatilities, and the Bachelier model for normal volatilities. The 
 full volatility smile (cube) is taken into account where available.
 
-Trades are considered a ``standard European swaption'' if the following criteria are met:
+If the Black pricer does not support certain features of the underlying, a numerical pricing is used, as for
+Bermudan swaptions (see \ref{pricing:ir_bermswaption}):
 
 \begin{itemize}
-\item the exercise type is set to European (if set to Bermudan, and only one exercise date is present, this does {\em not} count as European!)
-\item the underlying has exactly two legs, one payer, one receiever and one of type ``Fixed'', one of type ``Floating''
-\item the underlying notional is constant
-\item the underlying fixed rate is constant
-\item the underlying float margin is constant
-\item the underlying float gearing is constant
-\item the underlying float index is Ibor (OIS, BMA do not count as Standard) and fixes in advance (i.e. not in arrears)
-\item the underlying has no embedded caps / floors
+\item the underlying has embedded caps / floors
 \end{itemize}
-
-If a trade is not classified as ``standard European'', it is priced using the Bermudan pricer, see
-\ref{pricing:ir_bermswaption}.
 
 \subsubsection*{Black model - log-normal volatilities}
 
