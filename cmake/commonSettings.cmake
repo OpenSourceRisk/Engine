@@ -313,3 +313,32 @@ function(msvc_wpo_options target_name)
         endforeach()
     endif()
 endfunction()
+
+# Remove compile options from a target if they are present.
+function(remove_compile_options target_name)
+    # If no options are given, do nothing.
+    if(NOT ARGN)
+        return()
+    endif()
+
+    # If the target has no compile flags, do nothing.
+    get_target_property(current_flags ${target_name} COMPILE_OPTIONS)
+    if(NOT current_flags)
+        return()
+    endif()
+
+    # Attempt to remove each flag from the target's compile options, if it is present.
+    set(sth_removed FALSE)
+    foreach(flag IN LISTS ARGN)
+        if("${current_flags}" MATCHES "${flag}")
+            list(REMOVE_ITEM current_flags ${flag})
+            set(sth_removed TRUE)
+            message(DEBUG "Removed compile option ${flag} from target ${target_name}.")
+        endif()
+    endforeach()
+
+    # If we removed something, update the target's compile options.
+    if(sth_removed)
+        set_target_properties(${target_name} PROPERTIES COMPILE_OPTIONS "${current_flags}")
+    endif()
+endfunction()
