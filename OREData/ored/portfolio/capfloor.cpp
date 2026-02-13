@@ -55,7 +55,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string("CapFloor");
     additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     QL_REQUIRE((legData_.legType() == LegType::Floating) || (legData_.legType() == LegType::CMS) ||
                    (legData_.legType() == LegType::DurationAdjustedCMS) || (legData_.legType() == LegType::CMSSpread) ||
@@ -380,7 +380,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         legs_.push_back(makeCPILeg(legData_, zeroIndex.currentLink(), engineFactory));
 
-        
+
         // If any cap/floor rates are provided, ensure they align with the number of schedule periods
         vector < double> effectiveFloors_ = floors_;
         if (floors_.size() > 0) {
@@ -861,8 +861,8 @@ const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() cons
     if (legData_.legType() == LegType::Floating &&
         !plainFloatingLeg_.empty() && !discountCurve_.empty()) {
         try {
-            additionalData_["atmForward"] = fairRate(
-                {plainFloatingLeg_}, {false}, {discountCurve_}, {1.0}, 0);
+            additionalData_["atmForward"] = std::abs(fairRate(
+                {plainFloatingLeg_}, {false}, {discountCurve_}, {1.0}, 0));
         } catch (const std::exception& e) {
             DLOG("Could not compute atmForward for CapFloor " << id() << ": " << e.what());
         }
