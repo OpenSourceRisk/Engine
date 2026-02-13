@@ -156,8 +156,27 @@ Real fairRate(const std::vector<Leg>& legs,
 
         if (auto frc = QuantLib::ext::dynamic_pointer_cast<
                 FloatingRateCoupon>(cf)) {
-            Real amt = frc->nominal() * frc->accrualPeriod()
-                     * frc->gearing() * frc->indexFixing();
+            // Use the pricer-computed rate if available (includes adjustments),
+            // otherwise fall back to raw index fixing
+            Real effectiveRate;
+            
+            if (frc->pricer()) {
+                try {
+                    // rate() returns: gearing * adjustedFixing + spread
+                    Real pricerRate = frc->rate();
+                    Real spread = frc->spread();
+                    // Strip spread to get: gearing * adjustedFixing
+                    effectiveRate = pricerRate - spread;
+                } catch (...) {
+                    // Pricer not computed yet, use raw fixing
+                    effectiveRate = frc->gearing() * frc->indexFixing();
+                }
+            } else {
+                // No pricer attached, use raw fixing
+                effectiveRate = frc->gearing() * frc->indexFixing();
+            }
+            
+            Real amt = frc->nominal() * frc->accrualPeriod() * effectiveRate;
             strippedNpv += amt * df;
             annuityRaw  += frc->nominal()
                          * frc->accrualPeriod() * df;
