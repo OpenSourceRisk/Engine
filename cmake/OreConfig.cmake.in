@@ -6,6 +6,10 @@ include(CMakeFindDependencyMacro)
 find_dependency(Boost REQUIRED COMPONENTS @BOOST_COMPONENT_LIST@)
 
 # Optional dependencies
+if(@ORE_BUILD_QL_SEPARATELY@)
+    find_dependency(QuantLib REQUIRED)
+endif()
+
 if(@ORE_ENABLE_OPENCL@)
     find_dependency(OpenCL REQUIRED)
 endif()
