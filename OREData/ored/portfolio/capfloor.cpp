@@ -25,6 +25,7 @@
 #include <ored/portfolio/durationadjustedcmslegdata.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/fairrate.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -112,6 +113,20 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
             // The only remaining unsupported case are ibor coupons with sub periods
+
+            // Build plain floating leg for fair rate calculation (before applying caps/floors)
+            {
+                LegData plainLd = legData_;
+                QuantLib::ext::shared_ptr<FloatingLegData> plainFld = QuantLib::ext::make_shared<FloatingLegData>(*floatData);
+                plainFld->caps().clear();
+                plainFld->floors().clear();
+                plainFld->nakedOption() = false;
+                plainLd.concreteLegData() = plainFld;
+                plainFloatingLeg_ = engineFactory->legBuilder(plainLd.legType())
+                                        ->buildLeg(plainLd, engineFactory, requiredFixings_,
+                                                   engineFactory->configuration(MarketContext::pricing));
+            }
+
             LegData tmpLegData = legData_;
             QuantLib::ext::shared_ptr<FloatingLegData> tmpFloatData = QuantLib::ext::make_shared<FloatingLegData>(*floatData);
             tmpFloatData->floors() = floors_;
@@ -553,6 +568,25 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     }
 
     additionalData_["startDate"] = to_string(startDate);
+
+    // Store discount curve for fair rate calculation
+    {
+        auto configuration = engineFactory->configuration(MarketContext::pricing);
+        std::string discountCurveName = envelope().additionalField("discount_curve", false);
+        Currency ccy = parseCurrency(legData_.currency());
+        if (discountCurveName.empty()) {
+            discountCurve_ = engineFactory->market()->discountCurve(ccy.code(), configuration);
+        } else {
+            discountCurve_ = indexOrYieldCurve(engineFactory->market(), discountCurveName, configuration);
+        }
+        std::string securitySpread = envelope().additionalField("security_spread", false);
+        if (!securitySpread.empty()) {
+            discountCurve_ = Handle<YieldTermStructure>(
+                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+                    discountCurve_,
+                    engineFactory->market()->securitySpread(securitySpread, configuration)));
+        }
+    }
 }
 
 const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() const {
@@ -821,6 +855,17 @@ const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() cons
 
     } catch (std::exception& e) {
         ALOG("error getting additional data for capfloor trade " << id() << ". " << e.what());
+    }
+
+    // Compute ATM forward of the underlying floating leg
+    if (legData_.legType() == LegType::Floating &&
+        !plainFloatingLeg_.empty() && !discountCurve_.empty()) {
+        try {
+            additionalData_["atmForward"] = fairRate(
+                {plainFloatingLeg_}, {false}, {discountCurve_}, {1.0}, 0);
+        } catch (const std::exception& e) {
+            DLOG("Could not compute atmForward for CapFloor " << id() << ": " << e.what());
+        }
     }
 
     return additionalData_;
