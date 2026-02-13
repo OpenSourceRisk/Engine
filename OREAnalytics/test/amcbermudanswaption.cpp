@@ -122,7 +122,7 @@ struct TestData : ore::test::OreaTopLevelFixture {
         vector<string> optionStrikes = {};
         vector<Time> sigmaTimes = {};
 
-        std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+        std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
         vector<Real> sigmaValues = {0.15};
         fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, false,
                                                                  ParamType::Constant, sigmaTimes, sigmaValues,

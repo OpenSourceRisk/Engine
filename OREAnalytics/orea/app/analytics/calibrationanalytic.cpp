@@ -215,7 +215,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
         // Update Cross Asset Model Data: FX
         for (Size i = 0; i < data->fxConfigs().size(); ++i) {
-            ext::shared_ptr<FxBsData> fxData = data->fxConfigs()[i];
+            ext::shared_ptr<FxBsData> fxData = QuantLib::ext::dynamic_pointer_cast<FxBsData>(data->fxConfigs()[i]);
             ext::shared_ptr<Parametrization> para = model_->fx(i);
             if (auto fxPara = ext::dynamic_pointer_cast<FxBsParametrization>(para)) {
                 LOG("CamData, updating FxBsParametrization:" << " foreign=" << fxData->foreignCcy()
@@ -224,10 +224,10 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 // overwrite initial values with calibration results
                 times = fxPara->parameterTimes(0);
                 values = fxPara->parameterValues(0);
-                fxData->sigmaTimes() = std::vector<Real>(times.begin(), times.end());
-                fxData->sigmaValues() = std::vector<Real>(values.begin(), values.end());
+                fxData->setSigmaTimes(std::vector<Real>(times.begin(), times.end()));
+                fxData->setSigmaValues(std::vector<Real>(values.begin(), values.end()));
                 // set calibration flags to false to ensure we reuse the calibration when loading this version
-                fxData->calibrateSigma() = false;
+                fxData->setCalibrateSigma(false);
             } else {
                 StructuredAnalyticsWarningMessage(
                     "CalibrationAnalytic", "Parametrization not processed.",

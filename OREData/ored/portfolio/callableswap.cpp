@@ -99,9 +99,7 @@ XMLNode* CallableSwap::toXML(XMLDocument& doc) const {
     XMLUtils::appendNode(node, swapNode);
 
     for (Size i = 0; i < swap_.legData().size(); i++) {
-        // poor const correctness in ORE, so we copy...
-        LegData ld = swap_.legData()[i];
-        XMLUtils::appendNode(swapNode, ld.toXML(doc));
+        XMLUtils::appendNode(swapNode, swap_.legData()[i].toXML(doc));
     }
 
     // same as above...
