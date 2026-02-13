@@ -656,12 +656,6 @@ std::string scriptedIndexName(const QuantLib::ext::shared_ptr<Underlying>& under
     }
 }
 
-Size getInflationSimulationLag(const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index) {
-    // this is consistent with the lag computation in CrossAssetModel::infDki()
-    const auto& ts = index->zeroInflationTermStructure().currentLink();
-    return inflationTime(ts->referenceDate(), ts, false);
-}
-
 std::map<std::string, std::vector<Real>>
 getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData>& calibrationSpec,
                       const QuantLib::ext::shared_ptr<Context>& context) {

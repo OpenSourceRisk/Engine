@@ -51,6 +51,7 @@
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
@@ -1126,13 +1127,15 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                 // inf needs special considerations
                 QuantLib::ext::shared_ptr<ZeroInflationIndex> marketIndex =
                     getInfMarketIndex(info.name(), modelInfIndices_);
-                Size lag = getInflationSimulationLag(marketIndex);
+                int lag = simulationLag(marketIndex->zeroInflationTermStructure());
                 for (auto const& d : s.second) {
-                    auto lim = inflationPeriod(d + lag, info.inf()->frequency());
-                    simulationDates_.insert(lim.first);
+                    //std::cout << "inf index eval date: " << d << ", lag: " << lag << std::endl;
+                    auto lim = inflationPeriod(d, info.inf()->frequency());
+                    //std::cout << "  inf index period: " << lim.first << " - " << lim.second << std::endl;
+                    simulationDates_.insert(lim.first + lag);
                     // Allow interpolation of indices for convencience (avoid interpolation logic in script)
                     if (info.infIsInterpolated())
-                        simulationDates_.insert(lim.second + 1);
+                        simulationDates_.insert(lim.second + 1 + lag);
                 }
             } else {
                 // for all other indices we just take the original dates

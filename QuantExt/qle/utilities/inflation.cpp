@@ -119,7 +119,7 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const
     auto observationTime = ts->dayCounter().yearFraction(ts->referenceDate(), effectiveObservationDate);
     auto zeroRate = ts->zeroRate(observationTime);
     auto tau = ts->dayCounter().yearFraction(ts->baseDate(), effectiveObservationDate);
-    return pow(1.0 + zeroRate, tau);
+    return std::pow(1.0 + zeroRate, tau);
 }
 
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool indexIsInterpolated) {

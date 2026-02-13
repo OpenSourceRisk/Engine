@@ -156,26 +156,26 @@ struct comp {
 
 RandomVariable ModelImpl::getInflationIndexFixing(const bool returnMissingFixingAsNull, const std::string& indexInput,
                                                   const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
-                                                  const Size indexNo, const Date& limDate, const Date& obsdate,
+                                                  const Size indexNo, const Date& effectiveFixingDate, const Date& obsdate,
                                                   const Date& fwddate, const Date& baseDate) const {
-    std::cout << "ModelImpl::getInflationIndexFixing for index " << indexInput << " limDate "
-              << QuantLib::io::iso_date(limDate) << " obsdate " << QuantLib::io::iso_date(obsdate) << " fwddate "
+    std::cout << "ModelImpl::getInflationIndexFixing for index " << indexInput << " effectiveFixingDate "
+              << QuantLib::io::iso_date(effectiveFixingDate) << " obsdate " << QuantLib::io::iso_date(obsdate) << " fwddate "
               << QuantLib::io::iso_date(fwddate) << " baseDate " << QuantLib::io::iso_date(baseDate) << std::endl;
     RandomVariable res(size());
-    Real f = infIndex->timeSeries()[limDate];
+    Real historicalFixing = infIndex->timeSeries()[effectiveFixingDate];
     // we exclude historical fixings
     // - which are "impossible" to know (limDate > refDate)
     // - which have to be projected because a fwd date is given and they are later than the obsdate
-    if (f != Null<Real>() && !(limDate > referenceDate()) && (fwddate == Null<Date>() || limDate <= obsdate)) {
-        res = RandomVariable(size(), f);
+    if (historicalFixing != Null<Real>() && !(effectiveFixingDate > referenceDate()) && (fwddate == Null<Date>() || effectiveFixingDate <= obsdate)) {
+        res = RandomVariable(size(), historicalFixing);
     } else {
-        Date effectiveObsDate = std::min(obsdate, limDate);
+        Date effectiveObsDate = std::min(obsdate, effectiveFixingDate);
         if (effectiveObsDate >= baseDate) {
-            res = getInfIndexValue(indexNo, effectiveObsDate, limDate);
+            res = getInfIndexValue(indexNo, effectiveObsDate, effectiveFixingDate);
         } else if (returnMissingFixingAsNull) {
             return RandomVariable();
         } else {
-            QL_FAIL("missing " << indexInput << " fixing for " << QuantLib::io::iso_date(limDate) << " (obsdate="
+            QL_FAIL("missing " << indexInput << " fixing for " << QuantLib::io::iso_date(effectiveFixingDate) << " (obsdate="
                                << QuantLib::io::iso_date(obsdate) << ", fwddate=" << QuantLib::io::iso_date(fwddate)
                                << ", basedate=" << QuantLib::io::iso_date(baseDate) << ")");
         }
@@ -215,7 +215,8 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
         RandomVariable indexEnd = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                                           std::distance(infIndices_.begin(), inf), lim.second + 1,
                                                           obsdate, fwddate, baseDate);
-        // this is not entirely correct, since we should use the days in the lagged period, but we don't know the lag
+        // this is not entirely correct, since we should use the days in the cashflow inflation period (no lag applied)
+        // but we dont know the lag
         return indexStart +
                (indexEnd - indexStart) * RandomVariable(size(), static_cast<Real>(effectiveFixingDate - lim.first) /
                                                                     static_cast<Real>(lim.second + 1 - lim.first));

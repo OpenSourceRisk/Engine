@@ -29,8 +29,9 @@
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/time/period.hpp>
-#include <qle/models/zeroinflationmodeltermstructure.hpp>
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/models/zeroinflationmodeltermstructure.hpp>
+
 namespace QuantExt {
 
 /*! Utility function for calculating the time to a given \p date based on a given inflation index,

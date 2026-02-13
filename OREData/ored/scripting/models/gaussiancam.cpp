@@ -38,6 +38,27 @@
 #include <ql/math/comparison.hpp>
 #include <ql/quotes/simplequote.hpp>
 
+namespace {
+
+QuantExt::RandomVariable sesonalizeCPIRandomVariable(const QuantLib::Date& observationDate, const QuantExt::RandomVariable& CPI,
+                                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return CPI;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    QL_REQUIRE(seasonCurve != nullptr, "Seasonality curve is not of type MultiplicativePriceSeasonality");
+    QuantExt::RandomVariable factor{CPI.size(), seasonCurve->seasonalityFactor(observationDate)};
+    return CPI * factor;
+}
+
+QuantExt::RandomVariable sesonalizeCPIRandomVariable(const QuantLib::Date& observationDate, const QuantExt::RandomVariable& CPI,
+                                                     const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts) {
+    return sesonalizeCPIRandomVariable(observationDate, CPI, ts.currentLink());
+}
+
+
+} // namespace
+
 namespace ore {
 namespace data {
 
@@ -135,6 +156,7 @@ void GaussianCam::performCalculations() const {
 
     std::vector<Real> times;
     for (auto const& d : effectiveSimulationDates_) {
+        std::cout << "  adding time for date " << d << " : " << timeFromReference(d) << std::endl;
         times.push_back(timeFromReference(d));
     }
 
@@ -482,18 +504,22 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     if (fwd != Null<Date>())
         fixingDate = fwd;
     std::cout << "  obsDate " << obsDate << " fixingDate " << fixingDate << std::endl;
-    auto lag = getInflationSimulationLag(infIndices_[indexNo].second);
-    auto relObsDate = inflationPeriod(obsDate + lag, infIndices_[indexNo].second->frequency()).first;
+    
+    const auto& index = infIndices_[indexNo].second;
+    const auto& zits = index->zeroInflationTermStructure().currentLink();
+    auto lag = simulationLag(zits);
+    auto relObsDate = obsDate + lag;
     auto const& state = infStates_.at(relObsDate).at(indexNo);
     Size camIndex = infIndexPositionInCam_[indexNo];
-    const auto& zits = infIndices_[indexNo].second->zeroInflationTermStructure().currentLink();
     // Calculate time from curve base date to observation and fixing date and not from reference date, as
     // inflation curves are starting from their base date < reference date, and we have to add the time from base
     // date to reference date to the timeFromReference calculation
-    Real t = inflationTime(obsDate, zits, true);
-    Real T = inflationTime(fixingDate, zits, true);
+    auto modelDc = cam_->dayCounter().value_or(zits->dayCounter());
+    Real t = modelDc.yearFraction(zits->referenceDate(), obsDate);
+    Real T = modelDc.yearFraction(zits->referenceDate(), fixingDate + lag);
     Real baseFixing =
-        infIndices_[indexNo].second->fixing(infIndices_[indexNo].second->zeroInflationTermStructure()->baseDate());
+        infIndices_[indexNo].second->fixing(zits->baseDate());
+    baseFixing = deseasonalizeCPI(zits->baseDate(), baseFixing, zits);
     std::cout << "  t " << t << " T " << T << " baseFixing " << baseFixing << std::endl;
     RandomVariable result(size());
 
@@ -501,7 +527,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
         InfDkVectorised infdkv(*cam_);
         RandomVariable baseFixingVec(size(), baseFixing);
         QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
-        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second, false);
+        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second, true);
         result = baseFixingVec * dk.first * (fixingDate != obsDate ? dk.second : RandomVariable(size(), 1.0));
     } else if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::JY) {
         result = exp(state.second);
@@ -519,7 +545,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
         QL_FAIL("GaussianCam::getInfIndexValue(): unknown model type for inflation index "
                 << infIndices_[indexNo].first.name());
     }
-    return result;
+    return sesonalizeCPIRandomVariable(relObsDate, result, zits);
 }
 
 RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate,
@@ -760,6 +786,7 @@ void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
     injectedPathRelevantTimeIndexes_ = timeIndexes;
     update();
 }
+
 
 } // namespace data
 } // namespace ore
