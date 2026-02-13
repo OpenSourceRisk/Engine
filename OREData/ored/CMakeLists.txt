@@ -87,6 +87,8 @@ model/eqbsbuilder.cpp
 model/eqbsdata.cpp
 model/fxbsbuilder.cpp
 model/fxbsdata.cpp
+model/fxdata.cpp
+model/fxlvdata.cpp
 model/hestonmodelbuilder.cpp
 model/hestonmodelcalibration.cpp
 model/hwbuilder.cpp
@@ -504,6 +506,8 @@ model/eqbsbuilder.hpp
 model/eqbsdata.hpp
 model/fxbsbuilder.hpp
 model/fxbsdata.hpp
+model/fxdata.hpp
+model/fxlvdata.hpp
 model/hestonmodelbuilder.hpp
 model/hestonmodelcalibration.hpp
 model/hwbuilder.hpp
