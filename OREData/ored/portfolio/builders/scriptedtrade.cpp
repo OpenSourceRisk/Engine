@@ -1587,7 +1587,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
 
     std::vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs;
     std::vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigs;
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
     std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
     std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>> comConfigs;
 
@@ -1767,8 +1767,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
     // FX configs
     for (Size i = 1; i < modelCcys_.size(); ++i) {
         auto config = QuantLib::ext::make_shared<FxBsData>();
-        config->foreignCcy() = modelCcys_[i];
-        config->domesticCcy() = modelCcys_[0];
+        config->setForeignCcy(modelCcys_[i]);
+        config->setDomesticCcy(modelCcys_[0]);
         // if we do not have a FX index for the currency, we set up a zero vol process (FX indices are added above
         // for all non-base ccys if fullDynamicFx is specified)
         bool haveFxIndex = false;
@@ -1779,22 +1779,22 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
         if (calibrationExpiries.empty() || !haveFxIndex || zeroVolatility_) {
             DLOG("set up zero vol FxBsData for currency '" << modelCcys_[i] << "'");
             // zero vols
-            config->calibrationType() = CalibrationType::None;
-            config->calibrateSigma() = false;
-            config->sigmaParamType() = ParamType::Constant;
-            config->sigmaTimes() = std::vector<Real>();
-            config->sigmaValues() = {0.0};
+            config->setCalibrationType(CalibrationType::None);
+            config->setCalibrateSigma(false);
+            config->setSigmaParamType(ParamType::Constant);
+            config->setSigmaTimes(std::vector<Real>());
+            config->setSigmaValues({0.0});
         } else {
             DLOG("set up FxBsData for currency '" << modelCcys_[i] << "'");
             // bootstrapped on atm fx vols
-            config->calibrationType() = CalibrationType::Bootstrap;
-            config->calibrateSigma() = true;
-            config->sigmaParamType() = ParamType::Piecewise;
-            config->sigmaTimes() = calibrationTimes;
-            config->sigmaValues() = std::vector<Real>(calibrationTimes.size() + 1, 0.10); // start value for optimiser
-            config->optionExpiries() = calibrationExpiries;
-            config->optionStrikes() =
-                std::vector<std::string>(calibrationExpiries.size(), "ATMF"); // hardcoded ATMF calibration strike
+            config->setCalibrationType(CalibrationType::Bootstrap);
+            config->setCalibrateSigma(true);
+            config->setSigmaParamType(ParamType::Piecewise);
+            config->setSigmaTimes(calibrationTimes);
+            config->setSigmaValues(std::vector<Real>(calibrationTimes.size() + 1, 0.10)); // start value for optimiser
+            config->setOptionExpiries(calibrationExpiries);
+            config->setOptionStrikes(
+                std::vector<std::string>(calibrationExpiries.size(), "ATMF")); // hardcoded ATMF calibration strike
         }
         fxConfigs.push_back(config);
     }
@@ -1973,7 +1973,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(
         market_,
         QuantLib::ext::make_shared<CrossAssetModelData>(
             std::vector<QuantLib::ext::shared_ptr<IrModelData>>{config},
-            std::vector<QuantLib::ext::shared_ptr<FxBsData>>{}, std::vector<QuantLib::ext::shared_ptr<EqBsData>>{},
+            std::vector<QuantLib::ext::shared_ptr<FxData>>{}, std::vector<QuantLib::ext::shared_ptr<EqBsData>>{},
             std::vector<QuantLib::ext::shared_ptr<InflationModelData>>{},
             std::vector<QuantLib::ext::shared_ptr<CrLgmData>>{}, std::vector<QuantLib::ext::shared_ptr<CrCirData>>{},
             std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,
