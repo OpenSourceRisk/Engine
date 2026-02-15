@@ -17,13 +17,10 @@
 */
 
 #include <ored/utilities/fairrate.hpp>
-#include <ored/utilities/log.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
-#include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/settings.hpp>
 
 using namespace QuantLib;
 
@@ -31,106 +28,130 @@ namespace ore {
 namespace data {
 
 namespace {
-    const Spread basisPoint = 1.0e-4;
+const Spread basisPoint = 1.0e-4;
+
+enum class LegKind {
+    FixedLike,
+    FloatingNoSpread,
+    FloatingWithSpread,
+    Other
+};
+
+LegKind classifyLeg(const Leg& leg) {
+    bool hasCoupon = false;
+    bool hasFloatingCoupon = false;
+    bool hasNonZeroSpread = false;
+
+    for (const auto& cf : leg) {
+        if (auto frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf)) {
+            hasCoupon = true;
+            hasFloatingCoupon = true;
+            if (std::fabs(frc->spread()) > QL_EPSILON)
+                hasNonZeroSpread = true;
+        } else if (QuantLib::ext::dynamic_pointer_cast<Coupon>(cf)) {
+            hasCoupon = true;
+        }
+    }
+
+    if (hasFloatingCoupon)
+        return hasNonZeroSpread ? LegKind::FloatingWithSpread : LegKind::FloatingNoSpread;
+    if (hasCoupon)
+        return LegKind::FixedLike;
+    return LegKind::Other;
 }
 
-// Step 1 — Determine the Reference Leg
-std::pair<Size, std::vector<Size>>
-selectReferenceLeg(const std::vector<LegData>& legData) {
+std::pair<Size, std::vector<Size>> selectReferenceLeg(const std::vector<Leg>& legs) {
+    QL_REQUIRE(!legs.empty(), "selectReferenceLeg: empty leg data");
 
-    // Fixed-leg types (from isdaSubProductSwap classification)
-    auto isFixed = [](LegType t) {
-        return t == LegType::Fixed || t == LegType::ZeroCouponFixed
-            || t == LegType::Cashflow || t == LegType::CommodityFixed;
-    };
-
-    // Rule 1 & 2: find all fixed legs
     std::vector<Size> fixedIndices;
-    for (Size i = 0; i < legData.size(); ++i) {
-        if (isFixed(legData[i].legType()))
+    Size firstFloatingWithSpread = Null<Size>();
+    Size firstFloating = Null<Size>();
+
+    for (Size i = 0; i < legs.size(); ++i) {
+        LegKind kind = classifyLeg(legs[i]);
+        if (kind == LegKind::FixedLike) {
             fixedIndices.push_back(i);
+        } else if (kind == LegKind::FloatingWithSpread) {
+            if (firstFloatingWithSpread == Null<Size>())
+                firstFloatingWithSpread = i;
+            if (firstFloating == Null<Size>())
+                firstFloating = i;
+        } else if (kind == LegKind::FloatingNoSpread) {
+            if (firstFloating == Null<Size>())
+                firstFloating = i;
+        }
     }
 
     if (!fixedIndices.empty()) {
         Size ref = fixedIndices.front();
-        std::vector<Size> exclude(fixedIndices.begin() + 1,
-                                  fixedIndices.end());
+        std::vector<Size> exclude(fixedIndices.begin() + 1, fixedIndices.end());
         return {ref, exclude};
     }
 
-    // Rule 3: no fixed leg — find first floating with spread
-    for (Size i = 0; i < legData.size(); ++i) {
-        if (legData[i].legType() == LegType::Floating) {
-            auto fld = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(
-                legData[i].concreteLegData());
-            if (fld && !fld->spreads().empty()) {
-                bool hasNonZeroSpread = false;
-                for (auto s : fld->spreads()) {
-                    if (std::fabs(s) > QL_EPSILON) {
-                        hasNonZeroSpread = true;
-                        break;
-                    }
-                }
-                if (hasNonZeroSpread)
-                    return {i, {}};
-            }
-        }
-    }
+    if (firstFloatingWithSpread != Null<Size>())
+        return {firstFloatingWithSpread, {}};
 
-    // Fallback: first floating leg (even without a spread)
-    for (Size i = 0; i < legData.size(); ++i) {
-        if (legData[i].legType() == LegType::Floating)
-            return {i, {}};
-    }
+    if (firstFloating != Null<Size>())
+        return {firstFloating, {}};
 
-    // Final fallback: first leg
-    QL_REQUIRE(!legData.empty(), "selectReferenceLeg: empty leg data");
     return {0, {}};
 }
 
-Real fairRate(const std::vector<Leg>& legs,
-              const std::vector<bool>& isPayer,
-              const std::vector<Handle<YieldTermStructure>>& discountCurves,
-              const std::vector<Real>& fxSpotToBase,
-              Size referenceLegIdx,
-              Real* spreadCorrection) {
+} // namespace
+
+std::pair<Real, Real> fairRate(const std::vector<Leg>& legs,
+                               const std::vector<bool>& isPayer,
+                               const std::vector<Handle<YieldTermStructure>>& discountCurves,
+                               const std::vector<Real>& fxSpotToBase) {
 
     // --- Input validation ---
     Size n = legs.size();
     QL_REQUIRE(n > 0, "fairRate: no legs provided");
     QL_REQUIRE(isPayer.size() == n, "fairRate: isPayer size mismatch");
-    QL_REQUIRE(discountCurves.size() == n,
+    QL_REQUIRE(discountCurves.size() == 1 || discountCurves.size() == n,
                "fairRate: discountCurves size mismatch");
-    QL_REQUIRE(fxSpotToBase.size() == n,
+    QL_REQUIRE(fxSpotToBase.empty() || fxSpotToBase.size() == n,
                "fairRate: fxSpotToBase size mismatch");
-    QL_REQUIRE(referenceLegIdx < n,
-               "fairRate: referenceLegIdx " << referenceLegIdx
-               << " out of range [0," << n << ")");
 
-    // Step 2 — Classify reference leg
-    bool refIsFixed = true;
-    for (const auto& cf : legs[referenceLegIdx]) {
-        if (QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf)) {
-            refIsFixed = false;
-            break;
-        }
+    auto discountCurve = [&](Size i) -> const Handle<YieldTermStructure>& {
+        return discountCurves.size() == 1 ? discountCurves.front() : discountCurves[i];
+    };
+
+    auto fxSpot = [&](Size i) -> Real {
+        return fxSpotToBase.empty() ? 1.0 : fxSpotToBase[i];
+    };
+
+    for (Size i = 0; i < n; ++i)
+        QL_REQUIRE(!discountCurve(i).empty(), "fairRate: empty discount curve at leg " << i);
+
+    Date settl = discountCurve(0)->referenceDate();
+    for (Size i = 1; i < n; ++i) {
+        QL_REQUIRE(discountCurve(i)->referenceDate() == settl,
+                   "fairRate: all discount curves must share a common reference date");
     }
+
+    auto [referenceLegIdx, excludeIndices] = selectReferenceLeg(legs);
+    std::vector<bool> exclude(n, false);
+    for (const auto i : excludeIndices)
+        exclude[i] = true;
+
+    const LegKind refKind = classifyLeg(legs[referenceLegIdx]);
+    const bool refIsFixed = (refKind == LegKind::FixedLike);
 
     // Step 3 — Compute signed NPV in base ccy for all non-reference legs
     // after stripping floating spread contributions
     Real totalNpvNonRef = 0.0;
     Real spreadNpvNonRefBase = 0.0;
-    Date settl = Settings::instance().evaluationDate();
 
     for (Size l = 0; l < n; ++l) {
-        if (l == referenceLegIdx)
+        if (l == referenceLegIdx || exclude[l])
             continue;
 
-        auto [npv, bps] = CashFlows::npvbps(
-            legs[l], *discountCurves[l].operator->());
+        auto npvAndBps = CashFlows::npvbps(legs[l], **discountCurve(l));
+        Real npv = npvAndBps.first;
 
         Real spreadNpv = 0.0;
-        const YieldTermStructure& dc = *discountCurves[l].operator->();
+        const YieldTermStructure& dc = **discountCurve(l);
         for (const auto& cf : legs[l]) {
             if (cf->hasOccurred(settl) || cf->tradingExCoupon(settl))
                 continue;
@@ -138,35 +159,30 @@ Real fairRate(const std::vector<Leg>& legs,
                 spreadNpv += frc->nominal() * frc->accrualPeriod() * frc->spread() * dc.discount(cf->date());
             }
         }
-        DiscountFactor npvDateDf = dc.discount(settl);
-        if (std::fabs(npvDateDf) > QL_EPSILON)
-            spreadNpv /= npvDateDf;
 
         Real strippedNpv = npv - spreadNpv;
         Real dir = isPayer[l] ? -1.0 : 1.0;
-        totalNpvNonRef += strippedNpv * dir * fxSpotToBase[l];
-        spreadNpvNonRefBase += spreadNpv * dir * fxSpotToBase[l];
+        totalNpvNonRef += strippedNpv * dir * fxSpot(l);
+        spreadNpvNonRefBase += spreadNpv * dir * fxSpot(l);
     }
 
     // --- Fixed reference leg ---
     if (refIsFixed) {
-        auto [npvRef, bpsRef] = CashFlows::npvbps(
-            legs[referenceLegIdx],
-            *discountCurves[referenceLegIdx].operator->());
+        auto npvAndBpsRef = CashFlows::npvbps(legs[referenceLegIdx], **discountCurve(referenceLegIdx));
+        Real bpsRef = npvAndBpsRef.second;
         Real dirRef = isPayer[referenceLegIdx] ? -1.0 : 1.0;
-        Real annuityBase = (bpsRef / basisPoint)
-                         * dirRef * fxSpotToBase[referenceLegIdx];
+        Real annuityBase = (bpsRef / basisPoint) * dirRef * fxSpot(referenceLegIdx);
 
-            QL_REQUIRE(std::fabs(annuityBase) > QL_EPSILON,
-                       "fairRate: zero annuity on fixed reference leg");
-            if (spreadCorrection)
-                *spreadCorrection = spreadNpvNonRefBase / annuityBase;
-            return -totalNpvNonRef / annuityBase;
+        QL_REQUIRE(std::fabs(annuityBase) > QL_EPSILON,
+                   "fairRate: zero annuity on fixed reference leg");
+        Real fair = -totalNpvNonRef / annuityBase;
+        Real spreadCorrection = spreadNpvNonRefBase / annuityBase;
+        return {fair, spreadCorrection};
     }
 
     // --- Floating reference leg ---
     const auto& refLeg = legs[referenceLegIdx];
-    const YieldTermStructure& dc = *discountCurves[referenceLegIdx].operator->();
+    const YieldTermStructure& dc = **discountCurve(referenceLegIdx);
 
     Real strippedNpv = 0.0;
     Real annuityRaw  = 0.0;
@@ -179,25 +195,9 @@ Real fairRate(const std::vector<Leg>& legs,
 
         if (auto frc = QuantLib::ext::dynamic_pointer_cast<
                 FloatingRateCoupon>(cf)) {
-            // Use the pricer-computed rate if available (includes adjustments),
-            // otherwise fall back to raw index fixing
-            Real effectiveRate;
-
-            if (frc->pricer()) {
-                try {
-                    // rate() returns: gearing * adjustedFixing + spread
-                    Real pricerRate = frc->rate();
-                    Real spread = frc->spread();
-                    // Strip spread to get: gearing * adjustedFixing
-                    effectiveRate = pricerRate - spread;
-                } catch (...) {
-                    // Pricer not computed yet, use raw fixing
-                    effectiveRate = frc->gearing() * frc->indexFixing();
-                }
-            } else {
-                // No pricer attached, use raw fixing
-                effectiveRate = frc->gearing() * frc->indexFixing();
-            }
+            QL_REQUIRE(frc->pricer(),
+                       "fairRate: floating reference coupon without pricer");
+            Real effectiveRate = frc->rate() - frc->spread();
 
             Real amt = frc->nominal() * frc->accrualPeriod() * effectiveRate;
             strippedNpv += amt * df;
@@ -213,14 +213,8 @@ Real fairRate(const std::vector<Leg>& legs,
         }
     }
 
-    DiscountFactor npvDateDf = dc.discount(settl);
-    if (std::fabs(npvDateDf) > QL_EPSILON) {
-        strippedNpv /= npvDateDf;
-        annuityRaw  /= npvDateDf;
-    }
-
     Real dirRef     = isPayer[referenceLegIdx] ? -1.0 : 1.0;
-    Real fxRef      = fxSpotToBase[referenceLegIdx];
+    Real fxRef      = fxSpot(referenceLegIdx);
     Real strippedBase = strippedNpv * dirRef * fxRef;
     Real annuityBase  = annuityRaw  * dirRef * fxRef;
 
@@ -228,9 +222,9 @@ Real fairRate(const std::vector<Leg>& legs,
 
     QL_REQUIRE(std::fabs(annuityBase) > QL_EPSILON,
                "fairRate: zero annuity on floating reference leg");
-    if (spreadCorrection)
-        *spreadCorrection = spreadNpvNonRefBase / annuityBase;
-    return -totalNpv / annuityBase;
+    Real fair = -totalNpv / annuityBase;
+    Real spreadCorrection = spreadNpvNonRefBase / annuityBase;
+    return {fair, spreadCorrection};
 }
 
 } // namespace data

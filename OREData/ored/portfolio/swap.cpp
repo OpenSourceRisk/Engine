@@ -346,37 +346,13 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     if (allLegsAreSimmPlainVanillaIrLegs_ && !legs_.empty() && !discountCurves_.empty() &&
         discountCurves_.size() == numLegs) {
         try {
-            // Step 1: Determine reference leg and legs to exclude
-            auto [refIdx, excludeIndices] = selectReferenceLeg(legData_);
-
-            // Build inputs for fairRate() - filter out excluded legs
-            std::vector<Leg> fairRateLegs;
-            std::vector<bool> fairRateIsPayer;
-            std::vector<Handle<YieldTermStructure>> fairRateDcs;
-            std::vector<Real> fairRateFx;
-            Size mappedRefIdx = 0;
-
-            std::set<Size> excludeSet(excludeIndices.begin(), excludeIndices.end());
-
-            for (Size i = 0; i < numLegs; ++i) {
-                if (excludeSet.count(i))
-                    continue;
-                if (i == refIdx)
-                    mappedRefIdx = fairRateLegs.size();
-
-                fairRateLegs.push_back(legs_[i]);
-                fairRateIsPayer.push_back(legData_[i].isPayer());
-                fairRateDcs.push_back(discountCurves_[i]);
-                fairRateFx.push_back(fxSpots_[i]);
-            }
-
-            // Compute the fair rate
-            if (!fairRateLegs.empty()) {
-                Real spreadCorrection = 0.0;
-                additionalData_["atmForward"] = fairRate(
-                    fairRateLegs, fairRateIsPayer, fairRateDcs, fairRateFx, mappedRefIdx, &spreadCorrection);
-                additionalData_["spreadCorrection"] = spreadCorrection;
-            }
+            auto [atmForward, spreadCorrection] = fairRate(
+                std::vector<Leg>(legs_.begin(), legs_.begin() + numLegs),
+                std::vector<bool>(legPayers_.begin(), legPayers_.begin() + numLegs),
+                discountCurves_,
+                fxSpots_);
+            additionalData_["atmForward"] = atmForward;
+            additionalData_["spreadCorrection"] = spreadCorrection;
         } catch (const std::exception& e) {
             DLOG("Could not compute atmForward using fairRate utility: " << e.what());
         }
