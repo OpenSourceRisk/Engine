@@ -344,19 +344,20 @@ void RangeAccrualLegData::fromXML(XMLNode* node) {
     underlying_->fromXML(underlyingNode);
     indices_ = underlying_->indices();
 
-    coupon_ = XMLUtils::getChildValueAsDouble(node, "Coupon", false, 0.0);
-    lowerBound_ = XMLUtils::getChildValueAsDouble(node, "LowerBound", false, QuantLib::Null<double>());
-    upperBound_ = XMLUtils::getChildValueAsDouble(node, "UpperBound", false, QuantLib::Null<double>());
+    coupon_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Coupons", "Coupon", "startDate", couponDates_, &parseReal,
+                                                             true);
+    upperBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "UpperBounds", "UpperBound", "startDate", upperBoundDates_, &parseReal,
+                                                             true);
+    lowerBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "LowerBounds", "LowerBound", "startDate", lowerBoundDates_, &parseReal,
+                                                             true);
 }
 
 XMLNode* RangeAccrualLegData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::appendNode(node, underlying_->toXML(doc));
-    XMLUtils::addChild(doc, node, "Coupon", coupon_);
-    if (lowerBound_ != QuantLib::Null<double>())
-        XMLUtils::addChild(doc, node, "LowerBound", lowerBound_);
-    if (upperBound_ != QuantLib::Null<double>())
-        XMLUtils::addChild(doc, node, "UpperBound", upperBound_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Coupons", "Coupon", coupon_, "startDate", couponDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "UpperBounds", "UpperBound", upperBound_, "startDate", upperBoundDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "LowerBounds", "LowerBound", lowerBound_, "startDate", lowerBoundDates_);
     return node;
 }
 
@@ -2348,6 +2349,7 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
     auto floatData = rangeAccrualData->underlying();
     QL_REQUIRE(floatData, "makeRangeAccrualLeg: no underlying FloatingLegData");
 
+    // We allow only an IborIndex - could be extended in the future
     auto iborIndex = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
     QL_REQUIRE(iborIndex, "makeRangeAccrualLeg: expected IborIndex for " << floatData->index());
 
@@ -2367,13 +2369,17 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
         buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
-
-    double coupon = rangeAccrualData->coupon();
-    double lowerBound = rangeAccrualData->lowerBound();
-    double upperBound = rangeAccrualData->upperBound();
+    vector<double> coupon =
+        buildScheduledVectorNormalised(rangeAccrualData->coupon(), rangeAccrualData->couponDates(), schedule, 0.0);
+    vector<double> lowerBound =
+        buildScheduledVectorNormalised(rangeAccrualData->lowerBound(), rangeAccrualData->lowerBoundDates(), schedule, 0.0);
+    vector<double> upperBound =
+        buildScheduledVectorNormalised(rangeAccrualData->upperBound(), rangeAccrualData->upperBoundDates(), schedule, 0.0);
 
     // The RangeAccrualFloatersCoupon computes: (gearing * indexFixing + spread) * (n/N)
-    // For a standard range accrual: Rate = Coupon * (n/N), the coupon is passed as spread.
+    // For a standard range accrual: Rate = Coupon * (n/N), the coupon is passed as spread,
+    // and gearings must come from the FloatingLegData (defaulting to 1.0) so that QuantLib
+    // creates RangeAccrualFloatersCoupon objects (gearing == 0 would create FixedRateCoupons).
     Leg leg = QuantLib::RangeAccrualLeg(schedule, iborIndex)
                       .withNotionals(notionals)
                       .withPaymentDayCounter(dc)
@@ -2388,23 +2394,17 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
 
     // Attach per-coupon range accrual pricers with correct expiry/payment smile sections
     if (attachPricer) {
-        auto builder = engineFactory->builder("RangeAccrualLeg");
-        QL_REQUIRE(builder, "No builder found for RangeAccrualLeg");
+        auto builder = engineFactory->builder("IborRangeAccrualLeg");
+        QL_REQUIRE(builder, "No builder found for IborRangeAccrualLeg");
         auto raBuilder =
             QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
         QL_REQUIRE(raBuilder, "Expected RangeAccrualLegEngineBuilder");
         std::string indexName = IndexNameTranslator::instance().oreName(iborIndex->name());
-        auto ovs = raBuilder->optionletVolatilityStructure(indexName);
-        Real correlation = raBuilder->correlation(indexName);
-        bool withSmile = raBuilder->withSmile(indexName);
-        bool byCallSpread = raBuilder->byCallSpread(indexName);
         for (auto& cf : leg) {
             auto raCoupon = QuantLib::ext::dynamic_pointer_cast<RangeAccrualFloatersCoupon>(cf);
             if (raCoupon) {
-                auto smileOnExpiry = ovs->smileSection(raCoupon->accrualStartDate(), true);
-                auto smileOnPayment = ovs->smileSection(raCoupon->accrualEndDate(), true);
-                auto pricer = QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
-                    correlation, smileOnExpiry, smileOnPayment, withSmile, byCallSpread);
+                auto pricer = raBuilder->buildPricer(
+                    indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
                 raCoupon->setPricer(pricer);
             }
         }

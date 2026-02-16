@@ -347,18 +347,21 @@ public:
     RangeAccrualLegData() : LegAdditionalData(LegType::RangeAccrual, true) {}
     //! Constructor
     RangeAccrualLegData(const QuantLib::ext::shared_ptr<FloatingLegData>& underlying,
-                        double coupon = 0.0,
-                        double lowerBound = QuantLib::Null<double>(),
-                        double upperBound = QuantLib::Null<double>())
+                        std::vector<Real> coupon,
+                        std::vector<Real> lowerBound,
+                        std::vector<Real> upperBound)
         : LegAdditionalData(LegType::RangeAccrual, true), underlying_(underlying),
           coupon_(coupon), lowerBound_(lowerBound), upperBound_(upperBound) { }
 
     //! \name Inspectors
     //@{
     const QuantLib::ext::shared_ptr<FloatingLegData>& underlying() const { return underlying_; }
-    double coupon() const { return coupon_; }
-    double lowerBound() const { return lowerBound_; }
-    double upperBound() const { return upperBound_; }
+    const std::vector<Real>& coupon() const { return coupon_; }
+    const std::vector<Real>& lowerBound() const { return lowerBound_; }
+    const std::vector<Real>& upperBound() const { return upperBound_; }
+    const std::vector<string>& couponDates() const { return couponDates_; }
+    const std::vector<string>& lowerBoundDates() const { return lowerBoundDates_; }
+    const std::vector<string>& upperBoundDates() const { return upperBoundDates_; }
     //@}
 
     //! \name Serialisation
@@ -368,9 +371,12 @@ public:
     //@}
 private:
     QuantLib::ext::shared_ptr<FloatingLegData> underlying_;
-    double coupon_ = 0.0;
-    double lowerBound_ = QuantLib::Null<double>();
-    double upperBound_ = QuantLib::Null<double>();
+    std::vector<string> couponDates_;
+    std::vector<string> lowerBoundDates_;
+    std::vector<string> upperBoundDates_;
+    std::vector<Real> coupon_;
+    std::vector<Real> lowerBound_;
+    std::vector<Real> upperBound_;
 };
 
 //! Serializable CPI Leg Data

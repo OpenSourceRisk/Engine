@@ -187,24 +187,12 @@ Leg RangeAccrualLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::s
                             data.lastPeriodDayCounter());
 
     // We want to build the FloatingLegData as well
-    auto ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index);
+    auto idx = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index);
     Leg result;
-    if (ois != nullptr) {
-        QuantLib::ext::shared_ptr<OvernightIndex> idx = ois;
-        if (!floatData->historicalFixings().empty())
-            idx = QuantLib::ext::make_shared<OvernightIndexWithFixingOverride>(ois, floatData->historicalFixings());
-        result = makeOISLeg(floatingLegData, idx, engineFactory, attachPricer, openEndDateReplacement);
-    } else {
-        auto bma = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
-        if (bma != nullptr)
-            result = makeBMALeg(floatingLegData, bma, engineFactory, openEndDateReplacement, attachPricer);
-        else {
-            QuantLib::ext::shared_ptr<IborIndex> idx = index;
-            if (!floatData->historicalFixings().empty())
-                idx = QuantLib::ext::make_shared<IborIndexWithFixingOverride>(index, floatData->historicalFixings());
-            result = makeIborLeg(floatingLegData, idx, engineFactory, attachPricer, openEndDateReplacement);
-        }
-    }
+    QL_REQUIRE(idx, "RangeAccrual Index must be an Ibor Index");
+    if (!floatData->historicalFixings().empty())
+        idx = QuantLib::ext::make_shared<IborIndexWithFixingOverride>(index, floatData->historicalFixings());
+    result = makeIborLeg(floatingLegData, idx, engineFactory, attachPricer, openEndDateReplacement);
     applyIndexing(result, floatingLegData, engineFactory, requiredFixings, openEndDateReplacement, useXbsCurves);
     addToRequiredFixings(result, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings));
 

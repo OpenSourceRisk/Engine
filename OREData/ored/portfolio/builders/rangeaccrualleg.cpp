@@ -48,5 +48,17 @@ bool RangeAccrualLegEngineBuilder::byCallSpread(const std::string& index) {
     return parseBool(engineParameter("ByCallSpread", {}, false, "true"));
 }
 
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder::buildPricer(
+    const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate) {
+    auto ovs = optionletVolatilityStructure(index);
+    Real corr = correlation(index);
+    bool smile = withSmile(index);
+    bool callSpread = byCallSpread(index);
+    auto smileOnExpiry = ovs->smileSection(accrualStartDate, true);
+    auto smileOnPayment = ovs->smileSection(accrualEndDate, true);
+    return QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
+        corr, smileOnExpiry, smileOnPayment, smile, callSpread);
+}
+
 } // namespace data
 } // namespace ore

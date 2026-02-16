@@ -41,8 +41,12 @@ namespace data {
 class RangeAccrualLegEngineBuilder : public EngineBuilder {
 public:
     RangeAccrualLegEngineBuilder()
-        : EngineBuilder("BlackOrBachelier", "RangeAccrualPricer", {"RangeAccrualLeg"}) {}
+        : EngineBuilder("BGM", "FloatingRateCouponPricer", {"IborRangeAccrualLeg"}) {}
 
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> buildPricer(
+        const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate);
+
+private:
     Handle<OptionletVolatilityStructure> optionletVolatilityStructure(const std::string& index);
     Real correlation(const std::string& index);
     bool withSmile(const std::string& index);
