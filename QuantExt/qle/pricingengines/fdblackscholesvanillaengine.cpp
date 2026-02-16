@@ -43,6 +43,11 @@ void FdBlackScholesVanillaEngine2::calculate() const {
     cfResults.back().type = "ExpectedFlow";
 
     results_.additionalResults["cashFlowResults"] = cfResults;
+    results_.additionalResults["riskFreeRate"] = process_->riskFreeRate()->discount(lastDate);
+    results_.additionalResults["dividendYield"] = process_->dividendYield()->discount(lastDate);
+    results_.additionalResults["volatility"] = process_->blackVolatility()->blackVol(
+        lastDate, (dynamic_pointer_cast<QuantLib::StrikedTypePayoff>(arguments_.payoff))->strike());
+    results_.additionalResults["spot"] = process_->x0();
 }
 
 } // namespace QuantExt
