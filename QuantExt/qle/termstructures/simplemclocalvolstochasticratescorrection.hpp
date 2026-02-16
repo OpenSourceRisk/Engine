@@ -22,7 +22,11 @@
 
 #pragma once
 
+#include <qle/models/irmodel.hpp>
+#include <qle/models/fxmodel.hpp>
+
 #include <ql/termstructures/volatility/equityfx/localvoltermstructure.hpp>
+#include <ql/handle.hpp>
 
 namespace QuantExt {
 
@@ -30,19 +34,20 @@ class SimpleMcLocalVolStochasticRatesCorrection : public QuantLib::LocalVolTermS
 public:
     /*! S should be linked to this local vol ts to facilitate the bootstrap of the correction */
     SimpleMcLocalVolStochasticRatesCorrection(
-        Handle<LocalVolTermStructure> source, QuantLib::ext::shared_ptr<IrModel> r,
+        QuantLib::Handle<QuantLib::LocalVolTermStructure> source, QuantLib::ext::shared_ptr<IrModel> r,
         QuantLib::ext::shared_ptr<IrModel> q, QuantLib::ext::shared_ptr<FxModel> S,
-        std::function<QuantLib::Array(QuantLib::Real, QuantLib::Real)>& dwGenerator);
-
-protected:
-    Volatility localVolImpl(Time t, Real strike) final const override;
+        std::function<QuantLib::Array(QuantLib::Real, QuantLib::Real)> dwGenerator);
 
 private:
-    Handle<LocalVolTermStructure> source_;
+    void performCalculations() const override;
+    void update() override;
+    QuantLib::Volatility localVolImpl(Time t, Real strike) const override final;
+
+    QuantLib::Handle<QuantLib::LocalVolTermStructure> source_;
     QuantLib::ext::shared_ptr<IrModel> r_;
     QuantLib::ext::shared_ptr<IrModel> q_;
     QuantLib::ext::shared_ptr<FxModel> S_;
-    std::function<QuantLib::Array(QuantLib::Real, QuantLib::Real)>& dwGenerator_;
-}
+    std::function<QuantLib::Array(QuantLib::Real, QuantLib::Real)> dwGenerator_;
+};
 
 } // namespace QuantExt
