@@ -62,6 +62,7 @@ void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inp
     ext::shared_ptr<CurveConfigurations> ccOverride;
     inputs->loadParameterXML<CurveConfigurations>(ccOverride, pnlParams, vector<string>({"curveConfigMporOverride", "curveConfigPnlOverride"}), false,
         inputs->setupVariables().refDataManager_, inputs->setupVariables().iborFallbackConfig_);
+    inputs->curveConfigs().add(pnlCurveConfig_, "mpor");
     if (pnlCurveConfig_ && ccOverride)
         pnlCurveConfig_->setCurveConfigOverride(ccOverride);
     if (!pnlCurveConfig_)
@@ -286,9 +287,10 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     analytic()->addReport(LABEL, "pnl_npv_t1_m0_p0", t1m0p0NpvReport);
 
+    QuantLib::ext::shared_ptr<InMemoryReport> t1m0p0AddReport;
     if (inputs_->outputAdditionalResults()) {
         CONSOLEW("Pricing: Additional Results t1,m0,p0");
-        QuantLib::ext::shared_ptr<InMemoryReport> t1m0p0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        t1m0p0AddReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t1m0p0AddReport, analytic()->portfolio(), analytic()->market(),
                                           marketConfig, effectiveResultCurrency);
@@ -360,11 +362,13 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                                               marketConfig, effectiveResultCurrency);
             CONSOLE("OK");
         }
-    } else
-        t1m0p1NpvReport = t1m1p0NpvReport;
+    } else {
+        t1m0p1NpvReport = t1m0p0NpvReport;
+        t1m0p1AddReport = t1m0p0AddReport;
+    }
 
     analytic()->addReport(LABEL, "pnl_npv_t1_m0_p1", t1m0p1NpvReport);
-    if (inputs_->outputAdditionalResults())
+    if (inputs_->outputAdditionalResults() && t1m0p1AddReport)
         analytic()->addReport(LABEL, "pnl_additional_results_t1_m0_p1", t1m0p1AddReport);
 
     // remove existing trades from t1 portfolio
@@ -422,11 +426,13 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                                               marketConfig, effectiveResultCurrency);            
             CONSOLE("OK");
         }
-    } else
+    } else {
         t1m1p1NpvReport = t1m1p0NpvReport;
+        t1m1p1AddReport = t1m1p0AddReport;
+    }
 
     analytic()->addReport(LABEL, "pnl_npv_t1_m1_p1", t1m1p1NpvReport);
-    if (inputs_->outputAdditionalResults())
+    if (inputs_->outputAdditionalResults() && t1m1p1AddReport)
         analytic()->addReport(LABEL, "pnl_additional_results_t1_m1_p1", t1m1p1AddReport);
 
     /****************************
