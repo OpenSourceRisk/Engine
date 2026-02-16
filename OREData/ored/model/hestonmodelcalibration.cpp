@@ -42,6 +42,7 @@
 #include <ql/processes/hestonprocess.hpp>
 #include <ql/processes/hestonslvprocess.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/shared_ptr.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
 namespace ore {
@@ -560,11 +561,11 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
 
     DLOG("PiecewiseConstantParameters initialised");
 
-    boost::shared_ptr<PiecewiseTimeDependentHestonModel> ptdModel =
-        boost::make_shared<PiecewiseTimeDependentHestonModel>(yts, dts, s0, m->v0(), ptdTheta, ptdKappa,
+    ext::shared_ptr<PiecewiseTimeDependentHestonModel> ptdModel =
+        ext::make_shared<PiecewiseTimeDependentHestonModel>(yts, dts, s0, m->v0(), ptdTheta, ptdKappa,
                                                               ptdSigma, ptdRho, timeGrid);
-    boost::shared_ptr<PricingEngine> ptdEngine = boost::make_shared<AnalyticPTDHestonEngine>(
-        boost::static_pointer_cast<PiecewiseTimeDependentHestonModel>(ptdModel));
+    ext::shared_ptr<PricingEngine> ptdEngine = ext::make_shared<AnalyticPTDHestonEngine>(
+        ext::static_pointer_cast<PiecewiseTimeDependentHestonModel>(ptdModel));
 
     DLOG("Piecewise Heston Model and Engine constructed");
 
@@ -587,7 +588,7 @@ ext::shared_ptr<PiecewiseTimeDependentHestonModel> HestonModelCalibration::ptdMo
         DLOG("PiecewiseBootstrap selected");
         for (Size i = 0; i < times.size(); ++i) {
 	    DLOG("expiry time " << i << ": " << times[i]);
-            std::vector<boost::shared_ptr<CalibrationHelper>> localHelper;
+            std::vector<ext::shared_ptr<CalibrationHelper>> localHelper;
             std::vector<Real> localWeights;
             Size nonZeroInstr = 0;
             for (Size k = 0; k < moneyness_.size(); ++k) {
