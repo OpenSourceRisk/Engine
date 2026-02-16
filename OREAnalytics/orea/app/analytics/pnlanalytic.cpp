@@ -62,9 +62,11 @@ void PnlVariables::loadVariablesImpl(const ext::shared_ptr<InputParameters>& inp
     ext::shared_ptr<CurveConfigurations> ccOverride;
     inputs->loadParameterXML<CurveConfigurations>(ccOverride, pnlParams, vector<string>({"curveConfigMporOverride", "curveConfigPnlOverride"}), false,
         inputs->setupVariables().refDataManager_, inputs->setupVariables().iborFallbackConfig_);
-    inputs->curveConfigs().add(pnlCurveConfig_, "mpor");
-    if (pnlCurveConfig_ && ccOverride)
-        pnlCurveConfig_->setCurveConfigOverride(ccOverride);
+    if (pnlCurveConfig_) {
+        inputs->curveConfigs().add(pnlCurveConfig_, "mpor");
+        if (ccOverride)
+            pnlCurveConfig_->setCurveConfigOverride(ccOverride);
+    }
     if (!pnlCurveConfig_)
         pnlCurveConfig_ = inputs->curveConfigs().get();
     
