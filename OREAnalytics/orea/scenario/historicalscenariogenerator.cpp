@@ -443,11 +443,9 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
     }else{
         scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     }
-    
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
         QuantLib::ext::make_shared<HistoricalScenarioLoader>(hsr, period.startDates().front(),
-                                                             period.endDates().front(), calendar);
-
+                                                             period.endDates().back(), calendar);
     // Create the historical scenario generator
     // Propagate risk factor breakdown to the generator; use absolute scenarios by default
     return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, returnConfiguration,
