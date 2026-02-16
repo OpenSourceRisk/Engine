@@ -19,9 +19,6 @@ endif()
 
 SET(COMPONENT_LIST date_time iostreams serialization timer thread)
 
-if (ORE_BUILD_TESTS)
-    LIST(APPEND COMPONENT_LIST unit_test_framework)
-endif()
 if(MSVC AND ORE_USE_ZLIB)
     LIST(APPEND COMPONENT_LIST zlib)
 endif()
