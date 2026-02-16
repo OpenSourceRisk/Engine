@@ -1266,7 +1266,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             std::size_t offset = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(
                                      gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second) *
                                  size_[currentId_ - 1];
-            std::copy(&values[offset], &values[offset + size_[currentId_ - 1]], output[i]);
+            std::copy(&values[offset], &values[offset] + size_[currentId_ - 1], output[i]);
         }
     }
 
@@ -1315,7 +1315,8 @@ void OpenClContext::copyLocalValuesToHost(
         for (auto const& v : vars) {
             std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
             std::copy(&valuesFloat[counter * size_[currentId_ - 1]],
-                      &valuesFloat[(counter + 1) * size_[currentId_ - 1]], &values[bid * size_[currentId_ - 1]]);
+                      &valuesFloat[counter * size_[currentId_ - 1]] + size_[currentId_ - 1],
+                      &values[bid * size_[currentId_ - 1]]);
             ++counter;
         }
     }
@@ -1336,7 +1337,8 @@ void OpenClContext::copyLocalValuesToDevice(
         std::size_t counter = 0;
         for (auto const& v : vars) {
             std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
-            std::copy(&values[bid * size_[currentId_ - 1]], &values[(bid + 1) * size_[currentId_ - 1]],
+            std::copy(&values[bid * size_[currentId_ - 1]],
+                      &values[bid * size_[currentId_ - 1]] + size_[currentId_ - 1],
                       &valuesFloat[counter * size_[currentId_ - 1]]);
             ++counter;
         }
