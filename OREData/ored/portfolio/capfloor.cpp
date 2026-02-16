@@ -25,10 +25,10 @@
 #include <ored/portfolio/durationadjustedcmslegdata.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/utilities/fairrate.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/utilities/fairrate.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
@@ -861,7 +861,7 @@ const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() cons
     if (legData_.legType() == LegType::Floating &&
         !plainFloatingLeg_.empty() && !discountCurve_.empty()) {
         try {
-            auto [atmForward, spreadCorrection] = fairRate(
+            auto [atmForward, spreadCorrection] = QuantExt::fairRate(
                 {plainFloatingLeg_}, {false}, {discountCurve_}, {1.0});
             additionalData_["atmForward"] = std::abs(atmForward);
             additionalData_["spreadCorrection"] = spreadCorrection;

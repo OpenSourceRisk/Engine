@@ -389,7 +389,6 @@ utilities/currencyparser.cpp
 utilities/databuilders.cpp
 utilities/dategrid.cpp
 utilities/dependencies.cpp
-utilities/fairrate.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
 utilities/formulaparser.cpp
@@ -827,7 +826,6 @@ utilities/currencyparser.hpp
 utilities/databuilders.hpp
 utilities/dategrid.hpp
 utilities/dependencies.hpp
-utilities/fairrate.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
 utilities/formulaparser.hpp
@@ -872,4 +870,3 @@ install(TARGETS ${ORED_LIB_NAME}
         LIBRARY DESTINATION lib
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
         )
-

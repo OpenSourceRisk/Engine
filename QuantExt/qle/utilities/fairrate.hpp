@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/fairrate.hpp
+/*! \file qle/utilities/fairrate.hpp
     \brief Fair rate utility for multi-leg swaps
     \ingroup utilities
 */
@@ -30,8 +30,7 @@
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-namespace ore {
-namespace data {
+namespace QuantExt {
 
 /*! Compute the fair rate of a collection of swap legs.
 
@@ -63,5 +62,19 @@ fairRate(const std::vector<QuantLib::Leg>& legs,
          const std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>>& discountCurves,
          const std::vector<QuantLib::Real>& fxSpotToBase = {});
 
-} // namespace data
-} // namespace ore
+/*! Compute fair forward and spread correction from pre-aggregated fixed/floating components.
+
+
+    fairForward = -(floatingNpv - floatingSpreadNpv) / fixedBps
+    spreadCorrection = floatingSpreadNpv / |fixedBps|
+
+    If fixedBps is zero (or very close), both return values are 0.
+
+    \return pair(fairForward, spreadCorrection)
+*/
+std::pair<QuantLib::Real, QuantLib::Real>
+fairRateFromNpvBps(QuantLib::Real fixedBps,
+                   QuantLib::Real floatingNpv,
+                   QuantLib::Real floatingSpreadNpv);
+
+} // namespace QuantExt

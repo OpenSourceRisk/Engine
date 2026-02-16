@@ -21,7 +21,6 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/swap.hpp>
-#include <ored/utilities/fairrate.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -35,6 +34,7 @@
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/instruments/currencyswap.hpp>
+#include <qle/utilities/fairrate.hpp>
 
 #include <ql/instruments/swap.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -346,7 +346,7 @@ const std::map<std::string,QuantLib::ext::any>& Swap::additionalData() const {
     if (allLegsAreSimmPlainVanillaIrLegs_ && !legs_.empty() && !discountCurves_.empty() &&
         discountCurves_.size() == numLegs) {
         try {
-            auto [atmForward, spreadCorrection] = fairRate(
+            auto [atmForward, spreadCorrection] = QuantExt::fairRate(
                 std::vector<Leg>(legs_.begin(), legs_.begin() + numLegs),
                 std::vector<bool>(legPayers_.begin(), legPayers_.begin() + numLegs),
                 discountCurves_,
