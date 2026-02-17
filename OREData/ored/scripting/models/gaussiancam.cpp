@@ -150,7 +150,6 @@ void GaussianCam::performCalculations() const {
 
     std::vector<Real> times;
     for (auto const& d : effectiveSimulationDates_) {
-        std::cout << "  adding time for date " << d << " : " << timeFromReference(d) << std::endl;
         times.push_back(timeFromReference(d));
     }
 
@@ -491,33 +490,29 @@ RandomVariable GaussianCam::getIrIndexValue(const Size indexNo, const Date& d, c
 }
 
 RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
-    std::cout << "GaussianCam:getInfIndexValue called for indexNo " << indexNo << " date " << d
-              << " fwd " << (fwd != Null<Date>() ? to_string(fwd) : "Null") << std::endl;
     Date fixingDate = d;
     Date obsDate = d;
     if (fwd != Null<Date>())
-        fixingDate = fwd;
-    std::cout << "  obsDate " << obsDate << " fixingDate " << fixingDate << std::endl;
-    
+        fixingDate = fwd;    
     const auto& index = infIndices_[indexNo].second;
     const auto& zits = index->zeroInflationTermStructure().currentLink();
     auto lag = simulationLag(zits);
-    auto relObsDate = obsDate + lag;
-    auto const& state = infStates_.at(relObsDate).at(indexNo);
+    // we have an simulation lag when simulating inf indices, we need to adjust the observation date accordingly,
+    // (see scriptedtrade.cpp, when compiling the inflation simulation dates).
+    auto laggedObsDate = obsDate + lag;
+    auto laggedFixingDate = fixingDate + lag;
+    auto const& state = infStates_.at(laggedObsDate).at(indexNo);
     Size camIndex = infIndexPositionInCam_[indexNo];
     // Calculate time from curve base date to observation and fixing date and not from reference date, as
     // inflation curves are starting from their base date < reference date, and we have to add the time from base
     // date to reference date to the timeFromReference calculation
     auto modelDc = cam_->dayCounter().value_or(zits->dayCounter());
-    Real t = modelDc.yearFraction(zits->referenceDate(), obsDate);
-    Real T = modelDc.yearFraction(zits->referenceDate(), fixingDate + lag);
-    Real baseFixing =
-        infIndices_[indexNo].second->fixing(zits->baseDate());
-    baseFixing = deseasonalizeCPI(zits->baseDate(), baseFixing, zits);
-    std::cout << "  t " << t << " T " << T << " baseFixing " << baseFixing << std::endl;
+    Real t = modelDc.yearFraction(zits->referenceDate(), laggedObsDate);
+    Real T = modelDc.yearFraction(zits->referenceDate(), laggedFixingDate);
     RandomVariable result(size());
-
     if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::DK) {
+        Real baseFixing = infIndices_[indexNo].second->fixing(zits->baseDate());
+        baseFixing = deseasonalizeCPI(zits->baseDate(), baseFixing, zits);
         InfDkVectorised infdkv(*cam_);
         RandomVariable baseFixingVec(size(), baseFixing);
         QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
@@ -530,8 +525,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
             RandomVariable growthFactor(size());
             growthFactor.expand();
             for (Size p = 0; p < size(); ++p) {
-                growthFactor.data()[p] =
-                    inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], true);
+                growthFactor.data()[p] = inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], true);
             }
             result *= growthFactor;
         }
@@ -539,7 +533,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
         QL_FAIL("GaussianCam::getInfIndexValue(): unknown model type for inflation index "
                 << infIndices_[indexNo].first.name());
     }
-    return sesonalizeCPIRandomVariable(relObsDate, result, zits);
+    return sesonalizeCPIRandomVariable(obsDate, result, zits);
 }
 
 RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate,

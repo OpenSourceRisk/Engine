@@ -1127,14 +1127,25 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                 // inf needs special considerations
                 QuantLib::ext::shared_ptr<ZeroInflationIndex> marketIndex =
                     getInfMarketIndex(info.name(), modelInfIndices_);
+                // we have an simulation lag when simulating inf indices, the lag is the difference between the last
+                // observered fixing (base date of the t0 curve) and t0. We keep the lag constant throughout the
+                // simulation. At time t we simulated effectivly the index value at t - lag, so we need to add the lag
+                // to the relevant dates to make sure we have the required fixings in the simulation (the inflation
+                // models are continuous time models, so lag is applied as number of days and the lagged date is not
+                // moved to the beginning of the inflation period).
                 int lag = simulationLag(marketIndex->zeroInflationTermStructure());
                 for (auto const& d : s.second) {
-                    //std::cout << "inf index eval date: " << d << ", lag: " << lag << std::endl;
                     auto lim = inflationPeriod(d, info.inf()->frequency());
-                    //std::cout << "  inf index period: " << lim.first << " - " << lim.second << std::endl;
                     simulationDates_.insert(lim.first + lag);
+                    DLOG("added " << io::iso_date(lim.first + lag) << " as simulation date for '" << info.name()
+                                  << "' (from index eval date [" << io::iso_date(d) << "], inf period start ["
+                                  << io::iso_date(lim.first) << "] + lag[" << lag << "])");
                     // Allow interpolation of indices for convencience (avoid interpolation logic in script)
                     if (info.infIsInterpolated())
+                        DLOG("index '" << info.name() << "' is interpolated, adding "
+                                       << io::iso_date(lim.second + 1 + lag) << "' (from index eval date ["
+                                       << io::iso_date(d) << "], start next inf period ["
+                                       << io::iso_date(lim.second + 1) << "] + lag[" << lag << "])");
                         simulationDates_.insert(lim.second + 1 + lag);
                 }
             } else {
