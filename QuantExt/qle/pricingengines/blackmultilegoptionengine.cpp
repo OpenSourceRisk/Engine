@@ -365,6 +365,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     additionalResults_["vega"] = vega;
     additionalResults_["fixedNpv"] = fixedNpv;
     additionalResults_["fixedBps"] = fixedBps;
+    additionalResults_["atmForward"] = effectiveAtmForward - spreadCorrection;
     additionalResults_["spreadCorrection"] = spreadCorrection;
     additionalResults_["effectiveAtmForward"] = effectiveAtmForward;
     additionalResults_["weightedFixedRate"] = weightedFixedRate;
