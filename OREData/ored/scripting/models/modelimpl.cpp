@@ -158,9 +158,6 @@ RandomVariable ModelImpl::getInflationIndexFixing(const bool returnMissingFixing
                                                   const QuantLib::ext::shared_ptr<ZeroInflationIndex>& infIndex,
                                                   const Size indexNo, const Date& effectiveFixingDate, const Date& obsdate,
                                                   const Date& fwddate, const Date& baseDate) const {
-    std::cout << "ModelImpl::getInflationIndexFixing for index " << indexInput << " effectiveFixingDate "
-              << QuantLib::io::iso_date(effectiveFixingDate) << " obsdate " << QuantLib::io::iso_date(obsdate) << " fwddate "
-              << QuantLib::io::iso_date(fwddate) << " baseDate " << QuantLib::io::iso_date(baseDate) << std::endl;
     RandomVariable res(size());
     Real historicalFixing = infIndex->timeSeries()[effectiveFixingDate];
     // we exclude historical fixings
