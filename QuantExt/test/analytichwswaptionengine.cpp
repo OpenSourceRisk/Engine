@@ -149,8 +149,7 @@ BOOST_AUTO_TEST_CASE(test2FAgainstMC) {
     MultiPathGeneratorSobolBrownianBridge pgen(process, grid, SobolBrownianGenerator::Steps, 42);
 
     MultiPath p;
-    Array x(2);
-    Array aux(2);
+    Array x(4);
 
     boost::accumulators::accumulator_set<
         double, boost::accumulators::stats<boost::accumulators::tag::mean,
@@ -164,11 +163,11 @@ BOOST_AUTO_TEST_CASE(test2FAgainstMC) {
         p = pgen.next().value;
         x[0] = p[0].back();
         x[1] = p[1].back();
-        aux[0] = p[2].back();
-        aux[1] = p[3].back();
+        x[2] = p[2].back();
+        x[3] = p[3].back();
         modelDiscount->state(x);
         modelForward->state(x);
-        acc(std::max(swap->NPV(), 0.0) / hwModel->numeraire(T, x, discount, aux));
+        acc(std::max(swap->NPV(), 0.0) / hwModel->numeraire(T, x, discount));
     }
 
     Real mcNpv = boost::accumulators::mean(acc);

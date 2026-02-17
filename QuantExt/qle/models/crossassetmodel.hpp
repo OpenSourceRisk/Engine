@@ -166,8 +166,7 @@ public:
     /*! numeraire */
     QuantLib::Real
     numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const;
+              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
 
     /*! discount bond */
     QuantLib::Real discountBond(
@@ -654,10 +653,10 @@ inline const QuantLib::ext::shared_ptr<CrStateParametrization> CrossAssetModel::
     return QuantLib::ext::static_pointer_cast<CrStateParametrization>(p_[idx(CrossAssetModel::AssetType::CrState, i)]);
 }
 
-inline QuantLib::Real CrossAssetModel::numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
-                                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                                 const QuantLib::Array& aux) const {
-    return irModel(ccy)->numeraire(t, x, discountCurve, aux);
+inline QuantLib::Real
+CrossAssetModel::numeraire(const Size ccy, const QuantLib::Time t, const QuantLib::Array& x,
+                           const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
+    return irModel(ccy)->numeraire(t, x, discountCurve);
 }
 
 inline Real CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,

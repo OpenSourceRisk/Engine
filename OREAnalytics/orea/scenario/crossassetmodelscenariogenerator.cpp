@@ -412,10 +412,8 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
 
     std::vector<Array> ir_state(n_ccy_);
     for (Size j = 0; j < n_ccy_; ++j) {
-        ir_state[j] = Array(model_->irModel(j)->n());
+        ir_state[j] = Array(model_->irModel(j)->n() + model_->irModel(j)->n_aux());
     }
-
-    Array ir_state_aux(model_->irModel(0)->n_aux());
 
     std::vector<Size> indexCcyIdx(n_indices_);
     for (Size j = 0; j < n_indices_; ++j)
@@ -431,16 +429,12 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
         scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
 
         // populate IR states
-        copyPathToArray(sample.value, gridIndexInPath_[i + 1], model_->pIdx(CrossAssetModel::AssetType::IR, 0),
-                        ir_state[0]);
-        copyPathToArray(sample.value, gridIndexInPath_[i + 1],
-                        model_->pIdx(CrossAssetModel::AssetType::IR, 0) + ir_state[0].size(), ir_state_aux);
-        for (Size j = 1; j < n_ccy_; ++j)
+        for (Size j = 0; j < n_ccy_; ++j)
             copyPathToArray(sample.value, gridIndexInPath_[i + 1], model_->pIdx(CrossAssetModel::AssetType::IR, j),
                             ir_state[j]);
 
         // Set numeraire from domestic ir process
-        scenarios[i]->setNumeraire(model_->numeraire(0, t, ir_state[0], Handle<YieldTermStructure>(), ir_state_aux));
+        scenarios[i]->setNumeraire(model_->numeraire(0, t, ir_state[0], Handle<YieldTermStructure>()));
 
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {

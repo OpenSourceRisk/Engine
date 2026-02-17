@@ -566,7 +566,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
         // eolve fx processes
 
         for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
-            auto r = model_->fxModel(i)->eulerStep(
+            auto r = model_->fxModel(i)->marginalStep(
                 t0, getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n()),
                 dt, getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->m()),
                 shortRates[0], shortRates[i + 1]);
