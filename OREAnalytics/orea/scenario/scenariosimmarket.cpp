@@ -2503,9 +2503,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs, zeroCurveTimes, quotes);
                         } else {
                             int simLag = simulationLag(inflationTs);
+                            // Quotes are build with first time to be (baseDate), need to 0 Days tenors here
+                            vector<Period> tenors(1, 0 * Days); 
+                            tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(), parameters->zeroInflationTenors(name).end());
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, simLag, obsLag,
-                                inflationTs->frequency(), false, parameters->zeroInflationTenors(name), quotes,
+                                inflationTs->frequency(), false, tenors, quotes,
                                 inflationTs->seasonality());
                         }
 

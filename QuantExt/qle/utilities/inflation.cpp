@@ -64,17 +64,16 @@ double scenarioInflationZeroRateFromModelTs(const Date& simDate, const Period te
                                             const QuantLib::ext::shared_ptr<ZeroInflationIndex> index,
                                             const QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> modelTs,
                                             const CrossAssetModel::ModelType modelType, const DayCounter simulationDc) {
+    
     auto zits = index->zeroInflationTermStructure();
     auto fixingDate = inflationPeriod(simDate + tenor- observationLag, zits->frequency()).first;
     auto T2_fixing = simulationDc.yearFraction(simDate, fixingDate);
     auto [baseCpi, growth] = modelTs->indexGrowth(T2_fixing);
-    auto baseCpiT0 = deseasonalizeCPI(zits->baseDate(), index->fixing(zits->baseDate()), zits);
-    baseCpi *= (modelType == CrossAssetModel::ModelType::DK) ? baseCpiT0 : 1.0;
     auto baseDateT1 = inflationPeriod(simDate - simulationLag(zits), zits->frequency()).first;
-    auto baseCPIT1 = deseasonalizeCPI(baseDateT1, index->fixing(baseDateT1), zits);
     auto tau = zits->dayCounter().yearFraction(baseDateT1, fixingDate);
-    return std::pow(baseCpi * growth / baseCPIT1, 1.0 / tau) - 1.0;
+    return std::pow(growth, 1.0 / tau) - 1.0;
 }
+
 
 double scenarioBaseCpi(const Real y, const Real z, const QuantLib::Date& date,
                        const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size modelIdx,
