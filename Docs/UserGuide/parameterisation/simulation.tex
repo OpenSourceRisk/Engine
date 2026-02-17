@@ -121,6 +121,7 @@ When defining the currencies in the cross asset model, the domestic currency alw
   <BootstrapTolerance>0.0001</BootstrapTolerance>
   <Measure>LGM</Measure><!-- Choices: LGM, BA -->
   <Discretization>Exact</Discretization>
+  <SalvagingAlgorithm>Spectral</SalvagingAlgorithm>
   <!-- ... -->
 </CrossAssetModel>
 \end{minted}
@@ -138,6 +139,8 @@ exploiting the analytical tractability of the model to avoid any time discretiza
 time discretization scheme which has numerical error and requires small time steps for accurate results (useful for
 testing purposes or if more sophisticated component models are used). If {\em Euler} is used, you should consider
 setting TimeStepsPerYear (see above) to a large enough value.
+
+The SalvagingAlgorithm tag specifies the preprocessing of the input correlation matrix (None, Spectral, Hypersphere, LowerDiagonal, Higham). Optional, defaults to None.
 
 \medskip
 
@@ -220,7 +223,7 @@ The reason for having to specify one more {\tt Volatility/InitialValue} entries 
 
 \medskip
 
-Each FX model is specified by a block as follows
+Each FX model is specified by a block as in \ref{lst:simulation_model_fx_configuration_bs} or \ref{lst:simulation_model_fx_configuration_lv}
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -253,8 +256,30 @@ Each FX model is specified by a block as follows
   <!-- ... -->
 <CrossAssetModel>
 \end{minted}
-\caption{Simulation model FX configuration}
-\label{lst:simulation_model_fx_configuration}
+\caption{Simulation model FX configuration BlackScholes}
+\label{lst:simulation_model_fx_configuration_bs}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>
+  <!-- ... -->
+  <ForeignExchangeModels>
+    <LocalVol foreignCcy="default">
+      <DomesticCcy>EUR</DomesticCcy>
+        <Model>AndreasenHuge</Model>
+        <StochasticRatesCorrection>None</StochasticRatesCorrection>
+        <CalibrationMoneyness>-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0</CalibrationMoneyness>
+        <CalibrationGrid>40,3M</CalibrationGrid>
+    </LocalVol>
+    <!-- ... -->
+  </ForeignExchangeModels>
+  <!-- ... -->
+<CrossAssetModel>
+\end{minted}
+\caption{Simulation model FX configuration LocalVol}
+\label{lst:simulation_model_fx_configuration_lv}
 \end{listing}
 
 CrossCcyLGM sections are defined by foreign currency, but we also support a default configuration as above for the IR
@@ -272,6 +297,15 @@ the default, ATMF options), or explicitly specified (in terms of FX rates as abs
 such as $\pm 25D$, $ATMF$ for at the money). There have to be at least one more calibration options configured than {\tt Sigma/TimeGrid} entries were given
 \end{itemize}
 
+The parameters for the local volatility specification have the following meaning:
+
+\begin{itemize}
+\item {\tt DomesticCcy: } Domestic currency completing the FX pair
+\item {\tt Model: } LocalVol implementation to use. Allowed values: Dupire, AndreasenHuge
+\item {\tt StochasticRatesCorrection: } Handling of the stochastic interest rates. Allowed values: None.
+\item {\tt CalibrationMoneyness: } Specification of calibrating options for one expiry in terms of standardized moneyness. For model AndreasenHuge.
+\item {\tt CalibrationGrid: } Specification of the expiries that are used for the calibration. For model AndreasenHuge.
+\end{itemize}
 
 \medskip
 

@@ -43,6 +43,7 @@ app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
 app/analytics/stresstestanalytic.cpp
+app/analytics/utilities.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
 app/analytics/xvaexplainanalytic.cpp
@@ -71,6 +72,7 @@ cube/inmemorycubeopt.cpp
 cube/jaggedcube.cpp
 cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
+cube/overlaynpvcube.cpp
 cube/sensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
@@ -256,6 +258,7 @@ app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
 app/analytics/stresstestanalytic.hpp
+app/analytics/utilities.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
 app/analytics/xvaexplainanalytic.hpp
@@ -292,6 +295,7 @@ cube/jointnpvcube.hpp
 cube/jointnpvsensicube.hpp
 cube/npvcube.hpp
 cube/npvsensicube.hpp
+cube/overlaynpvcube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
@@ -444,7 +448,7 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} "app/analytics/utilities.cpp")
 target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})

@@ -122,7 +122,7 @@ struct TestData : ore::test::OreaTopLevelFixture {
         vector<string> optionStrikes = {};
         vector<Time> sigmaTimes = {};
 
-        std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+        std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
         vector<Real> sigmaValues = {0.15};
         fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, false,
                                                                  ParamType::Constant, sigmaTimes, sigmaValues,
@@ -369,7 +369,7 @@ BOOST_FIXTURE_TEST_SUITE(AmcBermudanSwaptionTest, TestData)
 BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(testCaseData), testCase) {
 
     // if true, only output results (e.g. for plotting), do no checks
-    const bool outputResults = true;
+    const bool outputResults = false;
 
     // if true, cached results are used for the reference values computed with the grid engine
     // if false, the grid engine is used for the computation, which is slow
@@ -406,7 +406,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
 
     BOOST_TEST_MESSAGE("Simulation Grid:");
     for (Size i = 0; i < grid->dates().size(); ++i)
-        std::cout << QuantLib::io::iso_date(grid->dates()[i]) << " " << grid->timeGrid()[i + 1] << std::endl;
+        BOOST_TEST_MESSAGE(QuantLib::io::iso_date(grid->dates()[i]) << " " << grid->timeGrid()[i + 1]);
 
     // Model
     QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model = ccLgm;

@@ -42,6 +42,7 @@
 %include qle_tenorbasisswap.i
 %include qle_creditdefaultswap.i
 %include qle_averageoisratehelper.i
+%include qle_processes.i
 
 //%include qle_crossccyfixfloatswaphelper.i
 

@@ -26,7 +26,7 @@
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using namespace QuantLib::ext;
 
 namespace ore {
@@ -103,6 +103,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             varParams, inputs_->getVarSalvagingAlgorithm(), QuantLib::ext::nullopt, std::move(sensiArgs),
             inputs_->varBreakDown(), inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
     } else {
+        QL_REQUIRE(inputs_->benchmarkVarPeriod()!=std::string(), "BenchmarkVarPeriod Required.");
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
 
@@ -111,6 +112,8 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
         auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+
+        QL_REQUIRE(inputs_->scenarioReader(), "ScenarioReader Required.");
 
         auto scenarios = buildHistoricalScenarioGenerator(
             inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
@@ -159,6 +162,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
     LOG("Build VaR calculator");
+    QL_REQUIRE(inputs_->benchmarkVarPeriod()!=std::string(), "BenchmarkVarPeriod Required.");
     TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate), inputs_->mporDays(), inputs_->mporCalendar());
         
     QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
@@ -166,6 +170,8 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
     auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+
+    QL_REQUIRE(inputs_->scenarioReader(), "ScenarioReader Required.");
 
     auto scenarios = buildHistoricalScenarioGenerator(
         inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
@@ -187,9 +193,15 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
         simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), inputs_->iborFallbackConfig());
 
+    std::unique_ptr<MarketRiskReport::MultiThreadArgs> multiThreadsArgs;
+    if(inputs_->nThreads()>1)
+        multiThreadsArgs = std::make_unique<MarketRiskReport::MultiThreadArgs>(inputs_->nThreads(), inputs_->asof(), analytic()->loader(), 
+                                                                                analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams,
+                                                                                inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, "histstimvar-simulation");
+
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), inputs_->varBreakDown(),
+        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), inputs_->varBreakDown(),
         inputs_->includeExpectedShortfall(), inputs_->tradePnl(), riskFactorBreakdown_, inputs_->useAtParCouponsCurves(),
         inputs_->useAtParCouponsTrades());
 }

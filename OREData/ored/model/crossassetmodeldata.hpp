@@ -123,7 +123,7 @@ public:
     CrossAssetModelData( //! Vector of IR model specifications
         const vector<QuantLib::ext::shared_ptr<IrModelData>>& irConfigs,
         //! Vector of FX model specifications
-        const vector<QuantLib::ext::shared_ptr<FxBsData>>& fxConfigs,
+        const vector<QuantLib::ext::shared_ptr<FxData>>& fxConfigs,
         //! Correlation map
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
@@ -154,7 +154,7 @@ public:
     CrossAssetModelData( //! Vector of IR model specifications
         const std::vector<QuantLib::ext::shared_ptr<IrModelData>>& irConfigs,
         //! Vector of FX model specifications
-        const std::vector<QuantLib::ext::shared_ptr<FxBsData>>& fxConfigs,
+        const std::vector<QuantLib::ext::shared_ptr<FxData>>& fxConfigs,
         //! Vector of EQ model specifications
         const std::vector<QuantLib::ext::shared_ptr<EqBsData>>& eqConfigs,
         //! Correlation map
@@ -186,7 +186,7 @@ public:
     CrossAssetModelData( //! Vector of IR model specifications
         const std::vector<QuantLib::ext::shared_ptr<IrModelData>>& irConfigs,
         //! Vector of FX model specifications
-        const std::vector<QuantLib::ext::shared_ptr<FxBsData>>& fxConfigs,
+        const std::vector<QuantLib::ext::shared_ptr<FxData>>& fxConfigs,
         //! Vector of EQ model specifications
         const std::vector<QuantLib::ext::shared_ptr<EqBsData>>& eqConfigs,
         //! Vector of INF model specifications
@@ -242,7 +242,7 @@ public:
     const vector<string>& creditNames() const { return creditNames_; }
     const vector<string>& commodities() const { return commodities_; }
     const vector<QuantLib::ext::shared_ptr<IrModelData>>& irConfigs() const { return irConfigs_; }
-    const vector<QuantLib::ext::shared_ptr<FxBsData>>& fxConfigs() const { return fxConfigs_; }
+    const vector<QuantLib::ext::shared_ptr<FxData>>& fxConfigs() const { return fxConfigs_; }
     const vector<QuantLib::ext::shared_ptr<EqBsData>>& eqConfigs() const { return eqConfigs_; }
     const vector<QuantLib::ext::shared_ptr<InflationModelData>>& infConfigs() const { return infConfigs_; }
     const vector<QuantLib::ext::shared_ptr<CrLgmData>>& crLgmConfigs() const { return crLgmConfigs_; }
@@ -269,7 +269,7 @@ public:
     vector<string>& creditNames() { return creditNames_; }
     vector<string>& commodities() { return commodities_; }
     vector<QuantLib::ext::shared_ptr<IrModelData>>& irConfigs() { return irConfigs_; }
-    vector<QuantLib::ext::shared_ptr<FxBsData>>& fxConfigs() { return fxConfigs_; }
+    vector<QuantLib::ext::shared_ptr<FxData>>& fxConfigs() { return fxConfigs_; }
     vector<QuantLib::ext::shared_ptr<EqBsData>>& eqConfigs() { return eqConfigs_; }
     vector<QuantLib::ext::shared_ptr<InflationModelData>>& infConfigs() { return infConfigs_; }
     vector<QuantLib::ext::shared_ptr<CrLgmData>>& crLgmConfigs() { return crLgmConfigs_; }
@@ -301,7 +301,7 @@ public:
     //! helper to convert LGM data, possibly including defaults, into an IR config vector
     void buildIrConfigs(map<string, QuantLib::ext::shared_ptr<IrModelData>>& irMap);
     //! helper to convert FX data, possibly including defaults, into an FX config vector
-    void buildFxConfigs(std::map<std::string, QuantLib::ext::shared_ptr<FxBsData>>& fxMap);
+    void buildFxConfigs(std::map<std::string, QuantLib::ext::shared_ptr<FxData>>& fxMap);
     //! helper to convert EQ data, possibly including defaults, into an EQ config vector
     void buildEqConfigs(std::map<std::string, QuantLib::ext::shared_ptr<EqBsData>>& eqMap);
     //! helper to convert INF data, possibly including defaults, into an INF config vector
@@ -326,7 +326,7 @@ private:
     vector<std::string> creditNames_;
     vector<std::string> commodities_;
     vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs_;
-    vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs_;
+    vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs_;
     vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs_;
     vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigs_;
     vector<QuantLib::ext::shared_ptr<CrLgmData>> crLgmConfigs_;

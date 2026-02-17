@@ -381,6 +381,17 @@
     <AdvanceCalendar>TARGET,US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
   </FX>
+  <FxOption>
+    <Id>EUR-USD-FXOPTION</Id>
+    <FXConventionID>EUR-USD-FX</FXConventionID>
+    <AtmType>AtmDeltaNeutral</AtmType>
+    <DeltaType>Spot</DeltaType>
+    <SwitchTenor>2Y</SwitchTenor>
+    <LongTermAtmType>AtmDeltaNeutral</LongTermAtmType>
+    <LongTermDeltaType>Fwd</LongTermDeltaType>
+    <RiskReversalInFavorOf>Call</RiskReversalInFavorOf>
+    <ButterflyStyle>Broker</ButterflyStyle>
+  </FxOption>
    <!-- Cross Currency Basis Swaps -->
   <CrossCurrencyBasis>
     <Id>EUR-USD-XCCY-BASIS</Id>

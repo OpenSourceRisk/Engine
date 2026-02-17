@@ -102,6 +102,7 @@ protected:
         mutable std::vector<Matrix> cache_v_, cache_d_;
     }; // ExactDiscretization
 
+    bool cacheApplicable_ = true;
     mutable bool cacheNotReady_m_ = true;
     mutable bool cacheNotReady_d_ = true;
     mutable Size timeStepsToCache_m_ = 0;

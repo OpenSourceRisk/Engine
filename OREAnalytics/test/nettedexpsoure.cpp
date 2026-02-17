@@ -249,7 +249,7 @@ QuantLib::ext::shared_ptr<CrossAssetModel> buildCrossAssetModel(QuantLib::ext::s
     vector<string> optionStrikes(optionExpiries.size(), "ATMF");
     vector<Time> sigmaTimes = {};
 
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
 
     vector<Real> sigmaValues = {0.15};
     fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
@@ -507,14 +507,12 @@ public:
     std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory) override {
         return string();
     }
-    std::string loadParameterXMLString(const std::string& analytic, const std::string& param, bool mandatory) override {
-        return string();
+    std::vector<std::string> loadParameterXMLString(const std::string& rawStr) override {
+        return {};
     }
 };
 
 BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
-
-
 
     CachedResultsData cachedResults;
     std::map<tuple<string, string, string, string, string, string>, vector<Date>> cachedDefaultDates = cachedResults.defaultDates;
@@ -630,7 +628,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         QuantLib::ext::shared_ptr<InputParameters> inputs = QuantLib::ext::make_shared<TestInputParameters>();
         QuantLib::ext::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator =
             QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(
-                inputs, portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
+                portfolio, cube, cubeInterpreter, asd, 0.99, 14, 2, regressors);
 
         BOOST_TEST_MESSAGE("initial NPV at "<< QuantLib::io::iso_date(referenceDate)<<": "<<cube->getT0(0));
         for (Size i = 0; i<cube->dates().size(); i++)

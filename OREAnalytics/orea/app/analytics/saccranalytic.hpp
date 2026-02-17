@@ -29,6 +29,13 @@ namespace analytics {
 class SaccrCalculator;
 class SaccrTradeData;
 
+struct SaCcrVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+    QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
+};
+
 class SaCcrAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SA_CCR";

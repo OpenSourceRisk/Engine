@@ -44,8 +44,6 @@
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
 #include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
-#include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_system
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_timer

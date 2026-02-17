@@ -40,6 +40,8 @@ public:
     Size n() const override { return 1; }
     Size m() const override { return 1; }
 
+    double volatility(const Time t, const Array& s) const override;
+
     Array eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
                     const Real r_for) const override;
 
@@ -51,6 +53,8 @@ inline FxBsModel::FxBsModel(const QuantLib::ext::shared_ptr<FxBsParametrization>
     : parametrization_(parametrization) {
     QL_REQUIRE(parametrization != nullptr, "FxBsModel: parametrization is null");
 }
+
+inline double FxBsModel::volatility(const Time t, const Array&) const { return parametrization_->sigma(t); }
 
 inline Array FxBsModel::eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
                                   const Real r_for) const {

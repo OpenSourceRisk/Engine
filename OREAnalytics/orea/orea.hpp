@@ -48,6 +48,7 @@
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/smrcanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analytics/xvaexplainanalytic.hpp>
@@ -83,6 +84,7 @@
 #include <orea/cube/jointnpvsensicube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/npvsensicube.hpp>
+#include <orea/cube/overlaynpvcube.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/cube/sparsenpvcube.hpp>

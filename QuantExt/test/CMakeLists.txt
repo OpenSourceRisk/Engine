@@ -60,6 +60,7 @@ formulabasedcoupon.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 fxvoltimeweighting.cpp
+generictest.cpp
 hullwhitebucketing.cpp
 hwpiecewiseparametrization.cpp
 index.cpp
@@ -84,6 +85,7 @@ pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
 quadraticinterpolation.cpp
+quantohestonprocess.cpp
 randomvariable.cpp
 randomvariablelsmbasissystem.cpp
 ratehelpers.cpp
@@ -96,6 +98,12 @@ survivalprobabilitycurve.cpp
 swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)
+
+find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono)
+
+if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
+    find_library(RT_LIBRARY rt REQUIRED)
+endif()
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
 target_link_libraries(quantext-test-suite ${QL_LIB_NAME})

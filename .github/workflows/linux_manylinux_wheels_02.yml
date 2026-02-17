@@ -1,6 +1,9 @@
 name: Linux x86_64 ManyLinux Wheels (cp*)
 
 on:
+  push:
+    tags:
+       - 'v*'
   workflow_dispatch:
 
 jobs:

@@ -27,9 +27,11 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/models/heston.hpp>
 
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/models/assetmodelwrapper.hpp>
 #include <qle/time/monthcounter.hpp>
 
 #include <ql/errors.hpp>
@@ -472,11 +474,18 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
     }
 }
 
-QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, QuantLib::Date asOf, std::string mporCalendar) {
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Date& asOf, const std::string& mporCalendar) {
     QuantLib::Calendar mporCal = parseCalendar(mporCalendar);
-    if (asOf == Date())
-        asOf = Settings::instance().evaluationDate();
-    return mporCal.advance(asOf, mporDays, QuantExt::Days);
+    return calculateMporDate(mporDays, mporCal, asOf);
+}
+
+QuantLib::Date calculateMporDate(const QuantLib::Size& mporDays, const QuantLib::Calendar& mporCalendar,
+                                 const QuantLib::Date& asOf) {
+    Date d = asOf;
+    if (d == Date())
+        d = Settings::instance().evaluationDate();
+    return mporCalendar.advance(d, mporDays, QuantExt::Days);
+
 }
 
 Exercise::Type parseExerciseType(const std::string& s) {
@@ -995,8 +1004,14 @@ pair<string, string> parseBoostAny(const QuantLib::ext::any& anyType, Size preci
         resultType = "currency";
         QuantLib::Currency r = QuantLib::ext::any_cast<QuantLib::Currency>(anyType);
         oss << r;
+    } else if (anyType.type() == typeid(MultiAssetHestonPaths)) {
+        resultType = "heston_paths";
+        oss << "see separate report";
+    } else if (anyType.type() == typeid(std::vector<AssetModelCalibrationResults>)) {
+        resultType = "vector_calibration_results";
+        oss << "see separate reports";
     } else {
-        ALOG("Unsupported QuantLib::ext::any type");
+      ALOG("Unsupported QuantLib::ext::any type");
         resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());
@@ -1815,5 +1830,50 @@ std::ostream& operator<<(std::ostream& os, ParConversionMatrixRegularisation reg
     return os;
 }
 
+HestonProcess::Discretization parseHestonProcessDiscretization(const std::string& s) {
+    static std::map<std::string, HestonProcess::Discretization> m = {
+        {"PartialTruncation", HestonProcess::PartialTruncation},
+        {"FullTruncation", HestonProcess::FullTruncation},
+        {"Reflection", HestonProcess::Reflection},
+        {"NonCentralChiSquareVariance", HestonProcess::NonCentralChiSquareVariance},
+        {"QuadraticExponential", HestonProcess::QuadraticExponential},
+        {"QuadraticExponentialMartingale", HestonProcess::QuadraticExponentialMartingale},
+        {"BroadieKayaExactSchemeLobatto", HestonProcess::BroadieKayaExactSchemeLobatto},
+        {"BroadieKayaExactSchemeLaguerre", HestonProcess::BroadieKayaExactSchemeLaguerre},
+        {"BroadieKayaExactSchemeTrapezoidal", HestonProcess::BroadieKayaExactSchemeTrapezoidal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to HestonProcess::Discretization");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, HestonProcess::Discretization dis) {
+    if (dis == HestonProcess::PartialTruncation) {
+        os << "PartialTruncation";
+    } else if (dis == HestonProcess::FullTruncation) {
+        os << "FullTruncation";
+    } else if (dis == HestonProcess::Reflection) {
+        os << "Reflection";
+    } else if (dis == HestonProcess::NonCentralChiSquareVariance) {
+        os << "NonCentralChiSquareVariance";
+    } else if (dis == HestonProcess::QuadraticExponential) {
+        os << "QuadraticExponential";
+    } else if (dis == HestonProcess::QuadraticExponentialMartingale) {
+        os << "QuadraticExponentialMartingale";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLobatto) {
+        os << "BroadieKayaExactSchemeLobatto";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeLaguerre) {
+        os << "BroadieKayaExactSchemeLaguerre";
+    } else if (dis == HestonProcess::BroadieKayaExactSchemeTrapezoidal) {
+        os << "BroadieKayaExactSchemeTrapezoidal";
+    } else {
+        QL_FAIL("Unknown HestonProcess::Discretization");
+    }
+    return os;
+}
+
+  
 } // namespace data
 } // namespace ore

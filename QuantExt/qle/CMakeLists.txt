@@ -178,6 +178,7 @@ methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmhestonop.cpp
 methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
 methods/irdeltaparconverter.cpp
@@ -216,6 +217,7 @@ models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
+models/fxlvparametrization.cpp
 models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
 models/hullwhitebucketing.cpp
@@ -310,6 +312,7 @@ pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/intrinsicascotengine.cpp
 pricingengines/lgmconvolutionsolver.cpp
+pricingengines/mccamcallablebondengine.cpp
 pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamequityforwardengine.cpp
 pricingengines/mccamfxforwardengine.cpp
@@ -338,8 +341,12 @@ pricingengines/volatilityfromvarianceswapengine.cpp
 processes/commodityschwartzstateprocess.cpp
 processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
+processes/hestonprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+processes/ptdhestonprocess.cpp
+processes/quantohestonprocess.cpp
+processes/multiassetquantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
@@ -438,6 +445,7 @@ time/dateutilities.cpp
 time/monthcounter.cpp
 time/yearcounter.cpp
 utilities/barrier.cpp
+utilities/callablebond.cpp
 utilities/cashflows.cpp
 utilities/commodity.cpp
 utilities/creditcurves.cpp
@@ -711,6 +719,7 @@ methods/fdmblackscholesmesher.hpp
 methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmhestonop.hpp
 methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
 methods/irdeltaparconverter.hpp
@@ -741,6 +750,7 @@ models/constantlosslatentmodel.hpp
 models/cpicapfloorhelper.hpp
 models/crcirpp.hpp
 models/crlgm1fparametrization.hpp
+models/crlgmvectorised.hpp
 models/crossassetanalytics.hpp
 models/crossassetanalyticsbase.hpp
 models/crossassetmodel.hpp
@@ -764,6 +774,8 @@ models/fxbsmodel.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
+models/fxlvmodel.hpp
+models/fxlvparametrization.hpp
 models/fxmodel.hpp
 models/gaussian1dcrossassetadaptor.hpp
 models/gaussianlhplossmodel.hpp
@@ -881,6 +893,7 @@ pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/intrinsicascotengine.hpp
 pricingengines/lgmconvolutionsolver.hpp
+pricingengines/mccamcallablebondengine.hpp
 pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamequityforwardengine.hpp
 pricingengines/mccamfxforwardengine.hpp
@@ -910,8 +923,12 @@ pricingengines/volatilityfromvarianceswapengine.hpp
 processes/commodityschwartzstateprocess.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
+processes/hestonprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+processes/ptdhestonprocess.hpp
+processes/quantohestonprocess.hpp
+processes/multiassetquantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
@@ -985,6 +1002,7 @@ termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/implieddefaulttermstructure.hpp
+termstructures/impliedtermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpicurve.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
@@ -1047,6 +1065,7 @@ termstructures/strippedoptionletadapter2.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
+termstructures/survivalprobabilitycurvefromyield.hpp
 termstructures/swaptionsabrcube.hpp
 termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
@@ -1068,6 +1087,7 @@ time/futureexpirycalculator.hpp
 time/monthcounter.hpp
 time/yearcounter.hpp
 utilities/barrier.hpp
+utilities/callablebond.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
 utilities/creditcurves.hpp
@@ -1084,8 +1104,11 @@ utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 
+find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono)
+
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
+
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
 
 if(ORE_ENABLE_OPENCL)
