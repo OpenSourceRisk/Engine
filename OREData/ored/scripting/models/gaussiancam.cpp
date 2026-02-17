@@ -51,12 +51,6 @@ QuantExt::RandomVariable sesonalizeCPIRandomVariable(const QuantLib::Date& obser
     return CPI * factor;
 }
 
-QuantExt::RandomVariable sesonalizeCPIRandomVariable(const QuantLib::Date& observationDate, const QuantExt::RandomVariable& CPI,
-                                                     const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts) {
-    return sesonalizeCPIRandomVariable(observationDate, CPI, ts.currentLink());
-}
-
-
 } // namespace
 
 namespace ore {
