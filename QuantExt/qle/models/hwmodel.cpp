@@ -49,10 +49,9 @@ QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Tim
 }
 
 QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                  const QuantLib::Array& aux) const {
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
     QL_REQUIRE(measure_ == IrModel::Measure::BA, "HwModel::numeraire() supports BA measure only currently.");
-    return std::exp(std::accumulate(aux.begin(), aux.end(), 0.0)) /
+    return std::exp(std::accumulate(std::next(x.begin(), n()), x.end(), 0.0)) /
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
@@ -61,6 +60,10 @@ QuantLib::Real HwModel::shortRate(const QuantLib::Time t, const QuantLib::Array&
     return std::accumulate(x.begin(), x.end(), 0.0) +
            (discountCurve.empty() ? parametrization_->termStructure()->forwardRate(t, t, Compounding::Continuous)
                                   : discountCurve->forwardRate(t, t, Compounding::Continuous));
+}
+
+Array HwModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const {
+    return stateProcess_->evolve(t0, x0, dt, dw);
 }
 
 void HwModel::update() {
