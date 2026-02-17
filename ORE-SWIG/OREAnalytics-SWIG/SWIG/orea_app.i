@@ -272,10 +272,10 @@ public:
     // Setters for xva
     void setXvaBaseCurrency(const std::string& s);
     // TODO: API for setting NPV and market cubes
-    // boost::shared_ptr<NPVCube> cube();
-    // boost::shared_ptr<NPVCube> nettingSetCube();
-    // boost::shared_ptr<NPVCube> cptyCube();
-    // boost::shared_ptr<AggregationScenarioData> mktCube();
+    // ext::shared_ptr<NPVCube> cube();
+    // ext::shared_ptr<NPVCube> nettingSetCube();
+    // ext::shared_ptr<NPVCube> cptyCube();
+    // ext::shared_ptr<AggregationScenarioData> mktCube();
     void setFlipViewXVA(bool b);
     void setFullInitialCollateralisation(bool b);
     void setExposureProfiles(bool b);
