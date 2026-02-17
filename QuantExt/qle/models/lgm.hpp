@@ -181,15 +181,12 @@ inline QuantLib::ext::shared_ptr<StochasticProcess> LinearGaussMarkovModel::stat
 inline QuantLib::Real
 LinearGaussMarkovModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    QL_REQUIRE(x.size() == n(), "LinearGaussMarkovModel::discountBond() requires input state of dimension " << n());
     return discountBond(t, T, x[0], discountCurve);
 }
 
 inline QuantLib::Real
 LinearGaussMarkovModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    QL_REQUIRE(x.size() == n() + n_aux(),
-               "LinearGaussMarkovModel::numeraire() requires input state of dimension " << n() + n_aux());
     if (measure() == Measure::LGM) {
         return numeraire(t, x[0], discountCurve);
     } else {
