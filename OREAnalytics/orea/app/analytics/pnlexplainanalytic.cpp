@@ -126,8 +126,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     // dates needed for scenarios
     set<Date> pnlDates;
     pnlDates.insert(inputs_->asof());
-    pnlDates.insert(inputs_->mporDate());
-    TimePeriod period({inputs_->asof(), inputs_->mporDate()});
+    pnlDates.insert(pnlVariables_->pnlDate_);
+    TimePeriod period({inputs_->asof(), pnlVariables_->pnlDate_});
 
     auto pnlImpl = static_cast<PnlAnalyticImpl*>(pnlAnalytic->impl().get());
     QL_REQUIRE(pnlImpl, "Impl must of type PNLAnalyticImpl");
