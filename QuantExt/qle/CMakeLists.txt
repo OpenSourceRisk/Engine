@@ -344,9 +344,9 @@ processes/crossassetstateprocess.cpp
 processes/hestonprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
-processes/multiassetquantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
@@ -927,9 +927,9 @@ processes/crossassetstateprocess.hpp
 processes/hestonprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+processes/multiassetquantohestonprocess.hpp
 processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
-processes/multiassetquantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
