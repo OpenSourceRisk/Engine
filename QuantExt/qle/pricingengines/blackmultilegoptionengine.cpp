@@ -280,12 +280,11 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // determine the fair swap rate
 
-    Real atmForward = 0.0;
+    Real effectiveAtmForward = 0.0;
     Real spreadCorrection = 0.0;
-    std::tie(atmForward, spreadCorrection) = fairRateFromNpvBps(fixedBps, floatingNpv, floatingSpreadNpv);
+    std::tie(effectiveAtmForward, spreadCorrection) = fairRateFromNpvBps(fixedBps, floatingNpv, floatingSpreadNpv);
 
-    Real effectiveAtmForward = atmForward - spreadCorrection;
-    Real effectiveFixedRate = weightedFixedRate - spreadCorrection;
+    Real effectiveFixedRate = weightedFixedRate + spreadCorrection;
 
     // incorporate the simple cashflows (including the rebate)
 
@@ -366,7 +365,6 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     additionalResults_["vega"] = vega;
     additionalResults_["fixedNpv"] = fixedNpv;
     additionalResults_["fixedBps"] = fixedBps;
-    additionalResults_["atmForward"] = atmForward;
     additionalResults_["spreadCorrection"] = spreadCorrection;
     additionalResults_["effectiveAtmForward"] = effectiveAtmForward;
     additionalResults_["weightedFixedRate"] = weightedFixedRate;

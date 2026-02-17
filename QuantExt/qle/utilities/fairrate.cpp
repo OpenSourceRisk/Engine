@@ -202,7 +202,7 @@ std::pair<Real, Real> fairRateFromNpvBps(Real fixedBps, Real floatingNpv, Real f
         return {0.0, 0.0};
 
     Real fairForward = -(floatingNpv - floatingSpreadNpv) / fixedBps;
-    Real spreadCorrection = floatingSpreadNpv / std::fabs(fixedBps);
+    Real spreadCorrection = floatingSpreadNpv / fixedBps;
     return {fairForward, spreadCorrection};
 }
 

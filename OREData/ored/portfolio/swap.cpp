@@ -269,7 +269,14 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
                 fxSpots_[i] = 1.0;
             } else {
                 string pair = ccyCode + npvCcy.code();
-                fxSpots_[i] = market->fxRate(pair, configuration)->value();
+                Handle<Quote> fx = market->fxRate(pair, configuration);
+                if (fx.empty()) {
+                    DLOG("Swap::build(): missing FX spot for pair " << pair << " in configuration " << configuration
+                                                                     << ", using 1.0 as placeholder for fair-rate reporting.");
+                    fxSpots_[i] = 1.0;
+                } else {
+                    fxSpots_[i] = fx->value();
+                }
             }
         }
     } else {
