@@ -26,9 +26,9 @@
 #include <qle/models/irmodel.hpp>
 
 #include <ql/handle.hpp>
-#include <ql/termstructures/volatility/equityfx/localvoltermstructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/localvoltermstructure.hpp>
 
 namespace QuantExt {
 
@@ -43,6 +43,14 @@ public:
         QuantLib::Handle<QuantLib::YieldTermStructure> r0, QuantLib::Handle<QuantLib::YieldTermStructure> q0,
         std::function<QuantLib::Array(QuantLib::Real, QuantLib::Real)> dwGenerator, std::vector<Real> times,
         std::vector<Real> logStrikes, Size nPaths);
+
+    Date maxDate() const override { return source_->maxDate(); }
+    Real minStrike() const override { return source_->minStrike(); }
+    Real maxStrike() const override { return source_->maxStrike(); }
+    Calendar calendar() const override { return source_->calendar(); }
+    DayCounter dayCounter() const override { return source_->dayCounter(); }
+    Natural settlementDays() const override { return source_->settlementDays(); }
+    const Date& referenceDate() const override { return source_->referenceDate(); }
 
 private:
     void performCalculations() const override;

@@ -666,7 +666,8 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!fxBuilder[i]->requiresRecalibration() &&
             recalibratedCurrencies.find(fxParametrizations[i]->currency().code()) == recalibratedCurrencies.end() &&
-            recalibratedCurrencies.find(domesticCcy.code()) == recalibratedCurrencies.end()) {
+            recalibratedCurrencies.find(domesticCcy.code()) == recalibratedCurrencies.end() &&
+            !fxLocalVolHandle[i].empty()) {
             DLOG("FX Calibration "
                  << i << " skipped, since neither fx builder nor ir models in dom / for ccy were recalibrated.");
             continue;
