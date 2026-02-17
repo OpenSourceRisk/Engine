@@ -41,11 +41,13 @@ public:
     Handle<Quote> fxSpotToday() const override { return parametrization_->fxSpotToday(); }
     Size n() const override { return 1; }
     Size m() const override { return 1; }
+    Size n_aux() const override { return 0; }
+    Size m_aux() const override { return 0; }
 
     double volatility(const Time t, const Array& s) const override;
 
-    Array eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
-                    const Real r_for) const override;
+    Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
+                       const Real r_for) const override;
 
 private:
     QuantLib::ext::shared_ptr<FxLvParametrization> parametrization_;
@@ -58,8 +60,8 @@ inline FxLvModel::FxLvModel(const QuantLib::ext::shared_ptr<FxLvParametrization>
 
 inline double FxLvModel::volatility(const Time t, const Array& s) const { return parametrization_->sigma(t, s[0]); }
 
-inline Array FxLvModel::eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
-                                  const Real r_for) const {
+inline Array FxLvModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
+                                     const Real r_for) const {
     Real sigma = parametrization_->sigma(t0, x0[0]);
     return x0 + (r_dom - r_for - 0.5 * sigma * sigma) * dt + sigma * std::sqrt(dt) * dw[0];
 }
