@@ -16,15 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/blackindexcdsoptionengine.hpp>
-
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/credit/isdacdsengine.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
-#include <ql/termstructures/credit/flathazardrate.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/daycounters/actual360.hpp>
+#include <qle/pricingengines/blackindexcdsoptionengine.hpp>
+#include <qle/pricingengines/forwardriskyannuitystrike.hpp>
 #include <qle/utilities/time.hpp>
 
 #include <numeric>
@@ -68,7 +64,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
                                discTradeCollToExercise / cds.notional();
 
     // Adjusted strike spread. K' in O'Kane 2008, Section 11.7. K' in ICE paper (notation is poor).
-    Real rpv01_K_fwd = forwardRiskyAnnuityStrike(discountSwapCurrency_, strike, exerciseDate, indexRecovery_, cds);
+    Real rpv01_K_fwd = QuantExt::forwardRiskyAnnuityStrike(discountSwapCurrency_, strike, exerciseDate, indexRecovery_, cds);
 
     Real Kp = close_enough(strike, 0.0)
                   ? 0.0
@@ -174,65 +170,6 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
         results_.additionalResults["standardDeviation"] = stdDev;
         results_.additionalResults["callPut"] = cp == Option::Put ? string("Put") : string("Call");
     }
-}
-
-Real forwardRiskyAnnuityStrike(const Handle<YieldTermStructure>& discount, const Real& strike, const Date& exerciseDate,
-                               const Real& recovery, const CreditDefaultSwap& cds) {
-
-    // This method returns RPV01(0; t_e, T, K) / SP(t_e; K). This is the quantity in formula 11.9 of O'Kane 2008.
-    // There is a slight modification in that we divide by the survival probability to t_E using the flat curve at
-    // the strike spread that we create here.
-
-    // Standard index CDS schedule.
-    Schedule schedule = MakeSchedule()
-                            .from(cds.protectionStartDate())
-                            .to(cds.maturity())
-                            .withCalendar(WeekendsOnly())
-                            .withFrequency(Quarterly)
-                            .withConvention(Following)
-                            .withTerminationDateConvention(Unadjusted)
-                            .withRule(DateGeneration::CDS2015);
-
-    // Derive hazard rate curve from a single forward starting CDS matching the characteristics of underlying index
-    // CDS with a running spread equal to the strike.
-    Real accuracy = 1e-8;
-
-    auto strikeCds = QuantLib::ext::make_shared<CreditDefaultSwap>(
-        Protection::Buyer, 1 / accuracy, strike, schedule, Following, Actual360(), cds.settlesAccrual(),
-        cds.protectionPaymentTime(), cds.protectionStartDate(), QuantLib::ext::shared_ptr<Claim>(), Actual360(true),
-        true, cds.tradeDate(), cds.cashSettlementDays());
-    // dummy engine
-    strikeCds->setPricingEngine(QuantLib::ext::make_shared<MidPointCdsEngine>(
-        Handle<DefaultProbabilityTermStructure>(
-            QuantLib::ext::make_shared<FlatHazardRate>(0, NullCalendar(), 0.0, Actual365Fixed())),
-        0.0,
-        Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()))));
-
-    Real hazardRate;
-    try {
-        hazardRate = strikeCds->impliedHazardRate(0.0, discount, Actual365Fixed(), recovery, accuracy);
-    } catch (const std::exception& e) {
-        QL_FAIL("can not imply fair hazard rate for CDS at option strike "
-                << strike << ". Is the strike correct? Exception: " << e.what());
-    }
-
-    Handle<DefaultProbabilityTermStructure> dph(
-        QuantLib::ext::make_shared<FlatHazardRate>(discount->referenceDate(), hazardRate, Actual365Fixed()));
-
-    // Calculate the forward risky strike annuity.
-    strikeCds->setPricingEngine(QuantLib::ext::make_shared<QuantExt::MidPointCdsEngine>(dph, recovery, discount));
-    Real rpv01_K = std::abs(strikeCds->couponLegNPV() + strikeCds->accrualRebateNPV()) /
-                   (strikeCds->notional() * strikeCds->runningSpread());
-    QL_REQUIRE(rpv01_K > 0.0, "BlackIndexCdsOptionEngine: strike based risky annuity must be positive.");
-
-    // Survival to exercise
-    Probability spToExercise = dph->survivalProbability(exerciseDate);
-    Real discToExercise = discount->discount(exerciseDate);
-
-    // Forward risky annuity strike (divides out the survival probability and discount to exercise)
-    Real rpv01_K_fwd = rpv01_K / spToExercise / discToExercise;
-
-    return rpv01_K_fwd;
 }
 
 } // namespace QuantExt

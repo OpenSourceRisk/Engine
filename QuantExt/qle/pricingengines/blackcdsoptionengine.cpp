@@ -18,11 +18,8 @@
 
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
-#include <ql/termstructures/credit/flathazardrate.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
-#include <qle/pricingengines/blackindexcdsoptionengine.hpp> // include forwardRiskyAnnuityStrike
+#include <qle/pricingengines/forwardriskyannuitystrike.hpp>
 
 #include <string>
 
@@ -99,9 +96,9 @@ void BlackCdsOptionEngine::calculate() const {
     DiscountFactor disc = discount_->discount(exerciseDate);
     Probability sp = probability_->survivalProbability(exerciseDate);
     Real runningSpread = cds.runningSpread();
-    Real Kp = close_enough(strike, 0.0)
-                  ? 0.0
-                  : runningSpread + forwardRiskyAnnuityStrike(discount_, strike, exerciseDate, recovery_, cds) * (strike - runningSpread) * disc / rpv01;
+    Real rpv01_K_fwd = QuantExt::forwardRiskyAnnuityStrike(discount_, strike, exerciseDate, recovery_, cds);
+    Real Kp = close_enough(strike, 0.0) ? 0.0 : runningSpread + rpv01_K_fwd * (strike - runningSpread) * disc / rpv01;
+    Kp = std::max(Kp, 0.0);
 
     // NPV, Section 9.3.7 O'Kane 2008.
     // use fwd risky annuity as numeraire, the coefficient becomes = rpv01 * sp * disc
