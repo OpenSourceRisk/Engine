@@ -45,6 +45,10 @@ namespace QuantExt {
     Single-name and Multi-name Credit Derivatives, Dominic O'Kane, 2008, Section 11.7</em>. This is also the approach
     outlined in <em>Credit Index Option, ICE, 2018</em>.
 */
+
+QuantLib::Real forwardRiskyAnnuityStrike(const Handle<YieldTermStructure>& discount, const QuantLib::Real& strike,
+                                         const QuantLib::Date& exerciseDate, const QuantLib::Real& recovery,
+                                         const QuantLib::CreditDefaultSwap& swap);
 class BlackIndexCdsOptionEngine : public QuantExt::IndexCdsOptionBaseEngine {
 public:
     using IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine;
@@ -54,7 +58,6 @@ private:
 
     void spreadStrikeCalculate(QuantLib::Real fep) const;
     void priceStrikeCalculate(QuantLib::Real fep) const;
-    QuantLib::Real forwardRiskyAnnuityStrike() const;
 };
 
 } // namespace QuantExt
