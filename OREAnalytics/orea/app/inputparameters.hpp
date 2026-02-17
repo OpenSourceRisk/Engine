@@ -299,7 +299,7 @@ public:
         if (xmlStr.size() == 0)
             return false;
 
-        LOG("InputParameters::loadParameterXML(): loading parameter (" << analytic << "," << param
+        TLOG("InputParameters::loadParameterXML(): loading parameter (" << analytic << "," << param
                                                                        << ") from XML string: " << xmlStr[0]);
         for (const auto& s : xmlStr) {            
             try {
