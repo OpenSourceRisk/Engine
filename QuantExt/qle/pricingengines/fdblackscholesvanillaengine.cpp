@@ -58,13 +58,14 @@ void FdBlackScholesVanillaEngine2::calculate() const {
     results_.additionalResults["timeToExpiry"] = tte;
     
     results_.additionalResults["forward"] =
-        process_->x0() *
+        process_->x0() * process_->dividendYield()->discount(lastDate) / process_->riskFreeRate()->discount(lastDate);
+    /* process_->x0() *
         std::exp(
             tte * (process_->riskFreeRate()
                        ->forwardRate(0, tte, QuantLib::Continuous, QuantLib::NoFrequency, true)
                        .rate()) -
             process_->dividendYield()->forwardRate(0, tte, QuantLib::Continuous, QuantLib::NoFrequency, true).rate());
-    
+    */
 }
 
 } // namespace QuantExt
