@@ -42,10 +42,14 @@ QuantLib::Real HwModel::discountBond(const QuantLib::Time t, const QuantLib::Tim
     QuantLib::Array gt = parametrization_->g(t, T);
     QuantLib::Matrix yt = parametrization_->y(t);
 
+    Real dp = 0.0;
+    for (Size i = 0; i < n(); ++i)
+        dp += gt[i] * x[i];
+
     return (discountCurve.empty()
                 ? parametrization_->termStructure()->discount(T) / parametrization_->termStructure()->discount(t)
                 : discountCurve->discount(T) / discountCurve->discount(t)) *
-           std::exp(-QuantLib::DotProduct(gt, x) - 0.5 * QuantLib::DotProduct(gt, yt * gt));
+           std::exp(-dp - 0.5 * QuantLib::DotProduct(gt, yt * gt));
 }
 
 QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
@@ -57,7 +61,7 @@ QuantLib::Real HwModel::numeraire(const QuantLib::Time t, const QuantLib::Array&
 
 QuantLib::Real HwModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    return std::accumulate(x.begin(), x.end(), 0.0) +
+    return std::accumulate(x.begin(), std::next(x.begin() + n()), 0.0) +
            (discountCurve.empty() ? parametrization_->termStructure()->forwardRate(t, t, Compounding::Continuous)
                                   : discountCurve->forwardRate(t, t, Compounding::Continuous));
 }
