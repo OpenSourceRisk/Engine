@@ -26,6 +26,9 @@
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
 class ParConversionAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PARCONVERSION";
@@ -46,12 +49,7 @@ public:
                    false, false, false,
                    false) {}
 
-    std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> loadZeroSensitivities() const { 
-        ZeroSensitivityLoader loader(inputs_->parConversionInputFile());
-        return loader.sensitivities();
-    }
-
-private:
+    std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> loadZeroSensitivities() const;
 
 };
 

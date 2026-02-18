@@ -19,6 +19,7 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
@@ -28,7 +29,9 @@
 #include <orea/scenario/deltascenariofactory.hpp>
 
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/report/utilities.hpp>
+
 namespace ore {
 namespace analytics {
 

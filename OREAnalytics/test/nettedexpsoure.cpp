@@ -18,6 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 

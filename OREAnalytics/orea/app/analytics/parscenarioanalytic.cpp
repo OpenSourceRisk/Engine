@@ -17,9 +17,11 @@
 */
 
 #include <orea/app/analytics/parscenarioanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
 
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/parsers.hpp>
 
 using namespace ore::analytics;

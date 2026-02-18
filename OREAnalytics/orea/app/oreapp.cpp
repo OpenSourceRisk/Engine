@@ -34,6 +34,7 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/xvaenginecg.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
 #include <orea/simm/simmbasicnamemapper.hpp>
 #include <orea/simm/simmbucketmapper.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
