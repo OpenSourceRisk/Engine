@@ -142,6 +142,9 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
     } else {
         if (hisScenGen_->isRiskFactorBreakdown() && runRiskFactorBreakdown) {
             // Run for RiskFactor PnL Breakdown (multi-threaded)
+            // Each thread builds a fresh sim market, so scenarios must contain
+            // all keys to pass the scenario/simData size check.
+            hisScenGen_->setPopulateAllKeysOnBreakdown(true);
             ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
             QL_REQUIRE(sc != nullptr,
                        "HistoricalPnlGenerator: base scenario must be set for multi-threaded risk factor breakdown");

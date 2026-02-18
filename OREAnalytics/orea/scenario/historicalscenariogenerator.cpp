@@ -149,16 +149,25 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
     // loop over one key or all keys
     calcDetailsCounter_ = 0;
     if(currentKey_!=RiskFactorKey()){
-        // Risk factor breakdown: apply the shift only for the selected key,
-        // but populate all other keys with their base (unshifted) values so
-        // that the scenario is complete and passes sim market validation.
-        for (auto const& key : baseScenario_->keys()) {
-            if (key == currentKey_) {
-                nextKey(d, key, scen);
-            } else {
-                scen->add(key, baseScenario_->get(key));
+        if (populateAllKeysOnBreakdown_) {
+            // Multi-threaded path: the sim market is built fresh per thread
+            // and requires a complete scenario with all keys present.
+            // Apply the shift only for the selected key; populate all others
+            // with their base (unshifted) values.
+            for (auto const& key : baseScenario_->keys()) {
+                if (key == currentKey_) {
+                    nextKey(d, key, scen);
+                } else {
+                    scen->add(key, baseScenario_->get(key));
+                }
+                calcDetailsCounter_++;
             }
-            calcDetailsCounter_++;
+        } else {
+            // Single-threaded path: the persistent sim market already holds
+            // base values after reset(), so a partial scenario containing only
+            // the shifted key is sufficient (allowPartialScenarios must be set
+            // on the sim market).
+            nextKey(d, currentKey_, scen);
         }
     }else{
         for (auto const& key : baseScenario_->keys()) {
@@ -354,6 +363,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates
     // Access and propagate the current key from the underlying generator
     auto key = this->getCurrentKey();
     gen_->setCurrentKey(key);
+    gen_->setPopulateAllKeysOnBreakdown(this->populateAllKeysOnBreakdown());
 
     while (i_orig_ < gen_->numScenarios() && !isRelevantScenario_[i_orig_]) {
         gen_->next(d);
