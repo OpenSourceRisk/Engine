@@ -227,17 +227,19 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
 
     bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(infVol_.currentLink());
     if (isLogNormalVol) {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_, true);
     } else {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_, true);
     }
 
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     BusinessDayConvention bdc = infVol_->businessDayConvention();
-    Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
-    Real baseCPI = inflationIndex_->fixing(baseDate);
     Period lag = infVol_->observationLag();
-
+    Date startDate = Settings::instance().evaluationDate();
+    bool useInterpolatedCPIFixings = infVol_->indexIsInterpolated();
+    Real baseCPI = dontCalibrate_ ? 100. : ZeroInflation::cpiFixing(inflationIndex_, startDate, lag, useInterpolatedCPIFixings);
+    Real nominal = 1.0;
+    
     // if cache doesn't exist resize vector
     if (infPriceCache_.size() != optionBasket_.size())
         infPriceCache_ = vector<Real>(optionBasket_.size(), Null<Real>());
@@ -245,7 +247,7 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     // Handle on calibration instruments. No checks this time.
     const auto& ci = data_->calibrationBaskets()[0].instruments();
 
-    Real nominal = 1.0;
+    
     Size optionCounter = 0;
     Date today = Settings::instance().evaluationDate();
     for (Size j = 0; j < ci.size(); j++) {
@@ -259,6 +261,7 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
         Date expiryDate = optionMaturityDate(j);
         auto strikeValue = optionStrikeValue(j);
 
+        DLOG("pricing cap floor for " << data_->index() << " with expiry " << expiryDate << " and strike " << strikeValue);
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
 
         QuantLib::ext::shared_ptr<CPICapFloor> h =
@@ -301,7 +304,8 @@ void InfDkBuilder::buildCapFloorBasket() const {
     } else {
         engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
     }
-       
+    DLOG("Building cap floor basket for " << data_->index() << " with " << ci.size() << " calibration instruments, reference calibration grid size "
+         << referenceCalibrationDates.size());
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     Date baseDate = infVol_->baseDate();
     
@@ -313,12 +317,13 @@ void InfDkBuilder::buildCapFloorBasket() const {
     Real baseCPI = dontCalibrate_ ? 100. : ZeroInflation::cpiFixing(inflationIndex_, startDate, lag, useInterpolatedCPIFixings);
     Real nominal = 1.0;
     vector<Time> expiryTimes;
+    DLOG("DkBuilder: building option basket for " << data_->index() << " with base CPI " << baseDate << " value " << baseCPI);
     optionBasket_.clear();
     for (Size j = 0; j < ci.size(); j++) {
 
         auto cpiCapFloor = QuantLib::ext::dynamic_pointer_cast<CpiCapFloor>(ci[j]);
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
-
+        
         Date expiryDate = optionMaturityDate(j);
         Date fixingDate = inflationPeriod(expiryDate - lag, inflationIndex_->frequency()).first;
         if (fixingDate <= baseDate) {
@@ -335,11 +340,10 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 QuantLib::ext::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar, bdc,
                                                 fixCalendar, bdc, strikeValue, inflationIndex_, lag);
             cf->setPricingEngine(engine);
-            Real tte = inflationYearFraction(inflationIndex_->frequency(), useInterpolatedCPIFixings,
-                                             inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
-                                             cf->fixingDate());
+            Date fixingDate = inflationPeriod(expiryDate - lag, inflationIndex_->frequency()).first;
+            Real tte = rateCurve_->timeFromReference(fixingDate + simulationLag(inflationIndex_->zeroInflationTermStructure()));
 
-            Real tteFromBase = infVol_->timeFromBase(expiryDate);
+            Real tteFromBase = infVol_->timeFromBase(fixingDate);
 
             Real marketPrem;
             if (dontCalibrate_)

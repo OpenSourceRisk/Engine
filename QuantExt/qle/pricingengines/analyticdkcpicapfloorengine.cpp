@@ -18,7 +18,7 @@
 
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
-
+#include <qle/utilities/inflation.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 
 namespace QuantExt {
@@ -27,41 +27,76 @@ using namespace CrossAssetAnalytics;
 
 AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                          const Size index, const Real baseCPI)
-    : model_(model), index_(index), baseCPI_(baseCPI) {}
+    : model_(model), index_(index) {}
 
 void AnalyticDkCpiCapFloorEngine::calculate() const {
 
     bool interpolate = arguments_.observationInterpolation == CPI::Linear;
 
-    Real t = inflationYearFraction(arguments_.index->frequency(), interpolate,
-                                   model_->infdk(index_)->termStructure()->dayCounter(),
-                                   model_->infdk(index_)->termStructure()->baseDate(), arguments_.fixDate);
+    //Date startDate = inflationPeriod(arguments_.startDate - arguments_.observationLag, arguments_.index->frequency()).first;
+    auto zits = model_->infdk(index_)->termStructure();
+    Size irIdx = model_->ccyIndex(model_->infdk(index_)->currency());
+    auto yts = model_->irlgm1f(irIdx)->termStructure();
+    
+    Date fixingDate = inflationPeriod(arguments_.fixDate, arguments_.index->frequency()).first;
 
-    if (t <= 0.0) {
+    Date baseDate = inflationPeriod(arguments_.startDate - arguments_.observationLag, arguments_.index->frequency()).first;
+
+    Real t_strike = inflationYearFraction(arguments_.index->frequency(), interpolate,
+                                   zits->dayCounter(),
+                                   baseDate, fixingDate);
+    
+    Real t = yts->dayCounter().yearFraction(yts->referenceDate(), fixingDate + simulationLag(zits));
+
+    
+    if (t_strike <= 0.0) {
         // option is expired, we do not value any possibly non settled
         // flows, i.e. set the npv to zero in this case
         results_.value = 0.0;
         return;
     }
-
+    Real baseCPI_t0 = arguments_.index->fixing(zits->baseDate());
+    Real t_curve = zits->dayCounter().yearFraction(zits->baseDate(), fixingDate);
     // Book, 13.37, 13.38
 
-    Real k = std::pow(1.0 + arguments_.strike, t);
+    Real k = std::pow(1.0 + arguments_.strike, t_strike);
     Real kTilde = k * arguments_.baseCPI;
     Real nTilde = arguments_.nominal / arguments_.baseCPI;
 
-    Real m = baseCPI_ *
-             std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate, Period(0, Days)), t);
-    m = arguments_.index->fixing(arguments_.fixDate);
+    std::cout << "AnalyticDkCpiCapFloorEngine: arguments_.startDate = " << arguments_.startDate << "\n"
+              << "arguments_.fixDate = " << arguments_.fixDate << "\n"
+              << "fixingDate = " << fixingDate << "\n"
+              << "baseDate = " << baseDate << "\n"
+              << "t_strike = " << t_strike << "\n"
+              << "t = " << t << "\n"
+              << "t_curve = " << t_curve << "\n"
+              << "k = " << k << "\n"
+              << "kTilde = " << kTilde << "\n"
+              << "nTilde = " << nTilde << "\n"
+                << "baseCPI_t0 = " << baseCPI_t0 << "\n"
+                <<" baseCPI = " << arguments_.baseCPI << "\n"
+                << "zits->zeroRate(arguments_.fixDate) = " << zits->zeroRate(arguments_.fixDate) << "\n";
+
+              
+
+    Real m = baseCPI_t0 *
+             std::pow(1.0 + zits->zeroRate(arguments_.fixDate), t_curve);
+    std::cout << "baseCPI_t0 = " << baseCPI_t0 << "\n"
+              << "zits->zeroRate(arguments_.fixDate) = " << zits->zeroRate(arguments_.fixDate) << "\n"
+              << "m = " << m << "\n";
+    m = ZeroInflation::cpiFixing(arguments_.index, arguments_.fixDate, 0*Days, interpolate);
+    std::cout << "m (from index fixing) = " << m << "\n";
     Real Ht = Hy(index_).eval(*model_, t);
     Real v = Ht * Ht * zetay(index_).eval(*model_, t) -
              2.0 * Ht * integral(*model_, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
              integral(*model_, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t);
 
-    Size irIdx = model_->ccyIndex(model_->infdk(index_)->currency());
-    Real discount = model_->irlgm1f(irIdx)->termStructure()->discount(arguments_.payDate);
+    Real discount = yts->discount(arguments_.payDate);
 
     results_.value = nTilde * blackFormula(arguments_.type, kTilde, m, std::sqrt(v), discount);
+    std::cout << "v = " << v << "\n"
+              << "discount = " << discount << "\n"
+              << "results_.value = " << results_.value << "\n";
 
 } // calculate()
 
