@@ -149,7 +149,17 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
     // loop over one key or all keys
     calcDetailsCounter_ = 0;
     if(currentKey_!=RiskFactorKey()){
-        nextKey(d, currentKey_, scen);
+        // Risk factor breakdown: apply the shift only for the selected key,
+        // but populate all other keys with their base (unshifted) values so
+        // that the scenario is complete and passes sim market validation.
+        for (auto const& key : baseScenario_->keys()) {
+            if (key == currentKey_) {
+                nextKey(d, key, scen);
+            } else {
+                scen->add(key, baseScenario_->get(key));
+            }
+            calcDetailsCounter_++;
+        }
     }else{
         for (auto const& key : baseScenario_->keys()) {
             nextKey(d, key, scen);

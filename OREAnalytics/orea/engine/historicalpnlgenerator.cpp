@@ -140,6 +140,41 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
     } else {
+        if (hisScenGen_->isRiskFactorBreakdown() && runRiskFactorBreakdown) {
+            // Run for RiskFactor PnL Breakdown (multi-threaded)
+            ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
+            QL_REQUIRE(sc != nullptr,
+                       "HistoricalPnlGenerator: base scenario must be set for multi-threaded risk factor breakdown");
+            std::vector<RiskFactorKey> deltaKeys = sc->keys();
+            for (auto const& key : deltaKeys) {
+                // If we already have a non-empty shared_ptr for this key, skip rebuilding
+                auto it = mapCube_.find(key);
+                if (it != mapCube_.end() && it->second) {
+                    continue;
+                }
+                hisScenGen_->setCurrentKey(key);
+                hisScenGen_->setIterator(0);
+
+                MultiThreadedValuationEngine rfEngine(
+                    nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(),
+                    hisScenGen_->numScenarios(), loader_, hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_,
+                    configuration_, simMarketData_, false, false, filter, referenceData_, iborFallbackConfig_, true,
+                    true, true, {}, {}, {}, context_);
+                for (auto const& i : this->progressIndicators()) {
+                    i->reset();
+                    rfEngine.registerProgressIndicator(i);
+                }
+                rfEngine.buildCube(portfolio_, npvCalculator_, ValuationEngine::ErrorPolicy::RemoveAll, {}, true,
+                                   dryRun_);
+                mapCube_[key] =
+                    QuantLib::ext::make_shared<JointNPVCube>(rfEngine.outputCubes(), portfolio_->ids(), true);
+                hisScenGen_->reset();
+            }
+            // Run for Full report - Remove risk factor key - reset counter
+            hisScenGen_->setCurrentKey(RiskFactorKey());
+            hisScenGen_->setIterator(0);
+        }
+
         MultiThreadedValuationEngine engine(
             nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
             hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_, false, false,
