@@ -212,7 +212,10 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
     auto cf = QuantLib::ext::dynamic_pointer_cast<CpiCapFloor>(ci.at(j));
     QL_REQUIRE(cf,
                "InfDkBuilder::optionStrike(" << j << "): expected CpiCapFloor calibration instruments, could not cast");
-    return cpiCapFloorStrikeValue(cf->strike(), *inflationIndex_->zeroInflationTermStructure(), optionMaturityDate(j));
+    Date maturity = optionMaturityDate(j);
+    Period lag = infVol_->observationLag();
+    Date fixingDate = inflationPeriod(maturity - lag, inflationIndex_->frequency()).first;
+    return cpiCapFloorStrikeValue(cf->strike(), *inflationIndex_->zeroInflationTermStructure(), fixingDate);
 }
 
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
@@ -300,13 +303,14 @@ void InfDkBuilder::buildCapFloorBasket() const {
     }
        
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
-    Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
-    Real baseCPI = dontCalibrate_ ? 100. : inflationIndex_->fixing(baseDate);
+    Date baseDate = infVol_->baseDate();
+    
     BusinessDayConvention bdc = infVol_->businessDayConvention();
     Period lag = infVol_->observationLag();
     Handle<ZeroInflationIndex> hIndex(inflationIndex_);
     Date startDate = Settings::instance().evaluationDate();
     bool useInterpolatedCPIFixings = infVol_->indexIsInterpolated();
+    Real baseCPI = dontCalibrate_ ? 100. : ZeroInflation::cpiFixing(inflationIndex_, startDate, lag, useInterpolatedCPIFixings);
     Real nominal = 1.0;
     vector<Time> expiryTimes;
     optionBasket_.clear();
@@ -316,7 +320,11 @@ void InfDkBuilder::buildCapFloorBasket() const {
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
 
         Date expiryDate = optionMaturityDate(j);
-
+        Date fixingDate = inflationPeriod(expiryDate - lag, inflationIndex_->frequency()).first;
+        if (fixingDate <= baseDate) {
+            DLOG("Skipping calibration instrument with expiry " << expiryDate << " since fixing date " << fixingDate << " is before or equal to base date " << baseDate);
+            continue;
+        }
         // check if we want to keep the helper when a reference calibration grid is given
         auto refCalDate =
             std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);

@@ -496,13 +496,13 @@ Date optionMaturity(const boost::variant<Date, Period>& maturity, const QuantLib
 
 Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
                             const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& curve,
-                            const QuantLib::Date& optionMaturityDate) {
+                            const QuantLib::Date& fixingDate) {
     if (auto abs = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
         return abs->strike();
     } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
-        return curve->zeroRate(optionMaturityDate, curve->observationLag());
+        return curve->zeroRate(fixingDate, curve->observationLag());
     } else {
         QL_FAIL("cpi cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
                 << strike->toString());
