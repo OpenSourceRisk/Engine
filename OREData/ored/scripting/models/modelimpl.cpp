@@ -196,18 +196,13 @@ RandomVariable ModelImpl::eval(const std::string& indexInput, const Date& obsdat
         Date baseDate = inf->second->zeroInflationTermStructure()->baseDate();
         Date effectiveFixingDate = fwddate != Null<Date>() ? fwddate : obsdate;
         std::pair<Date, Date> lim = inflationPeriod(effectiveFixingDate, inf->second->frequency());
-        std::cout << "modelImpl.eval() obsDate " << obsdate << " fwddate " << fwddate << " effectiveFixingDate "
-                  << effectiveFixingDate << " lim (" << lim.first << "," << lim.second << ")" << std::endl;
         RandomVariable indexStart =
             getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                     std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
-        std::cout << "  indexStart for date " << QuantLib::io::iso_date(lim.first) << " is " << indexStart << std::endl;
         // if the index is not interpolated we are done
         if (!indexInfo.infIsInterpolated()) {
             return indexStart;
         }
-        std::cout << "  Inflation index is interpolated, getting second fixing for date "
-                  << QuantLib::io::iso_date(lim.second+1) << std::endl;
         // otherwise we need to get a second value and interpolate as in ZeroInflationIndex
         RandomVariable indexEnd = getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                                           std::distance(infIndices_.begin(), inf), lim.second + 1,

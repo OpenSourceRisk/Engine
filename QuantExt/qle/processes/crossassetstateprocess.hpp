@@ -27,6 +27,7 @@
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/stochasticprocess.hpp>
+#include <ql/time/daycounter.hpp>
 #include <optional>
 
 namespace QuantExt {
@@ -41,7 +42,7 @@ class CrossAssetModel;
 class CrossAssetStateProcess : public StochasticProcess {
 public:
     CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
-                           const std::optional<DayCounter>& gridDayCounter_ = std::nullopt);
+                           const std::optional<QuantLib::DayCounter>& gridDayCounter_ = std::nullopt);
 
     /*! StochasticProcess interface */
     Size size() const override;
@@ -56,7 +57,7 @@ public:
 
     // get sqrt correlation matrix (only available for Euler discretization, empty otherwise)
     const Matrix& sqrtCorrelation() const { return sqrtCorrelation_; }
-    const std::optional<DayCounter>& gridDayCounter() const { return gridDayCounter_; }
+    const std::optional<QuantLib::DayCounter>& gridDayCounter() const { return gridDayCounter_; }
 protected:
     virtual Matrix diffusionOnCorrelatedBrownians(Time t, const Array& x) const;
     virtual Matrix diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const;
@@ -65,7 +66,7 @@ protected:
     QuantLib::ext::shared_ptr<const CrossAssetModel> model_;
     // for inflation we need to convert the time grid to dates, if its not given 
     // we assume inflation curve daycounter are equal to the simulation grid daycounter
-    mutable std::optional<DayCounter> gridDayCounter_;
+    mutable std::optional<QuantLib::DayCounter> gridDayCounter_;
     std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> crCirpp_;
     Size cirppCount_;
 
