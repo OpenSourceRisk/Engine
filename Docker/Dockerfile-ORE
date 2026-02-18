@@ -25,6 +25,10 @@ COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
 COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
 COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
 
+# Temp step to make the ORE+ tests work on CI.
+# This will all be fixed properly by merge request 3214.
+COPY QuantLib/test-suite/paralleltestrunner.hpp /usr/local/include/test-suite/paralleltestrunner.hpp
+
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
 ENV CCACHE_MAXSIZE="10G"
