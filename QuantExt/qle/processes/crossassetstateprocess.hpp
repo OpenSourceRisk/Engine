@@ -27,6 +27,7 @@
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/stochasticprocess.hpp>
+#include <optional>
 
 namespace QuantExt {
 using namespace QuantLib;
