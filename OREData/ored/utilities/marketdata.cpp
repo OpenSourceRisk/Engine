@@ -327,7 +327,7 @@ std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, Quant
         endDate = IMM::nextDate(refEnd, false);
     } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
         endDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months, Following);
-        startDate = calendar.adjust(endDate - tenor, Following);
+        startDate = calendar.adjust(Date(1, expiryMonth, expiryYear) + 1 * Months - tenor, Following);
     }
     return std::make_pair(startDate, endDate);
 }
