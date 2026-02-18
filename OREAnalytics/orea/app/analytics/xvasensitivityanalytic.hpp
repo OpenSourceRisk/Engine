@@ -30,8 +30,11 @@
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/engine/zerotoparcube.hpp>
+
 namespace ore {
 namespace analytics {
+
+class InputParameters;
 
 class XvaResults {
 public:

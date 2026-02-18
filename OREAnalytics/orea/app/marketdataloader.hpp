@@ -22,18 +22,22 @@
 
 #pragma once
 
+#include <map>
 #include <ored/marketdata/inmemoryloader.hpp>
-#include <orea/app/inputparameters.hpp>
+#include <ored/portfolio/fixingdates.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 typedef std::map<QuantLib::Date, std::set<std::string>> QuoteMap;
-typedef std::map<std::string, RequiredFixings::FixingDates> FixingMap;
+typedef std::map<std::string, ore::data::RequiredFixings::FixingDates> FixingMap;
 
 //! Utility class for Structured Fixing warnings
-class StructuredFixingWarningMessage : public StructuredMessage {
+class StructuredFixingWarningMessage : public ore::data::StructuredMessage {
 public:
     StructuredFixingWarningMessage(const std::string& fixingId, const QuantLib::Date& fixingDate,
                                    const std::string& exceptionType, const std::string& exceptionWhat,
@@ -85,7 +89,7 @@ public:
     populateFixings(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
                     const std::set<QuantLib::Date>& loaderDates = {});
 
-    virtual void addRelevantFixings(const std::pair<std::string, RequiredFixings::FixingDates>& fixing,
+    virtual void addRelevantFixings(const std::pair<std::string, ore::data::RequiredFixings::FixingDates>& fixing,
         std::map<std::pair<std::string, QuantLib::Date>, std::set<QuantLib::Date>>& lastAvailableFixingLookupMap);
 
     //! clear the loader
