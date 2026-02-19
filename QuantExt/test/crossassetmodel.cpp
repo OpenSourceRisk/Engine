@@ -4700,7 +4700,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
                    "CDS start (" << schedule.date(0) << ") should be on or after option maturity (" << mat << ")");
         QuantLib::ext::shared_ptr<CdsOptionHelper> h(
             new CdsOptionHelper(mat, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(impliedVols[i - 1])),
-                                Protection::Buyer, schedule, Following, Actual360(), prob, 0.4, eurYts));
+                                Protection::Buyer, schedule, Following, Actual360(), prob, 0.4, eurYts, eurYts));
         Real t = eurYts->timeFromReference(mat);
         cdsoHelpers.push_back(h);
         if (i <= nMat - 1)

@@ -269,8 +269,10 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     // If the strike_ is Null, the strike is taken as the running coupon.
     Real strike = strike_ == Null<Real>() ? runningCoupon : strike_;
 
+    Settlement::Type settleType = parseSettlementType(option_.settlement());
+
     // Build the option instrument
-    auto cdsOption = QuantLib::ext::make_shared<QuantExt::CdsOption>(cds, exercise, knockOut_, strike, strikeType);
+    auto cdsOption = QuantLib::ext::make_shared<QuantExt::CdsOption>(cds, exercise, knockOut_, strike, strikeType, settleType);
 
     // Set the option engine
     auto cdsOptionEngineBuilder = QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwapOptionEngineBuilder>(
@@ -294,7 +296,6 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
 
     // Instrument wrapper depends on the settlement type.
     Position::Type positionType = parsePositionType(option_.longShort());
-    Settlement::Type settleType = parseSettlementType(option_.settlement());
     // The instrument build should be indpednent of the evaluation date. However, the general behavior
     // in ORE (e.g. IR swaptions) for normal pricing runs is that the option is considered expired on
     // the expiry date with no assumptions on an (automatic) exercise. Therefore we build a vanilla

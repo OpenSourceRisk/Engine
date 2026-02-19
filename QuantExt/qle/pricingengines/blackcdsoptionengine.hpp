@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2026 AcadiaSoft, Inc.
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -46,14 +47,16 @@ class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
 public:
     BlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
         QuantLib::Real recovery,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountSwapCurrency,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountTradeCollateral,
         const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
 
     //! \name Inspectors
     //@{
     const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability() const;
     QuantLib::Real recovery() const;
-    const QuantLib::Handle<QuantLib::YieldTermStructure> discount() const;
+    const QuantLib::Handle<QuantLib::YieldTermStructure> discountSwapCurrency() const;
+    const QuantLib::Handle<QuantLib::YieldTermStructure> discountTradeCollateral() const;
     const QuantLib::Handle<QuantExt::CreditVolCurve> volatility() const;
     //@}
 
@@ -65,7 +68,8 @@ public:
 private:
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> probability_;
     QuantLib::Real recovery_;
-    QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountSwapCurrency_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountTradeCollateral_;
     QuantLib::Handle<QuantExt::CreditVolCurve> volatility_;
 };
 
