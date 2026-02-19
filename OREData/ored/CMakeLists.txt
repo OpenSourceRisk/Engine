@@ -851,7 +851,7 @@ utilities/wildcard.hpp
 utilities/xmlutils.hpp
 version.hpp)
 
-writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
+writeAll("ored" "${CMAKE_CURRENT_LIST_DIR}/ored.hpp" "auto_link.hpp" "${OREData_HDR}")
 add_library(${ORED_LIB_NAME} ${OREData_SRC} ${OREData_HDR} "ored.hpp")
 add_library(${ORE_PACKAGE_NAME}::${ORED_LIB_NAME} ALIAS ${ORED_LIB_NAME})
 

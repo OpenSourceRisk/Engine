@@ -1106,7 +1106,7 @@ utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 
-writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
+writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
 # This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build 
 # (locally) and in the split build during CI i.e. build ORE, import ORE CMake targets, build OREPlus.

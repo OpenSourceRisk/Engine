@@ -449,7 +449,7 @@ simulation/fixingmanager.hpp
 simulation/simmarket.hpp
 version.hpp)
 
-writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
+writeAll("orea" "${CMAKE_CURRENT_LIST_DIR}/orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
 add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} ${OREAnalytics_HDR} "orea.hpp")
 add_library(${ORE_PACKAGE_NAME}::${OREA_LIB_NAME} ALIAS ${OREA_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME}
