@@ -48,6 +48,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     Real runningSpread = cds.runningSpread();
     DiscountFactor discTradeCollToExercise = discountTradeCollateral_->discount(exerciseDate);
     DiscountFactor discSwapCurrToExercise = discountSwapCurrency_->discount(exerciseDate);
+    bool cashSettled = arguments_.settlementType == Settlement::Cash;
 
     // Calculate the risky annuity
     Real rpv01 = std::abs(cds.couponLegNPV() + cds.accrualRebateNPV()) / (cds.notional() * cds.runningSpread());
@@ -60,7 +61,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     Real fairSpread = cds.fairSpreadClean();
 
     // FEP adjusted forward spread. F^{Adjusted} in O'Kane 2008, Section 11.7. F' in ICE paper (notation is poor).
-    Real Fp = fairSpread + fep * (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise) / rpv01 /
+    Real Fp = fairSpread + fep * (cashSettled ? discSwapCurrToExercise : discTradeCollToExercise) / rpv01 /
                                discTradeCollToExercise / cds.notional();
 
     // Adjusted strike spread. K' in O'Kane 2008, Section 11.7. K' in ICE paper (notation is poor).
@@ -70,7 +71,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
                   ? 0.0
                   : runningSpread + arguments_.tradeDateNtl / cds.notional() * rpv01_K_fwd *
                                         (strike - runningSpread) *
-                                        (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise) / rpv01;
+                                        (cashSettled ? discSwapCurrToExercise : discTradeCollToExercise) / rpv01;
 
     // Read the volatility from the volatility surface
     Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm), strike,
@@ -89,7 +90,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     // floored at 0.0, so we ensure this here. This lets us compute the black formula as well in all cases.
     Kp = std::max(Kp, 0.0);
 
-    results_.value = discTradeCollToExercise / (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise) *
+    results_.value = discTradeCollToExercise / (cashSettled ? discSwapCurrToExercise : discTradeCollToExercise) *
                      rpv01 * cds.notional() * blackFormula(callPut, Kp, Fp, stdDev, 1.0);
 
     if (generateAdditionalResults_) {
@@ -116,6 +117,7 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
     const auto& cds = *arguments_.swap;
 
     const Real& tradeDateNtl = arguments_.tradeDateNtl;
+    bool cashSettled = arguments_.settlementType == Settlement::Cash;
 
     // effective strike (strike is expressed w.r.t. trade date notional by market convention)
     Real effStrike = 1.0 - tradeDateNtl / cds.notional() * (1.0 - arguments_.strike);
@@ -130,7 +132,7 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
     Real npv = cds.side() == Protection::Buyer ? cds.NPV() : -cds.NPV();
 
     Real forwardPrice =
-        1 - npv / cds.notional() / (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
+        1 - npv / cds.notional() / (cashSettled ? discSwapCurrToExercise : discTradeCollToExercise);
 
     // Front end protection adjusted forward price.
     Real Fp = forwardPrice - fep / cds.notional() / discTradeCollToExercise;
@@ -162,8 +164,7 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
         results_.additionalResults["discountToExerciseTradeCollateral"] = discTradeCollToExercise;
         results_.additionalResults["discountToExerciseSwapCurrency"] = discSwapCurrToExercise;
         results_.additionalResults["upfront"] =
-            npv *
-            (arguments_.settlementType == Settlement::Cash ? discTradeCollToExercise / discSwapCurrToExercise : 1.0);
+            npv * (cashSettled ? discTradeCollToExercise / discSwapCurrToExercise : 1.0);
         results_.additionalResults["forwardPrice"] = forwardPrice;
         results_.additionalResults["fepAdjustedForwardPrice"] = Fp;
         results_.additionalResults["volatility"] = volatility;
