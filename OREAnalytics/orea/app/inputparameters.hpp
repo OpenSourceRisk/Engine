@@ -72,6 +72,7 @@ struct SetupVariables : public InputVariables {
     
     QuantLib::Date asof_;
     std::string baseCurrency_;
+    std::string discountIndex_;
     std::filesystem::path resultsPath_;
     std::filesystem::path inputPath_;
     std::string resultCurrency_;
@@ -396,6 +397,7 @@ public:
     void setResultsPath(const std::string& s) { setupVariables_.resultsPath_ = s; }
     void setInputPath(const std::string& s) { setupVariables_.inputPath_ = s; }
     void setBaseCurrency(const std::string& s) { setupVariables_.baseCurrency_ = s; }
+    void setDiscountIndex(const std::string& discountIndex) { setupVariables_.discountIndex_ = discountIndex; }
     void setContinueOnError(bool b) { setupVariables_.continueOnError_ = b; }
     void setAllowModelBuilderFallbacks(bool b) { setupVariables_.allowModelBuilderFallbacks_ = b; }
     void setLazyMarketBuilding(bool b) { setupVariables_.lazyMarketBuilding_ = b; }
@@ -855,6 +857,7 @@ public:
     const QuantLib::Date& asof() const { return setupVariables_.asof_; }
     const std::filesystem::path& resultsPath() const { return setupVariables_.resultsPath_; }
     const std::string& baseCurrency() const { return setupVariables_.baseCurrency_; }
+    const std::string& discountIndex() { return setupVariables_.discountIndex_; }
     const std::string& resultCurrency() const { return setupVariables_.resultCurrency_; }
     bool continueOnError() const { return setupVariables_.continueOnError_; }
     bool allowModelBuilderFallbacks() const { return setupVariables_.allowModelBuilderFallbacks_; }
