@@ -19,7 +19,7 @@ option(ORE_ENABLE_OPENCL "Enable OpenCL" OFF)
 option(ORE_ENABLE_CUDA "Enable CUDA" OFF)
 
 # define build type clang address sanitizer + undefined behaviour + LIBCPP assertions, but keep O2
-set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2")
+set(CMAKE_CXX_FLAGS_CLANG_ASAN_O2 "-fsanitize=address,undefined -fno-omit-frame-pointer -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -g -O2 -std=c++20")
 
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
