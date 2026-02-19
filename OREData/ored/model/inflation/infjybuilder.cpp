@@ -328,7 +328,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         /* FIXME - the maturity date is not adjusted on eval date changes even if given as a tenor
                  - if the strike is atm, the value will not be updated on eval date changes */
         Real strikeValue =
-            cpiCapFloorStrikeValue(cpiCapFloor->strike(), *zeroInflationIndex_->zeroInflationTermStructure(), maturity);
+            cpiCapFloorStrikeValue(cpiCapFloor->strike(), zeroInflationIndex_, cpiVolatility_, maturity);
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
         auto inst = QuantLib::ext::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar, bdc, calendar, bdc,
                                             strikeValue, zeroInflationIndex_, obsLag, observationInterpolation);

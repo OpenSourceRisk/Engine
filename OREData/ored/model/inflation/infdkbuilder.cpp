@@ -213,9 +213,7 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
     QL_REQUIRE(cf,
                "InfDkBuilder::optionStrike(" << j << "): expected CpiCapFloor calibration instruments, could not cast");
     Date maturity = optionMaturityDate(j);
-    Period lag = infVol_->observationLag();
-    Date fixingDate = inflationPeriod(maturity - lag, inflationIndex_->frequency()).first;
-    return cpiCapFloorStrikeValue(cf->strike(), *inflationIndex_->zeroInflationTermStructure(), fixingDate);
+    return cpiCapFloorStrikeValue(cf->strike(), inflationIndex_, infVol_, maturity);
 }
 
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {

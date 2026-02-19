@@ -106,7 +106,8 @@ QuantLib::Date optionMaturity(const boost::variant<QuantLib::Date, QuantLib::Per
 
 //! Return a cpi cap/floor strike value, the input strike can be of type absolute or atm forward
 Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
-                            const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& curve,
+                            const boost::shared_ptr<QuantLib::ZeroInflationIndex>& inflationIndex,
+                            const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& volSurface,
                             const QuantLib::Date& optionMaturityDate);
 
 //! Return a yoy cap/floor strike value, the input strike can be of type absolute or atm forward
