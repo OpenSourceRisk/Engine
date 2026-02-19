@@ -80,7 +80,6 @@ target_link_libraries(ored-test-suite
     PRIVATE
         ${ORED_LIB_NAME}
         ${ORE_TEST_SUPPORT_NAME}
-        Boost::unit_test_framework
 )
 
 # under windows our unit test code switches to .. since it assumes the test executable is run from /bin

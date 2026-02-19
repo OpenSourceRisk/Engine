@@ -18,7 +18,6 @@
 
 #include <iomanip>
 #include <iostream>
-using namespace std;
 
 // Boost
 #include <boost/timer/timer.hpp>
@@ -34,6 +33,7 @@ using boost::timer::cpu_timer;
 
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
+using namespace std;
 
 #include <oret/basedatapath.hpp>
 #include <oret/datapaths.hpp>

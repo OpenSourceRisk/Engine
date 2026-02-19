@@ -55,6 +55,7 @@ app/cleanupsingletons.cpp
 app/hwhistoricalcalibrationdataloader.cpp
 app/initbuilders.cpp
 app/inputparameters.cpp
+app/inputvariables.cpp
 app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
 app/marketdatainmemoryloader.cpp
@@ -271,6 +272,7 @@ app/dummymarketdataloader.hpp
 app/hwhistoricalcalibrationdataloader.hpp
 app/initbuilders.hpp
 app/inputparameters.hpp
+app/inputvariables.hpp
 app/marketcalibrationreport.hpp
 app/marketdatabinaryloader.hpp
 app/marketdatacsvloader.hpp
