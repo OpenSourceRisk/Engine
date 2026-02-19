@@ -1,6 +1,8 @@
 # syntax = docker/dockerfile:1.2
+ARG DOCKER_REPO
+ARG DEBIAN_TAG
 ARG ORE_BUILD_VERSION
-FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} as orebuild
+FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} AS orebuild
 
 LABEL Quaternion Risk Management
 LABEL Description="Build ORE"
