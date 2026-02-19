@@ -474,10 +474,13 @@ if(ORE_MULTITHREADING_CPU_AFFINITY)
 endif()
 
 if (QL_USE_PCH)
-target_precompile_headers(${OREA_LIB_NAME}
-  PUBLIC
-    <orea/app/inputparameters.hpp>
-    <orea/scenario/scenariosimmarketparameters.hpp>)
+    target_precompile_headers(${OREA_LIB_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:
+                <orea/app/inputparameters.hpp$<ANGLE-R>
+                <orea/scenario/scenariosimmarketparameters.hpp$<ANGLE-R>
+            >
+    )
 endif()
 
 # Installation properties.

@@ -1168,22 +1168,26 @@ else()
         Please set 'Eigen3_DIR' when configuring.")
 endif()
 
+
 if(ORE_BUILD_QL_SEPARATELY AND QL_USE_PCH)
- target_precompile_headers(${QLE_LIB_NAME}
-   PUBLIC
-    <ql/any.hpp>
-    <ql/errors.hpp>
-    <ql/index.hpp>
-    <ql/indexes/indexmanager.hpp>
-    <ql/instrument.hpp>
-    <ql/indexes/interestrateindex.hpp>
-    <ql/math/array.hpp>
-    <ql/math/interpolations/cubicinterpolation.hpp>
-    <ql/math/matrix.hpp>
-    <ql/methods/finitedifferences/operators/fdmlinearop.hpp>
-    <ql/patterns/observable.hpp>
-    <ql/qldefines.hpp>
-    <ql/termstructure.hpp>)
+    target_precompile_headers(ql_library
+        PUBLIC
+            $<BUILD_INTERFACE:
+                <ql/any.hpp$<ANGLE-R>
+                <ql/errors.hpp$<ANGLE-R>
+                <ql/index.hpp$<ANGLE-R>
+                <ql/indexes/indexmanager.hpp$<ANGLE-R>
+                <ql/instrument.hpp$<ANGLE-R>
+                <ql/indexes/interestrateindex.hpp$<ANGLE-R>
+                <ql/math/array.hpp$<ANGLE-R>
+                <ql/math/interpolations/cubicinterpolation.hpp$<ANGLE-R>
+                <ql/math/matrix.hpp$<ANGLE-R>
+                <ql/methods/finitedifferences/operators/fdmlinearop.hpp$<ANGLE-R>
+                <ql/patterns/observable.hpp$<ANGLE-R>
+                <ql/qldefines.hpp$<ANGLE-R>
+                <ql/termstructure.hpp$<ANGLE-R>
+            >
+    )
 endif()
 
 # Installation properties.
