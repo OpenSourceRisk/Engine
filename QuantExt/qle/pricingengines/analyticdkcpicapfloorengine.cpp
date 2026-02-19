@@ -37,10 +37,12 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     auto zits = model_->infdk(index_)->termStructure();
     Size irIdx = model_->ccyIndex(model_->infdk(index_)->currency());
     auto yts = model_->irlgm1f(irIdx)->termStructure();
-    
-    Date fixingDate = inflationPeriod(arguments_.fixDate, arguments_.index->frequency()).first;
 
-    Date baseDate = inflationPeriod(arguments_.startDate - arguments_.observationLag, arguments_.index->frequency()).first;
+    Date fixingDate =
+        ZeroInflation::fixingDate(arguments_.fixDate, 0 * Days, arguments_.index->frequency(), interpolate);
+
+    Date baseDate = ZeroInflation::fixingDate(arguments_.startDate, arguments_.observationLag,
+                                              arguments_.index->frequency(), interpolate);
 
     Real t_strike = inflationYearFraction(arguments_.index->frequency(), interpolate,
                                    zits->dayCounter(),

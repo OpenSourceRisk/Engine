@@ -78,7 +78,7 @@ void CPICapFloorEngine::calculate() const {
     Real atmGrowth = atmCPIFixing / optionBaseFixing;
     Real strike = std::pow(1.0 + arguments_.strike, timeToMaturityFromInception); 
 
-    auto lastKnownFixingDate = ZeroInflation::lastAvailableFixing(*index, volatilitySurface_->referenceDate());
+    auto lastKnownFixingDate = index->zeroInflationTermStructure()->baseDate();
     auto observationPeriod = inflationPeriod(optionObservationDate, index->frequency());
     auto requiredFixing = isInterpolated ? observationPeriod.first : observationPeriod.second + 1 * Days;
     

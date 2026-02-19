@@ -20,6 +20,7 @@
 #include <ql/pricingengines/blackformula.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantExt::CrossAssetAnalytics;
 using QuantLib::DiscountFactor;
@@ -46,17 +47,30 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
 
     // Discount factor to pay date will be needed below.
     Size irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
-    DiscountFactor df = model_->irlgm1f(irIdx)->termStructure()->discount(arguments_.payDate);
+    auto yts = model_->irlgm1f(irIdx)->termStructure();
+    DiscountFactor df = yts->discount(arguments_.payDate);
 
     bool interpolate = arguments_.observationInterpolation == CPI::Linear;
     // Get the time to expiry. This determines if we use the JY model or look for an inflation index fixing.
     auto zts = model_->infjy(index_)->realRate()->termStructure();
-    Real t = inflationYearFraction(arguments_.index->frequency(), interpolate, zts->dayCounter(), zts->baseDate(),
-                                   arguments_.fixDate);
+
+    Date fixingDate =
+        ZeroInflation::fixingDate(arguments_.fixDate, 0 * Days, arguments_.index->frequency(), interpolate);
+
+    Date baseDate = ZeroInflation::fixingDate(arguments_.startDate, arguments_.observationLag,
+                                              arguments_.index->frequency(), interpolate);
+
+    Real t_strike = inflationYearFraction(arguments_.index->frequency(), interpolate,
+                                   zts->dayCounter(),
+                                   baseDate, fixingDate);
+    
+    Real t = yts->dayCounter().yearFraction(yts->referenceDate(), fixingDate + simulationLag(zts));
+    Real baseCPI_t0 = arguments_.index->fixing(zts->baseDate());
+    Real t_curve = zts->dayCounter().yearFraction(zts->baseDate(), fixingDate);
 
     // If time to expiry is non-positive, we return the discounted value of the settled amount.
     // CPICapFloor should really have its own day counter for going from strike rate to k. We use t here.
-    Real k = pow(1.0 + arguments_.strike, t);
+    Real k = pow(1.0 + arguments_.strike, t_strike);
     if (t <= 0.0) {
         auto cpiAtExpiry = arguments_.index->fixing(arguments_.fixDate);
         if (arguments_.type == Option::Call) {
