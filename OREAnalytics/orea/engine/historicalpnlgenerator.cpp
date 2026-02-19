@@ -140,6 +140,15 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
                                     nullptr, nullptr, {}, dryRun_);
     } else {
+        MultiThreadedValuationEngine engine(
+            nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
+            hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_, false, false,
+            filter, referenceData_, iborFallbackConfig_, true, true, true, {}, {}, {}, context_);
+        for (auto const& i : this->progressIndicators()) {
+            i->reset();
+            engine.registerProgressIndicator(i);
+        }
+
         if (hisScenGen_->isRiskFactorBreakdown() && runRiskFactorBreakdown) {
             // Run for RiskFactor PnL Breakdown (multi-threaded)
             // Each thread builds a fresh sim market, so scenarios must contain
@@ -157,34 +166,21 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
                 }
                 hisScenGen_->setCurrentKey(key);
                 hisScenGen_->setIterator(0);
-
-                MultiThreadedValuationEngine rfEngine(
-                    nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(),
-                    hisScenGen_->numScenarios(), loader_, hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_,
-                    configuration_, simMarketData_, false, false, filter, referenceData_, iborFallbackConfig_, true,
-                    true, true, {}, {}, {}, context_);
                 for (auto const& i : this->progressIndicators()) {
                     i->reset();
-                    rfEngine.registerProgressIndicator(i);
                 }
-                rfEngine.buildCube(portfolio_, npvCalculator_, ValuationEngine::ErrorPolicy::RemoveAll, {}, true,
-                                   dryRun_);
+                engine.buildCube(portfolio_, npvCalculator_, ValuationEngine::ErrorPolicy::RemoveAll, {}, true,
+                                 dryRun_);
                 mapCube_[key] =
-                    QuantLib::ext::make_shared<JointNPVCube>(rfEngine.outputCubes(), portfolio_->ids(), true);
+                    QuantLib::ext::make_shared<JointNPVCube>(engine.outputCubes(), portfolio_->ids(), true);
                 hisScenGen_->reset();
             }
             // Run for Full report - Remove risk factor key - reset counter
             hisScenGen_->setCurrentKey(RiskFactorKey());
             hisScenGen_->setIterator(0);
         }
-
-        MultiThreadedValuationEngine engine(
-            nThreads_, today_, QuantLib::ext::make_shared<ore::analytics::DateGrid>(), hisScenGen_->numScenarios(), loader_,
-            hisScenGen_, engineData_, curveConfigs_, todaysMarketParams_, configuration_, simMarketData_, false, false,
-            filter, referenceData_, iborFallbackConfig_, true, true, true, {}, {}, {}, context_);
         for (auto const& i : this->progressIndicators()) {
             i->reset();
-            engine.registerProgressIndicator(i);
         }
         engine.buildCube(portfolio_, npvCalculator_, ValuationEngine::ErrorPolicy::RemoveAll, {}, true, dryRun_);
         cube_ = QuantLib::ext::make_shared<JointNPVCube>(engine.outputCubes(), portfolio_->ids(), true);
