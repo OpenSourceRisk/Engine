@@ -17,11 +17,13 @@
 */
 
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;

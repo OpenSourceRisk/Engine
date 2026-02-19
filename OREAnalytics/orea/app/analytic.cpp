@@ -18,6 +18,8 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <orea/app/inputparameters.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/portfolioanalyser.hpp>

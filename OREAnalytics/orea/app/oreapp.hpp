@@ -26,6 +26,7 @@
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/analyticsmanager.hpp>
+#include <ored/marketdata/csvloader.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/timer/timer.hpp>

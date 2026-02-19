@@ -29,6 +29,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 class XvaStressAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA_STRESS";

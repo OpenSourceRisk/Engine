@@ -61,6 +61,7 @@
 #include <orea/app/hwhistoricalcalibrationdataloader.hpp>
 #include <orea/app/initbuilders.hpp>
 #include <orea/app/inputparameters.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 #include <orea/app/marketdatabinaryloader.hpp>
 #include <orea/app/marketdatacsvloader.hpp>

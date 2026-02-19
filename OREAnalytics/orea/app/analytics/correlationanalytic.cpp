@@ -18,11 +18,13 @@
 
 #include <orea/app/analytics/correlationanalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;
