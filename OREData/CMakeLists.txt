@@ -8,12 +8,6 @@ get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
 
-if (ORE_BUILD_TESTS)
-    SET(COMPONENTS_CONDITIONAL "unit_test_framework")
-else()
-    SET(COMPONENTS_CONDITIONAL "")
-endif()
-
 if(MSVC)
 	add_compile_definitions(BOOST_IOSTREAMS_NO_LIB)
 endif()
@@ -27,7 +21,9 @@ if(MSVC AND ORE_USE_ZLIB)
 endif()
 
 find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono iostreams)
-
+if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
+    find_library(RT_LIBRARY rt REQUIRED)
+endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
