@@ -245,20 +245,21 @@ if (MSVC)
 endif()
 
 function(generate_git_hash custom_target_name file_dir)
-  # Only write the file if it does not exist to prevent unnecessary rebuilds.
-  set(GIT_VER_FILE "${file_dir}/gitversion.hpp")
-  if(NOT EXISTS "${GIT_VER_FILE}")
-    file(WRITE "${GIT_VER_FILE}")
-  endif()
+    # Only write the file if it does not exist to prevent unnecessary rebuilds.
+    set(GIT_VER_FILE "${file_dir}/gitversion.hpp")
+    if(NOT EXISTS "${GIT_VER_FILE}")
+        file(WRITE "${GIT_VER_FILE}")
+    endif()
 
-  add_custom_target(
-    ${custom_target_name} ALL
-    COMMAND ${CMAKE_COMMAND}
-            -D IN_FILE=${file_dir}/gitversion.hpp.in
-            -D OUT_FILE=${file_dir}/gitversion.hpp
-            -P "${_THIS_MODULE_BASE_DIR}/generateGitVersion.cmake"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  )
+    add_custom_command(
+        OUTPUT ${file_dir}/gitversion.hpp
+        COMMAND ${CMAKE_COMMAND}
+                 -D IN_FILE=${file_dir}/gitversion.hpp.in
+                 -D OUT_FILE=${file_dir}/gitversion.hpp
+                 -P "${_THIS_MODULE_BASE_DIR}/generateGitVersion.cmake"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS ${file_dir}/gitversion.hpp.in
+    )
 endfunction()
 
 if(ORE_BUILD_DOC)
