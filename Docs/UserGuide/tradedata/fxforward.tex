@@ -58,7 +58,7 @@ from the \lstinline!Rules! sub-node.
 The \lstinline!Rules! sub-node is shown in Listing \ref{lst:settlement_data_node}, and the meanings and allowable values of its elements follow below.
   \begin{itemize}
 	\item PaymentLag [Optional]: The lag between the value date and the payment date. \\
-	Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
+	Allowable values: Any valid period, i.e.\ a negative or positive whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
   \emph{Y} (years). For cash settlement and if a FXIndex is specified defaults to the fx convention (field ``SpotDays'') if blank or omitted, otherwise to 0. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
 	\item PaymentCalendar [Optional]: The calendar to be used when applying the payment lag. \\
 	Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. For cash settlement and if a FXIndex is specified defaults to the fx convention (field ``AdvanceCalendar'') if left blank or omitted, otherwise to NullCalendar (no holidays).

@@ -648,10 +648,10 @@ Month parseMonth(const string& s) {
 
 PaymentLag parsePaymentLag(const string& s) {
     Period p;
-    Natural n;
+    Integer n = 0;
     if (tryParse<Period>(s, p, parsePeriod))
         return p;
-    else if (tryParse<Natural>(s, n, parseInteger))
+    else if (tryParse<Integer>(s, n, parseInteger))
         return n;
     else
         return 0;
