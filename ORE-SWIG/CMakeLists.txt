@@ -48,7 +48,7 @@ if(ORE_USE_ZLIB)
 endif()
 
 # Load the UseSWIG module from the cmake installation
-include(${SWIG_USE_FILE})
+include(UseSWIG)
 
 # Add to the list of include directories
 include_directories(${PROJECT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG)
