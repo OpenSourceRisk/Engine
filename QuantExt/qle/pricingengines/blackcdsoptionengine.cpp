@@ -121,7 +121,7 @@ void BlackCdsOptionEngine::calculate() const {
                      rpv01 * cds.notional() * blackFormula(callPut, Kp, forward, stdDev, 1.0);
 
     // If it is non-knockout and a payer, add the value of the default payout.
-    // Section 2.2 of Richard J.Martin, 2019 or Section 9.3.7 O'Kane 2008.
+    // Section 2.2 of Richard J.Martin, 2019 or Section 9.3.8 O'Kane 2008.
     if (!arguments_.knocksOut && cds.side() == Protection::Buyer) {
 
         Probability sp = probability_->survivalProbability(exerciseDate);
