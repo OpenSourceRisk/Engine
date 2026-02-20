@@ -1697,9 +1697,17 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
                 calibrationStrike = QuantLib::ext::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
             }
             std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> calInstr;
-            for (auto const& d : calibrationDates)
+            for (auto const& d : calibrationDates){
+                Date effectiveFixingDate = d - simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+                auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
+                Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
+                DLOG("adding calibration instrument for inflation index '" << modelInfIndices_[i].first
+                     << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate << " (maturity " << maturity
+                     << ") and strike " << calibrationStrike->toString());
+                
                 calInstr.push_back(
-                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, d, calibrationStrike));
+                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity, calibrationStrike));
+            }
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
