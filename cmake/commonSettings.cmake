@@ -159,7 +159,7 @@ else()
         --system-header-prefix=boost/
         -Werror=unused-variable
         -Werror=uninitialized
-        "$<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:${clangs_to_check}>>:-Xclang -fno-pch-timestamp>"
+        "$<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:${clangs_to_check}>>:SHELL:-Xclang -fno-pch-timestamp>"
         $<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:GNU>>:-fpch-preprocess>
         $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Wsometimes-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wmaybe-uninitialized>
