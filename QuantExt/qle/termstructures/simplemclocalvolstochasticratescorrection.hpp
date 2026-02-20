@@ -29,20 +29,20 @@
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/volatility/equityfx/localvoltermstructure.hpp>
+#include <ql/timegrid.hpp>
 
 namespace QuantExt {
 
 class SimpleMcLocalVolStochasticRatesCorrection : public QuantLib::LocalVolTermStructure, public QuantLib::LazyObject {
 public:
-    /*! - S should be linked to this local vol ts to facilitate the bootstrap of the correction
-        - the log strike grid is defined as ln( K / F ) */
+    /*! - the input model S should be linked to this local vol ts to facilitate the bootstrap of the correction
+        - min, max strike are given in log moneyness log K / F */
     SimpleMcLocalVolStochasticRatesCorrection(
-        QuantLib::Handle<QuantLib::BlackVolTermStructure> blackVol,
         QuantLib::Handle<QuantLib::LocalVolTermStructure> source, QuantLib::ext::shared_ptr<IrModel> r,
         QuantLib::ext::shared_ptr<IrModel> q, QuantLib::ext::shared_ptr<FxModel> S,
         QuantLib::Handle<QuantLib::YieldTermStructure> r0, QuantLib::Handle<QuantLib::YieldTermStructure> q0,
-        std::function<QuantLib::Array(QuantLib::Real, QuantLib::Real)> dwGenerator, std::vector<Real> times,
-        std::vector<Real> logStrikes, Size nPaths);
+        Matrix correlation_r_q_S, Real maxTime = 10.0, Real minStrike = -2.5, Real maxStrike = 2.5,
+        Size timeStepsPerYear = 24, Size nStrikes = 100, Size nPaths = 10000, Real d2CdK2Threshold = 0.01);
 
     Date maxDate() const override { return source_->maxDate(); }
     Real minStrike() const override { return source_->minStrike(); }
@@ -57,20 +57,26 @@ private:
     void update() override;
     QuantLib::Volatility localVolImpl(Time t, Real strike) const override final;
 
-    QuantLib::Handle<QuantLib::BlackVolTermStructure> blackVol_;
     QuantLib::Handle<QuantLib::LocalVolTermStructure> source_;
     QuantLib::ext::shared_ptr<IrModel> r_;
     QuantLib::ext::shared_ptr<IrModel> q_;
     QuantLib::ext::shared_ptr<FxModel> S_;
     QuantLib::Handle<QuantLib::YieldTermStructure> r0_;
     QuantLib::Handle<QuantLib::YieldTermStructure> q0_;
-    std::function<QuantLib::Array(QuantLib::Real, QuantLib::Real)> dwGenerator_;
-    std::vector<Real> times_;
-    std::vector<Real> logStrikes_;
+    Matrix correlation_r_q_S_;
+    Real maxTime_;
+    Real minStrike_;
+    Real maxStrike_;
+    Size timeStepsPerYear_;
+    Size nStrikes_;
     Size nPaths_;
+    Real d2CdK2Threshold_;
 
     mutable Matrix correctionData_;
+    mutable TimeGrid timeGrid_;
+    mutable std::vector<Real> logStrikes_;
     mutable std::unique_ptr<Interpolation2D> correction_;
+    mutable bool applyCorrection_ = true;
 };
 
 } // namespace QuantExt
