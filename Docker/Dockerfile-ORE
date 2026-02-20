@@ -25,10 +25,6 @@ COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
 COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
 COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
 
-# Temp step to make the ORE+ tests work on CI.
-# This will all be fixed properly by merge request 3214.
-COPY QuantLib/test-suite/paralleltestrunner.hpp /usr/local/include/test-suite/paralleltestrunner.hpp
-
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
 ENV CCACHE_MAXSIZE="10G"
@@ -38,17 +34,22 @@ ENV CCACHE_MAXSIZE="10G"
 # - add  -fpch-preprocess to CMAKE_CXX_FLAGS when QL_USE_PCH is set to ON
 RUN cd /ore \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" -DORE_BUILD_SWIG=ON -DCMAKE_C_COMPILER=/usr/bin/clang -DORE_PYTHON_INTEGRATION=ON -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER $([ "$(uname -m)" = "x86_64" ] && echo "-mavx2")" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -DORE_ENABLE_OPENCL=ON -DORE_MULTITHREADING_CPU_AFFINITY=ON 
- 
+  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+    -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
+    -DORE_BUILD_SWIG=ON -DORE_PYTHON_INTEGRATION=ON -DQL_USE_PCH=OFF \
+    -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+    -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER $([ "$(uname -m)" = "x86_64" ] && echo "-mavx2")" \
+    -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF \
+    -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON \
+    -DORE_ENABLE_OPENCL=ON -DORE_MULTITHREADING_CPU_AFFINITY=ON -DCMAKE_POLICY_DEFAULT_CMP0167=NEW
+
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ ccache -z \
-  && cmake --build . -- -j ${NUM_CORES} install \
-  && ccache -s \
-  && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
-  && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
-  && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" 
+  && cmake --build . -- -j ${NUM_CORES} \
+  && cmake --install . \
+  && ccache -s
 
-WORKDIR / 
+WORKDIR /
 RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
@@ -58,12 +59,10 @@ RUN mkdir -p html \
   && mv /ore/build.ore/ORE-SWIG/_OREP.so /oreswig/pythonlib \
   && rm -rf ore
 
-
 RUN mkdir -p /boostlibs && \
     find /usr/lib -type f -name 'libboost*.so*' -exec cp {} /boostlibs/ \;
 RUN mkdir -p /opencllibs && \
     find /usr/lib -type f -name 'libOpenCL*' -exec cp {} /opencllibs/ \;
-
 
 ARG DEBIAN_TAG
 FROM ${DOCKER_REPO}debian:${DEBIAN_TAG}
@@ -78,8 +77,5 @@ COPY --from=orebuild /usr/include/boost/ /usr/include/boost
 COPY --from=orebuild /usr/include/CL /usr/include/CL
 COPY --from=orebuild /oreswig /oreswig
 
-
 RUN ldconfig
-
 CMD bash
-
