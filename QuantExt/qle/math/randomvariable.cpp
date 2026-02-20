@@ -442,7 +442,8 @@ void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     }
 }
 
-void RandomVariable::copyToArray(QuantLib::Array& array) const {
+RandomVariable::operator Array() const {
+    Array array(n_);
     if (deterministic_)
         std::fill(array.begin(), array.end(), constantData_);
     else if (n_ != 0) {
@@ -451,6 +452,7 @@ void RandomVariable::copyToArray(QuantLib::Array& array) const {
         std::copy(data_, data_ + n_, array.begin());
         stopDataStats(n_);
     }
+    return array;
 }
 
 void RandomVariable::clear() {
@@ -664,12 +666,20 @@ RandomVariable operator*(RandomVariable x, const RandomVariable& y) {
     return x;
 }
 
+RandomVariable operator*(Real y, RandomVariable x) { return x * RandomVariable(x.size(), y); }
+
+RandomVariable operator*(RandomVariable x, Real y) { return x * RandomVariable(x.size(), y); }
+
 RandomVariable operator/(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     x /= y;
     return x;
 }
+
+RandomVariable operator/(Real y, RandomVariable x) { return RandomVariable(x.size(), y) / x; }
+
+RandomVariable operator/(RandomVariable x, Real y) { return x / RandomVariable(x.size(), y); }
 
 RandomVariable max(RandomVariable x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
@@ -1254,11 +1264,7 @@ Array regressionCoefficients(
         r = applyFilter(r, filter);
     }
 
-    Array b(r.size());
-    if (r.deterministic())
-        std::fill(b.begin(), b.end(), r[0]);
-    else
-        r.copyToArray(b);
+    Array b = static_cast<Array>(r);
 
     Array res;
     if (regressionMethod == RandomVariableRegressionMethod::SVD) {
