@@ -305,25 +305,31 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
     // Add calibration instruments to the helpers vector.
     const auto& ci = cb.instruments();
-
-    auto observationInterpolation = cpiVolatility_->indexIsInterpolated() ? CPI::Linear : CPI::Flat;
-
+ 
+    auto observationInterpolation =cpiVolatility_->indexIsInterpolated() ? CPI::Linear : CPI::Flat;
+    DLOG("InfJyBuilder: ci size = " << ci.size() << ", base CPI = " << baseCpi << ", obs lag = " << obsLag <<
+         ", observation interpolation = " << (observationInterpolation == CPI::Linear ? "Linear" : "Flat"));
     for (Size i = 0; i < ci.size(); ++i) {
-
         auto cpiCapFloor = QuantLib::ext::dynamic_pointer_cast<CpiCapFloor>(ci[i]);
         QL_REQUIRE(cpiCapFloor, "InfJyBuilder: expected CpiCapFloor calibration instrument.");
         auto maturity = optionMaturity(cpiCapFloor->maturity(), calendar);
-
-        auto fixingDate = ZeroInflation::fixingDate(maturity, obsLag, zeroInflationIndex_->frequency(), observationInterpolation);
-        if (fixingDate <= zeroInflationIndex_->zeroInflationTermStructure()->baseDate()) {
-            WLOG("InfJyBuilder: skipping calibration instrument with maturity " << maturity <<
-                " since its fixing date, " << fixingDate << ", is on or before the base date of the zero inflation curve.");
+        auto fixingDate = ZeroInflation::fixingDate(maturity, obsLag, zeroInflationIndex_->frequency(), cpiVolatility_->indexIsInterpolated());
+        DLOG("InfJyBuilder: processing CPI cap floor calibration instrument with maturity " << io::iso_date(maturity) <<
+             " and strike " << cpiCapFloor->strike() << " fixing Date " << io::iso_date(fixingDate));
+        if(fixingDate <= zeroInflationIndex_->zeroInflationTermStructure()->baseDate()){
+            DLOG("InfJyBuilder: skipping CPI cap floor calibration instrument with maturity " << io::iso_date(maturity) <<
+                 " as its fixing date " << io::iso_date(fixingDate) << " is on or before the base date of the zero inflation curve, " <<
+                 io::iso_date(zeroInflationIndex_->zeroInflationTermStructure()->baseDate()));
+            active[i] = false;
             continue;
         }
-
-        // Deal with reference calibration date grid stuff.
+        
+             // Deal with reference calibration date grid stuff.
         auto rcDate = lower_bound(rcDates.begin(), rcDates.end(), maturity);
         if (!(rcDate == rcDates.end() || *rcDate > prevRcDate)) {
+            DLOG("InfJyBuilder: skipping CPI cap floor calibration instrument with maturity " << io::iso_date(maturity) <<
+                 " as it does not satisfy the reference calibration date grid requirement. rcDate = " <<  io::iso_date(*rcDate) <<
+                 ", prevRcDate = " << io::iso_date(prevRcDate));
             active[i] = false;
             continue;
         }
@@ -348,7 +354,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         Real premium;
         if(dontCalibrate_)
             premium = 0.01;
-        else if(t <= 0.0 || fixingDate <= zeroInflationIndex_->zeroInflationTermStructure()->baseDate())
+        else if(t <= 0.0)
             premium = 0.0;
         else
             premium = inst->NPV();
