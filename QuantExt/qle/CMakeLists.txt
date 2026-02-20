@@ -1132,6 +1132,7 @@ target_link_libraries(${QLE_LIB_NAME}
         Boost::boost
         Boost::serialization
         Boost::timer
+        Boost::thread
 )
 
 if(ORE_ENABLE_OPENCL)

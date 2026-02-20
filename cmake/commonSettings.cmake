@@ -199,7 +199,7 @@ endif()
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 
 # Find Boost components.
-list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams)
+list(APPEND BOOST_COMPONENT_LIST filesystem serialization timer log iostreams thread)
 find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENT_LIST})
 
 if (MSVC)
