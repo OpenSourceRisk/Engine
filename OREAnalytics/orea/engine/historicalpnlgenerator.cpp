@@ -25,7 +25,15 @@
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
+#include <orea/app/structuredanalyticserror.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <ored/marketdata/clonedloader.hpp>
+#include <ored/marketdata/todaysmarket.hpp>
+
 #include <boost/range/adaptor/indexed.hpp>
+
+#include <future>
+#include <thread>
 
 using ore::data::EngineBuilder;
 using ore::data::EngineData;
@@ -151,30 +159,166 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
 
         if (hisScenGen_->isRiskFactorBreakdown() && runRiskFactorBreakdown) {
             // Run for RiskFactor PnL Breakdown (multi-threaded)
-            // Each thread builds a fresh sim market, so scenarios must contain
-            // all keys to pass the scenario/simData size check.
-            hisScenGen_->setPopulateAllKeysOnBreakdown(true);
+            // Parallelise across risk factor keys rather than across trades.
+            // Each thread builds its own market / portfolio / engine ONCE,
+            // then iterates over a subset of risk factor keys. This avoids
+            // the massive overhead of rebuilding everything per key.
+
             ext::shared_ptr<Scenario> sc = hisScenGen_->baseScenario();
             QL_REQUIRE(sc != nullptr,
                        "HistoricalPnlGenerator: base scenario must be set for multi-threaded risk factor breakdown");
             std::vector<RiskFactorKey> deltaKeys = sc->keys();
+
+            // Collect keys that still need processing
+            std::vector<RiskFactorKey> keysToProcess;
             for (auto const& key : deltaKeys) {
-                // If we already have a non-empty shared_ptr for this key, skip rebuilding
                 auto it = mapCube_.find(key);
-                if (it != mapCube_.end() && it->second) {
-                    continue;
-                }
-                hisScenGen_->setCurrentKey(key);
-                hisScenGen_->setIterator(0);
-                for (auto const& i : this->progressIndicators()) {
-                    i->reset();
-                }
-                engine.buildCube(portfolio_, npvCalculator_, ValuationEngine::ErrorPolicy::RemoveAll, {}, true,
-                                 dryRun_);
-                mapCube_[key] =
-                    QuantLib::ext::make_shared<JointNPVCube>(engine.outputCubes(), portfolio_->ids(), true);
-                hisScenGen_->reset();
+                if (it == mapCube_.end() || !it->second)
+                    keysToProcess.push_back(key);
             }
+
+            if (!keysToProcess.empty()) {
+                Size eff_nThreads = std::min(keysToProcess.size(), nThreads_);
+
+                // Partition keys across threads (round-robin)
+                std::vector<std::vector<RiskFactorKey>> threadKeys(eff_nThreads);
+                for (Size i = 0; i < keysToProcess.size(); ++i)
+                    threadKeys[i % eff_nThreads].push_back(keysToProcess[i]);
+
+                // Serialize portfolio for thread-safe deserialization in workers
+                std::string portfolioXml = portfolio_->toXMLString();
+
+                // Clone loaders for each thread
+                std::vector<QuantLib::ext::shared_ptr<ore::data::ClonedLoader>> loaders;
+                for (Size i = 0; i < eff_nThreads; ++i)
+                    loaders.push_back(QuantLib::ext::make_shared<ore::data::ClonedLoader>(today_, loader_));
+
+                // Capture QuantLib/ORE settings from main thread
+                ore::analytics::ObservationMode::Mode obsMode = ore::analytics::ObservationMode::instance().mode();
+                auto includeTodaysCashFlows = QuantLib::Settings::instance().includeTodaysCashFlows();
+                auto localIncRefDateEvents = QuantLib::Settings::instance().includeReferenceDateEvents();
+
+                // Capture hisScenGen properties for per-thread cloning
+                auto hisScenLoader = hisScenGen_->scenarioLoader();
+                auto scenFactory = hisScenGen_->scenarioFactory();
+                auto retConfig = hisScenGen_->returnConfiguration();
+                auto cal = hisScenGen_->cal();
+                auto adjFactors = hisScenGen_->adjFactors();
+                Size mporDays = hisScenGen_->mporDays();
+                bool overlapping = hisScenGen_->overlapping();
+                auto labelPrefix = hisScenGen_->labelPrefix();
+                bool genDiffScen = hisScenGen_->generateDifferenceScenarios();
+                Size numScenarios = hisScenGen_->numScenarios();
+
+                // Per-thread result maps
+                std::vector<std::map<RiskFactorKey, QuantLib::ext::shared_ptr<NPVCube>>> threadMaps(eff_nThreads);
+                std::vector<std::future<int>> results(eff_nThreads);
+                std::vector<std::thread> jobs;
+
+                for (Size i = 0; i < eff_nThreads; ++i) {
+                    auto job = [this, &threadKeys, &loaders, &portfolioXml, &threadMaps,
+                                obsMode, includeTodaysCashFlows, localIncRefDateEvents,
+                                hisScenLoader, scenFactory, retConfig, cal, adjFactors,
+                                mporDays, overlapping, labelPrefix, genDiffScen, numScenarios,
+                                &filter](int id) -> int {
+                        // Set thread-local QuantLib settings
+                        QuantLib::Settings::instance().evaluationDate() = today_;
+                        QuantLib::Settings::instance().includeTodaysCashFlows() = includeTodaysCashFlows;
+                        QuantLib::Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
+                        ore::analytics::ObservationMode::instance().setMode(obsMode);
+
+                        LOG("Risk factor breakdown thread " << id << " started, processing "
+                            << threadKeys[id].size() << " keys");
+
+                        try {
+                            // Build TodaysMarket (once per thread)
+                            auto initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
+                                today_, todaysMarketParams_, loaders[id], curveConfigs_,
+                                true, true, true, referenceData_, false, iborFallbackConfig_, false, true);
+
+                            // Create per-thread HistoricalScenarioGenerator
+                            auto localHisScenGen = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
+                                hisScenLoader, scenFactory, retConfig, cal, adjFactors,
+                                mporDays, overlapping, labelPrefix, genDiffScen, true);
+                            localHisScenGen->setPopulateAllKeysOnBreakdown(true);
+
+                            // Build ScenarioSimMarket (once per thread)
+                            auto simMkt = QuantLib::ext::make_shared<ScenarioSimMarket>(
+                                initMarket, simMarketData_, configuration_, *curveConfigs_,
+                                *todaysMarketParams_, true, false, false, false,
+                                iborFallbackConfig_, true);
+
+                            // Link scenario generator and set filter
+                            simMkt->scenarioGenerator() = localHisScenGen;
+                            if (filter)
+                                simMkt->filter() = filter;
+
+                            // Set base scenario from sim market
+                            localHisScenGen->baseScenario() = simMkt->baseScenario();
+
+                            // Build portfolio (once per thread)
+                            auto threadPortfolio = QuantLib::ext::make_shared<ore::data::Portfolio>();
+                            threadPortfolio->fromXMLString(portfolioXml);
+                            auto engFactory = QuantLib::ext::make_shared<ore::data::EngineFactory>(
+                                engineData_, simMkt,
+                                std::map<ore::data::MarketContext, string>(),
+                                referenceData_, iborFallbackConfig_);
+                            threadPortfolio->build(engFactory, context_, true);
+
+                            // Create ValuationEngine (once per thread)
+                            auto grid = QuantLib::ext::make_shared<ore::data::DateGrid>();
+                            auto valEngine = QuantLib::ext::make_shared<ValuationEngine>(
+                                simMkt->asofDate(), grid, simMkt, engFactory->modelBuilders());
+
+                            // Process assigned risk factor keys
+                            for (auto const& key : threadKeys[id]) {
+                                localHisScenGen->setCurrentKey(key);
+                                localHisScenGen->setIterator(0);
+
+                                auto newCube = QuantLib::ext::make_shared<InMemoryCubeOpt<double>>(
+                                    simMkt->asofDate(), threadPortfolio->ids(),
+                                    vector<Date>(1, simMkt->asofDate()), numScenarios);
+
+                                valEngine->buildCube(threadPortfolio, newCube, npvCalculator_(),
+                                                     ValuationEngine::ErrorPolicy::RemoveAll, true,
+                                                     nullptr, nullptr, {}, dryRun_);
+
+                                threadMaps[id][key] = newCube;
+                                localHisScenGen->reset();
+                            }
+
+                            LOG("Risk factor breakdown thread " << id << " finished successfully.");
+                            return 0;
+
+                        } catch (const std::exception& e) {
+                            ore::analytics::StructuredAnalyticsErrorMessage(
+                                "Historical PnL Generator", "risk factor breakdown", e.what()).log();
+                            return 1;
+                        }
+                    };
+
+                    std::packaged_task<int(int)> task(job);
+                    results[i] = task.get_future();
+                    jobs.emplace_back(std::move(task), i);
+                }
+
+                // Wait for all threads
+                for (auto& t : jobs)
+                    t.join();
+                for (Size i = 0; i < results.size(); ++i) {
+                    results[i].wait();
+                    QL_REQUIRE(results[i].get() == 0,
+                               "error in risk factor breakdown thread " << i
+                               << ". Check structured errors from 'Historical PnL Generator'.");
+                }
+
+                // Merge thread results into mapCube_
+                for (Size i = 0; i < eff_nThreads; ++i) {
+                    for (auto& [key, cube] : threadMaps[i])
+                        mapCube_[key] = cube;
+                }
+            }
+
             // Run for Full report - Remove risk factor key - reset counter
             hisScenGen_->setCurrentKey(RiskFactorKey());
             hisScenGen_->setIterator(0);
