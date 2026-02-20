@@ -35,7 +35,7 @@
 #include <qle/models/hwparametrization.hpp>
 
 #include <ql/models/calibrationhelper.hpp>
-
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <boost/variant.hpp>
 
 #include <vector>

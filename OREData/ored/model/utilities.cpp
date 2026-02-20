@@ -515,9 +515,6 @@ Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
                                         volSurface->indexIsInterpolated());
         auto ttm = inflationIndex->zeroInflationTermStructure()->dayCounter().yearFraction(baseDate, fixingDate);
         auto strike = std::pow(growth, 1.0 / ttm) - 1.0;
-        std::cout << "cpiCapFloorStrikeValue: forwardCPI = " << forwardCPI << ", baseFixing = " << baseFixing
-                  << ", growth = " << growth << ", ttm = " << ttm << " baseDate = " << volSurface->baseDate()
-                  << " fixingDate = " << fixingDate << " strike = " << strike << std::endl;
         return strike;
     } else {
         QL_FAIL("cpi cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
