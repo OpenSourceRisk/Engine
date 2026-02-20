@@ -19,6 +19,7 @@
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -28,6 +29,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/zerotoparscenariogenerator.hpp>
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 

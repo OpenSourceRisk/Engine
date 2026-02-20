@@ -28,6 +28,8 @@
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
   
 class VarAnalyticImpl : public Analytic::Impl {
 public:
@@ -66,9 +68,7 @@ public:
 
     virtual void setUpConfigurations() override;
     virtual QuantLib::ext::shared_ptr<SensitivityStream>
-    sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
-        return inputs_->sensitivityStream();
-    };
+    sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
 protected:
     void setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) override;

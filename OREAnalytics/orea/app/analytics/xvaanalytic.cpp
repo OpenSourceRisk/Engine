@@ -25,6 +25,7 @@
 #include <orea/aggregation/simmhelper.hpp>
 #include <orea/app/analytics/utilities.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
@@ -43,11 +44,14 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/app/analytics/correlationanalytic.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
+#include <qle/methods/pathgeneratorfactory.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;

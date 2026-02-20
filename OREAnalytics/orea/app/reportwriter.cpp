@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/utilities.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 
 #include <ored/utilities/marketdata.hpp>

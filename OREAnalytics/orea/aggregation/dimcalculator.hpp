@@ -24,7 +24,6 @@
 #pragma once
 
 #include <orea/aggregation/collatexposurehelper.hpp>
-#include <orea/app/inputparameters.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>

@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 

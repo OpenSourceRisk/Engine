@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2022 Quaternion Risk Management Ltd
+ Copyright (C) 2026 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,13 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/config.hpp
-    \brief ORE Test utilities
-*/
+#include <orea/app/inputvariables.hpp>
+#include <ql/errors.hpp>
 
-#pragma once
+namespace ore {
+namespace analytics {
 
-/* Define this to enable the parallel unit test runner */
-#ifndef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
-//#    define ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
-#endif
+void InputVariables::loadVariables(const QuantLib::ext::weak_ptr<InputParameters>& inputs) {
+    if (auto s = inputs.lock())
+        loadVariablesImpl(s);
+    else
+        QL_FAIL("Internal error: could not lock inputParameters_ in InputVariables::loadVariables. Contact dev.");
+}
+
+} // namespace analytics
+} // namespace ore
