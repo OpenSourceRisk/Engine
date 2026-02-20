@@ -65,29 +65,11 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     Real kTilde = k * arguments_.baseCPI;
     Real nTilde = arguments_.nominal / arguments_.baseCPI;
 
-    std::cout << "AnalyticDkCpiCapFloorEngine: arguments_.startDate = " << arguments_.startDate << "\n"
-              << "arguments_.fixDate = " << arguments_.fixDate << "\n"
-              << "fixingDate = " << fixingDate << "\n"
-              << "baseDate = " << baseDate << "\n"
-              << "t_strike = " << t_strike << "\n"
-              << "t = " << t << "\n"
-              << "t_curve = " << t_curve << "\n"
-              << "k = " << k << "\n"
-              << "kTilde = " << kTilde << "\n"
-              << "nTilde = " << nTilde << "\n"
-                << "baseCPI_t0 = " << baseCPI_t0 << "\n"
-                <<" baseCPI = " << arguments_.baseCPI << "\n"
-                << "zits->zeroRate(arguments_.fixDate) = " << zits->zeroRate(arguments_.fixDate) << "\n";
-
-              
-
     Real m = baseCPI_t0 *
              std::pow(1.0 + zits->zeroRate(arguments_.fixDate), t_curve);
-    std::cout << "baseCPI_t0 = " << baseCPI_t0 << "\n"
-              << "zits->zeroRate(arguments_.fixDate) = " << zits->zeroRate(arguments_.fixDate) << "\n"
-              << "m = " << m << "\n";
+
     m = ZeroInflation::cpiFixing(arguments_.index, arguments_.fixDate, 0*Days, interpolate);
-    std::cout << "m (from index fixing) = " << m << "\n";
+
     Real Ht = Hy(index_).eval(*model_, t);
     Real v = Ht * Ht * zetay(index_).eval(*model_, t) -
              2.0 * Ht * integral(*model_, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
@@ -96,9 +78,6 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     Real discount = yts->discount(arguments_.payDate);
 
     results_.value = nTilde * blackFormula(arguments_.type, kTilde, m, std::sqrt(v), discount);
-    std::cout << "v = " << v << "\n"
-              << "discount = " << discount << "\n"
-              << "results_.value = " << results_.value << "\n";
 
 } // calculate()
 
