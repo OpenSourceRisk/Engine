@@ -65,8 +65,6 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
                                    baseDate, fixingDate);
     
     Real t = yts->dayCounter().yearFraction(yts->referenceDate(), fixingDate + simulationLag(zts));
-    Real baseCPI_t0 = arguments_.index->fixing(zts->baseDate());
-    Real t_curve = zts->dayCounter().yearFraction(zts->baseDate(), fixingDate);
 
     // If time to expiry is non-positive, we return the discounted value of the settled amount.
     // CPICapFloor should really have its own day counter for going from strike rate to k. We use t here.
