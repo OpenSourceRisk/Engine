@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(ORE CXX)
 include(CTest)
-
-# Path for local cmake modules
-if(NOT "${CMAKE_CURRENT_LIST_DIR}/cmake" IN_LIST CMAKE_MODULE_PATH)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-endif()
-
 include(commonSettings)
 
 if(ORE_BUILD_QL_SEPARATELY)

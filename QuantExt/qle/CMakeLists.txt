@@ -1106,6 +1106,15 @@ utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
+    COMMAND ${CMAKE_COMMAND}
+            -D IN_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp.in
+            -D OUT_FILE=${CMAKE_CURRENT_LIST_DIR}/gitversion.hpp
+            -P "${PROJECT_SOURCE_DIR}/cmake/generateGitVersion.cmake"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
 writeAll("qle" "${CMAKE_CURRENT_LIST_DIR}/quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC} ${QuantExt_HDR} "quantext.hpp")
 # This adds Ore::QuantExt as an alias for the target QuantExt. So Ore::QuantExt can be used in the mono-repo build 

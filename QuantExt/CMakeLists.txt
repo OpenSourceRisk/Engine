@@ -1,5 +1,3 @@
-generate_git_hash(ore_qle ${CMAKE_CURRENT_LIST_DIR}/qle)
-
 add_subdirectory("qle")
 if (ORE_BUILD_DOC AND Doxygen_FOUND)
     add_subdirectory("doc")
