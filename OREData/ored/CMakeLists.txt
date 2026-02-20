@@ -877,11 +877,9 @@ endif()
 if (QL_USE_PCH)
     target_precompile_headers(${ORED_LIB_NAME}
         PUBLIC
-            $<BUILD_INTERFACE:
-                <ored/portfolio/enginefactory.hpp$<ANGLE-R>
-                <ored/utilities/log.hpp$<ANGLE-R>
-                <ored/utilities/parsers.hpp$<ANGLE-R>
-            >
+            $<BUILD_INTERFACE:<ored/portfolio/enginefactory.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ored/utilities/log.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ored/utilities/parsers.hpp$<ANGLE-R>>
     )
 endif()
 

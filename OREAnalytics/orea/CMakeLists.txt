@@ -476,10 +476,8 @@ endif()
 if (QL_USE_PCH)
     target_precompile_headers(${OREA_LIB_NAME}
         PUBLIC
-            $<BUILD_INTERFACE:
-                <orea/app/inputparameters.hpp$<ANGLE-R>
-                <orea/scenario/scenariosimmarketparameters.hpp$<ANGLE-R>
-            >
+            $<BUILD_INTERFACE:<orea/app/inputparameters.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<orea/scenario/scenariosimmarketparameters.hpp$<ANGLE-R>>
     )
 endif()
 

@@ -1172,21 +1172,19 @@ endif()
 if(ORE_BUILD_QL_SEPARATELY AND QL_USE_PCH)
     target_precompile_headers(ql_library
         PUBLIC
-            $<BUILD_INTERFACE:
-                <ql/any.hpp$<ANGLE-R>
-                <ql/errors.hpp$<ANGLE-R>
-                <ql/index.hpp$<ANGLE-R>
-                <ql/indexes/indexmanager.hpp$<ANGLE-R>
-                <ql/instrument.hpp$<ANGLE-R>
-                <ql/indexes/interestrateindex.hpp$<ANGLE-R>
-                <ql/math/array.hpp$<ANGLE-R>
-                <ql/math/interpolations/cubicinterpolation.hpp$<ANGLE-R>
-                <ql/math/matrix.hpp$<ANGLE-R>
-                <ql/methods/finitedifferences/operators/fdmlinearop.hpp$<ANGLE-R>
-                <ql/patterns/observable.hpp$<ANGLE-R>
-                <ql/qldefines.hpp$<ANGLE-R>
-                <ql/termstructure.hpp$<ANGLE-R>
-            >
+            $<BUILD_INTERFACE:<ql/any.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/errors.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/index.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/indexes/indexmanager.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/instrument.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/indexes/interestrateindex.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/math/array.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/math/interpolations/cubicinterpolation.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/math/matrix.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/methods/finitedifferences/operators/fdmlinearop.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/patterns/observable.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/qldefines.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ql/termstructure.hpp$<ANGLE-R>>
     )
 endif()
 
