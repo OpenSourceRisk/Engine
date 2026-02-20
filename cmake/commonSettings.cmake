@@ -106,7 +106,7 @@ if(MSVC)
         /W3
         /we5038 /we4189 /we4700 /we5233 /we4508 /wd4834 /we26815
         "$<$<CONFIG:Release>:/GF;/Gy;/Ot;/GT>"
-        "$<$<CONFIG:RelWithDebInfo>:/GF;/Gy;/Ot;/GT;Oi>"
+        "$<$<CONFIG:RelWithDebInfo>:/GF;/Gy;/Ot;/GT;/Oi>"
         $<$<BOOL:${MSVC_PARALLELBUILD}>:/MP>
     )
 
