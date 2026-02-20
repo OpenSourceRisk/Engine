@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(ORE CXX)
 include(CTest)
-include(commonSettings)
+include("cmake/commonSettings.cmake")
 
 if(ORE_BUILD_QL_SEPARATELY)
     # Use installed QuantLib CMake package if we are not building it.

@@ -1,14 +1,5 @@
 include_guard(GLOBAL)
 
-# In version 3.17+, we can get rid of this and use:
-# https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_FUNCTION_LIST_DIR.html
-set(_THIS_MODULE_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
-
-# Path for local cmake modules
-if(NOT "${_THIS_MODULE_BASE_DIR}" IN_LIST CMAKE_MODULE_PATH)
-    list(APPEND CMAKE_MODULE_PATH "${_THIS_MODULE_BASE_DIR}")
-endif()
-
 include(CheckCXXCompilerFlag)
 include(CheckLinkerFlag)
 
