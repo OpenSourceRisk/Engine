@@ -45,27 +45,17 @@ void FdBlackScholesVanillaEngine2::calculate() const {
     cfResults.back().type = "ExpectedFlow";
     auto payoff = dynamic_pointer_cast<QuantLib::StrikedTypePayoff>(arguments_.payoff);
     results_.additionalResults["cashFlowResults"] = cfResults;
-    //results_.additionalResults["cashFlowResults2"] = cfResults;
-    results_.additionalResults["riskFreeDiscount"] = process_->riskFreeRate()->discount(lastDate);
-    results_.additionalResults["dividendDiscount"] = process_->dividendYield()->discount(lastDate);
+    auto rf = process_->riskFreeRate()->discount(lastDate);
+    auto dividendYield = process_->dividendYield()->discount(lastDate);
+    results_.additionalResults["riskFreeDiscount"] = rf;
+    results_.additionalResults["dividendDiscount"] = dividendYield;
     results_.additionalResults["volatility"] = process_->blackVolatility()->blackVol(
         lastDate, payoff->strike());
     results_.additionalResults["spot"] = process_->x0();
     auto tte = process_->blackVolatility()->timeFromReference(lastDate);
-    
-    //results_.additionalResults["forward"] = forwardPrice;
     results_.additionalResults["strike"] = payoff->strike();
     results_.additionalResults["timeToExpiry"] = tte;
-    
-    results_.additionalResults["forward"] =
-        process_->x0() * process_->dividendYield()->discount(lastDate) / process_->riskFreeRate()->discount(lastDate);
-    /* process_->x0() *
-        std::exp(
-            tte * (process_->riskFreeRate()
-                       ->forwardRate(0, tte, QuantLib::Continuous, QuantLib::NoFrequency, true)
-                       .rate()) -
-            process_->dividendYield()->forwardRate(0, tte, QuantLib::Continuous, QuantLib::NoFrequency, true).rate());
-    */
+    results_.additionalResults["forward"] = process_->x0() * dividendYield / rf;
 }
 
 } // namespace QuantExt
