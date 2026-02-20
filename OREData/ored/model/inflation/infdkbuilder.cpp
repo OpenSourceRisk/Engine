@@ -298,9 +298,9 @@ void InfDkBuilder::buildCapFloorBasket() const {
 
     bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(infVol_.currentLink());
     if (isLogNormalVol) {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_, true);
     } else {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_, true);
     }
     DLOG("Building cap floor basket for " << data_->index() << " with " << ci.size() << " calibration instruments, reference calibration grid size "
          << referenceCalibrationDates.size());
@@ -323,7 +323,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
         
         Date expiryDate = optionMaturityDate(j);
-        Date fixingDate = inflationPeriod(expiryDate - lag, inflationIndex_->frequency()).first;
+        Date fixingDate = ZeroInflation::fixingDate(expiryDate, lag, inflationIndex_->frequency(), useInterpolatedCPIFixings;
         if (fixingDate <= baseDate) {
             DLOG("Skipping calibration instrument with expiry " << expiryDate << " since fixing date " << fixingDate << " is before or equal to base date " << baseDate);
             continue;
@@ -338,9 +338,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 QuantLib::ext::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar, bdc,
                                                 fixCalendar, bdc, strikeValue, inflationIndex_, lag);
             cf->setPricingEngine(engine);
-            Date fixingDate = inflationPeriod(expiryDate - lag, inflationIndex_->frequency()).first;
             Real tte = rateCurve_->timeFromReference(fixingDate + simulationLag(inflationIndex_->zeroInflationTermStructure()));
-
             Real tteFromBase = infVol_->timeFromBase(fixingDate);
 
             Real marketPrem;
