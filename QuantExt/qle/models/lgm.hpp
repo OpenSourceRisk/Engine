@@ -222,7 +222,8 @@ inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, con
 inline QuantLib::Real
 LinearGaussMarkovModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    QL_FAIL("LGM does not provide short rate.");
+    return discountCurve->forwardRate(t, t, QuantLib::Compounding::Continuous) + x[0] * parametrization_->Hprime(t) +
+           parametrization_->zeta(t) * parametrization_->Hprime(t) * parametrization_->H(t);
 }
 
 inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time T, const Real x,
