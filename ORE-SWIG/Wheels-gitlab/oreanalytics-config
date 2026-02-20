@@ -29,12 +29,12 @@ while test $# -gt 0; do
 
   case $1 in
     --cflags)
-      #echo -I${ORE}/build/QuantLib -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib -I${BOOST_INC} -std=c++1z -DNDEBUG -Wno-free-nonheap-object -Wno-maybe-uninitialized -Wno-misleading-indentation
+      #echo -I${ORE}/build/QuantLib -I${ORE}/OREAnalytics -I${ORE}/OREData -I${ORE}/QuantExt -I${ORE}/QuantLib -I${BOOST_INC} -std=c++20 -DNDEBUG -Wno-free-nonheap-object -Wno-maybe-uninitialized -Wno-misleading-indentation
       # We must not specify any include directories, because we have already installed boost and ORE to system directories:
       echo -w
       ;;
     --libs)
-      #echo -L${ORE}/build/OREAnalytics/orea -lOREAnalytics -L${ORE}/build/OREData/ored -lOREData -L${ORE}/build/QuantExt/qle -lQuantExt -L${ORE}/build/QuantLib/ql -lQuantLib -L${BOOST_LIB} -l${BOOST_THREAD} -lboost_system -lboost_serialization -lboost_date_time -lboost_regex -std=c++1z
+      #echo -L${ORE}/build/OREAnalytics/orea -lOREAnalytics -L${ORE}/build/OREData/ored -lOREData -L${ORE}/build/QuantExt/qle -lQuantExt -L${ORE}/build/QuantLib/ql -lQuantLib -L${BOOST_LIB} -l${BOOST_THREAD} -lboost_system -lboost_serialization -lboost_date_time -lboost_regex -std=c++20
       # We must not specify any library directories, because we have already installed boost and ORE to system directories:
       echo -lOREAnalytics -lOREData -lQuantExt -lQuantLib -l${BOOST_THREAD} -lboost_system -lboost_serialization -lboost_date_time -lboost_regex
       ;;
