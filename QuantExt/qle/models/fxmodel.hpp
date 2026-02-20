@@ -31,6 +31,8 @@ namespace QuantExt {
 
 class FxModel : public LinkableCalibratedModel {
 public:
+    enum class Discretization { Euler, PC };
+
     /*! parametrization (as base class) */
     virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;
 
@@ -57,7 +59,7 @@ public:
 
     /*! perform a marginal step given short rates for the rates */
     virtual Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
-                               const Real r_for) const = 0;
+                               const Real r_for, const std::optional<Discretization> disc = std::nullopt) const = 0;
 };
 
 } // namespace QuantExt
