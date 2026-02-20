@@ -323,7 +323,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
         
         Date expiryDate = optionMaturityDate(j);
-        Date fixingDate = ZeroInflation::fixingDate(expiryDate, lag, inflationIndex_->frequency(), useInterpolatedCPIFixings;
+        Date fixingDate = ZeroInflation::fixingDate(expiryDate, lag, inflationIndex_->frequency(), useInterpolatedCPIFixings);
         if (fixingDate <= baseDate) {
             DLOG("Skipping calibration instrument with expiry " << expiryDate << " since fixing date " << fixingDate << " is before or equal to base date " << baseDate);
             continue;
