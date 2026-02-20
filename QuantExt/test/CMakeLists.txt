@@ -99,21 +99,24 @@ swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)
 
-find_package (Boost REQUIRED COMPONENTS date_time thread serialization timer log OPTIONAL_COMPONENTS system chrono)
-
-if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER AND UNIX AND NOT APPLE)
-    find_library(RT_LIBRARY rt REQUIRED)
-endif()
-
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
-target_link_libraries(quantext-test-suite ${QL_LIB_NAME})
-target_link_libraries(quantext-test-suite ${QLE_LIB_NAME})
-target_link_libraries(quantext-test-suite ${Boost_LIBRARIES} ${RT_LIBRARY})
+target_link_libraries(quantext-test-suite
+    PRIVATE
+        ${QLE_LIB_NAME}
+        ${ORE_TEST_SUPPORT_NAME}
+        Boost::log
+)
+
+if (ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
+    target_compile_definitions(quantext-test-suite PRIVATE ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER)
+    if(UNIX AND NOT APPLE)
+        add_rt_library(quantext-test-suite)
+    endif()
+endif()
 
 add_test(NAME quantext-test-suite COMMAND quantext-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
 install(TARGETS quantext-test-suite
-        RUNTIME DESTINATION bin
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        OPTIONAL
-        )
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    OPTIONAL
+)
