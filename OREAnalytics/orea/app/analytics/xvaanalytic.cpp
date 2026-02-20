@@ -1284,17 +1284,17 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     SavedSettings settings;
 
-    Settings::instance().includeTodaysCashFlows() = *xvaVars->exposureIncludeTodaysCashFlows_;
-    LOG("Simulation IncludeTodaysCashFlows is defined: " << (xvaVars->exposureIncludeTodaysCashFlows_ ? "true"
-                                                                                                    : "false"));
     if (xvaVars->exposureIncludeTodaysCashFlows_) {
         LOG("Exposure IncludeTodaysCashFlows is set to "
             << (*xvaVars->exposureIncludeTodaysCashFlows_ ? "true" : "false"));
+        Settings::instance().includeTodaysCashFlows() = *xvaVars->exposureIncludeTodaysCashFlows_;
     }
 
-    Settings::instance().includeReferenceDateEvents() = *xvaVars->exposureIncludeReferenceDateEvents_;
-    LOG("Simulation IncludeReferenceDateEvents is set to "
-        << (xvaVars->exposureIncludeReferenceDateEvents_ ? "true" : "false"));
+    if (xvaVars->exposureIncludeReferenceDateEvents_) {
+        LOG("Simulation IncludeReferenceDateEvents is set to "
+            << (xvaVars->exposureIncludeReferenceDateEvents_ ? "true" : "false"));
+        Settings::instance().includeReferenceDateEvents() = *xvaVars->exposureIncludeReferenceDateEvents_;
+    }
 
     std::map<std::string, double> cubeNpvOverlay;
     if (xvaVars->cubeNpvOverlay_) {
