@@ -88,7 +88,10 @@ FxLvModel::Discretization getFxLvDiscretization(CrossAssetModel::Discretization 
     QL_REQUIRE(discretization != CrossAssetModel::Discretization::Exact,
                "FxLv model component does not provide a discretization corresponding to "
                "CrossAssetModel::Discretization::Exact");
-    return FxLvModel::Discretization::Euler;
+    if (discretization == CrossAssetModel::Discretization::BestMarginalDiscretization)
+        return FxLvModel::Discretization::PC;
+    else
+        return FxLvModel::Discretization::Euler;
 }
 
 } // namespace
@@ -505,7 +508,8 @@ void CrossAssetModel::initializeParametrizations() {
                 QuantLib::ext::make_shared<FxBsModel>(QuantLib::ext::dynamic_pointer_cast<FxBsParametrization>(p_[i])));
         } else if (getComponentType(i).second == ModelType::LV) {
             fxModels_.push_back(
-                QuantLib::ext::make_shared<FxLvModel>(QuantLib::ext::dynamic_pointer_cast<FxLvParametrization>(p_[i])));
+                QuantLib::ext::make_shared<FxLvModel>(QuantLib::ext::dynamic_pointer_cast<FxLvParametrization>(p_[i]),
+                                                      getFxLvDiscretization(discretization_)));
         } else {
             fxModels_.push_back(nullptr);
         }
