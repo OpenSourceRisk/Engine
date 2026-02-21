@@ -63,6 +63,8 @@ SimpleMcLocalVolStochasticRatesCorrection::SimpleMcLocalVolStochasticRatesCorrec
         timeGrid_.begin(), timeGrid_.end(), logStrikes_.begin(), logStrikes_.end(), correctionData_));
 
     correction_->enableExtrapolation();
+
+    this->enableExtrapolation();
 }
 
 void SimpleMcLocalVolStochasticRatesCorrection::update() {
@@ -106,8 +108,6 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
     std::vector<Real> q_u(nPaths_);
     std::vector<Real> n_u(nPaths_);
 
-    FxModel::Discretization S_disc = FxModel::Discretization::Euler;
-
     for (Size i = 1; i < timeGrid_.size(); ++i) {
 
         Real t0 = timeGrid_[i - 1];
@@ -124,21 +124,22 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
 
             Array rStateUpd = r_->marginalStep(t0, rState[p], dt, getProjectedArray(dw, 0, m_r));
             Array qStateUpd = q_->marginalStep(t0, qState[p], dt, getProjectedArray(dw, m_r, m_q));
-            Array sStateUpd =
-                S_->marginalStep(t0, sState[p], dt, getProjectedArray(dw, m_r + m_q, m_s), r[p], q[p], S_disc);
 
-            Real rs = r_->shortRate(t1, rStateUpd, r0_);
-            Real qs = q_->shortRate(t1, qStateUpd, q0_);
+            Real rs = -std::log(r_->discountBond(t0, t1, rStateUpd, r0_)) / dt;
+            Real qs = -std::log(q_->discountBond(t0, t1, qStateUpd, q0_)) / dt;
+
+            Array sStateUpd = S_->marginalStep(t0, sState[p], dt, getProjectedArray(dw, m_r + m_q, m_s), rs, qs,
+                                               FxModel::Discretization::Euler);
 
             Array rStateUpd_u = r_->marginalStep(t0, rState_u[p], dt, Array(m_r, 0.0));
             Array qStateUpd_u = q_->marginalStep(t0, qState_u[p], dt, Array(m_q, 0.0));
 
-            Real rs_u = r_->shortRate(t1, rStateUpd_u, r0_);
-            Real qs_u = q_->shortRate(t1, qStateUpd_u, q0_);
+            Real rs_u = -std::log(r_->discountBond(t0, t1, rStateUpd_u, r0_)) / dt;
+            Real qs_u = -std::log(q_->discountBond(t0, t1, qStateUpd_u, q0_)) / dt;
 
             applyCorrection_ = false;
-            Array sStateUpd_u =
-                S_->marginalStep(t0, sState_u[p], dt, getProjectedArray(dw, m_r + m_q, m_s), rs_u, qs_u, S_disc);
+            Array sStateUpd_u = S_->marginalStep(t0, sState_u[p], dt, getProjectedArray(dw, m_r + m_q, m_s), rs_u, qs_u,
+                                                 FxModel::Discretization::Euler);
             applyCorrection_ = true;
 
             rState[p] = rStateUpd;
