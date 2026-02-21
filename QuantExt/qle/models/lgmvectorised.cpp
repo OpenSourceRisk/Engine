@@ -137,7 +137,7 @@ RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRat
                     tmp *= adjFactor;
                 }
                 numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
-            } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCoupon>(c)) {
+            } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(c)) {
                 Date start = cpn->valueDates().front();
                 Date end = cpn->valueDates().back();
                 Time T1 = std::max(t, p_->termStructure()->timeFromReference(start));
@@ -164,7 +164,7 @@ RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRat
                 }
                 numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
             } else {
-                QL_FAIL("LgmVectorised::fixing(): expected ibor coupon");
+                QL_FAIL("LgmVectorised::fixing(): expected ibor or on coupon");
             }
         }
         for (auto const& c : fixedLeg) {
