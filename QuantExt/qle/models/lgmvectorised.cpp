@@ -32,10 +32,9 @@ namespace QuantExt {
 RandomVariable LgmVectorised::numeraire(const Time t, const RandomVariable& x,
                                         const Handle<YieldTermStructure>& discountCurve) const {
     QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGMVectorised::numeraire");
-    RandomVariable Ht(x.size(), p_->H(t));
-    return exp(Ht * x + RandomVariable(x.size(), 0.5 * p_->zeta(t)) * Ht * Ht) /
-           RandomVariable(x.size(),
-                          (discountCurve.empty() ? p_->termStructure()->discount(t) : discountCurve->discount(t)));
+    Real Ht = p_->H(t);
+    return exp(Ht * x + 0.5 * p_->zeta(t) * Ht * Ht) /
+           (discountCurve.empty() ? p_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
 RandomVariable LgmVectorised::discountBond(const Time t, const Time T, const RandomVariable& x,
@@ -43,12 +42,11 @@ RandomVariable LgmVectorised::discountBond(const Time t, const Time T, const Ran
     if (QuantLib::close_enough(t, T))
         return RandomVariable(x.size(), 1.0);
     QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBond");
-    RandomVariable Ht(x.size(), p_->H(t));
-    RandomVariable HT(x.size(), p_->H(T));
-    return RandomVariable(x.size(),
-                          (discountCurve.empty() ? p_->termStructure()->discount(T) / p_->termStructure()->discount(t)
-                                                 : discountCurve->discount(T) / discountCurve->discount(t))) *
-           exp(-(HT - Ht) * x - RandomVariable(x.size(), 0.5 * p_->zeta(t)) * (HT * HT - Ht * Ht));
+    Real Ht = p_->H(t);
+    Real HT = p_->H(T);
+    return (discountCurve.empty() ? p_->termStructure()->discount(T) / p_->termStructure()->discount(t)
+                                  : discountCurve->discount(T) / discountCurve->discount(t)) *
+           exp(-(HT - Ht) * x - 0.5 * p_->zeta(t) * (HT * HT - Ht * Ht));
 }
 
 RandomVariable LgmVectorised::reducedDiscountBond(const Time t, const Time T, const RandomVariable& x,
@@ -57,10 +55,9 @@ RandomVariable LgmVectorised::reducedDiscountBond(const Time t, const Time T, co
         return RandomVariable(x.size(), 1.0) / numeraire(t, x, discountCurve);
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t << ") >= 0 required in LGMVectorised::reducedDiscountBond");
-    RandomVariable HT(x.size(), p_->H(T));
-    return RandomVariable(x.size(),
-                          (discountCurve.empty() ? p_->termStructure()->discount(T) : discountCurve->discount(T))) *
-           exp(-HT * x - RandomVariable(x.size(), 0.5 * p_->zeta(t)) * HT * HT);
+    Real HT = p_->H(T);
+    return (discountCurve.empty() ? p_->termStructure()->discount(T) : discountCurve->discount(T)) *
+           exp(-HT * x - 0.5 * p_->zeta(t) * HT * HT);
 }
 
 RandomVariable LgmVectorised::discountBondOption(Option::Type type, const Real K, const Time t, const Time S,
@@ -68,16 +65,15 @@ RandomVariable LgmVectorised::discountBondOption(Option::Type type, const Real K
                                                  const Handle<YieldTermStructure>& discountCurve) const {
     QL_REQUIRE(T > S && S >= t && t >= 0.0,
                "T(" << T << ") > S(" << S << ") >= t(" << t << ") >= 0 required in LGMVectorised::discountBondOption");
-    RandomVariable w(x.size(), type == Option::Call ? 1.0 : -1.0);
+    Real w = type == Option::Call ? 1.0 : -1.0;
     RandomVariable pS = discountBond(t, S, x, discountCurve);
     RandomVariable pT = discountBond(t, T, x, discountCurve);
     // slight generalization of Lichters, Stamm, Gallagher 11.2.1
     // with t < S, SSRN: https://ssrn.com/abstract=2246054
-    RandomVariable sigma(x.size(), std::sqrt(p_->zeta(t)) * (p_->H(T) - p_->H(S)));
-    RandomVariable dp =
-        log(pT / (RandomVariable(x.size(), K) * pS)) / sigma + RandomVariable(x.size(), 0.5) * sigma * sigma;
+    Real sigma = std::sqrt(p_->zeta(t)) * (p_->H(T) - p_->H(S));
+    RandomVariable dp = log(pT / (K * pS)) / sigma + 0.5 * sigma * sigma;
     RandomVariable dm = dp - sigma;
-    return w * (pT * normalCdf(w * dp) - pS * RandomVariable(x.size(), K) * normalCdf(w * dm));
+    return w * (pT * normalCdf(w * dp) - pS * K * normalCdf(w * dm));
 }
 
 RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
@@ -103,7 +99,7 @@ RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRat
         // reducedDiscountBond is faster to compute, there we use this here instead of discountBond
         RandomVariable disc1 = reducedDiscountBond(t, T1, x, ibor->forwardingTermStructure());
         RandomVariable disc2 = reducedDiscountBond(t, T2, x, ibor->forwardingTermStructure());
-        return (disc1 / disc2 - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), dt);
+        return (disc1 / disc2 - 1.0) / dt;
     } else if (auto swap = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(index)) {
 
         // Swap Index
@@ -136,9 +132,9 @@ RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRat
                     cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate(),
                                                    cpn->referencePeriodStart(), cpn->referencePeriodEnd()) /
                     swap->iborIndex()->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
-                RandomVariable tmp = disc1 / disc2 - RandomVariable(x.size(), 1.0);
+                RandomVariable tmp = disc1 / disc2 - 1.0;
                 if (!QuantLib::close_enough(adjFactor, 1.0)) {
-                    tmp *= RandomVariable(x.size(), adjFactor);
+                    tmp *= adjFactor;
                 }
                 numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
             } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCoupon>(c)) {
@@ -155,7 +151,7 @@ RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRat
                     swap->iborIndex()->dayCounter().yearFraction(start, end);
                 RandomVariable tmp;
                 if (cpn->averagingMethod() == RateAveraging::Compound) {
-                    tmp = disc1 / disc2 - RandomVariable(x.size(), 1.0);
+                    tmp = disc1 / disc2 - 1.0;
                 } else if (cpn->averagingMethod() == RateAveraging::Simple) {
                     tmp = QuantExt::log(disc1 / disc2);
                 } else {
@@ -164,7 +160,7 @@ RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRat
                             << "' not handled - internal error, contact dev.");
                 }
                 if (!QuantLib::close_enough(adjFactor, 1.0)) {
-                    tmp *= RandomVariable(x.size(), adjFactor);
+                    tmp *= adjFactor;
                 }
                 numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
             } else {
@@ -176,8 +172,7 @@ RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRat
             QL_REQUIRE(cpn, "LgmVectorised::fixing(): expected fixed coupon");
             Date d = cpn->date();
             Time T = std::max(t, p_->termStructure()->timeFromReference(d));
-            denominator +=
-                reducedDiscountBond(t, T, x, swapDiscountCurve) * RandomVariable(x.size(), cpn->accrualPeriod());
+            denominator += reducedDiscountBond(t, T, x, swapDiscountCurve) * cpn->accrualPeriod();
         }
         return numerator / denominator;
 
@@ -193,9 +188,8 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
                                                const Real gearing, const Period lookback, Real cap, Real floor,
                                                const bool localCapFloor, const bool nakedOption, const Time t,
                                                const RandomVariable& x) const {
-    return compoundedOnRate(index, fixingDates, valueDates, dt, rateCutoff, includeSpread, spread, gearing,
-                            lookback, cap, floor, localCapFloor, nakedOption,
-                            {t}, {0}, [x](Size) { return &x; });
+    return compoundedOnRate(index, fixingDates, valueDates, dt, rateCutoff, includeSpread, spread, gearing, lookback,
+                            cap, floor, localCapFloor, nakedOption, {t}, {0}, [x](Size) { return &x; });
 }
 
 RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
@@ -204,8 +198,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
                                                const Natural rateCutoff, const bool includeSpread, const Real spread,
                                                const Real gearing, const Period lookback, Real cap, Real floor,
                                                const bool localCapFloor, const bool nakedOption,
-                                               const std::vector<Time>& simTime,
-                                               const std::vector<Size>& simIdx,
+                                               const std::vector<Time>& simTime, const std::vector<Size>& simIdx,
                                                const std::function<const RandomVariable*(Size)>& x) const {
 
     QL_REQUIRE(!includeSpread || QuantLib::close_enough(gearing, 1.0),
@@ -268,7 +261,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
         Handle<YieldTermStructure> curve = index->forwardingTermStructure();
         QL_REQUIRE(!curve.empty(),
                    "LgmVectorised::compoundedOnRate(): null term structure set to this instance of " << index->name());
-        
+
         QL_REQUIRE(!simTime.empty(), "LgmVectorised::averageOnRate(): empty simTime");
         QL_REQUIRE(simTime.size() == simIdx.size(), "LgmVectorised::averageOnRate(): simTime and simIdx size mismatch");
 
@@ -276,12 +269,12 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
 
             Date startValueDate = j == 0 ? valueDates[i] : valueDates[simIdx[j]];
             startValueDate = std::max(startValueDate, valueDates[i]);
-            Date endValueDate = ((j == simIdx.size() - 1) || (simIdx[j + 1] > nCutoff)) ?
-                                valueDates[n] : valueDates[simIdx[j + 1]];
+            Date endValueDate =
+                ((j == simIdx.size() - 1) || (simIdx[j + 1] > nCutoff)) ? valueDates[n] : valueDates[simIdx[j + 1]];
             endValueDate = std::max(startValueDate, endValueDate);
             Date endValueDatePreCutoff = std::max(std::min(valueDates[nCutoff], endValueDate), startValueDate);
             DiscountFactor startDiscount = curve->discount(startValueDate);
-            DiscountFactor endDiscount =  curve->discount(endValueDatePreCutoff);
+            DiscountFactor endDiscount = curve->discount(endValueDatePreCutoff);
 
             if (endValueDatePreCutoff < endValueDate) {
                 DiscountFactor discountCutoffDate =
@@ -360,15 +353,15 @@ RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<O
         // ignore localCapFloor, treat as global
         RandomVariable effectiveStrike =
             (RandomVariable(sample, floor) - effectiveSpread) / RandomVariable(sample, gearing);
-        floorletRate = RandomVariable(sample, gearing) *
-                       max(RandomVariable(sample, 0.0), effectiveStrike - effectiveIndexFixing);
+        floorletRate =
+            RandomVariable(sample, gearing) * max(RandomVariable(sample, 0.0), effectiveStrike - effectiveIndexFixing);
     }
 
     if (cap != Null<Real>()) {
         RandomVariable effectiveStrike =
             (RandomVariable(sample, cap) - effectiveSpread) / RandomVariable(sample, gearing);
-        capletRate = RandomVariable(sample, gearing) *
-                     max(RandomVariable(sample, 0.0), effectiveIndexFixing - effectiveStrike);
+        capletRate =
+            RandomVariable(sample, gearing) * max(RandomVariable(sample, 0.0), effectiveIndexFixing - effectiveStrike);
         if (nakedOption && floor == Null<Real>())
             capletRate = -capletRate;
     }
@@ -382,9 +375,8 @@ RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<Ove
                                              const bool includeSpread, const Real spread, const Real gearing,
                                              const Period lookback, Real cap, Real floor, const bool localCapFloor,
                                              const bool nakedOption, const Time t, const RandomVariable& x) const {
-    return averagedOnRate(index, fixingDates, valueDates, dt, rateCutoff, includeSpread, spread, gearing,
-                          lookback, cap, floor, localCapFloor, nakedOption,
-                          {t}, {0}, [x](Size) { return &x; });
+    return averagedOnRate(index, fixingDates, valueDates, dt, rateCutoff, includeSpread, spread, gearing, lookback, cap,
+                          floor, localCapFloor, nakedOption, {t}, {0}, [x](Size) { return &x; });
 }
 
 RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
@@ -450,12 +442,12 @@ RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<Ove
 
             Date startValueDate = j == 0 ? valueDates[i] : valueDates[simIdx[j]];
             startValueDate = std::max(startValueDate, valueDates[i]);
-            Date endValueDate = ((j == simIdx.size() - 1) || (simIdx[j + 1] > nCutoff)) ?
-                                valueDates[n] : valueDates[simIdx[j + 1]];
+            Date endValueDate =
+                ((j == simIdx.size() - 1) || (simIdx[j + 1] > nCutoff)) ? valueDates[n] : valueDates[simIdx[j + 1]];
             endValueDate = std::max(startValueDate, endValueDate);
             Date endValueDatePreCutoff = std::max(std::min(valueDates[nCutoff], endValueDate), startValueDate);
             DiscountFactor startDiscount = curve->discount(startValueDate);
-            DiscountFactor endDiscount =  curve->discount(endValueDatePreCutoff);
+            DiscountFactor endDiscount = curve->discount(endValueDatePreCutoff);
 
             if (endValueDatePreCutoff < endValueDate) {
                 DiscountFactor discountCutoffDate =
@@ -494,8 +486,7 @@ RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<Ove
     }
 
     Rate tau = index->dayCounter().yearFraction(valueDates.front(), valueDates.back());
-    RandomVariable rate =
-        RandomVariable(sample, gearing / tau) * accumulatedRateLgm + RandomVariable(sample, spread);
+    RandomVariable rate = RandomVariable(sample, gearing / tau) * accumulatedRateLgm + RandomVariable(sample, spread);
 
     if (cap == Null<Real>() && floor == Null<Real>())
         return rate;
@@ -522,8 +513,7 @@ RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<Ove
 
     if (cap != Null<Real>()) {
         RandomVariable effectiveStrike = RandomVariable(sample, (cap - spread) / gearing);
-        capletRate =
-            RandomVariable(sample, gearing) * max(RandomVariable(sample, 0.0), forwardRate - effectiveStrike);
+        capletRate = RandomVariable(sample, gearing) * max(RandomVariable(sample, 0.0), forwardRate - effectiveStrike);
         if (nakedOption && floor == Null<Real>())
             capletRate = -capletRate;
     }
@@ -598,21 +588,20 @@ RandomVariable LgmVectorised::averagedBmaRate(const QuantLib::ext::shared_ptr<BM
 
             // apply a correction to the discount factors
 
-            disc1 *= RandomVariable(x.size(), startDiscount / curve->discount(T1_lgm));
-            disc2 *= RandomVariable(x.size(), endDiscount / curve->discount(T2_lgm));
+            disc1 *= startDiscount / curve->discount(T1_lgm);
+            disc2 *= endDiscount / curve->discount(T2_lgm);
 
             // estimate the fixing
 
-            fixing = (disc1 / disc2 - RandomVariable(x.size(), 1.0)) /
-                     RandomVariable(x.size(), index->dayCounter().yearFraction(start, end));
+            fixing = (disc1 / disc2 - 1.0) / index->dayCounter().yearFraction(start, end);
         }
 
-        avgBMA += fixing * RandomVariable(x.size(), (d2 - d1));
+        avgBMA += fixing * (d2 - d1);
         d1 = d2;
     }
 
-    avgBMA *= RandomVariable(x.size(), gearing / (endDate - startDate));
-    avgBMA += RandomVariable(x.size(), spread);
+    avgBMA *= gearing / (endDate - startDate);
+    avgBMA += spread;
 
     if (cap == Null<Real>() && floor == Null<Real>())
         return avgBMA;
@@ -623,7 +612,7 @@ RandomVariable LgmVectorised::averagedBmaRate(const QuantLib::ext::shared_ptr<BM
         std::swap(cap, floor);
     }
 
-    RandomVariable forwardRate = (avgBMA - RandomVariable(x.size(), spread)) / RandomVariable(x.size(), gearing);
+    RandomVariable forwardRate = (avgBMA - spread) / gearing;
     RandomVariable floorletRate(x.size(), 0.0);
     RandomVariable capletRate(x.size(), 0.0);
 
@@ -632,15 +621,13 @@ RandomVariable LgmVectorised::averagedBmaRate(const QuantLib::ext::shared_ptr<BM
 
     if (floor != Null<Real>()) {
         // ignore localCapFloor, treat as global
-        RandomVariable effectiveStrike = RandomVariable(x.size(), (floor - spread) / gearing);
-        floorletRate =
-            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), effectiveStrike - forwardRate);
+        Real effectiveStrike = (floor - spread) / gearing;
+        floorletRate = gearing * max(0.0, effectiveStrike - forwardRate);
     }
 
     if (cap != Null<Real>()) {
-        RandomVariable effectiveStrike = RandomVariable(x.size(), (cap - spread) / gearing);
-        capletRate =
-            RandomVariable(x.size(), gearing) * max(RandomVariable(x.size(), 0.0), forwardRate - effectiveStrike);
+        Real effectiveStrike = (cap - spread) / gearing;
+        capletRate = gearing * max(0.0, forwardRate - effectiveStrike);
         if (nakedOption && floor == Null<Real>())
             capletRate = -capletRate;
     }
@@ -650,11 +637,9 @@ RandomVariable LgmVectorised::averagedBmaRate(const QuantLib::ext::shared_ptr<BM
 
 RandomVariable LgmVectorised::subPeriodsRate(const QuantLib::ext::shared_ptr<InterestRateIndex>& index,
                                              const std::vector<Date>& fixingDates, const Time t,
-                                             const RandomVariable& x,
-                                             const std::vector<Time>& accrualFractions,
+                                             const RandomVariable& x, const std::vector<Time>& accrualFractions,
                                              const SubPeriodsCoupon1::Type type, const bool includeSpread,
-                                             const Spread spread, const Real gearing,
-                                             const Time accrualPeriod) const {
+                                             const Spread spread, const Real gearing, const Time accrualPeriod) const {
     Size numPeriods = accrualFractions.size();
     auto incSpread = RandomVariable(x.size(), includeSpread ? spread : 0.0);
     auto excSpread = includeSpread ? 0.0 : spread;
@@ -665,17 +650,16 @@ RandomVariable LgmVectorised::subPeriodsRate(const QuantLib::ext::shared_ptr<Int
         accumulatedRate = RandomVariable(x.size(), 0.0);
         for (Size i = 0; i < numPeriods; ++i) {
             RandomVariable indexFixing = fixing(index, fixingDates[i], t, x);
-            accumulatedRate += (indexFixing + incSpread) * RandomVariable(x.size(), accrualFractions[i]);
+            accumulatedRate += (indexFixing + incSpread) * accrualFractions[i];
         }
-        rate = RandomVariable(x.size(), gearing / accrualPeriod + excSpread) * accumulatedRate;
+        rate = (gearing / accrualPeriod + excSpread) * accumulatedRate;
     } else if (type == SubPeriodsCoupon1::Compounding) {
         accumulatedRate = RandomVariable(x.size(), 1.0);
         for (Size i = 0; i < numPeriods; ++i) {
             RandomVariable indexFixing = fixing(index, fixingDates[i], t, x);
-            accumulatedRate *= (RandomVariable(x.size(), 1.0) + (indexFixing + incSpread) * RandomVariable(x.size(), accrualFractions[i]));
+            accumulatedRate *= 1.0 + (indexFixing + incSpread) * accrualFractions[i];
         }
-        rate = RandomVariable(x.size(), gearing / accrualPeriod + excSpread) *
-               (accumulatedRate - RandomVariable(x.size(), 1.0));
+        rate = (gearing / accrualPeriod + excSpread) * (accumulatedRate - 1.0);
     } else {
         QL_FAIL("LgmVectorised::subPeriodsRate(): Invalid sub-period coupon type");
     }
