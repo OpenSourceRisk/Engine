@@ -171,8 +171,8 @@ struct RandomVariable {
     explicit RandomVariable(const std::vector<double>& data, const Real time = Null<Real>());
     // interop with ql classes
     explicit RandomVariable(const QuantLib::Array& data, const Real time = Null<Real>());
+    explicit operator Array() const;
     void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
-    void copyToArray(QuantLib::Array& array) const;
     // modifiers
     void clear();
     void set(const Size i, const Real v);
@@ -199,7 +199,11 @@ struct RandomVariable {
     friend RandomVariable operator+(RandomVariable, const RandomVariable&);
     friend RandomVariable operator-(RandomVariable, const RandomVariable&);
     friend RandomVariable operator*(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator*(Real, RandomVariable);
+    friend RandomVariable operator*(RandomVariable, Real);
     friend RandomVariable operator/(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator/(Real, RandomVariable);
+    friend RandomVariable operator/(RandomVariable, Real);
     friend RandomVariable max(RandomVariable, const RandomVariable&);
     friend RandomVariable min(RandomVariable, const RandomVariable&);
     friend RandomVariable pow(RandomVariable, const RandomVariable&);
@@ -268,7 +272,11 @@ bool operator!=(const RandomVariable& a, const RandomVariable& b);
 RandomVariable operator+(RandomVariable, const RandomVariable&);
 RandomVariable operator-(RandomVariable, const RandomVariable&);
 RandomVariable operator*(RandomVariable, const RandomVariable&);
+RandomVariable operator*(Real, RandomVariable);
+RandomVariable operator*(RandomVariable, Real);
 RandomVariable operator/(RandomVariable, const RandomVariable&);
+RandomVariable operator/(Real, RandomVariable);
+RandomVariable operator/(RandomVariable, Real);
 RandomVariable max(RandomVariable, const RandomVariable&);
 RandomVariable min(RandomVariable, const RandomVariable&);
 RandomVariable pow(RandomVariable, const RandomVariable&);
