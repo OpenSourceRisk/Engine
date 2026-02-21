@@ -203,6 +203,15 @@ void XvaEngineCG::buildCam() {
         irIndices.push_back(std::make_pair(ind, *simMarket_->iborIndex(ind)));
     }
 
+    for (auto const& [ind, dsc] : simMarketData_->swapIndices()) {
+        irIndices.push_back(std::make_pair(ind, *simMarket_->swapIndex(ind)));
+        if (std::find_if(irIndices.begin(), irIndices.end(),
+                         [&dsc](const std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>& p) {
+                             return p.first == dsc;
+                         }) == irIndices.end())
+            irIndices.push_back(std::make_pair(dsc, *simMarket_->iborIndex(dsc)));
+    }
+
     // note: - these must be fine enough for Euler, e.g. weekly over the whole simulation period
 
     valuationDates_ = scenarioGeneratorData_->getGrid()->valuationDates();
