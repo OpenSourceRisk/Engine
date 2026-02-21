@@ -396,8 +396,7 @@ Real Heston::extractT0Result(const RandomVariable& value) const {
     // following FdmHestonSolver/Fdm2DimSolver here
     
     // a) convert result values into a matrix
-    Array res(r.size());
-    r.copyToArray(res);
+    Array res = static_cast<Array>(r);
     Matrix resultValues(mesher_->layout()->dim()[1], mesher_->layout()->dim()[0]);
     std::copy(res.begin(), res.end(), resultValues.begin());
 
