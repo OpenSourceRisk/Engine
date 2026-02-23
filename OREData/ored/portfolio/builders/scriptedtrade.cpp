@@ -1697,8 +1697,10 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
                 calibrationStrike = QuantLib::ext::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
             }
             std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> calInstr;
+            DLOG("building calibration basket for inflation index '" << modelInfIndices_[i].first);
             for (auto const& d : calibrationDates){
-                Date effectiveFixingDate = d - simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+                auto simLag =  simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+                Date effectiveFixingDate = d - simLag;
                 auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
                 Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
                 DLOG("processing calibration date " << d << " for inflation index '" << modelInfIndices_[i].first << "'"
