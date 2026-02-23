@@ -498,7 +498,8 @@ Date optionMaturity(const boost::variant<Date, Period>& maturity, const QuantLib
 Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
                             const boost::shared_ptr<QuantLib::ZeroInflationIndex>& inflationIndex,
                             const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& volSurface,
-                            const QuantLib::Date& maturityDate) {
+                            const QuantLib::Date& maturityDate,
+                            const bool dontCalibrate) {
     if (auto abs = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
         return abs->strike();
     } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
@@ -506,8 +507,10 @@ Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
                    "only atm forward allowed as atm strike for cpi cap floors");
         auto forwardCPI = ZeroInflation::cpiFixing(inflationIndex, maturityDate, volSurface->observationLag(),
                                                    volSurface->indexIsInterpolated());
-        auto baseFixing = ZeroInflation::cpiFixing(inflationIndex, volSurface->referenceDate(), volSurface->observationLag(),
-                                                   volSurface->indexIsInterpolated());
+        auto baseFixing =
+            dontCalibrate ? 100.
+                          : ZeroInflation::cpiFixing(inflationIndex, volSurface->referenceDate(),
+                                                     volSurface->observationLag(), volSurface->indexIsInterpolated());
         auto growth = forwardCPI / baseFixing;
         auto fixingDate = ZeroInflation::fixingDate(
             maturityDate, volSurface->observationLag(), volSurface->frequency(), volSurface->indexIsInterpolated());

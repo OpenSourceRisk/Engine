@@ -213,7 +213,7 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
     QL_REQUIRE(cf,
                "InfDkBuilder::optionStrike(" << j << "): expected CpiCapFloor calibration instruments, could not cast");
     Date maturity = optionMaturityDate(j);
-    return cpiCapFloorStrikeValue(cf->strike(), inflationIndex_, infVol_, maturity);
+    return cpiCapFloorStrikeValue(cf->strike(), inflationIndex_, infVol_, maturity, dontCalibrate_);
 }
 
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
@@ -313,6 +313,9 @@ void InfDkBuilder::buildCapFloorBasket() const {
     Date startDate = Settings::instance().evaluationDate();
     bool useInterpolatedCPIFixings = infVol_->indexIsInterpolated();
     Real baseCPI = dontCalibrate_ ? 100. : ZeroInflation::cpiFixing(inflationIndex_, startDate, lag, useInterpolatedCPIFixings);
+    DLOG("Base CPI for " << data_->index() << " is " << baseCPI << " at base date " << io::iso_date(baseDate)
+                         << " with observation lag of " << lag << " and useInterpolatedCPIFixings = "
+                         << useInterpolatedCPIFixings << " and dontCalibrate = " << dontCalibrate_);
     Real nominal = 1.0;
     vector<Time> expiryTimes;
     DLOG("DkBuilder: building option basket for " << data_->index() << " with base CPI " << baseDate << " value " << baseCPI);
@@ -328,6 +331,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
             DLOG("Skipping calibration instrument with expiry " << expiryDate << " since fixing date " << fixingDate << " is before or equal to base date " << baseDate);
             continue;
         }
+        DLOG("Processing calibration instrument with expiry " << expiryDate << " and fixing date " << fixingDate);
         // check if we want to keep the helper when a reference calibration grid is given
         auto refCalDate =
             std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
