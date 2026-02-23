@@ -1701,6 +1701,14 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
                 Date effectiveFixingDate = d - simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
                 auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
                 Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
+                DLOG("processing calibration date " << d << " for inflation index '" << modelInfIndices_[i].first << "'"
+                     << " with simulationLag (days) " << simLag << ", effective fixing date " << effectiveFixingDate << " and maturity " << maturity);
+                if (maturity < referenceDate) {
+                    DLOG("skipping calibration instrument for inflation index '" << modelInfIndices_[i].first
+                         << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate
+                         << " (maturity " << maturity << ") since maturity is before reference date");
+                    continue;
+                }
                 DLOG("adding calibration instrument for inflation index '" << modelInfIndices_[i].first
                      << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate << " (maturity " << maturity
                      << ") and strike " << calibrationStrike->toString());
