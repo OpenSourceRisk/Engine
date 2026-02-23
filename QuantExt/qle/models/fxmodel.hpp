@@ -31,7 +31,7 @@ namespace QuantExt {
 
 class FxModel : public LinkableCalibratedModel {
 public:
-    enum class Discretization { Euler, PC };
+    enum class Discretization { Euler, PC, Exact, ExactGlobal };
 
     /*! parametrization (as base class) */
     virtual const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const = 0;

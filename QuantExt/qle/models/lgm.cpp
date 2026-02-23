@@ -59,7 +59,7 @@ Size LinearGaussMarkovModel::n() const { return 1; }
 Size LinearGaussMarkovModel::m() const { return 1; }
 Size LinearGaussMarkovModel::n_aux() const { return evaluateBankAccount_ && measure_ == Measure::BA ? 1 : 0; }
 Size LinearGaussMarkovModel::m_aux() const {
-    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? 1 : 0;
+    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::ExactGlobal ? 1 : 0;
 }
 
 Array LinearGaussMarkovModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const {

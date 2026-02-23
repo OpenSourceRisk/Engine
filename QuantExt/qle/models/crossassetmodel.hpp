@@ -713,7 +713,9 @@ inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, 
     QL_FAIL("model at " << i << " is not CR-*");
 }
 
-std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& type);
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& v);
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::ModelType& v);
+std::ostream& operator<<(std::ostream& out, const CrossAssetModel::Discretization& v);
 
 } // namespace QuantExt
 

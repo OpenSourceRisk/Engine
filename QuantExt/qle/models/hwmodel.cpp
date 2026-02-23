@@ -80,9 +80,7 @@ void HwModel::generateArguments() { update(); }
 Size HwModel::n() const { return parametrization_->n(); }
 Size HwModel::m() const { return parametrization_->m(); }
 Size HwModel::n_aux() const { return evaluateBankAccount_ && measure_ == Measure::BA ? n() : 0; }
-Size HwModel::m_aux() const {
-    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? m() : 0;
-}
+Size HwModel::m_aux() const { return 0.0; }
 
 void HwModel::calibrateVolatilitiesIterativeStatisticalWithRiskNeutralVolatility(
     const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,

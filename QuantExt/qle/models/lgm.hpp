@@ -45,7 +45,7 @@ using namespace QuantLib;
 */
 class LinearGaussMarkovModel : public IrModel {
 public:
-    enum class Discretization { Euler, Exact };
+    enum class Discretization { Euler, Exact, ExactGlobal };
 
     LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization,
                            const Measure measure = Measure::LGM, const Discretization = Discretization::Euler,
