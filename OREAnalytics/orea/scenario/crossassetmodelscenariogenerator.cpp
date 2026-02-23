@@ -585,7 +585,7 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
             // Populate the zero inflation scenario values based on the current date and state.
             for (Size k = 0; k < ten_zinf_[j].size(); k++) {
                 auto index = *initMarket_->zeroInflationIndex(model_->inf(idx)->name());
-                auto obsLag = 3 * Months;
+                auto obsLag = ts->observationLag();
                 auto zeroRate =
                     scenarioInflationZeroRateFromModelTs(dates_[i], ten_zinf_[j][k], obsLag, index, ts, modelType, dc);
                 scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], zeroRate);

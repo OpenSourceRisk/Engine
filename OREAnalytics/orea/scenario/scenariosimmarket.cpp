@@ -145,21 +145,6 @@ void processException(const std::exception& e, const std::string& curveId = "",
     }
 }
 
-QuantLib::ext::shared_ptr<InflationSwapConvention>
-getInflationSwapConvention(const CurveConfigurations& curveConfigs, const std::string& curveId,
-                           InflationCurveConfig::Type type) {
-    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    auto curveConfig = QuantLib::ext::dynamic_pointer_cast<InflationCurveConfig>(
-        curveConfigs.findInflationCurveConfig(curveId, type));
-    QL_REQUIRE(curveConfig, "no inflation curve config found for " << curveId);
-    QL_REQUIRE(!curveConfig->segments().empty(), "no inflation curve segments configured for " << curveId);
-    const string& conventionId = curveConfig->segments().front().convention();
-    QuantLib::ext::shared_ptr<InflationSwapConvention> conv =
-        QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(conventionId));
-    QL_REQUIRE(conv, "no inflation swap convention found for id " << conventionId);
-    return conv;
-}
-
 template <typename TimeInterpolator>
 bool createSabrAdapter(RelinkableHandle<OptionletVolatilityStructure> hCapletVol, 
                        QuantLib::ext::shared_ptr<QuantLib::StrippedOptionlet> optionlet,
@@ -2442,15 +2427,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         DLOG("building " << name << " zero inflation curve");
 
-                        QuantLib::ext::shared_ptr<InflationSwapConvention> conv =
-                            getInflationSwapConvention(curveConfigs, name, InflationCurveConfig::Type::ZC);
 
                         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(name, configuration);
                         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
                         vector<string> keys(parameters->zeroInflationTenors(name).size());
 
-                        Period obsLag = conv->observationLag();
-                        Date date0 = asof_ - obsLag;
+                        Date date0 = asof_ - inflationTs->observationLag();
                         DayCounter dc = inflationTs->dayCounter();
                         vector<Date> quoteDates;
                         vector<Time> zeroCurveTimes(
@@ -2468,7 +2450,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < zeroCurveTimes.size(); i++) {
-                            Date obsDate = inflationPeriod(quoteDates[i - 1] - obsLag, inflationTs->frequency()).first;
+                            Date obsDate = inflationPeriod(quoteDates[i - 1] - inflationTs->observationLag(), inflationTs->frequency()).first;
                             Real rate = inflationTs->zeroRate(obsDate);
                             if (inflationTs->hasSeasonality()) {
                                 rate = inflationTs->seasonality()->deseasonalisedZeroRate(obsDate,                                 
@@ -2507,7 +2489,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             vector<Period> tenors(1, 0 * Days); 
                             tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(), parameters->zeroInflationTenors(name).end());
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
-                                0, inflationIndex->fixingCalendar(), dc, simLag, obsLag,
+                                0, inflationIndex->fixingCalendar(), dc, simLag, inflationTs->observationLag(),
                                 inflationTs->frequency(), false, tenors, quotes,
                                 inflationTs->seasonality());
                         }
