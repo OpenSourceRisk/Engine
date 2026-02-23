@@ -505,18 +505,27 @@ Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
     } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
-        auto forwardCPI = ZeroInflation::cpiFixing(inflationIndex, maturityDate, volSurface->observationLag(),
-                                                   volSurface->indexIsInterpolated());
+        DLOG("Calculating forward strike for CPI cap floor with maturity " << maturityDate << " and observation lag "
+              << volSurface->observationLag() << " and index interpolation " << volSurface->indexIsInterpolated());
+        auto zits = inflationIndex->zeroInflationTermStructure();
+        auto fixingDate = ZeroInflation::fixingDate(
+            maturityDate, volSurface->observationLag(), volSurface->frequency(), volSurface->indexIsInterpolated());
+
+        auto forwardCPI = dontCalibrate
+                              ? 100 * std::pow(1 + zits->zeroRate(maturityDate - volSurface->observationLag()),
+                                               zits->dayCounter().yearFraction(zits->baseDate(), fixingDate))
+                              : ZeroInflation::cpiFixing(inflationIndex, maturityDate, volSurface->observationLag(),
+                                                         volSurface->indexIsInterpolated());
+        DLOG("Forward CPI is " << forwardCPI);
         auto baseFixing =
             dontCalibrate ? 100.
                           : ZeroInflation::cpiFixing(inflationIndex, volSurface->referenceDate(),
                                                      volSurface->observationLag(), volSurface->indexIsInterpolated());
+        DLOG("Base CPI fixing is " << baseFixing);
         auto growth = forwardCPI / baseFixing;
-        auto fixingDate = ZeroInflation::fixingDate(
-            maturityDate, volSurface->observationLag(), volSurface->frequency(), volSurface->indexIsInterpolated());
         auto baseDate = ZeroInflation::fixingDate(volSurface->referenceDate(), volSurface->observationLag(), volSurface->frequency(),
                                         volSurface->indexIsInterpolated());
-        auto ttm = inflationIndex->zeroInflationTermStructure()->dayCounter().yearFraction(baseDate, fixingDate);
+        auto ttm = zits->dayCounter().yearFraction(baseDate, fixingDate);
         auto strike = std::pow(growth, 1.0 / ttm) - 1.0;
         return strike;
     } else {
