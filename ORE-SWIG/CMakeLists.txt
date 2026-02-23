@@ -2,7 +2,7 @@ find_package(SWIG REQUIRED)
 find_package(Python REQUIRED COMPONENTS Development)
 
 # Load the UseSWIG module from the cmake installation
-include(${SWIG_USE_FILE})
+include(UseSWIG)
 
 # Path to the top level .i file.
 set(OREA_SWIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/OREAnalytics-SWIG/SWIG/oreanalytics.i)
