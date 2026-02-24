@@ -50,6 +50,32 @@ struct ScopedTimer {
     }
 };
 
+// ---------------------------------------------------------------------------
+// Zero-allocation helpers that walk a raw char pointer and parse comma-
+// separated unsigned integers / doubles without any heap allocation.
+// After a successful parse `p` is advanced past the parsed token AND
+// the following comma (if present).  Returns true on success.
+// ---------------------------------------------------------------------------
+inline bool fast_parse_size(const char*& p, const char* end, Size& out) {
+    auto [ptr, ec] = std::from_chars(p, end, out);
+    if (ec != std::errc{})
+        return false;
+    p = ptr;
+    if (p != end && *p == ',')
+        ++p;
+    return true;
+}
+
+inline bool fast_parse_double(const char*& p, const char* end, double& out) {
+    auto [ptr, ec] = std::from_chars(p, end, out);
+    if (ec != std::errc{})
+        return false;
+    p = ptr;
+    if (p != end && *p == ',')
+        ++p;
+    return true;
+}
+
 bool use_compression(const std::string& filename) {
 #ifdef ORE_USE_ZLIB
     // assume compression for all filenames that do not end with csv or txt
@@ -152,21 +178,20 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
     }
     result->setCube(cube);
 
-    vector<string> tokens;
     Size nData = 0;
     while (!in.eof()) {
         std::getline(in, line);
         if (line.empty())
             continue;
-        boost::split(tokens, line, [](char c) { return c == ','; });
-        QL_REQUIRE(tokens.size() == 5, "loadCube(): invalid data line '" << line << "', expected 5 tokens");
+        // Zero-allocation fast parse: walk the raw string without splitting
+        const char* p   = line.data();
+        const char* end = p + line.size();
         Size id = 0, date = 0, sample = 0, depth = 0;
         double value = 0.0;
-        std::from_chars(tokens[0].data(), tokens[0].data() + tokens[0].size(), id);
-        std::from_chars(tokens[1].data(), tokens[1].data() + tokens[1].size(), date);
-        std::from_chars(tokens[2].data(), tokens[2].data() + tokens[2].size(), sample);
-        std::from_chars(tokens[3].data(), tokens[3].data() + tokens[3].size(), depth);
-        std::from_chars(tokens[4].data(), tokens[4].data() + tokens[4].size(), value);
+        QL_REQUIRE(fast_parse_size(p, end, id) && fast_parse_size(p, end, date) &&
+                       fast_parse_size(p, end, sample) && fast_parse_size(p, end, depth) &&
+                       fast_parse_double(p, end, value),
+                   "loadCube(): invalid data line '" << line << "'");
         if (date == 0)
             cube->setT0(value, id, depth);
         else
@@ -291,19 +316,20 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
     std::getline(in, line);
     Size dimSamples = ore::data::parseInteger(getMetaData(line, "dimSamples"));
 
-    vector<string> tokens;
-
     std::getline(in, line);
     Size numKeys = ore::data::parseInteger(getMetaData(line, "keys"));
     std::vector<std::pair<AggregationScenarioDataType, std::string>> keys;
     for (Size i = 0; i < numKeys; ++i) {
         std::getline(in, line);
-        boost::split(tokens, line.substr(2), [](char c) { return c == ','; });
-        QL_REQUIRE(tokens.size() == 2,
-                   "loadAggregationScenarioData(): invalid data line '" << line << "', expected 2 tokens");
+        // Format: "# <keyType>,<keyName>"
+        QL_REQUIRE(line.size() >= 2 && line[0] == '#' && line[1] == ' ',
+                   "loadAggregationScenarioData(): invalid key line '" << line << "'");
+        const char* p   = line.data() + 2;
+        const char* end = line.data() + line.size();
         Size keyType = 0;
-        std::from_chars(tokens[0].data(), tokens[0].data() + tokens[0].size(), keyType);
-        keys.push_back(std::make_pair(AggregationScenarioDataType(keyType), tokens[1]));
+        QL_REQUIRE(fast_parse_size(p, end, keyType),
+                   "loadAggregationScenarioData(): invalid key type in line '" << line << "'");
+        keys.push_back(std::make_pair(AggregationScenarioDataType(keyType), std::string(p, end)));
     }
 
     std::getline(in, line); // header line for data
@@ -318,15 +344,14 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
         std::getline(in, line);
         if (line.empty())
             continue;
-        boost::split(tokens, line, [](char c) { return c == ','; });
-        QL_REQUIRE(tokens.size() == 4,
-                   "loadAggregationScenarioData(): invalid data line '" << line << "', expected 4 tokens");
+        // Zero-allocation fast parse
+        const char* p   = line.data();
+        const char* end = p + line.size();
         Size date = 0, sample = 0, key = 0;
         double value = 0.0;
-        std::from_chars(tokens[0].data(), tokens[0].data() + tokens[0].size(), date);
-        std::from_chars(tokens[1].data(), tokens[1].data() + tokens[1].size(), sample);
-        std::from_chars(tokens[2].data(), tokens[2].data() + tokens[2].size(), key);
-        std::from_chars(tokens[3].data(), tokens[3].data() + tokens[3].size(), value);
+        QL_REQUIRE(fast_parse_size(p, end, date) && fast_parse_size(p, end, sample) &&
+                       fast_parse_size(p, end, key) && fast_parse_double(p, end, value),
+                   "loadAggregationScenarioData(): invalid data line '" << line << "'");
         QL_REQUIRE(key < keys.size(), "loadAggregationScenarioData(): invalid data line '" << line << "', key (" << key
                                                                                            << ") is out of range 0..."
                                                                                            << (keys.size() - 1));
