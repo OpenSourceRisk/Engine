@@ -29,8 +29,7 @@
 
 % Document metadata
 \title{Inflation Simulation in ORE}
-\author{Matthias Groncki}
-\date{2025-02-09}
+\date{2026-02-09}
 
 \begin{document}
 
@@ -58,7 +57,7 @@ Before discussing simulation, we establish the t=0 market curve conventions that
 
 \item \textbf{Published fixings:} CPI indices publish one fixing per calendar month, always assigned to the \textbf{first day of the month} (the start of the inflation period). There are no intra-month fixings. Forward CPI are flat throughout the month.
 
-\item \textbf{Flat forward rule:} Between published fixings (within a calendar month), forward CPI values remain \textbf{constant}—the forward CPI for any date within month M equals the forward CPI for the 1st of month M.
+\item \textbf{Flat forward rule:} Between published fixings (within a calendar month), forward CPI values remain \textbf{constant} -- the forward CPI for any date within month M equals the forward CPI for the 1st of month M.
 
 \item \textbf{Interpolation:} When instruments require interpolated CPI (e.g., \code{CPI::Linear} interpolation), the interpolation is performed \textbf{by the instrument/index} between the two monthly fixings that bracket the observation date. The interpolation uses the current calendar date within the month (not lagged time).
 \end{itemize}
@@ -116,7 +115,7 @@ Time axis (calendar dates):
   |------|------|------|---------- ... ----------|------|------|------|
   Nov    Dec    Jan    Feb                       Nov    Dec    Jan    Feb
   2025   2025   2026   2026                      2027   2027   2028   2028
-  ↑      ↑             ↑                         ↑                    ↑
+  ^      ^             ^                         ^                    ^
 baseDate baseDate      today                     t_obs              maturity (T)
 _ZCIS   _curve         (reference                (ZCIIS              (payment date)
          (curve         date)                     observation)
@@ -127,7 +126,7 @@ _ZCIS   _curve         (reference                (ZCIIS              (payment da
   <-------obsLag------->                          <-------obsLag------->
            = 3M                                            = 3M
          <--simLag----->
-           ≈ 2M + 8d
+           ~ 2M + 8d
 \end{verbatim}
 
 \noindent\textbf{Curve anchor:}  
@@ -199,7 +198,7 @@ This gives us the seasonality adjusted zero rate $z$:
 
 \subsubsection{Seasonality and the Simulation Drift}
 
-Because seasonality is \textbf{deterministic}, it does not need to be included in the stochastic simulation. The model simulates only the deseasonalised index $I(t)$; seasonality is applied afterwards — at the publishing stage — exactly as it is at $t=0$. This means:
+Because seasonality is \textbf{deterministic}, it does not need to be included in the stochastic simulation. The model simulates only the deseasonalised index $I(t)$; seasonality is applied afterwards -- at the publishing stage -- exactly as it is at $t=0$. This means:
 
 \begin{itemize}
 \item The model drift is computed using the \textbf{deseasonalised} zero-inflation curve (i.e. after stripping seasonality). The stochastic dynamics and drift corrections (e.g. the JY real-rate/index cross-terms) operate on smooth, deseasonalised quantities only.
@@ -245,7 +244,7 @@ When we simulate to calendar date $S$, the model time is simply:
 t_S = S - \text{simLag}
 \end{equation}
 
-and the model implies the deseasonalised CPI $I(t_S)$ at calendar date $S$—in continuous time, \textbf{not discretized} to the inflation periods.
+and the model implies the deseasonalised CPI $I(t_S)$ at calendar date $S$ -- in continuous time, \textbf{not discretized} to the inflation periods.
 
 We keep the simulation lag constant throughout the simulation.
 
