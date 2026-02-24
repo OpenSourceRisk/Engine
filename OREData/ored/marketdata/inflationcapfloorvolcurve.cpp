@@ -69,11 +69,9 @@ std::pair<Date, bool> getStartDateAndIsInterpolated(
 CPI::InterpolationType getObservationInterpolation(
     const QuantLib::ext::shared_ptr<ore::data::InflationCapFloorVolatilityCurveConfig>& config) {
     auto [_, interpolated] = getStartDateAndIsInterpolated(Settings::instance().evaluationDate(), config);
-    // If the convention is not interpolated, return AsIndex, it will defualt to flat, once the index interpolation
-    // method is fully deprecated in QL.
+    // If the convention is not interpolated, return AsIndex, it will defualt to flat
     return interpolated ? CPI::Linear : CPI::AsIndex;
 }
-
 
 } // namespace
 
@@ -86,15 +84,12 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
             curveConfigs.inflationCapFloorVolCurveConfig(spec.curveConfigID());
 
         auto it = yieldCurves.find(config->yieldTermStructure());
-        if (it != yieldCurves.end()) {
-            discountCurve_ = it->second->handle(config->yieldTermStructure());
-        } else {
-            QL_FAIL("The yield term structure, " << config->yieldTermStructure()
-                                                 << ", required in the building "
-                                                    "of the curve, "
-                                                 << spec.name() << ", was not found.");
-        }
+        QL_REQUIRE(it != yieldCurves.end(), "The yield term structure, " << config->yieldTermStructure()
+                                                                         << ", required in the building "
+                                                                            "of the curve, "
+                                                                         << spec.name() << ", was not found.");
 
+        discountCurve_ = it->second->handle(config->yieldTermStructure());
         switch (config->quoteType()) {
         case InflationCapFloorVolatilityCurveConfig::QuoteType::Price:
             buildFromPrices(asof, spec, loader, config, yieldCurves, inflationCurves);
@@ -278,11 +273,9 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                 true, Handle<YoYInflationTermStructure>(yyTs));
         }
 
-        auto observationInterpolation = getObservationInterpolation(config);
-
         YoYPriceSurfaceFromVolatilities volToPriceConverter;
 
-        auto priceSurface = volToPriceConverter(capVol, index, observationInterpolation,
+        auto priceSurface = volToPriceConverter(capVol, index, getObservationInterpolation(config),
                                                 discountCurve_, quoteVolatilityType, 0.0);
 
         // Get configuration values for bootstrap
@@ -578,15 +571,12 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                 parseZeroInflationIndex(config->index(), Handle<ZeroInflationTermStructure>(zeroTs)),
                 true, Handle<YoYInflationTermStructure>());
         }
-        const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        
-        auto observationInterpolation = getObservationInterpolation(config);
         // Build the term structure
         QuantLib::ext::shared_ptr<
             QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>
             yoySurface = QuantLib::ext::make_shared<
                 QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
-                0, config->observationLag(), index, observationInterpolation, discountCurve_,
+                0, config->observationLag(), index, getObservationInterpolation(config), discountCurve_,
                 config->dayCounter(), config->calendar(), config->businessDayConvention(), capStrikes, floorStrikes,
                 terms, cPrice, fPrice);
 
