@@ -51,7 +51,7 @@ Array FxLvModel::marginalStep(const Time t0, const Array& x0, const Time dt, con
 
         Real sigma2 = parametrization_->sigma(t0 + dt, p[0]);
 
-        Real h = x0[0] * 1.0001;
+        Real h = x0[0] * 0.0001;
         Real dsigmadp = (parametrization_->sigma(t0, x0[0] + h) - sigma) / h;
         Real dsigma2dp = (parametrization_->sigma(t0 + dt, p[0] + h) - sigma2) / h;
 
