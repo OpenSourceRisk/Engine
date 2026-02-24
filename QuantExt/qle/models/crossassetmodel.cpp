@@ -569,30 +569,6 @@ void CrossAssetModel::initializeParametrizations() {
     }
     components_[(Size)CrossAssetModel::AssetType::INF] = j;
 
-    // Cr parametrizations
-
-    j = 0;
-    while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::CR) {
-
-        if (getComponentType(i).second == CrossAssetModel::ModelType::CIRPP) {
-            auto tmp = QuantLib::ext::dynamic_pointer_cast<CrCirppParametrization>(p_[i]);
-            QL_REQUIRE(tmp, "CrossAssetModelPlus::initializeParametrizations(): expected CrCirppParametrization");
-            crcirppModel_.push_back(QuantLib::ext::make_shared<CrCirpp>(tmp));
-        } else
-            crcirppModel_.push_back(QuantLib::ext::shared_ptr<CrCirpp>());
-
-        updateIndices(CrossAssetModel::AssetType::CR, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
-        cIdxTmp += getNumberOfBrownians(i);
-        wIdxTmp += getNumberOfBrownians(i) + getNumberOfAuxBrownians(i);
-        pIdxTmp += getNumberOfStateVariables(i);
-        aIdxTmp += getNumberOfParameters(i);
-        ++j;
-        ++i;
-        // we do not check the currency, if not present among the model's
-        // currencies, it will throw below
-    }
-    components_[(Size)CrossAssetModel::AssetType::CR] = j;
-
     // Eq parametrizations
 
     j = 0;
@@ -618,6 +594,30 @@ void CrossAssetModel::initializeParametrizations() {
             QL_FAIL("Invalid currency (" << eqCcy.code() << ") for equity " << eqbs(i)->name());
         }
     }
+
+    // Cr parametrizations
+
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == CrossAssetModel::AssetType::CR) {
+
+        if (getComponentType(i).second == CrossAssetModel::ModelType::CIRPP) {
+            auto tmp = QuantLib::ext::dynamic_pointer_cast<CrCirppParametrization>(p_[i]);
+            QL_REQUIRE(tmp, "CrossAssetModelPlus::initializeParametrizations(): expected CrCirppParametrization");
+            crcirppModel_.push_back(QuantLib::ext::make_shared<CrCirpp>(tmp));
+        } else
+            crcirppModel_.push_back(QuantLib::ext::shared_ptr<CrCirpp>());
+
+        updateIndices(CrossAssetModel::AssetType::CR, i, cIdxTmp, wIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        wIdxTmp += getNumberOfBrownians(i) + getNumberOfAuxBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
+        ++i;
+        // we do not check the currency, if not present among the model's
+        // currencies, it will throw below
+    }
+    components_[(Size)CrossAssetModel::AssetType::CR] = j;
 
     // COM parametrizations
 
