@@ -1047,7 +1047,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
         XvaEngineCG engine(
             xvaVars->amcCg_, inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
-            xvaVars->amcCgPricingEngine_, xvaVars->crossAssetModelData_, xvaVars->scenarioGeneratorData_,
+            xvaVars->amcCgPricingEngine_, analytic()->configurations().crossAssetModelData,
+            analytic()->configurations().scenarioGeneratorData,
             amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
             xvaVars->xvaCgSensiScenarioData_, inputs_->refDataManager(), inputs_->iborFallbackConfig(),
             xvaVars->xvaCgBumpSensis_, xvaVars->xvaCgDynamicIM_, xvaVars->xvaCgDynamicIMStepSize_,
@@ -1080,13 +1081,13 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
         if (inputs_->nThreads() == 1) {
             initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
             ext::shared_ptr<ore::data::Market> market =
-                offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
+                !offsetScenario_ ? analytic()->market() : offsetSimMarket_;
 
             AMCValuationEngine amcEngine(
-                model_, xvaVars->scenarioGeneratorData_, market,
-                xvaVars->exposureSimMarketParams_->additionalScenarioDataIndices(),
-                xvaVars->exposureSimMarketParams_->additionalScenarioDataCcys(),
-                xvaVars->exposureSimMarketParams_->additionalScenarioDataNumberOfCreditStates(),
+                model_, analytic()->configurations().scenarioGeneratorData, market,
+                analytic()->configurations().simMarketParams->additionalScenarioDataIndices(),
+                analytic()->configurations().simMarketParams->additionalScenarioDataCcys(),
+                analytic()->configurations().simMarketParams->additionalScenarioDataNumberOfCreditStates(),
                 xvaVars->amcPathDataInput_, xvaVars->amcPathDataOutput_, xvaVars->amcIndividualTrainingInput_,
                 xvaVars->amcIndividualTrainingOutput_);
             amcEngine.registerProgressIndicator(progressBar);
@@ -1106,14 +1107,16 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun, bool continueOnCalibrationError,
             };
 
             auto simMarketParams =
-                offsetScenario_ == nullptr ? analytic()->configurations().simMarketParams : offsetSimMarketParams_;
+                !offsetScenario_ ? analytic()->configurations().simMarketParams : offsetSimMarketParams_;
 
             AMCValuationEngine amcEngine(
-                inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(), xvaVars->scenarioGeneratorData_,
-                xvaVars->exposureSimMarketParams_->additionalScenarioDataIndices(),
-                xvaVars->exposureSimMarketParams_->additionalScenarioDataCcys(),
-                xvaVars->exposureSimMarketParams_->additionalScenarioDataNumberOfCreditStates(),
-                xvaVars->crossAssetModelData_, xvaVars->amcPricingEngine_, inputs_->curveConfigs().get(),
+                inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(),
+                analytic()->configurations().scenarioGeneratorData,
+                simMarketParams->additionalScenarioDataIndices(),
+                simMarketParams->additionalScenarioDataCcys(),
+                simMarketParams->additionalScenarioDataNumberOfCreditStates(),
+                analytic()->configurations().crossAssetModelData, xvaVars->amcPricingEngine_,
+                inputs_->curveConfigs().get(),
                 analytic()->configurations().todaysMarketParams, inputs_->marketConfig("lgmcalibration"),
                 inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
                 inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
