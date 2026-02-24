@@ -21,6 +21,7 @@
 
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -653,14 +654,6 @@ std::string scriptedIndexName(const QuantLib::ext::shared_ptr<Underlying>& under
     } else {
         QL_FAIL("underlying type '" << underlying->type() << "' not handled.");
     }
-}
-
-Size getInflationSimulationLag(const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index) {
-    // this is consistent with the lag computation in CrossAssetModel::infDki()
-    Date d1 = index->zeroInflationTermStructure()->baseDate();
-    Date d2 = index->zeroInflationTermStructure()->referenceDate();
-    d2 = inflationPeriod(d2, index->frequency()).first;
-    return d2 - d1;
 }
 
 std::map<std::string, std::vector<Real>>

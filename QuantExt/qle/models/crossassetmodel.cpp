@@ -122,7 +122,7 @@ CrossAssetModel::CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<IrM
 
 QuantLib::ext::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess() const {
     if (stateProcess_ == nullptr) {
-        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this());
+        stateProcess_ = QuantLib::ext::make_shared<CrossAssetStateProcess>(shared_from_this(), dayCounter());
     }
     return stateProcess_;
 }
@@ -956,6 +956,7 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
 }
 
 std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
+    
     QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
     Real V0, V_tilde;
     std::pair<Real, Real> Vs = infdkV(i, t, T);
@@ -967,11 +968,12 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     // TODO account for seasonality ...
     // compute final results depending on z and y
     const auto& zts = infdk(i)->termStructure();
-    auto dc = irlgm1f(0)->termStructure()->dayCounter();
-    bool indexIsInterpolated = true; // FIXME, though in line with the comment below
-    Real growth_t = inflationGrowth(zts, t, dc, indexIsInterpolated);
+    auto relevantDc = dayCounter();
+    QL_REQUIRE(relevantDc.has_value(), "internal error, daycounter should be available, contact dev");
+    bool indexIsInterpolated = true; // the model is continous so we need to compute time in a continous way
+    Real growth_t = inflationGrowth(zts, t, relevantDc, indexIsInterpolated);
     Real It = growth_t * std::exp(Hyt * z - y - V0);
-    Real Itilde_t_T = inflationGrowth(zts, T, dc, indexIsInterpolated) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
+    Real Itilde_t_T = inflationGrowth(zts, T, relevantDc, indexIsInterpolated) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
     // concerning interpolation there is an inaccuracy here: if the index
     // is not interpolated, we still simulate the index value as of t
     // (and T), although we should go back to t, T which corresponds to

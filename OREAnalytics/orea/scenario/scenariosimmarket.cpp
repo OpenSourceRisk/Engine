@@ -27,6 +27,8 @@
 #include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
 
+#include <ored/configuration/conventions.hpp>
+#include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
@@ -2379,29 +2381,28 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         DLOG("adding " << name << " base CPI price");
+
                         Handle<ZeroInflationIndex> zeroInflationIndex =
                             initMarket->zeroInflationIndex(name, configuration);
-                        Period obsLag = zeroInflationIndex->zeroInflationTermStructure()->observationLag();
-                        Date fixingDate = zeroInflationIndex->zeroInflationTermStructure()->baseDate();
+                        auto zits = zeroInflationIndex->zeroInflationTermStructure();
+                        int simLag = simulationLag(zits);
+                        Date fixingDate = zits->baseDate();
                         Real baseCPI = zeroInflationIndex->fixing(fixingDate);
-
-                        QuantLib::ext::shared_ptr<InflationIndex> inflationIndex =
-                            QuantLib::ext::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
 
                         auto q = QuantLib::ext::make_shared<SimpleQuote>(baseCPI);
                         if(useSpreadedTermStructures_) {
                             auto m = [baseCPI](Real x) { return x * baseCPI; };
                             Handle<InflationIndexObserver> inflObserver(
                                 QuantLib::ext::make_shared<InflationIndexObserver>(
-                                    inflationIndex,
+                                    zeroInflationIndex,
                                     Handle<Quote>(
                                         QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(Handle<Quote>(q), m)),
-                                    obsLag));
+                                    simLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         } else {
                             Handle<InflationIndexObserver> inflObserver(
-                                QuantLib::ext::make_shared<InflationIndexObserver>(inflationIndex, Handle<Quote>(q),
-                                                                                   obsLag));
+                                QuantLib::ext::make_shared<InflationIndexObserver>(zeroInflationIndex, Handle<Quote>(q),
+                                                                                   simLag));
                             baseCpis_.insert(make_pair(make_pair(Market::defaultConfiguration, name), inflObserver));
                         }
                         simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
@@ -2426,6 +2427,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         DLOG("building " << name << " zero inflation curve");
 
+
                         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(name, configuration);
                         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
                         vector<string> keys(parameters->zeroInflationTenors(name).size());
@@ -2448,10 +2450,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < zeroCurveTimes.size(); i++) {
-                            Real rate = inflationTs->zeroRate(quoteDates[i - 1], inflationTs->observationLag());
+                            Date obsDate = inflationPeriod(quoteDates[i - 1] - inflationTs->observationLag(), inflationTs->frequency()).first;
+                            Real rate = inflationTs->zeroRate(obsDate);
                             if (inflationTs->hasSeasonality()) {
-                                Date fixingDate = quoteDates[i - 1] - inflationTs->observationLag();
-                                rate = inflationTs->seasonality()->deseasonalisedZeroRate(fixingDate,                                 
+                                rate = inflationTs->seasonality()->deseasonalisedZeroRate(obsDate,                                 
                                     rate, *inflationTs.currentLink());
                             }
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
@@ -2482,9 +2484,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             zeroCurve =
                                 QuantLib::ext::make_shared<SpreadedZeroInflationCurve>(inflationTs, zeroCurveTimes, quotes);
                         } else {
+                            int simLag = simulationLag(inflationTs);
+                            // Quotes are build with first time to be (baseDate), need to 0 Days tenors here
+                            vector<Period> tenors(1, 0 * Days); 
+                            tenors.insert(tenors.end(), parameters->zeroInflationTenors(name).begin(), parameters->zeroInflationTenors(name).end());
                             zeroCurve = QuantLib::ext::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
-                                0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
-                                inflationTs->frequency(), false, zeroCurveTimes, quotes,
+                                0, inflationIndex->fixingCalendar(), dc, simLag, inflationTs->observationLag(),
+                                inflationTs->frequency(), false, tenors, quotes,
                                 inflationTs->seasonality());
                         }
 

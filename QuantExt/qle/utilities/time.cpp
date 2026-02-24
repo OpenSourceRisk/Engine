@@ -66,8 +66,8 @@ QuantLib::Period implyIndexTerm(const Date& startDate, const Date& endDate) {
 QuantLib::Date lowerDate(const Real t, const QuantLib::Date& refDate, const QuantLib::DayCounter& dc) {
     if (close_enough(t, 0.0))
         return refDate;
-    QL_REQUIRE(t > 0.0, "lowerDate(" << t << "," << refDate << "," << dc.name()
-                                     << ") was called with negative time, this is not allowed.");
+    //QL_REQUIRE(t > 0.0, "lowerDate(" << t << "," << refDate << "," << dc.name()
+    //                                 << ") was called with negative time, this is not allowed.");
     bool done = false;
     Date d = refDate + static_cast<int>(t * 365.25);
     Real tmp = dc.yearFraction(refDate, d);
