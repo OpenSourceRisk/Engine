@@ -36,13 +36,14 @@ namespace QuantExt {
 class SimpleMcLocalVolStochasticRatesCorrection : public QuantLib::LocalVolTermStructure, public QuantLib::LazyObject {
 public:
     /*! - the input model S should be linked to this local vol ts to facilitate the bootstrap of the correction
-        - min, max strike are given in log moneyness log K / F */
+        - min, max strike are given in std log moneyness ( log K / F ) / sigma_atm * sqrt(t) */
     SimpleMcLocalVolStochasticRatesCorrection(
-        QuantLib::Handle<QuantLib::LocalVolTermStructure> source, QuantLib::ext::shared_ptr<IrModel> r,
-        QuantLib::ext::shared_ptr<IrModel> q, QuantLib::ext::shared_ptr<FxModel> S,
-        QuantLib::Handle<QuantLib::YieldTermStructure> r0, QuantLib::Handle<QuantLib::YieldTermStructure> q0,
-        Matrix correlation_r_q_S, Real maxTime = 10.0, Real minStrike = -2.5, Real maxStrike = 2.5,
-        Size timeStepsPerYear = 24, Size nStrikes = 100, Size nPaths = 10000, Real d2CdK2Threshold = 0.01);
+        Handle<BlackVolTermStructure> blackVol, QuantLib::Handle<QuantLib::LocalVolTermStructure> source,
+        QuantLib::ext::shared_ptr<IrModel> r, QuantLib::ext::shared_ptr<IrModel> q,
+        QuantLib::ext::shared_ptr<FxModel> S, QuantLib::Handle<QuantLib::YieldTermStructure> r0,
+        QuantLib::Handle<QuantLib::YieldTermStructure> q0, Matrix correlation_r_q_S, Real maxTime = 10.0,
+        Real minStrike = -2.5, Real maxStrike = 2.5, Size timeStepsPerYear = 24, Size nStrikes = 100,
+        Size nPaths = 10000, Real d2CdK2Threshold = 0.01);
 
     Date maxDate() const override { return source_->maxDate(); }
     Real minStrike() const override { return source_->minStrike(); }
@@ -71,12 +72,15 @@ private:
     Size nStrikes_;
     Size nPaths_;
     Real d2CdK2Threshold_;
+    Handle<BlackVolTermStructure> blackVol_;
 
-    mutable Matrix correctionData_;
+    mutable bool applyCorrection_ = true;
     mutable TimeGrid timeGrid_;
     mutable std::vector<Real> logStrikes_;
+    mutable std::vector<Real> atmVarianceData_;
+    mutable Matrix correctionData_;
+    mutable std::unique_ptr<Interpolation> atmVariance_;
     mutable std::unique_ptr<Interpolation2D> correction_;
-    mutable bool applyCorrection_ = true;
 };
 
 } // namespace QuantExt

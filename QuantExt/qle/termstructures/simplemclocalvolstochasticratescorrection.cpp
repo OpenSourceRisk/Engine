@@ -19,6 +19,7 @@
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/termstructures/simplemclocalvolstochasticratescorrection.hpp>
 
+#include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
@@ -37,31 +38,39 @@ inline Array getProjectedArray(const Array& source, Size start, Size length) {
 namespace QuantExt {
 
 SimpleMcLocalVolStochasticRatesCorrection::SimpleMcLocalVolStochasticRatesCorrection(
-    QuantLib::Handle<QuantLib::LocalVolTermStructure> source, QuantLib::ext::shared_ptr<IrModel> r,
-    QuantLib::ext::shared_ptr<IrModel> q, QuantLib::ext::shared_ptr<FxModel> S,
+    Handle<BlackVolTermStructure> blackVol, QuantLib::Handle<QuantLib::LocalVolTermStructure> source,
+    QuantLib::ext::shared_ptr<IrModel> r, QuantLib::ext::shared_ptr<IrModel> q, QuantLib::ext::shared_ptr<FxModel> S,
     QuantLib::Handle<QuantLib::YieldTermStructure> r0, QuantLib::Handle<QuantLib::YieldTermStructure> q0,
     Matrix correlation_r_q_S, Real maxTime, Real minStrike, Real maxStrike, Size timeStepsPerYear, Size nStrikes,
     Size nPaths, Real d2CdK2Threshold)
-    : source_(std::move(source)), r_(std::move(r)), q_(std::move(q)), S_(std::move(S)), r0_(std::move(r0)),
-      q0_(std::move(q0)), correlation_r_q_S_(correlation_r_q_S), maxTime_(maxTime), minStrike_(minStrike),
-      maxStrike_(maxStrike), timeStepsPerYear_(timeStepsPerYear), nStrikes_(nStrikes), nPaths_(nPaths),
-      d2CdK2Threshold_(d2CdK2Threshold) {
+    : blackVol_(std::move(blackVol)), source_(std::move(source)), r_(std::move(r)), q_(std::move(q)), S_(std::move(S)),
+      r0_(std::move(r0)), q0_(std::move(q0)), correlation_r_q_S_(correlation_r_q_S), maxTime_(maxTime),
+      minStrike_(minStrike), maxStrike_(maxStrike), timeStepsPerYear_(timeStepsPerYear), nStrikes_(nStrikes),
+      nPaths_(nPaths), d2CdK2Threshold_(d2CdK2Threshold) {
 
     timeGrid_ = TimeGrid(maxTime_, static_cast<Size>(0.5 + maxTime_ * static_cast<Real>(timeStepsPerYear_)));
 
-    correctionData_ = Matrix(nStrikes_, timeGrid_.size(), 0.0);
+    atmVarianceData_.resize(timeGrid_.size());
+    for (Size i = 0; i < timeGrid_.size(); ++i) {
+        Real F = S_->fxSpotToday()->value() * q0_->discount(timeGrid_[i]) / r0_->discount(timeGrid_[i]);
+        atmVarianceData_[i] = i == 0 ? 0.0 : blackVol_->blackVariance(timeGrid_[i], F);
+    }
+
+    correctionData_ = Matrix(nStrikes_, timeGrid_.size() - 1, 0.0);
 
     logStrikes_.resize(nStrikes_);
 
     Real k = minStrike_;
     for (Size i = 0; i < nStrikes_; ++i) {
         logStrikes_[i] = k;
-        k += (maxStrike_ - minStrike_) / static_cast<Real>(nStrikes_);
+        k += (maxStrike_ - minStrike_) / static_cast<Real>(nStrikes_ - 1);
     }
 
-    correction_ = std::make_unique<FlatExtrapolator2D>(QuantLib::ext::make_shared<BilinearInterpolation>(
-        timeGrid_.begin(), timeGrid_.end(), logStrikes_.begin(), logStrikes_.end(), correctionData_));
+    atmVariance_ = std::make_unique<LinearInterpolation>(timeGrid_.begin(), timeGrid_.end(), atmVarianceData_.begin());
+    atmVariance_->enableExtrapolation();
 
+    correction_ = std::make_unique<FlatExtrapolator2D>(QuantLib::ext::make_shared<BilinearInterpolation>(
+        std::next(timeGrid_.begin(), 1), timeGrid_.end(), logStrikes_.begin(), logStrikes_.end(), correctionData_));
     correction_->enableExtrapolation();
 
     this->enableExtrapolation();
@@ -114,8 +123,6 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
         Real t1 = timeGrid_[i];
         Real dt = t1 - t0;
 
-        Real maxS = 0.0;
-
         // generate path values
 
         for (Size p = 0; p < nPaths_; ++p) {
@@ -156,7 +163,6 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
             q_u[p] = qs_u;
             n_u[p] = r_->numeraire(t1, getProjectedArray(rStateUpd_u, 0, m_r), r0_);
 
-            maxS = std::max(maxS, sStateUpd[0]);
         }
 
         // iterate over strikes and accumulate results
@@ -166,11 +172,11 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
         Real e1 = 0.0, e2 = 0.0;
         Real e1_u = 0.0, e2_u = 0.0;
 
-        Real K_prev = F * std::exp(maxS); // largest realisation
+        Real K_prev = F * 2.0 * std::exp(logStrikes_.back() * std::sqrt(atmVarianceData_[i]));
 
         for (int k = logStrikes_.size() - 1; k >= 0; --k) {
 
-            Real K = F * std::exp(logStrikes_[k]);
+            Real K = F * std::exp(logStrikes_[k] * std::sqrt(atmVarianceData_[i]));
 
             Real n1 = 0.0, n2 = 0.0;
 
@@ -204,7 +210,7 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
             e2_u = static_cast<Real>(n2_u) / static_cast<Real>(nPaths_);
 
             if (d2CdK2 * (K_prev - K) > d2CdK2Threshold_) {
-                correctionData_(k, i) = (-K * (e1 - e1_u) + (e2 - e2_u)) / (0.5 * K * K * d2CdK2);
+                correctionData_(k, i - 1) = (-K * (e1 - e1_u) + (e2 - e2_u)) / (0.5 * K * K * d2CdK2);
             }
 
             K_prev = K;
@@ -219,7 +225,10 @@ Volatility SimpleMcLocalVolStochasticRatesCorrection::localVolImpl(Time t, Real 
     calculate();
     Real F = S_->fxSpotToday()->value() * q0_->discount(t) / r0_->discount(t);
     Real s = source_->localVol(t, strike);
-    Real c = applyCorrection_ ? correction_->operator()(t, std::log(strike / F)) : 0.0;
+    Real c =
+        applyCorrection_
+            ? correction_->operator()(t, std::log(strike / F) / std::max(1E-10, std::sqrt(atmVariance_->operator()(t))))
+            : 0.0;
     return std::sqrt(std::max(0.0, s * s + c));
 }
 
