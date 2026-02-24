@@ -44,7 +44,7 @@ SimpleMcLocalVolStochasticRatesCorrection::SimpleMcLocalVolStochasticRatesCorrec
     Matrix correlation_r_q_S, Real maxTime, Real minStrike, Real maxStrike, Size timeStepsPerYear, Size nStrikes,
     Size nPaths, Real d2CdK2Threshold)
     : blackVol_(std::move(blackVol)), source_(std::move(source)), r_(std::move(r)), q_(std::move(q)), S_(std::move(S)),
-      r0_(std::move(r0)), q0_(std::move(q0)), correlation_r_q_S_(correlation_r_q_S), maxTime_(maxTime),
+      r0_(std::move(r0)), q0_(std::move(q0)), correlation_r_q_S_(std::move(correlation_r_q_S)), maxTime_(maxTime),
       minStrike_(minStrike), maxStrike_(maxStrike), timeStepsPerYear_(timeStepsPerYear), nStrikes_(nStrikes),
       nPaths_(nPaths), d2CdK2Threshold_(d2CdK2Threshold) {
 
