@@ -20,10 +20,26 @@
 #include <ostream>
 #include <ql/errors.hpp>
 #include <stdio.h>
+#include <charconv>
+#include <chrono>
+#include <iostream>
 
 using QuantLib::Date;
 using std::string;
 using std::vector;
+
+namespace {
+// Minimal benchmark timer — remove after profiling
+struct ScopedTimer {
+    const char* label;
+    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
+    ~ScopedTimer() {
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - t0).count();
+        std::cout << "[CubeIO] " << label << ": " << ms << " ms\n";
+    }
+};
+} // namespace
 
 namespace ore {
 namespace analytics {
@@ -32,6 +48,7 @@ CubeWriter::CubeWriter(const std::string& filename) : filename_(filename) {}
 
 void CubeWriter::write(const QuantLib::ext::shared_ptr<NPVCube>& cube, const std::map<std::string, std::string>& nettingSetMap,
                        bool append) {
+    ScopedTimer _t{"CubeWriter::write"};
 
     // Convert dates into strings
     vector<string> dateStrings(cube->numDates());
@@ -50,7 +67,8 @@ void CubeWriter::write(const QuantLib::ext::shared_ptr<NPVCube>& cube, const std
     QL_REQUIRE(fp, "error opening file " << filename_);
     if (!append)
         fprintf(fp, "Id,NettingSet,DateIndex,Date,Sample,Depth,Value\n");
-    const char* fmt = "%s,%s,%lu,%s,%lu,%lu,%.4f\n";
+    const char* fmt = "%s,%s,%lu,%s,%lu,%lu,%s\n";
+    char valBuf[32]; // sufficient for any double in shortest round-trip form
 
     // Get netting Set Ids (or "" if not there)
     vector<const char*> nettingSetIds(ids.size());
@@ -62,17 +80,18 @@ void CubeWriter::write(const QuantLib::ext::shared_ptr<NPVCube>& cube, const std
         else
             nettingSetIds[idx] = "";
 
+        *std::to_chars(valBuf, valBuf + sizeof(valBuf), cube->getT0(idx)).ptr = '\0';
         fprintf(fp, fmt, id.c_str(), nettingSetIds[idx], static_cast<Size>(0), asofString.c_str(),
-                static_cast<Size>(0), static_cast<Size>(0), cube->getT0(idx));        
+                static_cast<Size>(0), static_cast<Size>(0), valBuf);
     }
     // Cube
-    
+
     for (const auto& [id, idx] : ids) {
         for (Size j = 0; j < cube->numDates(); j++) {
             for (Size k = 0; k < cube->samples(); k++) {
                 for (Size l = 0; l < cube->depth(); l++) {
-                    fprintf(fp, fmt, id.c_str(), nettingSetIds[idx], j + 1, dateStrings[j].c_str(), k + 1, l,
-                            cube->get(idx, j, k, l));
+                    *std::to_chars(valBuf, valBuf + sizeof(valBuf), cube->get(idx, j, k, l)).ptr = '\0';
+                    fprintf(fp, fmt, id.c_str(), nettingSetIds[idx], j + 1, dateStrings[j].c_str(), k + 1, l, valBuf);
                 }
             }
         }
