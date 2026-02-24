@@ -213,9 +213,6 @@ parseScriptedInflationIndex(const std::string& indexName);
 /*! Builds an index (EQ-SP5-EUR, FX-ECB-EUR-USD, ...) that can be used in scripted trades, from an underlying */
 std::string scriptedIndexName(const QuantLib::ext::shared_ptr<Underlying>& underlying);
 
-/*! Get inflation simulation lag in calendar days */
-Size getInflationSimulationLag(const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index);
-
 /*! Get map index => calibration strikes as vector<Real> from calibration spec and context */
 std::map<std::string, std::vector<Real>>
 getCalibrationStrikes(const std::vector<ScriptedTradeScriptData::CalibrationData>& calibrationSpec,

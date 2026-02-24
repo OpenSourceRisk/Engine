@@ -25,25 +25,20 @@
 #include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
 #include <ored/configuration/currencyconfig.hpp>
+#include <ored/configuration/baseltrafficlightconfig.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <orea/simm/crifloader.hpp>
+#include <orea/simm/simmcalibration.hpp>
 
 using namespace QuantLib;
 
 namespace ore {
 namespace analytics {
-
-    
-void InputVariables::loadVariables(const QuantLib::ext::weak_ptr<InputParameters>& inputs) {
-    if (auto s = inputs.lock())
-        loadVariablesImpl(s);
-    else
-        QL_FAIL("Internal error: could not lock inputParameters_ in InputVariables::loadVariables. Contact dev.");
-}
 
 void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
 

@@ -30,7 +30,6 @@ namespace QuantExt {
                                                                     const RandomVariable& z,
                                                                     const RandomVariable& y,
                                                                     bool indexIsInterpolated) const {
-            //
             
             Size n_samples = z.size();
 

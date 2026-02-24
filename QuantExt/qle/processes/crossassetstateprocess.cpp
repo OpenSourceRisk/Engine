@@ -19,6 +19,8 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/processes/irhwstateprocess.hpp>
+#include <qle/utilities/inflation.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
@@ -62,14 +64,15 @@ inline Array getProjectedArray(const Array& source, Size start, Size length) {
 
 } // namespace
 
-CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model)
-    : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
+CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                                               const std::optional<DayCounter>& gridDayCounter)
+    : StochasticProcess(), model_(std::move(model)), gridDayCounter_(gridDayCounter), cirppCount_(0) {
 
     if (model_->discretization() != CrossAssetModel::Discretization::Exact) {
         discretization_ = QuantLib::ext::make_shared<EulerDiscretization>();
     } else {
         discretization_ = QuantLib::ext::make_shared<CrossAssetStateProcess::ExactDiscretization>(
-            model_, model_->salvagingAlgorithm());
+            model_, gridDayCounter_, model_->salvagingAlgorithm());
     }
 
     updateSqrtCorrelation();
@@ -305,14 +308,26 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
 
                 // Add on the f_n(0, t) - f_r(0, t) piece using the initial zero inflation term structure.
                 // Use the same dt below that is used in yield forward rate calculations.
+                // Take the simulation lag into account
                 auto ts = p->realRate()->termStructure();
+                // Use grid day counter for time-to-date conversion since t is in grid time
+                auto gridDc = gridDayCounter_.value_or(ts->dayCounter());
+                auto lagInGridDc = gridDc.yearFraction(ts->baseDate(), ts->referenceDate());
+                auto laggedObservationDate = lowerDate(t - lagInGridDc, ts->referenceDate(), gridDc);
+                // Use inflation day counter for tau and seasonality
+                const auto& infDayCounter = ts->dayCounter();
+                Time laggedt = infDayCounter.yearFraction(ts->referenceDate(), laggedObservationDate);
+                Time tau = infDayCounter.yearFraction(ts->baseDate(), laggedObservationDate);
+                // Use unadjusted zero rates (no seasonality) - seasonality is applied when 
+                // computing CPI fixings from the simulated state. This avoids issues with
+                // discontinuous seasonality factors in the discrete Euler scheme.
                 Time dt = 0.0001;
-                Time t1 = std::max(t - dt / 2.0, 0.0);
+                Time t1 = std::max(laggedt - dt / 2.0, 0.0);
                 Time t2 = t1 + dt;
-                auto z_t = ts->zeroRate(t);
+                auto z_t = ts->zeroRate(laggedt);
                 auto z_t1 = ts->zeroRate(t1);
                 auto z_t2 = ts->zeroRate(t2);
-                indexDrift += std::log(1 + z_t) + (t / (1 + z_t)) * ((z_t2 - z_t1) / dt);
+                indexDrift += std::log(1 + z_t) + (tau / (1 + z_t)) * ((z_t2 - z_t1) / dt);
 
                 if (i_j > 0) {
                     Real sigma_x_i_j = model_->fxModel(i_j - 1)->volatility(
@@ -632,8 +647,9 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
 }
 
 CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
+                                                                 const std::optional<DayCounter>& gridDayCounter,
                                                                  SalvagingAlgorithm::Type salvaging)
-    : model_(std::move(model)), salvaging_(salvaging) {
+    : model_(std::move(model)), gridDayCounter_(gridDayCounter), salvaging_(salvaging) {
 
     QL_REQUIRE(model_->modelType(CrossAssetModel::AssetType::IR, 0) == CrossAssetModel::ModelType::LGM1F,
                "CrossAssetStateProces::ExactDiscretization is only supported by LGM1F IR model types.");
@@ -723,7 +739,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticPr
         if (model_->modelType(CrossAssetModel::AssetType::INF, i) == CrossAssetModel::ModelType::JY) {
             std::tie(res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 0)],
                      res[model_->pIdx(CrossAssetModel::AssetType::INF, i, 1)]) =
-                inf_jy_expectation_1(*model_, i, t0, dt);
+                inf_jy_expectation_1(*model_, i, t0, dt, gridDayCounter_);
         }
     }
 

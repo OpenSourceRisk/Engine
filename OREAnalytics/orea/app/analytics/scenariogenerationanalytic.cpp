@@ -17,17 +17,21 @@
 */
 
 #include <orea/app/analytics/scenariogenerationanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariogeneratortransform.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <qle/methods/pathgeneratorfactory.hpp>
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;

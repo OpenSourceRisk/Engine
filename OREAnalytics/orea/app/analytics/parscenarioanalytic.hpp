@@ -26,6 +26,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 // Computes the fair par rates
 class ParScenarioAnalyticImpl : public Analytic::Impl {
 public:

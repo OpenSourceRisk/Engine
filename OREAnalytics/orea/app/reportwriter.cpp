@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/utilities.hpp>
+#include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/scenario/scenariowriter.hpp>
 
 #include <ored/utilities/marketdata.hpp>
@@ -2279,12 +2280,12 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
         .addColumn("MaturityTime", double(), 6)
         .addColumn("StartDate", Date())
         .addColumn("EndDate", Date())
-        .addColumn("NPV(t0;m0;p0)", double(), 6) // renamed from NPV(t0)
-        .addColumn("NPV(t0;m1;p0)", double(), 6) // renamed from NPV(asof=t0;mkt=t1)
-        .addColumn("NPV(t1;m0;p0)", double(), 6) // renamed from NPV(asof=t1;mkt=t0)
-        .addColumn("NPV(t1;m1;p0)", double(), 6) // renamed from NPV(t1;portfolio=t0)
-        .addColumn("NPV(t1;m0;p1)", double(), 6) // new column
-        .addColumn("NPV(t1;m1;p1)", double(), 6) // renamed from NPV(t1)
+        .addColumn("NPV(t0_m0_p0)", double(), 6) // renamed from NPV(t0)
+        .addColumn("NPV(t0_m1_p0)", double(), 6) // renamed from NPV(asof=t0;mkt=t1)
+        .addColumn("NPV(t1_m0_p0)", double(), 6) // renamed from NPV(asof=t1;mkt=t0)
+        .addColumn("NPV(t1_m1_p0)", double(), 6) // renamed from NPV(t1;portfolio=t0)
+        .addColumn("NPV(t1_m0_p1)", double(), 6) // new column
+        .addColumn("NPV(t1_m1_p1)", double(), 6) // renamed from NPV(t1)
         .addColumn("Day1PnL", double(), 6)
         .addColumn("TradeChangePnL", double(), 6)
         .addColumn("PeriodCashFlow", double(), 6)

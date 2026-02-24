@@ -482,7 +482,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
                 // Price the fixed-coupon CDS with h and real recovery rate to get upfront
                 Handle<DefaultProbabilityTermStructure> dProb(
-                    boost::shared_ptr<DefaultProbabilityTermStructure>(
+                    ext::shared_ptr<DefaultProbabilityTermStructure>(
                         new FlatHazardRate(0, cdsConv->calendar(), h, Actual365Fixed())
                     )
                 );

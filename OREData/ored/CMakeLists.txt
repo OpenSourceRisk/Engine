@@ -851,27 +851,43 @@ utilities/wildcard.hpp
 utilities/xmlutils.hpp
 version.hpp)
 
-writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
-add_library(${ORED_LIB_NAME} ${OREData_SRC})
-target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
-target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
+writeAll("ored" "${CMAKE_CURRENT_LIST_DIR}/ored.hpp" "auto_link.hpp" "${OREData_HDR}")
+add_library(${ORED_LIB_NAME} ${OREData_SRC} ${OREData_HDR} "ored.hpp")
+add_library(${ORE_PACKAGE_NAME}::${ORED_LIB_NAME} ALIAS ${ORED_LIB_NAME})
 
+target_include_directories(${ORED_LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
-if (QL_USE_PCH)
-target_precompile_headers(${ORED_LIB_NAME}
-  PUBLIC
-    <ored/portfolio/enginefactory.hpp>
-    <ored/utilities/log.hpp>
-    <ored/utilities/parsers.hpp>)
+target_link_libraries(${ORED_LIB_NAME}
+    PRIVATE
+        ${RAPIDXML_NAME}
+        Boost::iostreams
+    PUBLIC
+        ${ORE_PACKAGE_NAME}::${QLE_LIB_NAME}
+        Boost::log
+)
+
+if(ORE_USE_ZLIB)
+    target_link_libraries(${ORED_LIB_NAME} PRIVATE ZLIB::ZLIB)
+    target_compile_definitions(${ORED_LIB_NAME} PRIVATE ORE_USE_ZLIB)
 endif()
 
-install(DIRECTORY . DESTINATION include/ored
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+if (QL_USE_PCH)
+    target_precompile_headers(${ORED_LIB_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:<ored/portfolio/enginefactory.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ored/utilities/log.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<ored/utilities/parsers.hpp$<ANGLE-R>>
+    )
+endif()
 
-install(TARGETS ${ORED_LIB_NAME}
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
+# Installation properties.
+install(TARGETS ${ORED_LIB_NAME} EXPORT ${ORE_PACKAGE_NAME}Targets)
 
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

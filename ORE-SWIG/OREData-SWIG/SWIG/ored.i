@@ -32,7 +32,7 @@
 
 #include <ql/errors.hpp>
 
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <ored/auto_link.hpp>
 #endif
 

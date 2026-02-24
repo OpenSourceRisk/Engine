@@ -28,6 +28,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 /*! Pricing-type analytics
   \todo align pillars for par sensitivity analysis
 */

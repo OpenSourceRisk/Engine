@@ -683,6 +683,25 @@ const std::map<std::string, QuantLib::ext::any>& Swaption::additionalData() cons
         }
     }
 
+    // ATM forward and spread correction of the full underlying swap
+    if (underlying_) {
+        try {
+            const auto& underlyingAd = underlying_->additionalData();
+            auto itAtm = underlyingAd.find("atmForward");
+            if (itAtm != underlyingAd.end()) {
+                additionalData_["atmForward"] = itAtm->second;
+            }
+            auto itSpread = underlyingAd.find("spreadCorrection");
+            if (itSpread != underlyingAd.end()) {
+                additionalData_["spreadCorrection"] = itSpread->second;
+            }
+        } catch (const std::exception& e) {
+            DLOG("Could not retrieve atmForward/spreadCorrection from underlying swap for Swaption " << id()
+                                                                                                       << ": "
+                                                                                                       << e.what());
+        }
+    }
+
     return additionalData_;
 }
 
