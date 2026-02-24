@@ -575,12 +575,54 @@
   </xs:element>
   <xs:element name="RangeAccrualLegData" substitutionGroup="legDataType">
     <xs:complexType>
-      <xs:all>
-        <xs:element ref="FloatingLegData"/>
-        <xs:element type="xs:float" name="Coupon" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:float" name="LowerBound" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:float" name="UpperBound" minOccurs="0" maxOccurs="1"/>
-      </xs:all>
+      <xs:sequence>
+        <xs:element ref="FloatingLegData" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="Coupons" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Coupon" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="UpperBounds" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="UpperBound" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="LowerBounds" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="LowerBound" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
     </xs:complexType>
   </xs:element>
   <xs:element name="CPILegData" substitutionGroup="legDataType">
@@ -1403,6 +1445,7 @@
       <xs:enumeration value="CommodityFloating"/>
       <xs:enumeration value="EquityMargin"/>
       <xs:enumeration value="DurationAdjustedCMS"/>
+      <xs:enumeration value="RangeAccrual"/>
     </xs:restriction>
   </xs:simpleType>
 

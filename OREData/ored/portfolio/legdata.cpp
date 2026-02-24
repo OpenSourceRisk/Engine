@@ -345,7 +345,7 @@ void RangeAccrualLegData::fromXML(XMLNode* node) {
     indices_ = underlying_->indices();
 
     coupon_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Coupons", "Coupon", "startDate", couponDates_, &parseReal,
-                                                             true);
+                                                             false);
     upperBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "UpperBounds", "UpperBound", "startDate", upperBoundDates_, &parseReal,
                                                              true);
     lowerBound_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "LowerBounds", "LowerBound", "startDate", lowerBoundDates_, &parseReal,
@@ -2376,23 +2376,35 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
     vector<double> upperBound =
         buildScheduledVectorNormalised(rangeAccrualData->upperBound(), rangeAccrualData->upperBoundDates(), schedule, 0.0);
 
-    // The RangeAccrualFloatersCoupon computes: (gearing * indexFixing + spread) * (n/N)
-    // For a standard range accrual: Rate = Coupon * (n/N), the coupon is passed as spread,
-    // and gearings must come from the FloatingLegData (defaulting to 1.0) so that QuantLib
-    // creates RangeAccrualFloatersCoupon objects (gearing == 0 would create FixedRateCoupons).
+    // Determine fixed-rate vs floating mode.
+    // Fixed-rate mode: the Coupons node provides a fixed rate x% and the payout is
+    //     Amount = Notional * x% * (n/N) * DayCountFraction
+    // Floating mode (no Coupons or Coupon=0): the payout is
+    //     Amount = Notional * (gearing * Libor + spread) * (n/N) * DayCountFraction
+    //     (note: in the QuantLib pricer the spread addend is actually unconditional)
+    bool fixedRateMode = false;
+    for (const auto& c : coupon) {
+        if (c != 0.0) { fixedRateMode = true; break; }
+    }
+
+    // In both modes gearing must be non-zero so the QuantLib leg builder creates
+    // RangeAccrualFloatersCoupon objects (gearing == 0 would create FixedRateCoupons
+    // with no range-accrual logic).
     Leg leg = QuantLib::RangeAccrualLeg(schedule, iborIndex)
                       .withNotionals(notionals)
                       .withPaymentDayCounter(dc)
                       .withPaymentAdjustment(bdc)
                       .withFixingDays(static_cast<Natural>(fixingDays))
-                      .withSpreads(coupon)
-                      .withGearings(gearings)
+                      .withSpreads(fixedRateMode ? std::vector<Spread>(1, 0.0) : spreads)
+                      .withGearings(fixedRateMode ? std::vector<Real>(1, 1.0) : gearings)
                       .withLowerTriggers(lowerBound)
                       .withUpperTriggers(upperBound)
                       .withObservationTenor(1 * Days)
                       .withObservationConvention(bdc);
 
-    // Attach per-coupon range accrual pricers with correct expiry/payment smile sections
+    // Attach per-coupon range accrual pricers with correct expiry/payment smile sections.
+    // Only attach pricers to live coupons (payment date > today). Past coupons are fully
+    // determined by historical fixings and don't need analytical pricing.
     if (attachPricer) {
         auto builder = engineFactory->builder("IborRangeAccrualLeg");
         QL_REQUIRE(builder, "No builder found for IborRangeAccrualLeg");
@@ -2400,12 +2412,25 @@ Leg makeRangeAccrualLeg(const LegData& data, const QuantLib::ext::shared_ptr<Ibo
             QuantLib::ext::dynamic_pointer_cast<RangeAccrualLegEngineBuilder>(builder);
         QL_REQUIRE(raBuilder, "Expected RangeAccrualLegEngineBuilder");
         std::string indexName = IndexNameTranslator::instance().oreName(iborIndex->name());
+        Date today = Settings::instance().evaluationDate();
+        Size couponIdx = 0;
         for (auto& cf : leg) {
             auto raCoupon = QuantLib::ext::dynamic_pointer_cast<RangeAccrualFloatersCoupon>(cf);
             if (raCoupon) {
-                auto pricer = raBuilder->buildPricer(
-                    indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
-                raCoupon->setPricer(pricer);
+                if (raCoupon->date() > today) {
+                    auto pricer = raBuilder->buildPricer(
+                        indexName, raCoupon->accrualStartDate(), raCoupon->accrualEndDate());
+                    if (fixedRateMode) {
+                        // Set the per-coupon fixed rate on the pricer so it computes
+                        // fixedRate * (n/N) instead of gearing * Libor * (n/N) + spread
+                        auto raPricer =
+                            QuantLib::ext::dynamic_pointer_cast<RangeAccrualPricerByBgm>(pricer);
+                        if (raPricer)
+                            raPricer->setFixedRate(coupon[std::min(couponIdx, coupon.size() - 1)]);
+                    }
+                    raCoupon->setPricer(pricer);
+                }
+                ++couponIdx;
             }
         }
     }

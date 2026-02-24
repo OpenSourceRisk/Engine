@@ -21,17 +21,71 @@
 #include <ored/utilities/indexparser.hpp>
 
 #include <ql/cashflows/rangeaccrual.hpp>
-#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+#include <ql/indexes/iborindex.hpp>
+#include <ql/pricingengines/blackformula.hpp>
+#include <ql/termstructures/volatility/smilesection.hpp>
 
 namespace ore {
 namespace data {
 
-Handle<OptionletVolatilityStructure> RangeAccrualLegEngineBuilder::optionletVolatilityStructure(const std::string& index) {
-    bool zeroVolatility = parseBool(engineParameter("ZeroVolatility", {}, false, "false"));
-    if (zeroVolatility) {
-        return Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
-            0, NullCalendar(), Unadjusted, 0.0, Actual365Fixed(), Normal));
+namespace {
+
+//! Adapter that converts a Normal (Bachelier) SmileSection to Lognormal (Black).
+/*! The BGM range-accrual pricer (RangeAccrualPricerByBgm) interprets the vol
+    returned by SmileSection::volatility(strike) as a lognormal instantaneous vol.
+    When the cap/floor surface is quoted in Normal vols, we must convert on the fly.
+    For each strike we:
+    1. Price an option using the Normal vol and Bachelier formula
+    2. Invert the Black formula to recover the equivalent lognormal vol
+*/
+class NormalToLognormalSmileSection : public QuantLib::SmileSection {
+public:
+    NormalToLognormalSmileSection(const QuantLib::ext::shared_ptr<QuantLib::SmileSection>& normalSection,
+                                 QuantLib::Real forward)
+        : SmileSection(normalSection->exerciseTime(), normalSection->dayCounter(),
+                       QuantLib::ShiftedLognormal,
+                       // Displacement ensures forward + shift > 0 for lognormal inversion.
+                       // When forward is positive, shift = 0 (plain lognormal).
+                       std::max(0.0, -forward + 1e-4)),
+          normalSection_(normalSection), forward_(forward),
+          shift_(std::max(0.0, -forward + 1e-4)) {}
+
+    QuantLib::Real minStrike() const override { return normalSection_->minStrike(); }
+    QuantLib::Real maxStrike() const override { return normalSection_->maxStrike(); }
+    QuantLib::Real atmLevel() const override { return forward_; }
+
+protected:
+    QuantLib::Volatility volatilityImpl(QuantLib::Rate strike) const override {
+        Real normalVol = normalSection_->volatility(strike);
+        Real t = exerciseTime();
+        if (t <= 0.0 || normalVol <= 0.0)
+            return 0.0;
+        Real normalStdDev = normalVol * std::sqrt(t);
+        Option::Type type = strike >= forward_ ? Option::Call : Option::Put;
+        Real premium = bachelierBlackFormula(type, strike, forward_, normalStdDev);
+        try {
+            // shift_ is 0 when forward > 0 (standard lognormal inversion).
+            // When forward ≤ 0, shift_ makes (forward + shift_) > 0 so the
+            // shifted-Black inversion is well-defined. The BGM pricer treats
+            // the returned vol as lognormal; the approximation error is small
+            // for modest shifts.
+            return blackFormulaImpliedStdDev(type, strike, forward_, premium, 1.0, shift_) /
+                   std::sqrt(t);
+        } catch (...) {
+            // Fallback: first-order approximation  σ_SLN ≈ σ_N / (F + shift)
+            return normalVol / (forward_ + shift_);
+        }
     }
+
+private:
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> normalSection_;
+    QuantLib::Real forward_;
+    QuantLib::Real shift_;
+};
+
+}
+
+Handle<OptionletVolatilityStructure> RangeAccrualLegEngineBuilder::optionletVolatilityStructure(const std::string& index) {
     auto configuration = this->configuration(MarketContext::pricing);
     return market_->capFloorVol(index, configuration);
 }
@@ -54,8 +108,28 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
     Real corr = correlation(index);
     bool smile = withSmile(index);
     bool callSpread = byCallSpread(index);
-    auto smileOnExpiry = ovs->smileSection(accrualStartDate, true);
+
+    // Use at least 1 day after reference date to avoid t=0 smile section
+    // (stddev = vol * sqrt(0) = 0, then vol = stddev / sqrt(0) = NaN)
+    Date expiryDate = std::max(accrualStartDate, ovs->referenceDate() + 1);
+    auto smileOnExpiry = ovs->smileSection(expiryDate, true);
     auto smileOnPayment = ovs->smileSection(accrualEndDate, true);
+
+    // The BGM pricer interprets SmileSection vols as lognormal. If the cap/floor
+    // surface is in Normal vol, we must convert via Bachelier→Black inversion.
+    if (ovs->volatilityType() == QuantLib::Normal) {
+        auto configuration = this->configuration(MarketContext::pricing);
+        auto iborIndex = market_->iborIndex(index, configuration);
+        // Use per-section forwards: the conversion should reflect the forward
+        // at each smile section's expiry. Using the index's fixing calendar
+        // ensures the dates are valid fixing dates.
+        Calendar fixCal = iborIndex->fixingCalendar();
+        Real forwardExpiry = iborIndex->forecastFixing(fixCal.adjust(expiryDate));
+        Real forwardPayment = iborIndex->forecastFixing(fixCal.adjust(accrualEndDate));
+        smileOnExpiry = QuantLib::ext::make_shared<NormalToLognormalSmileSection>(smileOnExpiry, forwardExpiry);
+        smileOnPayment = QuantLib::ext::make_shared<NormalToLognormalSmileSection>(smileOnPayment, forwardPayment);
+    }
+
     return QuantLib::ext::make_shared<RangeAccrualPricerByBgm>(
         corr, smileOnExpiry, smileOnPayment, smile, callSpread);
 }
