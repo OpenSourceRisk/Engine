@@ -29,6 +29,9 @@
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/time/period.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/zeroinflationmodeltermstructure.hpp>
+
 namespace QuantExt {
 
 /*! Utility function for calculating the time to a given \p date based on a given inflation index,
@@ -45,16 +48,62 @@ QuantLib::Time inflationTime(const QuantLib::Date& date,
 /*! Utility for calculating the ratio \f$ \frac{P_r(0, t)}{P_n(0, t)} \f$ where \f$ P_r(0, t) \f$ is the real zero
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
 */
-QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
-    QuantLib::Time t,
-    const QuantLib::DayCounter& dc,
-    bool indexIsInterpolated);
+QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts, QuantLib::Time t,
+                               const std::optional<QuantLib::DayCounter>& dc, bool indexIsInterpolated);
 
 /*! Utility for calculating the ratio \f$ \frac{P_r(0, t)}{P_n(0, t)} \f$ where \f$ P_r(0, t) \f$ is the real zero
     coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
 */
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
     QuantLib::Time t, bool indexIsInterpolated);
+
+int simulationLag(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+
+int simulationLag(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+double simulationLagTime(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
+
+double simulationLagTime(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts,
+                         const std::optional<QuantLib::DayCounter>& dc = std::nullopt);
+
+/*! Compute a seasonality-adjusted zero rate for a given observation date.
+    It takes the time tau between the term structure base date and the observation date as
+    given and dont adjust it internally based on the frequency of the inflation curve.
+    \param observationDate  date at which the seasonality factor is evaluated
+    \param unadjustedZeroRate the zero inflation rate before seasonality
+    \param tau the year fraction between the term structure base date and the observation date
+    \param ts the zero inflation term structure that may contain seasonality
+    \return the seasonality-adjusted zero inflation rate
+*/
+QuantLib::Real continuousSeasonalityAdjustment(const QuantLib::Date& baseDate, const QuantLib::Date& observationDate, QuantLib::Rate unadjustedZeroRate,
+                                     QuantLib::Time tau,
+                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+/*! Applies seasonality adjustment to a given CPI value assuming the CPI doesnt include the seasonality
+    This method is used to seasonalize the CPI fixings for the Cross-AssetModel, where the inflation is modelled without
+   seasonality, and the seasonality is applied on top of the model.
+*/
+QuantLib::Real seasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                    const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+
+QuantLib::Real seasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                      const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+QuantLib::Real deseasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                      const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts);
+
+QuantLib::Real deseasonalizeCPI(const QuantLib::Date& observationDate, const QuantLib::Real CPI,
+                      const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts);
+
+double scenarioInflationZeroRateFromModelTs(const Date& simDate, const Period tenor, const Period observationLag,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationIndex> index,
+                                            const QuantLib::ext::shared_ptr<ZeroInflationModelTermStructure> modelTs,
+                                            const CrossAssetModel::ModelType modelType, const DayCounter simulationDc);
+
+double scenarioBaseCpi(const Real y, const Real z, const QuantLib::Date& date,
+                       const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size modelIdx,
+                       const DayCounter& simulationDc, const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index);
 
 /*! Calculate the Compound Factor to compute the nominal price from the real price
    I(t_s)/I(t_0) with I(t_s) the CPI at settlement date and I(t_0) the bond's base CPI
@@ -109,6 +158,7 @@ bool isCPIVolSurfaceLogNormal(const QuantLib::ext::shared_ptr<QuantLib::CPIVolat
 
 
 }
+
 
 } // namespace QuantExt
 

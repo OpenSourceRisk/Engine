@@ -43,7 +43,8 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within 
         the model, \p index.
     */
-    ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+    ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+                                    const std::optional<QuantLib::DayCounter>& simulationDayCounter = std::nullopt);
 
     //! \name Observer interface
     //@{
@@ -73,10 +74,26 @@ public:
 
     void enableCache(const bool b = true) const { enableCache_ = b; }
     virtual void clearCache() const {}
+    //! Returns the baseCPI at simulation time S and the inflation growth between S and S+t.
+    //! Parameter t should be fixing observation date (after applying the contractional observation lag) in simulation
+    //! grid time
+    virtual std::pair<QuantLib::Real, QuantLib::Real> indexGrowth(QuantLib::Time t) const = 0;
 
 protected:
+
+    QuantLib::Time simulationLag() const {
+        auto its = inflationTermStructure(model_, index_);
+        return simulationDayCounter_.value_or(dayCounter()).yearFraction(its->baseDate(), its->referenceDate());
+    }
+
+    QuantLib::Size simulationLagDays() const {
+        auto its = inflationTermStructure(model_, index_);
+        return its->referenceDate() - its->baseDate();
+    }
+    
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
+    std::optional<QuantLib::DayCounter> simulationDayCounter_;
     // Hides referenceDate_ in TermStructure.
     QuantLib::Date referenceDate_;
     QuantLib::Time relativeTime_;

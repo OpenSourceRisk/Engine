@@ -75,7 +75,8 @@ Real ir_expectation_2(const CrossAssetModel& model, const Size i, const Real zi_
     process and the second element of the pair relates to the inflation index process.
 */
 std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_1(const CrossAssetModel& model, QuantLib::Size i,
-                                                               QuantLib::Time t0, QuantLib::Real dt);
+                                                               QuantLib::Time t0, QuantLib::Real dt,
+                                                               const std::optional<DayCounter>& gridDayCounter);
 
 /*! State dependent portion of the JY inflation drift. The first element of the pair relates to the real rate
     process and the second element of the pair relates to the inflation index process.

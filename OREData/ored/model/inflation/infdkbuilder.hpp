@@ -27,6 +27,7 @@
 #include <ored/model/inflation/infdkdata.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 
 #include <map>
 #include <ostream>
