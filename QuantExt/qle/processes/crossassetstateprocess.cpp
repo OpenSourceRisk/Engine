@@ -500,8 +500,7 @@ void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const 
 
     // the specifics depend on the ir and fx model types and their discretizations
 
-    if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW &&
-        model->modelType(CrossAssetModel::AssetType::FX, i - 1) == CrossAssetModel::ModelType::BS) {
+    if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW) {
 
         QL_REQUIRE(model->discretization() != CrossAssetModel::Discretization::Exact,
                    "applyFxDrifAdjustment(): can not handle exact discretization.");
@@ -521,7 +520,7 @@ void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const 
         }
 
     } else {
-        QL_FAIL("applyFxDriftAdjustment(): can only handle ir model type HW and fx model type BS currently.");
+        QL_FAIL("applyFxDriftAdjustment(): can only handle ir model type HW currently.");
     }
 }
 } // namespace

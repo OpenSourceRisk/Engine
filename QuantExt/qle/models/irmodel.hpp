@@ -57,7 +57,7 @@ public:
     virtual Size m_aux() const = 0;
 
     /*! get initial value of state */
-    virtual Array initialValue() const { return Array(n(), 0.0); }
+    virtual Array initialValue() const { return Array(n() + n_aux(), 0.0); }
 
     /*! stochastic process, this has dimension n() + n_aux() and m() + m_aux() Brownian drivers */
     virtual QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const = 0;

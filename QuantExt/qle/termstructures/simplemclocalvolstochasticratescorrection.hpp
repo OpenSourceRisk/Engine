@@ -58,6 +58,7 @@ private:
     void update() override;
     QuantLib::Volatility localVolImpl(Time t, Real strike) const override final;
 
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> blackVol_;
     QuantLib::Handle<QuantLib::LocalVolTermStructure> source_;
     QuantLib::ext::shared_ptr<IrModel> r_;
     QuantLib::ext::shared_ptr<IrModel> q_;
@@ -72,7 +73,6 @@ private:
     Size nStrikes_;
     Size nPaths_;
     Real d2CdK2Threshold_;
-    Handle<BlackVolTermStructure> blackVol_;
 
     mutable bool applyCorrection_ = true;
     mutable TimeGrid timeGrid_;
