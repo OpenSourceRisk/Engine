@@ -197,7 +197,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
     }
 }
 
-bool InflationCurve::deriveYYfromZC(const boost::shared_ptr<ore::data::InflationCurveConfig>& config,
+bool InflationCurve::deriveYYfromZC(const ext::shared_ptr<ore::data::InflationCurveConfig>& config,
                                     ore::data::InflationCurveSpec& spec, const ore::data::Loader& loader,
                                     QuantLib::Date& asof) const {
     auto quotes = config->segments().front().quotes();

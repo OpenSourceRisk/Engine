@@ -24,8 +24,12 @@
 #include <orea/app/analytic.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
+
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
 class StressTestAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "STRESS";

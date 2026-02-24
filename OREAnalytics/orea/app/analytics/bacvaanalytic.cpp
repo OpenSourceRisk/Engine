@@ -17,7 +17,9 @@
 */
 
 #include <orea/app/analytics/bacvaanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;

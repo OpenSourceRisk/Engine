@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CapFlooredIborLeg">
+    <Model>BlackOrBachelier</Model>
+    <ModelParameters/>
+    <Engine>BlackIborCouponPricer</Engine>
+    <EngineParameters>
+      <!-- Black76 or BivariateLognormal -->
+      <Parameter name="TimingAdjustment">Black76</Parameter>
+      <!-- Correlation Parameter for BivariateLognormal -->
+      <Parameter name="Correlation">1.0</Parameter>
+      <!-- true if vol surface is not needed in pricing (i.e. no cap/floor in floating leg) -->
+      <Parameter name="ZeroVolatility">true</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="YYCapFloor">
+    <Model>YYCapModel</Model>
+    <ModelParameters/>
+    <Engine>YYCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CapFlooredYYLeg">
+    <Model>CapFlooredYYModel</Model>
+    <ModelParameters/>
+    <Engine>CapFlooredYYCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CpiCapFloor">
+    <Model>CpiCapModel</Model>
+    <ModelParameters/>
+    <Engine>CpiCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CappedFlooredCpiLegCoupons">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CappedFlooredCpiLegCashFlows">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <Parameter name="Model">GaussianCam</Parameter>
+      <Parameter name="BaseCcy">EUR</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="GridCoarsening"/>
+      <Parameter name="ReferenceCalibrationGrid">3M,6M,9M,10M,11M,1Y,13M, 15M, 18M,2Y,27M,30M,3Y,5Y,7Y,10Y,15Y,18Y,20Y,25Y,30Y</Parameter>
+      <Parameter name="IrReversion_EUR">0.04</Parameter>
+      <Parameter name="IrReversion_GBP">0.022</Parameter>
+      <Parameter name="IrReversion_USD">0.0175</Parameter>
+      <Parameter name="IrReversion_JPY">0.01</Parameter>
+      <!-- Calibration Deal (from script) or ATM -->
+      <Parameter name="Calibration">ATM</Parameter>
+      <!-- IrVolatilityType can be Hagan, HullWhite -->
+      <Parameter name="IrVolatilityType">HullWhite</Parameter>
+      <Parameter name="FullDynamicFx">true</Parameter>
+      <Parameter name="FullDynamicIr">true</Parameter>
+      <!-- DK or JY -->
+      <Parameter name="InfModelType">JY</Parameter>
+      <!-- explicit overwrite of cam correlations -->
+      <!-- 
+        IR:GBP = nominal rate
+        INF:UKRPI:0 = real rate
+        INF:UKRPI:1 = inflation index ("fx" rate between nominal/real rates)
+      -->
+      <Parameter name="Correlation_IR:EUR_INF:DECPI:0">0.95</Parameter>
+      <!-- <Parameter name="Correlation_IR:EUR_INF:DECPI:1">0</Parameter> -->
+      <Parameter name="Correlation_IR:EUR_INF:ESCPI:0">0.77</Parameter>
+      <Parameter name="Correlation_IR:EUR_INF:ESCPI:1">0.1</Parameter>
+      <Parameter name="Correlation_IR:EUR_INF:EUHICPXT:0">0.75</Parameter>
+      <!-- <Parameter name="Correlation_IR:EUR_INF:EUHICPXT:1">0.1</Parameter> -->
+      <Parameter name="Correlation_IR:EUR_INF:FRHICP:0">0.65</Parameter>
+      <!-- <Parameter name="Correlation_IR:EUR_INF:FRHICP:1">0.1</Parameter> -->
+      <Parameter name="Correlation_IR:GBP_INF:UKRPI:0">0.5</Parameter>
+      <!-- <Parameter name="Correlation_IR:GBP_INF:UKRPI:1">0.7</Parameter> -->
+      <!-- <Parameter name="Correlation_INF:DECPI:0_INF:DECPI:1">0</Parameter> -->
+      <Parameter name="Correlation_INF:ESCPI:0_INF:ESCPI:1">0.5</Parameter>
+      <!-- <Parameter name="Correlation_INF:EUHICPXT:0_INF:EUHICPXT:1">0.5</Parameter> -->
+      <!-- <Parameter name="Correlation_INF:FRHICP:0_INF:FRHICP:1">0.4</Parameter> -->
+      <!-- <Parameter name="Correlation_INF:UKRPI:0_INF:UKRPI:1">0.7</Parameter> -->
+      <!-- DK volatility -->
+      <Parameter name="InfDkVolatility">0.05</Parameter>
+      <!-- explicit overwrite of real rate vol and rev in jy model -->
+      <!--
+      <Parameter name="InfJyTimes">1.0, 2.000,3.0, 4.0, 5.003,7.003,10.008</Parameter>
+      
+      <Parameter name="InfJyRealRateVol">0.007831953,0.007474828,0.006680603,0.007470473,0.008652856,0.008446092,0.010340671,0.003079889</Parameter>
+      <Parameter name="InfJyIndexVol">0.00393773,0.019040616,0.026657432,0.024286304,0.030143028,0.029239484,0.017687216,0.000443281</Parameter>
+      <Parameter name="InfJyRealRateReversion">0.00</Parameter>
+      -->
+      <!--
+      <Parameter name="InfJyRealRateVol">0, 0, 0, 0, 0.0</Parameter>
+      <Parameter name="InfJyIndexVol">0, 0, 0, 0, 0.0</Parameter>
+      <Parameter name="InfJyRealRateReversion">0.00</Parameter>
+      -->
+      
+      <Parameter name="InfJyRealToNominalVolRatio">1</Parameter>
+      
+
+      
+      <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">100000</Parameter>
+      <Parameter name="StaticNpvMem">false</Parameter>
+      <!-- reduced to 1000 for regression testing speed -->
+      <Parameter name="RegressionOrder">4</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="BootstrapTolerance">0.1</Parameter>
+      <Parameter name="Engine_FXSpread">MC</Parameter>
+      <Parameter name="IncludePastCashflows">true</Parameter>
+      <Parameter name="ZeroVolatility">false</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+    </EngineParameters>
+  </Product>
+  
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+  </GlobalParameters>
+</PricingEngines>

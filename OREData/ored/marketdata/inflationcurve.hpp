@@ -88,7 +88,7 @@ private:
     QuantLib::ext::shared_ptr<Seasonality> buildSeasonality(Date asof, const Loader& loader,
                                                             const QuantLib::ext::shared_ptr<InflationCurveConfig>& config) const;
 
-    bool deriveYYfromZC(const boost::shared_ptr<ore::data::InflationCurveConfig>& config,
+    bool deriveYYfromZC(const ext::shared_ptr<ore::data::InflationCurveConfig>& config,
                         ore::data::InflationCurveSpec& spec, const ore::data::Loader& loader, QuantLib::Date& asof) const;
 
     QuantLib::Handle<QuantLib::Quote>

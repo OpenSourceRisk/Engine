@@ -19,6 +19,7 @@
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/utilities.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/sensitivityreportstream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -28,6 +29,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/zerotoparscenariogenerator.hpp>
 #include <ored/marketdata/adjustedinmemoryloader.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 
@@ -126,8 +128,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     // dates needed for scenarios
     set<Date> pnlDates;
     pnlDates.insert(inputs_->asof());
-    pnlDates.insert(inputs_->mporDate());
-    TimePeriod period({inputs_->asof(), inputs_->mporDate()});
+    pnlDates.insert(pnlVariables_->pnlDate_);
+    TimePeriod period({inputs_->asof(), pnlVariables_->pnlDate_});
 
     auto pnlImpl = static_cast<PnlAnalyticImpl*>(pnlAnalytic->impl().get());
     QL_REQUIRE(pnlImpl, "Impl must of type PNLAnalyticImpl");

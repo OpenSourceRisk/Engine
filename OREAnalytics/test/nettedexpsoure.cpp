@@ -18,6 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 
@@ -249,7 +250,7 @@ QuantLib::ext::shared_ptr<CrossAssetModel> buildCrossAssetModel(QuantLib::ext::s
     vector<string> optionStrikes(optionExpiries.size(), "ATMF");
     vector<Time> sigmaTimes = {};
 
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
 
     vector<Real> sigmaValues = {0.15};
     fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,

@@ -23,9 +23,12 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
 
 enum class ScenarioGenerationType { stress, sensitivity, exposure };
 struct ScenarioGenerationVariables : public InputVariables {

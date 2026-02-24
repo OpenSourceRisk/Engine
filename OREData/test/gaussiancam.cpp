@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     std::vector<std::string> calibrationTermsStr(calibrationExpiriesStr.size(), "2029-07-07");
 
     std::vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs;
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
     std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
 
     auto configEUR = QuantLib::ext::make_shared<IrLgmData>();
@@ -119,15 +119,15 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     irConfigs.push_back(configUSD);
 
     auto configFX = QuantLib::ext::make_shared<FxBsData>();
-    configFX->foreignCcy() = "USD";
-    configFX->domesticCcy() = "EUR";
-    configFX->calibrationType() = CalibrationType::Bootstrap;
-    configFX->calibrateSigma() = true;
-    configFX->sigmaParamType() = ParamType::Piecewise;
-    configFX->sigmaTimes() = calibrationTimes;
-    configFX->sigmaValues() = std::vector<Real>(calibrationTimes.size() + 1, 0.0030);
-    configFX->optionExpiries() = calibrationExpiriesStr;
-    configFX->optionStrikes() = std::vector<std::string>(calibrationExpiriesStr.size(), "ATMF");
+    configFX->setForeignCcy("USD");
+    configFX->setDomesticCcy("EUR");
+    configFX->setCalibrationType(CalibrationType::Bootstrap);
+    configFX->setCalibrateSigma(true);
+    configFX->setSigmaParamType(ParamType::Piecewise);
+    configFX->setSigmaTimes(calibrationTimes);
+    configFX->setSigmaValues(std::vector<Real>(calibrationTimes.size() + 1, 0.0030));
+    configFX->setOptionExpiries(calibrationExpiriesStr);
+    configFX->setOptionStrikes(std::vector<std::string>(calibrationExpiriesStr.size(), "ATMF"));
     fxConfigs.push_back(configFX);
 
     auto configEQ = QuantLib::ext::make_shared<EqBsData>();

@@ -17,20 +17,21 @@
 */
 
 #include <orea/app/analytics/calibrationanalytic.hpp>
-
+#include <orea/app/inputparameters.hpp>
+#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
+#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
 
-#include <orea/app/hwhistoricalcalibrationdataloader.hpp>
-#include <ored/model/hwhistoricalcalibrationmodeldata.hpp>
-#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;
@@ -215,7 +216,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
         // Update Cross Asset Model Data: FX
         for (Size i = 0; i < data->fxConfigs().size(); ++i) {
-            ext::shared_ptr<FxBsData> fxData = data->fxConfigs()[i];
+            ext::shared_ptr<FxBsData> fxData = QuantLib::ext::dynamic_pointer_cast<FxBsData>(data->fxConfigs()[i]);
             ext::shared_ptr<Parametrization> para = model_->fx(i);
             if (auto fxPara = ext::dynamic_pointer_cast<FxBsParametrization>(para)) {
                 LOG("CamData, updating FxBsParametrization:" << " foreign=" << fxData->foreignCcy()
@@ -224,10 +225,10 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
                 // overwrite initial values with calibration results
                 times = fxPara->parameterTimes(0);
                 values = fxPara->parameterValues(0);
-                fxData->sigmaTimes() = std::vector<Real>(times.begin(), times.end());
-                fxData->sigmaValues() = std::vector<Real>(values.begin(), values.end());
+                fxData->setSigmaTimes(std::vector<Real>(times.begin(), times.end()));
+                fxData->setSigmaValues(std::vector<Real>(values.begin(), values.end()));
                 // set calibration flags to false to ensure we reuse the calibration when loading this version
-                fxData->calibrateSigma() = false;
+                fxData->setCalibrateSigma(false);
             } else {
                 StructuredAnalyticsWarningMessage(
                     "CalibrationAnalytic", "Parametrization not processed.",

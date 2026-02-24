@@ -26,9 +26,12 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
 
 struct PnlExplainVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;

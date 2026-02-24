@@ -467,8 +467,10 @@ Handle<ZeroInflationIndex> DependencyMarket::zeroInflationIndex(const string& na
         quotes.push_back(qh1);
     }
     QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroCurve =
-        QuantLib::ext::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(new ZeroInflationCurveObserverMoving<Linear>(
-            0, WeekendsOnly(), dc, Period(2, Months), QuantLib::Frequency::Semiannual, false, zeroCurveTimes, quotes));
+        QuantLib::ext::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(
+            new ZeroInflationCurveObserverMoving<Linear>(0, WeekendsOnly(), dc, 60, Period(2, Months),
+                                                         QuantLib::Frequency::Semiannual, false,
+                                                         {0 * Days, 1 * Years, 2 * Years}, quotes));
     its.linkTo(zeroCurve);
     its->enableExtrapolation();
     return Handle<ZeroInflationIndex>(ore::data::parseZeroInflationIndex(name, its));

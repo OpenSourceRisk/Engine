@@ -20,7 +20,7 @@
 #define qle_i
 
 %{
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <qle/auto_link.hpp>
 #endif
 #include <qle/quantext.hpp>

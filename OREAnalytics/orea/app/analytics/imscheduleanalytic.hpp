@@ -26,7 +26,8 @@
 
 namespace ore {
 namespace analytics {
-
+    
+class InputParameters;
 
 class IMScheduleAnalyticImpl : public Analytic::Impl {
 public:

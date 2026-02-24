@@ -63,7 +63,7 @@ void McCamCurrencySwapEngine::calculate() const {
     Real fxSpot = 1.0;
     Size npvCcyIndex = model_->ccyIndex(npvCcy_);
     if (npvCcyIndex > 0)
-        fxSpot = model_->fxbs(npvCcyIndex - 1)->fxSpotToday()->value();
+        fxSpot = model_->fxModel(npvCcyIndex - 1)->fxSpotToday()->value();
     results_.value = resultValue_ / fxSpot;
     results_.additionalResults["amcCalculator"] = amcCalculator();
 } // calculate

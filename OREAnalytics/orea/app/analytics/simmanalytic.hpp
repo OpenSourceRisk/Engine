@@ -29,6 +29,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 class SimmAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SIMM";
@@ -48,21 +50,7 @@ public:
     SimmAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                  const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
                  const QuantLib::ext::shared_ptr<Crif>& crif = nullptr, const bool hasNettingSetDetails = false,
-                 const bool determineWinningRegulations = true)
-        : Analytic(std::make_unique<SimmAnalyticImpl>(inputs), {"SIMM"}, inputs, analyticsManager, false, false, false,
-                   false),
-          crif_(crif), hasNettingSetDetails_(hasNettingSetDetails),
-          determineWinningRegulations_(determineWinningRegulations) {
-        setWriteIntermediateReports(inputs->writeSimmIntermediateReports());
-	// Build a Crif analytic if we need it, i.e. no CRIF has been passed
-        if ((!crif || !crif_->hasCrifRecords()) && !inputs->crif()) {
-            auto crifAnalytic = AnalyticFactory::instance().build(crifLookupKey, inputs_, analyticsManager, true).second;
-	    crifAnalytic->configurations().todaysMarketParams = inputs->todaysMarketParams();
-	    crifAnalytic->configurations().simMarketParams = inputs->sensiSimMarketParams();
-	    crifAnalytic->configurations().sensiScenarioData = inputs->sensiScenarioData();
-	    impl()->addDependentAnalytic(crifLookupKey, crifAnalytic);
-        }
-    }
+                 const bool determineWinningRegulations = true);
 
     const QuantLib::ext::shared_ptr<Crif>& crif() const { return crif_; }
     bool hasNettingSetDetails() { return hasNettingSetDetails_; }

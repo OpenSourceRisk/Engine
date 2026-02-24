@@ -22,11 +22,14 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
 
 struct BaCvaVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;

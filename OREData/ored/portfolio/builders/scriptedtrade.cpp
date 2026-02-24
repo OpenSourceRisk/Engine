@@ -51,6 +51,7 @@
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
@@ -1162,13 +1163,26 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                 // inf needs special considerations
                 QuantLib::ext::shared_ptr<ZeroInflationIndex> marketIndex =
                     getInfMarketIndex(info.name(), modelInfIndices_);
-                Size lag = getInflationSimulationLag(marketIndex);
+                // we have an simulation lag when simulating inf indices, the lag is the difference between the last
+                // observered fixing (base date of the t0 curve) and t0. We keep the lag constant throughout the
+                // simulation. At time t we simulated effectivly the index value at t - lag, so we need to add the lag
+                // to the relevant dates to make sure we have the required fixings in the simulation (the inflation
+                // models are continuous time models, so lag is applied as number of days and the lagged date is not
+                // moved to the beginning of the inflation period).
+                int lag = simulationLag(marketIndex->zeroInflationTermStructure());
                 for (auto const& d : s.second) {
                     auto lim = inflationPeriod(d, info.inf()->frequency());
                     simulationDates_.insert(lim.first + lag);
+                    DLOG("added " << io::iso_date(lim.first + lag) << " as simulation date for '" << info.name()
+                                  << "' (from index eval date [" << io::iso_date(d) << "], inf period start ["
+                                  << io::iso_date(lim.first) << "] + lag[" << lag << "])");
                     // Allow interpolation of indices for convencience (avoid interpolation logic in script)
                     if (info.infIsInterpolated())
-                        simulationDates_.insert(d + lag);
+                        DLOG("index '" << info.name() << "' is interpolated, adding "
+                                       << io::iso_date(lim.second + 1 + lag) << "' (from index eval date ["
+                                       << io::iso_date(d) << "], start next inf period ["
+                                       << io::iso_date(lim.second + 1) << "] + lag[" << lag << "])");
+                        simulationDates_.insert(lim.second + 1 + lag);
                 }
             } else {
                 // for all other indices we just take the original dates
@@ -1587,7 +1601,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
 
     std::vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs;
     std::vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigs;
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
     std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
     std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>> comConfigs;
 
@@ -1683,9 +1697,27 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
                 calibrationStrike = QuantLib::ext::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
             }
             std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> calInstr;
-            for (auto const& d : calibrationDates)
+            DLOG("building calibration basket for inflation index '" << modelInfIndices_[i].first);
+            for (auto const& d : calibrationDates){
+                auto simLag =  simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+                Date effectiveFixingDate = d - simLag;
+                auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
+                Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
+                DLOG("processing calibration date " << d << " for inflation index '" << modelInfIndices_[i].first << "'"
+                     << " with simulationLag (days) " << simLag << ", effective fixing date " << effectiveFixingDate << " and maturity " << maturity);
+                if (maturity < referenceDate) {
+                    DLOG("skipping calibration instrument for inflation index '" << modelInfIndices_[i].first
+                         << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate
+                         << " (maturity " << maturity << ") since maturity is before reference date");
+                    continue;
+                }
+                DLOG("adding calibration instrument for inflation index '" << modelInfIndices_[i].first
+                     << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate << " (maturity " << maturity
+                     << ") and strike " << calibrationStrike->toString());
+                
                 calInstr.push_back(
-                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, d, calibrationStrike));
+                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity, calibrationStrike));
+            }
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
@@ -1767,8 +1799,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
     // FX configs
     for (Size i = 1; i < modelCcys_.size(); ++i) {
         auto config = QuantLib::ext::make_shared<FxBsData>();
-        config->foreignCcy() = modelCcys_[i];
-        config->domesticCcy() = modelCcys_[0];
+        config->setForeignCcy(modelCcys_[i]);
+        config->setDomesticCcy(modelCcys_[0]);
         // if we do not have a FX index for the currency, we set up a zero vol process (FX indices are added above
         // for all non-base ccys if fullDynamicFx is specified)
         bool haveFxIndex = false;
@@ -1779,22 +1811,22 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
         if (calibrationExpiries.empty() || !haveFxIndex || zeroVolatility_) {
             DLOG("set up zero vol FxBsData for currency '" << modelCcys_[i] << "'");
             // zero vols
-            config->calibrationType() = CalibrationType::None;
-            config->calibrateSigma() = false;
-            config->sigmaParamType() = ParamType::Constant;
-            config->sigmaTimes() = std::vector<Real>();
-            config->sigmaValues() = {0.0};
+            config->setCalibrationType(CalibrationType::None);
+            config->setCalibrateSigma(false);
+            config->setSigmaParamType(ParamType::Constant);
+            config->setSigmaTimes(std::vector<Real>());
+            config->setSigmaValues({0.0});
         } else {
             DLOG("set up FxBsData for currency '" << modelCcys_[i] << "'");
             // bootstrapped on atm fx vols
-            config->calibrationType() = CalibrationType::Bootstrap;
-            config->calibrateSigma() = true;
-            config->sigmaParamType() = ParamType::Piecewise;
-            config->sigmaTimes() = calibrationTimes;
-            config->sigmaValues() = std::vector<Real>(calibrationTimes.size() + 1, 0.10); // start value for optimiser
-            config->optionExpiries() = calibrationExpiries;
-            config->optionStrikes() =
-                std::vector<std::string>(calibrationExpiries.size(), "ATMF"); // hardcoded ATMF calibration strike
+            config->setCalibrationType(CalibrationType::Bootstrap);
+            config->setCalibrateSigma(true);
+            config->setSigmaParamType(ParamType::Piecewise);
+            config->setSigmaTimes(calibrationTimes);
+            config->setSigmaValues(std::vector<Real>(calibrationTimes.size() + 1, 0.10)); // start value for optimiser
+            config->setOptionExpiries(calibrationExpiries);
+            config->setOptionStrikes(
+                std::vector<std::string>(calibrationExpiries.size(), "ATMF")); // hardcoded ATMF calibration strike
         }
         fxConfigs.push_back(config);
     }
@@ -1973,7 +2005,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(
         market_,
         QuantLib::ext::make_shared<CrossAssetModelData>(
             std::vector<QuantLib::ext::shared_ptr<IrModelData>>{config},
-            std::vector<QuantLib::ext::shared_ptr<FxBsData>>{}, std::vector<QuantLib::ext::shared_ptr<EqBsData>>{},
+            std::vector<QuantLib::ext::shared_ptr<FxData>>{}, std::vector<QuantLib::ext::shared_ptr<EqBsData>>{},
             std::vector<QuantLib::ext::shared_ptr<InflationModelData>>{},
             std::vector<QuantLib::ext::shared_ptr<CrLgmData>>{}, std::vector<QuantLib::ext::shared_ptr<CrCirData>>{},
             std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,

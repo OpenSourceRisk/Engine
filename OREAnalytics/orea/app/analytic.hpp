@@ -25,7 +25,6 @@
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
-#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/timer.hpp>
 
 #include <orea/aggregation/collateralaccount.hpp>
@@ -37,16 +36,25 @@
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 
-#include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
 
 #include <ql/any.hpp>
 #include <iostream>
 
 namespace ore {
+namespace data {
+class CrossAssetModelData;
+class InMemoryReport;
+}; // namespace ore
+}; // namespace data
+
+namespace ore {
 namespace analytics {
 
+class InputParameters;
+struct InputVariables;
 class AnalyticsManager;
+class StressTestScenarioData;
 
 class Analytic {
 public:
@@ -71,10 +79,10 @@ public:
         bool scenarioGeneratorConfigRequired = false;
         bool crossAssetModelConfigRequired = false;
         QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams;
-        QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams;
-        QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData;
-        QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData;
-        QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData;
+        QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams;
+        QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData;
+        QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
+        QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData;
         QuantLib::ext::shared_ptr<CurveConfigurations> curveConfig;
         QuantLib::ext::shared_ptr<ore::data::EngineData> engineData;
         QuantLib::Date asofDate;

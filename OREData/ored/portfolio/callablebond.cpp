@@ -136,7 +136,7 @@ XMLNode* CallableBondData::toXML(XMLDocument& doc) const {
 }
 
 void CallableBondData::populateFromBondReferenceData(
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
+    const ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
 
     QL_REQUIRE(!bondData_.securityId().empty(),
                "CallableBondData::populateFromBondReferenceData(): no security id given");
@@ -144,13 +144,13 @@ void CallableBondData::populateFromBondReferenceData(
         DLOG("could not get CallableBondReferenceDatum for name " << bondData_.securityId()
                                                                   << " leave data in trade unchanged");
     } else {
-        auto bondRefData = boost::dynamic_pointer_cast<CallableBondReferenceDatum>(
+        auto bondRefData = ext::dynamic_pointer_cast<CallableBondReferenceDatum>(
             referenceData->getData(CallableBondReferenceDatum::TYPE, bondData_.securityId()));
         QL_REQUIRE(bondRefData, "could not cast to CallableBondReferenceDatum, this is unexpected");
         DLOG("Got CallableBondReferenceDatum for name " << bondData_.securityId()
                                                         << " overwrite empty elements in trade");
         bondData_.populateFromBondReferenceData(
-            boost::make_shared<BondReferenceDatum>(bondData_.securityId(), bondRefData->bondData()));
+            ext::make_shared<BondReferenceDatum>(bondData_.securityId(), bondRefData->bondData()));
         if (!callData_.initialised()) {
             DLOG("overwrite CallData from reference data")
             callData_ = bondRefData->callData();
@@ -175,7 +175,7 @@ XMLNode* CallableBond::toXML(XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-CallableBond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CallableBond::underlyingIndices(const ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     data_ = originalData_;
     data_.populateFromBondReferenceData(referenceDataManager);
     std::map<AssetClass, std::set<std::string>> result;
@@ -250,7 +250,7 @@ void CallableBondTrsUnderlyingBuilder::updateUnderlying(
 }
 
 
-void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void CallableBond::build(const ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("CallableBond::build() called for trade " << id());
 
     // ISDA taxonomy: same as for Bond applies here too
@@ -259,7 +259,7 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
-    auto builder = boost::dynamic_pointer_cast<CallableBondEngineBuilder>(engineFactory->builder("CallableBond"));
+    auto builder = ext::dynamic_pointer_cast<CallableBondEngineBuilder>(engineFactory->builder("CallableBond"));
     QL_REQUIRE(builder, "CallableBond::build(): could not cast to CallableBondBuilder, this is unexpected");
 
     data_ = originalData_;
@@ -270,18 +270,18 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     ore::data::Bond underlyingBond(Envelope(), data_.bondData());
     underlyingBond.build(engineFactory);
     requiredFixings_.addData(underlyingBond.requiredFixings());
-    auto qlUnderlyingBond = boost::dynamic_pointer_cast<QuantLib::Bond>(underlyingBond.instrument()->qlInstrument());
+    auto qlUnderlyingBond = ext::dynamic_pointer_cast<QuantLib::Bond>(underlyingBond.instrument()->qlInstrument());
     QL_REQUIRE(qlUnderlyingBond,
                "CallableBond::build(): internal error, could not cast underlying bond to QuantLib::Bond");
     auto qlUnderlyingBondCoupons = qlUnderlyingBond->cashflows();
     qlUnderlyingBondCoupons.erase(
         std::remove_if(qlUnderlyingBondCoupons.begin(), qlUnderlyingBondCoupons.end(),
-                       [](boost::shared_ptr<CashFlow> c) { return boost::dynamic_pointer_cast<Coupon>(c) == nullptr; }),
+                       [](ext::shared_ptr<CashFlow> c) { return ext::dynamic_pointer_cast<Coupon>(c) == nullptr; }),
         qlUnderlyingBondCoupons.end());
 
     // get open end date replacement from vanilla builder to handle perpetuals
 
-    boost::shared_ptr<EngineBuilder> vanillaBuilder = engineFactory->builder("Bond");
+    ext::shared_ptr<EngineBuilder> vanillaBuilder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "CallableBond::build(): internal error, vanilla builder is null");
     std::string openEndDateStr = vanillaBuilder->modelParameter("OpenEndDateReplacement", {}, false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, parseCalendar(data_.bondData().calendar()));
@@ -302,7 +302,7 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     // get the last relevant date of the convertible bond, this is used as the last calibration date for the model
     Date lastDate = qlUnderlyingBond->maturityDate();
 
-    auto qlInstr = boost::make_shared<QuantExt::CallableBond>(
+    auto qlInstr = ext::make_shared<QuantExt::CallableBond>(
         qlUnderlyingBond->settlementDays(), qlUnderlyingBond->calendar(), qlUnderlyingBond->issueDate(),
         qlUnderlyingBondCoupons, callData, putData);
     qlInstr->setPricingEngine(builder->engine(id(), data_.bondData().currency(), data_.bondData().creditCurveId(),
@@ -314,7 +314,7 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
 
     // set up other trade member variables
 
-    instrument_ = boost::make_shared<VanillaInstrument>(qlInstr, multiplier);
+    instrument_ = ext::make_shared<VanillaInstrument>(qlInstr, multiplier);
     npvCurrency_ = notionalCurrency_ = data_.bondData().currency();
     maturity_ = qlUnderlyingBond->maturityDate();
     notional_ = qlUnderlyingBond->notional() * data_.bondData().bondNotional();
@@ -323,8 +323,8 @@ void CallableBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     legPayers_ = {data_.bondData().isPayer()};
 }
 
-BondBuilder::Result CallableBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                               const boost::shared_ptr<ReferenceDataManager>& referenceData,
+BondBuilder::Result CallableBondBuilder::build(const ext::shared_ptr<EngineFactory>& engineFactory,
+                                               const ext::shared_ptr<ReferenceDataManager>& referenceData,
                                                const std::string& securityId) const {
     static long id = 0;
     CallableBondData data(BondData(securityId, 1.0));
@@ -334,7 +334,7 @@ BondBuilder::Result CallableBondBuilder::build(const boost::shared_ptr<EngineFac
     bond->build(engineFactory);
 
     QL_REQUIRE(bond->instrument(), "CallableBondBuilder: constructed bond is null, this is unexpected");
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
+    auto qlBond = ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
     QL_REQUIRE(
         qlBond,

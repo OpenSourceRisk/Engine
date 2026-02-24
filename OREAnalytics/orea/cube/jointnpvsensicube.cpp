@@ -17,9 +17,8 @@
 */
 
 #include <orea/cube/jointnpvsensicube.hpp>
-
 #include <ql/errors.hpp>
-
+#include <algorithm>
 #include <numeric>
 #include <set>
 

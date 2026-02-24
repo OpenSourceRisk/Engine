@@ -24,6 +24,7 @@
 #ifndef quantext_ptdhestonprocess_hpp
 #define quantext_ptdhestonprocess_hpp
 
+#include <ql/shared_ptr.hpp>
 #include <ql/models/equity/piecewisetimedependenthestonmodel.hpp>
 #include <ql/processes/hestonprocess.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -41,7 +42,8 @@ using namespace QuantLib;
 */
 class PiecewiseTimeDependentHestonProcess : public StochasticProcess {
 public:
-    PiecewiseTimeDependentHestonProcess(const boost::shared_ptr<PiecewiseTimeDependentHestonModel>& model,
+    PiecewiseTimeDependentHestonProcess(
+        const QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonModel>& model,
                      HestonProcess::Discretization d = HestonProcess::QuadraticExponentialMartingale);
 
     Size size() const;
@@ -53,19 +55,19 @@ public:
     Array apply(const Array& x0, const Array& dx) const;
     Array evolve(Time t0, const Array& x0, Time dt, const Array& dw) const;
 
-    boost::shared_ptr<PiecewiseTimeDependentHestonModel> model() const { return model_; }
+    QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonModel> model() const { return model_; }
 
     Time time(const Date&) const;
 
     HestonProcess::Discretization discretization() { return discretization_; }
 
 private:
-    boost::shared_ptr<HestonProcess> makeHestonProcess(const Real t, const Real s0, const Real v0) const;
+    QuantLib::ext::shared_ptr<HestonProcess> makeHestonProcess(const Real t, const Real s0, const Real v0) const;
 
-    const boost::shared_ptr<PiecewiseTimeDependentHestonModel> model_;
+    const QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonModel> model_;
     HestonProcess::Discretization discretization_;
     const Real smalldt_;
-    const boost::shared_ptr<HestonProcess> process0_;
+    const QuantLib::ext::shared_ptr<HestonProcess> process0_;
 };  
 
 } // namespace QuantExt

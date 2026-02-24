@@ -59,8 +59,8 @@ using namespace QuantLib;
 class CrossAssetModel : public LinkableCalibratedModel, public QuantLib::ext::enable_shared_from_this<CrossAssetModel> {
 public:
     enum class AssetType : Size { IR = 0, FX = 1, INF = 2, CR = 3, EQ = 4, COM = 5, CrState = 6 };
-    enum class ModelType { LGM1F, HW, BS, DK, CIRPP, JY, GAB, GENERIC };
-    enum class Discretization { Euler, Exact };
+    enum class ModelType { LGM1F, HW, BS, LV, DK, CIRPP, JY, GENERIC };
+    enum class Discretization { Euler, Exact, BestMarginalDiscretization };
 
     static constexpr Size numberOfAssetTypes = 7;
 
@@ -283,7 +283,10 @@ public:
 
     /*! return (I(t), I^tilde(t,T)) in the notation of the book, note that
         I(0) is normalized to 1 here, i.e. you have to multiply the result
-        with the index value (as of the base date of the inflation ts) */
+        with the index value (as of the base date of the inflation ts).
+        DayCounter dc was used to convert dates from the grid to times, used
+        to convert the times to times measure by the inflation day counter
+        */
     std::pair<Real, Real> infdkI(const Size i, const Time t, const Time T, const Real z, const Real y);
 
     /*! return YoYIIS(t) in the notation of the book, the year on year
@@ -444,6 +447,9 @@ public:
        - of asset type component t / index
        - at step i (or at all steps if i is null) */
     std::vector<bool> MoveParameter(const AssetType t, const Size param, const Size index, const Size i);
+
+    //! Returns the day counter of the domestic ir curve or nullopt
+    std::optional<QuantLib::DayCounter> dayCounter() const;
 
 protected:
     /* ctor to be used in extensions, initialize is not called */
@@ -712,6 +718,12 @@ inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, 
         return crcirppS(i, t, T, z, y);
     }
     QL_FAIL("model at " << i << " is not CR-*");
+}
+
+inline std::optional<QuantLib::DayCounter> CrossAssetModel::dayCounter() const {
+    if (irModels_.empty() || irModels_[0] == nullptr || irModels_[0]->termStructure().empty())
+        return std::nullopt;
+    return irModels_[0]->termStructure()->dayCounter();
 }
 
 std::ostream& operator<<(std::ostream& out, const CrossAssetModel::AssetType& type);

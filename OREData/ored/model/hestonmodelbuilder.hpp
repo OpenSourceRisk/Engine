@@ -52,12 +52,12 @@ public:
                        const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.5, 0.04},
                        const std::vector<bool>& fixedValues = {false, false, false, false, false},
                        const std::string& calibrationMethod = "ConstantBestFit",
-		       const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 10.0, 0.9, 0.1},
-		       Real relaxedFellerConstraint = 1.0,
-		       Size maxCalibrationAttempts = 50, Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
+                       const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 10.0, 0.9, 0.1},
+                       Real relaxedFellerConstraint = 1.0, Size maxCalibrationAttempts = 50,
+                       Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
                        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                       const Handle<YieldTermStructure>& baseCurve = {});
+                       const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false);
     HestonModelBuilder(const std::vector<std::string>& indices, const Handle<YieldTermStructure>& curve,
                        const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                        const std::set<Date>& simulationDates = {}, const std::set<Date>& addDates = {},
@@ -71,19 +71,19 @@ public:
                        const std::vector<Real>& initialValues = {0.04, 1.0, 0.5, -0.5, 0.04},
                        const std::vector<bool>& fixedValues = {false, false, false, false, false},
                        const std::string& calibrationMethod = "ConstantBestFit",
-		       const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 3.0, 0.9, 0.1},
-		       Real relaxedFellerConstraint = 1.0,
-                       Size maxCalibrationAttempts = 50, Real earlyExitThreshold = 0.005,
-                       Real maxAcceptableError = 0.05,
+                       const std::vector<Real>& maximumInitialValues = {0.1, 20.0, 3.0, 0.9, 0.1},
+                       Real relaxedFellerConstraint = 1.0, Size maxCalibrationAttempts = 50,
+                       Real earlyExitThreshold = 0.005, Real maxAcceptableError = 0.05,
                        const HestonProcess::Discretization& discretization = HestonProcess::QuadraticExponential,
                        const std::string& referenceCalibrationGrid = "", const bool dontCalibrate = false,
-                       const Handle<YieldTermStructure>& baseCurve = {})
+                       const Handle<YieldTermStructure>& baseCurve = {}, const bool observeContinuum = false)
         : HestonModelBuilder(indices, std::vector<Handle<YieldTermStructure>>{curve},
                              std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
                              addDates, timeStepsPerYear, calibrationExpiries, calibrationMoneyness,
-                             calibrationVarianceTerms, initialValues, fixedValues, 
-                             calibrationMethod, maximumInitialValues, relaxedFellerConstraint, maxCalibrationAttempts, earlyExitThreshold,
-                             maxAcceptableError, discretization, referenceCalibrationGrid, dontCalibrate, baseCurve) {}
+                             calibrationVarianceTerms, initialValues, fixedValues, calibrationMethod,
+                             maximumInitialValues, relaxedFellerConstraint, maxCalibrationAttempts, earlyExitThreshold,
+                             maxAcceptableError, discretization, referenceCalibrationGrid, dontCalibrate, baseCurve,
+                             observeContinuum) {}
 
     std::vector<ext::shared_ptr<StochasticProcess>> getCalibratedProcesses() const override;
 

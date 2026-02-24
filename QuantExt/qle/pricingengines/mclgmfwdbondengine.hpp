@@ -22,7 +22,7 @@
 */
 
 #pragma once
-
+#include <ql/shared_ptr.hpp>
 #include <qle/instruments/forwardbond.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
@@ -104,11 +104,11 @@ public:
         Currency npvCurrency() override { return baseCurrency_; }
 
         void addEngine(const QuantExt::McLgmFwdBondEngine& engine) {
-            engine_ = boost::make_shared<QuantExt::McLgmFwdBondEngine>(engine);
+            engine_ = QuantLib::ext::make_shared<QuantExt::McLgmFwdBondEngine>(engine);
         };
 
     private:
-        boost::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
+        QuantLib::ext::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
     };
 
 private:

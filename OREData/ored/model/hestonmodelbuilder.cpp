@@ -59,8 +59,9 @@ HestonModelBuilder::HestonModelBuilder(
     const ::std::string& calibrationMethod, const std::vector<Real>& maximumInitialValues, Real relaxedFellerConstraint,
     Size maxCalibrationAttempts, Real earlyExitThreshold, Real maxAcceptableError,
     const HestonProcess::Discretization& discretization, const std::string& referenceCalibrationGrid,
-    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve)
-    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
+    const bool dontCalibrate, const Handle<YieldTermStructure>& baseCurve, const bool observeContinuum)
+    : AssetModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve,
+                            observeContinuum),
       indices_(indices), calibrationExpiries_(calibrationExpiries), calibrationMoneyness_(calibrationMoneyness),
       calibrationVarianceTerms_(calibrationVarianceTerms), initialValues_(initialValues), fixedValues_(fixedValues),
       calibrationMethod_(calibrationMethod), maximumInitialValues_(maximumInitialValues),

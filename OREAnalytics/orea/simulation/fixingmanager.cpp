@@ -30,6 +30,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/genericindex.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -151,9 +152,9 @@ void FixingManager::applyFixings(Date start, Date end) {
         Date currentFixingDate;
         if (auto zii = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(m.first)) {
             fixStart =
-                inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+                inflationPeriod(fixStart - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first;
             fixEnd =
-                inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first +
+                inflationPeriod(fixEnd - simulationLag(zii->zeroInflationTermStructure()), zii->frequency()).first +
                 1;
             currentFixingDate = fixEnd;
         } else if (auto yii = QuantLib::ext::dynamic_pointer_cast<YoYInflationIndex>(m.first)) {

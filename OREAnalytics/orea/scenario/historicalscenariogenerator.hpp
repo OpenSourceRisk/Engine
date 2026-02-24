@@ -180,6 +180,13 @@ public:
     RiskFactorKey getCurrentKey() const { return currentKey_;}
     virtual void setIterator(const Size& k);
 
+    //! When true, next() populates all base-scenario keys even in single-key
+    //! breakdown mode (required for multi-threaded runs where each thread
+    //! builds a fresh sim market). When false (default), only the shifted
+    //! key is added to the scenario (single-threaded optimisation).
+    void setPopulateAllKeysOnBreakdown(bool b) { populateAllKeysOnBreakdown_ = b; }
+    bool populateAllKeysOnBreakdown() const { return populateAllKeysOnBreakdown_; }
+
 protected:
     // to be managed in derived classes, if next is overwritten
     Size i_;
@@ -213,6 +220,7 @@ private:
     std::string labelPrefix_;
     bool generateDifferenceScenarios_ = false;
     bool riskFactorBreakdown_ = false;
+    bool populateAllKeysOnBreakdown_ = false;
     RiskFactorKey currentKey_;
 };
 

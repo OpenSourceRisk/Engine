@@ -106,7 +106,7 @@ struct BondFutureUtils {
     enum BondFutureType { ShortTenorUS, LongTenorUS };
 
     static std::pair<QuantLib::Date, QuantLib::Date>
-    deduceDates(const boost::shared_ptr<BondFutureReferenceDatum>& refData);
+    deduceDates(const ext::shared_ptr<BondFutureReferenceDatum>& refData);
 
     static std::pair<QuantLib::Date, QuantLib::Date>
     deduceDates(const std::string& currency, const std::string& contractMonth, const std::string& rootDateStr,

@@ -65,6 +65,10 @@ private:
     vector<double> floors_;
     vector<string> floorDates_;
     PremiumData premiumData_;
+
+    // For fair rate calculation
+    mutable QuantLib::Leg plainFloatingLeg_;
+    mutable QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 } // namespace data
 } // namespace ore

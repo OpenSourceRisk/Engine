@@ -17,8 +17,10 @@
 */
 
 #include <orea/app/analytics/smrcanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/engine/smrc.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 namespace ore {
 namespace analytics {

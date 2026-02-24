@@ -17,11 +17,13 @@
 */
 
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/zerotoparshift.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;

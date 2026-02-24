@@ -149,7 +149,10 @@ BOOST_AUTO_TEST_CASE(testFunctions) {
     BOOST_CHECK_CLOSE((X + Y).at(0), x + y, tol);
     BOOST_CHECK_CLOSE((X - Y).at(0), x - y, tol);
     BOOST_CHECK_CLOSE((X * Y).at(0), x * y, tol);
+    BOOST_CHECK_CLOSE((x * Y).at(0), x * y, tol);
     BOOST_CHECK_CLOSE((X / Y).at(0), x / y, tol);
+    BOOST_CHECK_CLOSE((x / Y).at(0), x / y, tol);
+    BOOST_CHECK_CLOSE((X / y).at(0), x / y, tol);
 
     BOOST_CHECK_CLOSE((-X).at(0), -x, tol);
     BOOST_CHECK_CLOSE((QuantExt::abs(Y)).at(0), std::abs(y), tol);

@@ -25,7 +25,8 @@ cases = [ "run_swapflat.py",  # 1, 11
           "run_flipview.py",   # 35
           "run_xva_corr.py",
           "run_hwhistoricalcalibration.py",
-          "run_callable_bond.py"
+          "run_callable_bond.py",
+          "run_fx_localvol.py"
          ]
 
 # Get max parallel from environment variable, default to 1

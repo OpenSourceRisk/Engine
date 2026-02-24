@@ -23,11 +23,15 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/simm/crifmarket.hpp>
+#include <orea/simm/crifrecord.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/additionalfieldgetter.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+class Crif;
 
 std::pair<QuantLib::ext::shared_ptr<ore::analytics::SensitivityStream>,
           std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>
@@ -78,7 +82,7 @@ public:
     const set<CrifRecord::Regulation>& simmExemptionOverrides() const { return simmExemptionOverrides_; }
 
     //! Creates a CRIF from a sensitivity stream
-    QuantLib::ext::shared_ptr<ore::analytics::Crif>
+    QuantLib::ext::shared_ptr<Crif>
     computeCrif(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                 const QuantLib::ext::shared_ptr<SensitivityStream>& sensiStream,
                 const QuantLib::ext::shared_ptr<InputParameters>& inputs, 

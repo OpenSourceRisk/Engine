@@ -248,7 +248,7 @@ void simulation(string dateGridString, bool checkFixings) {
     vector<string> optionStrikes(optionExpiries.size(), "ATMF");
     vector<Time> sigmaTimes = {};
 
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
     vector<Real> sigmaValues = {0.15};
     fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));

@@ -383,8 +383,7 @@ RandomVariable AssetModel::npv(const RandomVariable& amount, const Date& obsdate
 
         // if t0 < t1, we roll back on the time grid
 
-        Array workingArray(amount.size());
-        amount.copyToArray(workingArray);
+        Array workingArray = static_cast<Array>(amount);
 
         for (int j = static_cast<int>(ind1) - 1; j >= static_cast<int>(ind0); --j) {
             solver_->rollback(workingArray, timeGrid_[j + 1], timeGrid_[j], 1, 0);
@@ -559,10 +558,8 @@ Real AssetModel::extractT0Result(const RandomVariable& value) const {
 
     // otherwise interpolate the result at the spot of the underlying process
 
-    Array x(underlyingValues_.size());
-    Array y(underlyingValues_.size());
-    underlyingValues_.copyToArray(x);
-    r.copyToArray(y);
+    Array x = static_cast<Array>(underlyingValues_);
+    Array y = static_cast<Array>(r);
     MonotonicCubicNaturalSpline interpolation(x.begin(), x.end(), y.begin());
     interpolation.enableExtrapolation();
     return interpolation(initialValue(0));

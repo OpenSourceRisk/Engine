@@ -34,9 +34,24 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmvectorised.hpp>
-
+#include <qle/utilities/inflation.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/quotes/simplequote.hpp>
+
+namespace {
+
+QuantExt::RandomVariable sesonalizeCPIRandomVariable(const QuantLib::Date& observationDate, const QuantExt::RandomVariable& CPI,
+                                                     const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTermStructure>& ts) {
+    if (ts->seasonality() == nullptr) {
+        return CPI;
+    }
+    auto seasonCurve = QuantLib::ext::dynamic_pointer_cast<QuantLib::MultiplicativePriceSeasonality>(ts->seasonality());
+    QL_REQUIRE(seasonCurve != nullptr, "Seasonality curve is not of type MultiplicativePriceSeasonality");
+    QuantExt::RandomVariable factor{CPI.size(), seasonCurve->seasonalityFactor(observationDate)};
+    return CPI * factor;
+}
+
+} // namespace
 
 namespace ore {
 namespace data {
@@ -478,22 +493,30 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     Date fixingDate = d;
     Date obsDate = d;
     if (fwd != Null<Date>())
-        fixingDate = fwd;
-    Size lag = getInflationSimulationLag(infIndices_[indexNo].second);
-    auto const& state = infStates_.at(obsDate + lag).at(indexNo);
+        fixingDate = fwd;    
+    const auto& index = infIndices_[indexNo].second;
+    const auto& zits = index->zeroInflationTermStructure().currentLink();
+    auto lag = simulationLag(zits);
+    // we have an simulation lag when simulating inf indices, we need to adjust the observation date accordingly,
+    // (see scriptedtrade.cpp, when compiling the inflation simulation dates).
+    auto laggedObsDate = obsDate + lag;
+    auto laggedFixingDate = fixingDate + lag;
+    auto const& state = infStates_.at(laggedObsDate).at(indexNo);
     Size camIndex = infIndexPositionInCam_[indexNo];
-    Real t = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(obsDate + lag);
-    Real T = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(fixingDate + lag);
-    bool isInterpolated = infIndices_[indexNo].first.infIsInterpolated();
-    Real baseFixing =
-        infIndices_[indexNo].second->fixing(infIndices_[indexNo].second->zeroInflationTermStructure()->baseDate());
+    // Calculate time from curve base date to observation and fixing date and not from reference date, as
+    // inflation curves are starting from their base date < reference date, and we have to add the time from base
+    // date to reference date to the timeFromReference calculation
+    auto modelDc = cam_->dayCounter().value_or(zits->dayCounter());
+    Real t = modelDc.yearFraction(zits->referenceDate(), laggedObsDate);
+    Real T = modelDc.yearFraction(zits->referenceDate(), laggedFixingDate);
     RandomVariable result(size());
-
     if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::DK) {
+        Real baseFixing = infIndices_[indexNo].second->fixing(zits->baseDate());
+        baseFixing = deseasonalizeCPI(zits->baseDate(), baseFixing, zits);
         InfDkVectorised infdkv(*cam_);
         RandomVariable baseFixingVec(size(), baseFixing);
         QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
-        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second, isInterpolated);
+        auto dk = infdkv.infdkI(camIndex, t, T, state.first, state.second, true);
         result = baseFixingVec * dk.first * (fixingDate != obsDate ? dk.second : RandomVariable(size(), 1.0));
     } else if (cam_->modelType(CrossAssetModel::AssetType::INF, camIndex) == CrossAssetModel::ModelType::JY) {
         result = exp(state.second);
@@ -502,8 +525,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
             RandomVariable growthFactor(size());
             growthFactor.expand();
             for (Size p = 0; p < size(); ++p) {
-                growthFactor.data()[p] =
-                    inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], isInterpolated);
+                growthFactor.data()[p] = inflationGrowth(*cam_, indexNo, t, T, state.first[p], state.second[p], true);
             }
             result *= growthFactor;
         }
@@ -511,7 +533,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
         QL_FAIL("GaussianCam::getInfIndexValue(): unknown model type for inflation index "
                 << infIndices_[indexNo].first.name());
     }
-    return result;
+    return sesonalizeCPIRandomVariable(obsDate, result, zits);
 }
 
 RandomVariable GaussianCam::fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate,
@@ -752,6 +774,7 @@ void GaussianCam::injectPaths(const std::vector<QuantLib::Real>* pathTimes,
     injectedPathRelevantTimeIndexes_ = timeIndexes;
     update();
 }
+
 
 } // namespace data
 } // namespace ore

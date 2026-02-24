@@ -18,10 +18,12 @@
 
 #include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/saccrtradedata.hpp>
 #include <orea/engine/saccrcrifgenerator.hpp>
 #include <orea/engine/saccrcalculator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
 using namespace std::filesystem;

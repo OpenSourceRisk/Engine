@@ -25,6 +25,9 @@
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
 class ParStressConversionAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PARSTRESSCONVERSION";

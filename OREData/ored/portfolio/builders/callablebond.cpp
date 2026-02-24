@@ -35,7 +35,7 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
+ext::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const std::string& id, const std::string& ccy,
                                                                          const QuantLib::Date& maturityDate,
                                                                          const bool generateAdditionalResults) {
 
@@ -60,7 +60,7 @@ boost::shared_ptr<QuantExt::IrModel> CallableBondLgmEngineBuilder::model(const s
 
     auto floatSpreadMapping = parseFloatSpreadMapping(modelParameter("FloatSpreadMapping", {}, false, "proRata"));
 
-    auto data = boost::make_shared<IrLgmData>();
+    auto data = ext::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
@@ -188,7 +188,7 @@ Handle<QuantExt::CrossAssetModel> CallableBondCamEngineBuilder::model(const std:
 
     auto floatSpreadMapping = parseFloatSpreadMapping(modelParameter("FloatSpreadMapping", {}, false, "proRata"));
 
-    auto data = boost::make_shared<IrLgmData>();
+    auto data = ext::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
@@ -300,7 +300,7 @@ Handle<QuantExt::CrossAssetModel> CallableBondCamEngineBuilder::model(const std:
     
     
     //! Vector of FX model specifications
-    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxConfigs;
     //! Vector of EQ model specifications
     std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
     //! Vector of INF model specifications

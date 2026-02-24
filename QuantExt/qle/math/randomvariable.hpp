@@ -171,8 +171,8 @@ struct RandomVariable {
     explicit RandomVariable(const std::vector<double>& data, const Real time = Null<Real>());
     // interop with ql classes
     explicit RandomVariable(const QuantLib::Array& data, const Real time = Null<Real>());
+    explicit operator Array() const;
     void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
-    void copyToArray(QuantLib::Array& array) const;
     // modifiers
     void clear();
     void set(const Size i, const Real v);
@@ -192,18 +192,36 @@ struct RandomVariable {
     Real at(const Size i) const;         // with checks for initialized, i within bounds
     Real time() const { return time_; }
     RandomVariable& operator+=(const RandomVariable&);
+    RandomVariable& operator+=(const Real);
     RandomVariable& operator-=(const RandomVariable&);
+    RandomVariable& operator-=(const Real);
     RandomVariable& operator*=(const RandomVariable&);
+    RandomVariable& operator*=(const Real);
     RandomVariable& operator/=(const RandomVariable&);
+    RandomVariable& operator/=(const Real);
     friend bool operator==(const RandomVariable&, const RandomVariable&);
     friend RandomVariable operator+(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator+(Real,RandomVariable);
+    friend RandomVariable operator+(RandomVariable,Real);
     friend RandomVariable operator-(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator-(Real,RandomVariable);
+    friend RandomVariable operator-(RandomVariable,Real);
     friend RandomVariable operator*(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator*(Real, RandomVariable);
+    friend RandomVariable operator*(RandomVariable, Real);
     friend RandomVariable operator/(RandomVariable, const RandomVariable&);
+    friend RandomVariable operator/(Real, RandomVariable);
+    friend RandomVariable operator/(RandomVariable, Real);
     friend RandomVariable max(RandomVariable, const RandomVariable&);
+    friend RandomVariable max(RandomVariable, const Real);
+    friend RandomVariable max(const Real, RandomVariable);
     friend RandomVariable min(RandomVariable, const RandomVariable&);
+    friend RandomVariable min(RandomVariable, const Real);
+    friend RandomVariable min(const Real, RandomVariable);
     friend RandomVariable pow(RandomVariable, const RandomVariable&);
+    friend RandomVariable pow(RandomVariable, const Real);
     friend RandomVariable round(RandomVariable, const RandomVariable&);
+    friend RandomVariable round(RandomVariable, const Real);
     friend RandomVariable operator-(RandomVariable);
     friend RandomVariable abs(RandomVariable);
     friend RandomVariable exp(RandomVariable);
@@ -266,13 +284,27 @@ bool operator==(const RandomVariable& a, const RandomVariable& b);
 bool operator!=(const RandomVariable& a, const RandomVariable& b);
 
 RandomVariable operator+(RandomVariable, const RandomVariable&);
+RandomVariable operator+(Real,RandomVariable);
+RandomVariable operator+(RandomVariable,Real);
 RandomVariable operator-(RandomVariable, const RandomVariable&);
+RandomVariable operator-(Real,RandomVariable);
+RandomVariable operator-(RandomVariable, Real);
 RandomVariable operator*(RandomVariable, const RandomVariable&);
+RandomVariable operator*(Real, RandomVariable);
+RandomVariable operator*(RandomVariable, Real);
 RandomVariable operator/(RandomVariable, const RandomVariable&);
+RandomVariable operator/(Real, RandomVariable);
+RandomVariable operator/(RandomVariable, Real);
 RandomVariable max(RandomVariable, const RandomVariable&);
+RandomVariable max(RandomVariable, const Real);
+RandomVariable max(const Real, RandomVariable);
 RandomVariable min(RandomVariable, const RandomVariable&);
+RandomVariable min(RandomVariable, const Real);
+RandomVariable min(Real, RandomVariable);
 RandomVariable pow(RandomVariable, const RandomVariable&);
+RandomVariable pow(RandomVariable, const Real);
 RandomVariable round(RandomVariable, const RandomVariable&);
+RandomVariable round(RandomVariable, const Real);
 RandomVariable operator-(RandomVariable);
 RandomVariable abs(RandomVariable);
 RandomVariable exp(RandomVariable);

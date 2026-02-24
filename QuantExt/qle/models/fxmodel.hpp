@@ -43,6 +43,9 @@ public:
     /*! number of Brownians to evolve the state */
     virtual Size m() const = 0;
 
+    /*! get spot volatility at time t for state s */
+    virtual double volatility(const Time t, const Array& s) const = 0;
+
     /*! perform an Euler step given short rates for the rates */
     virtual Array eulerStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
                             const Real r_for) const = 0;

@@ -28,6 +28,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 class PortfolioDetailsAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PORTFOLIO_DETAILS";

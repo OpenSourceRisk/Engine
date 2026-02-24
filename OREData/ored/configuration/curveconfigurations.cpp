@@ -373,7 +373,7 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
 }
 
 QuantLib::ext::shared_ptr<CurveConfig>
-CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) {
+CurveConfigurations::findInflationCurveConfig(const string& id, InflationCurveConfig::Type type) const {
     set<string> curves;
     const auto& it = configs_.find(CurveSpec::CurveType::Inflation);
     if (it != configs_.end()) {

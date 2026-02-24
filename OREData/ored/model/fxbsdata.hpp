@@ -23,17 +23,7 @@
 
 #pragma once
 
-#include <vector>
-
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/types.hpp>
-
-#include <qle/models/crossassetmodel.hpp>
-
-#include <ored/configuration/conventions.hpp>
-#include <ored/marketdata/market.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/model/fxdata.hpp>
 
 namespace ore {
 namespace data {
@@ -47,50 +37,47 @@ using namespace QuantLib;
 
   \ingroup models
 */
-class FxBsData {
+class FxBsData : public FxData {
 public:
-    //! Default constructor
-    FxBsData() {}
-
-    //! Detailed constructor
+    FxBsData() : FxData({}, {}, "CrossCcyLGM") {}
     FxBsData(std::string foreignCcy, std::string domesticCcy, CalibrationType calibrationType, bool calibrateSigma,
              ParamType sigmaType, const std::vector<Time>& sigmaTimes, const std::vector<Real>& sigmaValues,
              std::vector<std::string> optionExpiries = std::vector<std::string>(),
              std::vector<std::string> optionStrikes = std::vector<std::string>())
-        : foreignCcy_(foreignCcy), domesticCcy_(domesticCcy), calibrationType_(calibrationType),
+        : FxData(foreignCcy, domesticCcy, "CrossCcyLGM"), calibrationType_(calibrationType),
           calibrateSigma_(calibrateSigma), sigmaType_(sigmaType), sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues),
           optionExpiries_(optionExpiries), optionStrikes_(optionStrikes) {}
 
     //! \name Setters/Getters
     //@{
-    const std::string& foreignCcy() const { return foreignCcy_; }
-    std::string& foreignCcy() { return foreignCcy_; }
-    const std::string& domesticCcy() const { return domesticCcy_; }
-    std::string& domesticCcy() { return domesticCcy_; }
-    CalibrationType& calibrationType() { return calibrationType_; }
-    bool& calibrateSigma() { return calibrateSigma_; }
-    ParamType& sigmaParamType() { return sigmaType_; }
-    std::vector<Time>& sigmaTimes() { return sigmaTimes_; }
-    std::vector<Real>& sigmaValues() { return sigmaValues_; }
-    std::vector<std::string>& optionExpiries() { return optionExpiries_; }
-    std::vector<std::string>& optionStrikes() { return optionStrikes_; }
+    CalibrationType calibrationType() const { return calibrationType_; }
+    bool calibrateSigma() const { return calibrateSigma_; }
+    ParamType sigmaParamType() const { return sigmaType_; }
+    const std::vector<Time>& sigmaTimes() const { return sigmaTimes_; }
+    const std::vector<Real>& sigmaValues() const { return sigmaValues_; }
+    const std::vector<std::string>& optionExpiries() const { return optionExpiries_; }
+    const std::vector<std::string>& optionStrikes() const { return optionStrikes_; }
+    void setCalibrationType(const CalibrationType type) { calibrationType_ = type; }
+    void setCalibrateSigma(bool b) { calibrateSigma_ = b; }
+    void setSigmaParamType(const ParamType type) { sigmaType_ = type; }
+    void setSigmaTimes(std::vector<Time> times) { sigmaTimes_ = std::move(times); }
+    void setSigmaValues(std::vector<Real> values) { sigmaValues_ = std::move(values); }
+    void setOptionExpiries(std::vector<std::string> expiries) { optionExpiries_ = std::move(expiries); }
+    void setOptionStrikes(std::vector<std::string> strikes) { optionStrikes_ = std::move(strikes); }
     //@}
 
     //! \name Serialisation
     //@{
-    void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
-    //! \name Operators
-    //@{
-    bool operator==(const FxBsData& rhs);
-    bool operator!=(const FxBsData& rhs);
-    //@}
+    bool operator==(const FxBsData& rhs) const = default;
+    bool operator!=(const FxBsData& rhs) const = default;
+
+    QuantLib::ext::shared_ptr<FxData> clone(std::string foreignCcy) const override;
 
 private:
-    std::string foreignCcy_;
-    std::string domesticCcy_;
     CalibrationType calibrationType_;
     bool calibrateSigma_;
     ParamType sigmaType_;
@@ -99,5 +86,6 @@ private:
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
 };
+
 } // namespace data
 } // namespace ore

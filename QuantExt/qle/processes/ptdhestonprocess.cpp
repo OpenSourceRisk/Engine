@@ -15,29 +15,30 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
+#include <ql/shared_ptr.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
 #include <qle/processes/ptdhestonprocess.hpp>
 #include <qle/termstructures/impliedtermstructure.hpp>
-
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
 
-PiecewiseTimeDependentHestonProcess::PiecewiseTimeDependentHestonProcess(const boost::shared_ptr<PiecewiseTimeDependentHestonModel>& model,
+PiecewiseTimeDependentHestonProcess::PiecewiseTimeDependentHestonProcess(const QuantLib::ext::shared_ptr<PiecewiseTimeDependentHestonModel>& model,
                                    HestonProcess::Discretization d)
-    : StochasticProcess(boost::shared_ptr<StochasticProcess::discretization>(new EulerDiscretization)), model_(model), discretization_(d),
+    : StochasticProcess(QuantLib::ext::shared_ptr<StochasticProcess::discretization>(new EulerDiscretization)),
+      model_(model), discretization_(d),
       smalldt_(1.0E-8), process0_(makeHestonProcess(0.0, model_->s0(), model_->v0())) {
 
     registerWith(model_);
 }
 
-boost::shared_ptr<HestonProcess> PiecewiseTimeDependentHestonProcess::makeHestonProcess(const Real t, const Real s0, const Real v0) const {
+QuantLib::ext::shared_ptr<HestonProcess>
+PiecewiseTimeDependentHestonProcess::makeHestonProcess(const Real t, const Real s0, const Real v0) const {
     Real tmp = t + smalldt_;
-    return boost::make_shared<HestonProcess>(
-        Handle<YieldTermStructure>(boost::make_shared<ImpliedTermStructure>(model_->riskFreeRate(), t)),
-        Handle<YieldTermStructure>(boost::make_shared<ImpliedTermStructure>(model_->dividendYield(), t)),
-        Handle<Quote>(boost::make_shared<SimpleQuote>(s0)), v0, model_->kappa(tmp), model_->theta(tmp),
+    return QuantLib::ext::make_shared<HestonProcess>(
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<ImpliedTermStructure>(model_->riskFreeRate(), t)),
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<ImpliedTermStructure>(model_->dividendYield(), t)),
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(s0)), v0, model_->kappa(tmp), model_->theta(tmp),
         model_->sigma(tmp), model_->rho(tmp), discretization_);
 }
 
