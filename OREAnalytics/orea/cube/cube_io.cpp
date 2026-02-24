@@ -30,6 +30,7 @@
 
 #include <charconv>
 #include <chrono>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <regex>
@@ -75,6 +76,44 @@ inline bool fast_parse_double(const char*& p, const char* end, double& out) {
         ++p;
     return true;
 }
+
+// ---------------------------------------------------------------------------
+// Buffered writer — batches small writes into a 1 MB buffer before flushing
+// to the underlying filtering_stream, reducing per-write overhead through the
+// gzip compressor filter chain (B2).
+// ---------------------------------------------------------------------------
+struct BufWriter {
+    static constexpr std::size_t CAPACITY = 1u << 20; // 1 MB
+    boost::iostreams::filtering_stream<boost::iostreams::output>& sink_;
+    std::vector<char> buf_;
+    std::size_t pos_ = 0;
+
+    explicit BufWriter(boost::iostreams::filtering_stream<boost::iostreams::output>& s)
+        : sink_(s), buf_(CAPACITY) {}
+
+    void flush() {
+        if (pos_ > 0) {
+            sink_.write(buf_.data(), static_cast<std::streamsize>(pos_));
+            pos_ = 0;
+        }
+    }
+
+    // n must be < CAPACITY (guaranteed: max line length here is ~128 bytes)
+    void write(const char* data, std::size_t n) {
+        if (pos_ + n > CAPACITY - 512)
+            flush();
+        std::memcpy(buf_.data() + pos_, data, n);
+        pos_ += n;
+    }
+
+    void put(char c) {
+        if (pos_ + 1 > CAPACITY - 512)
+            flush();
+        buf_[pos_++] = c;
+    }
+
+    ~BufWriter() { flush(); }
+};
 
 bool use_compression(const std::string& filename) {
 #ifdef ORE_USE_ZLIB
@@ -252,45 +291,50 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
         out << "# storeCrSt  : " << *cube.storeCreditStateNPVs() << "\n";
     }
 
-    // write cube data (charconv: locale-independent, fastest round-trip formatting)
+    // write cube data — buffered to amortise per-write overhead of the
+    // gzip filter chain (B2); charconv for locale-independent formatting (P5).
+    {
+        BufWriter w(out);
+        static constexpr char hdr[] = "#id,date,sample,depth,value\n";
+        w.write(hdr, sizeof(hdr) - 1);
 
-    char idxBuf[128]; // sufficient for 4 x uint64 indices + commas
-    char valBuf[32];  // sufficient for any double in shortest round-trip form
+        char idxBuf[128]; // sufficient for 4 x uint64 indices + commas
+        char valBuf[32];  // sufficient for any double in shortest round-trip form
 
-    out << "#id,date,sample,depth,value\n";
-    for (Size i = 0; i < cube.cube()->numIds(); ++i) {
-        // T0 line: "i,0,0,0,value\n"
-        {
-            char* p = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
-            *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ',';
-            auto [vp, vec] = std::to_chars(valBuf, valBuf + sizeof(valBuf), cube.cube()->getT0(i));
-            out.write(idxBuf, p - idxBuf);
-            out.write(valBuf, vp - valBuf);
-            out.put('\n');
-        }
+        for (Size i = 0; i < cube.cube()->numIds(); ++i) {
+            // T0 line: "i,0,0,0,value\n"
+            {
+                char* p = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
+                *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ',';
+                auto [vp, vec] = std::to_chars(valBuf, valBuf + sizeof(valBuf), cube.cube()->getT0(i));
+                w.write(idxBuf, static_cast<std::size_t>(p - idxBuf));
+                w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
+                w.put('\n');
+            }
 
-        char* p0_end = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
-        *p0_end++ = ',';
-        for (Size j = 0; j < cube.cube()->numDates(); ++j) {
-            char* p1_end = std::to_chars(p0_end, p0_end + 24, j + 1).ptr;
-            *p1_end++ = ',';
-            for (Size k = 0; k < cube.cube()->samples(); ++k) {
-                char* p2_end = std::to_chars(p1_end, p1_end + 24, k).ptr;
-                *p2_end++ = ',';
-                for (Size d = 0; d < cube.cube()->depth(); ++d) {
-                    double value = cube.cube()->get(i, j, k, d);
-                    if (value != 0.0) {
-                        char* p3_end = std::to_chars(p2_end, p2_end + 24, d).ptr;
-                        *p3_end++ = ',';
-                        auto [vp, vec] = std::to_chars(valBuf, valBuf + sizeof(valBuf), value);
-                        out.write(idxBuf, p3_end - idxBuf);
-                        out.write(valBuf, vp - valBuf);
-                        out.put('\n');
+            char* p0_end = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
+            *p0_end++ = ',';
+            for (Size j = 0; j < cube.cube()->numDates(); ++j) {
+                char* p1_end = std::to_chars(p0_end, p0_end + 24, j + 1).ptr;
+                *p1_end++ = ',';
+                for (Size k = 0; k < cube.cube()->samples(); ++k) {
+                    char* p2_end = std::to_chars(p1_end, p1_end + 24, k).ptr;
+                    *p2_end++ = ',';
+                    for (Size d = 0; d < cube.cube()->depth(); ++d) {
+                        double value = cube.cube()->get(i, j, k, d);
+                        if (value != 0.0) {
+                            char* p3_end = std::to_chars(p2_end, p2_end + 24, d).ptr;
+                            *p3_end++ = ',';
+                            auto [vp, vec] = std::to_chars(valBuf, valBuf + sizeof(valBuf), value);
+                            w.write(idxBuf, static_cast<std::size_t>(p3_end - idxBuf));
+                            w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
+                            w.put('\n');
+                        }
                     }
                 }
             }
         }
-    }
+    } // BufWriter flushes on destruction
 }
 
 QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
@@ -392,21 +436,29 @@ void saveAggregationScenarioData(const std::string& filename, const AggregationS
         out << "# " << (unsigned int)k.first << "," << k.second << "\n";
     }
 
-    // write data (charconv: locale-independent, fastest round-trip formatting)
+    // write data — buffered (B2); all fields formatted via charconv (P5) so
+    // operator<< is never called in the hot loop.
+    {
+        BufWriter w(out);
+        static constexpr char hdr[] = "#date,sample,key,value\n";
+        w.write(hdr, sizeof(hdr) - 1);
 
-    char aggValBuf[32]; // sufficient for any double in shortest round-trip form
-    out << "#date,sample,key,value\n";
-    for (Size i = 0; i < cube.dimDates(); ++i) {
-        for (Size j = 0; j < cube.dimSamples(); ++j) {
-            for (Size k = 0; k < keys.size(); ++k) {
-                auto [vp, vec] = std::to_chars(aggValBuf, aggValBuf + sizeof(aggValBuf),
-                                               cube.get(i, j, keys[k].first, keys[k].second));
-                out << (i + 1) << "," << j << "," << k << ",";
-                out.write(aggValBuf, vp - aggValBuf);
-                out.put('\n');
+        char lineBuf[128]; // date + sample + key + value + 3 commas + newline
+        for (Size i = 0; i < cube.dimDates(); ++i) {
+            for (Size j = 0; j < cube.dimSamples(); ++j) {
+                for (Size k = 0; k < keys.size(); ++k) {
+                    char* p = lineBuf;
+                    p = std::to_chars(p, p + 20, i + 1).ptr; *p++ = ',';
+                    p = std::to_chars(p, p + 20, j).ptr;     *p++ = ',';
+                    p = std::to_chars(p, p + 20, k).ptr;     *p++ = ',';
+                    p = std::to_chars(p, p + 32,
+                                      cube.get(i, j, keys[k].first, keys[k].second)).ptr;
+                    *p++ = '\n';
+                    w.write(lineBuf, static_cast<std::size_t>(p - lineBuf));
+                }
             }
         }
-    }
+    } // BufWriter flushes on destruction
 }
 
 } // namespace analytics
