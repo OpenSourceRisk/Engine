@@ -51,20 +51,29 @@ namespace data {
 
 namespace {
 
-CPI::InterpolationType getObservationInterpolation(
-    const QuantLib::ext::shared_ptr<ore::data::InflationCapFloorVolatilityCurveConfig>& config) {
+std::pair<Date, bool> getStartDateAndIsInterpolated(
+    const Date& asof, const QuantLib::ext::shared_ptr<ore::data::InflationCapFloorVolatilityCurveConfig>& config) {
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions =
         ore::data::InstrumentConventions::instance().conventions();
+    Date startDate = Date();
     bool interpolated = false;
-    if (!config->conventions().empty() && conventions->has(config->conventions())) {
-        QuantLib::ext::shared_ptr<ore::data::InflationSwapConvention> conv =
-            QuantLib::ext::dynamic_pointer_cast<ore::data::InflationSwapConvention>(
-                conventions->get(config->conventions()));
+    if (!config->conventions().empty() && conventions->has(config->conventions(), Convention::Type::InflationSwap)) {
+        QuantLib::ext::shared_ptr<InflationSwapConvention> conv =
+            QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
+        startDate = getStartAndLag(asof, *conv).first;
         interpolated = conv->interpolated();
     }
-    // Use AsIndex which will default later to flat, once interpolation was removed from yy index in QL
+    return {startDate, interpolated};
+}
+
+CPI::InterpolationType getObservationInterpolation(
+    const QuantLib::ext::shared_ptr<ore::data::InflationCapFloorVolatilityCurveConfig>& config) {
+    auto [_, interpolated] = getStartDateAndIsInterpolated(Settings::instance().evaluationDate(), config);
+    // If the convention is not interpolated, return AsIndex, it will defualt to flat, once the index interpolation
+    // method is fully deprecated in QL.
     return interpolated ? CPI::Linear : CPI::AsIndex;
 }
+
 
 } // namespace
 
@@ -305,15 +314,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
         QuantLib::ext::shared_ptr<ZeroInflationIndex> index = getIndex(spec, config, inflationCurves);
         
         DLOG("Building surface");
-        Date startDate = Date();
-        const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        bool interpolated = false;
-        if (!config->conventions().empty() && conventions->has(config->conventions())) {
-            QuantLib::ext::shared_ptr<InflationSwapConvention> conv =
-                QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
-            startDate = getStartAndLag(asof, *conv).first;
-            interpolated = conv->interpolated();
-        }
+        auto [startDate, interpolated] = getStartDateAndIsInterpolated(asof, config);
 
         cpiVolSurface_ = QuantLib::ext::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
             tenors, strikes, quotes, index, interpolated, config->settleDays(), config->calendar(),
@@ -446,16 +447,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         }
 
         try {
-            const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-            Date startDate = Date();
-            bool interpolated = false;
-            if (!config->conventions().empty() &&
-                conventions->has(config->conventions(), Convention::Type::InflationSwap)) {
-                QuantLib::ext::shared_ptr<InflationSwapConvention> conv =
-                    QuantLib::ext::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
-                startDate = getStartAndLag(asof, *conv).first;
-                interpolated = conv->interpolated();
-            }
+            auto [startDate, interpolated] = getStartDateAndIsInterpolated(asof, config);            
             QuantLib::ext::shared_ptr<QuantExt::CPIPriceVolatilitySurface<Linear, Linear>> cpiCapFloorVolSurface;
             
             // We ignore missing prices and convert all available prices to vols and interpolate misisng vols linear and 
