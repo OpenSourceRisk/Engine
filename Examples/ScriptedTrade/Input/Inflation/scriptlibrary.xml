@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ScriptLibrary>
+  <Script>
+    <Name>CappedFlooredZeroCouponInflationSwap</Name>
+    <Script>
+      <Code>
+        <![CDATA[
+          NUMBER j, infLegNPV, zcLegNPV, accrual;
+          NUMBER call[SIZE(CPIFixingDates)-1], put[SIZE(CPIFixingDates)-1], growth[SIZE(CPIFixingDates)-1];
+          NUMBER BaseCPI, CPI[SIZE(CPIFixingDates)-1];
+          FOR j IN (2, SIZE(CPIFixingDates), 1) DO
+		        BaseCPI = CPIIndex(CPIFixingDates[1]);
+            CPI[j-1] = CPIIndex(CPIFixingDates[j]);
+            accrual = dcf(zeroDayCounter, CPIFixingDates[1], CPIFixingDates[j]);
+            growth[j-1] = CPI[j-1] / BaseCPI;
+            call[j-1] = max(growth[j-1] - pow(1.0 + Cap, accrual), 0.0);
+            put[j-1] = max(pow(1.0 + Floor, accrual) - growth[j-1], 0.0);
+            infLegNPV =  infLegNPV + LOGPAY(Notional * growth[j-1],  CPIFixingDates[j], CPISchedule[j], Currency, 0, Inflation) + 
+              LOGPAY(Notional * put[j-1],  CPIFixingDates[j], CPISchedule[j], Currency, 0, Floorlet) - 
+              LOGPAY(Notional * call[j-1],  CPIFixingDates[j], CPISchedule[j], Currency, 0, Caplet);
+          END;
+          FOR j IN (2, SIZE(ZeroCouponSchedule), 1) DO
+            accrual = dcf(zeroDayCounter, ZeroCouponSchedule[1], ZeroCouponSchedule[j]);        
+            zcLegNPV = zcLegNPV + LOGPAY(Notional * pow(1.0 + zeroRate, accrual), ZeroCouponSchedule[j], ZeroCouponSchedule[j], Currency, 1, ZeroCoupon);
+          END;
+          IF payInflation == 0 THEN
+            Value =  infLegNPV - zcLegNPV;
+          ELSE
+            Value =  zcLegNPV - infLegNPV;
+          END;
+        ]]>      </Code>
+      <NPV>Value</NPV>
+      <Results>
+        <Result>Notional</Result>
+        <Result>CPI</Result>
+        <Result>BaseCPI</Result>
+        <Result>infLegNPV</Result>
+        <Result>zcLegNPV</Result>
+        <Result>growth</Result>
+        <Result>call</Result>
+        <Result>put</Result>
+      </Results>
+    </Script>
+  </Script>
+</ScriptLibrary>

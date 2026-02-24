@@ -1,0 +1,5 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+Scripted_ZCIIS_floored,ScriptedTrade,2020-06-05,4.330601,31284.095816,EUR,31284.095816,EUR,#N/A,#N/A,#N/A,,
+Scripted_ZCIIS_seasoned,ScriptedTrade,2020-06-05,4.330601,4849.837422,EUR,4849.837422,EUR,#N/A,#N/A,#N/A,,
+ZeroCouponSwap_floored,InflationSwap,2020-06-05,4.330601,31276.828025,EUR,31276.828025,EUR,1000000.00,EUR,1000000.00,CPTY_A_tradeTypeWrapper,CPTY_A
+ZeroCouponSwap_seasoned,InflationSwap,2020-06-05,4.330601,4950.252117,EUR,4950.252117,EUR,1000000.00,EUR,1000000.00,CPTY_A_tradeTypeWrapper,CPTY_A

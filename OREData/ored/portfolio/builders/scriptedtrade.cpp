@@ -51,6 +51,7 @@
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
@@ -1162,13 +1163,26 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                 // inf needs special considerations
                 QuantLib::ext::shared_ptr<ZeroInflationIndex> marketIndex =
                     getInfMarketIndex(info.name(), modelInfIndices_);
-                Size lag = getInflationSimulationLag(marketIndex);
+                // we have an simulation lag when simulating inf indices, the lag is the difference between the last
+                // observered fixing (base date of the t0 curve) and t0. We keep the lag constant throughout the
+                // simulation. At time t we simulated effectivly the index value at t - lag, so we need to add the lag
+                // to the relevant dates to make sure we have the required fixings in the simulation (the inflation
+                // models are continuous time models, so lag is applied as number of days and the lagged date is not
+                // moved to the beginning of the inflation period).
+                int lag = simulationLag(marketIndex->zeroInflationTermStructure());
                 for (auto const& d : s.second) {
                     auto lim = inflationPeriod(d, info.inf()->frequency());
                     simulationDates_.insert(lim.first + lag);
+                    DLOG("added " << io::iso_date(lim.first + lag) << " as simulation date for '" << info.name()
+                                  << "' (from index eval date [" << io::iso_date(d) << "], inf period start ["
+                                  << io::iso_date(lim.first) << "] + lag[" << lag << "])");
                     // Allow interpolation of indices for convencience (avoid interpolation logic in script)
                     if (info.infIsInterpolated())
-                        simulationDates_.insert(d + lag);
+                        DLOG("index '" << info.name() << "' is interpolated, adding "
+                                       << io::iso_date(lim.second + 1 + lag) << "' (from index eval date ["
+                                       << io::iso_date(d) << "], start next inf period ["
+                                       << io::iso_date(lim.second + 1) << "] + lag[" << lag << "])");
+                        simulationDates_.insert(lim.second + 1 + lag);
                 }
             } else {
                 // for all other indices we just take the original dates
@@ -1683,9 +1697,27 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
                 calibrationStrike = QuantLib::ext::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
             }
             std::vector<QuantLib::ext::shared_ptr<CalibrationInstrument>> calInstr;
-            for (auto const& d : calibrationDates)
+            DLOG("building calibration basket for inflation index '" << modelInfIndices_[i].first);
+            for (auto const& d : calibrationDates){
+                auto simLag =  simulationLag(modelInfIndices_[i].second->zeroInflationTermStructure());
+                Date effectiveFixingDate = d - simLag;
+                auto cpiVolatility = market_->cpiInflationCapFloorVolatilitySurface(modelInfIndices_[i].first);
+                Date maturity = effectiveFixingDate + cpiVolatility->observationLag();
+                DLOG("processing calibration date " << d << " for inflation index '" << modelInfIndices_[i].first << "'"
+                     << " with simulationLag (days) " << simLag << ", effective fixing date " << effectiveFixingDate << " and maturity " << maturity);
+                if (maturity < referenceDate) {
+                    DLOG("skipping calibration instrument for inflation index '" << modelInfIndices_[i].first
+                         << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate
+                         << " (maturity " << maturity << ") since maturity is before reference date");
+                    continue;
+                }
+                DLOG("adding calibration instrument for inflation index '" << modelInfIndices_[i].first
+                     << "' with expiry " << d << " and effective fixing date " << effectiveFixingDate << " (maturity " << maturity
+                     << ") and strike " << calibrationStrike->toString());
+                
                 calInstr.push_back(
-                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, d, calibrationStrike));
+                    QuantLib::ext::make_shared<CpiCapFloor>(QuantLib::CapFloor::Type::Floor, maturity, calibrationStrike));
+            }
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
