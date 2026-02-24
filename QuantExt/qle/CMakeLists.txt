@@ -217,6 +217,7 @@ models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
+models/fxlvmodel.cpp
 models/fxlvparametrization.cpp
 models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp

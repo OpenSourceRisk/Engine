@@ -26,8 +26,6 @@
 #include <qle/models/fxlvparametrization.hpp>
 #include <qle/models/fxmodel.hpp>
 
-#include <iostream>
-
 namespace QuantExt {
 
 class FxLvModel : public FxModel {
@@ -52,29 +50,5 @@ private:
     QuantLib::ext::shared_ptr<FxLvParametrization> parametrization_;
     Discretization disc_;
 };
-
-inline FxLvModel::FxLvModel(const QuantLib::ext::shared_ptr<FxLvParametrization>& parametrization,
-                            const Discretization disc)
-    : parametrization_(parametrization), disc_(disc) {
-    QL_REQUIRE(parametrization != nullptr, "FxLvModel: parametrization is null");
-}
-
-inline double FxLvModel::volatility(const Time t, const Array& s) const { return parametrization_->sigma(t, s[0]); }
-
-inline Array FxLvModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw, const Real r_dom,
-                                     const Real r_for, const std::optional<Discretization> disc) const {
-    Discretization effDisc = disc ? *disc : disc_;
-    if (effDisc == Discretization::Euler) {
-        Real sigma = parametrization_->sigma(t0, x0[0]);
-        return x0 + (r_dom - r_for - 0.5 * sigma * sigma) * dt + sigma * std::sqrt(dt) * dw[0];
-    } else if (effDisc == Discretization::PC) {
-        Real sigma = parametrization_->sigma(t0, x0[0]);
-        Array x1 = x0 + (r_dom - r_for - 0.5 * sigma * sigma) * dt + sigma * std::sqrt(dt) * dw[0];
-        Real sigma2 = 0.5 * (sigma + parametrization_->sigma(t0 + dt, x1[0]));
-        return x0 + (r_dom - r_for - 0.5 * sigma2 * sigma2) * dt + sigma2 * std::sqrt(dt) * dw[0];
-    } else {
-        QL_FAIL("FxLvModel::marginalStep(): discretization " << static_cast<int>(effDisc) << " not handled.");
-    }
-}
 
 } // namespace QuantExt
