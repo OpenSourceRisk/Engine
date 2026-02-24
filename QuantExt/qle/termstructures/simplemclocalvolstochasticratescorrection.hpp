@@ -26,6 +26,7 @@
 #include <qle/models/irmodel.hpp>
 
 #include <ql/handle.hpp>
+#include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/volatility/equityfx/localvoltermstructure.hpp>
