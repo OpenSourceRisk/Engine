@@ -20,9 +20,9 @@ add_subdirectory("ThirdPartyLibs/rapidxml-1.13")
 if (ORE_BUILD_APP)
     add_subdirectory("App")
 endif()
-#if (ORE_BUILD_SWIG)
-#    add_subdirectory("ORE-SWIG")
-#endif()
+if (ORE_BUILD_SWIG)
+    add_subdirectory("ORE-SWIG")
+endif()
 
 # add examples testsuite
 if (ORE_BUILD_EXAMPLES AND ORE_BUILD_TESTS)
