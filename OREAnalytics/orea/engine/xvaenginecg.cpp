@@ -298,7 +298,11 @@ void XvaEngineCG::buildCgPartB() {
         std::vector<TradeExposure> tradeExposure;
         TradeExposureMetaInfo metaInfo;
 
-        engine->buildComputationGraph(false, &tradeExposure, &metaInfo);
+        try {
+            engine->buildComputationGraph(false, &tradeExposure, &metaInfo);
+        } catch (const std::exception& e) {
+            QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "': " << e.what());
+        }
 
         for (auto& t : tradeExposure)
             t.multiplier = multiplier;
