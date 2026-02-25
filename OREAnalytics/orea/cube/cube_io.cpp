@@ -52,15 +52,32 @@ struct ScopedTimer {
 };
 
 // ---------------------------------------------------------------------------
-// Apple's libc++ only provides floating-point std::from_chars / std::to_chars
-// when the deployment target is macOS 13.3+ (SDK macro value 130300).
-// On older Apple targets we fall back to strtod / snprintf.
+// Floating-point std::from_chars / std::to_chars require separate availability
+// checks on Apple platforms because libc++ gates them on different OS dylib
+// versions:
+//
+//   std::to_chars  (float/double) – available from macOS 13  (LLVM 14)
+//   std::from_chars(float/double) – available from macOS 26  (LLVM 20)
+//
+// Including <charconv> above transitively pulls in libc++'s
+// <__configuration/availability.h>, which defines the macro
+//   _LIBCPP_AVAILABILITY_HAS_FROM_CHARS_FLOATING_POINT  (1 if available, 0 if not)
+// based on the active deployment target.  We use that directly instead of
+// hard-coding an OS version number — it is the single source of truth for
+// both float-from_chars and float-to_chars (LLVM 20 ⊇ LLVM 14).
+//
+// If the macro is absent (SDK predates LLVM 20 altogether) we treat the
+// functions as unavailable and fall back to strtod / snprintf for both
+// parsing and formatting.
+//
 // On all other platforms (MSVC, GCC, non-Apple Clang) fp charconv has been
 // available since C++17 support matured and no fallback is needed.
 // ---------------------------------------------------------------------------
-#if defined(__APPLE__) && \
-    (!defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED < 130300)
-#  define ORE_CHARCONV_FLOAT_UNAVAILABLE
+#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
+#  if !defined(_LIBCPP_AVAILABILITY_HAS_FROM_CHARS_FLOATING_POINT) || \
+      !_LIBCPP_AVAILABILITY_HAS_FROM_CHARS_FLOATING_POINT
+#    define ORE_CHARCONV_FLOAT_UNAVAILABLE
+#  endif
 #endif
 
 // ---------------------------------------------------------------------------
