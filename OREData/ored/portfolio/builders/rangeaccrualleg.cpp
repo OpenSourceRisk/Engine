@@ -122,14 +122,14 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
         auto configuration = this->configuration(MarketContext::pricing);
         auto iborIndex = market_->iborIndex(index, configuration);
         auto dayCounter = iborIndex->dayCounter();
-        Real flatVol = 0.1; // or parameterize if needed
+        Real flatVol = 1; // or parameterize if needed
         smileOnExpiry = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualStartDate, flatVol, dayCounter));
         smileOnPayment = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualEndDate, flatVol, dayCounter));
     }
 
     
 
-    // The BGM pricer interprets SmileSection vols as lognormal. If the cap/floor
+    // The BGM pricer interprets SmileSection vols as lognormal. If the swaption
     // surface is in Normal vol, we must convert via Bachelier→Black inversion.
     if (smile && ovs->volatilityType() == QuantLib::Normal) {
         auto configuration = this->configuration(MarketContext::pricing);
