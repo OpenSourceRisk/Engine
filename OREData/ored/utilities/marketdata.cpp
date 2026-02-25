@@ -350,7 +350,7 @@ Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiry
         return w2 >= Date(9, expiryMonth, expiryYear) ? w2 : Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear);
     } else if (rule == FutureConvention::DateGenerationRule::IMMCAD) {
         // Two GB+CA business days before the third Wednesday of the expiry month.
-        return JointCalendar({UnitedKingdom(), Canada()})
+        return JointCalendar(std::vector<Calendar>{UnitedKingdom(), Canada()})
             .advance(Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear), -2, Days, Preceding);
     } else {
         QL_FAIL("getMmFutureExpiryDate: DateGenerationRule '" << rule << "' not supported for MM Futures");
