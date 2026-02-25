@@ -21,25 +21,10 @@
 #include <ql/errors.hpp>
 #include <stdio.h>
 #include <charconv>
-#include <chrono>
-#include <iostream>
 
 using QuantLib::Date;
 using std::string;
 using std::vector;
-
-namespace {
-// Minimal benchmark timer — remove after profiling
-struct ScopedTimer {
-    const char* label;
-    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
-    ~ScopedTimer() {
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - t0).count();
-        std::cout << "[CubeIO] " << label << ": " << ms << " ms\n";
-    }
-};
-} // namespace
 
 namespace ore {
 namespace analytics {
@@ -48,7 +33,6 @@ CubeWriter::CubeWriter(const std::string& filename) : filename_(filename) {}
 
 void CubeWriter::write(const QuantLib::ext::shared_ptr<NPVCube>& cube, const std::map<std::string, std::string>& nettingSetMap,
                        bool append) {
-    ScopedTimer _t{"CubeWriter::write"};
 
     // Convert dates into strings
     vector<string> dateStrings(cube->numDates());
