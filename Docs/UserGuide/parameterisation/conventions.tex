@@ -139,13 +139,20 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
 \item Id: The name of the convention.
 \item Index: The underlying index of the futures, this is either a MM (i.e. Ibor) index like e.g. EUR-EURIBOR-3M or an
   overnight index like e.g. USD-SOFR.
-\item DateGenerationRule [Optional]: This should be set to `IMM' when the start and end dates of the future are
-  following the IMM date logic, `FirstDayOfMonth' when the start and end date are the first day of a month, or
-  `SecondThursday' when the expiry date is the second Thursday of the month. If not given this field defaults to `IMM'.
+\item DateGenerationRule [Optional]: Controls how the expiry (and for OI futures, the start) date is derived from the
+  expiry month. Accepted values are listed below. If not given this field defaults to `IMM'.
   \begin{itemize}
-  \item For MM futures `IMM' or `SecondThursday' are allowed. The expiry date for `IMM' is determined as the next 3rd
-    Wednesday of the expiry month of a future. The expiry date for `SecondThursday' is determined as the 2nd Thursday
-    of the expiry month (e.g. used for AUD-BBSW-3M futures).
+  \item For MM futures the following rules are allowed:
+    \begin{itemize}
+    \item \texttt{IMM}: Expiry is the 3rd Wednesday of the expiry month.
+    \item \texttt{IMMAUD} (alias \texttt{SecondThursday}): Expiry is the 2nd Thursday of the expiry month. Used for
+      AUD-BBSW-3M futures. \texttt{SecondThursday} is accepted as a backward-compatible alias and will be serialised
+      as \texttt{IMMAUD}.
+    \item \texttt{IMMNZD}: Expiry is the first Wednesday on or after the 9th day of the expiry month (pure weekday
+      arithmetic, no holiday calendar adjustment). Used for NZD bank-bill futures.
+    \item \texttt{IMMCAD}: Expiry is two business days (using a combined UK and Canada holiday calendar) before the
+      3rd Wednesday of the expiry month. Used for CAD BAX / CORRA futures.
+    \end{itemize}
   \item For an overnight index future `IMM' means that the end date of the future is set to the 3rd Wednesday of the
     expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
     `IMM' applies to SOFR-3M futures for example. `FirstDayOfMonth' on the other hand means that the end date of the
@@ -165,8 +172,9 @@ future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The str
 \end{itemize}
 
 Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_aud_bbsw_3m},
-\ref{lst:future_conventions_sofr_3m}, \ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M, AUD-BBSW-3M,
-SOFR-3M and SOFR-1M future conventions.
+\ref{lst:future_conventions_nzd_bkbm_3m}, \ref{lst:future_conventions_cad_corra_3m},
+\ref{lst:future_conventions_sofr_3m}, \ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M,
+AUD-BBSW-3M, NZD-BKBM-3M, CAD-CORRA-3M, SOFR-3M and SOFR-1M future conventions.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -200,11 +208,38 @@ SOFR-3M and SOFR-1M future conventions.
 <Future>
   <Id>AUD-BBSW-3M-FUTURES-CONVENTIONS</Id>
   <Index>AUD-BBSW-3M</Index>
-  <DateGenerationRule>SecondThursday</DateGenerationRule>
+  <DateGenerationRule>IMMAUD</DateGenerationRule>
 </Future>
 \end{minted}
-\caption{AUD BBSW 3M MM Future conventions (Second Thursday expiry)}
+\caption{AUD BBSW 3M MM Future conventions (IMMAUD -- second Thursday expiry; \texttt{SecondThursday} is a
+backward-compatible alias)}
 \label{lst:future_conventions_aud_bbsw_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id>NZD-BKBM-3M-FUTURES</Id>
+  <Index>NZD-BKBM-3M</Index>
+  <DateGenerationRule>IMMNZD</DateGenerationRule>
+</Future>
+\end{minted}
+\caption{NZD BKBM 3M MM Future conventions (IMMNZD -- first Wednesday on or after the 9th of the expiry month)}
+\label{lst:future_conventions_nzd_bkbm_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id>CAD-CORRA-3M-FUTURES</Id>
+  <Index>CAD-CORRA-3M</Index>
+  <DateGenerationRule>IMMCAD</DateGenerationRule>
+</Future>
+\end{minted}
+\caption{CAD CORRA 3M MM Future conventions (IMMCAD -- two UK/Canada business days before the third Wednesday)}
+\label{lst:future_conventions_cad_corra_3m}
 \end{listing}
 
 \begin{listing}[H]
