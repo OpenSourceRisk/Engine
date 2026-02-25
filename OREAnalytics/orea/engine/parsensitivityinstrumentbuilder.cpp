@@ -927,8 +927,8 @@ std::pair<QuantLib::ext::shared_ptr<Instrument>, Date> ParSensitivityInstrumentB
     QL_REQUIRE(fraConvIdx->tenor().units() == Months,
                "ParSensitivityInstrumentBuilder::makeFRA(): index tenor unit must be Months ("
                    << fraConvIdx->tenor() << ")(" << term << ")(" << indexName << ")(" << name << ")");
-    QL_REQUIRE(term > fraConvIdx->tenor(),
-               "ParSensitivityInstrumentBuilder::makeFRA(): term must be larger than index tenor");
+    QL_REQUIRE(term >= fraConvIdx->tenor(),
+               "ParSensitivityInstrumentBuilder::makeFRA(): term must be larger or equal than index tenor");
     Period startTerm = term - fraConvIdx->tenor(); // the input term refers to the end of the FRA accrual period
     Calendar fraCal = fraConvIdx->fixingCalendar();
     Date asofadj = fraCal.adjust(asof); // same as in FraRateHelper
