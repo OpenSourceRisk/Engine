@@ -52,6 +52,18 @@ struct ScopedTimer {
 };
 
 // ---------------------------------------------------------------------------
+// Apple's libc++ only provides floating-point std::from_chars / std::to_chars
+// when the deployment target is macOS 13.3+ (SDK macro value 130300).
+// On older Apple targets we fall back to strtod / snprintf.
+// On all other platforms (MSVC, GCC, non-Apple Clang) fp charconv has been
+// available since C++17 support matured and no fallback is needed.
+// ---------------------------------------------------------------------------
+#if defined(__APPLE__) && \
+    (!defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED < 130300)
+#  define ORE_CHARCONV_FLOAT_UNAVAILABLE
+#endif
+
+// ---------------------------------------------------------------------------
 // Zero-allocation helpers that walk a raw char pointer and parse comma-
 // separated unsigned integers / doubles without any heap allocation.
 // After a successful parse `p` is advanced past the parsed token AND
@@ -68,13 +80,33 @@ inline bool fast_parse_size(const char*& p, const char* end, Size& out) {
 }
 
 inline bool fast_parse_double(const char*& p, const char* end, double& out) {
+#ifdef ORE_CHARCONV_FLOAT_UNAVAILABLE
+    // strtod fallback: locale-independent on all POSIX platforms
+    char* endptr = nullptr;
+    out = std::strtod(p, &endptr);
+    if (endptr == p)
+        return false;
+    p = endptr;
+#else
     auto [ptr, ec] = std::from_chars(p, end, out);
     if (ec != std::errc{})
         return false;
     p = ptr;
+#endif
     if (p != end && *p == ',')
         ++p;
     return true;
+}
+
+// Write a double into [buf, end) and return a pointer past the last char.
+// Uses std::to_chars where available; falls back to snprintf (%.17g) otherwise.
+inline char* write_double(char* buf, char* end, double v) {
+#ifdef ORE_CHARCONV_FLOAT_UNAVAILABLE
+    int n = std::snprintf(buf, static_cast<std::size_t>(end - buf), "%.17g", v);
+    return buf + (n > 0 ? n : 0);
+#else
+    return std::to_chars(buf, end, v).ptr;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -306,7 +338,7 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
             {
                 char* p = std::to_chars(idxBuf, idxBuf + 24, i).ptr;
                 *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ','; *p++ = '0'; *p++ = ',';
-                auto [vp, vec] = std::to_chars(valBuf, valBuf + sizeof(valBuf), cube.cube()->getT0(i));
+                char* vp = write_double(valBuf, valBuf + sizeof(valBuf), cube.cube()->getT0(i));
                 w.write(idxBuf, static_cast<std::size_t>(p - idxBuf));
                 w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
                 w.put('\n');
@@ -325,7 +357,7 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
                         if (value != 0.0) {
                             char* p3_end = std::to_chars(p2_end, p2_end + 24, d).ptr;
                             *p3_end++ = ',';
-                            auto [vp, vec] = std::to_chars(valBuf, valBuf + sizeof(valBuf), value);
+                            char* vp = write_double(valBuf, valBuf + sizeof(valBuf), value);
                             w.write(idxBuf, static_cast<std::size_t>(p3_end - idxBuf));
                             w.write(valBuf, static_cast<std::size_t>(vp - valBuf));
                             w.put('\n');
@@ -451,8 +483,8 @@ void saveAggregationScenarioData(const std::string& filename, const AggregationS
                     p = std::to_chars(p, p + 20, i + 1).ptr; *p++ = ',';
                     p = std::to_chars(p, p + 20, j).ptr;     *p++ = ',';
                     p = std::to_chars(p, p + 20, k).ptr;     *p++ = ',';
-                    p = std::to_chars(p, p + 32,
-                                      cube.get(i, j, keys[k].first, keys[k].second)).ptr;
+                    p = write_double(p, p + 32,
+                                     cube.get(i, j, keys[k].first, keys[k].second));
                     *p++ = '\n';
                     w.write(lineBuf, static_cast<std::size_t>(p - lineBuf));
                 }
