@@ -24,6 +24,7 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
+#include <ql/termstructures/volatility/flatsmilesection.hpp>
 
 namespace ore {
 namespace data {
@@ -85,9 +86,9 @@ private:
 
 }
 
-Handle<OptionletVolatilityStructure> RangeAccrualLegEngineBuilder::optionletVolatilityStructure(const std::string& index) {
+Handle<SwaptionVolatilityStructure> RangeAccrualLegEngineBuilder::swaptionVolatilityStructure(const std::string& index) {
     auto configuration = this->configuration(MarketContext::pricing);
-    return market_->capFloorVol(index, configuration);
+    return market_->swaptionVol(index, configuration);
 }
 
 Real RangeAccrualLegEngineBuilder::correlation(const std::string& index) {
@@ -104,20 +105,33 @@ bool RangeAccrualLegEngineBuilder::byCallSpread(const std::string& index) {
 
 QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder::buildPricer(
     const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate) {
-    auto ovs = optionletVolatilityStructure(index);
     Real corr = correlation(index);
     bool smile = withSmile(index);
     bool callSpread = byCallSpread(index);
-
-    // Use at least 1 day after reference date to avoid t=0 smile section
-    // (stddev = vol * sqrt(0) = 0, then vol = stddev / sqrt(0) = NaN)
+    Handle<SwaptionVolatilityStructure> ovs = swaptionVolatilityStructure(index);
     Date expiryDate = std::max(accrualStartDate, ovs->referenceDate() + 1);
-    auto smileOnExpiry = ovs->smileSection(expiryDate, true);
-    auto smileOnPayment = ovs->smileSection(accrualEndDate, true);
+    ext::shared_ptr<SmileSection>smileOnExpiry;
+    ext::shared_ptr<SmileSection>smileOnPayment;
+    if(smile){
+        // Use at least 1 day after reference date to avoid t=0 smile section
+        // (stddev = vol * sqrt(0) = 0, then vol = stddev / sqrt(0) = NaN)
+        smileOnExpiry = ovs->smileSection(expiryDate, true);
+        smileOnPayment = ovs->smileSection(accrualEndDate, true);
+    }else{
+        // Use the day counter from the index in LegData
+        auto configuration = this->configuration(MarketContext::pricing);
+        auto iborIndex = market_->iborIndex(index, configuration);
+        auto dayCounter = iborIndex->dayCounter();
+        Real flatVol = 0.1; // or parameterize if needed
+        smileOnExpiry = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualStartDate, flatVol, dayCounter));
+        smileOnPayment = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualEndDate, flatVol, dayCounter));
+    }
+
+    
 
     // The BGM pricer interprets SmileSection vols as lognormal. If the cap/floor
     // surface is in Normal vol, we must convert via Bachelier→Black inversion.
-    if (ovs->volatilityType() == QuantLib::Normal) {
+    if (smile && ovs->volatilityType() == QuantLib::Normal) {
         auto configuration = this->configuration(MarketContext::pricing);
         auto iborIndex = market_->iborIndex(index, configuration);
         // Use per-section forwards: the conversion should reflect the forward

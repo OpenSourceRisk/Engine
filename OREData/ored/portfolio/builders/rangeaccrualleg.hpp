@@ -47,7 +47,7 @@ public:
         const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate);
 
 private:
-    Handle<OptionletVolatilityStructure> optionletVolatilityStructure(const std::string& index);
+    Handle<SwaptionVolatilityStructure> swaptionVolatilityStructure(const std::string& index);
     Real correlation(const std::string& index);
     bool withSmile(const std::string& index);
     bool byCallSpread(const std::string& index);
