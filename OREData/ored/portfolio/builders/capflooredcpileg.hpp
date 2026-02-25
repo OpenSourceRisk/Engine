@@ -52,15 +52,12 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
 
-         bool useLastFixingDate =
-            parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
-
          bool isLogNormal = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(vol.currentLink());
 
          if (isLogNormal) {
-             return QuantLib::ext::make_shared<QuantExt::BlackCPICouponPricer>(vol, discountCurve, useLastFixingDate);
+             return QuantLib::ext::make_shared<QuantExt::BlackCPICouponPricer>(vol, discountCurve);
          } else {
-             return QuantLib::ext::make_shared<QuantExt::BachelierCPICouponPricer>(vol, discountCurve, useLastFixingDate);
+             return QuantLib::ext::make_shared<QuantExt::BachelierCPICouponPricer>(vol, discountCurve);
          }
 
         
@@ -83,15 +80,12 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
 
-        bool useLastFixingDate =
-            parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
-
         bool isLogNormal = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(vol.currentLink());
 
         if (isLogNormal) {
-            return QuantLib::ext::make_shared<QuantExt::BlackCPICashFlowPricer>(vol, discountCurve, useLastFixingDate);
+            return QuantLib::ext::make_shared<QuantExt::BlackCPICashFlowPricer>(vol, discountCurve);
         } else {
-            return QuantLib::ext::make_shared<QuantExt::BachelierCPICashFlowPricer>(vol, discountCurve, useLastFixingDate);
+            return QuantLib::ext::make_shared<QuantExt::BachelierCPICashFlowPricer>(vol, discountCurve);
         }
     }
 };

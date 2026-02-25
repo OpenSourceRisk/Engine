@@ -139,7 +139,6 @@
     <ModelParameters/>
     <Engine>CpiCapEngine</Engine>
     <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
   </Product>
@@ -176,7 +175,6 @@
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
   </Product>
@@ -185,7 +183,6 @@
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
   </Product>
