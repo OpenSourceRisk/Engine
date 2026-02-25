@@ -17,6 +17,7 @@
 */
 
 #include <orea/cube/cube_io.hpp>
+#include <orea/cube/cube_io_utils.hpp>
 #include <orea/cube/inmemorycube.hpp>
 
 #include <ored/utilities/to_string.hpp>
@@ -28,11 +29,7 @@
 #endif
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include <charconv>
-#include <chrono>
-#include <cstring>
 #include <iomanip>
-#include <iostream>
 #include <regex>
 
 namespace ore {
@@ -40,129 +37,7 @@ namespace analytics {
 
 namespace {
 
-// Minimal benchmark timer — remove after profiling
-struct ScopedTimer {
-    const char* label;
-    std::chrono::steady_clock::time_point t0 = std::chrono::steady_clock::now();
-    ~ScopedTimer() {
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - t0).count();
-        std::cout << "[CubeIO] " << label << ": " << ms << " ms\n";
-    }
-};
-
-// ---------------------------------------------------------------------------
-// Floating-point std::from_chars / std::to_chars require separate availability
-// checks on Apple platforms because libc++ gates them on different OS dylib
-// versions:
-//
-//   std::to_chars  (float/double) – available from macOS 13  (LLVM 14)
-//   std::from_chars(float/double) – available from macOS 26  (LLVM 20)
-//
-// Including <charconv> above transitively pulls in libc++'s
-// <__configuration/availability.h>, which defines the macro
-//   _LIBCPP_AVAILABILITY_HAS_FROM_CHARS_FLOATING_POINT  (1 if available, 0 if not)
-// based on the active deployment target.  We use that directly instead of
-// hard-coding an OS version number — it is the single source of truth for
-// both float-from_chars and float-to_chars (LLVM 20 ⊇ LLVM 14).
-//
-// If the macro is absent (SDK predates LLVM 20 altogether) we treat the
-// functions as unavailable and fall back to strtod / snprintf for both
-// parsing and formatting.
-//
-// On all other platforms (MSVC, GCC, non-Apple Clang) fp charconv has been
-// available since C++17 support matured and no fallback is needed.
-// ---------------------------------------------------------------------------
-#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
-#  if !defined(_LIBCPP_AVAILABILITY_HAS_FROM_CHARS_FLOATING_POINT) || \
-      !_LIBCPP_AVAILABILITY_HAS_FROM_CHARS_FLOATING_POINT
-#    define ORE_CHARCONV_FLOAT_UNAVAILABLE
-#  endif
-#endif
-
-// ---------------------------------------------------------------------------
-// Zero-allocation helpers that walk a raw char pointer and parse comma-
-// separated unsigned integers / doubles without any heap allocation.
-// After a successful parse `p` is advanced past the parsed token AND
-// the following comma (if present).  Returns true on success.
-// ---------------------------------------------------------------------------
-inline bool fast_parse_size(const char*& p, const char* end, Size& out) {
-    auto [ptr, ec] = std::from_chars(p, end, out);
-    if (ec != std::errc{})
-        return false;
-    p = ptr;
-    if (p != end && *p == ',')
-        ++p;
-    return true;
-}
-
-inline bool fast_parse_double(const char*& p, const char* end, double& out) {
-#ifdef ORE_CHARCONV_FLOAT_UNAVAILABLE
-    // strtod fallback: locale-independent on all POSIX platforms
-    char* endptr = nullptr;
-    out = std::strtod(p, &endptr);
-    if (endptr == p)
-        return false;
-    p = endptr;
-#else
-    auto [ptr, ec] = std::from_chars(p, end, out);
-    if (ec != std::errc{})
-        return false;
-    p = ptr;
-#endif
-    if (p != end && *p == ',')
-        ++p;
-    return true;
-}
-
-// Write a double into [buf, end) and return a pointer past the last char.
-// Uses std::to_chars where available; falls back to snprintf (%.17g) otherwise.
-inline char* write_double(char* buf, char* end, double v) {
-#ifdef ORE_CHARCONV_FLOAT_UNAVAILABLE
-    int n = std::snprintf(buf, static_cast<std::size_t>(end - buf), "%.17g", v);
-    return buf + (n > 0 ? n : 0);
-#else
-    return std::to_chars(buf, end, v).ptr;
-#endif
-}
-
-// ---------------------------------------------------------------------------
-// Buffered writer — batches small writes into a 1 MB buffer before flushing
-// to the underlying filtering_stream, reducing per-write overhead through the
-// gzip compressor filter chain (B2).
-// ---------------------------------------------------------------------------
-struct BufWriter {
-    static constexpr std::size_t CAPACITY = 1u << 20; // 1 MB
-    boost::iostreams::filtering_stream<boost::iostreams::output>& sink_;
-    std::vector<char> buf_;
-    std::size_t pos_ = 0;
-
-    explicit BufWriter(boost::iostreams::filtering_stream<boost::iostreams::output>& s)
-        : sink_(s), buf_(CAPACITY) {}
-
-    void flush() {
-        if (pos_ > 0) {
-            sink_.write(buf_.data(), static_cast<std::streamsize>(pos_));
-            pos_ = 0;
-        }
-    }
-
-    // n must be < CAPACITY (guaranteed: max line length here is ~128 bytes)
-    void write(const char* data, std::size_t n) {
-        if (pos_ + n > CAPACITY - 512)
-            flush();
-        std::memcpy(buf_.data() + pos_, data, n);
-        pos_ += n;
-    }
-
-    void put(char c) {
-        if (pos_ + 1 > CAPACITY - 512)
-            flush();
-        buf_[pos_++] = c;
-    }
-
-    ~BufWriter() { flush(); }
-};
+using namespace ore::analytics::cube_io_utils;
 
 bool use_compression(const std::string& filename) {
 #ifdef ORE_USE_ZLIB
@@ -189,7 +64,6 @@ std::string getMetaData(const std::string& line, const std::string& tag, const b
 } // namespace
 
 QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filename) {
-    ScopedTimer _t{"loadCube"};
 
     auto result = QuantLib::ext::make_shared<NPVCubeWithMetaData>();
 
@@ -271,7 +145,6 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
         std::getline(in, line);
         if (line.empty())
             continue;
-        // Zero-allocation fast parse: walk the raw string without splitting
         const char* p   = line.data();
         const char* end = p + line.size();
         Size id = 0, date = 0, sample = 0, depth = 0;
@@ -294,7 +167,6 @@ QuantLib::ext::shared_ptr<NPVCubeWithMetaData> loadCube(const std::string& filen
 }
 
 void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
-    ScopedTimer _t{"saveCube"};
 
     // open file
 
@@ -340,8 +212,7 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
         out << "# storeCrSt  : " << *cube.storeCreditStateNPVs() << "\n";
     }
 
-    // write cube data — buffered to amortise per-write overhead of the
-    // gzip filter chain (B2); charconv for locale-independent formatting (P5).
+    // write cube data
     {
         BufWriter w(out);
         static constexpr char hdr[] = "#id,date,sample,depth,value\n";
@@ -383,11 +254,10 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube) {
                 }
             }
         }
-    } // BufWriter flushes on destruction
+    }
 }
 
 QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
-    ScopedTimer _t{"loadAggScenData"};
 
     // open file
 
@@ -437,7 +307,6 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
         std::getline(in, line);
         if (line.empty())
             continue;
-        // Zero-allocation fast parse
         const char* p   = line.data();
         const char* end = p + line.size();
         Size date = 0, sample = 0, key = 0;
@@ -460,7 +329,6 @@ QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(c
 }
 
 void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube) {
-    ScopedTimer _t{"saveAggScenData"};
 
     // open file
 
@@ -485,8 +353,7 @@ void saveAggregationScenarioData(const std::string& filename, const AggregationS
         out << "# " << (unsigned int)k.first << "," << k.second << "\n";
     }
 
-    // write data — buffered (B2); all fields formatted via charconv (P5) so
-    // operator<< is never called in the hot loop.
+    // write data
     {
         BufWriter w(out);
         static constexpr char hdr[] = "#date,sample,key,value\n";
@@ -507,7 +374,7 @@ void saveAggregationScenarioData(const std::string& filename, const AggregationS
                 }
             }
         }
-    } // BufWriter flushes on destruction
+    }
 }
 
 } // namespace analytics
