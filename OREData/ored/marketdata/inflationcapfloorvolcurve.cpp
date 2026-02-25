@@ -676,7 +676,7 @@ void InflationCapFloorVolCurve::setCalibrationInfo(
     calibrationInfo_->strikeCPI =
         std::vector<std::vector<Real>>(times.size(), std::vector<Real>(strikes.size(), 0.0));
     QuantLib::ext::shared_ptr<ZeroInflationIndex> index = getIndex(spec, config, inflationCurves);
-    auto lastKnownFixingDate = ZeroInflation::lastAvailableFixing(*index, cpiVolSurface_->referenceDate());
+    auto lastKnownFixingDate = index->zeroInflationTermStructure()->baseDate();
     auto baseCPI = ZeroInflation::cpiFixing(index, cpiVolSurface_->baseDate(), 0 * Days, cpiVolSurface_->indexIsInterpolated());
     for (Size i = 0; i < times.size(); ++i) {
         Real t = times[i];
