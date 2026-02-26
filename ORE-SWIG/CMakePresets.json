@@ -8,8 +8,6 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_BUILD_TYPE": "Debug",
-        "BOOST_INCLUDEDIR": "$env{BOOST}",
-        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
         "ORE": "$env{ORE}",
         "ORE_BUILD": "$env{ORE_BUILD}",
         "QL_BUILD_EXAMPLES": false,
@@ -42,8 +40,6 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "BOOST_INCLUDEDIR": "$env{BOOST}",
-        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
         "ORE": "$env{ORE}",
         "ORE_BUILD": "$env{ORE_BUILD}",
         "QL_BUILD_EXAMPLES": false,
@@ -76,8 +72,6 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_BUILD_TYPE": "Release",
-        "BOOST_INCLUDEDIR": "$env{BOOST}",
-        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
         "ORE": "$env{ORE}",
         "ORE_BUILD": "$env{ORE_BUILD}",
         "QL_BUILD_EXAMPLES": false,
@@ -108,8 +102,6 @@
       "binaryDir": "${sourceDir}/build",
       "generator": "Visual Studio 17 2022",
       "cacheVariables": {
-        "BOOST_INCLUDEDIR": "$env{BOOST}",
-        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
         "ORE": "$env{ORE}",
         "ORE_BUILD": "$env{ORE_BUILD}",
         "QL_BUILD_EXAMPLES": false,
@@ -140,8 +132,6 @@
       "binaryDir": "${sourceDir}/build",
       "generator": "Visual Studio 17 2022",
       "cacheVariables": {
-        "BOOST_INCLUDEDIR": "$env{BOOST}",
-        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
         "ORE": "$env{ORE}",
         "ORE_BUILD": "$env{ORE_BUILD}",
         "QL_BUILD_EXAMPLES": false,
