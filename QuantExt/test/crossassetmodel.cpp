@@ -2838,15 +2838,15 @@ struct IrFxInfCrEqModelTestData {
         infEur_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
         infGbp_p = QuantLib::ext::make_shared<InfDkConstantParametrization>(GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
 
+        // credit
+        n1_p = QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
+
         // equity
         QuantLib::ext::shared_ptr<EqBsParametrization> eqSpBsParam = QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
             USDCurrency(), "SP", spSpotToday, fxEurUsd, eqSpTimes, spSigmas, usdYts, eqDivSp);
 
         QuantLib::ext::shared_ptr<EqBsParametrization> eqLhBsParam = QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
             EURCurrency(), "LH", lhSpotToday, fxEurEur, eqLhTimes, lhSigmas, eurYts, eqDivLh);
-
-        // credit
-        n1_p = QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
 
         singleModels.push_back(eurLgm_p);
         singleModels.push_back(usdLgm_p);
@@ -2855,9 +2855,9 @@ struct IrFxInfCrEqModelTestData {
         singleModels.push_back(fxGbp_p);
         singleModels.push_back(infEur_p);
         singleModels.push_back(infGbp_p);
+        singleModels.push_back(n1_p);
         singleModels.push_back(eqSpBsParam);
         singleModels.push_back(eqLhBsParam);
-        singleModels.push_back(n1_p);
 
         Real tmp[10][10] = {
             // EUR  USD GBP  FX1  FX2  INF_EUR INF_GBP CR EQ1 EQ2
@@ -4295,15 +4295,15 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
                         parametrizations.push_back(
                             QuantLib::ext::make_shared<InfDkConstantParametrization>(pseudoCcy[0], its, 0.01, 0.01));
                     }
-                    // EQ
-                    for (Size i = 0; i < eqs[ee]; ++i) {
-                        parametrizations.push_back(QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
-                            pseudoCcy[0], "dummy", eqspot, fxspot, notimes, eqsigma, yts, yts));
-                    }
                     // CR
                     for (Size i = 0; i < creditnames[jj]; ++i) {
                         parametrizations.push_back(
                             QuantLib::ext::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
+                    }
+                    // EQ
+                    for (Size i = 0; i < eqs[ee]; ++i) {
+                        parametrizations.push_back(QuantLib::ext::make_shared<EqBsPiecewiseConstantParametrization>(
+                            pseudoCcy[0], "dummy", eqspot, fxspot, notimes, eqsigma, yts, yts));
                     }
 
                     // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
