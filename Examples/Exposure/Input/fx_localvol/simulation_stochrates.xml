@@ -158,7 +158,7 @@
         <!-- AndreasenHuge, Dupire -->
         <Model>AndreasenHuge</Model>
         <!-- None, SimpleMc -->
-        <StochasticRatesCorrection>None</StochasticRatesCorrection>
+        <StochasticRatesCorrection>SimpleMc</StochasticRatesCorrection>
         <SimpleMcParameters>
           <TimeStepsPerYear>24</TimeStepsPerYear>
           <CalibrationMoneynessMin>-3.0</CalibrationMoneynessMin>
