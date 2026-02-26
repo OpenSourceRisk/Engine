@@ -63,15 +63,15 @@ Size LinearGaussMarkovModel::m_aux() const {
 }
 
 Array LinearGaussMarkovModel::marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const {
-    if (measure_ == IrModel::Measure::LGM) {
+    if (measure_ == IrModel::Measure::LGM || (measure_ == IrModel::Measure::BA && !evaluateBankAccount_)) {
         return Array(1, x0[0] + std::sqrt(parametrization_->zeta(t0 + dt) - parametrization_->zeta(t0)) * dw[0]);
-    } else if (measure_ == IrModel::Measure::BA) {
+    } else if (measure_ == IrModel::Measure::BA && evaluateBankAccount_) {
         Array res(2);
         Real H = parametrization_->H(t0);
         Real alpha = parametrization_->alpha(t0);
         res[0] = x0[0] - dt * H * alpha * alpha +
                  std::sqrt(parametrization_->zeta(t0 + dt) - parametrization_->zeta(t0)) * dw[0];
-        res[1] = x0[1] + alpha * H * std::sqrt(dt) * dw[1];
+        res[1] = x0[1] + alpha * H * std::sqrt(dt) * dw[0];
         return res;
     } else {
         QL_FAIL("LinearGaussMarkovModel::marginalStep(): measure " << static_cast<int>(measure_) << " not handled.");

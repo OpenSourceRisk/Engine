@@ -158,14 +158,14 @@ void SimpleMcLocalVolStochasticRatesCorrection::performCalculations() const {
                 sState[p] = sStateUpd;
                 r[p] = rs;
                 q[p] = qs;
-                n[p] = r_->numeraire(t1, getProjectedArray(rStateUpd, 0, m_r), r0_);
+                n[p] = r_->numeraire(t1, rStateUpd, r0_);
 
                 rState_u[p] = rStateUpd_u;
                 qState_u[p] = qStateUpd_u;
                 sState_u[p] = sStateUpd_u;
                 r_u[p] = rs_u;
                 q_u[p] = qs_u;
-                n_u[p] = r_->numeraire(t1, getProjectedArray(rStateUpd_u, 0, m_r), r0_);
+                n_u[p] = r_->numeraire(t1, rStateUpd_u, r0_);
             }
 
             // iterate over strikes and accumulate results
