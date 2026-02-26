@@ -251,9 +251,7 @@ public:
     /*! index of component in the correlation matrix, by offset */
     Size cIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
-    /*! index of component in the Brownian vector (including aux brownians), by offset
-        this is checked to be equal to cIdx for Euler discretization and pIdx for exact discretization
-        as an internal assertion */
+    /*! index of component in the Brownian vector (including aux brownians), by offset */
     Size wIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
     /*! index of component in the stochastic process array, by offset */
