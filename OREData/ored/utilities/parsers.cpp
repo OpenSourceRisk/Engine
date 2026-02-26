@@ -1043,10 +1043,15 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
         return FutureConvention::DateGenerationRule::IMM;
     else if (s == "FirstDayOfMonth")
         return FutureConvention::DateGenerationRule::FirstDayOfMonth;
-    else if (s == "SecondThursday")
-        return FutureConvention::DateGenerationRule::SecondThursday;
+    else if (s == "IMMAUD" || s == "SecondThursday")  // SecondThursday is a backward-compatible alias for IMMAUD
+        return FutureConvention::DateGenerationRule::IMMAUD;
+    else if (s == "IMMNZD")
+        return FutureConvention::DateGenerationRule::IMMNZD;
+    else if (s == "IMMCAD")
+        return FutureConvention::DateGenerationRule::IMMCAD;
     else {
-        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth', or 'SecondThursday'");
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM', 'FirstDayOfMonth',"
+                " 'IMMAUD' (alias 'SecondThursday'), 'IMMNZD', or 'IMMCAD'");
     }
 }
 
@@ -1055,8 +1060,12 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
         return os << "IMM";
     else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
         return os << "FirstDayOfMonth";
-    else if (t == FutureConvention::DateGenerationRule::SecondThursday)
-        return os << "SecondThursday";
+    else if (t == FutureConvention::DateGenerationRule::IMMAUD)
+        return os << "IMMAUD";
+    else if (t == FutureConvention::DateGenerationRule::IMMNZD)
+        return os << "IMMNZD";
+    else if (t == FutureConvention::DateGenerationRule::IMMCAD)
+        return os << "IMMCAD";
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
