@@ -58,6 +58,8 @@
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 
+#include <qle/termstructures/simplemclocalvolstochasticratescorrection.hpp>
+
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
