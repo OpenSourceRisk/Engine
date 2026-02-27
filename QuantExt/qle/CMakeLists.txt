@@ -217,6 +217,7 @@ models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
+models/fxlvmodel.cpp
 models/fxlvparametrization.cpp
 models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
@@ -344,9 +345,9 @@ processes/crossassetstateprocess.cpp
 processes/hestonprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
-processes/multiassetquantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
@@ -415,6 +416,7 @@ termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
 termstructures/scenario.cpp
+termstructures/simplemclocalvolstochasticratescorrection.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
@@ -927,9 +929,9 @@ processes/crossassetstateprocess.hpp
 processes/hestonprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+processes/multiassetquantohestonprocess.hpp
 processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
-processes/multiassetquantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
@@ -1044,6 +1046,7 @@ termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
 termstructures/scenario.hpp
+termstructures/simplemclocalvolstochasticratescorrection.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp
