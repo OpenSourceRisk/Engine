@@ -592,13 +592,13 @@ void CrossAssetModelBuilder::buildModel() const {
         parametrizations.push_back(irParametrizations[i]);
     for (Size i = 0; i < fxParametrizations.size(); i++)
         parametrizations.push_back(fxParametrizations[i]);
-    for (Size i = 0; i < eqParametrizations.size(); i++)
-        parametrizations.push_back(eqParametrizations[i]);
     parametrizations.insert(parametrizations.end(), infParameterizations.begin(), infParameterizations.end());
     for (Size i = 0; i < crLgmParametrizations.size(); i++)
         parametrizations.push_back(crLgmParametrizations[i]);
     for (Size i = 0; i < crCirParametrizations.size(); i++)
         parametrizations.push_back(crCirParametrizations[i]);
+    for (Size i = 0; i < eqParametrizations.size(); i++)
+        parametrizations.push_back(eqParametrizations[i]);
     for (Size i = 0; i < comParametrizations.size(); i++)
         parametrizations.push_back(comParametrizations[i]);
     for (Size i = 0; i < crStateParametrizations.size(); i++)
