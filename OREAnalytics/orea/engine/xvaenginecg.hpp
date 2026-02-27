@@ -239,6 +239,7 @@ private:
     QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> sensiScenarioGenerator_;
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> camBuilder_;
     QuantLib::ext::shared_ptr<GaussianCamCG> model_;
+    QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory_;
 
     std::set<Date> simulationDates_;
     std::vector<Date> stickyCloseOutDates_;

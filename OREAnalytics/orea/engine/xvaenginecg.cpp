@@ -27,6 +27,8 @@
 #include <orea/simm/simmbucketmapperbase.hpp>
 #include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 
+#include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -37,6 +39,7 @@
 #include <qle/ad/ssaform.hpp>
 #include <qle/math/randomvariable_ops.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
+#include <qle/instruments/payment.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -260,12 +263,12 @@ void XvaEngineCG::buildPortfolio() {
     configurations[MarketContext::fxCalibration] = marketConfiguration_;
     configurations[MarketContext::pricing] = marketConfiguration_;
 
-    auto factory = QuantLib::ext::make_shared<EngineFactory>(
+    engineFactory_ = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
         EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
             model_, std::vector<Date>(simulationDates_.begin(), simulationDates_.end())));
 
-    portfolio_->build(factory, "xva engine cg", true, useAtParCouponsTrades_);
+    portfolio_->build(engineFactory_, "xva engine cg", true, useAtParCouponsTrades_);
 
     timing_pf_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build trades (" << portfolio_->size() << ") done.");
@@ -282,12 +285,6 @@ void XvaEngineCG::buildCgPartB() {
 
     for (auto const& [id, trade] : portfolio_->trades()) {
 
-        double multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
-
-        auto engine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
-            trade->instrument()->qlInstrument()->pricingEngine());
-        QL_REQUIRE(engine, "XvaEngineCG: expected to get AmcCgPricingEngine, trade '"
-                               << id << "' has a different or no engine attached.");
         if (useRedBlocks_)
             g->startRedBlock();
 
@@ -295,22 +292,8 @@ void XvaEngineCG::buildCgPartB() {
         if (!trade->instrument()->qlInstrument()->isCalculated())
             trade->instrument()->qlInstrument()->recalculate();
 
-        std::vector<TradeExposure> tradeExposure;
-        std::vector<TradeExposureMetaInfo> metaInfo;
-
-        try {
-            metaInfo.push_back(TradeExposureMetaInfo());
-            engine->buildComputationGraph(false, &tradeExposure, &metaInfo.front());
-        } catch (const std::exception& e) {
-            QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "': " << e.what());
-        }
-
-        for (auto& t : tradeExposure)
-            t.multiplier = multiplier;
-
-        tradeExposureMetaInfo_.push_back(metaInfo);
-
-        {
+        auto populateTradeExposure = [&](std::vector<std::vector<std::vector<TradeExposure>>>& data,
+                                         const std::vector<TradeExposure>& tradeExposure) {
             std::vector<std::vector<TradeExposure>> tmpValuation(valuationDates_.size() + 1);
             tmpValuation[0].push_back(tradeExposure[0]);
             for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
@@ -323,41 +306,79 @@ void XvaEngineCG::buildCgPartB() {
                     tmpValuation[i + 1].push_back(tradeExposure[index + 1]);
                 }
             }
-            tradeExposureValuation_.push_back(tmpValuation);
-        }
+            data.push_back(tmpValuation);
+        };
 
-        if (!closeOutDates_.empty()) {
-
-            if (!stickyCloseOutDates_.empty()) {
-                model_->useStickyCloseOutDates(true);
-                try {
-                    engine->buildComputationGraph(true, &tradeExposure, &metaInfo.front());
-                } catch (const std::exception& e) {
-                    QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "': " << e.what());
-                }
-                model_->useStickyCloseOutDates(false);
-                for (auto& t : tradeExposure)
-                    t.multiplier = multiplier;
+        auto processTrade = [&](const QuantLib::ext::shared_ptr<PricingEngine>& engine, double multiplier,
+                                const std::string& desc) {
+            auto amcCgEngine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(engine);
+            QL_REQUIRE(engine,
+                       "XvaEngineCG: expected to get AmcCgPricingEngine for trade '" << id << "' (" << desc << ")");
+            std::vector<TradeExposure> tradeExposure;
+            std::vector<TradeExposureMetaInfo> metaInfo;
+            try {
+                metaInfo.push_back(TradeExposureMetaInfo());
+                amcCgEngine->buildComputationGraph(false, &tradeExposure, &metaInfo.front());
+            } catch (const std::exception& e) {
+                QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
+                                                                                      << "): " << e.what());
             }
-
-            std::vector<std::vector<TradeExposure>> tmpCloseOut(closeOutDates_.size() + 1);
-            tmpCloseOut[0].push_back(tradeExposure[0]);
-            for (std::size_t i = 0; i < closeOutDates_.size(); ++i) {
+            for (auto& t : tradeExposure)
+                t.multiplier = multiplier;
+            tradeExposureMetaInfo_.push_back(metaInfo);
+            populateTradeExposure(tradeExposureValuation_, tradeExposure);
+            if (!closeOutDates_.empty()) {
                 if (!stickyCloseOutDates_.empty()) {
-                    tmpCloseOut[i + 1].push_back(tradeExposure[i + 1]);
-                } else {
-                    std::size_t index =
-                        std::distance(simulationDates_.begin(),
-                                      std::find(simulationDates_.begin(), simulationDates_.end(), closeOutDates_[i]));
-                    tmpCloseOut[i + 1].push_back(tradeExposure[index + 1]);
+                    model_->useStickyCloseOutDates(true);
+                    tradeExposure.clear();
+                    try {
+                        amcCgEngine->buildComputationGraph(true, &tradeExposure, &metaInfo.front());
+                    } catch (const std::exception& e) {
+                        QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
+                                                                                              << "): " << e.what());
+                    }
+                    model_->useStickyCloseOutDates(false);
+                    for (auto& t : tradeExposure)
+                        t.multiplier = multiplier;
                 }
+                populateTradeExposure(tradeExposureCloseOut_, tradeExposure);
             }
-            tradeExposureCloseOut_.push_back(tmpCloseOut);
+        };
+
+        // process main instrument
+
+        double multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
+        processTrade(trade->instrument()->qlInstrument()->pricingEngine(), multiplier, "main");
+
+        // process fees as single currency swaps per currency
+
+        std::map<std::string, std::pair<std::vector<Real>, std::vector<std::string>>> tradeFees;
+        for (Size i = 0; i < trade->instrument()->additionalInstruments().size(); ++i) {
+            if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
+                    trade->instrument()->additionalInstruments()[i])) {
+                tradeFees[p->currency().code()].first.push_back(p->cashFlow()->amount() *
+                                                                trade->instrument()->additionalMultipliers()[i]);
+                tradeFees[p->currency().code()].second.push_back(ore::data::to_string(p->cashFlow()->date()));
+            } else {
+                StructuredTradeErrorMessage(trade, "Additional instrument is ignored in AMCCG simulation",
+                                            "only QuantExt::Payment is handled as additional instrument.")
+                    .log();
+            }
         }
+
+        for (auto const& [ccy, flows] : tradeFees) {
+            ore::data::Swap swap(
+                Envelope(), {LegData(QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)});
+            swap.build(engineFactory_);
+            processTrade(swap.instrument()->qlInstrument()->pricingEngine(), 1.0, "fee");
+        }
+
+        // end the trade's red block and continue with next trade in loop
 
         if (useRedBlocks_)
             g->endRedBlock();
-    }
+
+    } // loop over trades in portfolio
 
     timing_partb_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build computation graph for all trades done - graph size is "
