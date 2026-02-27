@@ -721,6 +721,18 @@
     <xs:attribute type="currencyCodeWithDefault" name="foreignCcy" use="required"/>
   </xs:complexType>
 
+  <xs:complexType name="localVolSimpleMcParameters">
+    <xs:all>
+      <xs:element type="xs:integer" name="TimeStepsPerYear" minOccurs="0" />
+      <xs:element type="xs:double" name="CalibrationMoneynessMin" minOccurs="0" />
+      <xs:element type="xs:double" name="CalibrationMoneynessMax" minOccurs="0" />
+      <xs:element type="xs:integer" name="nStrikes" minOccurs="0" />
+      <xs:element type="xs:integer" name="Samples" minOccurs="0" />
+      <xs:element type="xs:double" name="d2CdK2Threshold" minOccurs="0" />
+      <xs:element type="xs:integer" name="nPasses" minOccurs="0" />
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="localVol">
     <xs:all>
       <xs:element type="currencyCode" name="DomesticCcy" />
@@ -728,6 +740,7 @@
       <xs:element type="xs:string" name="StochasticRatesCorrection"/>
       <xs:element type="xs:string" name="CalibrationMoneyness"/>
       <xs:element type="xs:string" name="CalibrationGrid"/>
+      <xs:element type="localVolSimpleMcParameters" name="SimpleMcParameters" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="currencyCodeWithDefault" name="foreignCcy" use="required"/>
   </xs:complexType>

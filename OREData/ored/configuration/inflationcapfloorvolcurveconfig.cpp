@@ -70,14 +70,13 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const vector<string>& capStrikes, const vector<string>& floorStrikes, const vector<string>& strikes,
     const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
     const BusinessDayConvention& businessDayConvention, const string& index, const string& indexCurve,
-    const string& yieldTermStructure, const Period& observationLag, const string& quoteIndex, const string& conventions,
-    const bool useLastAvailableFixingDate)
+    const string& yieldTermStructure, const Period& observationLag, const string& quoteIndex, const string& conventions)
     : CurveConfig(curveID, curveDescription), type_(type), quoteType_(quoteType), volatilityType_(volatilityType),
       extrapolate_(extrapolate), tenors_(tenors), capStrikes_(capStrikes), floorStrikes_(floorStrikes),
       strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
       yieldTermStructure_(yieldTermStructure), observationLag_(observationLag), quoteIndex_(quoteIndex),
-      conventions_(conventions), useLastAvailableFixingDate_(useLastAvailableFixingDate) {}
+      conventions_(conventions) {}
 
 void InflationCapFloorVolatilityCurveConfig::populateRequiredIds() const {
     if (!yieldTermStructure().empty())
@@ -204,8 +203,8 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     observationLag_ = parsePeriod(XMLUtils::getChildValue(node, "ObservationLag", true));
     quoteIndex_ = XMLUtils::getChildValue(node, "QuoteIndex", false);
     conventions_ = XMLUtils::getChildValue(node, "Conventions", false, "");
-    useLastAvailableFixingDate_ =
-        XMLUtils::getChildValueAsBool(node, "UseLastFixingDate", false, false);
+    if (XMLUtils::getChildNode(node, "UseLastFixingDate"))
+        WLOG("UseLastFixingDate in InflationCapFloorVolatility is deprecated and ignored.");
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
@@ -254,8 +253,6 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "QuoteIndex", quoteIndex_);
     if (!conventions_.empty())
         XMLUtils::addChild(doc, node, "Conventions", conventions_);
-    if (useLastAvailableFixingDate_)
-        XMLUtils::addChild(doc, node, "UseLastFixingDate", useLastAvailableFixingDate_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
     return node;

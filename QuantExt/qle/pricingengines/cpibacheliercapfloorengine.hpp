@@ -31,9 +31,8 @@ namespace QuantExt {
 class CPIBachelierCapFloorEngine : public CPICapFloorEngine {
 public:
     CPIBachelierCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                           const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
-                           const bool ttmFromLastAvailableFixing = false)
-        : CPICapFloorEngine(discountCurve, surface, ttmFromLastAvailableFixing){};
+                           const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface)
+        : CPICapFloorEngine(discountCurve, surface){};
     virtual ~CPIBachelierCapFloorEngine() = default;
 
 protected:
