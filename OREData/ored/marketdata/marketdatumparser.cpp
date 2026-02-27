@@ -150,7 +150,6 @@ static FXForwardQuote::FxFwdString parseFxString(const string& s) {
 }
 boost::variant<QuantLib::Period, QuantLib::Date> parseCdsPeriod(const string& s) {
     Date d;
-    Period p;
     if (tryParse(s, d, std::function<Date(const string&)>(parseDate))) {
         return d;
     } else {
