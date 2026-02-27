@@ -225,9 +225,9 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
 
     bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(infVol_.currentLink());
     if (isLogNormalVol) {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_, true);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
     } else {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_, true);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
     }
 
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
@@ -298,9 +298,9 @@ void InfDkBuilder::buildCapFloorBasket() const {
 
     bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(infVol_.currentLink());
     if (isLogNormalVol) {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_, true);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
     } else {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_, true);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, infVol_);
     }
     DLOG("Building cap floor basket for " << data_->index() << " with " << ci.size() << " calibration instruments, reference calibration grid size "
          << referenceCalibrationDates.size());

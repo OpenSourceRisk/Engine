@@ -34,17 +34,13 @@ QuantLib::ext::shared_ptr<PricingEngine> CpiCapFloorEngineBuilder::engineImpl(co
     Handle<YieldTermStructure> discountCurve = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
     Handle<QuantLib::CPIVolatilitySurface> ovs =
         market_->cpiInflationCapFloorVolatilitySurface(indexName, configuration(MarketContext::pricing));
-    // QL_REQUIRE(!ovs.empty(),
-    //            "engineFactory error: cpi cap/floor vol surface for index " << indexName << " not found");
-    bool useLastFixingDate =
-        parseBool(engineParameter("useLastFixingDate", std::vector<std::string>(), false, "false"));
 
     bool isLogNormal = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(ovs.currentLink());
 
     if (isLogNormal) {
-        return QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
+        return QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs);
     } else {
-        return QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
+        return QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(discountCurve, ovs);
     }
     
 }

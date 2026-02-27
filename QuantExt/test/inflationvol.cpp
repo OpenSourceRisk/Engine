@@ -205,12 +205,11 @@ CPICapFloorPriceData pricesFromVolQuotes(CommonData& cd, const QuantLib::ext::sh
 
 QuantLib::ext::shared_ptr<CPIVolatilitySurface> buildVolSurfaceFromPrices(CommonData& cd, CPICapFloorPriceData& priceData,
                                                                   const QuantLib::ext::shared_ptr<ZeroInflationIndex>& index,
-                                                                  const bool useLastKnownFixing,
                                                                   const Date& startDate = Date(),
                                                                   bool ignoreMissingQuotes = false) {
 
     QuantLib::ext::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(), useLastKnownFixing);
+        cd.discountTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
 
     QuantLib::ext::shared_ptr<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>> cpiCapFloorVolSurface;
     cpiCapFloorVolSurface = QuantLib::ext::make_shared<QuantExt::CPIPriceVolatilitySurface<QuantLib::Linear, QuantLib::Linear>>(
@@ -274,7 +273,7 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngine) {
     auto priceData = pricesFromVolQuotes(cd, index, false, Date());
 
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface), true);
+        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface));
 
     for (size_t i = 0; i < priceData.cStrikes.size(); ++i) {
         double strike = priceData.cStrikes[i];
@@ -313,7 +312,7 @@ BOOST_AUTO_TEST_CASE(testCPIBlackCapFloorEngineSeasonedCapFloors) {
     double baseCPI = index->fixing(volSurface->baseDate());
 
     QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface), true);
+        cd.discountTS, Handle<CPIVolatilitySurface>(volSurface));
 
     Date seasonedStartDate(15, Aug, 2021);
     Date seasonedMaturity(15, Aug, 2024);
@@ -350,7 +349,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurface) {
 
     auto priceData = pricesFromVolQuotes(cd, index, false, Date());
 
-    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), false);
+    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), false);
 
     for (size_t i = 0; i < cd.tenors.size(); ++i) {
         auto fixingDate = volSurface->baseDate() + cd.tenors[i];
@@ -376,7 +375,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteInterpolation) {
             priceData.cPrices[strikeIdx][tenorIdx] = Null<Real>();
             priceData.fPrices[strikeIdx][tenorIdx] = Null<Real>();
 
-            auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+            auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
             double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes[strikeIdx]);
 
@@ -405,7 +404,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteExtrapolation) {
         priceData.cPrices[0][tenorIdx] = Null<Real>();
         priceData.fPrices[0][tenorIdx] = Null<Real>();
 
-        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes.front());
 
@@ -422,7 +421,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteExtrapolation) {
         priceData.cPrices[cd.strikes.size()-1][tenorIdx] = Null<Real>();
         priceData.fPrices[cd.strikes.size() - 1][tenorIdx] = Null<Real>();
 
-        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes.back());
 
@@ -442,7 +441,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceMissingQuoteExtrapolation) {
         priceData.cPrices[1][tenorIdx] = Null<Real>();
         priceData.fPrices[1][tenorIdx] = Null<Real>();
 
-        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+        auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes.front());
 
@@ -468,7 +467,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceAllButOneQuoteMissing) {
     priceData.cPrices[1][0] = priceDataAllQuotes.cPrices[1][0];
     priceData.fPrices[1][0] = priceDataAllQuotes.fPrices[1][0];
 
-    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+    auto volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
 
     double vol = volSurface->volatility(cd.tenors[0], cd.strikes[0]);
     double expectedVol = cd.vols[0][1]->value();
@@ -483,7 +482,7 @@ BOOST_AUTO_TEST_CASE(testCPIPriceVolSurfaceAllButOneQuoteMissing) {
         priceData.fPrices[1][tenorIdx] = priceDataAllQuotes.fPrices[1][tenorIdx];
     }
 
-    volSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, Date(), true);
+    volSurface = buildVolSurfaceFromPrices(cd, priceData, index, Date(), true);
     for (Size tenorIdx = 0; tenorIdx < cd.tenors.size(); tenorIdx++) {
         double vol = volSurface->volatility(cd.tenors[tenorIdx], cd.strikes[0]);
         double expectedVol = cd.vols[tenorIdx][1]->value();
@@ -561,7 +560,7 @@ BOOST_AUTO_TEST_CASE(testVolatiltiySurfaceWithStartDate) {
     priceData.cStrikes = cd.strikes;
     priceData.fStrikes = cd.strikes;
 
-    auto priceSurface = buildVolSurfaceFromPrices(cd, priceData, index, true, startDate);
+    auto priceSurface = buildVolSurfaceFromPrices(cd, priceData, index, startDate);
 
     for (size_t i = 0; i < cd.strikes.size(); ++i) {
         for (size_t j = 0; j < cd.tenors.size(); ++j) {
