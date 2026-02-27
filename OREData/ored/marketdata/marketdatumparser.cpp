@@ -148,7 +148,15 @@ static FXForwardQuote::FxFwdString parseFxString(const string& s) {
         QL_FAIL("Cannot convert \"" << s << "\" to FxFwdString");
     }
 }
-
+boost::variant<QuantLib::Period, QuantLib::Date> parseCdsPeriod(const string& s) {
+    Date d;
+    Period p;
+    if (tryParse(s, d, std::function<Date(const string&)>(parseDate))) {
+        return d;
+    } else {
+        return parsePeriod(s);
+    }
+}
 boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> parseFxPeriod(const string& s) {
     Date d;
     Period p;
@@ -162,6 +170,18 @@ boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> pa
 }
 
 namespace {
+
+struct CdsTermGetter : boost::static_visitor<Period> {
+    CdsTermGetter() {}
+    Period operator()(const Date&) const { QL_FAIL("CdsTermGetter: internal error, can not convert date to period"); }
+    Period operator()(const Period& p) const { return p; }
+};
+
+struct CdsDateGetter : boost::static_visitor<Date> {
+    CdsDateGetter() {}
+    Date operator()(const Date& d) const { return d; }
+    Date operator()(const Period& p) const { return Date(); }
+};
 
 struct FxTenorGetter : boost::static_visitor<Period> {
     FxTenorGetter() {}
@@ -224,6 +244,12 @@ struct FxFwdStringCompare : boost::static_visitor<bool> {
 };
 
 } // namespace
+
+QuantLib::Period cdsQuoteTenor(const boost::variant<QuantLib::Period, QuantLib::Date>& term){
+    return boost::apply_visitor(CdsTermGetter(), term);} 
+
+QuantLib::Date cdsQuoteDate(const boost::variant<QuantLib::Period, QuantLib::Date>& term){
+    return boost::apply_visitor(CdsDateGetter(), term);}
 
 QuantLib::Period
 fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term) {
@@ -429,6 +455,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // CDS/PRICE/Name/Seniority/ccy/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/doc/term
         // CDS/PRICE/Name/Seniority/ccy/doc/term/runningSpread
+        // CDS/PRICE/Name/Seniority/ccy/expiryDate/runningSpread
         QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
             "6, 7 or 8 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
@@ -436,22 +463,24 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         const string& ccy = tokens[4];
 
         string docClause;
-        Period term;
+        boost::variant<QuantLib::Period, QuantLib::Date> term;
+        Date expiryDate;
         Real runningSpread = Null<Real>();
+        
         if (tokens.size() == 6) {
-            term = parsePeriod(tokens[5]);
+            term = parseCdsPeriod(tokens[5]);
         } else if (tokens.size() == 8) {
             docClause = tokens[5];
-            term = parsePeriod(tokens[6]);
+            term = parseCdsPeriod(tokens[6]);
             runningSpread = parseReal(tokens[7]) / 10000;
         } else {
             // 7 tokens => [5]/[6] = doc/term or term/runningSpread
             CdsDocClause cdsDocClause;
             if (tryParse<CdsDocClause>(tokens[5], cdsDocClause, &parseCdsDocClause)) {
                 docClause = tokens[5];
-                term = parsePeriod(tokens[6]);
+                term = parseCdsPeriod(tokens[6]);
             } else {
-                term = parsePeriod(tokens[5]);
+                term = parseCdsPeriod(tokens[5]);
                 runningSpread = parseReal(tokens[6]) / 10000;
             }
         }

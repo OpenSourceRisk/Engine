@@ -20,6 +20,7 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/wildcard.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 
 #include <qle/termstructures/generatordefaulttermstructure.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
@@ -56,10 +57,10 @@ using namespace ore::data;
 struct QuoteData {
     QuoteData() : value(Null<Real>()), runningSpread(Null<Real>()) {}
 
-    QuoteData(const Period& t, Real v, string s, string c, string d, Real rs = Null<Real>())
+    QuoteData(const boost::variant<Period, Date>& t, Real v, string s, string c, string d, Real rs = Null<Real>())
         : term(t), value(v), seniority(s), ccy(c), docClause(d), runningSpread(rs) {}
 
-    Period term;
+    boost::variant<Period, Date> term;
     Real value;
     string seniority;
     string ccy;
@@ -69,7 +70,7 @@ struct QuoteData {
 
 bool operator<(const QuoteData& lhs, const QuoteData& rhs) { return lhs.term < rhs.term; }
 
-void addQuote(set<QuoteData>& quotes, const string& configId, const string& name, const Period& tenor, Real value,
+void addQuote(set<QuoteData>& quotes, const string& configId, const string& name, const boost::variant<Period, Date>& tenor, Real value,
               string seniority, string ccy, string docClause, Real runningSpread = Null<Real>()) {
 
     // Add to quotes, with a check that we have no duplicate tenors
@@ -409,10 +410,14 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         refData.type = "SpreadCDS";
         for (auto quote : quotes) {
             try {
+                Date maturity = cdsQuoteDate(quote.term) != Date()
+                    ? cdsQuoteDate(quote.term) : cdsMaturity(asof, cdsQuoteTenor(quote.term),
+                     cdsConv->rule());
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
-                    cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
-                    auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                        cdsQuoteDate(quote.term) <= asof + 1 * Days ||
+                    maturity <= asof + 1 * Days) {
+                    //auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                     WLOG("DefaultCurve:: SKIP cds with term "
                          << quote.term << " because cds maturity (" << io::iso_date(maturity)
                          << ") is <= T + 1 (T =" << io::iso_date(asof)
@@ -425,13 +430,13 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
                     cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
                 runningSpread = config.runningSpread();
-                helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
+                helperQuoteTerms[helpers.back()->latestDate()] = cdsQuoteTenor(quote.term);
             } catch (exception& e) {
-                if (quote.term == Period(0, Months)) {
+                if (cdsQuoteTenor(quote.term) == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
                                                                                     << asof);
                 } else {
-                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << quote.term << " to CDS curve " << curveID
+                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << cdsQuoteTenor(quote.term) << " to CDS curve " << curveID
                                                                           << " for asof date " << asof
                                                                           << ", with error: " << e.what());
                 }
@@ -441,12 +446,14 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         refData.type = "ConvSpreadCDS";
         for (auto quote : quotes) {
             try {
+                Date maturity = cdsQuoteDate(quote.term) != Date()
+                                    ? cdsQuoteDate(quote.term)
+                                    : cdsMaturity(asof, cdsQuoteTenor(quote.term), cdsConv->rule());
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
-                    cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
-                    auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                    maturity <= asof + 1 * Days) {
                     WLOG("DefaultCurve:: SKIP cds with term "
-                         << quote.term << " because cds maturity (" << io::iso_date(maturity)
+                         << cdsQuoteTenor(quote.term) << " because cds maturity (" << io::iso_date(maturity)
                          << ") is <= T + 1 (T =" << io::iso_date(asof)
                          << "), but by standard conventioons the first CDS payment is the next IMM payment"
                             "date strictly after T + 1.");
@@ -455,7 +462,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 Real notional = 1000000;
                 auto convSpread = quote.value;
                 // Use configured/convention start date and calendar
-                Date maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                //Date maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                 Schedule schedule(asof, maturity, Period(cdsConv->frequency()), cdsConv->calendar(),  cdsConv->paymentConvention(), 
                                  cdsConv->paymentConvention(), cdsConv->rule(), false);
                 
@@ -512,9 +519,9 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 if (tmp->latestDate() > asof) {
                     helpers.push_back(tmp);
                 }
-                helperQuoteTerms[tmp->latestDate()] = quote.term;
+                helperQuoteTerms[tmp->latestDate()] = cdsQuoteTenor(quote.term);
             } catch (exception& e) {
-                if (quote.term == Period(0, Months)) {
+                if (cdsQuoteTenor(quote.term) == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
                                                                                     << asof);
                 } else {
@@ -544,7 +551,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
             if (tmp->latestDate() > asof) {
                 helpers.push_back(tmp);
             }
-            helperQuoteTerms[tmp->latestDate()] = quote.term;
+            helperQuoteTerms[tmp->latestDate()] = cdsQuoteTenor(quote.term);
         }
     }
 
@@ -693,14 +700,15 @@ void DefaultCurve::buildHazardRateCurve(const std::string& curveID, const Defaul
     vector<Real> quoteValues;
 
     // If first term is not zero, add asof point
-    if (quotes.begin()->term != 0 * Days) {
+    if (cdsQuoteTenor(quotes.begin()->term) != 0 * Days) {
         LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << quotes.begin()->value << ", as not given");
         dates.push_back(asof);
         quoteValues.push_back(quotes.begin()->value);
     }
 
     for (auto quote : quotes) {
-        dates.push_back(cal.advance(asof, quote.term, Following, false));
+        
+        dates.push_back(cdsQuoteDate(quote.term) != Date() ? cdsQuoteDate(quote.term) : cal.advance(asof, cdsQuoteTenor(quote.term), Following, false));
         quoteValues.push_back(quote.value);
     }
 

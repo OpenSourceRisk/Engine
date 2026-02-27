@@ -725,7 +725,7 @@ public:
 
     //! Constructor
     CdsQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& underlyingName,
-             const string& seniority, const string& ccy, Period term, const string& docClause = "",
+             const string& seniority, const string& ccy, boost::variant<Period, Date> term, const string& docClause = "",
              Real runningSpread = Null<Real>())
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS), underlyingName_(underlyingName),
           seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause), runningSpread_(runningSpread) {}
@@ -738,7 +738,9 @@ public:
 
     //! \name Inspectors
     //@{
-    const Period& term() const { return term_; }
+    
+    const boost::variant<Date, Period>& term() const { return term_; }
+    //const Period& term() const { return term_; }
     const string& seniority() const { return seniority_; }
     const string& ccy() const { return ccy_; }
     const string& underlyingName() const { return underlyingName_; }
@@ -750,7 +752,8 @@ private:
     string underlyingName_;
     string seniority_;
     string ccy_;
-    Period term_;
+    boost::variant<Period, Date> term_;
+    //Period term_;
     string docClause_;
     Real runningSpread_;
 
