@@ -141,7 +141,6 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
                 AndreasenHugeVolatilityInterpl::CubicSpline, AndreasenHugeVolatilityInterpl::Call, 500, Null<Real>(),
                 Null<Real>());
             localVol = Handle<LocalVolTermStructure>(QuantLib::ext::make_shared<AndreasenHugeLocalVolAdapter>(ah));
-            localVol->enableExtrapolation();
             DLOG("Andreasen-Huge local vol calibration for process #"
                  << l
                  << ": "
@@ -160,6 +159,8 @@ std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> LocalVolModelBuilder::
         } else {
             QL_FAIL("unexpected local vol type");
         }
+
+        localVol->enableExtrapolation();
 
         processes.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
             processes_[l]->stateVariable(), processes_[l]->dividendYield(), processes_[l]->riskFreeRate(),
