@@ -7,8 +7,7 @@ ORE's source code is hosted at \url{https://github.com/opensourcerisk/engine}.
 You can get ORE sources in two ways, either by downloading a release bundle as described in section \ref{sec:release}
 or by checking out the source code from the github repository as described in section \ref{sec:build_ore}.
 In both cases, the user usually needs to build (compile) from sources in a platform dependent way.
-To avoid that build process, one can either get the pre-built ORE Python module as mentioned in section \ref{sec:intro_wheels},
-or try the executables built on github automatically for a few platforms for testing purposes, see the ``Actions'' menu.
+To avoid that build process, one can either get the pre-built ORE Python module as mentioned in section \ref{sec:intro_wheels}.
 
 \subsection{ORE Releases}\label{sec:release}
 
@@ -170,12 +169,20 @@ Alternatively, compile all Boost libraries directly from the source code:
 \end{itemize}
 \end{enumerate}
 
-Configure boost paths, setting environment variables, e.g.:
+There are two options for pointing at your Boost installation:
+\begin{enumerate}
+\item With CMake 3.30.0+ and Boost 1.70.0+, set the environment variable ORE_BOOST_DIR or BOOST_DIR to the directory containing the 
+Boost CMake package configuration file i.e. the file BoostConfig.cmake. ORE_BOOST_DIR is provided to allow for a selected version of
+Boost for building ORE.
+\item If you are still using the old FindBoost module for a particular reason (like building ORE-SWIG with setup.py), set the 
+environment variables BOOST and BOOST_LIB64 to point to the Boost root directory and Boost lib directory respectively, e.g:
 \begin{itemize}
 \item {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0}
 \item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.3}
 \item {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.3}
 \end{itemize}
+\end{enumerate}
+
 
 \subsubsection*{Compiler / Boost Versions}
 \label{sec:compiler_boost_versions}
@@ -267,56 +274,78 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
 {\scriptsize
 \begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
   \hline
-  Option & Description & Default  \\
+  Option & Description & Default & Recommendation \\
   \hline
   \hline
-  ORE\_BUILD\_DOC & Build PDF documentation & ON \\
+  ORE\_BUILD\_DOC & Build PDF documentation & ON & ON \\
   \hline
-  ORE\_BUILD\_EXAMPLES & Build examples & ON \\
+  ORE\_BUILD\_TESTS & Build test suites  & ON & ON \\
   \hline
-  ORE\_BUILD\_TESTS & Build test suites  & ON \\
+  ORE\_BUILD\_EXAMPLES & Create a testsuite of examples in ORE/Examples. Requires ORE\_BUILD\_TESTS to be ON. & ON & ON\\
   \hline
-  ORE\_BUILD\_APP & Build the ORE commandline application {\tt ore[.exe]} & ON \\
+  ORE\_BUILD\_APP & Build the ORE commandline application {\tt ore[.exe]} & ON & ON \\
   \hline
-  ORE\_BUILD\_SWIG & Build the ORE Python module & ON \\
+  ORE\_BUILD\_SWIG & Build the ORE Python module & ON & ON \\
   \hline
-  ORE\_ENABLE\_OPENCL & Build the compute environment using OpenCL, to utilise a GPU & OFF \\
+  ORE\_BUILD\_QL\_SEPARATELY & Import separate pre-built QuantLib & OFF & OFF \\
   \hline
-  ORE\_ENABLE\_CUDA & Build the compute environment using CUDA, to utilise a GPU & OFF \\
+  ORE\_ENABLE\_OPENCL & Build the compute environment using OpenCL, to utilise a GPU & OFF & \\
   \hline
-% TODO: This is still in experimental stage, to be documented for release 14
-  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF \\
+  ORE\_ENABLE\_CUDA & Build the compute environment using CUDA, to utilise a GPU & OFF & \\
   \hline
-  ORE\_USE\_ZLIB & Use compression for boost::iostreams, e.g. to write compressed cube files & OFF\\
+  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF & \\
   \hline
-  ORE\_MULTITHREADING \_CPU\_AFFINITY & Set cpu affinitity in multithreaded calculations & OFF \\
+  ORE\_USE\_ZLIB & Use compression for boost::iostreams, e.g. to write compressed cube files & OFF & ON \\
   \hline
-  ORE\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
+  ORE\_MULTITHREADING \_CPU\_AFFINITY & Set cpu affinitity in multithreaded calculations & OFF & \\
   \hline
-  MSVC\_LINK\_DYNAMIC\_RUNTIME & Link against dynamic runtime & ON \\
+  ORE\_ENABLE\_PARALLEL\_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF & \\
   \hline
-  MSVC\_PARALLELBUILD & Use flag /MP & ON \\
+  MSVC\_LINK\_DYNAMIC\_RUNTIME & Link against dynamic runtime & ON & ON \\
   \hline
-  \hline
-  QL\_USE\_PCH & Use precompiled headers & OFF \\
-  \hline
-  QL\_ENABLE\_SESSIONS & Singletons return different instances for different sessions; turn ON for ORE's multi-threading & OFF \\
-  \hline
-  QL\_BUILD\_EXAMPLES & Build QuantLib examples & ON \\
-  \hline
-  QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
-  \hline
-  \hline
-  BOOST\_INCLUDEDIR, BOOST\_ROOT & directory containing the ``boost'' folder, root of all boost includes & user-provided if not found by CMake \\
-  \hline
-  BOOST\_LIBRARYDIR & folder containing compiled boost libraries & user-provided if not found by CMake \\
-  \hline
+  MSVC\_PARALLELBUILD & Use flag /MP & ON & ON\\
   \hline
   Python\_ROOT & directory containing Python.h & user-provided if not found by CMake \\
   \hline
   Python\_LIBRARY & Python shared library name including full path & user-provided if not found by CMake \\
   \hline
 \end{tabular}
+}
+
+%    \lstinline!Roll QuantLib Flags! & %\begin{table}
+{\scriptsize
+\begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
+  \hline
+  Option & Description & Default \\
+  \hline
+  \hline
+  QL\_BUILD\_Examples & Build examples & ON \\
+  \hline
+  QL\_BUILD\_TEST_SUITE & Build test suites  & ON \\
+  \hline
+  QL\_BUILD\_FUZZ\_TEST\_SUITE & Build fuzz test suite & OFF \\
+  \hline
+  QL\_ENABLE\_OPEN\_MP & Detect and use OpenMP & OFF \\
+  \hline
+  QL\_ENABLE\_ENABLE\_PARALLEL\_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
+  \hline
+  QL\_USE\_PCH & Use precompiled headers & OFF \\
+  \hline
+  QL\_ENABLE\_SESSIONS & Singletons return different instances for different sessions; turn ON for ORE's multi-threading & ON\textsuperscript{*} \\
+  \hline
+  QL\_USE\_STD\_ANY & Use std::any instead of boost::any & ON\textsuperscript{*} \\
+  \hline
+  QL\_USE\_STD\_OPTIONAL & Use std::optional isntead of boost::optional & ON\textsuperscript{*} \\
+  \hline
+  QL\_USE\_STD\_SHARED\_PTR & Use standard smart pointers intead of Boost ones & OFF\textsuperscript{*} \\
+  \hline
+  QL\_USE\_STD\_CLASSES & Enable all QL_USE_STD_ options & OFF\textsuperscript{*} \\
+  \hline
+  QL\_BUILD\_EXAMPLES & Build QuantLib examples & ON \\
+  \hline
+  QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
+\end{tabular}
+\caption{The value indicated should not be changed.}
 }
 
 The latter BOOST and Python variables have been added to the list, because CMake may use them to locate
