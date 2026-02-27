@@ -311,47 +311,46 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
   \hline
 \end{tabular}
 }
-
 The latter BOOST and Python variables have been added to the list, because CMake may use them to locate
 the BOOST and Python development files, if CMake does not find them automatically.
 
 
-\begin{table}[h]
-    \begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
-      \hline
-      Option & Description & Default \\
-      \hline
-      \hline
-      QL\_BUILD\_Examples & Build examples & ON \\
-      \hline
-      QL\_BUILD\_TEST_SUITE & Build test suites  & ON \\
-      \hline
-      QL\_BUILD\_FUZZ\_TEST\_SUITE & Build fuzz test suite & OFF \\
-      \hline
-      QL\_ENABLE\_OPEN\_MP & Detect and use OpenMP & OFF \\
-      \hline
-      QL\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
-      \hline
-      QL\_USE\_PCH & Use precompiled headers & OFF \\
-      \hline
-      QL\_ENABLE\_SESSIONS & Singletons return different instances for different sessions; turn ON for ORE's multi-threading & ON\textsuperscript{*} \\
-      \hline
-      QL\_USE\_STD\_ANY & Use std::any instead of boost::any & ON\textsuperscript{*} \\
-      \hline
-      QL\_USE\_STD\_OPTIONAL & Use std::optional isntead of boost::optional & ON\textsuperscript{*} \\
-      \hline
-      QL\_USE\_STD\_SHARED\_PTR & Use standard smart pointers intead of Boost ones & OFF\textsuperscript{*} \\
-      \hline
-      QL\_USE\_STD\_CLASSES & Enable all QL\_USE\_STD\_ options & OFF\textsuperscript{*} \\
-      \hline
-      QL\_BUILD\_EXAMPLES & Build QuantLib examples & ON \\
-      \hline
-      QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
-      \hline
-  \end{tabular}
-  \caption{\textsuperscript{*} The default value should not be changed.}
-  \label{tab:QuantLib Flags}
-\end{table}
+Quantlib Flags
+{\scriptsize
+\begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
+    \hline
+    Option & Description & Default \\
+    \hline
+    \hline
+    QL\_BUILD\_Examples & Build examples & ON \\
+    \hline
+    QL\_BUILD\_TEST_SUITE & Build test suites  & ON \\
+    \hline
+    QL\_BUILD\_FUZZ\_TEST\_SUITE & Build fuzz test suite & OFF \\
+    \hline
+    QL\_ENABLE\_OPEN\_MP & Detect and use OpenMP & OFF \\
+    \hline
+    QL\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
+    \hline
+    QL\_USE\_PCH & Use precompiled headers & OFF \\
+    \hline
+    QL\_ENABLE\_SESSIONS & Singletons return different instances for different sessions; turn ON for ORE's multi-threading & ON\textsuperscript{*} \\
+    \hline
+    QL\_USE\_STD\_ANY & Use std::any instead of boost::any & ON\textsuperscript{*} \\
+    \hline
+    QL\_USE\_STD\_OPTIONAL & Use std::optional isntead of boost::optional & ON\textsuperscript{*} \\
+    \hline
+    QL\_USE\_STD\_SHARED\_PTR & Use standard smart pointers intead of Boost ones & OFF\textsuperscript{*} \\
+    \hline
+    QL\_USE\_STD\_CLASSES & Enable all QL\_USE\_STD\_ options & OFF\textsuperscript{*} \\
+    \hline
+    QL\_BUILD\_EXAMPLES & Build QuantLib examples & ON \\
+    \hline
+    QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
+    \hline
+\end{tabular}
+}
+\scriptsize{ \textsuperscript{*}Default values should not be modified.}
 
 
 \subsubsection*{Linux and macOS}
