@@ -152,7 +152,7 @@ private:
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     std::pair<std::set<std::size_t>, std::set<std::set<std::size_t>>>
-    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::size_t>& tradeIds,
+    getRegressors(const std::size_t dateIndex, const Date& obsDate, const std::set<std::pair<Size, Size>>& tradeIds,
                   const bool regressors);
 
     std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
@@ -179,7 +179,7 @@ private:
                                        std::vector<std::vector<RandomVariable>>& conditionalIrVega,
                                        std::vector<std::vector<RandomVariable>>& conditionalFxVega);
     RandomVariable dynamicImCombineComponents(const std::vector<const RandomVariable*>& componentDerivatives,
-                                              const std::size_t tradeId, const std::size_t timeStep,
+                                              const Size tradeId, const Size k, const Size timeStep,
                                               const std::string& label, const double multiplier);
 
     // set via additional methods
@@ -254,12 +254,15 @@ private:
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
-    // per trade and time step trade exposures (buildPartB(), conditional expectation, includes t=0 as first component)
-    std::vector<std::vector<TradeExposure>> tradeExposureValuation_;
-    std::vector<std::vector<TradeExposure>> tradeExposureCloseOut_;
+    /* Per trade and time step the exposure of a trade, which is represented a vector of TradeExposure
+       entries for the components of a trade (buildPartB()). It is guaranteed that the number of components
+       is constant across all time steps. Includes t = 0 as first time step. */
+    std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureValuation_;
+    std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureCloseOut_;
 
-    // per trade meta info (buildPartB())
-    std::vector<TradeExposureMetaInfo> tradeExposureMetaInfo_;
+    /* Per trade vector of meta info (buildPartB()). vector size is same as for tradeExposureValuation_,
+       and tradeExposureCloseOut_ members */
+    std::vector<std::vector<TradeExposureMetaInfo>> tradeExposureMetaInfo_;
 
     // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
     std::vector<std::size_t> pfExposureValuation_;
@@ -272,14 +275,15 @@ private:
     /* for dynamic im calculation */
     struct DynamicImInfo {
         // plain trade ids, i.e. trades without TradeExposure::targetConditionalExpectation
-        std::set<std::size_t> plainTradeIds;
+        // the id is the pair of trade id and component
+        std::set<std::pair<std::size_t, std::size_t>> plainTradeIds;
         // sum of path exposures for plain trades, grouped by relevant model parameters
         std::map<std::set<ModelCG::ModelParameter>, std::size_t> plainTradeSumGrouped;
         // set of regressor nodes and var groups for plain trades
         std::set<std::size_t> plainTradeRegressors;
         std::set<std::set<std::size_t>> plainTradeRegressorGroups;
         // indices in tradeExposureValuation with TradeExposure::targetConditionalExpectation set
-        std::set<std::size_t> individualTradeIds;
+        std::set<std::pair<std::size_t, std::size_t>> individualTradeIds;
     };
 
     // dynamic im info per valuation date,
