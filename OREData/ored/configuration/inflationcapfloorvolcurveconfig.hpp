@@ -60,7 +60,7 @@ public:
         const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
         const BusinessDayConvention& businessDayConvention, const string& index, const string& indexCurve,
         const string& yieldTermStructure, const Period& observationLag, const std::string& quoteIndex = "",
-        const std::string& conventions = "", const bool useLastAvailableFixingDate = false);
+        const std::string& conventions = "");
 
     //! \name XMLSerializable interface
     //@{
@@ -89,7 +89,6 @@ public:
     const Period& observationLag() const { return observationLag_; }
     const std::string& quoteIndex() const { return quoteIndex_; }
     const std::string& conventions() const { return conventions_; }
-    const bool& useLastAvailableFixingDate() const { return useLastAvailableFixingDate_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
@@ -113,7 +112,6 @@ public:
     Period& observationLag() { return observationLag_; }
     std::string& quoteIndex() { return quoteIndex_; }
     std::string& conventions() { return conventions_; }
-    bool& useLastAvailableFixingDate() { return useLastAvailableFixingDate_; }
     //@}
 
 private:
@@ -138,7 +136,6 @@ private:
     // Can be different from the index_ string to allow the surface to be configured against another index's quotes.
     std::string quoteIndex_;
     std::string conventions_;
-    bool useLastAvailableFixingDate_;
     ReportConfig reportConfig_;
     BootstrapConfig bootstrapConfig_;
 };
