@@ -272,38 +272,38 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
 
 %\begin{table}
 {\scriptsize
-\begin{tabular}{|p{5.5cm}|p{6cm}|p{1.5cm}|p{1.5cm}|}
+\begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
   \hline
-  Option & Description & Default & Recommendation \\
+  Option & Description & Default \\
   \hline
   \hline
-  ORE\_BUILD\_DOC & Build PDF documentation & ON & ON \\
+  ORE\_BUILD\_DOC & Build PDF documentation & ON \\
   \hline
-  ORE\_BUILD\_TESTS & Build test suites  & ON & ON \\
+  ORE\_BUILD\_TESTS & Build test suites  & ON \\
   \hline
-  ORE\_BUILD\_EXAMPLES & Create a testsuite of examples in ORE/Examples. Requires ORE\_BUILD\_TESTS to be ON. & ON & ON\\
+  ORE\_BUILD\_EXAMPLES & Create a testsuite of examples in ORE/Examples. Requires ORE\_BUILD\_TESTS to be ON. & ON \\
   \hline
-  ORE\_BUILD\_APP & Build the ORE commandline application {\tt ore[.exe]} & ON & ON \\
+  ORE\_BUILD\_APP & Build the ORE commandline application {\tt ore[.exe]} & ON \\
   \hline
-  ORE\_BUILD\_SWIG & Build the ORE Python module & ON & ON \\
+  ORE\_BUILD\_SWIG & Build the ORE Python module & ON \\
   \hline
-  ORE\_BUILD\_QL\_SEPARATELY & Import separate pre-built QuantLib & OFF & OFF \\
+  ORE\_BUILD\_QL\_SEPARATELY & Import separate pre-built QuantLib & OFF \\
   \hline
-  ORE\_ENABLE\_OPENCL & Build the compute environment using OpenCL, to utilise a GPU & OFF & \\
+  ORE\_ENABLE\_OPENCL & Build the compute environment using OpenCL, to utilise a GPU & OFF \\
   \hline
-  ORE\_ENABLE\_CUDA & Build the compute environment using CUDA, to utilise a GPU & OFF & \\
+  ORE\_ENABLE\_CUDA & Build the compute environment using CUDA, to utilise a GPU & OFF \\
   \hline
-  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF & \\
+  ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF \\
   \hline
-  ORE\_USE\_ZLIB & Use compression for boost::iostreams, e.g. to write compressed cube files & OFF & ON \\
+  ORE\_USE\_ZLIB & Use compression for boost::iostreams, e.g. to write compressed cube files & OFF \\
   \hline
-  ORE\_MULTITHREADING \_CPU\_AFFINITY & Set cpu affinitity in multithreaded calculations & OFF & \\
+  ORE\_MULTITHREADING \_CPU\_AFFINITY & Set cpu affinitity in multithreaded calculations & OFF  \\
   \hline
-  ORE\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF & \\
+  ORE\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF  \\
   \hline
-  MSVC\_LINK\_DYNAMIC\_RUNTIME & Link against dynamic runtime & ON & ON \\
+  MSVC\_LINK\_DYNAMIC\_RUNTIME & Link against dynamic runtime & ON \\
   \hline
-  MSVC\_PARALLELBUILD & Use flag /MP & ON & ON\\
+  MSVC\_PARALLELBUILD & Use flag /MP & ON \\
   \hline
   Python\_ROOT & directory containing Python.h & user-provided if not found by CMake \\
   \hline
@@ -330,7 +330,7 @@ QuantLib Flags
   \hline
   QL\_ENABLE\_OPEN\_MP & Detect and use OpenMP & OFF \\
   \hline
-  QL\_ENABLE\_ENABLE\_PARALLEL\_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
+  QL\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
   \hline
   QL\_USE\_PCH & Use precompiled headers & OFF \\
   \hline
@@ -348,7 +348,7 @@ QuantLib Flags
   \hline
   QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
 \end{tabular}
-
+}
 \caption{The value indicated should not be changed.}
 
 
