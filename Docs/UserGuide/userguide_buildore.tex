@@ -171,16 +171,16 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 There are two options for pointing at your Boost installation:
 \begin{enumerate}
-\item With CMake 3.30.0+ and Boost 1.70.0+, set the environment variable ORE_BOOST_DIR or BOOST_DIR to the directory containing the 
-Boost CMake package configuration file i.e. the file BoostConfig.cmake. ORE_BOOST_DIR is provided to allow for a selected version of
+\item With CMake 3.30.0+ and Boost 1.70.0+, set the environment variable {\tt ORE\_BOOST\_DIR} or {\tt BOOST\_DIR} to the directory containing the 
+Boost CMake package configuration file i.e. the file BoostConfig.cmake. {\tt ORE\_BOOST\_DIR} is provided to allow for a selected version of
 Boost for building ORE.
 \item If you are still using the old FindBoost module for a particular reason (like building ORE-SWIG with setup.py), set the 
-environment variables BOOST and BOOST_LIB64 to point to the Boost root directory and Boost lib directory respectively, e.g:
-\begin{itemize}
-\item {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0}
-\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.3}
-\item {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.3}
-\end{itemize}
+environment variables BOOST and {\tt BOOST\_LIB64} to point to the Boost root directory and Boost lib directory respectively, e.g:
+    \begin{itemize}
+        \item {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0}
+        \item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.3}
+        \item {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.3}
+    \end{itemize}
 \end{enumerate}
 
 
@@ -272,7 +272,7 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
 
 %\begin{table}
 {\scriptsize
-\begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
+\begin{tabular}{|p{5.5cm}|p{6cm}|p{1.5cm}|p{1.5cm}|}
   \hline
   Option & Description & Default & Recommendation \\
   \hline
@@ -299,7 +299,7 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
   \hline
   ORE\_MULTITHREADING \_CPU\_AFFINITY & Set cpu affinitity in multithreaded calculations & OFF & \\
   \hline
-  ORE\_ENABLE\_PARALLEL\_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF & \\
+  ORE\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF & \\
   \hline
   MSVC\_LINK\_DYNAMIC\_RUNTIME & Link against dynamic runtime & ON & ON \\
   \hline
@@ -311,6 +311,10 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
   \hline
 \end{tabular}
 }
+\end{table}
+
+The latter BOOST and Python variables have been added to the list, because CMake may use them to locate
+the BOOST and Python development files, if CMake does not find them automatically.
 
 %    \lstinline!Roll QuantLib Flags! & %\begin{table}
 {\scriptsize
@@ -339,17 +343,16 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
   \hline
   QL\_USE\_STD\_SHARED\_PTR & Use standard smart pointers intead of Boost ones & OFF\textsuperscript{*} \\
   \hline
-  QL\_USE\_STD\_CLASSES & Enable all QL_USE_STD_ options & OFF\textsuperscript{*} \\
+  QL\_USE\_STD\_CLASSES & Enable all QL\_USE\_STD\_ options & OFF\textsuperscript{*} \\
   \hline
   QL\_BUILD\_EXAMPLES & Build QuantLib examples & ON \\
   \hline
   QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
 \end{tabular}
+} 
+\end{table}
 \caption{The value indicated should not be changed.}
-}
 
-The latter BOOST and Python variables have been added to the list, because CMake may use them to locate
-the BOOST and Python development files, if CMake does not find them automatically.
 
 \subsubsection*{Linux and macOS}
 
