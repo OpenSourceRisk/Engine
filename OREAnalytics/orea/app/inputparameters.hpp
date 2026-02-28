@@ -543,7 +543,7 @@ public:
     void setCovarianceData(ore::data::CSVReader& reader) { parameters_.set("parametricVar", "covarianceInputFile", reader); }
     void setCovarianceDataFromBuffer(const std::string& xml) { parameters_.set("parametricVar", "covarianceInputFile", xml); }
     void setSensitivityStream(const std::string& s) { parameters_.set("var", "sensitivityInputFile", s); }
-    void setBenchmarkVarPeriod(const std::string& period) { parameters_.set("var", "lookbackPeriod", period); }
+    void setBenchmarkVarPeriod(const std::string& period) { benchmarkVarPeriod_ = period; }
     void setScenarioReader(const std::string& fileName);
     void setHistVarSimMarketParams(const std::string& s) { parameters_.set("historicalSimulationVar", "simulationConfigFile", s); }
     void setHistVarSimMarketParamsFromFile(const std::string& s) { parameters_.set("historicalSimulationVar", "simulationConfigFile", s); }

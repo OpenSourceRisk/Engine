@@ -41,7 +41,7 @@ struct VarVariables : public InputVariables {
     std::string lookbackPeriod_;
     QuantLib::Size horizonDays_ = 10;
     QuantLib::Calendar horizonCalendar_;
-    bool horizonOverlappingPeriods_;
+    bool horizonOverlappingPeriods_ = true;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams_;
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
