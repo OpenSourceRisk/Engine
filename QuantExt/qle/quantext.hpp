@@ -591,6 +591,7 @@
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 #include <qle/termstructures/sabrstrippedoptionletadapter.hpp>
 #include <qle/termstructures/scenario.hpp>
+#include <qle/termstructures/simplemclocalvolstochasticratescorrection.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
