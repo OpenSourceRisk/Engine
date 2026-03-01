@@ -106,7 +106,6 @@ public:
     QuantLib::ext::shared_ptr<InMemoryReport> dynamicImRegressionReport() const { return dynamicImRegressionReport_; }
 
 private:
-
     // main process steps
 
     void buildT0Market();
@@ -255,21 +254,25 @@ private:
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
-    /* Per trade and time step the exposure of a trade, which is represented a vector of TradeExposure
+    /* Per trade and time step the exposure of a trade, which is represented by a vector of TradeExposure
        entries for the components of a trade (buildPartB()). It is guaranteed that the number of components
-       is constant across all time steps. Includes t = 0 as first time step. */
+       is constant across all time steps. Includes t = 0 as first time step.
+       The index of the outmost vector corresponds to the position of the trade in portfolio->trades(), and
+       there is an entry for each trade, possibly identically zero for trades that fail in the computation
+       graph build within this engine. */
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureValuation_;
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureCloseOut_;
 
-    /* Per trade vector of meta info (buildPartB()). vector size is same as for tradeExposureValuation_,
-       and tradeExposureCloseOut_ members */
+    /* Per trade vector of meta info (buildPartB()). vector size is guaranteed to be the same as for
+       tradeExposureValuation_, and tradeExposureCloseOut_ members */
     std::vector<std::vector<TradeExposureMetaInfo>> tradeExposureMetaInfo_;
 
     // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
     std::vector<std::size_t> pfExposureValuation_;
     std::vector<std::size_t> pfExposureCloseOut_;
 
-    // if trade breakdown, per time step, trade the exposure, as conditional expectation (buildPartC(), includes t=0)
+    /* if trade breakdown, per time step and trade the exposure, as conditional expectation (buildPartC(), includes t=0)
+       trade index is the same as above for tradeExposureValuation_ member */
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;
     std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_;
 

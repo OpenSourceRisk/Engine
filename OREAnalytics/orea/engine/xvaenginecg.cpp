@@ -283,6 +283,13 @@ void XvaEngineCG::buildCgPartB() {
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
 
+    tradeExposureValuation_.resize(portfolio_->trades().size(),
+                                   std::vector<std::vector<TradeExposure>>(valuationDates_.size()));
+    if(!closeOutDaes_.empy())
+        tradeExposureCloseOut_.resize(portfolio_->trades().size(),
+                                       std::vector<std::vector<TradeExposure>>(valuationDates_.size()));
+
+    Size tradeIndex = 0;
     for (auto const& [id, trade] : portfolio_->trades()) {
 
         if (useRedBlocks_)
@@ -292,9 +299,10 @@ void XvaEngineCG::buildCgPartB() {
         if (!trade->instrument()->qlInstrument()->isCalculated())
             trade->instrument()->qlInstrument()->recalculate();
 
-        auto populateTradeExposure = [&](std::vector<std::vector<std::vector<TradeExposure>>>& data,
+        auto populateTradeExposure = [&](const Size tradeIndex,
+                                         std::vector<std::vector<std::vector<TradeExposure>>>& data,
                                          const std::vector<TradeExposure>& tradeExposure) {
-            std::vector<std::vector<TradeExposure>> tmpValuation(valuationDates_.size() + 1);
+            auto tmpValuation& = data[tradeIndex];
             tmpValuation[0].push_back(tradeExposure[0]);
             for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
                 if (closeOutDates_.empty() || !stickyCloseOutDates_.empty()) {
@@ -306,11 +314,10 @@ void XvaEngineCG::buildCgPartB() {
                     tmpValuation[i + 1].push_back(tradeExposure[index + 1]);
                 }
             }
-            data.push_back(tmpValuation);
         };
 
-        auto processTrade = [&](const QuantLib::ext::shared_ptr<PricingEngine>& engine, double multiplier,
-                                const std::string& desc) {
+        auto processTrade = [&](const Size tradeInddex, const QuantLib::ext::shared_ptr<PricingEngine>& engine,
+                                double multiplier, const std::string& desc) {
             auto amcCgEngine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(engine);
             QL_REQUIRE(engine,
                        "XvaEngineCG: expected to get AmcCgPricingEngine for trade '" << id << "' (" << desc << ")");
@@ -326,7 +333,7 @@ void XvaEngineCG::buildCgPartB() {
             for (auto& t : tradeExposure)
                 t.multiplier = multiplier;
             tradeExposureMetaInfo_.push_back(metaInfo);
-            populateTradeExposure(tradeExposureValuation_, tradeExposure);
+            populateTradeExposure(tradeIndex, tradeExposureValuation_, tradeExposure);
             if (!closeOutDates_.empty()) {
                 if (!stickyCloseOutDates_.empty()) {
                     model_->useStickyCloseOutDates(true);
@@ -341,14 +348,14 @@ void XvaEngineCG::buildCgPartB() {
                     for (auto& t : tradeExposure)
                         t.multiplier = multiplier;
                 }
-                populateTradeExposure(tradeExposureCloseOut_, tradeExposure);
+                populateTradeExposure(tradeIndex, tradeExposureCloseOut_, tradeExposure);
             }
         };
 
         // process main instrument
 
         double multiplier = trade->instrument()->multiplier() * trade->instrument()->multiplier2();
-        processTrade(trade->instrument()->qlInstrument()->pricingEngine(), multiplier, "main");
+        processTrade(tradeIndex, trade->instrument()->qlInstrument()->pricingEngine(), multiplier, "main");
 
         // process fees as single currency swaps per currency
 
@@ -370,13 +377,18 @@ void XvaEngineCG::buildCgPartB() {
             ore::data::Swap swap(
                 Envelope(), {LegData(QuantLib::ext::make_shared<CashflowData>(flows.first, flows.second), false, ccy)});
             swap.build(engineFactory_);
-            processTrade(swap.instrument()->qlInstrument()->pricingEngine(), 1.0, "fee");
+            // trigger setupArguments
+            if (!swap.instrument()->qlInstrument()->isCalculated())
+                swap.instrument()->qlInstrument()->recalculate();
+            processTrade(tradeIndex, swap.instrument()->qlInstrument()->pricingEngine(), 1.0, "fee");
         }
 
         // end the trade's red block and continue with next trade in loop
 
         if (useRedBlocks_)
             g->endRedBlock();
+
+        ++tradeIndex;
 
     } // loop over trades in portfolio
 
