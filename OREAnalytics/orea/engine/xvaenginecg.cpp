@@ -285,7 +285,7 @@ void XvaEngineCG::buildCgPartB() {
 
     tradeExposureValuation_.resize(portfolio_->trades().size(),
                                    std::vector<std::vector<TradeExposure>>(valuationDates_.size()));
-    if(!closeOutDaes_.empy())
+    if(!closeOutDates_.empty())
         tradeExposureCloseOut_.resize(portfolio_->trades().size(),
                                        std::vector<std::vector<TradeExposure>>(valuationDates_.size()));
 
@@ -302,7 +302,7 @@ void XvaEngineCG::buildCgPartB() {
         auto populateTradeExposure = [&](const Size tradeIndex,
                                          std::vector<std::vector<std::vector<TradeExposure>>>& data,
                                          const std::vector<TradeExposure>& tradeExposure) {
-            auto tmpValuation& = data[tradeIndex];
+            auto& tmpValuation = data[tradeIndex];
             tmpValuation[0].push_back(tradeExposure[0]);
             for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
                 if (closeOutDates_.empty() || !stickyCloseOutDates_.empty()) {
