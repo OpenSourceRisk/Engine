@@ -284,10 +284,10 @@ void XvaEngineCG::buildCgPartB() {
     auto g = model_->computationGraph();
 
     tradeExposureValuation_.resize(portfolio_->trades().size(),
-                                   std::vector<std::vector<TradeExposure>>(valuationDates_.size()));
+                                   std::vector<std::vector<TradeExposure>>(valuationDates_.size() + 1));
     if(!closeOutDates_.empty())
         tradeExposureCloseOut_.resize(portfolio_->trades().size(),
-                                       std::vector<std::vector<TradeExposure>>(valuationDates_.size()));
+                                      std::vector<std::vector<TradeExposure>>(valuationDates_.size() + 1));
 
     Size tradeIndex = 0;
     for (auto const& [id, trade] : portfolio_->trades()) {
