@@ -515,8 +515,7 @@ void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const 
 
     // the specifics depend on the ir and fx model types and their discretizations
 
-    if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW &&
-        model->modelType(CrossAssetModel::AssetType::FX, i - 1) == CrossAssetModel::ModelType::BS) {
+    if (model->modelType(CrossAssetModel::AssetType::IR, i) == CrossAssetModel::ModelType::HW) {
 
         QL_REQUIRE(model->discretization() != CrossAssetModel::Discretization::Exact,
                    "applyFxDrifAdjustment(): can not handle exact discretization.");
@@ -536,7 +535,7 @@ void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const 
         }
 
     } else {
-        QL_FAIL("applyFxDriftAdjustment(): can only handle ir model type HW and fx model type BS currently.");
+        QL_FAIL("applyFxDriftAdjustment(): can only handle ir model type HW currently.");
     }
 }
 } // namespace
@@ -581,7 +580,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
         // eolve fx processes
 
         for (Size i = 0; i < model_->components(CrossAssetModel::AssetType::FX); ++i) {
-            auto r = model_->fxModel(i)->eulerStep(
+            auto r = model_->fxModel(i)->marginalStep(
                 t0, getProjectedArray(x0, model_->pIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->n()),
                 dt, getProjectedArray(dz, model_->wIdx(CrossAssetModel::AssetType::FX, i, 0), model_->fxModel(i)->m()),
                 shortRates[0], shortRates[i + 1]);

@@ -496,7 +496,7 @@ Date optionMaturity(const boost::variant<Date, Period>& maturity, const QuantLib
 }
 
 Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
-                            const boost::shared_ptr<QuantLib::ZeroInflationIndex>& inflationIndex,
+                            const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& inflationIndex,
                             const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& volSurface,
                             const QuantLib::Date& maturityDate,
                             const bool dontCalibrate) {

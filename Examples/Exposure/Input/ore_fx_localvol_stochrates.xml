@@ -3,9 +3,9 @@
   <Setup>
     <Parameter name="asofDate">2025-09-30</Parameter>
     <Parameter name="inputPath">Input/fx_localvol</Parameter>
-    <Parameter name="outputPath">Output/fx_localvol</Parameter>
+    <Parameter name="outputPath">Output/fx_localvol/stochrates</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">16</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
     <Parameter name="fixingDataFile">fixings.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
@@ -47,7 +47,7 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_stochrates.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">USD</Parameter>
       <Parameter name="observationModel">Disable</Parameter>

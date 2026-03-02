@@ -1612,8 +1612,6 @@ shown in listing \ref{lst:peconfig_CapFlooredCpiLegCoupons_Black_BlackAnalytic}
 The parameters have the following meaning:
 
 \begin{itemize}
-\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -1624,7 +1622,6 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-          <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -1649,9 +1646,9 @@ shown in listing \ref{lst:peconfig_CappedFlooredCpiLegCashFlows_Black_BlackAnaly
 The parameters have the following meaning:
 
 \begin{itemize}
-\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag
 \item SensitivityTemplate [optional]: the sensitivity template to use
+\item \item useLastFixingDate [deprecated]: not used anymore, the total
+variance should always be computed from the last known fixing date. This parameter will be ignored.
 \end{itemize}
 
 \begin{longlisting}
@@ -1661,7 +1658,6 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>BlackAnalytic</Engine>
     <EngineParameters>
-          <Parameter name="useLastFixingDate">true</Parameter>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>
@@ -2078,8 +2074,6 @@ of the market surface. A sample configuration is shown in listing
 The parameters have the following meaning:
 
 \begin{itemize}
-\item useLastFixingDate: if true, use the last known fixing date as the base date of the volatility structure, otherwise
-  use observation lag
 \item SensitivityTemplate [optional]: the sensitivity template to use
 \end{itemize}
 
@@ -2090,7 +2084,6 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>CpiCapEngine</Engine>
     <EngineParameters>
-        <Parameter name="useLastFixingDate">true</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
 </Product>

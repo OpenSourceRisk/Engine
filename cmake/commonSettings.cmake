@@ -1,5 +1,27 @@
 include_guard(GLOBAL)
 
+# Set the policy around find_package Boost: https://cmake.org/cmake/help/latest/policy/CMP0167.html
+if(DEFINED ENV{ORE_BOOST_DIR} OR DEFINED ENV{BOOST_DIR})
+    if(POLICY CMP0167)
+        cmake_policy(SET CMP0167 NEW)
+        set(CMAKE_POLICY_DEFAULT_CMP0167 NEW)
+    endif()
+    # Don't need to explicity set Boost_DIR if BOOST_DIR is defined as it will pick it up.
+    if(DEFINED ENV{ORE_BOOST_DIR})
+        set(Boost_DIR "$ENV{ORE_BOOST_DIR}" CACHE STRING "Initialized from environment variable ORE_BOOST_DIR")
+    endif()
+elseif(DEFINED ENV{BOOST} OR DEFINED ENV{BOOST_LIB64})
+    if(POLICY CMP0167)
+        cmake_policy(SET CMP0167 OLD)
+        set(CMAKE_POLICY_DEFAULT_CMP0167 OLD)
+    endif()
+    set(BOOST_INCLUDEDIR "$ENV{BOOST}" CACHE STRING "Initialized from environment variable BOOST")
+    set(BOOST_LIBRARYDIR "$ENV{BOOST_LIB64}" CACHE STRING "Initialized from environment variable BOOST_LIB64")
+else()
+    message(DEBUG "Neither ORE_BOOST_DIR nor BOOST_DIR nor BOOST/BOOST_LIB64 environment variables are set. 
+        Boost will be searched for in default locations and policy is not CMP0167 set.")
+endif()
+
 include(CheckCXXCompilerFlag)
 include(CheckLinkerFlag)
 

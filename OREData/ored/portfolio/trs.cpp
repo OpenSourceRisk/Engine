@@ -21,6 +21,7 @@
 #include <ored/portfolio/trswrapper.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/indexes/compositeindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 
@@ -671,8 +672,9 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
         auto& ld = fundingData_.legData()[i];
         QL_REQUIRE(ld.legType() == LegType::Fixed || ld.legType() == LegType::Floating ||
-                       ld.legType() == LegType::CMS || ld.legType() == LegType::CMB,
-                   "TRS::build(): funding leg type: only fixed, floating, CMS, CMB are supported");
+                       ld.legType() == LegType::CMS || ld.legType() == LegType::CMB ||
+                       ld.legType() == LegType::ZeroCouponFixed,
+                   "TRS::build(): funding leg type: only fixed, floating, CMS, CMB, ZeroCouponFixed are supported");
         TRS::FundingData::NotionalType notionalType =
             fundingData_.notionalType().empty() ? (ld.notionals().empty() ? TRS::FundingData::NotionalType::PeriodReset
                                                                           : TRS::FundingData::NotionalType::Fixed)
@@ -730,8 +732,9 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
                     QL_REQUIRE(QuantLib::ext::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(c) ||
                                    QuantLib::ext::dynamic_pointer_cast<QuantLib::IborCoupon>(c) ||
                                    QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
-                                   QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c),
-                               "daily reset funding legs support fixed rate, ibor and overnight indexed coupons only");
+                                   QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
+                                   QuantLib::ext::dynamic_pointer_cast<QuantExt::ZeroFixedCoupon>(c),
+                               "daily reset funding legs support fixed rate, ibor, overnight indexed and zero coupon fixed coupons only");
                     for (QuantLib::Date d = cpn->accrualStartDate(); d < cpn->accrualEndDate(); ++d) {
                         for (Size j = 0; j < underlying_.size(); ++j) {
                             Date fixingDate = underlyingIndex[j]->fixingCalendar().adjust(d, Preceding);

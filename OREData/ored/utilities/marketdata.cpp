@@ -32,6 +32,9 @@
 
 #include <ql/time/imm.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/canada.hpp>
+#include <ql/time/calendars/unitedkingdom.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -338,8 +341,17 @@ Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiry
 
     if (rule == FutureConvention::DateGenerationRule::IMM) {
         return IMM::nextDate(refDate, false);  // Third Wednesday
-    } else if (rule == FutureConvention::DateGenerationRule::SecondThursday) {
-        return Date::nthWeekday(2, Thursday, refDate.month(), refDate.year());
+    } else if (rule == FutureConvention::DateGenerationRule::IMMAUD) {
+        // Second Thursday of the expiry month (e.g. AUD-BBSW-3M futures).
+        return Date::nthWeekday(2, Thursday, expiryMonth, expiryYear);
+    } else if (rule == FutureConvention::DateGenerationRule::IMMNZD) {
+        // First Wednesday on or after the 9th: the 2nd Wednesday if it falls on day >= 9, otherwise the 3rd.
+        Date w2 = Date::nthWeekday(2, Wednesday, expiryMonth, expiryYear);
+        return w2 >= Date(9, expiryMonth, expiryYear) ? w2 : Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear);
+    } else if (rule == FutureConvention::DateGenerationRule::IMMCAD) {
+        // Two GB+CA business days before the third Wednesday of the expiry month.
+        return JointCalendar(std::vector<Calendar>{UnitedKingdom(), Canada()})
+            .advance(Date::nthWeekday(3, Wednesday, expiryMonth, expiryYear), -2, Days, Preceding);
     } else {
         QL_FAIL("getMmFutureExpiryDate: DateGenerationRule '" << rule << "' not supported for MM Futures");
     }

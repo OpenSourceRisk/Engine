@@ -2,6 +2,7 @@
 <Simulation>
     <Parameters>
       <Grid>70,1M</Grid>
+      <TimeStepsPerYear>24</TimeStepsPerYear>
       <Calendar>EUR,USD</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
@@ -9,9 +10,11 @@
       <Samples>10000</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+      <DayCounter>A365F</DayCounter>
     </Parameters>
   <CrossAssetModel>
     <Discretization>BestMarginalDiscretization</Discretization>
+    <Measure>BA</Measure>
     <DomesticCcy>USD</DomesticCcy>
     <Currencies>
       <Currency>USD</Currency>
@@ -20,7 +23,59 @@
     <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
 
-      <!-- calibrate stochastic vol interest rate processes -->
+      <!-- Hull White with constant volatility at 50 bp -->
+
+      <!-- <HWModel ccy="default"> -->
+      <!--   <CalibrationType>None</CalibrationType> -->
+      <!--   <Volatility> -->
+      <!--     <Calibrate>N</Calibrate> -->
+      <!--     <ParamType>Constant</ParamType> -->
+      <!--     <TimeGrid/> -->
+      <!--     <InitialValue> -->
+      <!--       <Sigma> -->
+      <!--         <Row>0.0050</Row> -->
+      <!--       </Sigma> -->
+      <!--     </InitialValue> -->
+      <!--   </Volatility> -->
+      <!--   <Reversion> -->
+      <!--     <Calibrate>N</Calibrate> -->
+      <!--     <ParamType>Constant</ParamType> -->
+      <!--     <TimeGrid/> -->
+      <!--     <InitialValue> -->
+      <!--       <Kappa>0.03</Kappa> -->
+      <!--     </InitialValue> -->
+      <!--   </Reversion> -->
+      <!-- </HWModel> -->
+
+      <!-- LGM with constant volatility at 50 bp -->
+
+     <!-- <LGM ccy="default"> -->
+     <!--    <CalibrationType>None</CalibrationType> -->
+     <!--    <Volatility> -->
+     <!--      <Calibrate>N</Calibrate> -->
+     <!--      <VolatilityType>HullWhite</VolatilityType> -->
+     <!--      <ParamType>Constant</ParamType> -->
+     <!--      <TimeGrid/> -->
+     <!--      <InitialValue>0.0050</InitialValue> -->
+     <!--    </Volatility> -->
+     <!--    <Reversion> -->
+     <!--      <Calibrate>N</Calibrate> -->
+     <!--      <ReversionType>HullWhite</ReversionType> -->
+     <!--      <ParamType>Constant</ParamType> -->
+     <!--      <TimeGrid/> -->
+     <!--      <InitialValue>0.03</InitialValue> -->
+     <!--    </Reversion> -->
+     <!--    <CalibrationSwaptions> -->
+     <!--      <Expiries>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y</Expiries> -->
+     <!--      <Terms>9Y,8Y,7Y,6Y,5Y,4Y,3Y,2Y,1Y</Terms> -->
+     <!--    </CalibrationSwaptions> -->
+     <!--    <ParameterTransformation> -->
+     <!--      <ShiftHorizon>0.0</ShiftHorizon> -->
+     <!--      <Scaling>1.0</Scaling> -->
+     <!--    </ParameterTransformation> -->
+     <!--  </LGM> -->
+
+      <!-- LGM calibrated to actual market data -->
 
       <!-- <LGM ccy="default"> -->
       <!--   <CalibrationType>Bootstrap</CalibrationType> -->
@@ -48,7 +103,7 @@
       <!--   </ParameterTransformation> -->
       <!-- </LGM> -->
 
-      <!-- use zero vol interest rate processes  -->
+      <!-- LGM with zero vol -->
 
       <LGM ccy="default">
         <CalibrationType>None</CalibrationType>
@@ -91,7 +146,7 @@
       <!--     <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue> -->
       <!--   </Sigma> -->
       <!--   <CalibrationOptions> -->
-      <!--     <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y, 10Y</Expiries> -->
+      <!--     <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y</Expiries> -->
       <!--     <Strikes/> -->
       <!--   </CalibrationOptions> -->
       <!-- </CrossCcyLGM> -->
@@ -102,10 +157,20 @@
         <DomesticCcy>USD</DomesticCcy>
         <!-- AndreasenHuge, Dupire -->
         <Model>AndreasenHuge</Model>
-        <!-- None, ... -->
+        <!-- None, SimpleMc -->
         <StochasticRatesCorrection>None</StochasticRatesCorrection>
-        <CalibrationMoneyness>-5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0</CalibrationMoneyness>
-        <CalibrationGrid>40,3M</CalibrationGrid>
+        <SimpleMcParameters>
+          <TimeStepsPerYear>24</TimeStepsPerYear>
+          <CalibrationMoneynessMin>-3.0</CalibrationMoneynessMin>
+          <CalibrationMoneynessMax>3.0</CalibrationMoneynessMax>
+          <nStrikes>25</nStrikes>
+          <Samples>10000</Samples>
+          <d2CdK2Threshold>0.01</d2CdK2Threshold>
+          <nPasses>1</nPasses>
+        </SimpleMcParameters>
+        <!-- AndreasenHuge: calibration set spec -->
+        <CalibrationMoneyness>-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0</CalibrationMoneyness>
+        <CalibrationGrid>70,1M</CalibrationGrid>
       </LocalVol>
 
     </ForeignExchangeModels>

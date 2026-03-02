@@ -251,6 +251,35 @@ LGM lattice, or
 \item using Monte Carlo simulation.
 \end{itemize}
 
+The {\underline limitations} of the LGM1F model are:
+
+\begin{itemize}
+\item Negative Rates: The model dynamics can produce negative rates with non-negligible probability. While this is
+  generally realistic in current interest rate environments, there is no lower bound on the rate level as it is
+  e.g. achieved by shifted lognormal models.
+\item Single Factor: The movements of the whole curve are driven by a single factor, which leads to perfectly correlated
+  tenor rate movements. This reders the model unsuitable to price multi-rate derivatives like CMS spread options. For
+  products that are mainly driven by the rate level and not the curve shape, this is less of a concern. This is
+  addressed by multi-factor models like the Hull-White nF model.
+\item Volatility Smile: the model's implied volatility smile can not be calibrated to market data, only one volatility
+  strike can be matched during calibration due to lack of local or stochastic volatility: This is the deeper reason for
+  not being able to calibrate the model volatility smile. While local volatility allows to calibrate to the market
+  volatility smile, it can produce unrealistic smile dynamics and underestimate values of derivatives that are sensitive
+  to the convexity of volatility like e.g. volatility swaps. Both points are addressed by stochastic volatility models.
+\item Global calibration: the model has limited capabilities to calibrate to market options. With piecewise volatility
+  and fixed mean reversion, the model can only be calibrated to a strip of swaptions or caps with one instrument, at one
+  strike, per calibration expiry, for a given set of calibration expiries.  This is partially addressed by advanced
+  calibration strategies, see \ref{pricing:ir_bermswaption} for details.
+\item Numerical issues: The LGM formulation of the Hull-White model is numerically unstable if the reversion parameter
+  is large, see \cite{LGM_Large_Reversion}. This is generally not a problem in the 1F setting, because the mean
+  reversion is usually small in this setting. It prevents a generalization of the LGM dynamics to multiple factors
+  though. This instability is not present in the Hull-White formulation of the model, because of the mean reverting
+  dynamics of the state variable. Furthermore, the LGM measure put large proababilities on unrealistic rate levels,
+  which makes it particulary hard to use in longer term MC simulations. This can however addressed by switching to a
+  T-forward measure (via shift of the $H(\cdot)$ parameter).
+\end{itemize}
+
+
 %--------------------------------------------------------------------------------
 \subsection{Barone-Adesi and Whaley Model}
 \label{models:barone-adesi}

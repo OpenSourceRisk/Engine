@@ -53,6 +53,7 @@ public:
                           const bool observeContinuum = false);
 
     Handle<AssetModelWrapper> model() const;
+    const std::set<Date>& simulationDates() const { return simulationDates_; }
 
     //! \name ModelBuilder interface
     //@{
