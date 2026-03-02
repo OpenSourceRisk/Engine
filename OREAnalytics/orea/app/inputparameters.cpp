@@ -252,8 +252,12 @@ ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::s
     loadParameter<string>(s, analytic, param);
     if (s.empty())
         return nullptr;
+    
+    std::filesystem::path ps(s);
     std::filesystem::path baseScenarioPath(setupVariables_.inputPath_ / s);
-    if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
+    if (exists(ps) && is_regular_file(ps)) {
+        return ext::make_shared<ScenarioFileReader>(s, ext::make_shared<SimpleScenarioFactory>(false));
+    } else if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
         return ext::make_shared<ScenarioFileReader>(baseScenarioPath.string(), ext::make_shared<SimpleScenarioFactory>(false));
     } else {
         // If the file does not exist or fails, assume it is a scenario string
