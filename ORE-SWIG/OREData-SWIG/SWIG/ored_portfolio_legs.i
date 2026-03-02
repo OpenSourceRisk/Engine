@@ -31,6 +31,10 @@ using ore::data::LegData;
 using ore::data::CMSLegData;
 using ore::data::CPILegData;
 using ore::data::YoYLegData;
+using ore::data::CMSSpreadLegData;
+using ore::data::DigitalCMSSpreadLegData;
+using ore::data::EquityLegData;
+using ore::data::LegDataFactory;
 using ore::data::CommodityPayRelativeTo;
 using ore::data::CommodityPriceType;
 using ore::data::CommodityPricingDateRule;
@@ -174,6 +178,56 @@ class YoYLegData : public LegAdditionalData {
                bool addInflationNotional = false, bool irregularYoY = false);
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(CMSSpreadLegData)
+class CMSSpreadLegData : public LegAdditionalData {
+public:
+  CMSSpreadLegData();
+  CMSSpreadLegData(const string& swapIndex1, const string& swapIndex2, Size fixingDays, bool isInArrears,
+           const vector<double>& spreads, const vector<string>& spreadDates = vector<string>(),
+           const vector<double>& caps = vector<double>(), const vector<string>& capDates = vector<string>(),
+           const vector<double>& floors = vector<double>(),
+           const vector<string>& floorDates = vector<string>(),
+           const vector<double>& gearings = vector<double>(),
+           const vector<string>& gearingDates = vector<string>(), bool nakedOption = false);
+  virtual void fromXML(XMLNode* node) override;
+  virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(DigitalCMSSpreadLegData)
+class DigitalCMSSpreadLegData : public LegAdditionalData {
+public:
+  DigitalCMSSpreadLegData();
+  DigitalCMSSpreadLegData(
+    const QuantLib::ext::shared_ptr<CMSSpreadLegData>& underlying, Position::Type callPosition = Position::Long,
+    bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+    const vector<string> callStrikeDates = vector<string>(), const vector<double> callPayoffs = vector<double>(),
+    const vector<string> callPayoffDates = vector<string>(), Position::Type putPosition = Position::Long,
+    bool isPutATMIncluded = false, const vector<double> putStrikes = vector<double>(),
+    const vector<string> putStrikeDates = vector<string>(), const vector<double> putPayoffs = vector<double>(),
+    const vector<string> putPayoffDates = vector<string>());
+  virtual void fromXML(XMLNode* node) override;
+  virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(EquityLegData)
+class EquityLegData : public LegAdditionalData {
+public:
+  EquityLegData();
+  EquityLegData(QuantExt::EquityReturnType returnType, Real dividendFactor, EquityUnderlying equityUnderlying,
+          Real initialPrice, bool notionalReset, Natural fixingDays = 0,
+          const ScheduleData& valuationSchedule = ScheduleData(), string eqCurrency = "", string fxIndex = "",
+          Real quantity = Null<Real>(), string initialPriceCurrency = "");
+  virtual void fromXML(XMLNode* node) override;
+  virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(LegDataFactory)
+class LegDataFactory {
+public:
+  static LegDataFactory& instance();
+  ext::shared_ptr<LegAdditionalData> build(const std::string& legType);
 };
 
 enum class CommodityPayRelativeTo {

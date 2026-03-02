@@ -116,7 +116,7 @@ public:
     const std::string& defaultCurveExtrapolation() const;
 
     bool simulateCdsVols() const;
-    bool simulateCdsVolATMOnly() const;  
+    bool simulateCdsVolATMOnly() const;
     const std::vector<QuantLib::Period>& cdsVolExpiries() const;
     std::vector<std::string> cdsVolNames() const;
     const std::string& cdsVolDecayMode() const;
@@ -138,7 +138,7 @@ public:
     const std::vector<QuantLib::Real>& fxVolMoneyness(const std::string& ccypair) const;
     const std::vector<QuantLib::Real>& fxVolStdDevs(const std::string& ccypair) const;
     const std::string& fxVolSmileDynamics(const std::string& key) const;
-    
+
     bool simulateEquityVols() const;
     bool simulateEquityVolATMOnly() const;
     bool equityUseMoneyness(const std::string& key) const;
@@ -170,7 +170,7 @@ public:
     std::vector<std::string> yoyInflationIndices() const;
     const std::vector<QuantLib::Period>& yoyInflationTenors(const std::string& key) const;
     bool hasYoyInflationTenors(const std::string& key) const;
-    
+
     bool commodityCurveSimulate() const;
     std::vector<std::string> commodityNames() const;
     const std::vector<QuantLib::Period>& commodityCurveTenors(const std::string& commodityName) const;
@@ -192,7 +192,7 @@ public:
     QuantLib::Size numberOfCreditStates() const;
 
     const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const;
-        
+
     std::vector<std::string>& ccys();
     void setDiscountCurveNames(std::vector<std::string> names);
     void setYieldCurveNames(std::vector<std::string> names);
@@ -214,7 +214,7 @@ public:
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     std::string& swapVolDecayMode();
     void setSwapVolSmileDynamics(const std::string& key, const std::string& smileDynamics);
-  
+
     void setSimulateYieldVols(bool simulate);
     std::vector<QuantLib::Period>& yieldVolTerms();
     void setYieldVolNames(std::vector<std::string> names);
@@ -333,7 +333,7 @@ public:
     void setNumberOfCreditStates(QuantLib::Size numberOfCreditStates);
     bool operator==(const ScenarioSimMarketParameters& rhs);
     bool operator!=(const ScenarioSimMarketParameters& rhs);
-    
+
     %extend {
       void setBaseCcy(std::string ccy) {
           self->baseCcy() = ccy;

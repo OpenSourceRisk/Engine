@@ -34,6 +34,11 @@ using OREBond = ore::data::Bond;
 using ORECommodityForward = ore::data::CommodityForward;
 using ORECommoditySwap = ore::data::CommoditySwap;
 using ORECommodityOption = ore::data::CommodityOption;
+using ore::data::ForwardBond;
+using ore::data::BondOption;
+using ore::data::TRS;
+using ore::data::FxDoubleBarrierOption;
+using ore::data::FxEuropeanBarrierOption;
 using ore::data::FxBarrierOption;
 using ore::data::FxTouchOption;
 using namespace std;
@@ -227,6 +232,62 @@ public:
                   const string& calendar = "", const string& fxIndex = "", const string& fxIndexDailyLows = "",
                   const string& fxIndexDailyHighs = "");
     void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(ForwardBond)
+class ForwardBond : public Trade {
+public:
+    ForwardBond();
+    ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string fwdSettlementDate,
+                string settlement, string amount, string lockRate, string lockRateDayCounter, string settlementDirty,
+                string compensationPayment, string compensationPaymentDate, string longInForward,
+                string dv01 = string(), string knockOut = string());
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(BondOption)
+class BondOption : public Trade {
+public:
+    BondOption();
+    BondOption(Envelope env, const BondData& bondData, const OptionData& optionData, TradeStrike strike, bool knocksOut);
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(TRS)
+class TRS : public Trade {
+public:
+    TRS();
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(FxDoubleBarrierOption)
+class FxDoubleBarrierOption : public Trade {
+public:
+    FxDoubleBarrierOption();
+    FxDoubleBarrierOption(Envelope& env, OptionData option, BarrierData barrier, QuantLib::Date startDate,
+        string calendar, string boughtCurrency, QuantLib::Real boughtAmount, string soldCurrency,
+        QuantLib::Real soldAmount, string fxIndex = "");
+};
+
+%shared_ptr(FxEuropeanBarrierOption)
+class FxEuropeanBarrierOption : public Trade {
+public:
+    FxEuropeanBarrierOption();
+    FxEuropeanBarrierOption(Envelope& env, OptionData option, BarrierData barrier, string boughtCurrency,
+                            double boughtAmount, string soldCurrency, double soldAmount, string startDate = "",
+                            string calendar = "", string fxIndex = "");
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };

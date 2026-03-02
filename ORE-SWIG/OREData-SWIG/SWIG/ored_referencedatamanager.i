@@ -24,6 +24,13 @@
 %{
 using ore::data::XMLSerializable;
 using ore::data::ReferenceDatum;
+using ore::data::BondReferenceDatum;
+using ore::data::CreditIndexConstituent;
+using ore::data::CreditIndexReferenceDatum;
+using ore::data::EquityReferenceDatum;
+using ore::data::CurrencyHedgedEquityIndexReferenceDatum;
+using ore::data::EquityIndexReferenceDatum;
+using ore::data::CommodityIndexReferenceDatum;
 using ore::data::ReferenceDataManager;
 using ore::data::BasicReferenceDataManager;
 using namespace std;
@@ -82,6 +89,77 @@ public:
     // adds a datum from an xml node and returns it (or nullptr if nothing was added due to an error)
     ext::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string(),
                                                      const QuantLib::Date& validFrom = QuantLib::Null<QuantLib::Date>());
+};
+
+%shared_ptr(BondReferenceDatum)
+class BondReferenceDatum : public ReferenceDatum {
+public:
+    BondReferenceDatum();
+    BondReferenceDatum(const string& id);
+    BondReferenceDatum(const string& id, const QuantLib::Date& validFrom);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(CreditIndexConstituent)
+class CreditIndexConstituent : public XMLSerializable {
+public:
+    CreditIndexConstituent();
+    CreditIndexConstituent(const std::string& name, QuantLib::Real weight,
+                           QuantLib::Real priorWeight = QuantLib::Null<QuantLib::Real>(),
+                           QuantLib::Real recovery = QuantLib::Null<QuantLib::Real>(),
+                           const QuantLib::Date& auctionDate = QuantLib::Date(),
+                           const QuantLib::Date& auctionSettlementDate = QuantLib::Date(),
+                           const QuantLib::Date& defaultDate = QuantLib::Date(),
+                           const QuantLib::Date& eventDeterminationDate = QuantLib::Date());
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(CreditIndexReferenceDatum)
+class CreditIndexReferenceDatum : public ReferenceDatum {
+public:
+    CreditIndexReferenceDatum();
+    CreditIndexReferenceDatum(const std::string& name);
+    CreditIndexReferenceDatum(const string& id, const QuantLib::Date& validFrom);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(EquityIndexReferenceDatum)
+class EquityIndexReferenceDatum : public ReferenceDatum {
+public:
+    EquityIndexReferenceDatum();
+    EquityIndexReferenceDatum(const string& name);
+    EquityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom);
+};
+
+%shared_ptr(CommodityIndexReferenceDatum)
+class CommodityIndexReferenceDatum : public ReferenceDatum {
+public:
+    CommodityIndexReferenceDatum();
+    CommodityIndexReferenceDatum(const string& name);
+    CommodityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom);
+};
+
+%shared_ptr(CurrencyHedgedEquityIndexReferenceDatum)
+class CurrencyHedgedEquityIndexReferenceDatum : public ReferenceDatum {
+public:
+    CurrencyHedgedEquityIndexReferenceDatum();
+    CurrencyHedgedEquityIndexReferenceDatum(const string& name);
+    CurrencyHedgedEquityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(EquityReferenceDatum)
+class EquityReferenceDatum : public ReferenceDatum {
+public:
+    EquityReferenceDatum();
+    EquityReferenceDatum(const std::string& id);
+    EquityReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 

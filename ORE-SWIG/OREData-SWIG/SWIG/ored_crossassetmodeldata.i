@@ -26,14 +26,19 @@
 %{
 using ore::data::CrossAssetModelData;
 using ore::data::IrModelData;
+using ore::data::LgmData;
+using ore::data::HwModelData;
 using ore::data::FxData;
 using ore::data::FxBsData;
 using ore::data::FxLvData;
 using ore::data::EqBsData;
 using ore::data::InflationModelData;
+using ore::data::InfDkData;
 using ore::data::CrLgmData;
 using ore::data::CrCirData;
 using ore::data::CommoditySchwartzData;
+using ore::data::CalibrationInstrument;
+using ore::data::CalibrationBasket;
 using ore::data::CorrelationKey;
 using ore::data::CrossAssetModel;
 using ore::data::InstantaneousCorrelations;
@@ -52,8 +57,45 @@ public:
     virtual std::string ccy() const;       
 };
 
+%shared_ptr(CalibrationInstrument)
+class CalibrationInstrument : public XMLSerializable {
+public:
+    CalibrationInstrument(const std::string& instrumentType);
+};
+
+%template(CalibrationInstrumentVector) std::vector<ext::shared_ptr<CalibrationInstrument>>;
+
+%shared_ptr(CalibrationBasket)
+class CalibrationBasket : public XMLSerializable {
+public:
+    CalibrationBasket();
+    CalibrationBasket(const std::vector<ext::shared_ptr<CalibrationInstrument>>& instruments);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%template(CalibrationBasketVector) std::vector<CalibrationBasket>;
+
+%shared_ptr(LgmData)
+class LgmData : public IrModelData {
+public:
+    enum class ReversionType { HullWhite, Hagan };
+    enum class VolatilityType { HullWhite, Hagan };
+    LgmData();
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(HwModelData)
+class HwModelData : public IrModelData {
+public:
+    HwModelData();
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
 %shared_ptr(FxBsData)
-class FxBsData : public FxData {
+class FxBsData {
 public:
     FxBsData();
     FxBsData(std::string foreignCcy, std::string domesticCcy, CalibrationType calibrationType, bool calibrateSigma,
@@ -74,6 +116,21 @@ public:
              std::vector<std::string> optionStrikes = std::vector<std::string>());
 
     const std::string& eqName() { return name_; }
+};
+
+%shared_ptr(InflationModelData)
+class InflationModelData : public XMLSerializable {
+public:
+    InflationModelData();
+    virtual void fromXML(XMLNode* node) override;
+};
+
+%shared_ptr(InfDkData)
+class InfDkData : public InflationModelData {
+public:
+    InfDkData();
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 %template(IrModelDataMap) std::map<std::string, ext::shared_ptr<IrModelData>>;

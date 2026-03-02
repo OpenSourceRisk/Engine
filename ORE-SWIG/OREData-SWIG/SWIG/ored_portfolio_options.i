@@ -28,11 +28,21 @@ using ore::data::TradeStrike;
 using ore::data::Underlying;
 using ore::data::EquityUnderlying;
 using ore::data::TradeMonetary;
+using ore::data::EquitySwap;
+using ore::data::InflationSwap;
 using ore::data::TradeBarrier;
 using ore::data::BarrierData;
 using ore::data::XMLSerializable;
 using namespace std;
 %}
+
+%shared_ptr(TradeMonetary)
+class TradeMonetary {
+public:
+    TradeMonetary();
+    TradeMonetary(const QuantLib::Real& value, std::string currency = std::string());
+    TradeMonetary(const std::string& valueString);
+};
 
 %shared_ptr(PremiumData)
 class PremiumData : public XMLSerializable {
@@ -107,6 +117,30 @@ public:
                 const std::optional<string>& strictComparison = std::nullopt, const std::optional<bool>& overrideTriggered = std::nullopt) {
         return new BarrierData(barrierType, levels, rebate, VECTOR_SWIG_TO_ORE(tradeBarriers),
             style, strictComparison, overrideTriggered);
+    }
+}
+
+%shared_ptr(EquitySwap)
+class EquitySwap : public Trade {
+public:
+    EquitySwap();
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+};
+%extend EquitySwap {
+    EquitySwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
+        return new EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
+    }
+}
+
+%shared_ptr(InflationSwap)
+class InflationSwap : public Trade {
+public:
+    InflationSwap();
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+};
+%extend InflationSwap {
+    InflationSwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
+        return new InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }
 

@@ -45,6 +45,7 @@
 %include ored_curvespec.i
 %include ored_curveconfig.i
 %include ored_curveconfigurations.i
+%include ored_configuration_ext.i
 %include ored_crossassetmodeldata.i
 %include ored_conventions.i
 %include ored_conventionsbasedfutureexpiry.i

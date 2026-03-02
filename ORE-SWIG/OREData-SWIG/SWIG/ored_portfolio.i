@@ -24,6 +24,8 @@
 %include ored_portfolio_options.i
 %include ored_portfolio_credit.i
 %include ored_portfolio_trades.i
+%include ored_portfolio_commodity.i
+%include ored_portfolio_scripted.i
 
 #endif
 
