@@ -51,6 +51,7 @@ private:
     Real correlation(const std::string& index);
     bool withSmile(const std::string& index);
     bool byCallSpread(const std::string& index);
+    Real flatVol(const std::string& index);
 };
 
 } // namespace data

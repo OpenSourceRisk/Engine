@@ -103,6 +103,10 @@ bool RangeAccrualLegEngineBuilder::byCallSpread(const std::string& index) {
     return parseBool(engineParameter("ByCallSpread", {}, false, "true"));
 }
 
+Real RangeAccrualLegEngineBuilder::flatVol(const std::string& index) {
+    return parseReal(engineParameter("FlatVol", {}, false, "1E-6"));
+}
+
 QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder::buildPricer(
     const std::string& index, const Date& accrualStartDate, const Date& accrualEndDate) {
     Real corr = correlation(index);
@@ -122,9 +126,9 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> RangeAccrualLegEngineBuilder
         auto configuration = this->configuration(MarketContext::pricing);
         auto iborIndex = market_->iborIndex(index, configuration);
         auto dayCounter = iborIndex->dayCounter();
-        Real flatVol = 1; // or parameterize if needed
-        smileOnExpiry = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualStartDate, flatVol, dayCounter));
-        smileOnPayment = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualEndDate, flatVol, dayCounter));
+        Real fVol = flatVol(index);// or parameterize if needed
+        smileOnExpiry = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(expiryDate, fVol, dayCounter));
+        smileOnPayment = QuantLib::ext::shared_ptr<SmileSection>(new FlatSmileSection(accrualEndDate, fVol, dayCounter));
     }
 
     

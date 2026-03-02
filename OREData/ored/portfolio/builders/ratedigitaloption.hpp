@@ -42,6 +42,7 @@
 #include <ql/instruments/payoffs.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
 
 namespace ore {
 namespace data {
@@ -179,6 +180,7 @@ protected:
         auto config = configuration(MarketContext::pricing);
 
         Handle<IborIndex> hIndex = market_->iborIndex(index, config);
+        auto smile = parseBool(engineParameter("WithSmile", {}, false, "false"));
         QL_REQUIRE(!hIndex.empty(), "RateDigitalOptionEngineBuilder: could not find index " << index);
         ext::shared_ptr<IborIndex> iborIndex = hIndex.currentLink();
 
@@ -190,6 +192,13 @@ protected:
         DiscountFactor dfPayment = discountCurve->discount(paymentDate);
 
         Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, config);
+        if (!smile) {
+            // Replace market vol with a flat zero surface → digital valued at intrinsic
+            ovs = Handle<OptionletVolatilityStructure>(
+                ext::make_shared<ConstantOptionletVolatility>(
+                    ovs->referenceDate(), ovs->calendar(), ovs->businessDayConvention(),
+                    0.0, ovs->dayCounter(), ovs->volatilityType(), ovs->displacement()));
+        }
         QL_REQUIRE(!ovs.empty(), "RateDigitalOptionEngineBuilder: no capFloor vol for " << index);
 
         // Call-spread eps (configurable, default 1e-4 = 1 bp)
