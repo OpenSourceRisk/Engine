@@ -225,7 +225,8 @@ public:
     void setMcVarSamples(Size s);
     void setMcVarSeed(long l);
     void setCovarianceData(ore::data::CSVReader& reader);
-    void setCovarianceDataFromBuffer(const std::string& xml);
+    void setCovarianceDataFromBuffer(const std::string& xml); 
+    void setLookbackPeriod(const std::string& s);
     void setBenchmarkVarPeriod(const std::string& period);
     void setScenarioReader(const std::string& fileName);
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);

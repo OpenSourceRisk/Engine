@@ -76,7 +76,6 @@ void ParametricVarVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<I
         covarianceData_ =
             loadCorrelationDataFromFile((inputs->setupVariables().inputPath_ / covarianceInputFile).generic_string());
 
-    QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
     sensitivityStream_ = inputs->loadSensitivityStream("parametricVar", "sensitivityInputFile");
 }
 

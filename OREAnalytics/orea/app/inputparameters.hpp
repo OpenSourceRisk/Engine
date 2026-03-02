@@ -456,11 +456,17 @@ public:
     void setMporDays(Size s) {
         mporDays_ = s;
         parameters_.set("pnl", "mporDays", s);
+        parameters_.set("var", "mporDays", s);
     }
-    void setMporOverlappingPeriods(bool b) { mporOverlappingPeriods_ = b; }
+    void setMporOverlappingPeriods(bool b) {
+        mporOverlappingPeriods_ = b;
+        parameters_.set("pnl", "mporOverlappingPeriods", b);
+        parameters_.set("var", "mporOverlappingPeriods", b);
+    }
     void setMporDate(const QuantLib::Date& d) { 
         mporDate_ = d;
         parameters_.set("pnl", "mporDate", d);
+        parameters_.set("var", "mporDate", d);
     }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
@@ -543,7 +549,11 @@ public:
     void setCovarianceData(ore::data::CSVReader& reader) { parameters_.set("parametricVar", "covarianceInputFile", reader); }
     void setCovarianceDataFromBuffer(const std::string& xml) { parameters_.set("parametricVar", "covarianceInputFile", xml); }
     void setSensitivityStream(const std::string& s) { parameters_.set("var", "sensitivityInputFile", s); }
-    void setBenchmarkVarPeriod(const std::string& period) { benchmarkVarPeriod_ = period; }
+    void setLookbackPeriod(const std::string& s) { parameters_.set("var", "lookbackPeriod", s); }
+    void setBenchmarkVarPeriod(const std::string& period) { 
+        parameters_.set("var", "lookbackPeriod", period);
+        benchmarkVarPeriod_ = period;
+    }
     void setScenarioReader(const std::string& fileName);
     void setHistVarSimMarketParams(const std::string& s) { parameters_.set("historicalSimulationVar", "simulationConfigFile", s); }
     void setHistVarSimMarketParamsFromFile(const std::string& s) { parameters_.set("historicalSimulationVar", "simulationConfigFile", s); }

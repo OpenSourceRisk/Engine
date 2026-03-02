@@ -531,6 +531,7 @@ void InputParameters::setMarketConfigs(const std::map<std::string, std::string>&
     
 void InputParameters::setMporCalendar(const std::string& s) {
     mporCalendar_ = parseCalendar(s);
+    parameters_.set("var", "mporCalendar", s);
     parameters_.set("pnl", "mporCalendar", s);
 }
 
@@ -809,6 +810,8 @@ void InputParameters::setScenarioReader(const std::string& fileName) {
         scenarioReader_ = ext::make_shared<ScenarioBufferReader>(
             fileName, ext::make_shared<SimpleScenarioFactory>(true));
     }
+
+    parameters_.set("var", "scenarioFile", fileName);
 }
 
 void InputParameters::setCashflowHorizon(const std::string& s) {
