@@ -173,6 +173,7 @@ portfolio/builders/equityasianoption.cpp
 portfolio/builders/equitybarrieroption.cpp
 portfolio/builders/equitycompositeoption.cpp
 portfolio/builders/equitydigitaloption.cpp
+portfolio/builders/ratedigitaloption.cpp
 portfolio/builders/equitydoublebarrieroption.cpp
 portfolio/builders/equitydoubletouchoption.cpp
 portfolio/builders/equityforward.cpp
@@ -247,6 +248,7 @@ portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equitybarrieroption.cpp
 portfolio/equitydigitaloption.cpp
+portfolio/ratedigitaloption.cpp
 portfolio/equitydoublebarrieroption.cpp
 portfolio/equitydoubletouchoption.cpp
 portfolio/equityeuropeanbarrieroption.cpp
@@ -597,6 +599,7 @@ portfolio/builders/equityasianoption.hpp
 portfolio/builders/equitybarrieroption.hpp
 portfolio/builders/equitycompositeoption.hpp
 portfolio/builders/equitydigitaloption.hpp
+portfolio/builders/ratedigitaloption.hpp
 portfolio/builders/equitydoublebarrieroption.hpp
 portfolio/builders/equitydoubletouchoption.hpp
 portfolio/builders/equityforward.hpp
@@ -674,6 +677,7 @@ portfolio/envelope.hpp
 portfolio/equitybarrieroption.hpp
 portfolio/equityderivative.hpp
 portfolio/equitydigitaloption.hpp
+portfolio/ratedigitaloption.hpp
 portfolio/equitydoublebarrieroption.hpp
 portfolio/equitydoubletouchoption.hpp
 portfolio/equityeuropeanbarrieroption.hpp

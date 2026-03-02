@@ -31,6 +31,7 @@
       <xs:element type="fxTouchOptionData" name="FxDoubleTouchOptionData"/>
       <xs:element type="fxSwapData" name="FxSwapData"/>
       <xs:element type="capFloorData" name="CapFloorData"/>
+      <xs:element type="rateDigitalOptionData" name="RateDigitalOptionData"/>
       <xs:element type="equityFutureOptionData" name="EquityFutureOptionData"/>
       <xs:element type="equityOptionData" name="EquityOptionData"/>
       <xs:element type="eqBarrierOptionData" name="EquityBarrierOptionData"/>
@@ -1420,9 +1421,10 @@
       <xs:enumeration value="CommodityRainbowOption"/>
       <xs:enumeration value="KnockOutSwap"/>
       <xs:enumeration value="CashPosition"/>
-	  <xs:enumeration value="CommodityStrikeResettableOption"/>
-	  <xs:enumeration value="FxStrikeResettableOption"/>
-	  <xs:enumeration value="EquityStrikeResettableOption"/>
+      <xs:enumeration value="RateDigitalOption"/>
+      <xs:enumeration value="CommodityStrikeResettableOption"/>
+      <xs:enumeration value="FxStrikeResettableOption"/>
+      <xs:enumeration value="EquityStrikeResettableOption"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -1510,6 +1512,18 @@
       <xs:element type="xs:float" name="SoldAmount" minOccurs="0"/>
       <xs:element type="xs:float" name="Delta" minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="rateDigitalOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="indexNameType" name="Index"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="PayoffAmount"/>
+      <xs:element type="currencyCode" name="PayoffCurrency"/>
+      <xs:element type="date" name="FixingDate"/>
+      <xs:element type="date" name="PaymentDate"/>
     </xs:all>
   </xs:complexType>
 

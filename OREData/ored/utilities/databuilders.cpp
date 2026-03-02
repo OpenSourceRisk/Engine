@@ -80,6 +80,7 @@
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/equitydigitaloption.hpp>
 #include <ored/portfolio/builders/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/builders/ratedigitaloption.hpp>
 #include <ored/portfolio/builders/equitydoubletouchoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
@@ -143,6 +144,7 @@
 #include <ored/portfolio/equityderivative.hpp>
 #include <ored/portfolio/equitydigitaloption.hpp>
 #include <ored/portfolio/equitydoublebarrieroption.hpp>
+#include <ored/portfolio/ratedigitaloption.hpp>
 #include <ored/portfolio/equitydoubletouchoption.hpp>
 #include <ored/portfolio/equityeuropeanbarrieroption.hpp>
 #include <ored/portfolio/equityforward.hpp>
@@ -313,6 +315,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("FxSwap", FxSwap, false)
     ORE_REGISTER_TRADE_BUILDER("EquityTouchOption", EquityTouchOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityDigitalOption", EquityDigitalOption, false)
+    ORE_REGISTER_TRADE_BUILDER("RateDigitalOption", RateDigitalOption, false)
     ORE_REGISTER_TRADE_BUILDER("CompositeTrade", CompositeTrade, false)
     ORE_REGISTER_TRADE_BUILDER("MultiLegOption", MultiLegOption, false)
     ORE_REGISTER_TRADE_BUILDER("Swap", Swap, false)
@@ -486,6 +489,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityTouchOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredYoYLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityDigitalOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(RateDigitalOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAAPEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDAASEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanAsianOptionMCDGAPEngineBuilder, false)
