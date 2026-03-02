@@ -17,6 +17,7 @@
 */
 #ifndef qle_common_i
 #define qle_common_i
+%include qle_common_typemaps.i
 %{
 #include <boost/optional.hpp>
 #include <ql/optional.hpp>
@@ -53,22 +54,6 @@ if (PyBool_Check($input) || Py_None == $input)
 else
 	$1 = 0;
 }
-
-%typemap(in) QuantLib::ext::optional<bool> %{
-    if ($input == Py_None)
-        $1 = ext::nullopt;
-    else if (PyBool_Check($input))
-        $1 = $input == Py_True;
-    else
-        SWIG_exception(SWIG_TypeError, "bool expected");
-%}
-%typecheck (QL_TYPECHECK_BOOL) QuantLib::ext::optional<bool> %{
-    $1 = (PyBool_Check($input) || $input == Py_None) ? 1 : 0;
-%}
-%typemap(out) QuantLib::ext::optional<bool> %{
-    $result = !$1 ? Py_None : *$1 ? Py_True : Py_False;
-    Py_INCREF($result);
-%}
 #endif
 
 #endif

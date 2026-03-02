@@ -53,6 +53,7 @@
 
 %include <windows.i>
 
+%include orea_common.i
 %include orea_app.i
 %include orea_cube.i
 %include orea_scenariosimmarketparameters.i

@@ -40,6 +40,7 @@
 
 %}
 
+%include ored_common.i
 %include ored_calendarAdjustmentConfig.i
 %include ored_curvespec.i
 %include ored_curveconfig.i
