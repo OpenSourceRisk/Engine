@@ -40,6 +40,7 @@ struct PnlExplainVariables : public InputVariables {
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData_;
     bool parSensitivity_ = false;
     bool riskFactorLevel_ = false;
+    std::string portfolioFilter_;
 };
 
 class PnlExplainAnalyticImpl : public Analytic::Impl {

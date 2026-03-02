@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/varanalytic.hpp>
+#include <orea/app/analytics/utilities.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/historicalsimulationvar.hpp>
@@ -33,6 +34,58 @@ using namespace QuantLib::ext;
 
 namespace ore {
 namespace analytics {
+
+void VarVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+
+    vector<string> varAnalytics = {"var", "parametricVar", "historicalSimulationVar"};
+        
+    inputs->loadParameter<vector<double>>(varQuantiles_, varAnalytics, "quantiles", false, parseListOfRealValues);
+    inputs->loadParameter<bool>(varBreakDown_, varAnalytics, "breakdown", false, parseBool);
+    inputs->loadParameter<string>(portfolioFilter_, varAnalytics, "portfolioFilter", false);
+    inputs->loadParameter<string>(lookbackPeriod_, varAnalytics, vector<string>({"lookbackPeriod", "historicalPeriod"}), false);
+    inputs->loadParameter<Size>(horizonDays_, varAnalytics, vector<string>({"horizonDays", "mporDays"}), false, parseInteger);
+    inputs->loadParameter<Calendar>(horizonCalendar_, varAnalytics, vector<string>({"horizonCalendar", "mporCalendar"}), false, parseCalendar);
+    if (horizonCalendar_.empty())
+        horizonCalendar_ = parseCalendar(inputs->setupVariables().baseCurrency_);
+    inputs->loadParameter<bool>(horizonOverlappingPeriods_, varAnalytics, vector<string>({"horizonOverlappingPeriods", "mporOverlappingPeriods"}), false, parseBool);
+    inputs->loadParameterXML<ScenarioSimMarketParameters>(simMarketParams_, varAnalytics, "simulationConfigFile");
+    inputs->loadParameterXML<SensitivityScenarioData>(sensiScenarioData_, varAnalytics, "sensitivityConfigFile");
+    
+    if (!lookbackPeriod_.empty()) {    
+        TimePeriod hsPeriod = totalTimePeriod(vector<string>({lookbackPeriod_}), horizonDays_, horizonCalendar_);
+        QL_REQUIRE(hsPeriod.numberOfContiguousParts() == 1,
+                   "JSON Body: Historical scenarios period must consist of one contiguous part");
+        scenarioReader_ =
+            inputs->loadScenarioReader(varAnalytics, vector<string>({"historicalScenarioFile", "scenarioFile"}),
+                                       hsPeriod.startDates().front(), hsPeriod.endDates().front());
+    }    
+    inputs->loadParameter<bool>(outputHistoricalScenarios_, varAnalytics, "outputHistoricalScenarios", false, parseBool);
+}
+
+void ParametricVarVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    VarVariables::loadVariablesImpl(inputs);
+        
+    inputs->loadParameter<SalvagingAlgorithm::Type>(varSalvagingAlgorithm_, "parametricVar", "SalvagingAlgorithm", false, parseSalvagingAlgorithmType);
+    inputs->loadParameter<string>(varMethod_, "parametricVar", vector<string>({"method", "varMethod"}), false);
+    inputs->loadParameter<Size>(mcVarSamples_, "parametricVar", vector<string>({"mcSamples", "varMcSamples"}), false, parseInteger);
+    inputs->loadParameter<long>(mcVarSeed_, "parametricVar", vector<string>({"mcSeed", "varMcSeed"}), false, parseInteger);
+        
+    string covarianceInputFile;
+    inputs->loadParameter<string>(covarianceInputFile, "parametricVar", "covarianceInputFile", false);
+    if (!covarianceInputFile.empty())
+        covarianceData_ =
+            loadCorrelationDataFromFile((inputs->setupVariables().inputPath_ / covarianceInputFile).generic_string());
+
+    sensitivityStream_ = inputs->loadSensitivityStream("parametricVar", "sensitivityInputFile");
+}
+
+void HistoricalSimulationVarVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    VarVariables::loadVariablesImpl(inputs);
+
+    inputs->loadParameter<bool>(includeExpectedShortfall_, "historicalSimulationVar", "includeExpectedShortfall", false, parseBool);
+    inputs->loadParameter<bool>(tradePnL_, "historicalSimulationVar", "tradePnl", false, parseBool);
+    inputs->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false, parseBool);
+}
 
 /***********************************************************************************
  * VAR Analytic: DELTA-VAR, DELTA-GAMMA-NORMAL-VAR, MONTE-CARLO-VAR
@@ -82,12 +135,14 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
 QuantLib::ext::shared_ptr<SensitivityStream>
 ParametricVarAnalyticImpl::sensiStream(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
-    return inputs_->sensitivityStream();
+    auto varVars = ext::dynamic_pointer_cast<ParametricVarVariables>(inputVariables_);
+    return varVars->sensitivityStream_;
 };
 
 void ParametricVarAnalyticImpl::setUpConfigurations() {
     VarAnalyticImpl::setUpConfigurations();
-    if (inputs_->covarianceData().size() == 0) {
+    auto varVars = ext::dynamic_pointer_cast<ParametricVarVariables>(inputVariables_);
+    if (varVars->covarianceData_.size() == 0) {
         analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
         analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     }
@@ -95,24 +150,25 @@ void ParametricVarAnalyticImpl::setUpConfigurations() {
 
 void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     LOG("Build trade to portfolio id mapping");
-    ParametricVarCalculator::ParametricVarParams varParams(inputs_->varMethod(), inputs_->mcVarSamples(),
-                                                           inputs_->mcVarSeed());
+    auto varVars = ext::dynamic_pointer_cast<ParametricVarVariables>(inputVariables_);
+    ParametricVarCalculator::ParametricVarParams varParams(varVars->varMethod_, varVars->mcVarSamples_,
+                                                           varVars->mcVarSeed_);
 
     QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
 
     LOG("Build VaR calculator");
-    if (inputs_->covarianceData().size() > 0) {
+    if (varVars->covarianceData_.size() > 0) {
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
-            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, inputs_->covarianceData());
+            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, nullptr, 0.01, varVars->covarianceData_);
 
         varReport_ = ext::make_shared<ParametricVarReport>(
-            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-            varParams, inputs_->getVarSalvagingAlgorithm(), QuantLib::ext::nullopt, std::move(sensiArgs),
-            inputs_->varBreakDown(), inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
+            inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
+            varParams, varVars->varSalvagingAlgorithm_, QuantLib::ext::nullopt, std::move(sensiArgs),
+            varVars->varBreakDown_, inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
     } else {
-        QL_REQUIRE(inputs_->benchmarkVarPeriod()!=std::string(), "BenchmarkVarPeriod Required.");
-        TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
-                                      inputs_->mporDays(), inputs_->mporCalendar());
+        QL_REQUIRE(varVars->lookbackPeriod_ != std::string(), "BenchmarkVarPeriod Required.");
+        TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(varVars->lookbackPeriod_, &parseDate),
+                                      varVars->horizonDays_, varVars->horizonCalendar_);
 
         QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
         if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
@@ -120,14 +176,14 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
 
         auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
 
-        QL_REQUIRE(inputs_->scenarioReader(), "ScenarioReader Required.");
+        QL_REQUIRE(varVars->scenarioReader_, "ScenarioReader Required.");
 
         auto scenarios = buildHistoricalScenarioGenerator(
-            inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+            varVars->scenarioReader_, adjFactors, benchmarkVarPeriod, varVars->horizonCalendar_, varVars->horizonDays_,
             analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-            defaultReturnConfig, inputs_->mporOverlappingPeriods());
+            defaultReturnConfig, varVars->horizonOverlappingPeriods_);
 
-        if (inputs_->outputHistoricalScenarios())
+        if (varVars->outputHistoricalScenarios_)
             ReportWriter().writeHistoricalScenarios(
                 scenarios->scenarioLoader(),
                 QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenarios.csv").string(),
@@ -144,22 +200,23 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
             analytic()->configurations().sensiScenarioData, analytic()->configurations().simMarketParams);
 
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
-            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, inputs_->covarianceData());
+            std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator, 0.01, varVars->covarianceData_);
 
         varReport_ = ext::make_shared<ParametricVarReport>(
-            inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), scenarios,
-            inputs_->varQuantiles(), varParams,
-            inputs_->getVarSalvagingAlgorithm(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
+            inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, scenarios,
+            varVars->varQuantiles_, varParams, varVars->varSalvagingAlgorithm_, benchmarkVarPeriod,
+            std::move(sensiArgs), varVars->varBreakDown_);
     }
 }
 
 void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
     VarAnalyticImpl::setUpConfigurations();
-    analytic()->configurations().simMarketParams = inputs_->histVarSimMarketParams();
+    auto varVars = ext::dynamic_pointer_cast<HistoricalSimulationVarVariables>(inputVariables_);
+    analytic()->configurations().simMarketParams = varVars->simMarketParams_;
     // ORE Swig does not handle that yet
     // inputs_->loadParameter<bool>(riskFactorBreakdown_, "historicalSimulationVar", "riskFactorBreakdown", false,
     //                              std::function<bool(const string&)>(parseBool));
-    riskFactorBreakdown_ = inputs_->riskFactorBreakdown();
+    riskFactorBreakdown_ = varVars->riskFactorBreakdown_;
     if(riskFactorBreakdown_){
         allowPartialScenarios_ = true;
     }
@@ -167,10 +224,12 @@ void HistoricalSimulationVarAnalyticImpl::setUpConfigurations() {
 
 void HistoricalSimulationVarAnalyticImpl::setVarReport(
     const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+    auto varVars = ext::dynamic_pointer_cast<HistoricalSimulationVarVariables>(inputVariables_);
 
     LOG("Build VaR calculator");
-    QL_REQUIRE(inputs_->benchmarkVarPeriod()!=std::string(), "BenchmarkVarPeriod Required.");
-    TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate), inputs_->mporDays(), inputs_->mporCalendar());
+    QL_REQUIRE(varVars->lookbackPeriod_ != std::string(), "LookbackPeriod Required.");
+    TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(varVars->lookbackPeriod_, &parseDate), varVars->horizonDays_,
+                                  varVars->horizonCalendar_);
         
     QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
     if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
@@ -178,14 +237,14 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
 
     auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
 
-    QL_REQUIRE(inputs_->scenarioReader(), "ScenarioReader Required.");
+    QL_REQUIRE(varVars->scenarioReader_, "ScenarioReader Required.");
 
     auto scenarios = buildHistoricalScenarioGenerator(
-        inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(),
+        varVars->scenarioReader_, adjFactors, benchmarkVarPeriod, varVars->horizonCalendar_, varVars->horizonDays_,
         analytic()->configurations().simMarketParams, analytic()->configurations().todaysMarketParams,
-        defaultReturnConfig, inputs_->mporOverlappingPeriods(), riskFactorBreakdown_);
+        defaultReturnConfig, varVars->horizonOverlappingPeriods_, riskFactorBreakdown_);
 
-    if (inputs_->outputHistoricalScenarios())
+    if (varVars->outputHistoricalScenarios_)
         ore::analytics::ReportWriter().writeHistoricalScenarios(
             scenarios->scenarioLoader(),
             QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "var_histscenarios.csv").string(), ',',
@@ -207,10 +266,10 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
                                                                                 inputs_->marketConfig("simulation"), analytic()->configurations().simMarketParams, "histstimvar-simulation");
 
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
-        inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), inputs_->varBreakDown(),
-        inputs_->includeExpectedShortfall(), inputs_->tradePnl(), riskFactorBreakdown_, inputs_->useAtParCouponsCurves(),
-        inputs_->useAtParCouponsTrades());
+        inputs_->baseCurrency(), analytic()->portfolio(), varVars->portfolioFilter_, varVars->varQuantiles_,
+        benchmarkVarPeriod, scenarios, std::move(fullRevalArgs), std::move(multiThreadsArgs), varVars->varBreakDown_,
+        varVars->includeExpectedShortfall_, varVars->tradePnL_, riskFactorBreakdown_,
+        inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
 }
 
 void HistoricalSimulationVarAnalyticImpl::addAdditionalReports(
