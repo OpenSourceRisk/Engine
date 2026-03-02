@@ -419,6 +419,7 @@
 #include <qle/pricingengines/discountingbondfutureengine.hpp>
 #include <qle/pricingengines/discountingbondrepoengine.hpp>
 #include <qle/pricingengines/discountingbondtrsengine.hpp>
+#include <qle/pricingengines/discountingcommoditycurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
 #include <qle/pricingengines/discountingcreditlinkedswapengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>

@@ -81,6 +81,7 @@ private:
                                            const std::string& configuration);
 
     std::vector<ore::data::LegData> legData_;
+    bool isXCCY_ = false;
     bool roundNettedFloatingLegs_ = false;
     QuantLib::Natural nettingPrecision_ = QuantLib::Null<QuantLib::Natural>();
 

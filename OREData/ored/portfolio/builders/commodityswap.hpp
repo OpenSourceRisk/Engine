@@ -28,6 +28,8 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
+#include <qle/pricingengines/discountingcommoditycurrencyswapengine.hpp>
 
 namespace ore {
 namespace data {
@@ -58,6 +60,40 @@ protected:
             yts, QuantLib::ext::nullopt, Date(), Date(),
             market_->fxRate(ccy.code() + npvCcy.code(), configuration(MarketContext::pricing)));
     };
+};
+
+//! Discounted Cashflows Engine Builder for Cross Currency Commodity Swaps
+class CrossCurrencyCommoditySwapEngineBuilder
+    : public CachingEngineBuilder<std::string, const std::vector<QuantLib::Currency>&, const QuantLib::Currency&> {
+public:
+    CrossCurrencyCommoditySwapEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencyCommoditySwapEngine",
+                               {"CrossCurrencyCommoditySwap"}) {}
+
+protected:
+    std::string keyImpl(const std::vector<Currency>& ccys, const Currency& npvCcy) {
+        std::ostringstream ccyskey;
+        ccyskey << npvCcy << "/";
+        for (Size i = 0; i < ccys.size(); ++i)
+            ccyskey << ccys[i] << "-";
+        return ccyskey.str();
+    }
+
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::vector<Currency>& ccys,
+                                                                  const Currency& npvCcy) {
+        std::string config = configuration(MarketContext::pricing);
+        std::string npvCcyCode = npvCcy.code();
+        std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>> discountCurves;
+        std::vector<QuantLib::Handle<QuantLib::Quote>> fxQuotes;
+        for (Size i = 0; i < ccys.size(); ++i) {
+            std::string legCcy = ccys[i].code();
+            discountCurves.push_back(market_->discountCurve(legCcy, config));
+            std::string pair = legCcy + npvCcyCode;
+            fxQuotes.push_back(market_->fxRate(pair, config));
+        }
+        return QuantLib::ext::make_shared<QuantExt::DiscountingCommodityCurrencySwapEngine>(discountCurves, fxQuotes,
+                                                                                            ccys, npvCcy);
+    }
 };
 
 } // namespace data
