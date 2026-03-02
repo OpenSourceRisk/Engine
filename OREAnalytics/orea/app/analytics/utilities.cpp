@@ -68,7 +68,7 @@ std::map<std::string, TimeSeries<Real>> loadDeterministicInitialMarginFromFile(c
 }
 
 std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> loadCorrelationDataFromFile(const std::string& fileName) {
-    ore::data::CSVFileReader reader(fileName, true);
+    ore::data::CSVFileReader reader(fileName, false);
     return loadCorrelationData(reader);
 }
 
