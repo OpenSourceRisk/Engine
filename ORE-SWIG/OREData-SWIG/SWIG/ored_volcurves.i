@@ -31,33 +31,7 @@ using namespace std;
 
 %template(DateSet) std::set<Date>;
 
-/*
-%shared_ptr(GenericYieldVolCurve)
-class GenericYieldVolCurve {
-	public:
-		GenericYieldVolCurve(const Date& asof, const Loader& loader,
-                            const CurveConfigurations& curveConfigs,
-                            const ext::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
-                            const map<string, ext::shared_ptr<SwapIndex>>& requiredSwapIndices,
-                            const map<string, ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
-                            const std::function<bool(const ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>&
-                                matchAtmQuote,
-                            const std::function<bool(const ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
-                                matchSmileQuote,
-                            const std::function<bool(const ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
-                            const bool buildCalibrationInfo);
-        const ext::shared_ptr<SwaptionVolatilityStructure>& volTermStructure();
-        ext::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const;
-};
-
-%shared_ptr(SwaptionVolCurve)
-class SwaptionVolCurve : public GenericYieldVolCurve {
-    public:
-        SwaptionVolCurve(Date asof, SwaptionVolatilitySpec spec, const Loader& loader,
-        const SwaptionVolatilityCurveSpec& spec() const;  
-
-};
-*/
+// GenericYieldVolCurve and SwaptionVolCurve wrappers are intentionally deferred.
 
 %template(GeneralizedBlackScholesProcessVector) std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess> >;
 

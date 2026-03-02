@@ -45,6 +45,6 @@
 %include qle_averageoisratehelper.i
 %include qle_processes.i
 
-//%include qle_crossccyfixfloatswaphelper.i
+// CrossCcyFixFloatSwapHelper is intentionally not exposed yet.
 
 #endif

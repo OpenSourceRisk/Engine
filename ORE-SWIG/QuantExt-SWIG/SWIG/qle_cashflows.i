@@ -31,25 +31,9 @@
 %include qle_indexes.i
 
 %{
-//using QuantExt::FXLinked;
 using QuantExt::FXLinkedCashFlow;
 using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 %}
-
-//%shared_ptr(FXLinked)
-//class FXLinked {
-// private:
-    // FXLinked();
-  //  public:
-    //    FXLinked(const QuantLib::Date& fixingDate, 
-      //           QuantLib::Real foreignAmount,
-        //         ext::shared_ptr<FxIndex> fxIndex);
-   //     QuantLib::Date fxFixingDate() const;
-   //     const ext::shared_ptr<FxIndex>& fxIndex() const;
-   //     QuantLib::Real foreignAmount() const;
-   //     QuantLib::Real fxRate() const;
-   //     ext::shared_ptr<FXLinked> clone(ext::shared_ptr<FxIndex> fxIndex) = 0;
-//};
 
 %shared_ptr(FXLinkedCashFlow)
 class FXLinkedCashFlow : public CashFlow {

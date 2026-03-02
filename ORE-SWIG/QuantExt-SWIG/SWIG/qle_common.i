@@ -49,7 +49,7 @@
 %typemap(BoostFilesystemPath) const std::filesystem::path& "String"
 
 %typecheck (QL_TYPECHECK_BOOL) boost::optional<bool> {
-if (PyBool_Check($input) || Py_None == $input) 
+if (PyBool_Check($input) || Py_None == $input)
 	$1 = 1;
 else
 	$1 = 0;

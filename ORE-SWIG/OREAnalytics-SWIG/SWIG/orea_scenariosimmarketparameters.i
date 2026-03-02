@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#ifndef orea_scenariosimmarketparameters.i
-#define orea_scenariosimmarketparameters.i
+#ifndef orea_scenariosimmarketparameters_i
+#define orea_scenariosimmarketparameters_i
 
 %include stl.i
 %include types.i
