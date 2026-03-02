@@ -169,19 +169,6 @@ Alternatively, compile all Boost libraries directly from the source code:
 \end{itemize}
 \end{enumerate}
 
-There are two options for pointing at your Boost installation:
-\begin{enumerate}
-\item With CMake 3.30.0+ and Boost 1.70.0+, set the environment variable {\tt ORE\_BOOST\_DIR} or {\tt BOOST\_DIR} to the directory containing the 
-Boost CMake package configuration file i.e. the file BoostConfig.cmake. {\tt ORE\_BOOST\_DIR} is provided to allow for a selected version of
-Boost for building ORE.
-\item If you are still using the old FindBoost module for a particular reason (like building ORE-SWIG with setup.py), set the 
-environment variables BOOST and {\tt BOOST\_LIB64} to point to the Boost root directory and Boost lib directory respectively, e.g:
-    \begin{itemize}
-        \item {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0}
-        \item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.3}
-        \item {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.3}
-    \end{itemize}
-\end{enumerate}
 
 
 \subsubsection*{Compiler / Boost Versions}
@@ -274,7 +261,7 @@ ore/QuantLib/CMakeLists.txt) which affect the build:
 {\scriptsize
 \begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
   \hline
-  Option & Description & Default \\
+  Option & Description & Default  \\
   \hline
   \hline
   ORE\_BUILD\_DOC & Build PDF documentation & ON \\
@@ -311,7 +298,8 @@ ore/QuantLib/CMakeLists.txt) which affect the build:
   \hline
 \end{tabular}
 }
-\scriptsize{ \textsuperscript{*} If ON and using Windows, ensure your boost is built with zlib.}
+\scriptsize{ \textsuperscript{*}If ON and using Windows, ensure your boost is built with zlib.}
+
 The latter BOOST and Python variables have been added to the list, because CMake may use them to locate
 the BOOST and Python development files, if CMake does not find them automatically.
 
@@ -320,7 +308,7 @@ Quantlib Flags
 {\scriptsize
 \begin{tabular}{|p{5.5cm}|p{6cm}|p{3cm}|}
     \hline
-    Option & Description & Default \\
+    Option & Description & Default  \\
     \hline
     \hline
     QL\_BUILD\_Examples & Build examples & ON \\
@@ -375,8 +363,8 @@ command line parameters {\tt -D} which allow overriding/setting the essential pa
 \hspace{2cm} {\tt -D QL\_ENABLE\_SESSIONS=ON \bs } \\
 \hspace{2cm} {\tt -D QL\_BUILD\_EXAMPLES=OFF \bs } \\
 \hspace{2cm} {\tt -D ORE\_USE\_ZLIB=ON \bs}  \\
-\hspace{2cm} {\tt [ -D BOOST\_INCLUDEDIR=<path/to/boost/includes> \bs ~] } \\
-\hspace{2cm} {\tt [ -D BOOST\_LIBRARYDIR=<path/to/boost/libraries> \bs ~] } \\
+\hspace{2cm} {\tt [ -D BOOST=<path/to/boost/> \bs ~] } \\
+\hspace{2cm} {\tt [ -D BOOST\_LIB64=<path/to/boost/libraries> \bs ~] } \\
 \hspace{2cm} {\tt [ -D Python\_ROOT=<directory containing Python.h> \bs ~] } \\
 \hspace{2cm} {\tt [ -D Python\_LIBRARY=<path/to/PythonLibrary> \bs ~] } \\
 \hspace{2cm} {\tt [ -G Ninja ] }
