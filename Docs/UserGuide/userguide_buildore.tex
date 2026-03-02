@@ -267,8 +267,8 @@ or to use the pre-built ORE Python module in section \ref{example:orepython}.
 
 \subsection{Building ORE}\label{sec:build}
 
-ORE uses the CMake build system with the following essential parameters (see ore/CMakeLists.txt,
-ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build:
+ORE uses the CMake build system with the following essential parameters (see ore/cmake/commonSettings.cmake and
+ore/QuantLib/CMakeLists.txt) which affect the build:
 
 %\begin{table}
 {\scriptsize
@@ -295,7 +295,7 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
   \hline
   ORE\_PYTHON\_INTEGRATION & Build ORE with Python Integration, allows calling from C++ into Python & OFF \\
   \hline
-  ORE\_USE\_ZLIB & Use compression for boost::iostreams, e.g. to write compressed cube files & OFF \\
+  ORE\_USE\_ZLIB & Use compression for boost::iostreams, e.g. to write compressed cube files & ON\textsuperscript{*} \\
   \hline
   ORE\_MULTITHREADING \_CPU\_AFFINITY & Set cpu affinitity in multithreaded calculations & OFF  \\
   \hline
@@ -311,6 +311,7 @@ ore/QuantExt/CMakeLists.txt, ore/QuantLib/CMakeLists.txt) which affect the build
   \hline
 \end{tabular}
 }
+\scriptsize{ \textsuperscript{*} If ON and using Windows, ensure your boost is built with zlib.}
 The latter BOOST and Python variables have been added to the list, because CMake may use them to locate
 the BOOST and Python development files, if CMake does not find them automatically.
 
@@ -324,13 +325,7 @@ Quantlib Flags
     \hline
     QL\_BUILD\_Examples & Build examples & ON \\
     \hline
-    QL\_BUILD\_TEST_SUITE & Build test suites  & ON \\
-    \hline
-    QL\_BUILD\_FUZZ\_TEST\_SUITE & Build fuzz test suite & OFF \\
-    \hline
-    QL\_ENABLE\_OPEN\_MP & Detect and use OpenMP & OFF \\
-    \hline
-    QL\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
+    QL\_BUILD\_TEST\_SUITE & Build test suites  & ON \\
     \hline
     QL\_USE\_PCH & Use precompiled headers & OFF \\
     \hline
@@ -344,13 +339,28 @@ Quantlib Flags
     \hline
     QL\_USE\_STD\_CLASSES & Enable all QL\_USE\_STD\_ options & OFF\textsuperscript{*} \\
     \hline
-    QL\_BUILD\_EXAMPLES & Build QuantLib examples & ON \\
+    QL\_USE\_INDEXED\_COUPON & Use indexed coupons instead of par coupons & OFF \\
     \hline
-    QL\_BUILD\_TEST\_SUITE & Build QuantLib test suite & ON \\
+    QL\_ENABLE\_OPEN\_MP & Detect and use OpenMP & OFF \\
     \hline
+    QL\_ENABLE\_PARALLEL \_UNIT\_TEST\_RUNNER & Enable the parallel unit test runner & OFF \\
+    \hline
+    QL\_ENABLE\_THREAD \_SAFE\_OBSERVER\_PATTERN & Enable the thread-safe observer pattern & OFF \\
+    \hline
+    QL\_ENABLE\_TRACING & Allow tracing messages & OFF \\
+    \hline
+    QL\_COMPILE\_WARNING\ _AS\_ERROR & Specify whether to treat warnings on compile as errors. & OFF \\
+    \hline
+    QL\_ERROR\_FUNCTIONS & Error messages should include current function information & OFF \\
+    \hline
+    QL\_FASTER\_LAZY \_OBJECTS & Cause lazy objects to forward just the first notification instead of every one & ON \\
+    \hline
+    QL\_HIGH\_RESOLUTION\_DATE & Enable date resolution down to microseconds & OFF \\
+    \hline
+
 \end{tabular}
 }
-\scriptsize{ \textsuperscript{*}Default values should not be modified.}
+\scriptsize{ \textsuperscript{*}Default values indicated should not be modified.}
 
 
 \subsubsection*{Linux and macOS}
