@@ -65,4 +65,18 @@
 %include orea_simm.i
 %include orea_analytics.i
 
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_OREA_MODULE_OVERVIEW = """OREAnalytics layer bindings.
+
+Contains application wiring, scenario/simulation configuration,
+cube interfaces, sensitivity engines, aggregation utilities, and SIMM APIs.
+"""
+if __doc__:
+    __doc__ = __doc__ + "\n\n" + _OREA_MODULE_OVERVIEW
+else:
+    __doc__ = _OREA_MODULE_OVERVIEW
+%}
+#endif
+
 #endif

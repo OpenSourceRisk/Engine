@@ -51,4 +51,18 @@
 
 // CrossCcyFixFloatSwapHelper is intentionally not exposed yet.
 
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_QLE_MODULE_OVERVIEW = """QuantExt layer bindings.
+
+Contains extended instruments, cashflows, pricing engines, term structures,
+models, and processes used by OREData and OREAnalytics workflows.
+"""
+if __doc__:
+	__doc__ = __doc__ + "\n\n" + _QLE_MODULE_OVERVIEW
+else:
+	__doc__ = _QLE_MODULE_OVERVIEW
+%}
+#endif
+
 #endif

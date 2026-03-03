@@ -68,4 +68,18 @@
 %include ored_xmlutils.i
 %include ored_yieldcurveconfig.i
 
+#if defined(SWIGPYTHON)
+%pythoncode %{
+_ORED_MODULE_OVERVIEW = """OREData layer bindings.
+
+Contains XML-serialisable configuration, market data abstractions,
+portfolio/trade construction, parsers, loaders, and utility APIs.
+"""
+if __doc__:
+	__doc__ = __doc__ + "\n\n" + _ORED_MODULE_OVERVIEW
+else:
+	__doc__ = _ORED_MODULE_OVERVIEW
+%}
+#endif
+
 #endif

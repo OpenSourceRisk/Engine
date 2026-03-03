@@ -75,6 +75,22 @@ const char* __version__;
 %}
 #endif
 
+#if defined(SWIGPYTHON)
+%feature("autodoc", "1");
+%feature("docstring") "ORE API symbol exposed through SWIG bindings.";
+%pythoncode %{
+_ORE_MODULE_OVERVIEW = """ORE Python bindings (single-module architecture).
+
+This module exposes QuantLib, QuantExt, OREData, and OREAnalytics classes
+through one SWIG-generated extension.
+"""
+if __doc__:
+    __doc__ = __doc__ + "\n\n" + _ORE_MODULE_OVERVIEW
+else:
+    __doc__ = _ORE_MODULE_OVERVIEW
+%}
+#endif
+
 // include all quantlib .i's
 %include ql.i
 

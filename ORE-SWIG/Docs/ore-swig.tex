@@ -34,7 +34,7 @@
     Download and install required software. For development purposes, use GitLab repos for QuantLib and ORE.
 \begin{enumerate}
     \item Microsoft Visual Studio (including necessary program files)
-    \item Python (3.6 and higher)
+    \item Python (3.8 to 3.13)
     \item Boost (preferably 1.72.0)
     \item SWIG (3.0 and higher for MacOS/Linux, 4.3 and higher for Windows)
     \item QuantLib
@@ -43,17 +43,19 @@
 
 Set the following environment variables:
 \begin{enumerate}
-    \item BOOST AND BOOST\_LIB
+    \item BOOST and BOOST\_LIB
     \item ORE\_DIR
     \item SWIG\_DIR and SWIG\_EXECUTABLE 
     \item Python Scripts in PATH
+    \item ORE\_STATIC\_RUNTIME (Windows builds)
 \end{enumerate}
 
 To build and run ORE-SWIG, there are two methods as outlined in the README: (1) CMAKE, (2) setup.py scripts. You can build individual levels (ex. only QuantExt-SWIG) by running the following in the respective directory
 \begin{lstlisting}
+        SET ORE_STATIC_RUNTIME=1
         python setup.py wrap 
         python setup.py build 
-        python seutp.py test 
+        python setup.py test 
         python setup.py install 
 \end{lstlisting}
 
@@ -120,10 +122,22 @@ After proper installation, you can look through the test scripts to see the gene
 \section*{SWIG and Needed Tasks}
 Briefly, SWIG wraps C++ code and makes them accessible to higher level scripting languages (ex. Python). In order to do so, the general task is to write SWIG interface (.i) files that introduce the code (from .hpp file) you want to access. Be sure, when copying over to change all boost::shared\_ptrs to ext::shared\_ptrs.\\
 
-\subsection*{To Do:}
-I. Currently, new interface files have been created but OREData and OREAnalytics require new python test scripts to confirm. \\
+\subsection*{Recent Expansion Highlights}
+The SWIG bindings expansion introduced substantial coverage and infrastructure updates across QuantExt, OREData, and OREAnalytics. Highlights include:
+\begin{enumerate}
+    \item Shared SWIG infrastructure files and common typemaps for cleaner layering and reduced duplication.
+    \item New and extended wrappers for analytics (scenario, engine, aggregation, simulation, SIMM, analytics orchestration), model builders, model data, and portfolio/configuration areas.
+    \item Master include files updated so new layer wrappers are compiled into the single \texttt{ORE} Python module.
+    \item Documentation enhancements in SWIG entry points:
+    \begin{enumerate}
+        \item \texttt{\%feature("autodoc", "1")} enabled for Python bindings.
+        \item Global \texttt{\%feature("docstring")} support enabled.
+        \item Layer-level \texttt{\%pythoncode} module overview blocks added for QuantExt, OREData, and OREAnalytics.
+    \end{enumerate}
+    \item Build validation flow standardised on Windows with \texttt{SET ORE\_STATIC\_RUNTIME=1} before wrap/build/test.
+\end{enumerate}
 
-II. OREAnalytics encounters the following error when building on Windows:
+The historical Windows linker issue remains relevant in some environments:
 \begin{lstlisting}[basicstyle=\small]
 OREData-x64-mt.lib(osutils.obj) : error LNK2001: unresolved external symbol
 __imp_GetUserNameA
@@ -133,7 +147,7 @@ error: command 'C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\
 VC\\Tools\\MSVC\\14.32.31326\\bin\\HostX86\\x64\\link.exe'
 failed with exit status 1120
 \end{lstlisting}
-The current hacky fix for that would be to comment out the function in OREData/utilities/osutils.* in ore. Howevwer the function is used in restore.
+The current hacky fix for that would be to comment out the function in OREData/utilities/osutils.* in ore. However, the function is used in restore.
 
 
 

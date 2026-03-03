@@ -54,7 +54,7 @@ class NPVCube {
     //! Get a T0 value from the cube using index
     virtual Real getT0(Size id, Size depth = 0) const = 0;
     //! Get a T0 value from the cube using trade id
-    virtual Real getT0(const std::string& id, Size depth = 0) const;    
+    virtual Real getT0(const std::string& id, Size depth = 0) const;
     //! Get a value from the cube using index
     virtual Real get(Size id, Size date, Size sample, Size depth = 0) const = 0;
     //! Get a value from the cube using trade id and date
@@ -151,7 +151,7 @@ public:
     JointNPVCube(
         const ext::shared_ptr<NPVCube>& cube1, const ext::shared_ptr<NPVCube>& cube2,
         const std::set<std::string>& ids = {}, const bool requireUniqueIds = true) {
-            return new JointNPVCube(cube1, cube2, ids, requireUniqueIds); 
+            return new JointNPVCube(cube1, cube2, ids, requireUniqueIds);
         }
 
     JointNPVCube(
