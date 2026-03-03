@@ -162,6 +162,26 @@ class FxBlackVannaVolgaVolatilitySurfaceTest(unittest.TestCase):
     def testSimpleInspectors(self):
         """ Test Fx Black Vanna Volga Volatility Surface simple inspector. """
         self.assertEqual(self.fxBlackVannaVolgaVolatilitySurface.dayCounter(),self.dc)
+
+
+class Task5TermStructureSmokeTest(unittest.TestCase):
+    def setUp(self):
+        """Create simple market inputs used across Task 5 term structure tests."""
+        self.today = Date(1, October, 2018)
+        self.dc = Actual360()
+        self.calendar = UnitedStates(UnitedStates.NYSE)
+        self.base = ConstantSwaptionVolatility(self.today, self.calendar, Following, 0.20, self.dc)
+
+    def test_task5_termstructure_symbols_available(self):
+        """Verify Task 5 term structure symbols are available in the module."""
+        self.assertTrue(hasattr(__import__("ORE"), "DynamicSwaptionVolatilityMatrix"))
+        self.assertTrue(hasattr(__import__("ORE"), "BlackVolatilitySurfaceBFRR"))
+        self.assertTrue(hasattr(__import__("ORE"), "CorrelationTermStructure"))
+        self.assertTrue(hasattr(__import__("ORE"), "QLESpreadedSwaptionVolatility"))
+
+    def test_spreaded_swaption_symbol_available(self):
+        """Verify the aliased QuantExt spreaded swaption class is available."""
+        self.assertTrue(hasattr(__import__("ORE"), "QLESpreadedSwaptionVolatility"))
         
         
 
@@ -175,6 +195,7 @@ if __name__ == '__main__':
     suite.addTest(unittest.makeSuite(SwaptionVolCubeWithATMTest,'test'))
     suite.addTest(unittest.makeSuite(QLESwaptionVolCube2Test,'test'))
     suite.addTest(unittest.makeSuite(FxBlackVannaVolgaVolatilitySurfaceTest,'test'))
+    suite.addTest(unittest.makeSuite(Task5TermStructureSmokeTest,'test'))
     
     unittest.TextTestRunner(verbosity=2).run(suite)
     unittest.main()

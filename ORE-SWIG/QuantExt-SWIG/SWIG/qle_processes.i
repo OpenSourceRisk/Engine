@@ -32,12 +32,19 @@
 
 %{
 using QuantExt::ExtendedHestonProcess;
+using QuantExt::CrossAssetStateProcess;
+using QuantExt::IrLgm1fStateProcess;
+using QuantExt::IrLgm1fParametrization;
+using QuantExt::CrossAssetModel;
 using QuantLib::Real;
 using QuantLib::Handle;
 using QuantLib::YieldTermStructure;
 using QuantLib::Quote;
 using QuantLib::Size;
 %}
+
+%shared_ptr(CrossAssetModel)
+class CrossAssetModel;
 
 %shared_ptr(ExtendedHestonProcess)
 class ExtendedHestonProcess : public HestonProcess {
@@ -65,6 +72,32 @@ public:
     // Integrand for the integration above 
     Real pdfIntegrand(Real u, Real x, Real time) const;
     Real cdfIntegrand(Real u, Real x, Real time) const;
+};
+
+%shared_ptr(CrossAssetStateProcess)
+%nodefaultctor CrossAssetStateProcess;
+class CrossAssetStateProcess : public StochasticProcess {
+public:
+    Size size() const override;
+    Size factors() const override;
+    Array initialValues() const override;
+    Array drift(Time t, const Array& x) const override;
+    Matrix diffusion(Time t, const Array& x) const override;
+    Array evolve(Time t0, const Array& x0, Time dt, const Array& dw) const override;
+    void resetCache(const Size timeSteps) const;
+};
+
+%shared_ptr(IrLgm1fStateProcess)
+class IrLgm1fStateProcess : public StochasticProcess1D {
+public:
+    IrLgm1fStateProcess(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization);
+    Real x0() const override;
+    Real drift(Time t, Real x) const override;
+    Real diffusion(Time t, Real x) const override;
+    Real expectation(Time t0, Real x0, Time dt) const override;
+    Real stdDeviation(Time t0, Real x0, Time dt) const override;
+    Real variance(Time t0, Real x0, Time dt) const override;
+    void resetCache(const Size timeSteps) const;
 };
 
 #endif
