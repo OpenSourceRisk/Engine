@@ -33,8 +33,6 @@ using namespace std;
 
 // GenericYieldVolCurve and SwaptionVolCurve wrappers are intentionally deferred.
 
-%template(GeneralizedBlackScholesProcessVector) std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess> >;
-
 %shared_ptr(LocalVolModelBuilder)
 class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
     public:

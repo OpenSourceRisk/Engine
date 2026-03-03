@@ -33,8 +33,6 @@ using ore::analytics::CubeWriter;
 using ore::analytics::CubeCsvReader;
 %}
 
-%template(StringStringMap) std::map<std::string, std::string>;
-
 %shared_ptr(NPVCube)
 class NPVCube {
   public:

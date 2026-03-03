@@ -26,8 +26,6 @@ using QuantLib::Real;
 using ore::data::XMLSerializable;
 %}
 
-%template(VectorReal) std::vector<Real>;
-%template(VectorPeriod) std::vector<Period>;
 %template(PeriodVectorRealMap) std::map<Period, std::vector<Real>>;
 %template(PeriodPairsRealMap) std::map<pair<Period, Period>, Real>;
 
