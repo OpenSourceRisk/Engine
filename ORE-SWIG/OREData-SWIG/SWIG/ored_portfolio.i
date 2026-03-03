@@ -28,4 +28,3 @@
 %include ored_portfolio_scripted.i
 
 #endif
-

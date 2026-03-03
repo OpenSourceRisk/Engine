@@ -54,7 +54,7 @@ public:
     IrModelData(const std::string& name,const std::string& qualifier, CalibrationType calibrationType);
     const std::string& name();
     const std::string& qualifier();
-    virtual std::string ccy() const;       
+    virtual std::string ccy() const;
 };
 
 %shared_ptr(CalibrationInstrument)
@@ -207,7 +207,7 @@ public:
     const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() const;
     QuantLib::Real bootstrapTolerance() const;
     const std::string& measure() const ;
-    CrossAssetModel::Discretization discretization() const;   
+    CrossAssetModel::Discretization discretization() const;
     QuantLib::SalvagingAlgorithm::Type getSalvagingAlgorithm() const;
     const string& integrationPolicy() const;
     bool piecewiseIntegration() const;
@@ -237,7 +237,7 @@ public:
       void setCurrencies(std::vector<std::string> ccys) {
           self->currencies() = ccys;
       }
-      
+
       void setEquities(std::vector<std::string> eqs) {
           self->equities() = eqs;
       }
@@ -245,11 +245,11 @@ public:
       void setInfIndices(std::vector<std::string> infs) {
           self->infIndices() = infs;
       }
-      
+
       void setCreditNames(std::vector<std::string> names) {
           self->creditNames() = names;
       }
-      
+
       void setCommodities(std::vector<std::string> coms) {
           self->commodities() = coms;
       }
@@ -257,7 +257,7 @@ public:
       void setCurrencies(std::vector<std::string> ccys) {
           self->currencies() = ccys;
       }
-      
+
       void setBootstrapTolerance(QuantLib::Real tol) {
           self->bootstrapTolerance() = tol;
       }
@@ -269,11 +269,11 @@ public:
       void setDiscretization(std::string d) {
           self->discretization() = parseDiscretization(d);
       }
-      
+
       void setIrConfigs(std::vector<ext::shared_ptr<IrModelData>> i) {
           self->irConfigs() = i;
       }
-      
+
       void setFxConfigs(std::vector<ext::shared_ptr<FxData>> i) {
           self->fxConfigs() = i;
       }
@@ -298,7 +298,7 @@ public:
 
       void setSalvagingAlgorithm(QuantLib::SalvagingAlgorithm::Type alg) {
           self->getSalvagingAlgorithm() = alg;
-      } 
+      }
     }
 
 };

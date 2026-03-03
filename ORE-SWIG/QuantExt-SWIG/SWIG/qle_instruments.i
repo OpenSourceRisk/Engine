@@ -43,6 +43,14 @@ using QuantExt::Deposit;
 using QuantExt::DepositEngine;
 using QuantExt::VarianceSwap2;
 using QuantExt::GeneralisedReplicatingVarianceSwapEngine;
+using QuantExt::MultiLegOption;
+using QuantExt::BondTRS;
+using QuantExt::GenericSwaption;
+using QuantExt::RiskParticipationAgreement;
+using QuantExt::ConvertibleBond2;
+using QLECallableBond = QuantExt::CallableBond;
+using QuantExt::BalanceGuaranteedSwap;
+using QuantExt::Ascot;
 %}
 
 
@@ -240,5 +248,101 @@ public:
                                              const VarSwapSettings settings = VarSwapSettings(),
                                              const bool staticTodaysSpot = true);
  };
+
+%shared_ptr(MultiLegOption)
+class MultiLegOption : public Instrument {
+  public:
+    MultiLegOption(const std::vector<Leg>& legs,
+                   const std::vector<bool>& payer,
+                   const std::vector<Currency>& currency,
+                   const QuantLib::ext::shared_ptr<Exercise>& exercise = QuantLib::ext::shared_ptr<Exercise>(),
+                   const Settlement::Type settlementType = Settlement::Physical,
+                   Settlement::Method settlementMethod = Settlement::PhysicalOTC,
+                   const std::vector<Date>& settlementDates = std::vector<Date>(),
+                   const bool midCouponExericse = false,
+                   const Period& noticePeriod = 0 * Days,
+                   const Calendar& noticeCalendar = NullCalendar(),
+                   const BusinessDayConvention noticeConvention = Following);
+    const std::vector<Leg>& legs() const;
+    const std::vector<bool>& payer() const;
+    const std::vector<Currency>& currency() const;
+    const QuantLib::ext::shared_ptr<Exercise> exercise() const;
+    Real underlyingNpv() const;
+};
+
+%shared_ptr(BondTRS)
+class BondTRS : public Instrument {
+  public:
+    BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex,
+            const Real bondNotional,
+            const Real initialPrice,
+            const std::vector<Leg>& fundingLeg,
+            const bool payTotalReturnLeg,
+            const std::vector<Date>& valuationDates,
+            const std::vector<Date>& paymentDates,
+            const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+            bool payBondCashFlowsImmediately = false,
+            const Currency& fundingCurrency = Currency(),
+            const Currency& bondCurrency = Currency(),
+            const bool applyFXIndexFixingDays = false,
+            const Period& payLagPeriod = Period(),
+            const Calendar& paymentCalendar = WeekendsOnly());
+
+    Real bondNotional() const;
+    Real initialPrice() const;
+    bool payTotalReturnLeg() const;
+    const std::vector<Date>& valuationDates() const;
+    const std::vector<Date>& paymentDates() const;
+};
+
+%shared_ptr(GenericSwaption)
+class GenericSwaption : public Option {
+  public:
+    GenericSwaption(const ext::shared_ptr<QuantLib::Swap>& swap,
+                    const ext::shared_ptr<Exercise>& exercise,
+                    QuantLib::Settlement::Type delivery = QuantLib::Settlement::Physical,
+                    QuantLib::Settlement::Method settlementMethod = QuantLib::Settlement::PhysicalOTC);
+
+    Settlement::Type settlementType() const;
+    Settlement::Method settlementMethod() const;
+    const ext::shared_ptr<QuantLib::Swap>& underlyingSwap() const;
+    Real underlyingValue() const;
+};
+
+%shared_ptr(RiskParticipationAgreement)
+class RiskParticipationAgreement : public Instrument {
+  public:
+    RiskParticipationAgreement(const std::vector<Leg>& underlying,
+                               const std::vector<bool>& underlyingPayer,
+                               const std::vector<std::string>& underlyingCcys,
+                               const std::vector<Leg>& protectionFee,
+                               const bool protectionFeePayer,
+                               const std::vector<std::string>& protectionFeeCcys,
+                               const Real participationRate,
+                               const Date& protectionStart,
+                               const Date& protectionEnd,
+                               const bool settlesAccrual,
+                               const Real fixedRecoveryRate = Null<Real>(),
+                               const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise = nullptr,
+                               const bool exerciseIsLong = false,
+                               const std::vector<QuantLib::ext::shared_ptr<CashFlow>>& premium = std::vector<QuantLib::ext::shared_ptr<CashFlow>>(),
+                               const bool nakedOption = false);
+};
+
+%shared_ptr(ConvertibleBond2)
+class ConvertibleBond2 : public Bond {
+};
+
+%shared_ptr(QLECallableBond)
+class QLECallableBond : public Bond {
+};
+
+%shared_ptr(BalanceGuaranteedSwap)
+class BalanceGuaranteedSwap : public Swap {
+};
+
+%shared_ptr(Ascot)
+class Ascot : public Instrument {
+};
 
 #endif
