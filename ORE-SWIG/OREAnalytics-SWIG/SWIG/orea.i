@@ -58,5 +58,9 @@
 %include orea_cube.i
 %include orea_scenariosimmarketparameters.i
 %include orea_scenario.i
+%include orea_simulation.i
+%include orea_scenario_ext.i
+%include orea_engine.i
+%include orea_aggregation.i
 
 #endif
