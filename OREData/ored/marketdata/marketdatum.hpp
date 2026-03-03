@@ -739,7 +739,7 @@ public:
     //! \name Inspectors
     //@{
     
-    const boost::variant<Date, Period>& term() const { return term_; }
+    const boost::variant<Period, Date>& term() const { return term_; }
     //const Period& term() const { return term_; }
     const string& seniority() const { return seniority_; }
     const string& ccy() const { return ccy_; }

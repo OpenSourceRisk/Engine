@@ -452,6 +452,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // CDS/[CONV_]CREDIT_SPREAD/Name/Seniority/ccy/doc/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/term
         // CDS/PRICE/Name/Seniority/ccy/term/runningSpread
+        // CDS/PRICE/Name/Seniority/ccy/expiryDate/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/doc/term
         // CDS/PRICE/Name/Seniority/ccy/doc/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/expiryDate/runningSpread

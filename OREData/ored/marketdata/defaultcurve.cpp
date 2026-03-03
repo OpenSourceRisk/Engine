@@ -415,7 +415,6 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                      cdsConv->rule());
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
-                        cdsQuoteDate(quote.term) <= asof + 1 * Days ||
                     maturity <= asof + 1 * Days) {
                     //auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                     WLOG("DefaultCurve:: SKIP cds with term "
@@ -426,9 +425,11 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     continue;
                 };
                 helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
-                    quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
-                    cdsConv->settlesAccrual(), ppt, config.startDate(), cdsConv->lastPeriodDayCounter()));
+                                      quote.value, maturity, cdsConv->settlementDays(), cdsConv->calendar(),
+                                      cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(),
+                                      cdsConv->dayCounter(), recoveryRate_, discountCurve,
+                                      CreditDefaultSwap::PricingModel::Midpoint, cdsConv->settlesAccrual(), ppt,
+                                      config.startDate(), cdsConv->lastPeriodDayCounter()));
                 runningSpread = config.runningSpread();
                 helperQuoteTerms[helpers.back()->latestDate()] = cdsQuoteTenor(quote.term);
             } catch (exception& e) {
