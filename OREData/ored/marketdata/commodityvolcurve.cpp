@@ -735,8 +735,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         if (vssc.strikeInterpolation() != "Cubic" && vssc.strikeInterpolation() != "Linear")
             WLOG("Allowable values for StrikeInterpolation are Linear and Cubic. Got "
                  << vssc.strikeInterpolation() << ". Use Linear as default value");
-        if (vssc.timeInterpolation() != "Cubic" && vssc.timeInterpolation() != "Linear")
-            WLOG("Allowable values for TimeInterpolation are Linear and Cubic. Got "
+        if (vssc.timeInterpolation() != "Cubic" && vssc.timeInterpolation() != "Linear" && vssc.timeInterpolation() != "BackwardFlat")
+            WLOG("Allowable values for TimeInterpolation are Linear, Cubic and BackwardFlat. Got "
                  << vssc.timeInterpolation() << ". Use Linear as default value");
         if (vssc.strikeInterpolation() == "Cubic") {
             if (vssc.timeInterpolation() == "Cubic") {
@@ -744,6 +744,11 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
                     BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::CubicSpline>>(
                     asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                     timeExtrapolation, volType, displacement);
+            }else if (vssc.timeInterpolation() == "BackwardFlat"){
+                volatility_ =
+                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantExt::BackwardFlat>>(
+                        asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                        timeExtrapolation, volType, displacement);
             } else {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantExt::CubicSpline, QuantLib::Linear>>(
@@ -754,6 +759,11 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
             if (vssc.timeInterpolation() == "Cubic") {
                 volatility_ =
                     QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantExt::CubicSpline>>(
+                        asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
+                        timeExtrapolation, volType, displacement);
+            }else if (vssc.timeInterpolation() == "BackwardFlat"){
+                volatility_ =
+                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse<QuantLib::Linear, QuantExt::BackwardFlat>>(
                         asof, calendar_, expiries, strikes, vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                         timeExtrapolation, volType, displacement);
             } else {
