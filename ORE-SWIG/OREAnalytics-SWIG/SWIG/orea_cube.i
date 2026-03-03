@@ -28,7 +28,12 @@ using ore::analytics::JointNPVCube;
 using ore::analytics::InMemoryCubeOpt;
 using ore::analytics::AggregationScenarioData;
 using ore::analytics::AggregationScenarioDataType;
+using ore::analytics::SensitivityCube;
+using ore::analytics::CubeWriter;
+using ore::analytics::CubeCsvReader;
 %}
+
+%template(StringStringMap) std::map<std::string, std::string>;
 
 %shared_ptr(NPVCube)
 class NPVCube {
@@ -54,6 +59,29 @@ class NPVCube {
     virtual Real get(Size id, Size date, Size sample, Size depth = 0) const = 0;
     //! Get a value from the cube using trade id and date
     virtual Real get(const std::string& id, const QuantLib::Date& date, Size sample, Size depth = 0) const;
+};
+
+%shared_ptr(SensitivityCube)
+%nodefaultctor SensitivityCube;
+class SensitivityCube {
+    public:
+        bool hasTrade(const std::string& tradeId) const;
+        QuantLib::Real npv(const std::string& tradeId) const;
+};
+
+%shared_ptr(CubeWriter)
+class CubeWriter {
+    public:
+        CubeWriter(const std::string& filename);
+        const std::string& filename();
+};
+
+%rename(CubeReader) CubeCsvReader;
+%shared_ptr(CubeCsvReader)
+class CubeCsvReader {
+    public:
+        CubeCsvReader(const std::string& filename, const bool useDoublePrecision = false);
+        const std::string& filename() const;
 };
 
 enum class AggregationScenarioDataType : unsigned int { IndexFixing = 0, FXSpot = 1, Numeraire = 2, Generic = 3 };

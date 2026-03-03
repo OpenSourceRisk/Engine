@@ -62,5 +62,7 @@
 %include orea_scenario_ext.i
 %include orea_engine.i
 %include orea_aggregation.i
+%include orea_simm.i
+%include orea_analytics.i
 
 #endif

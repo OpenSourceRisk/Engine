@@ -54,6 +54,7 @@ using ore::analytics::SimmCalculator;
 
 %nodefaultctor SimmConfiguration;
 %nodefaultctor SimmBucketMapper;
+%nodefaultctor SimmConfigurationBase;
 
 %template(RegulationSet) std::set<CrifRecord::Regulation>;
 
@@ -199,6 +200,13 @@ class SimmConfiguration {
     enum class MarginType { Delta, Vega, Curvature, BaseCorr, AdditionalIM, All };
 };
 
+class SimmConfigurationBase : public SimmConfiguration {
+  public:
+    const std::string& name() const;
+    const std::string& version() const;
+    bool hasBuckets(const CrifRecord::RiskType& rt) const;
+};
+
 class SimmBucketMapper {
   public:
     virtual std::string bucket(const CrifRecord::RiskType& riskType, const std::string& qualifier) const = 0;
@@ -259,38 +267,29 @@ class SimmResults {
 %nodefaultctor CrifLoader;
 class CrifLoader {
   public:
+    virtual ~CrifLoader();
     virtual QuantLib::ext::shared_ptr<Crif> loadCrif();
     const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration();
 };
 
 class CsvFileCrifLoader : public CrifLoader {
   public:
-    %extend {
-        CsvFileCrifLoader(const std::string& filename,
-                          const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration) {
-            return new CsvFileCrifLoader(filename, configuration);
-        }
-        CsvFileCrifLoader(const std::string& filename,
-                          const QuantLib::ext::shared_ptr<SimmConfiguration_ISDA_V2_6>& configuration) {
-            return new CsvFileCrifLoader(filename,
-                                         QuantLib::ext::static_pointer_cast<SimmConfiguration>(configuration));
-        }
-    }
+  CsvFileCrifLoader(const std::string& filename,
+            const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+            const std::string& nullString = "#N/A");
 };
 
 class CsvBufferCrifLoader : public CrifLoader {
   public:
-    %extend {
-        CsvBufferCrifLoader(const std::string& buffer,
-                            const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration) {
-            return new CsvBufferCrifLoader(buffer, configuration);
-        }
-        CsvBufferCrifLoader(const std::string& buffer,
-                            const QuantLib::ext::shared_ptr<SimmConfiguration_ISDA_V2_6>& configuration) {
-            return new CsvBufferCrifLoader(buffer,
-                                           QuantLib::ext::static_pointer_cast<SimmConfiguration>(configuration));
-        }
-    }
+  CsvBufferCrifLoader(const std::string& buffer,
+            const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
+            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+            bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+            char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+            const std::string& nullString = "#N/A");
 };
 
 %nodefaultctor SimmCalculator;
@@ -313,13 +312,6 @@ class SimmCalculator {
         }
     }
 
-    const SimmResults& simmResults(const SimmConfiguration::SimmSide& side,
-                                   const ore::data::NettingSetDetails& nettingSetDetails,
-                                   const std::set<CrifRecord::Regulation>& regulation) const;
-    const std::map<SimmConfiguration::SimmSide,
-                   std::map<ore::data::NettingSetDetails,
-                            std::pair<CrifRecord::Regulation, SimmResults>>>&
-    finalSimmResults() const;
     const std::string& calculationCurrency(const SimmConfiguration::SimmSide& side) const;
     const std::string& resultCurrency() const;
 };

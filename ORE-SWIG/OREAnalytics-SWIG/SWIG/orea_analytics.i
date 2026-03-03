@@ -30,6 +30,7 @@ using ore::analytics::SimmAnalytic;
 using ore::analytics::SaCcrAnalytic;
 %}
 
+%shared_ptr(AnalyticFactory)
 %shared_ptr(PricingAnalytic)
 %shared_ptr(XvaAnalytic)
 %shared_ptr(SimmAnalytic)
