@@ -3,10 +3,11 @@
 import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
-                              # Legacy Examples
-cases = [ "run_simm.py",      # 44
-	  "run_dim.py",       # 13
-	  "run_dim2.py"       
+                                             # Legacy Examples
+cases = [ "run_simm.py",                     # 44
+	  "run_dim.py",                      # 13
+	  "run_dim2.py",
+          "run_dim2_regregressiontest.py"    # test dyn simm against expected output
 ]
 
 # Get max parallel from environment variable, default to 1

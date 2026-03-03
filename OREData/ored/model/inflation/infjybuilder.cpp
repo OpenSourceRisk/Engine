@@ -277,9 +277,9 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     QuantLib::ext::shared_ptr<QuantExt::CPICapFloorEngine> engine;
     bool isLogNormalVol = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(cpiVolatility_.currentLink());
     if (isLogNormalVol) {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, cpiVolatility_, true);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, cpiVolatility_);
     } else {
-        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, cpiVolatility_, true);
+        engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(rateCurve_, cpiVolatility_);
     }
     // CPI cap floor calibration instrument details. Assumed to equal those from the index and market structures.
     // Some of these should possibly come from conventions.

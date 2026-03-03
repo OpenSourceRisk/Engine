@@ -87,11 +87,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<bool>(amcIndividualTrainingInput_, "xsimulationva", "amcIndividualTrainingInput", false, parseBool);
     inputs->loadParameter<bool>(amcIndividualTrainingOutput_, "simulation", "amcIndividualTrainingOutput", false, parseBool);
 
-    string scenarioFile;
-    inputs->loadParameter<string>(scenarioFile, "simulation", "scenarioFile", false);
-    if (!scenarioFile.empty())
-        scenarioReader_ = loadScenarioReader(scenarioFile, inputs->setupVariables().inputPath_);
-
+    scenarioReader_ = inputs->loadScenarioReader("simulation", "scenarioFile");
     inputs->loadParameterXML<EngineData>(simulationPricingEngine_, "simulation", "pricingEnginesFile");
     if (!simulationPricingEngine_)
         simulationPricingEngine_ = inputs->setupVariables().pricingEngine_;
@@ -107,11 +103,6 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     if (!crossAssetModelData_)
         // load default if not provided
         inputs->loadParameterXML<CrossAssetModelData>(crossAssetModelData_, "simulation", "simulationConfigFile");
-    //string testXml =
-    //    "<Simulation><Parameters><Discretization>"
-    //    "Exact</Discretization><Grid>81,3M</Grid><Calendar>EUR</Calendar><Sequence>SobolBrownianBridge</Sequence>"
-    //    "<Scenario>Simple</Scenario><Seed>42</Seed><Samples>1000</Samples></Parameters></Simulation>";
-    //inputs->setScenarioGeneratorData(testXml);
     inputs->loadParameterXML<ScenarioGeneratorData>(scenarioGeneratorData_, "simulation", "scenarioGeneratorData");
     if (!scenarioGeneratorData_) {
         LOG("ScenarioGenerator data not found")

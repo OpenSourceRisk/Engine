@@ -65,6 +65,7 @@ class StressTestScenarioData;
 class NPVCube;
 class SimmCalibrationData;
 class SimmConfiguration;
+class SensitivityFileStream;
 
 struct SetupVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
@@ -335,17 +336,26 @@ public:
 
     virtual QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& analytic,
                                                                          const std::string& param,
-                                                                         const Date& startDate, const Date& endDate);
+                                                                         const Date& startDate = Date(),
+                                                                         const Date& endDate = Date());
     QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& analytic,
-                                                                         const std::vector<std::string>& params,
-                                                                         const Date& startDate, const Date& endDate);
+                                                                 const std::vector<std::string>& params,
+                                                                 const Date& startDate = Date(),
+                                                                 const Date& endDate = Date());
     QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::vector<std::string>& analytics,
-                                                                         const std::string& param,
-                                                                         const Date& startDate, const Date& endDate);
+                                                                 const std::string& param,
+                                                                 const Date& startDate = Date(),
+                                                                 const Date& endDate = Date());
     QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::vector<std::string>& analytics,
-                                                                         const std::vector<std::string>& params,
-                                                                         const Date& startDate, const Date& endDate);
+                                                                 const std::vector<std::string>& params,
+                                                                 const Date& startDate = Date(),
+                                                                 const Date& endDate = Date());
 
+    virtual QuantLib::ext::shared_ptr<SensitivityStream> loadSensitivityStream(const std::string& analytic, const std::string& param);
+    QuantLib::ext::shared_ptr<SensitivityStream> loadSensitivityStream(const std::string& analytic, const std::vector<std::string>& params);
+    QuantLib::ext::shared_ptr<SensitivityStream> loadSensitivityStream(const std::vector<std::string>& analytics, const std::string& param);
+    QuantLib::ext::shared_ptr<SensitivityStream> loadSensitivityStream(const std::vector<std::string>& analytics, const std::vector<std::string>& params);
+       
     //! virtual function to load a parameter string for the given (analytic, param) pair
     virtual std::string loadParameterString(const std::string& analytic, const std::string& param, bool mandatory);
         
@@ -446,11 +456,17 @@ public:
     void setMporDays(Size s) {
         mporDays_ = s;
         parameters_.set("pnl", "mporDays", s);
+        parameters_.set("var", "mporDays", s);
     }
-    void setMporOverlappingPeriods(bool b) { mporOverlappingPeriods_ = b; }
+    void setMporOverlappingPeriods(bool b) {
+        mporOverlappingPeriods_ = b;
+        parameters_.set("pnl", "mporOverlappingPeriods", b);
+        parameters_.set("var", "mporOverlappingPeriods", b);
+    }
     void setMporDate(const QuantLib::Date& d) { 
         mporDate_ = d;
         parameters_.set("pnl", "mporDate", d);
+        parameters_.set("var", "mporDate", d);
     }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
@@ -523,26 +539,28 @@ public:
     void setStressPrecision(const Size value) { stressPrecision_ = value; };
     void setStressGenerateCashflows(const bool b) { stressGenerateCashflows_ = b; }
     // Setters for VaR
-    void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
-    void setVarQuantiles(const std::string& s); // parse to vector<Real>
-    void setVarBreakDown(bool b) { varBreakDown_ = b; }
-    void setTradePnl(bool b) { tradePnL_ = b; }
-    void setRiskFactorBreakdown(bool b) { riskFactorBreakdown_ = b; }
-    void setIncludeExpectedShortfall(bool b) { includeExpectedShortfall_ = b; }
-    void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
-    void setVarMethod(const std::string& s) { varMethod_ = s; }
-    void setMcVarSamples(Size s) { mcVarSamples_ = s; }
-    void setMcVarSeed(long l) { mcVarSeed_ = l; }
-    void setCovarianceData(ore::data::CSVReader& reader);  
-    void setCovarianceDataFromFile(const std::string& fileName);
-    void setCovarianceDataFromBuffer(const std::string& xml);
-    void setSensitivityStreamFromFile(const std::string& fileName);
-    void setBenchmarkVarPeriod(const std::string& period);
+    void setVarQuantiles(const std::string& s) { parameters_.set("var", "quantiles", s); }
+    void setVarBreakDown(bool b) { parameters_.set("var", "breakdown", b); }
+    void setPortfolioFilter(const std::string& s) { parameters_.set("var", "portfolioFilter", s); }
+    void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { parameters_.set("parametricVar", "SalvagingAlgorithm", vsa); }
+    void setVarMethod(const std::string& s) { parameters_.set("parametricVar", "method", s); }
+    void setMcVarSamples(Size s) { parameters_.set("parametricVar", "mcSamples", s); }
+    void setMcVarSeed(long l) { parameters_.set("parametricVar", "mcSeed", l); }
+    void setCovarianceData(ore::data::CSVReader& reader) { parameters_.set("parametricVar", "covarianceInputFile", reader); }
+    void setCovarianceDataFromBuffer(const std::string& xml) { parameters_.set("parametricVar", "covarianceInputFile", xml); }
+    void setSensitivityStream(const std::string& s) { parameters_.set("var", "sensitivityInputFile", s); }
+    void setLookbackPeriod(const std::string& s) { parameters_.set("var", "lookbackPeriod", s); }
+    void setBenchmarkVarPeriod(const std::string& period) { 
+        parameters_.set("var", "lookbackPeriod", period);
+        benchmarkVarPeriod_ = period;
+    }
     void setScenarioReader(const std::string& fileName);
-    void setSensitivityStreamFromBuffer(const std::string& buffer);
-    void setHistVarSimMarketParams(const std::string& xml);
-    void setHistVarSimMarketParamsFromFile(const std::string& fileName);
-    void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
+    void setHistVarSimMarketParams(const std::string& s) { parameters_.set("historicalSimulationVar", "simulationConfigFile", s); }
+    void setHistVarSimMarketParamsFromFile(const std::string& s) { parameters_.set("historicalSimulationVar", "simulationConfigFile", s); }
+    void setOutputHistoricalScenarios(const bool b) { parameters_.set("var", "outputHistoricalScenarios", b); }
+    void setTradePnl(bool b) { parameters_.set("historicalSimulationVar", "tradePnl", b); }
+    void setRiskFactorBreakdown(bool b) { parameters_.set("historicalSimulationVar", "riskFactorBreakdown", b); }
+    void setIncludeExpectedShortfall(bool b) { parameters_.set("historicalSimulationVar", "includeExpectedShortfall", b); }
 
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
@@ -986,27 +1004,10 @@ public:
     double stressAccurary() const { return stressAccurary_; };
     Size stressPrecision() const { return stressPrecision_; };
     bool stressGenerateCashflows() const { return stressGenerateCashflows_; }
-    
-    /*****************
-     * Getters for VaR
-     *****************/
-    SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
-    const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
-    bool varBreakDown() const { return varBreakDown_; }
-    bool tradePnl() const { return tradePnL_; }
-    bool riskFactorBreakdown() const { return riskFactorBreakdown_; }
-    bool includeExpectedShortfall() const { return includeExpectedShortfall_; }
-    const std::string& portfolioFilter() const { return portfolioFilter_; }
-    const std::string& varMethod() const { return varMethod_; }
-    Size mcVarSamples() const { return mcVarSamples_; }
-    long mcVarSeed() const { return mcVarSeed_; }
-    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() const { return covarianceData_; }
-    const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivityStream() const { return sensitivityStream_; }
-    std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
-    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader() const { return scenarioReader_;};
-    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
-    bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
 
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader() const { return scenarioReader_;};
+    string benchmarkVarPeriod() const { return benchmarkVarPeriod_; };
+    bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
     QuantLib::Size reportBufferSize() const { return setupVariables_.reportBufferSize_; }
     
     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const {
@@ -1270,26 +1271,8 @@ protected:
     bool xvaStressWriteCubes_ = false;
     bool stressGenerateCashflows_ = false;
 
-    /*****************
-     * VAR analytics
-     *****************/
-    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
-    std::vector<Real> varQuantiles_;
-    bool varBreakDown_ = false;
-    bool tradePnL_ = false;
-    bool riskFactorBreakdown_ = false;
-    bool includeExpectedShortfall_ = false;
-    std::string portfolioFilter_;
-    // Delta, DeltaGammaNormal, MonteCarlo, Cornish-Fisher, Saddlepoint 
-    std::string varMethod_ = "DeltaGammaNormal";
-    Size mcVarSamples_ = 1000000;
-    long mcVarSeed_ = 42;
-    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
-    QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
-    std::string benchmarkVarPeriod_;
     QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
-    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
-    std::string baseScenarioLoc_;
+    std::string benchmarkVarPeriod_;
     bool outputHistoricalScenarios_ = false;
 
     /*************

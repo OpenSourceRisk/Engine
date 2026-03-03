@@ -33,6 +33,10 @@ using namespace std::filesystem;
 namespace ore {
 namespace analytics {
 
+void StressTestVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) {
+    scenarioReader_ = inputs->loadScenarioReader("stress", "scenarioFile");
+}
+
 void StressTestAnalyticImpl::setUpConfigurations() {
     const auto stressData =  inputs_->stressScenarioData();
     analytic()->configurations().simulationConfigRequired = true;
@@ -48,7 +52,7 @@ void StressTestAnalyticImpl::setUpConfigurations() {
 void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
     LOG("StressTestAnalytic::runAnalytic called");
-
+    auto stressVars = ext::dynamic_pointer_cast<StressTestVariables>(inputVariables_);
     Settings::instance().evaluationDate() = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());
     QL_REQUIRE(inputs_->portfolio(), "StressTestAnalytic::run: No portfolio loaded.");
@@ -101,9 +105,9 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     analytic()->addReport(label(), "stress_scenarios", scenarioReport);
     
-    if (inputs_->scenarioReader()) {
+    if (stressVars->scenarioReader_) {
         runStressTest(analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                      analytic()->configurations().simMarketParams, inputs_->scenarioReader(), report, cfReport,
+                      analytic()->configurations().simMarketParams, stressVars->scenarioReader_, report, cfReport,
                       inputs_->stressThreshold(), inputs_->stressPrecision(), inputs_->includePastCashflows(),
                       *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
                       inputs_->refDataManager(), inputs_->iborFallbackConfig(), inputs_->continueOnError(),

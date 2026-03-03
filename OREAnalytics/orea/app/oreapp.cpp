@@ -1015,154 +1015,16 @@ void OREAppInputParameters::loadParameters() {
      ********************/
 
     tmp = params_->getString("parametricVar", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("PARAMETRIC_VAR");
-
-        tmp = params_->getString("parametricVar", "SalvagingAlgorithm", false);
-        if (tmp != "")
-            setVarSalvagingAlgorithm(parseSalvagingAlgorithmType(tmp));
-
-        tmp = params_->getString("parametricVar", "quantiles", false);
-        if (tmp != "")
-            setVarQuantiles(tmp);
-
-        tmp = params_->getString("parametricVar", "breakdown", false);
-        if (tmp != "")
-            setVarBreakDown(parseBool(tmp));
-
-        tmp = params_->getString("parametricVar", "portfolioFilter", false);
-        if (tmp != "")
-            setPortfolioFilter(tmp);
-
-        tmp = params_->getString("parametricVar", "method", false);
-        if (tmp != "")
-            setVarMethod(tmp);
-
-        tmp = params_->getString("parametricVar", "mcSamples", false);
-        if (tmp != "")
-            setMcVarSamples(parseInteger(tmp));
-
-        tmp = params_->getString("parametricVar", "mcSeed", false);
-        if (tmp != "")
-            setMcVarSeed(parseInteger(tmp));
-
-        tmp = params_->getString("parametricVar", "mporDays", false);
-        if (tmp != "")
-            setMporDays(static_cast<Size>(parseInteger(tmp)));
-
-        tmp = params_->getString("parametricVar", "mporCalendar", false);
-        if (tmp != "")
-            setMporCalendar(tmp);
-
-        tmp = params_->getString("parametricVar", "mporOverlappingPeriods", false);
-        if (tmp != "")
-            setMporOverlappingPeriods(parseBool(tmp));
-
-        tmp = params_->getString("parametricVar", "covarianceInputFile", false);
-        if (tmp != ""){
-            std::string covFile = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load Covariance Data from file " << covFile);
-            setCovarianceDataFromFile(covFile);
-        }
-
-        tmp = params_->getString("parametricVar", "historicalPeriod", false);
-        if (tmp != "")
-            setBenchmarkVarPeriod(tmp);
-
-        tmp = params_->getString("parametricVar", "sensitivityConfigFile", false);
-        if (tmp != "") {
-            string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Load sensitivity scenario data from file" << file);
-            setSensiScenarioDataFromFile(file);
-        }
-
-        tmp = params_->getString("parametricVar", "simulationConfigFile", false);
-        if (tmp != "") {
-            string file = (setupVariables_.inputPath_ / tmp).generic_string();
-            LOG("Loading sensitivity scenario sim market parameters from file" << file);
-            setSensiSimMarketParamsFromFile(file);
-        }
-
-        tmp = params_->getString("parametricVar", "scenarioFile", false);
-        if (tmp != "") {
-            std::string scenarioFile = (setupVariables_.inputPath_ / tmp).generic_string();
-            setScenarioReader(scenarioFile);
-        }
-
-        tmp = params_->getString("parametricVar", "sensitivityInputFile", false);
-        QL_REQUIRE(tmp != "", "sensitivityInputFile not provided");
-        std::string sensiFile = (setupVariables_.inputPath_ / tmp).generic_string();
-        LOG("Get sensitivity data from file " << sensiFile);
-        setSensitivityStreamFromFile(sensiFile);
-
-        tmp = params_->getString("parametricVar", "outputHistoricalScenarios", false);
-        if (tmp != "")
-            setOutputHistoricalScenarios(parseBool(tmp));
-    }
 
     /********************
      * VaR - Historical Simulation
      ********************/
 
     tmp = params_->getString("historicalSimulationVar", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("HISTSIM_VAR");
-
-        tmp = params_->getString("historicalSimulationVar", "historicalScenarioFile", false);
-        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
-        std::string scenarioFile = (setupVariables_.inputPath_ / tmp).generic_string();
-        setScenarioReader(scenarioFile);
-
-        tmp = params_->getString("historicalSimulationVar", "simulationConfigFile", false);
-        QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
-        string simulationConfigFile = (setupVariables_.inputPath_ / tmp).generic_string();
-        setHistVarSimMarketParamsFromFile(simulationConfigFile);
-
-        tmp = params_->getString("historicalSimulationVar", "historicalPeriod", false);
-        if (tmp != "")
-            setBenchmarkVarPeriod(tmp);
-
-        tmp = params_->getString("historicalSimulationVar", "mporDays", false);
-        if (tmp != "")
-            setMporDays(static_cast<Size>(parseInteger(tmp)));
-
-        tmp = params_->getString("historicalSimulationVar", "mporCalendar", false);
-        if (tmp != "")
-            setMporCalendar(tmp);
-
-        tmp = params_->getString("historicalSimulationVar", "mporOverlappingPeriods", false);
-        if (tmp != "")
-            setMporOverlappingPeriods(parseBool(tmp));
-
-        tmp = params_->getString("historicalSimulationVar", "quantiles", false);
-        if (tmp != "")
-            setVarQuantiles(tmp);
-
-        tmp = params_->getString("historicalSimulationVar", "includeExpectedShortfall", false);
-        if (tmp != "")
-            setIncludeExpectedShortfall(parseBool(tmp));
-
-        tmp = params_->getString("historicalSimulationVar", "breakdown", false);
-        if (tmp != "")
-            setVarBreakDown(parseBool(tmp));
-
-        tmp = params_->getString("historicalSimulationVar", "tradePnl", false);
-            if (tmp != "")
-                setTradePnl(parseBool(tmp));
-
-        tmp = params_->getString("historicalSimulationVar", "portfolioFilter", false);
-        if (tmp != "")
-            setPortfolioFilter(tmp);
-
-        tmp = params_->getString("historicalSimulationVar", "outputHistoricalScenarios", false);
-        if (tmp != "")
-            setOutputHistoricalScenarios(parseBool(tmp));
-        
-        tmp = params_->getString("historicalSimulationVar", "riskFactorBreakdown", false);
-        if (tmp != "")
-            setRiskFactorBreakdown(parseBool(tmp));
-        
-    }
 
     /*************
      * P&L
@@ -1209,7 +1071,7 @@ void OREAppInputParameters::loadParameters() {
             string file = (setupVariables_.inputPath_ / tmp).generic_string();
             setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
         }
-	else {
+	    else {
             // If an external CRIF is not provided we need to generate CRIF
             // using the CRIF analytic settings below
             tmp = params_->getString("crif", "marketConfigFile", false);

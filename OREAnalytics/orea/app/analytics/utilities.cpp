@@ -31,16 +31,6 @@ std::set<std::string> parseListOfValuesToSet(const string& s) {
     return std::set<std::string>(v.begin(), v.end());
 }
 
-QuantLib::ext::shared_ptr<ScenarioReader> loadScenarioReader(const std::string& s, const std::filesystem::path& inputPath) {
-    std::filesystem::path baseScenarioPath(inputPath / s);
-    if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
-        return ext::make_shared<ScenarioFileReader>(baseScenarioPath.string(), ext::make_shared<SimpleScenarioFactory>(false));
-    } else {
-        // If the file does not exist or fails, assume it is a scenario string
-        return ext::make_shared<ScenarioBufferReader>(s, ext::make_shared<SimpleScenarioFactory>(true));
-    }
-}
-
 std::map<std::string, TimeSeries<Real>> loadDeterministicInitialMarginFromFile(const std::string& fileName) {
     std::map<std::string, TimeSeries<Real>> result;
     // Minimum requirement: The file has a header line and contains at least
@@ -78,7 +68,7 @@ std::map<std::string, TimeSeries<Real>> loadDeterministicInitialMarginFromFile(c
 }
 
 std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> loadCorrelationDataFromFile(const std::string& fileName) {
-    ore::data::CSVFileReader reader(fileName, true);
+    ore::data::CSVFileReader reader(fileName, false);
     return loadCorrelationData(reader);
 }
 

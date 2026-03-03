@@ -431,12 +431,10 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
         if (isLogNormalVol) {
             engine = QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(),
-                config->useLastAvailableFixingDate());
+                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
         } else {
             engine = QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(
-                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>(),
-                config->useLastAvailableFixingDate());
+                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
         }
 
         try {
@@ -678,7 +676,7 @@ void InflationCapFloorVolCurve::setCalibrationInfo(
     calibrationInfo_->strikeCPI =
         std::vector<std::vector<Real>>(times.size(), std::vector<Real>(strikes.size(), 0.0));
     QuantLib::ext::shared_ptr<ZeroInflationIndex> index = getIndex(spec, config, inflationCurves);
-    auto lastKnownFixingDate = ZeroInflation::lastAvailableFixing(*index, cpiVolSurface_->referenceDate());
+    auto lastKnownFixingDate = index->zeroInflationTermStructure()->baseDate();
     auto baseCPI = ZeroInflation::cpiFixing(index, cpiVolSurface_->baseDate(), 0 * Days, cpiVolSurface_->indexIsInterpolated());
     for (Size i = 0; i < times.size(); ++i) {
         Real t = times[i];
@@ -691,13 +689,9 @@ void InflationCapFloorVolCurve::setCalibrationInfo(
                 Real strike = strikes[j];
                 Real vol = cpiVolSurface_->volatility(calibrationInfo_->optionObservationDates[i], strike, 0 * Days);
                 Real stddev;
-                if (config->useLastAvailableFixingDate()) {
-                    auto ttm = inflationYearFraction(cpiVolSurface_->frequency(), cpiVolSurface_->indexIsInterpolated(),
-                        cpiVolSurface_->dayCounter(), lastKnownFixingDate, calibrationInfo_->optionObservationDates[i]);
-                    stddev = std::sqrt(ttm * vol * vol);
-                } else {
-                    stddev = std::sqrt(cpiVolSurface_->totalVariance(calibrationInfo_->optionObservationDates[i], strike, 0 * Days));
-                }
+                auto ttm = inflationYearFraction(cpiVolSurface_->frequency(), cpiVolSurface_->indexIsInterpolated(),
+                    cpiVolSurface_->dayCounter(), lastKnownFixingDate, calibrationInfo_->optionObservationDates[i]);
+                stddev = std::sqrt(ttm * vol * vol);
 
                 strikeGrowths[i][j] = std::pow(1 + strike, ttm);
                 calibrationInfo_->strikeCPI[i][j] = strikeGrowths[i][j] * baseCPI;

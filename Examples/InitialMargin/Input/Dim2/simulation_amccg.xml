@@ -4,7 +4,7 @@
       <Discretization>Euler</Discretization>
       <!--<Grid>65,1M</Grid>-->
       <!--<Grid>135,2W</Grid>-->
-      <Grid>65,1M</Grid>
+      <Grid>122,1M</Grid>
       <!--<Grid>270,2W</Grid>-->
       <!--<Grid>1M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y</Grid>-->
       <TimeStepsPerYear>24</TimeStepsPerYear>
@@ -13,7 +13,7 @@
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>10000</Samples>
+      <Samples>1000</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
   </Parameters>

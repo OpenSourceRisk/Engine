@@ -34,8 +34,7 @@ namespace QuantExt {
 class CPICapFloorEngine : public QuantLib::CPICapFloor::engine {
 public:
     CPICapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                      const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
-                      const bool ttmFromLastAvailableFixing = false);
+                      const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface);
 
     virtual void calculate() const override;
 
@@ -47,15 +46,13 @@ protected:
     virtual double optionPriceImpl(QuantLib::Option::Type type, double forward, double strike, double stdDev, double discount) const = 0;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
-    bool ttmFromLastAvailableFixing_;
 };
 
 class CPIBlackCapFloorEngine : public CPICapFloorEngine {
 public:
     CPIBlackCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                           const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface,
-                           const bool ttmFromLastAvailableFixing = false)
-        : CPICapFloorEngine(discountCurve, surface, ttmFromLastAvailableFixing){};
+                           const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface)
+        : CPICapFloorEngine(discountCurve, surface){};
 
     virtual ~CPIBlackCapFloorEngine() = default;
 

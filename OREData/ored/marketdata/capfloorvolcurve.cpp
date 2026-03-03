@@ -1271,12 +1271,12 @@ vector<Date> CapFloorVolCurve::populateFixingDates(const QuantLib::Date& asof, C
         if (isOis) {
             Period effTenor =
                 config.optionletTenorInArrears() ? configTenors[i] : configTenors[i] + config.rateComputationPeriod();
-            Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, effTenor,
-                                           QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
-                                           config.rateComputationPeriod(), 0.04)
-                               .withTelescopicValueDates(true)
-                               .withSettlementDays(config.settleDays())
-                               .withRule(DateGeneration::Rule::Forward);
+            Leg dummyCap =
+                MakeOISCapFloor(CapFloor::Cap, effTenor, QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
+                                config.rateComputationPeriod(), 0.04)
+                    .withTelescopicValueDates(true)
+                    .withSettlementDays(config.onCapSettlementDays())
+                    .withRule(DateGeneration::Rule::Forward);
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
             fixingDates.push_back(std::max(asof + 1, lastCoupon->underlying()->fixingDates().front()));
