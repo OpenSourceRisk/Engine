@@ -263,8 +263,9 @@ private:
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureValuation_;
     std::vector<std::vector<std::vector<TradeExposure>>> tradeExposureCloseOut_;
 
-    /* Per trade vector of meta info (buildPartB()). vector size is guaranteed to be the same as for
-       tradeExposureValuation_, and tradeExposureCloseOut_ members */
+    /* Per trade vector of meta info (buildPartB()). outer vector size is guaranteed to be the same as for
+       tradeExposureValuation_, and tradeExposureCloseOut_ members, inner vector size is equal to components
+       per respective trade. */
     std::vector<std::vector<TradeExposureMetaInfo>> tradeExposureMetaInfo_;
 
     // per time step portfolio exposure as conditional expectation (buildPartC(), includes t=0)
