@@ -1,5 +1,3 @@
-# syntax = docker/dockerfile:1.2
-
 FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION}
 
 ARG WHEEL_ARCH
