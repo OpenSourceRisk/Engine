@@ -289,6 +289,8 @@ void XvaEngineCG::buildCgPartB() {
         tradeExposureCloseOut_.resize(portfolio_->trades().size(),
                                       std::vector<std::vector<TradeExposure>>(valuationDates_.size() + 1));
 
+    tradeExposureMetaInfo_.resize(portfolio_->trades().size());
+
     Size tradeIndex = 0;
     for (auto const& [id, trade] : portfolio_->trades()) {
 
@@ -322,24 +324,23 @@ void XvaEngineCG::buildCgPartB() {
             QL_REQUIRE(engine,
                        "XvaEngineCG: expected to get AmcCgPricingEngine for trade '" << id << "' (" << desc << ")");
             std::vector<TradeExposure> tradeExposure;
-            std::vector<TradeExposureMetaInfo> metaInfo;
+            TradeExposureMetaInfo metaInfo;
             try {
-                metaInfo.push_back(TradeExposureMetaInfo());
-                amcCgEngine->buildComputationGraph(false, &tradeExposure, &metaInfo.front());
+                amcCgEngine->buildComputationGraph(false, &tradeExposure, &metaInfo);
             } catch (const std::exception& e) {
                 QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
                                                                                       << "): " << e.what());
             }
             for (auto& t : tradeExposure)
                 t.multiplier = multiplier;
-            tradeExposureMetaInfo_.push_back(metaInfo);
+            tradeExposureMetaInfo_[tradeIndex].push_back(metaInfo);
             populateTradeExposure(tradeIndex, tradeExposureValuation_, tradeExposure);
             if (!closeOutDates_.empty()) {
                 if (!stickyCloseOutDates_.empty()) {
                     model_->useStickyCloseOutDates(true);
                     tradeExposure.clear();
                     try {
-                        amcCgEngine->buildComputationGraph(true, &tradeExposure, &metaInfo.front());
+                        amcCgEngine->buildComputationGraph(true, &tradeExposure, &metaInfo);
                     } catch (const std::exception& e) {
                         QL_FAIL("XvaEngineCG::buildCgPartB(): failed to build cg for trade '" << id << "' (" << desc
                                                                                               << "): " << e.what());
