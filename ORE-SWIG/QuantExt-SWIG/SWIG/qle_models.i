@@ -27,6 +27,7 @@
 
 %{
 using QuantExt::LinkableCalibratedModel;
+using QuantExt::ModelBuilder;
 using QuantExt::Parametrization;
 using QuantExt::IrModel;
 using QuantExt::FxBsParametrization;
@@ -50,6 +51,16 @@ using QuantLib::Array;
 
 %shared_ptr(CrossAssetStateProcess)
 class CrossAssetStateProcess;
+
+%shared_ptr(ModelBuilder)
+%nodefaultctor ModelBuilder;
+class ModelBuilder : public LazyObject {
+public:
+    virtual void recalibrate() const;
+    virtual void forceRecalculate();
+    virtual bool requiresRecalibration() const = 0;
+    virtual void newCalcWithoutRecalibration() const;
+};
 
 %shared_ptr(LinkableCalibratedModel)
 class LinkableCalibratedModel {

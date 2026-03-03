@@ -54,6 +54,7 @@
 %include ored_log.i
 %include ored_market.i
 %include ored_marketdatum.i
+%include ored_modelbuilders.i
 %include ored_parsers.i
 %include ored_portfolio.i
 %include ored_portfolio2.i
