@@ -40,11 +40,17 @@ public:
         const std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>>& discountCurves,
         const std::vector<QuantLib::Handle<QuantLib::Quote>>& fxQuotes,
         const std::vector<QuantLib::Currency>& currencies, const QuantLib::Currency& npvCurrency,
+        const QuantLib::Currency& notionalCurrency,
+        const std::map<std::string, QuantLib::Handle<QuantLib::Quote>>& notionalFxQuotes,
         QuantLib::ext::optional<bool> includeSettlementDateFlows = QuantLib::ext::nullopt,
         QuantLib::Date settlementDate = QuantLib::Date(), QuantLib::Date npvDate = QuantLib::Date(),
         const std::vector<QuantLib::Date>& spotFXSettleDateVec = std::vector<QuantLib::Date>());
 
     void calculate() const override;
+
+private:
+    QuantLib::Currency notionalCurrency_;
+    std::map<std::string, QuantLib::Handle<QuantLib::Quote>> notionalFxQuotes_;
 };
 
 } // namespace QuantExt

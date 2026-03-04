@@ -197,7 +197,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         swap = QuantLib::ext::make_shared<QuantExt::CurrencySwap>(legs_, legPayers_, currencies);
         auto xccyBuilder = QuantLib::ext::dynamic_pointer_cast<CrossCurrencyCommoditySwapEngineBuilder>(builder);
         QL_REQUIRE(xccyBuilder, "No builder found for CrossCurrencyCommoditySwap " << id());
-        engine = xccyBuilder->engine(currencies, npvCurrency);
+        engine = xccyBuilder->engine(currencies, npvCurrency, parseCurrencyWithMinors(notionalCurrency_));
     } else {
         swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommoditySwapEngineBuilder>(builder);
