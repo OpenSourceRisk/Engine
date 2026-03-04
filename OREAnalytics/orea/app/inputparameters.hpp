@@ -626,7 +626,7 @@ public:
     void setMeanReversionCalibration(bool b) { parameters_.set("calibration", "meanReversionCalibration", b); }
     void setForeignCurrencies(const std::string& s) { parameters_.set("calibration", "foreignCurrencies", s); }
     void setCurveTenors(const std::string& s) { parameters_.set("calibration", "curveTenors", s); }
-    void setScenarioInputFile(const std::string& fileName) { parameters_.set("calibration", "scenarioInputFile", s); }
+    void setScenarioInputFile(const std::string& fileName) { parameters_.set("calibration", "scenarioInputFile", fileName); }
     void setStartDate(const Date& d) { parameters_.set("calibration", "startDate", d); }
     void setEndDate(const Date& d) { parameters_.set("calibration", "endDate", d); }
     void setUseForwardOrZeroRate(const std::string& s) { parameters_.set("calibration", "useForwardOrZeroRate", s); }
