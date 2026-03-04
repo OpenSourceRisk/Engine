@@ -375,7 +375,7 @@ Date CreditDefaultSwapOption::addPremium(const QuantLib::ext::shared_ptr<EngineF
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
         string discountCurve = envelope().additionalField("discount_curve", false, std::string());
         return addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort, option_.premiumData(),
-                           indicatorLongShort, tradeCurrency, discountCurve, ef, marketConfig);
+                           -indicatorLongShort, tradeCurrency, discountCurve, ef, marketConfig);
 }
 
 }

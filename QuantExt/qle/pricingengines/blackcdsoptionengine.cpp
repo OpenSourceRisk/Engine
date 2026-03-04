@@ -127,7 +127,7 @@ void BlackCdsOptionEngine::calculate() const {
         Probability sp = probability_->survivalProbability(exerciseDate);
         results_.additionalResults["survivalProbabilityToExercise"] = sp;
 
-        Real nonKoPv = discTradeCollToExercise * (1.0 - sp) * (1.0 - recovery_);
+        Real nonKoPv = discTradeCollToExercise * (1.0 - sp) * (1.0 - recovery_) * cds.notional();
         results_.additionalResults["nonKnockoutPv"] = nonKoPv;
 
         results_.value += nonKoPv;
