@@ -80,6 +80,7 @@ public:
     Real fxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     RandomVariable barrierProbability(const std::string& index, const Date& obsdate1, const Date& obsdate2,
                                       const RandomVariable& barrier, const bool above) const override;
+    const std::vector<IndexInfo>& indices() const { return  indices_; }
     // provide default implementation for MC type models (taking a simple expectation)
     Real extractT0Result(const RandomVariable& value) const override;
     Type type() const override { return type_; }

@@ -22,11 +22,20 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
+struct BaCvaVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
+};
 
 class BaCvaAnalyticImpl : public Analytic::Impl {
 public:
@@ -34,7 +43,7 @@ public:
     static constexpr const char* saccrLookupKey = "SA_CCR";
 
     BaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<BaCvaVariables>()) {
         setLabel(LABEL);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

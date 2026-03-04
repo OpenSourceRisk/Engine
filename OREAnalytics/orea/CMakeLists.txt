@@ -43,6 +43,7 @@ app/analytics/sensitivitystressanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/smrcanalytic.cpp
 app/analytics/stresstestanalytic.cpp
+app/analytics/utilities.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
 app/analytics/xvaexplainanalytic.cpp
@@ -54,6 +55,7 @@ app/cleanupsingletons.cpp
 app/hwhistoricalcalibrationdataloader.cpp
 app/initbuilders.cpp
 app/inputparameters.cpp
+app/inputvariables.cpp
 app/marketcalibrationreport.cpp
 app/marketdatacsvloader.cpp
 app/marketdatainmemoryloader.cpp
@@ -257,6 +259,7 @@ app/analytics/sensitivitystressanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/smrcanalytic.hpp
 app/analytics/stresstestanalytic.hpp
+app/analytics/utilities.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
 app/analytics/xvaexplainanalytic.hpp
@@ -269,6 +272,7 @@ app/dummymarketdataloader.hpp
 app/hwhistoricalcalibrationdataloader.hpp
 app/initbuilders.hpp
 app/inputparameters.hpp
+app/inputvariables.hpp
 app/marketcalibrationreport.hpp
 app/marketdatabinaryloader.hpp
 app/marketdatacsvloader.hpp
@@ -445,29 +449,43 @@ simulation/fixingmanager.hpp
 simulation/simmarket.hpp
 version.hpp)
 
-writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
-target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
-target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+writeAll("orea" "${CMAKE_CURRENT_LIST_DIR}/orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} ${OREAnalytics_HDR} "orea.hpp")
+add_library(${ORE_PACKAGE_NAME}::${OREA_LIB_NAME} ALIAS ${OREA_LIB_NAME})
+target_link_libraries(${OREA_LIB_NAME}
+    PUBLIC
+        ${ORE_PACKAGE_NAME}::${ORED_LIB_NAME}
+    PRIVATE
+        Boost::iostreams
+)
+
+target_include_directories(${OREA_LIB_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 if(ORE_USE_ZLIB)
-    target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
+    target_link_libraries(${OREA_LIB_NAME} PRIVATE ZLIB::ZLIB)
+    target_compile_definitions(${OREA_LIB_NAME} PRIVATE ORE_USE_ZLIB)
+endif()
+
+if(ORE_MULTITHREADING_CPU_AFFINITY)
+    target_compile_definitions(${OREA_LIB_NAME} PRIVATE ORE_MULTITHREADING_CPU_AFFINITY)
 endif()
 
 if (QL_USE_PCH)
-target_precompile_headers(${OREA_LIB_NAME}
-  PUBLIC
-    <orea/app/inputparameters.hpp>
-    <orea/scenario/scenariosimmarketparameters.hpp>)
+    target_precompile_headers(${OREA_LIB_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:<orea/app/inputparameters.hpp$<ANGLE-R>>
+            $<BUILD_INTERFACE:<orea/scenario/scenariosimmarketparameters.hpp$<ANGLE-R>>
+    )
 endif()
 
-install(DIRECTORY . DESTINATION include/orea
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+# Installation properties.
+install(TARGETS ${OREA_LIB_NAME} EXPORT ${ORE_PACKAGE_NAME}Targets)
 
-install(TARGETS ${OREA_LIB_NAME}
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

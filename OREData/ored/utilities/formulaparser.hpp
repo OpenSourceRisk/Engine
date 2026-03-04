@@ -57,6 +57,9 @@ inline double max(const double x, const double y) { return std::max(x, y); }
 inline double min(const double x, const double y) { return std::min(x, y); }
 
 using std::abs;
+using std::log;
+using std::exp;
+using std::pow;
 
 // implementation
 template <class T> T parseFormula(const std::string& text, const std::function<T(std::string)>& variableMapping) {

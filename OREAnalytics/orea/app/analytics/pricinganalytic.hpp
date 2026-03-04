@@ -28,6 +28,8 @@
 namespace ore {
 namespace analytics {
 
+class InputParameters;
+
 /*! Pricing-type analytics
   \todo align pillars for par sensitivity analysis
 */
@@ -57,6 +59,10 @@ public:
 private:
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
+    bool outputCurves_ = false;
+    std::string curvesMarketConfig_ = Market::defaultConfiguration;
+    std::string curvesGrid_ = "240,1M";
+    std::string curvesCalendar_ = "TARGET";
 
 protected:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;

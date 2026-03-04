@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2022 Quaternion Risk Management Ltd
+ Copyright (C) 2026 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,13 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/config.hpp
-    \brief ORE Test utilities
-*/
+#include <qle/models/fxlvparametrization.hpp>
 
-#pragma once
+namespace QuantExt {
 
-/* Define this to enable the parallel unit test runner */
-#ifndef ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
-//#    define ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER
-#endif
+FxLvParametrization::FxLvParametrization(const Currency& foreignCurrency, const Handle<Quote>& fxSpotToday,
+                                         const QuantLib::Handle<QuantLib::LocalVolTermStructure>& lv)
+    : Parametrization(foreignCurrency), fxSpotToday_(fxSpotToday), lv_(lv) {}
+
+} // namespace QuantExt

@@ -168,9 +168,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
         std::size_t effectiveRate;
         if (isCapFloored) {
-            std::size_t swapletRate = ComputationGraph::nan;
-            std::size_t floorletRate = ComputationGraph::nan;
-            std::size_t capletRate = ComputationGraph::nan;
+            std::size_t swapletRate = cg_const(g, 0.0);
+            std::size_t floorletRate = cg_const(g, 0.0);
+            std::size_t capletRate = cg_const(g, 0.0);
             if (!isNakedOption)
                 swapletRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
             if (effFloor != Null<Real>())
@@ -182,16 +182,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
             if (isNakedOption && effFloor == Null<Real>()) {
                 capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
             }
-            effectiveRate = swapletRate;
-            if (floorletRate != ComputationGraph::nan)
-                effectiveRate = cg_add(g, effectiveRate, floorletRate);
-            if (capletRate != ComputationGraph::nan) {
-                if (isNakedOption && effFloor == Null<Real>()) {
-                    effectiveRate = cg_subtract(g, effectiveRate, capletRate);
-                } else {
-                    effectiveRate = cg_add(g, effectiveRate, capletRate);
-                }
-            }
+            effectiveRate = cg_subtract(g, cg_add(g, swapletRate, floorletRate), capletRate);
         } else {
             effectiveRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
         }
@@ -223,9 +214,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
         std::size_t effectiveRate;
         if (isCapFloored) {
-            std::size_t swapletRate = ComputationGraph::nan;
-            std::size_t floorletRate = ComputationGraph::nan;
-            std::size_t capletRate = ComputationGraph::nan;
+            std::size_t swapletRate = cg_const(g, 0.0);
+            std::size_t floorletRate = cg_const(g, 0.0);
+            std::size_t capletRate = cg_const(g, 0.0);
             if (!isNakedOption)
                 swapletRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
             if (effFloor != Null<Real>())
@@ -237,16 +228,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
             if (isNakedOption && effFloor == Null<Real>()) {
                 capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
             }
-            effectiveRate = swapletRate;
-            if (floorletRate != ComputationGraph::nan)
-                effectiveRate = cg_add(g, effectiveRate, floorletRate);
-            if (capletRate != ComputationGraph::nan) {
-                if (isNakedOption && effFloor == Null<Real>()) {
-                    effectiveRate = cg_subtract(g, effectiveRate, capletRate);
-                } else {
-                    effectiveRate = cg_add(g, effectiveRate, capletRate);
-                }
-            }
+            effectiveRate = cg_subtract(g, cg_add(g, swapletRate, floorletRate), capletRate);
         } else {
             effectiveRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
         }
@@ -271,9 +253,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
         std::size_t effectiveRate;
         if (isCapFloored) {
-            std::size_t swapletRate = ComputationGraph::nan;
-            std::size_t floorletRate = ComputationGraph::nan;
-            std::size_t capletRate = ComputationGraph::nan;
+            std::size_t swapletRate = cg_const(g, 0.0);
+            std::size_t floorletRate = cg_const(g, 0.0);
+            std::size_t capletRate = cg_const(g, 0.0);
             if (!isNakedOption)
                 swapletRate = cg_add(g, cg_mult(g, cg_const(g, cms->gearing()), fixing), cg_const(g, cms->spread()));
             if (effFloor != Null<Real>())
@@ -285,16 +267,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
             if (isNakedOption && effFloor == Null<Real>()) {
                 capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
             }
-            effectiveRate = swapletRate;
-            if (floorletRate != ComputationGraph::nan)
-                effectiveRate = cg_add(g, effectiveRate, floorletRate);
-            if (capletRate != ComputationGraph::nan) {
-                if (isNakedOption && effFloor == Null<Real>()) {
-                    effectiveRate = cg_subtract(g, effectiveRate, capletRate);
-                } else {
-                    effectiveRate = cg_add(g, effectiveRate, capletRate);
-                }
-            }
+            effectiveRate = cg_subtract(g, cg_add(g, swapletRate, floorletRate), capletRate);
         } else {
             effectiveRate = cg_add(g, cg_mult(g, cg_const(g, cms->gearing()), fixing), cg_const(g, cms->spread()));
         }
@@ -434,30 +407,27 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         effCap = cfbma->effectiveFloor();
         isNakedOption = cfbma->nakedOption();
 
+        // approximation, TODO, add averagedBmaRate to modelCg_ as in mccashflowinfo.cpp
+
         std::size_t effectiveRate;
-        std::size_t swapletRate = ComputationGraph::nan;
-        std::size_t floorletRate = ComputationGraph::nan;
-        std::size_t capletRate = ComputationGraph::nan;
-        if (!isNakedOption)
-            swapletRate = cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), fixing), cg_const(g, bma->spread()));
-        if (effFloor != Null<Real>())
-            floorletRate = cg_mult(g, cg_const(g, bma->gearing()),
-                                   cg_max(g, cg_subtract(g, cg_const(g, effFloor), fixing), cg_const(g, 0.0)));
-        if (effCap != Null<Real>())
-            capletRate = cg_mult(g, cg_const(g, bma->gearing()),
-                                 cg_max(g, cg_subtract(g, fixing, cg_const(g, effCap)), cg_const(g, 0.0)));
-        if (isNakedOption && effFloor == Null<Real>()) {
-            capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
-        }
-        effectiveRate = swapletRate;
-        if (floorletRate != ComputationGraph::nan)
-            effectiveRate = cg_add(g, effectiveRate, floorletRate);
-        if (capletRate != ComputationGraph::nan) {
+        if (effFloor != Null<Real>() || effCap != Null<Real>()) {
+            std::size_t swapletRate = cg_const(g, 0.0);
+            std::size_t floorletRate = cg_const(g, 0.0);
+            std::size_t capletRate = cg_const(g, 0.0);
+            if (!isNakedOption)
+                swapletRate = cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), fixing), cg_const(g, bma->spread()));
+            if (effFloor != Null<Real>())
+                floorletRate = cg_mult(g, cg_const(g, bma->gearing()),
+                                       cg_max(g, cg_subtract(g, cg_const(g, effFloor), fixing), cg_const(g, 0.0)));
+            if (effCap != Null<Real>())
+                capletRate = cg_mult(g, cg_const(g, bma->gearing()),
+                                     cg_max(g, cg_subtract(g, fixing, cg_const(g, effCap)), cg_const(g, 0.0)));
             if (isNakedOption && effFloor == Null<Real>()) {
-                effectiveRate = cg_subtract(g, effectiveRate, capletRate);
-            } else {
-                effectiveRate = cg_add(g, effectiveRate, capletRate);
+                capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
             }
+            effectiveRate = cg_subtract(g, cg_add(g, swapletRate, floorletRate), capletRate);
+        } else {
+            effectiveRate = cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), fixing), cg_const(g, bma->spread()));
         }
 
         info.flowNode = modelCg_->pay(

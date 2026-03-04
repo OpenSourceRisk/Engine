@@ -23,18 +23,34 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
-#include <ored/model/hwhistoricalcalibrationmodelbuilder.hpp>
+namespace ore {
+namespace data {
+class CrossAssetModelBuilder;
+class HwHistoricalCalibrationModelData;
+class HwHistoricalCalibrationModelBuilder;
+}; // namespace data
+}; // namespace ore
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;;
+
+struct CalibrationVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
+    QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
+};
 
 class CalibrationAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CALIBRATION";
 
     explicit CalibrationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs) {
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<CalibrationVariables>()) {
         setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -48,9 +64,9 @@ protected:
 
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
-    QuantLib::ext::shared_ptr<CrossAssetModelBuilder> builder_;
-    QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelData> hwHistoricalModelData_;
-    QuantLib::ext::shared_ptr<HwHistoricalCalibrationModelBuilder> hwHistoricalModelBuilder_;
+    QuantLib::ext::shared_ptr<ore::data::CrossAssetModelBuilder> builder_;
+    QuantLib::ext::shared_ptr<ore::data::HwHistoricalCalibrationModelData> hwHistoricalModelData_;
+    QuantLib::ext::shared_ptr<ore::data::HwHistoricalCalibrationModelBuilder> hwHistoricalModelBuilder_;
 };
 
 static const std::set<std::string> calibrationAnalyticSubAnalytics{};

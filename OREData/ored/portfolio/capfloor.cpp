@@ -28,6 +28,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/utilities/fairrate.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
@@ -54,7 +55,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string("CapFloor");
     additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaTransaction"] = string("");
 
     QL_REQUIRE((legData_.legType() == LegType::Floating) || (legData_.legType() == LegType::CMS) ||
                    (legData_.legType() == LegType::DurationAdjustedCMS) || (legData_.legType() == LegType::CMSSpread) ||
@@ -84,6 +85,13 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngines;
 
+    QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder;
+    if (engineFactory->engineData()->hasProduct("CapFloor_as_Swap")) {
+        swapBuilder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("CapFloor_as_Swap"));
+    } else if(engineFactory->engineData()->hasProduct("Swap")) {
+        swapBuilder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
+    }
+
     if (legData_.legType() == LegType::Floating) {
 
         QuantLib::ext::shared_ptr<FloatingLegData> floatData =
@@ -105,6 +113,20 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
             // The only remaining unsupported case are ibor coupons with sub periods
+
+            // Build plain floating leg for fair rate calculation (before applying caps/floors)
+            {
+                LegData plainLd = legData_;
+                QuantLib::ext::shared_ptr<FloatingLegData> plainFld = QuantLib::ext::make_shared<FloatingLegData>(*floatData);
+                plainFld->caps().clear();
+                plainFld->floors().clear();
+                plainFld->nakedOption() = false;
+                plainLd.concreteLegData() = plainFld;
+                plainFloatingLeg_ = engineFactory->legBuilder(plainLd.legType())
+                                        ->buildLeg(plainLd, engineFactory, requiredFixings_,
+                                                   engineFactory->configuration(MarketContext::pricing));
+            }
+
             LegData tmpLegData = legData_;
             QuantLib::ext::shared_ptr<FloatingLegData> tmpFloatData = QuantLib::ext::make_shared<FloatingLegData>(*floatData);
             tmpFloatData->floors() = floors_;
@@ -133,11 +155,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             // and a short cap while we have documented a collar to be a short floor and long cap
             qlInstrument =
                 QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-            if (engineFactory->engineData()->hasProduct("Swap")) {
-                builder = engineFactory->builder("Swap");
-                QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                    QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-                QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+            if (swapBuilder) {
                 qlInstrument->setPricingEngine(
                     swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string(), {}));
                 setSensitivityTemplate(*swapBuilder);
@@ -191,14 +209,13 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         }
 
     } else if (legData_.legType() == LegType::CMS) {
-        builder = engineFactory->builder("Swap");
 
         QuantLib::ext::shared_ptr<CMSLegData> cmsData = QuantLib::ext::dynamic_pointer_cast<CMSLegData>(legData_.concreteLegData());
         QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
 
         underlyingIndex = cmsData->swapIndex();
         Handle<SwapIndex> hIndex =
-            engineFactory->market()->swapIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
+            engineFactory->market()->swapIndex(underlyingIndex, swapBuilder->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << underlyingIndex << " in market.");
 
         QuantLib::ext::shared_ptr<SwapIndex> index = hIndex.currentLink();
@@ -220,18 +237,14 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
         qlInstrument = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-        if (engineFactory->engineData()->hasProduct("Swap")) {
-            builder = engineFactory->builder("Swap");
-            QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-            QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+        if (swapBuilder) {
             qlInstrument->setPricingEngine(
                 swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string(), {}));
             setSensitivityTemplate(*swapBuilder);
             addProductModelEngine(*swapBuilder);
         } else {
-            qlInstrument->setPricingEngine(
-                QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+            qlInstrument->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(
+                engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
         maturityType_ = "Leg Maturity Date";
@@ -256,18 +269,14 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
         qlInstrument = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-        if (engineFactory->engineData()->hasProduct("Swap")) {
-            builder = engineFactory->builder("Swap");
-            QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-            QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+        if (swapBuilder) {
             qlInstrument->setPricingEngine(
                 swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string(), {}));
             setSensitivityTemplate(*swapBuilder);
             addProductModelEngine(*swapBuilder);
         } else {
-            qlInstrument->setPricingEngine(
-                QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+            qlInstrument->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(
+                engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
     } else if (legData_.legType() == LegType::CMSSpread) {
@@ -292,18 +301,14 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
         // and a short cap while we have documented a collar to be a short floor and long cap
         qlInstrument = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-        if (engineFactory->engineData()->hasProduct("Swap")) {
-            builder = engineFactory->builder("Swap");
-            QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-                QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-            QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+        if (swapBuilder) {
             qlInstrument->setPricingEngine(
                 swapBuilder->engine(parseCurrency(legData_.currency()), std::string(), std::string(), {}));
             setSensitivityTemplate(*swapBuilder);
             addProductModelEngine(*swapBuilder);
         } else {
-            qlInstrument->setPricingEngine(
-                QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+            qlInstrument->setPricingEngine(QuantLib::ext::make_shared<DiscountingSwapEngine>(
+                engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
         maturityType_ = "Leg Maturity Date";
@@ -375,7 +380,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         legs_.push_back(makeCPILeg(legData_, zeroIndex.currentLink(), engineFactory));
 
-        
+
         // If any cap/floor rates are provided, ensure they align with the number of schedule periods
         vector < double> effectiveFloors_ = floors_;
         if (floors_.size() > 0) {
@@ -563,6 +568,25 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     }
 
     additionalData_["startDate"] = to_string(startDate);
+
+    // Store discount curve for fair rate calculation
+    {
+        auto configuration = engineFactory->configuration(MarketContext::pricing);
+        std::string discountCurveName = envelope().additionalField("discount_curve", false);
+        Currency ccy = parseCurrency(legData_.currency());
+        if (discountCurveName.empty()) {
+            discountCurve_ = engineFactory->market()->discountCurve(ccy.code(), configuration);
+        } else {
+            discountCurve_ = indexOrYieldCurve(engineFactory->market(), discountCurveName, configuration);
+        }
+        std::string securitySpread = envelope().additionalField("security_spread", false);
+        if (!securitySpread.empty()) {
+            discountCurve_ = Handle<YieldTermStructure>(
+                QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+                    discountCurve_,
+                    engineFactory->market()->securitySpread(securitySpread, configuration)));
+        }
+    }
 }
 
 const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() const {
@@ -831,6 +855,19 @@ const std::map<std::string, QuantLib::ext::any>& CapFloor::additionalData() cons
 
     } catch (std::exception& e) {
         ALOG("error getting additional data for capfloor trade " << id() << ". " << e.what());
+    }
+
+    // Compute ATM forward of the underlying floating leg
+    if (legData_.legType() == LegType::Floating &&
+        !plainFloatingLeg_.empty() && !discountCurve_.empty()) {
+        try {
+            auto [atmForward, spreadCorrection] = QuantExt::fairRate(
+                {plainFloatingLeg_}, {false}, {discountCurve_}, {1.0});
+            additionalData_["atmForward"] = std::abs(atmForward);
+            additionalData_["spreadCorrection"] = spreadCorrection;
+        } catch (const std::exception& e) {
+            DLOG("Could not compute atmForward for CapFloor " << id() << ": " << e.what());
+        }
     }
 
     return additionalData_;

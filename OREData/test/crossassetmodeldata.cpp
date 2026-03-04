@@ -162,7 +162,7 @@ vector<QuantLib::ext::shared_ptr<InflationModelData>> infConfigsData() {
     return {data};
 }
 
-QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<FxBsData>>> fxConfigsData() {
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<FxData>>> fxConfigsData() {
 
     // Create two instances
     QuantLib::ext::shared_ptr<FxBsData> fxBsData1(new data::FxBsData());
@@ -173,28 +173,29 @@ QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<FxBsData>>> fxConfigs
     std::vector<Time> times = {1.0, 2.0, 3.0, 4.0};
 
     // First instance
-    fxBsData1->foreignCcy() = "USD";
-    fxBsData1->domesticCcy() = "EUR";
-    fxBsData1->calibrationType() = parseCalibrationType("BOOTSTRAP");
-    fxBsData1->calibrateSigma() = true;
-    fxBsData1->sigmaParamType() = parseParamType("CONSTANT");
-    fxBsData1->sigmaTimes() = times;
-    fxBsData1->optionExpiries() = expiries;
-    fxBsData1->optionStrikes() = strikes;
+    fxBsData1->setForeignCcy("USD");
+    fxBsData1->setDomesticCcy("EUR");
+    fxBsData1->setCalibrationType(parseCalibrationType("BOOTSTRAP"));
+    fxBsData1->setCalibrateSigma(true);
+    fxBsData1->setSigmaParamType(parseParamType("CONSTANT"));
+    fxBsData1->setSigmaTimes(times);
+    fxBsData1->setOptionExpiries(expiries);
+    fxBsData1->setOptionStrikes(strikes);
 
     // Second instance
-    fxBsData2->foreignCcy() = "JPY";
-    fxBsData2->domesticCcy() = "EUR";
-    fxBsData2->calibrationType() = parseCalibrationType("BOOTSTRAP");
-    fxBsData2->calibrateSigma() = true;
-    fxBsData2->sigmaParamType() = parseParamType("CONSTANT");
-    fxBsData2->sigmaTimes() = times;
-    fxBsData2->optionExpiries() = expiries;
-    fxBsData2->optionStrikes() = strikes;
+    fxBsData2->setForeignCcy("JPY");
+    fxBsData2->setDomesticCcy("EUR");
+    fxBsData2->setCalibrationType(parseCalibrationType("BOOTSTRAP"));
+    fxBsData2->setCalibrateSigma(true);
+    fxBsData2->setSigmaParamType(parseParamType("CONSTANT"));
+    fxBsData2->setSigmaTimes(times);
+    fxBsData2->setOptionExpiries(expiries);
+    fxBsData2->setOptionStrikes(strikes);
 
-    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<FxBsData>>> fxBsDataVector(new vector<QuantLib::ext::shared_ptr<FxBsData>>);
-    *fxBsDataVector = {fxBsData1, fxBsData2};
-    return fxBsDataVector;
+    auto tmp = QuantLib::ext::make_shared<vector<QuantLib::ext::shared_ptr<FxData>>>();
+    tmp->push_back(fxBsData1);
+    tmp->push_back(fxBsData2);
+    return tmp;
 }
 
 QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<EqBsData>>> eqConfigsData() {

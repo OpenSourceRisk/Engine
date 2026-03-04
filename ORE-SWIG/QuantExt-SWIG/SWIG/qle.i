@@ -20,7 +20,7 @@
 #define qle_i
 
 %{
-#ifdef BOOST_MSVC
+#if !defined(BOOST_ALL_NO_LIB) && defined(BOOST_MSVC)
 #include <qle/auto_link.hpp>
 #endif
 #include <qle/quantext.hpp>
@@ -42,6 +42,7 @@
 %include qle_tenorbasisswap.i
 %include qle_creditdefaultswap.i
 %include qle_averageoisratehelper.i
+%include qle_processes.i
 
 //%include qle_crossccyfixfloatswaphelper.i
 

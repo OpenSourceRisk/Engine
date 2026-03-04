@@ -24,6 +24,7 @@
 #include <qle/models/futureoptionhelper.hpp>
 #include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyswaphelper.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
@@ -495,14 +496,38 @@ Date optionMaturity(const boost::variant<Date, Period>& maturity, const QuantLib
 }
 
 Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
-                            const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& curve,
-                            const QuantLib::Date& optionMaturityDate) {
+                            const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& inflationIndex,
+                            const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& volSurface,
+                            const QuantLib::Date& maturityDate,
+                            const bool dontCalibrate) {
     if (auto abs = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
         return abs->strike();
     } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
-        return curve->zeroRate(optionMaturityDate, curve->observationLag());
+        DLOG("Calculating forward strike for CPI cap floor with maturity " << maturityDate << " and observation lag "
+              << volSurface->observationLag() << " and index interpolation " << volSurface->indexIsInterpolated());
+        auto zits = inflationIndex->zeroInflationTermStructure();
+        auto fixingDate = ZeroInflation::fixingDate(
+            maturityDate, volSurface->observationLag(), volSurface->frequency(), volSurface->indexIsInterpolated());
+
+        auto forwardCPI = dontCalibrate
+                              ? 100 * std::pow(1 + zits->zeroRate(maturityDate - volSurface->observationLag()),
+                                               zits->dayCounter().yearFraction(zits->baseDate(), fixingDate))
+                              : ZeroInflation::cpiFixing(inflationIndex, maturityDate, volSurface->observationLag(),
+                                                         volSurface->indexIsInterpolated());
+        DLOG("Forward CPI is " << forwardCPI);
+        auto baseFixing =
+            dontCalibrate ? 100.
+                          : ZeroInflation::cpiFixing(inflationIndex, volSurface->referenceDate(),
+                                                     volSurface->observationLag(), volSurface->indexIsInterpolated());
+        DLOG("Base CPI fixing is " << baseFixing);
+        auto growth = forwardCPI / baseFixing;
+        auto baseDate = ZeroInflation::fixingDate(volSurface->referenceDate(), volSurface->observationLag(), volSurface->frequency(),
+                                        volSurface->indexIsInterpolated());
+        auto ttm = zits->dayCounter().yearFraction(baseDate, fixingDate);
+        auto strike = std::pow(growth, 1.0 / ttm) - 1.0;
+        return strike;
     } else {
         QL_FAIL("cpi cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
                 << strike->toString());

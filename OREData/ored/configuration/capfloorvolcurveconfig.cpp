@@ -226,6 +226,12 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             inputType_ = XMLUtils::getNodeValue(n);
         }
 
+        // Flag whether first period is flat
+        flatFirstPeriod_ = XMLUtils::getChildValueAsBool(node, "FlatFirstPeriod", false, true);
+
+        // for optionlet quotes, is the quote term in arrears or in advance?
+        optionletTenorInArrears_ = XMLUtils::getChildValueAsBool(node, "OptionletTenorInArrears", false, true);
+
         // Set type_
         configureType();
 
@@ -309,6 +315,9 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "QuoteIncludesIndexName", quoteIncludesIndexName_);
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
         XMLUtils::addChild(doc, node, "InputType", inputType_);
+        XMLUtils::addChild(doc, node, "FlatFirstPeriod", flatFirstPeriod_);
+        if (!optionletTenorInArrears_)
+            XMLUtils::addChild(doc, node, "OptionletTenorInArrears", optionletTenorInArrears_);
         if (modelShift_ != Null<Real>())
             XMLUtils::addChild(doc, node, "ModelShift", modelShift_);
         if (outputShift_ != Null<Real>())

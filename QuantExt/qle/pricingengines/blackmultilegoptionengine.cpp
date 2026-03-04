@@ -22,6 +22,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
+#include <qle/utilities/fairrate.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
@@ -257,22 +258,16 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     Real weightedFixedRate =
         QuantLib::close_enough(weightedFixedRateDenom, 0.0) ? 0.0 : weightedFixedRateNom / weightedFixedRateDenom;
 
-    // determine the pv-weighted floating margin, the floating bps, the floating npv
+    // determine floating npv and floating spread npv
 
-    Real weightedFloatingSpreadNom = 0.0, weightedFloatingSpreadDenom = 0.0;
-    Real floatingBps = 0.0, floatingNpv = 0.0;
+    Real floatingNpv = 0.0, floatingSpreadNpv = 0.0;
     for (auto const& c : cfInfo) {
         if (c.floatingSpread != Null<Real>()) {
             Real w = c.nominal * c.accrual * c.discountFactor;
-            weightedFloatingSpreadNom += c.floatingSpread * w;
-            weightedFloatingSpreadDenom += w;
-            floatingBps += w;
             floatingNpv += c.amount * c.discountFactor;
+            floatingSpreadNpv += c.floatingSpread * w;
         }
     }
-    Real weightedFloatingSpread = QuantLib::close_enough(weightedFloatingSpreadDenom, 0.0)
-                                      ? 0.0
-                                      : weightedFloatingSpreadNom / weightedFloatingSpreadDenom;
 
     // determine the simple cf npv
 
@@ -285,15 +280,11 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // determine the fair swap rate
 
-    Real atmForward = close_enough(fixedBps, 0.0) ? 0.0 : -floatingNpv / fixedBps;
+    Real effectiveAtmForward = 0.0;
+    Real spreadCorrection = 0.0;
+    std::tie(effectiveAtmForward, spreadCorrection) = fairRateFromNpvBps(fixedBps, floatingNpv, floatingSpreadNpv);
 
-    // determine the spread correction
-
-    Real spreadCorrection =
-        weightedFloatingSpread * (QuantLib::close_enough(fixedBps, 0.0) ? 0.0 : std::abs(floatingBps / fixedBps));
-
-    Real effectiveAtmForward = atmForward - spreadCorrection;
-    Real effectiveFixedRate = weightedFixedRate - spreadCorrection;
+    Real effectiveFixedRate = weightedFixedRate + spreadCorrection;
 
     // incorporate the simple cashflows (including the rebate)
 
@@ -362,10 +353,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     underlyingNpv_ = fixedNpv + floatingNpv + simpleCfNpv;
 
-    additionalResults_["spreadCorrection"] = spreadCorrection;
     additionalResults_["simpleCashflowCorrection"] = simpleCfCorrection;
     additionalResults_["strike"] = effectiveFixedRate;
-    additionalResults_["atmForward"] = effectiveAtmForward;
     additionalResults_["underlyingNPV"] = underlyingNpv_;
     additionalResults_["annuity"] = annuity;
     additionalResults_["timeToExpiry"] = exerciseTime;
@@ -376,10 +365,12 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     additionalResults_["vega"] = vega;
     additionalResults_["fixedNpv"] = fixedNpv;
     additionalResults_["fixedBps"] = fixedBps;
+    additionalResults_["atmForward"] = effectiveAtmForward - spreadCorrection;
+    additionalResults_["spreadCorrection"] = spreadCorrection;
+    additionalResults_["effectiveAtmForward"] = effectiveAtmForward;
     additionalResults_["weightedFixedRate"] = weightedFixedRate;
     additionalResults_["floatingNpv"] = floatingNpv;
-    additionalResults_["floatingBps"] = floatingBps;
-    additionalResults_["weightedFloatingSpread"] = weightedFloatingSpread;
+    additionalResults_["floatingSpreadNpv"] = floatingSpreadNpv;
     additionalResults_["simpleCfNpv"] = simpleCfNpv;
 }
 

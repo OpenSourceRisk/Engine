@@ -57,14 +57,15 @@ public:
                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                     Handle<YieldTermStructure>()) const override;
 
-    QuantLib::Real
-    numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const override;
+    QuantLib::Real numeraire(const QuantLib::Time t, const QuantLib::Array& x,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                 Handle<YieldTermStructure>()) const override;
 
     QuantLib::Real shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                  Handle<YieldTermStructure>()) const override;
+
+    Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const override;
 
     // HwModel specific methods
 

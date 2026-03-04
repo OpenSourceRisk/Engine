@@ -472,6 +472,8 @@
         </xs:simpleType>
       </xs:element>
       <xs:element type="bool" name="QuoteIncludesIndexName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="FlatFirstPeriod" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="OptionletTenorInArrears" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
@@ -525,6 +527,7 @@
           <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
           <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:string" name="ReinterpretedYieldCurve" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:integer" name="SpotLag" minOccurs="0" maxOccurs="1"/>
@@ -605,6 +608,7 @@
       <xs:enumeration value="Benchmark"/>
       <xs:enumeration value="Price"/>
       <xs:enumeration value="TransitionMatrix"/>
+      <xs:enumeration value="YieldCurve"/>
       <xs:enumeration value="Null"/>
     </xs:restriction>
   </xs:simpleType>
@@ -690,7 +694,6 @@
       <xs:element type="xs:string" name="YieldTermStructure" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:all>

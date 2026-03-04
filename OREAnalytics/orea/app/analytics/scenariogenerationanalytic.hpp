@@ -23,16 +23,38 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 
 namespace ore {
 namespace analytics {
+
+class InputParameters;
+
+enum class ScenarioGenerationType { stress, sensitivity, exposure };
+struct ScenarioGenerationVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+       
+    ScenarioGenerationType type_ = ScenarioGenerationType::exposure;
+    QuantLib::ext::shared_ptr<StressTestScenarioData> stressTestScenarioData_;
+    QuantLib::Integer scenarioDistributionSteps_ = 20;
+    bool scenarioOutputZeroRate_ = false;
+    bool scenarioOutputStatistics_ = true;
+    bool scenarioOutputDistributions_ = true;
+    QuantLib::Integer scenarioPrecision_ = 8;
+    std::string amcPathDataOutput_;    
+    
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketParams_;
+    QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
+    QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
+    QuantLib::ext::shared_ptr<EngineData> pricingEngine_;
+};
 
 class ScenarioGenerationAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SCENARIO_GENERATION";
 
-    enum class Type { stress, sensitivity, exposure};
-    ScenarioGenerationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    ScenarioGenerationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<ScenarioGenerationVariables>()) {
         setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -52,21 +74,10 @@ protected:
 
     QuantLib::ext::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;
-    
-
-private:
-    Type type_ = Type::exposure;
-    QuantLib::ext::shared_ptr<StressTestScenarioData> stressTestScenarioData_;
-    QuantLib::Integer scenarioDistributionSteps_ = 20;
-    bool scenarioOutputZeroRate_ = false;
-    bool scenarioOutputStatistics_ = true;
-    bool scenarioOutputDistributions_ = true;
-    QuantLib::Integer scenarioPrecision_ = 8;
-    std::string amcPathDataOutput_;
 };
 
-ScenarioGenerationAnalyticImpl::Type parseScenarioGenerationType(const std::string& s);
-std::ostream& operator<<(std::ostream& out, ScenarioGenerationAnalyticImpl::Type t);
+ScenarioGenerationType parseScenarioGenerationType(const std::string& s);
+std::ostream& operator<<(std::ostream& out, ScenarioGenerationType t);
 
 class ScenarioGenerationAnalytic : public Analytic {
 public:

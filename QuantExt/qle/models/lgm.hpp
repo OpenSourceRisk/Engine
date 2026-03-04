@@ -45,7 +45,7 @@ using namespace QuantLib;
 */
 class LinearGaussMarkovModel : public IrModel {
 public:
-    enum class Discretization { Euler, Exact };
+    enum class Discretization { Euler, Exact, ExactGlobal };
 
     LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization,
                            const Measure measure = Measure::LGM, const Discretization = Discretization::Euler,
@@ -68,14 +68,15 @@ public:
                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                     Handle<YieldTermStructure>()) const override;
 
-    QuantLib::Real
-    numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const QuantLib::Array& aux = Array()) const override;
+    QuantLib::Real numeraire(const QuantLib::Time t, const QuantLib::Array& x,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                 Handle<YieldTermStructure>()) const override;
 
     QuantLib::Real shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                  Handle<YieldTermStructure>()) const override;
+
+    Array marginalStep(const Time t0, const Array& x0, const Time dt, const Array& dw) const override;
 
     //! LGM specific methods
 
@@ -180,21 +181,16 @@ inline QuantLib::ext::shared_ptr<StochasticProcess> LinearGaussMarkovModel::stat
 inline QuantLib::Real
 LinearGaussMarkovModel::discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    QL_REQUIRE(x.size() == n(), "LinearGaussMarkovModel::discountBond() requires input state of dimension " << n());
     return discountBond(t, T, x[0], discountCurve);
 }
 
 inline QuantLib::Real
 LinearGaussMarkovModel::numeraire(const QuantLib::Time t, const QuantLib::Array& x,
-                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                                  const QuantLib::Array& aux) const {
-    QL_REQUIRE(x.size() == n(), "LinearGaussMarkovModel::numeraire() requires input state of dimension " << n());
-    QL_REQUIRE(aux.size() == n_aux(),
-               "LinearGaussMarkovModel::numeraire() requires aux input state of dimension " << n_aux());
+                                  const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
     if (measure() == Measure::LGM) {
         return numeraire(t, x[0], discountCurve);
     } else {
-        return bankAccountNumeraire(t, x[0], aux[0], discountCurve);
+        return bankAccountNumeraire(t, x[0], x[n()], discountCurve);
     }
 }
 
@@ -226,7 +222,8 @@ inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, con
 inline QuantLib::Real
 LinearGaussMarkovModel::shortRate(const QuantLib::Time t, const QuantLib::Array& x,
                                   const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve) const {
-    QL_FAIL("LGM does not provide short rate.");
+    return discountCurve->forwardRate(t, t, QuantLib::Compounding::Continuous) + x[0] * parametrization_->Hprime(t) +
+           parametrization_->zeta(t) * parametrization_->Hprime(t) * parametrization_->H(t);
 }
 
 inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time T, const Real x,
@@ -276,10 +273,9 @@ inline void LinearGaussMarkovModel::calibrateReversionsIterative(
     update();
 }
 
-inline void
-LinearGaussMarkovModel::calibrateVolatilities(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
-                                              OptimizationMethod& method, const EndCriteria& endCriteria,
-                                              const Constraint& constraint, const std::vector<Real>& weights) {
+inline void LinearGaussMarkovModel::calibrateVolatilities(
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     std::vector<bool> moveVols(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
     for (Size i = 0; i < parametrization_->parameter(0)->size(); ++i)
         moveVols[i] = false;
@@ -287,10 +283,9 @@ LinearGaussMarkovModel::calibrateVolatilities(const std::vector<QuantLib::ext::s
     update();
 }
 
-inline void
-LinearGaussMarkovModel::calibrateReversions(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers,
-                                            OptimizationMethod& method, const EndCriteria& endCriteria,
-                                            const Constraint& constraint, const std::vector<Real>& weights) {
+inline void LinearGaussMarkovModel::calibrateReversions(
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     std::vector<bool> moveRevs(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
     for (Size i = 0; i < parametrization_->parameter(1)->size(); ++i)
         moveRevs[parametrization_->parameter(0)->size() + i] = false;

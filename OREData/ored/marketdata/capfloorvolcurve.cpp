@@ -45,6 +45,7 @@
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
+#include <ql/termstructures/globalbootstrap.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -152,14 +153,61 @@ void CapFloorVolCurve::buildProxyCurve(
         config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod(), config.proxyScalingFactor());
 }
 
+#define TERM_ATM_OPT(INTMETH, INTINSTANCE)                                                                             \
+    {                                                                                                                  \
+        typedef PiecewiseAtmOptionletCurve<INTMETH, QuantExt::IterativeBootstrap> my_curve_1;                          \
+        typedef PiecewiseAtmOptionletCurve<INTMETH, QuantLib::GlobalBootstrap> my_curve_2;                             \
+        if (globalBootstrap) {                                                                                         \
+            auto tmp = QuantLib::ext::make_shared<my_curve_2>(                                                         \
+                config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,                                     \
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, INTINSTANCE,       \
+                my_curve_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},       \
+                                           !flatFirstPeriod),                                                          \
+                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(             \
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),      \
+                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),               \
+                                tmp->volatilityType(), tmp->displacement()));                                          \
+        } else {                                                                                                       \
+            auto tmp = QuantLib::ext::make_shared<my_curve_1>(                                                         \
+                config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,                                     \
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, INTINSTANCE,       \
+                my_curve_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,     \
+                                           dontThrowSteps),                                                            \
+                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(             \
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),      \
+                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),               \
+                                tmp->volatilityType(), tmp->displacement()));                                          \
+        }                                                                                                              \
+    }
+
+namespace {
+std::function<Array(const std::vector<Time>&, const std::vector<Real>&)> getPenaltyFunction(double smoothnessLambda) {
+    if (close_enough(smoothnessLambda, 0.0))
+        return {};
+    return [smoothnessLambda](const std::vector<Time>& times, const std::vector<Real>& data) {
+        Array p(times.size() - 1);
+        // TODO make the type of penalty configurable
+        // for (Size i = 0; i < times.size() - 2; ++i) {
+        //     p[i] = smoothnessLambda * (data[i + 2] - 2.0 * data[i + 1] + data[i]);
+        // }
+        for (Size i = 0; i < times.size() - 1; ++i) {
+            p[i] = smoothnessLambda * (data[i + 1] - data[i]);
+        }
+        return p;
+    };
+}
+} // namespace
+
 void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
-                                   QuantLib::ext::shared_ptr<IborIndex> index, Handle<YieldTermStructure> discountCurve,
-                                   Real shift) {
+                                       QuantLib::ext::shared_ptr<IborIndex> index,
+                                       Handle<YieldTermStructure> discountCurve, Real shift) {
 
     // Get the ATM cap floor term vol curve
     QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolCurve> cftvc = atmCurve(asof, config, loader);
 
-    bool flatFirstPeriod = true;
+    bool flatFirstPeriod = config.flatFirstPeriod();
     VolatilityType optVolType = volatilityType(config.outputVolatilityType());
     Real optDisplacement = 0.0;
     if (optVolType == QuantLib::ShiftedLognormal) {
@@ -174,77 +222,25 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     Real maxFactor = config.bootstrapConfig().maxFactor();
     Real minFactor = config.bootstrapConfig().minFactor();
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
+    bool globalBootstrap = config.bootstrapConfig().global();
+    Real smoothnessLambda = config.bootstrapConfig().smoothnessLambda();
+
+    auto additionalPenalties = getPenaltyFunction(smoothnessLambda);
 
     // On optionlets is the newly added interpolation approach whereas on term volatilities is legacy
     bool onOpt = interpOnOpt(config);
     if (onOpt) {
-        // This is not pretty but can't think of a better way (with template functions and or classes)
         // Note: second template argument in StrippedOptionletAdapter doesn't matter so just use Linear here.
         if (config.timeInterpolation() == "Linear") {
-            QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<Linear>> tmp =
-                QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<Linear>>(
-                    config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Linear(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseAtmOptionletCurve<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                tmp->volatilityType(), tmp->displacement()));
+            TERM_ATM_OPT(Linear, Linear())
         } else if (config.timeInterpolation() == "LinearFlat") {
-            QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<LinearFlat>> tmp =
-                QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<LinearFlat>>(
-                    config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, LinearFlat(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
-                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                tmp->volatilityType(), tmp->displacement()));
+            TERM_ATM_OPT(LinearFlat, LinearFlat())
         } else if (config.timeInterpolation() == "BackwardFlat") {
-            QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<BackwardFlat>> tmp =
-                QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat>>(
-                    config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, BackwardFlat(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseAtmOptionletCurve<BackwardFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Linear>>(
-                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                tmp->volatilityType(), tmp->displacement()));
+            TERM_ATM_OPT(BackwardFlat, BackwardFlat())
         } else if (config.timeInterpolation() == "Cubic") {
-            QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<Cubic>> tmp =
-                QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<Cubic>>(
-                    config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Cubic(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseAtmOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
-                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                tmp->volatilityType(), tmp->displacement()));
+            TERM_ATM_OPT(Cubic, Cubic())
         } else if (config.timeInterpolation() == "CubicFlat") {
-            QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<CubicFlat>> tmp =
-                QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<CubicFlat>>(
-                    config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, CubicFlat(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseAtmOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-            capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
-                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                tmp->volatilityType(), tmp->displacement()));
+            TERM_ATM_OPT(CubicFlat, CubicFlat())
         } else {
             QL_FAIL("Cap floor config " << config.curveID() << " has unexpected time interpolation "
                                         << config.timeInterpolation());
@@ -254,60 +250,15 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
         // We don't need time interpolation in this instance - we just use the term volatility interpolation.
         if (config.interpolationMethod() == CftvsInterp::BicubicSpline) {
             if (config.flatExtrapolation()) {
-                QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<CubicFlat>> tmp =
-                    QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<CubicFlat>>(
-                        config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                        volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, CubicFlat(),
-                        QuantExt::IterativeBootstrap<
-                            PiecewiseAtmOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                        config.rateComputationPeriod(), config.onCapSettlementDays());
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
-                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                    tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                    tmp->volatilityType(), tmp->displacement()));
+                TERM_ATM_OPT(CubicFlat, CubicFlat())
             } else {
-                QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<Cubic>> tmp =
-                    QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<Cubic>>(
-                        config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                        volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Cubic(),
-                        QuantExt::IterativeBootstrap<
-                            PiecewiseAtmOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                        config.rateComputationPeriod(), config.onCapSettlementDays());
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
-                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                    tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                    tmp->volatilityType(), tmp->displacement()));
+                TERM_ATM_OPT(Cubic, Cubic())
             }
         } else if (config.interpolationMethod() == CftvsInterp::Bilinear) {
             if (config.flatExtrapolation()) {
-                QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<LinearFlat>> tmp =
-                    QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<LinearFlat>>(
-                        config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                        volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt,
-                        LinearFlat(),
-                        QuantExt::IterativeBootstrap<
-                            PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                        config.rateComputationPeriod(), config.onCapSettlementDays());
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
-                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                    tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                    tmp->volatilityType(), tmp->displacement()));
+                TERM_ATM_OPT(LinearFlat, LinearFlat())
             } else {
-                QuantLib::ext::shared_ptr<PiecewiseAtmOptionletCurve<Linear>> tmp =
-                    QuantLib::ext::make_shared<PiecewiseAtmOptionletCurve<Linear>>(
-                        config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,
-                        volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, Linear(),
-                        QuantExt::IterativeBootstrap<
-                            PiecewiseAtmOptionletCurve<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                            accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                        config.rateComputationPeriod(), config.onCapSettlementDays());
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
-                                    tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),
-                                    tmp->volatilityType(), tmp->displacement()));
+                TERM_ATM_OPT(Linear, Linear())
             }
         } else {
             QL_FAIL("Cap floor config " << config.curveID() << " has unexpected interpolation method "
@@ -316,12 +267,58 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     }
 }
 
+#define TERM_OPT_STRIPPER(INTMETH, INTINSTANCE)                                                                        \
+    {                                                                                                                  \
+        typedef PiecewiseOptionletStripper<INTMETH, QuantExt::IterativeBootstrap> my_stripper_1;                       \
+        typedef PiecewiseOptionletStripper<INTMETH, QuantLib::GlobalBootstrap> my_stripper_2;                          \
+        if (globalBootstrap) {                                                                                         \
+            optionletStripper = QuantLib::ext::make_shared<my_stripper_2>(                                             \
+                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,      \
+                INTINSTANCE,                                                                                           \
+                my_stripper_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},    \
+                                              !flatFirstPeriod),                                                       \
+                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+        } else {                                                                                                       \
+            optionletStripper = QuantLib::ext::make_shared<my_stripper_1>(                                             \
+                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,      \
+                INTINSTANCE,                                                                                           \
+                my_stripper_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,  \
+                                              dontThrowSteps),                                                         \
+                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+        }                                                                                                              \
+    }
+
+#define TERM_OPT_ADAPTER(INTMETH_TIME, INTINSTANCE_TIME, INTMETH_STRIKE, INTINSTANCE_STRIKE)                           \
+    {                                                                                                                  \
+        if (includeAtm) {                                                                                              \
+            optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<INTMETH_TIME, INTMETH_STRIKE>>(    \
+                optionletStripper, cftvc, discountCurve, volType, shift, 10000, 1.0e-12, INTINSTANCE_TIME,             \
+                INTINSTANCE_STRIKE);                                                                                   \
+        }                                                                                                              \
+        capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH_TIME, INTMETH_STRIKE>>(     \
+            asof, transform(*optionletStripper), INTINSTANCE_TIME, INTINSTANCE_STRIKE);                                \
+    }
+
+#define TERM_OPT_ADAPTER_SABR(INTMETH, INTINSTANCE)                                                                    \
+    {                                                                                                                  \
+        if (includeAtm) {                                                                                              \
+            optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<INTMETH, Linear>>(                 \
+                optionletStripper, cftvc, discountCurve, volType, shift, 10000, 1.0e-12, INTINSTANCE, Linear());       \
+        }                                                                                                              \
+        capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<INTMETH>>(                      \
+            asof, transform(*optionletStripper), *sabrModelVariant, INTINSTANCE, outputVolType, outputDisplacement,    \
+            config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,              \
+            maxAcceptableError);                                                                                       \
+    }
+
 void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
-                                  QuantLib::ext::shared_ptr<IborIndex> index, Handle<YieldTermStructure> discountCurve,
-                                  Real shift) {
+                                      QuantLib::ext::shared_ptr<IborIndex> index,
+                                      Handle<YieldTermStructure> discountCurve, Real shift) {
 
     // Get the cap floor term vol surface
     QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface> cftvs = capSurface(asof, config, loader);
+
+    bool flatFirstPeriod = config.flatFirstPeriod();
 
     // Get the ATM cap floor term vol curve if we are including an ATM curve
     bool includeAtm = config.includeAtm();
@@ -338,6 +335,10 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     Real maxFactor = config.bootstrapConfig().maxFactor();
     Real minFactor = config.bootstrapConfig().minFactor();
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
+    bool globalBootstrap = config.bootstrapConfig().global();
+    Real smoothnessLambda = config.bootstrapConfig().smoothnessLambda();
+
+    auto additionalPenalties = getPenaltyFunction(smoothnessLambda);
 
     // Get configuration values for parametric smile
     std::vector<std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
@@ -363,7 +364,7 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
             initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.calibration));
             initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.calibration));
             initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.calibration));
-       }
+        }
         maxCalibrationAttempts = config.parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
         exitEarlyErrorThreshold = config.parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
         maxAcceptableError = config.parametricSmileConfiguration()->calibration().maxAcceptableError;
@@ -373,8 +374,6 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> optionletStripper;
     VolatilityType volType = volatilityType(config.volatilityType());
     bool onOpt = interpOnOpt(config);
-
-    bool flatFirstPeriod = true;
 
     VolatilityType optVolType = volType;
     Real optDisplacement = shift;
@@ -396,249 +395,83 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     }
 
     if (onOpt) {
-        // This is not pretty but can't think of a better way (with template functions and or classes)
         if (config.timeInterpolation() == "Linear") {
-            optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<Linear>>(
-                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                Linear(),
-                QuantExt::IterativeBootstrap<
-                    PiecewiseOptionletStripper<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                    accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod(), config.onCapSettlementDays());
+            TERM_OPT_STRIPPER(Linear, Linear())
             if (config.strikeInterpolation() == "Linear") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Linear, Linear(), Linear, Linear())
             } else if (config.strikeInterpolation() == "LinearFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Linear, LinearFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, LinearFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Linear, Linear(), LinearFlat, LinearFlat())
             } else if (config.strikeInterpolation() == "Cubic") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Linear, Cubic>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Cubic>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Linear, Linear(), Cubic, Cubic())
             } else if (config.strikeInterpolation() == "CubicFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Linear, CubicFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, CubicFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Linear, Linear(), CubicFlat, CubicFlat())
             } else if (sabrModelVariant) {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Linear>>(
-                    asof, transform(*optionletStripper), *sabrModelVariant, Linear(), outputVolType, outputDisplacement,
-                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
-                    maxAcceptableError);
+                TERM_OPT_ADAPTER_SABR(Linear, Linear())
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
             }
         } else if (config.timeInterpolation() == "LinearFlat") {
-            optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<LinearFlat>>(
-                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                LinearFlat(),
-                QuantExt::IterativeBootstrap<
-                    PiecewiseOptionletStripper<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                    accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod(), config.onCapSettlementDays());
+            TERM_OPT_STRIPPER(LinearFlat, LinearFlat())
             if (config.strikeInterpolation() == "Linear") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<LinearFlat, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(LinearFlat, LinearFlat(), Linear, Linear())
             } else if (config.strikeInterpolation() == "LinearFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(LinearFlat, LinearFlat(), LinearFlat, LinearFlat())
             } else if (config.strikeInterpolation() == "Cubic") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<LinearFlat, Cubic>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Cubic>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(LinearFlat, LinearFlat(), Cubic, Cubic())
             } else if (config.strikeInterpolation() == "CubicFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<LinearFlat, CubicFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, CubicFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(LinearFlat, LinearFlat(), CubicFlat, CubicFlat())
             } else if (sabrModelVariant) {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<LinearFlat, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<LinearFlat>>(
-                    asof, transform(*optionletStripper), *sabrModelVariant, LinearFlat(), outputVolType, outputDisplacement,
-                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
-                    maxAcceptableError);
+                TERM_OPT_ADAPTER_SABR(LinearFlat, LinearFlat())
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
             }
+
         } else if (config.timeInterpolation() == "BackwardFlat") {
-            optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<BackwardFlat>>(
-                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                BackwardFlat(),
-                QuantExt::IterativeBootstrap<
-                    PiecewiseOptionletStripper<BackwardFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                    accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod(), config.onCapSettlementDays());
+            TERM_OPT_STRIPPER(BackwardFlat, BackwardFlat())
             if (config.strikeInterpolation() == "Linear") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<BackwardFlat, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Linear>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(BackwardFlat, BackwardFlat(), Linear, Linear())
             } else if (config.strikeInterpolation() == "LinearFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<BackwardFlat, LinearFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, LinearFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(BackwardFlat, BackwardFlat(), LinearFlat, LinearFlat())
             } else if (config.strikeInterpolation() == "Cubic") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<BackwardFlat, Cubic>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Cubic>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(BackwardFlat, BackwardFlat(), Cubic, Cubic())
             } else if (config.strikeInterpolation() == "CubicFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<BackwardFlat, CubicFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, CubicFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(BackwardFlat, BackwardFlat(), CubicFlat, CubicFlat())
             } else if (sabrModelVariant) {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<BackwardFlat, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<BackwardFlat>>(
-                    asof, transform(*optionletStripper), *sabrModelVariant, BackwardFlat(), outputVolType, outputDisplacement,
-                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
-                    maxAcceptableError);
+                TERM_OPT_ADAPTER_SABR(BackwardFlat, BackwardFlat())
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
             }
         } else if (config.timeInterpolation() == "Cubic") {
-            optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<Cubic>>(
-                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                Cubic(),
-                QuantExt::IterativeBootstrap<
-                    PiecewiseOptionletStripper<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                    accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod(), config.onCapSettlementDays());
+            TERM_OPT_STRIPPER(Cubic, Cubic())
             if (config.strikeInterpolation() == "Linear") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Cubic, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Cubic, Cubic(), Linear, Linear())
             } else if (config.strikeInterpolation() == "LinearFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Cubic, LinearFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, LinearFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Cubic, Cubic(), LinearFlat, LinearFlat())
             } else if (config.strikeInterpolation() == "Cubic") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Cubic, Cubic(), Cubic, Cubic())
             } else if (config.strikeInterpolation() == "CubicFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Cubic, CubicFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, CubicFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(Cubic, Cubic(), CubicFlat, CubicFlat())
             } else if (sabrModelVariant) {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Cubic, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Cubic>>(
-                    asof, transform(*optionletStripper), *sabrModelVariant, Cubic(), outputVolType, outputDisplacement,
-                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
-                    maxAcceptableError);
-            }
-            {
+                TERM_OPT_ADAPTER_SABR(Cubic, Cubic())
+            } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
             }
         } else if (config.timeInterpolation() == "CubicFlat") {
-            optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<CubicFlat>>(
-                cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                CubicFlat(),
-                QuantExt::IterativeBootstrap<
-                    PiecewiseOptionletStripper<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                    accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod(), config.onCapSettlementDays());
+            TERM_OPT_STRIPPER(CubicFlat, CubicFlat())
             if (config.strikeInterpolation() == "Linear") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<CubicFlat, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(CubicFlat, CubicFlat(), Linear, Linear())
             } else if (config.strikeInterpolation() == "LinearFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<CubicFlat, LinearFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, LinearFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(CubicFlat, CubicFlat(), LinearFlat, LinearFlat())
             } else if (config.strikeInterpolation() == "Cubic") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<CubicFlat, Cubic>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Cubic>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(CubicFlat, CubicFlat(), Cubic, Cubic())
             } else if (config.strikeInterpolation() == "CubicFlat") {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_ADAPTER(CubicFlat, CubicFlat(), CubicFlat, CubicFlat())
             } else if (sabrModelVariant) {
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<CubicFlat, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<CubicFlat>>(
-                    asof, transform(*optionletStripper), *sabrModelVariant, CubicFlat(), outputVolType, outputDisplacement,
-                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
-                    maxAcceptableError);
+                TERM_OPT_ADAPTER_SABR(CubicFlat, CubicFlat())
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -652,63 +485,19 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
         // We don't need time interpolation in this instance - we just use the term volatility interpolation.
         if (config.interpolationMethod() == CftvsInterp::BicubicSpline) {
             if (config.flatExtrapolation()) {
-                optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<CubicFlat>>(
-                    cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                    CubicFlat(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseOptionletStripper<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_STRIPPER(CubicFlat, CubicFlat())
+                TERM_OPT_ADAPTER(CubicFlat, CubicFlat(), CubicFlat, CubicFlat())
             } else {
-                optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<Cubic>>(
-                    cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                    Cubic(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseOptionletStripper<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_STRIPPER(Cubic, Cubic())
+                TERM_OPT_ADAPTER(Cubic, Cubic(), Cubic, Cubic())
             }
         } else if (config.interpolationMethod() == CftvsInterp::Bilinear) {
             if (config.flatExtrapolation()) {
-                optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<LinearFlat>>(
-                    cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                    LinearFlat(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseOptionletStripper<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_STRIPPER(LinearFlat, LinearFlat())
+                TERM_OPT_ADAPTER(LinearFlat, LinearFlat(), LinearFlat, LinearFlat())
             } else {
-                optionletStripper = QuantLib::ext::make_shared<PiecewiseOptionletStripper<Linear>>(
-                    cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                    Linear(),
-                    QuantExt::IterativeBootstrap<
-                        PiecewiseOptionletStripper<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
-                        accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod(), config.onCapSettlementDays());
-                if (includeAtm) {
-                    optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
-                        optionletStripper, cftvc, discountCurve, volType, shift);
-                }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-                    asof, transform(*optionletStripper));
+                TERM_OPT_STRIPPER(Linear, Linear())
+                TERM_OPT_ADAPTER(Linear, Linear(), Linear, Linear())
             }
         } else {
             QL_FAIL("Cap floor config " << config.curveID() << " has unexpected interpolation method "
@@ -718,8 +507,8 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
 }
 
 void CapFloorVolCurve::optAtmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
-                                       QuantLib::ext::shared_ptr<IborIndex> index, Handle<YieldTermStructure> discountCurve,
-                                       Real shift) {
+                                      QuantLib::ext::shared_ptr<IborIndex> index,
+                                      Handle<YieldTermStructure> discountCurve, Real shift) {
     QL_REQUIRE(config.optionalQuotes() == false, "Optional quotes for optionlet volatilities are not supported.");
     // Load optionlet atm vol curve
     bool tenorRelevant = false;
@@ -1480,17 +1269,22 @@ vector<Date> CapFloorVolCurve::populateFixingDates(const QuantLib::Date& asof, C
         QuantLib::ext::make_shared<BlackCapFloorEngine>(iborIndex->forwardingTermStructure(), 0.20, config.dayCounter());
     for (Size i = 0; i < configTenors.size(); i++) {
         if (isOis) {
+            Period effTenor =
+                config.optionletTenorInArrears() ? configTenors[i] : configTenors[i] + config.rateComputationPeriod();
             Leg dummyCap =
-                MakeOISCapFloor(CapFloor::Cap, configTenors[i], QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
+                MakeOISCapFloor(CapFloor::Cap, effTenor, QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
                                 config.rateComputationPeriod(), 0.04)
                     .withTelescopicValueDates(true)
-                    .withSettlementDays(config.settleDays());
+                    .withSettlementDays(config.onCapSettlementDays())
+                    .withRule(DateGeneration::Rule::Forward);
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
             fixingDates.push_back(std::max(asof + 1, lastCoupon->underlying()->fixingDates().front()));
         } else {
+            Period effTenor =
+                config.optionletTenorInArrears() ? configTenors[i] : configTenors[i] + iborIndex->tenor();
             CapFloor dummyCap =
-                MakeCapFloor(CapFloor::Cap, configTenors[i], iborIndex, 0.04, 0 * Days).withPricingEngine(dummyEngine);
+                MakeCapFloor(CapFloor::Cap, effTenor, iborIndex, 0.04, 0 * Days).withPricingEngine(dummyEngine);
             QuantLib::ext::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
             fixingDates.push_back(std::max(asof + 1, lastCoupon->fixingDate()));
         }
@@ -1533,7 +1327,8 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
             Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, p, QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index),
                                            config->rateComputationPeriod(), 0.04)
                                .withTelescopicValueDates(true)
-                               .withSettlementDays(onSettlementDays);
+                               .withSettlementDays(onSettlementDays)
+                               .withRule(DateGeneration::Rule::Forward);
             if (dummyCap.empty())
                 continue;
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());

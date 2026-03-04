@@ -1930,12 +1930,12 @@
         "column_settings": [
           {
             "names": [
-              "NPV(t0;m0;p0)",
-              "NPV(t0;m1;p0)",
-              "NPV(t1;m0;p0)",
-              "NPV(t1;m1;p0)",
-              "NPV(t1;m0;p1)",
-              "NPV(t1;m1;p1)",
+              "NPV(t0_m0_p0)",
+              "NPV(t0_m1_p0)",
+              "NPV(t1_m0_p0)",
+              "NPV(t1_m1_p0)",
+              "NPV(t1_m0_p1)",
+              "NPV(t1_m1_p1)",
               "Day1PnL",
               "TradeChangePnL",
               "PeriodCashFlow",
@@ -1956,12 +1956,12 @@
         "column_settings": [
           {
             "names": [
-              "NPV(t0;m0;p0)",
-              "NPV(t0;m1;p0)",
-              "NPV(t1;m0;p0)",
-              "NPV(t1;m1;p0)",
-              "NPV(t1;m0;p1)",
-              "NPV(t1;m1;p1)",
+              "NPV(t0_m0_p0)",
+              "NPV(t0_m1_p0)",
+              "NPV(t1_m0_p0)",
+              "NPV(t1_m1_p0)",
+              "NPV(t1_m0_p1)",
+              "NPV(t1_m1_p1)",
               "Day1PnL",
               "TradeChangePnL",
               "PeriodCashFlow",

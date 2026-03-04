@@ -90,8 +90,11 @@ public:
         trade setups really, where the start date is not set to the index effective date */
     void setIndexStartDateHint(const QuantLib::Date& d) const { indexStartDateHint_ = d; }
 
-    /*! Get the index start date hint, or null if it was never set */
+    /*! Get the index start date hint, or Date() if it was never set */
     const QuantLib::Date& indexStartDateHint() const { return indexStartDateHint_; }
+
+    /*! Returns the first date in the schedule, can be used as a fallback in now indexStartDateHint is set */
+    QuantLib::Date firstScheduleDate() const;
 
     double currentTrancheNotional() const {
         auto additionalResults = instrument_->additionalResults();

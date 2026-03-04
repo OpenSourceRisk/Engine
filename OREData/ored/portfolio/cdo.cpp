@@ -774,11 +774,18 @@ std::string SyntheticCDO::creditCurveIdWithTerm() const {
     QuantLib::Schedule s = makeSchedule(leg().schedule());
     if (s.dates().empty())
         return p.first;
-    QuantLib::Period t = QuantExt::implyIndexTerm(
-        indexStartDateHint_ == Date() ? s.dates().front() : indexStartDateHint_, s.dates().back());
+    auto effectiveStartHintDate = indexStartDateHint_ == Date() ? firstScheduleDate() : indexStartDateHint_;
+    QuantLib::Period t = QuantExt::implyIndexTerm(effectiveStartHintDate, s.dates().back());
     if (t != 0 * Days)
         return p.first + "_" + ore::data::to_string(t);
     return p.first;
+}
+
+QuantLib::Date SyntheticCDO::firstScheduleDate() const {
+    QuantLib::Schedule s = makeSchedule(leg().schedule());
+    if (s.dates().empty())
+        return Date();
+    return s.dates().front();
 }
 
 } // namespace data

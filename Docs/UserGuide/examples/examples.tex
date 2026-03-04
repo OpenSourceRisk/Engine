@@ -1062,6 +1062,7 @@ The examples can be run individually (see below) or all together with {\tt pytho
 \item Commodity Forward, Option, Swaption, APO: {\tt python run\_commodity.py}
 \item Inflation CPI and YOY Swap, the simulation is run twice using a Dodgson-Kainth and Jarrow-Yildirim model: {\tt python run\_inflation.py}
 \item Credit Default Swap: {\tt python run\_credit.py}
+\item FX Forward Exposure with LocalVol FX process and deterministic interest rate
 \end{itemize}
 
 Somewhat more complex single-trade examples:
@@ -1499,6 +1500,20 @@ Correlation & NettingSetId & CVA & DVA & FBA & FCA \\
 \caption{CDS XVA results with LGM model}
 \end{center}
 \end{table}
+
+\subsubsection{FX Forward Exposure with LocalVol FX process and deterministic interest rate}\label{example:fx_localvol_detrates}
+
+Calling
+
+\medskip
+\centerline{\tt python run\_fx\_localvol.py }
+\medskip
+
+runs pricing of FX Options with smile and exosure simulation with local vol and deterministic rates. The EPE / ENE match
+the T0 pricing with smile volas. Using a Black Scholes fx process underestimates the EPE / ENE on the other hand. You
+can run with Black Scholes by using the outcommented sections in the simulation configuration. You can also switch to
+stochastic rates there. If the local vol process is not corrected for stochastic rates, the resulting EPE / ENE will be
+too high compared to the T0 pricing.
 
 \subsubsection{Capped/Floored (Digital) CMS Spread}\label{example:exposure_cmsspread}
 
@@ -2211,6 +2226,72 @@ Note:
 Though this initial example shows only single-asset Equity cases, the scripted trade in its current version is
 significantly more versatile, more examples and scripts to follow.
 
+\subsubsection{Heston Model}
+
+Scripted equity products can also be priced using the Heston model. To demonstrate this, we provide a separate portfolio and
+configuration in {\tt Examples/ScriptedTrade} that can be run with
+
+\medskip
+\centerline{\tt python run\_heston.py}
+
+\medskip
+or by running the Jupyter notebook
+
+\medskip
+\centerline{\tt python -m jupyterlab heston.ipynb \&}
+
+\medskip
+covering a vanilla Equity Option, Barrier Option and Rainbow Option with three underlyings. The Jupyter notebook prices
+the portfolio twice, using a Black and Heston model setup for comparison, and highlights the new asset model calibration reports
+and the MC paths report so that we can validate the simulated price distribution against the semi-analytical benchmark.
+
+The switch from Black to Haston is achieved by modifying the ScriptedTrade's pricing engine configuration, see
+{\tt pricingengine\_heston.xml}, as shown in the following listing.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      ...
+      <Parameter name="FullDynamicFx">false</Parameter>
+      <Parameter name="Model">Heston</Parameter>
+      ...
+    </ModelParameters>
+    <Engine>Generic</Engine>
+    <EngineParameters>
+      <Parameter name="Engine">MC</Parameter>
+      ...
+      <Parameter name="CalibrationMoneyness">-2.0,-1.5,-1.0,-0.5,0.0,0.5,1.0,1.5,2.0</Parameter>
+      <Parameter name="CalibrationExpiries">3M</Parameter>
+      <Parameter name="CalibrationVarianceTerms">1M, 2M, 3M, 6M, 9M, 1Y</Parameter>
+      <!-- theta, kappa, sigma, rho, v0 -->
+      <Parameter name="HestonInitialValues">0.04, 1.0, 0.5, -0.5, 0.04</Parameter> 
+      <Parameter name="HestonFixedValues">N, N, N, N, N</Parameter>                
+      <!-- in [0,1] -->
+      <Parameter name="HestonRelaxedFellerConstraint">0.25</Parameter>             
+      <Parameter name="HestonCalibrationRestarts">0</Parameter>                    
+      <Parameter name="HestonTolerance">0.001</Parameter>                          
+      <Parameter name="HestonProcessDiscretization">QuadraticExponential</Parameter>
+      <Parameter name="AddPathsToAdditionalResults">true</Parameter>
+    </EngineParameters>
+  </Product>
+\end{minted}
+%\hrule
+\caption{Pricing engine parametrisation for using Heston}
+\end{listing}
+
+Note:
+\begin{itemize}
+\item FullDynamicFx needs to be set to {\tt false} for now, because the Heston process might need an
+  approproate drift adjustment for equities with natural payoff in a foreign currency;
+  this adjustment is not implemented yet
+\item Engine needs to be set to {\tt MC}, because the finite difference version of the engine
+  is not implemented yet
+\end{itemize}
+See the scripted trade documentation for a discussion of the Heston-specific parameters above.
+
 \subsection{American Monte Carlo}\label{example:amc}
 
 The cases in this section, folder {\tt AmericanMonteCarlo},  demonstrate how to use American Monte Carlo Simulation (AMC)
@@ -2231,6 +2312,7 @@ to generate exposures in ORE.
 \item Forward Bond with AMC, run with: {\tt python run\_forwardbond.py}
 \item Overlapping Close-Out Grid, run with: {\tt python run\_overlapping.py}
 \item Scenario Statistics, run with: {\tt python run\_scenariostatistics.py}
+\item FX Local Vol exposure generation, run with {\tt python run\_fx\_localvol.py}, this is the amc-variant of example \ref{example:fx_localvol_detrates}
 \end{itemize}
 
 \subsubsection{Benchmarking AMC vs Classic Simulation}
@@ -2657,6 +2739,16 @@ Calling
 
 \medskip
 \centerline {\tt python run\_scenariostatistics.py}
+
+\subsubsection{FX LocalVol exposure generation}
+
+Calling
+
+\medskip
+\centerline {\tt python run\_fx\_localvol.py}
+
+runs exposure simulation under a local vol model, this is the amc-variant of example \ref{example:fx_localvol_detrates}
+
 
 \medskip
 demonstrates a basic statistical anylsis of the simulated raw scenario data (simulated yield curve discount factors, FX spot rates etc), generating a report

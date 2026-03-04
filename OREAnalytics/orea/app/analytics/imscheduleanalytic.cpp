@@ -17,11 +17,13 @@
 */
 
 #include <orea/app/analytics/imscheduleanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {

@@ -44,12 +44,16 @@
     <ScriptedTradeData>
       <Script>
         <Code><![CDATA[
-             NUMBER Payoff;
+             NUMBER Payoff, currentNotional;
              Payoff = PutCall * (Underlying(Expiry) - Strike);
              Option = PAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy);
         ]]></Code>
         <NPV>Option</NPV>
-        <CalibrationSpec>
+	<Results>
+          <Result>currentNotional</Result>
+          <Result rename="notionalCurrency">PayCcy</Result>
+	</Results>
+	<CalibrationSpec>
           <Calibration>
             <Index>Underlying</Index>
             <Strikes>
@@ -107,12 +111,16 @@
       <ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>
       <Script>
         <Code><![CDATA[
-             NUMBER Payoff;
+             NUMBER Payoff, currentNotional;
              Payoff = PutCall * (Underlying(Expiry) - Strike);
              Option = PAY( LongShort * Quantity * max( Payoff, 0 ), Expiry, Settlement, PayCcy);
         ]]></Code>
         <NPV>Option</NPV>
-        <CalibrationSpec>
+	<Results>
+          <Result>currentNotional</Result>
+          <Result rename="notionalCurrency">PayCcy</Result>
+	</Results>
+	<CalibrationSpec>
           <Calibration>
             <Index>Underlying</Index>
             <Strikes>

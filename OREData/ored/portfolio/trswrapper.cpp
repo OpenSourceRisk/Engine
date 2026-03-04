@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/trswrapper.hpp>
+#include <ored/portfolio/bondposition.hpp>
 #include <qle/indexes/compositeindex.hpp>
 
 #include <ored/utilities/to_string.hpp>
@@ -28,6 +29,7 @@
 #include <ql/currencies/exchangeratemanager.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
 namespace ore {
 namespace data {
 
@@ -266,7 +268,11 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
                         usingInitialPrice = true;
                     }
                 } else {
-                    s0 = getUnderlyingFixing(i, v0, false) * arguments_.underlyingMultiplier_[i];
+                    std::map<std::string, QuantLib::ext::any> s0AdditionalData;
+                    s0 = getUnderlyingFixing(i, v0, false, s0AdditionalData) * arguments_.underlyingMultiplier_[i];
+                    for (const auto& [key, value] : s0AdditionalData) {
+                        results_.additionalResults["s0_" + key] = value;
+                    }
                     fx0 = getFxConversionRate(fxDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
                 }
                 DLOG("start value (underlying " << std::to_string(i + 1) << "): s0=" << s0 << " fx0=" << fx0 << " => "
@@ -376,11 +382,17 @@ Real TRSWrapperAccrualEngine::getFxConversionRate(const Date& date, const Curren
 }
 
 Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection) const {
+    std::map<std::string, QuantLib::ext::any> unused;
+    return getUnderlyingFixing(i, date, enforceProjection, unused);
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date, const bool enforceProjection,
+                                                std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const {
     Date today = Settings::instance().evaluationDate();
     QL_REQUIRE(date <= today, "TRSWrapperAccrualEngine: internal error, getUnderlyingFixing("
                                   << date << ") for future date requested (today=" << today << ")");
     if (enforceProjection) {
-        auto tmp = getUnderlyingNPV(i);
+        auto tmp = getUnderlyingNPV(i, fixingAdditionalData);
         return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
     }
     Date adjustedDate = arguments_.underlyingIndex_[i]->fixingCalendar().adjust(date, Preceding);
@@ -389,7 +401,7 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
         return tmp;
     } catch (const std::exception&) {
         if (adjustedDate == today) {
-            auto tmp = getUnderlyingNPV(i);
+            auto tmp = getUnderlyingNPV(i, fixingAdditionalData);
             return QuantLib::close_enough(tmp, 0.0) ? 0.0 : tmp / arguments_.underlyingMultiplier_[i];
         }
         else
@@ -398,11 +410,26 @@ Real TRSWrapperAccrualEngine::getUnderlyingFixing(const Size i, const Date& date
 }
 
 Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i) const {
+    std::map<std::string, QuantLib::ext::any> unused;
+    return getUnderlyingNPV(i, unused);
+}
+
+Real TRSWrapperAccrualEngine::getUnderlyingNPV(const Size i, std::map<std::string, QuantLib::ext::any>& fixingAdditionalData) const {
     if (QuantLib::ext::dynamic_pointer_cast<BondIndex>(arguments_.underlyingIndex_[i]) != nullptr ||
         QuantLib::ext::dynamic_pointer_cast<BondFuturesIndex>(arguments_.underlyingIndex_[i]) != nullptr) {
         Date today = Settings::instance().evaluationDate();
         return arguments_.underlyingIndex_[i]->fixing(today, true) * arguments_.underlyingMultiplier_[i];
     } else {
+        if(auto bondPositionWrapper = QuantLib::ext::dynamic_pointer_cast<BondPositionInstrumentWrapper>(arguments_.underlying_[i]->instrument())){
+            auto bondDetails = bondPositionWrapper->NPVBreakDown();
+            for(Size k = 0; k < bondDetails.size(); k++){
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_weight"] = std::get<0>(bondDetails[k]);
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_bidAskSpread"] = std::get<1>(bondDetails[k]);
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_fxConversion"] = std::get<2>(bondDetails[k]);
+                fixingAdditionalData["underlying["+ std::to_string(k)+ "]_npv"] = std::get<3>(bondDetails[k]);
+            }
+            return bondPositionWrapper->NPV();
+        }
         return arguments_.underlying_[i]->instrument()->NPV();
     }
 }
@@ -438,7 +465,6 @@ void TRSWrapperAccrualEngine::calculate() const {
                              nthCurrentPeriod)) {
 
         // vector holding cashflow results, we store these as an additional result
-
         for (Size i = 0; i < arguments_.underlying_.size(); ++i) {
 
             std::string resultSuffix = arguments_.underlying_.size() > 1 ? "_" + std::to_string(i + 1) : "";
@@ -449,12 +475,16 @@ void TRSWrapperAccrualEngine::calculate() const {
 
             if (underlyingStartValue[i] != Null<Real>()) {
                 Real s1, fx1;
+                std::map<std::string, QuantLib::ext::any> s1AdditionalData;
                 if (endDate == Null<Date>()) {
-                    s1 = getUnderlyingNPV(i);
+                    s1 = getUnderlyingNPV(i, s1AdditionalData);
                     fx1 = getFxConversionRate(today, arguments_.assetCurrency_[i], arguments_.returnCurrency_, true);
                 } else {
-                    s1 = getUnderlyingFixing(i, endDate, false) * arguments_.underlyingMultiplier_[i];
+                    s1 = getUnderlyingFixing(i, endDate, false, s1AdditionalData) * arguments_.underlyingMultiplier_[i];
                     fx1 = getFxConversionRate(endDate, arguments_.assetCurrency_[i], arguments_.returnCurrency_, false);
+                }
+                for (const auto& [key, value] : s1AdditionalData) {
+                    results_.additionalResults["s1_" + key] = value;
                 }
                 assetLegNpv += fx1 * s1 - underlyingStartValue[i] * fxConversionFactor[i];
                 DLOG("end value (underlying " << std::to_string(i + 1) << "): s1=" << s1 << " fx1=" << fx1 << " => "
@@ -735,8 +765,46 @@ void TRSWrapperAccrualEngine::calculate() const {
                         }
                     }
                     fundingLegNotionalFactor = accruedInterest / localFundingLegNpv;
+                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
+                           QuantLib::ext::dynamic_pointer_cast<QuantExt::ZeroFixedCoupon>(cpn) != nullptr) {
+                    auto zeroCpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::ZeroFixedCoupon>(cpn);
+                    double rate = zeroCpn->rate();
+                    DayCounter dc = zeroCpn->dayCounter();
+                    Compounding comp = zeroCpn->compounding();
+                    Date endDate = std::min(cpn->accrualEndDate(), today);
+                    double accruedFunding = 0.0;
+                    double prevPriceFx = 0.0;
+                    for (QuantLib::Date d = cpn->accrualStartDate(); d < endDate; ++d) {
+                        Date fixingDate =
+                            arguments_.underlyingIndex_[j]->fixingCalendar().adjust(d, Preceding);
+                        Real localNotional =
+                            getUnderlyingFixing(j, fixingDate, false) * arguments_.underlyingMultiplier_[j];
+                        Real localFxFactor = getFxConversionRate(fixingDate, arguments_.assetCurrency_[j],
+                                                                 arguments_.fundingCurrency_, false);
+                        Real priceFx = localNotional * localFxFactor;
+                        Real deltaPriceFx = priceFx - prevPriceFx;
+                        double tau = dc.yearFraction(d, endDate);
+                        double compFactor = (comp == QuantLib::Compounded) ? std::pow(1.0 + rate, tau)
+                                                                            : (1.0 + rate * tau);
+                        accruedFunding += deltaPriceFx * compFactor;
+                        results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = localNotional;
+                        results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = localFxFactor;
+                        results_.additionalResults["fundingLegDeltaNotionalFx" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = deltaPriceFx;
+                        results_.additionalResults["fundingLegCompoundFactor" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = compFactor;
+                        prevPriceFx = priceFx;
+                    }
+                    // When subtractNotional=true the coupon's accruedAmount (=localFundingLegNpv) subtracts
+                    // the notional. It would be Sum delta * (compFactor - 1), which yields to a telescopic sum
+                    // and only the last priceFx remains.
+                    if (zeroCpn->subtractNotional())
+                        accruedFunding -= prevPriceFx;
+                    fundingLegNotionalFactor += accruedFunding / localFundingLegNpv;
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset) {
-                    QL_FAIL("daily reset funding legs support fixed rate, ibor and overnight indexed coupons only");
+                    QL_FAIL("daily reset funding legs support fixed rate, ibor, overnight indexed and zero coupon fixed coupons only");
                 } else {
                     QL_FAIL("internal error: unknown notional type, contact dev");
                 }

@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/crifanalytic.hpp>
+#include <orea/app/inputparameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/simm/crifgenerator.hpp>
@@ -32,10 +33,11 @@
 
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/parsers.hpp>
 
 using namespace ore::data;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 namespace ore {
 namespace analytics {
@@ -312,8 +314,8 @@ void CrifAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     LOG("CRIF report generated successfully");
 }
 
-CrifAnalytic::CrifAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
-                           const QuantLib::ext::weak_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
+CrifAnalytic::CrifAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                           const QuantLib::ext::weak_ptr<AnalyticsManager>& analyticsManager,
                            const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                            const std::string& baseCurrency)
     : Analytic(std::make_unique<CrifAnalyticImpl>(inputs), {"CRIF"}, inputs, analyticsManager) {
@@ -321,7 +323,7 @@ CrifAnalytic::CrifAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::Input
     baseCurrency_ = baseCurrency.empty() ? inputs->baseCurrency() : baseCurrency;
 }
 
-QuantLib::ext::shared_ptr<ore::analytics::Crif>
+QuantLib::ext::shared_ptr<Crif>
 CrifAnalytic::computeCrif(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                           const QuantLib::ext::shared_ptr<SensitivityStream>& sensiStream,
                           const QuantLib::ext::shared_ptr<InputParameters>& inputs,

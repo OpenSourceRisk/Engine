@@ -52,8 +52,7 @@ RandomVariable LgmFdSolver::rollback(const RandomVariable& v, const Real t1, con
     QL_REQUIRE(t0 < t1, "LgmCFdSolver::rollback(): t0 (" << t0 << ") < t1 (" << t1 << ") required.");
     if (steps == Null<Size>())
         steps = std::max<Size>(1, static_cast<Size>(static_cast<double>(timeStepsPerYear_) * (t1 - t0) + 0.5));
-    Array workingArray(v.size());
-    v.copyToArray(workingArray);
+    Array workingArray = static_cast<Array>(v);
     solver_->rollback(workingArray, t1, t0, steps, 0);
     if (QuantLib::close_enough(t0, 0.0)) {
         Array x = mesher_->locations(0);
