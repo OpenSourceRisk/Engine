@@ -26,46 +26,41 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     DLOG("SwaptionStraddle::build() for " << id());
 
     QL_REQUIRE(!legData_.empty(), "SwaptionStraddle requires at least one leg");
-    npvCurrency_ = notionalCurrency_ = legData_[0].currency();
 
-    // Create payer swaption (Payer)
-    OptionData payerOptionData = optionData_;
-    payerOptionData.setCallPut("Call");
-    payerOptionData.setLongShort(longShort_);
-    payerSwaption_ = QuantLib::ext::make_shared<Swaption>(envelope(), payerOptionData, legData_);
+    // Create swaption 1
+    swaption1_ = QuantLib::ext::make_shared<Swaption>(envelope(), optionData_, legData_);
     // we need to do set the id manually because it otherwise remains blank - it is essential because the engine is stored by id if the option style is Bermudan
-    payerSwaption_->setId(id() + "_PayerSwaption");
-    payerSwaption_->build(engineFactory);
+    swaption1_->setId(id() + "_1");
+    swaption1_->build(engineFactory);
 
-    // Create receiver swaption (Receiver)
-    OptionData receiverOptionData = optionData_;
-    receiverOptionData.setCallPut("Put");
-    receiverOptionData.setLongShort(longShort_);
+    // Create swaption 2 with opposite legs than swaption 1.
     std::vector<LegData> receiverLegData;
     for (auto const& ld: legData_) {
         LegData newLeg = ld;
         newLeg.isPayer() = !ld.isPayer(); //Reverse each legs payer/receiver
         receiverLegData.push_back(newLeg);
     }
-    receiverSwaption_ = QuantLib::ext::make_shared<Swaption>(envelope(), receiverOptionData, receiverLegData);
+    swaption2_ = QuantLib::ext::make_shared<Swaption>(envelope(), optionData_, receiverLegData);
     // we need to do set the id manually because it otherwise remains blank - it is essential because the engine is stored by id if the option style is Bermudan
-    receiverSwaption_->setId(id() + "_ReceiverSwaption");
-    receiverSwaption_->build(engineFactory);
+    swaption2_->setId(id() + "_2");
+    swaption2_->build(engineFactory);
 
     // They both have the same maturity
-    maturity_ = payerSwaption_->maturity();
-    notionalCurrency_ = payerSwaption_->notionalCurrency();
+    maturity_ = swaption1_->maturity();
+    notionalCurrency_ = swaption1_->notionalCurrency();
+    npvCurrency_ = swaption1_->notionalCurrency();
+    maturityType_ = swaption1_->maturityType();
 
     // Combine both swaptions in a composite instrument
     instrument_ = QuantLib::ext::make_shared<CompositeInstrumentWrapper>(
-        std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>{payerSwaption_->instrument(), receiverSwaption_->instrument()});
+        std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>{swaption1_->instrument(), swaption2_->instrument()});
 
-    requiredFixings_.addData(payerSwaption_->requiredFixings());
-    requiredFixings_.addData(receiverSwaption_->requiredFixings());
+    requiredFixings_.addData(swaption1_->requiredFixings());
+    requiredFixings_.addData(swaption2_->requiredFixings());
 
     additionalData_["isdaAssetClass"] = std::string("Interest Rate");
     additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("SwaptionStraddle");
+    additionalData_["isdaSubProduct"] = std::string("Swaption");
     additionalData_["isdaTransaction"] = std::string("");
     additionalData_["longShort"] = longShort_;
 }
@@ -99,15 +94,15 @@ XMLNode* SwaptionStraddle::toXML(XMLDocument& doc) const {
 }
 
 const std::map<std::string, QuantLib::ext::any>& SwaptionStraddle::additionalData() const {
-    if (payerSwaption_) {
-        for (const auto& [key, value] : payerSwaption_->additionalData()) {
+    if (swaption1_) {
+        for (const auto& [key, value] : swaption1_->additionalData()) {
             if (additionalData_.find("payer_" + key) == additionalData_.end()) {
                 additionalData_["payer_" + key] = value;
             }
         }
     }
-    if (receiverSwaption_) {
-        for (const auto& [key, value] : receiverSwaption_->additionalData()) {
+    if (swaption2_) {
+        for (const auto& [key, value] : swaption2_->additionalData()) {
             if (additionalData_.find("receiver_" + key) == additionalData_.end()) {
                 additionalData_["receiver_" + key] = value;
             }
@@ -120,8 +115,8 @@ const std::map<std::string, QuantLib::ext::any>& SwaptionStraddle::additionalDat
 std::map<AssetClass, std::set<std::string>>
 SwaptionStraddle::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
-    if (payerSwaption_) {
-        auto payerIndices = payerSwaption_->underlyingIndices(referenceDataManager);
+    if (swaption1_) {
+        auto payerIndices = swaption1_->underlyingIndices(referenceDataManager);
         for (const auto& [assetClass, indices] : payerIndices) {
             result[assetClass].insert(indices.begin(), indices.end());
         }
