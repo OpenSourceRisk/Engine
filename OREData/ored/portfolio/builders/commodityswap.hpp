@@ -23,11 +23,14 @@
 
 #pragma once
 
+#include <map>
+
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/pricingengines/discountingcommoditycurrencyswapengine.hpp>
 
 namespace ore {
 namespace data {
@@ -51,13 +54,53 @@ protected:
 
     virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const Currency& ccy, const Currency& npvCcy, const std::string& discountCurveName) override {
-        Handle<YieldTermStructure> yts = discountCurveName.empty()
-            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
-            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+        Handle<YieldTermStructure> yts =
+            discountCurveName.empty()
+                ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
         return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(
             yts, QuantLib::ext::nullopt, Date(), Date(),
             market_->fxRate(ccy.code() + npvCcy.code(), configuration(MarketContext::pricing)));
     };
+};
+
+//! Discounted Cashflows Engine Builder for Cross Currency Commodity Swaps
+class CrossCurrencyCommoditySwapEngineBuilder
+    : public CachingPricingEngineBuilder<std::string, const std::vector<QuantLib::Currency>&,
+                                         const QuantLib::Currency&, const QuantLib::Currency&> {
+public:
+    CrossCurrencyCommoditySwapEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencyCommoditySwapEngine",
+                               {"CrossCurrencyCommoditySwap"}) {}
+
+protected:
+    virtual std::string keyImpl(const std::vector<Currency>& ccys, const Currency& npvCcy,
+                                const Currency& notionalCcy) override {
+        std::ostringstream ccyskey;
+        ccyskey << npvCcy << "/" << notionalCcy << "/";
+        for (Size i = 0; i < ccys.size(); ++i)
+            ccyskey << ccys[i] << "-";
+        return ccyskey.str();
+    }
+
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::vector<Currency>& ccys,
+                                                                          const Currency& npvCcy,
+                                                                          const Currency& notionalCcy) override {
+        std::string config = configuration(MarketContext::pricing);
+        std::string npvCcyCode = npvCcy.code();
+        std::string notionalCcyCode = notionalCcy.code();
+        std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>> discountCurves;
+        std::vector<QuantLib::Handle<QuantLib::Quote>> fxQuotes;
+        std::map<std::string, QuantLib::Handle<QuantLib::Quote>> notionalFxQuotes;
+        for (Size i = 0; i < ccys.size(); ++i) {
+            std::string legCcy = ccys[i].code();
+            discountCurves.push_back(market_->discountCurve(legCcy, config));
+            fxQuotes.push_back(market_->fxRate(legCcy + npvCcyCode, config));
+            notionalFxQuotes[legCcy] = market_->fxRate(legCcy + notionalCcyCode, config);
+        }
+        return QuantLib::ext::make_shared<QuantExt::DiscountingCommodityCurrencySwapEngine>(
+            discountCurves, fxQuotes, ccys, npvCcy, notionalCcy, notionalFxQuotes);
+    }
 };
 
 } // namespace data
