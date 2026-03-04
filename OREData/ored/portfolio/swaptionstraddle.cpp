@@ -96,15 +96,15 @@ XMLNode* SwaptionStraddle::toXML(XMLDocument& doc) const {
 const std::map<std::string, QuantLib::ext::any>& SwaptionStraddle::additionalData() const {
     if (swaption1_) {
         for (const auto& [key, value] : swaption1_->additionalData()) {
-            if (additionalData_.find("payer_" + key) == additionalData_.end()) {
-                additionalData_["payer_" + key] = value;
+            if (additionalData_.find("swaption1_" + key) == additionalData_.end()) {
+                additionalData_["swaption1_" + key] = value;
             }
         }
     }
     if (swaption2_) {
         for (const auto& [key, value] : swaption2_->additionalData()) {
-            if (additionalData_.find("receiver_" + key) == additionalData_.end()) {
-                additionalData_["receiver_" + key] = value;
+            if (additionalData_.find("swaption2_" + key) == additionalData_.end()) {
+                additionalData_["swaption2_" + key] = value;
             }
         }
     }
@@ -116,8 +116,8 @@ std::map<AssetClass, std::set<std::string>>
 SwaptionStraddle::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     if (swaption1_) {
-        auto payerIndices = swaption1_->underlyingIndices(referenceDataManager);
-        for (const auto& [assetClass, indices] : payerIndices) {
+        auto underlyingIndices = swaption1_->underlyingIndices(referenceDataManager);
+        for (const auto& [assetClass, indices] : underlyingIndices) {
             result[assetClass].insert(indices.begin(), indices.end());
         }
     }
