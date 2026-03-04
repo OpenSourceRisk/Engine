@@ -11,7 +11,7 @@ ENV PATH="/venv/bin:$PATH"
 ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH}"
 ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
 ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
-ENV CIBW_BEFORE_ALL="pip3 install setuptools && chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && ORE-SWIG/Wheels-gitlab/before_all_linux.sh"
+ENV CIBW_BEFORE_ALL="/opt/python/cp310-cp310/bin/pip3 install setuptools docker && chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && PATH=/opt/python/cp310-cp310/bin:$PATH ORE-SWIG/Wheels-gitlab/before_all_linux.sh"
 ENV CIBW_BEFORE_BUILD="pip install setuptools"
 ENV CIBW_ENVIRONMENT="PATH=/usr/lib64/ccache:/usr/lib/ccache:$PATH CCACHE_DIR=/project/.ccache CCACHE_MAXSIZE=5G"
 
