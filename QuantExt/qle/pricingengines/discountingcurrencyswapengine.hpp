@@ -59,7 +59,7 @@ public:
     std::vector<Currency> currencies() { return currencies_; }
     Currency npvCurrency() { return npvCurrency_; }
 
-protected:
+private:
     Handle<YieldTermStructure> fetchTS(Currency ccy) const;
     Handle<Quote> fetchFX(Currency ccy) const;
 

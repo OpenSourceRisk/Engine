@@ -554,8 +554,6 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
         DLOG("CommoditySwap::netFloatingFlows() created netted leg for currency " << ccy
              << " from " << legIds.size() << " floating legs");
     }
-    // Keep nettedLegId_ pointing to the last one for backwards compatibility
-    nettedLegId_ = legs.size() - 1;
     
     legs_.swap(legs);
     legPayers_.swap(legPayers);
