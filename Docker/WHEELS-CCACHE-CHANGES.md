@@ -36,7 +36,9 @@ The `Dockerfile-Wheels-CIBW` build was slow because:
 | Change | Why |
 |--------|-----|
 | Added `# syntax = docker/dockerfile:1.2` | Enables BuildKit features |
+| Added `ARG DOCKER_REPO` and `ARG ORE_BUILD_VERSION` before `FROM` | Docker requires ARGs used in `FROM` to be declared before it |
 | Moved `before_all_linux.sh` from `CIBW_BEFORE_BUILD` to `CIBW_BEFORE_ALL` | SWIG wrapping (`setup.py wrap`) is Python-version-independent — now runs once per platform instead of once per wheel |
+| `CIBW_BEFORE_ALL` uses `/opt/python/cp310-cp310/bin/pip3` and prepends `/opt/python/cp310-cp310/bin` to `PATH` | `CIBW_BEFORE_ALL` runs in the raw manylinux container where `pip3`/`python3` are not on `PATH`; only versioned interpreters under `/opt/python/` exist |
 | Added `CIBW_BEFORE_BUILD="pip install setuptools"` | Ensures setuptools is available in each per-Python-version venv for `setup.py build_ext` |
 | Added `CIBW_ENVIRONMENT` with ccache config | Routes compiler calls through ccache inside cibuildwheel containers (see details below) |
 
@@ -107,3 +109,26 @@ CCACHE_MAXSIZE=5G
 | `Dockerfile-ORE` | `ccache-ore` | Flags include `-DORE_BUILD_SWIG=ON`, no `-fPIC`, `-DORE_ENABLE_OPENCL=ON` |
 | `Dockerfile-Wheels-ORE` | `ccache-wheels` | Flags include `-fPIC`, `-DORE_ENABLE_OPENCL=OFF`, tests disabled |
 | `Dockerfile-Wheels-CIBW` | N/A (ephemeral `/project/.ccache`) | Only lives within a single cibuildwheel run; shares across Python versions |
+
+## Bug Fix: `build-wheels-cibw` missing `check-out` dependency
+
+The `build-wheels-cibw` CI job was failing with:
+
+```
+Error: error resolving dockerfile path: please provide a valid path to a Dockerfile within the build context with --dockerfile
+```
+
+### Root Cause
+
+The job had `GIT_STRATEGY: none` (no repo checkout) and relied on artifacts from
+`needs` jobs. However, `check-out` was not listed in `needs`, so the `ore/` directory
+(containing `ore/Docker/Dockerfile-Wheels-CIBW`) was never downloaded. Kaniko could
+not find the Dockerfile.
+
+### Fixes
+
+1. **`ci/build_wheels.yml`**: Added `check-out` to the `needs` list of
+   `build-wheels-cibw` so that the `ore/` artifacts are available.
+2. **`ore/Docker/Dockerfile-Wheels-CIBW`**: Added `ARG DOCKER_REPO` and
+   `ARG ORE_BUILD_VERSION` before the `FROM` line, matching the pattern in
+   `Dockerfile-ORE`. Docker requires ARGs used in `FROM` to be declared before it.
