@@ -270,7 +270,6 @@ void SensitivityAnalysis::generateSensitivities() {
                     }
                     Size tradeIdx = cube->idsAndIndexes().at(id);
                     Real baseNpv = cube->getT0(tradeIdx, 0);
-                    std::cout<<"periodFlow = "<<periodFlow<<std::endl;
                     thetaMap[id] = npv * fx - baseNpv + periodFlow;
                 }
                 // Restore original fixings and reset evaluation date
