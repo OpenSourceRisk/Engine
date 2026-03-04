@@ -43,6 +43,25 @@ struct CalibrationVariables : public InputVariables {
 
     QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
+
+    std::string calibrationModel_;
+    std::string hwCalibrationMode_;
+    bool pcaCalibration_ = false;
+    bool meanReversionCalibration_ = false;
+    std::vector<std::string> foreignCurrencies_;
+    std::vector<QuantLib::Period> curveTenors_;
+    QuantLib::Date startDate_;
+    QuantLib::Date endDate_;
+    std::string scenarioInputFile_;
+    bool useForwardRate_ = false;
+    QuantLib::Real lambda_ = 1.0;
+    std::vector<std::string> pcaInputFiles_;
+    QuantLib::Real varianceRetained_ = 0.0;
+    QuantLib::Size basisFunctionNumber_ = 0;
+    QuantLib::Real kappaUpperBound_ = 0.0;
+    QuantLib::Size haltonMaxGuess_ = 0;
+    std::string pcaOutputFileName_;
+    std::string meanReversionOutputFileName_;
 };
 
 class CalibrationAnalyticImpl : public Analytic::Impl {
