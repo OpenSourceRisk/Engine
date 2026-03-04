@@ -51,6 +51,7 @@ struct SensitivityRecord {
     mutable QuantLib::Real delta;
     mutable QuantLib::Real gamma;
     mutable QuantLib::Real theta;
+    QuantLib::Period thetaPeriod;
 
     /*! Default ctor to prevent uninitialised variables
         Could use in class initialisation and avoid ctor but may be confusing

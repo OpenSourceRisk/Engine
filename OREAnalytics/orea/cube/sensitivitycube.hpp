@@ -156,6 +156,10 @@ public:
     //! Set theta values (tradeId -> theta)
     void setThetaMap(const std::map<std::string, QuantLib::Real>& thetaMap) { thetaMap_ = thetaMap; }
 
+    //! Set / get the theta period
+    void setThetaPeriod(const QuantLib::Period& p) { thetaPeriod_ = p; }
+    const QuantLib::Period& thetaPeriod() const { return thetaPeriod_; }
+
     //! Get the trade theta for trade with ID \p tradeId
     QuantLib::Real theta(const std::string& tradeId) const;
 
@@ -190,6 +194,8 @@ private:
 
     // theta values per trade (tradeId -> theta)
     std::map<std::string, QuantLib::Real> thetaMap_;
+    // theta period (e.g. 1D)
+    QuantLib::Period thetaPeriod_;
 
 };
 

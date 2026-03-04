@@ -91,10 +91,21 @@ SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& en
 
     sr.currency = entries[6];
     sr.baseNpv = parseReal(entries[7]);
-    sr.delta = parseReal(entries[8]);
-    tryParseReal(entries[9], sr.gamma); // might be #N/A, if not computed
+    Real delta = parseReal(entries[8]);
+    Real gamma = Null<Real>();
+    tryParseReal(entries[9], gamma); // might be #N/A, if not computed
 
-    // Theta is the last column if present (size 11 or 15)
+    // If this is a Theta row (Factor_1 key type is Theta), the theta value is in the Delta column
+    if (sr.key_1.keytype == RiskFactorKey::KeyType::Theta) {
+        sr.theta = delta;
+        sr.delta = 0;
+        sr.gamma = 0;
+    } else {
+        sr.delta = delta;
+        sr.gamma = gamma;
+    }
+
+    // Backward compatibility: Theta as a separate last column (size 11 or 15)
     if (entries.size() == 11) {
         tryParseReal(entries[10], sr.theta);
     } else if (entries.size() == 15) {

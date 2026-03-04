@@ -73,11 +73,19 @@ SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::Re
     sr.currency = boost::get<std::string>(entries[6]);
     sr.baseNpv = boost::get<Real>(entries[7]);
     Real delta = boost::get<Real>(entries[8]);
-    sr.delta = delta != Null<Real>() ? delta : 0;
     Real gamma = boost::get<Real>(entries[9]);
-    sr.gamma = gamma != Null<Real>() ? gamma : 0;
 
-    // Theta is the last column if present (size 11 or 15)
+    // If this is a Theta row (Factor_1 key type is Theta), the theta value is in the Delta column
+    if (sr.key_1.keytype == RiskFactorKey::KeyType::Theta) {
+        sr.theta = delta != Null<Real>() ? delta : 0;
+        sr.delta = 0;
+        sr.gamma = 0;
+    } else {
+        sr.delta = delta != Null<Real>() ? delta : 0;
+        sr.gamma = gamma != Null<Real>() ? gamma : 0;
+    }
+
+    // Backward compatibility: Theta as a separate last column (size 11 or 15)
     if (entries.size() == 11) {
         Real theta = boost::get<Real>(entries[10]);
         sr.theta = theta;

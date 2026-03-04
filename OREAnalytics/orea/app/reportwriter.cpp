@@ -878,10 +878,10 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     report.addColumn("Base NPV(Trade)", double(), amountPrecision);
     report.addColumn("Delta(Trade)", double(), amountPrecision);
     report.addColumn("Gamma(Trade)", double(), amountPrecision);
-    report.addColumn("Theta", double(), amountPrecision);
 
     // Make sure that we are starting from the start
     ss->reset();
+    std::set<std::string> thetaWritten; // track which trades already have a Theta row
     while (SensitivityRecord sr = ss->next()) {
         if ((outputThreshold == Null<Real>()) ||
             (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
@@ -895,6 +895,43 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             } else
                 tradeCcy = sr.currency;
 
+            // Write a dedicated Theta row once per trade, before the first regular sensitivity row
+            // Theta value goes into the Delta column; Gamma and trade-level fields are #N/A
+            if (sr.theta != Null<Real>() && thetaWritten.find(sr.tradeId) == thetaWritten.end()) {
+                thetaWritten.insert(sr.tradeId);
+                // Build a proper RiskFactorKey-style string: Theta/<currency>/0/<period>
+                std::ostringstream thetaFactor;
+                thetaFactor << "Theta/" << sr.currency << "/0";
+                Real thetaShiftSize = Null<Real>();
+                if (sr.thetaPeriod != Period()) {
+                    thetaFactor << "/" << ore::data::to_string(sr.thetaPeriod);
+                    // Convert period to year fraction
+                    thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length()) / 365.0;
+                    if (sr.thetaPeriod.units() == Weeks)
+                        thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length()) * 7.0 / 365.0;
+                    else if (sr.thetaPeriod.units() == Months)
+                        thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length()) / 12.0;
+                    else if (sr.thetaPeriod.units() == Years)
+                        thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length());
+                }
+                report.next();
+                report.add(sr.tradeId);
+                report.add(ore::data::to_string(sr.isPar));
+                report.add(thetaFactor.str());
+                report.add(thetaShiftSize);
+                report.add(string(""));
+                report.add(Null<Real>());       // ShiftSize_2 = #N/A
+                report.add(sr.currency);
+                report.add(sr.baseNpv);
+                report.add(sr.theta);           // Theta value in the Delta column
+                report.add(Null<Real>());       // Gamma = #N/A
+                report.add(tradeCcy);
+                report.add(Null<Real>());       // Base NPV(Trade) = #N/A
+                report.add(Null<Real>());       // Delta(Trade) = #N/A
+                report.add(Null<Real>());       // Gamma(Trade) = #N/A
+            }
+
+            // Write the regular sensitivity row
             report.next();
             report.add(sr.tradeId);
             report.add(ore::data::to_string(sr.isPar));
@@ -913,11 +950,6 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
                 report.add(sr.gamma);
             } else {
                 report.add(sr.gamma * fx);
-            }
-            if (sr.theta == Null<Real>()) {
-                report.add(sr.theta);
-            } else {
-                report.add(sr.theta);
             }
         } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
             // TODO: Again, is this needed?
