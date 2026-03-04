@@ -41,7 +41,13 @@ void SwaptionStraddle::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     OptionData receiverOptionData = optionData_;
     receiverOptionData.setCallPut("Put");
     receiverOptionData.setLongShort(longShort_);
-    receiverSwaption_ = QuantLib::ext::make_shared<Swaption>(envelope(), receiverOptionData, legData_);
+    std::vector<LegData> receiverLegData;
+    for (auto const& ld: legData_) {
+        LegData newLeg = ld;
+        newLeg.isPayer() = !ld.isPayer(); //Reverse each legs payer/receiver
+        receiverLegData.push_back(newLeg);
+    }
+    receiverSwaption_ = QuantLib::ext::make_shared<Swaption>(envelope(), receiverOptionData, receiverLegData);
     // we need to do set the id manually because it otherwise remains blank - it is essential because the engine is stored by id if the option style is Bermudan
     receiverSwaption_->setId(id() + "_ReceiverSwaption");
     receiverSwaption_->build(engineFactory);
