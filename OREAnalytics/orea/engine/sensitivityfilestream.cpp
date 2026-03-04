@@ -72,8 +72,8 @@ void SensitivityInputStream::reset() {
 
 SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& entries) const {
 
-    QL_REQUIRE(entries.size() == 10 || entries.size() == 14,
-               "On line number " << lineNo_ << ": A sensitivity record needs 10 or 14 entries");
+    QL_REQUIRE(entries.size() == 10 || entries.size() == 11 || entries.size() == 14 || entries.size() == 15,
+               "On line number " << lineNo_ << ": A sensitivity record needs 10, 11, 14, or 15 entries");
 
     SensitivityRecord sr;
     sr.tradeId = entries[0];
@@ -93,6 +93,13 @@ SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& en
     sr.baseNpv = parseReal(entries[7]);
     sr.delta = parseReal(entries[8]);
     tryParseReal(entries[9], sr.gamma); // might be #N/A, if not computed
+
+    // Theta is the last column if present (size 11 or 15)
+    if (entries.size() == 11) {
+        tryParseReal(entries[10], sr.theta);
+    } else if (entries.size() == 15) {
+        tryParseReal(entries[14], sr.theta);
+    }
 
     return sr;
 }

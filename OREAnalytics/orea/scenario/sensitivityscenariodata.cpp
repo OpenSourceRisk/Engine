@@ -535,6 +535,15 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     DLOG("Get compute gamma flag");
     computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
 
+    DLOG("Get compute theta flag");
+    computeTheta_ =  XMLUtils::getChildValueAsBool(node, "ComputeTheta", false); // defaults to true
+
+    DLOG("Get theta period");
+    if (auto n = XMLUtils::getChildNode(node, "ThetaPeriod"))
+        thetaPeriod_ = parsePeriod(XMLUtils::getNodeValue(n));
+    else
+        thetaPeriod_ = Period(1,Days);
+
     DLOG("Get useSpreadedTermStructures flag");
     if (auto n = XMLUtils::getChildNode(node, "UseSpreadedTermStructures"))
         useSpreadedTermStructures_ = parseBool(XMLUtils::getNodeValue(n));
@@ -927,6 +936,9 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
+    XMLUtils::addChild(doc, root, "ComputeTheta", computeTheta_);
+    if (computeTheta_)
+        XMLUtils::addChild(doc, root, "ThetaPeriod", ore::data::to_string(thetaPeriod_));
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 
     // If not par, no more to do

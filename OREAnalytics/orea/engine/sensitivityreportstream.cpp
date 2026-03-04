@@ -53,8 +53,8 @@ void SensitivityReportStream::reset() {
 
 SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::ReportType>& entries) const {
 
-    QL_REQUIRE(entries.size() == 10 || entries.size() == 14,
-               "On row number " << row_ << ": A sensitivity record needs 10 entries or 14 entries");
+    QL_REQUIRE(entries.size() == 10 || entries.size() == 11 || entries.size() == 14 || entries.size() == 15,
+               "On row number " << row_ << ": A sensitivity record needs 10, 11, 14, or 15 entries");
 
     SensitivityRecord sr;
     sr.tradeId = boost::get<std::string>(entries[0]);
@@ -76,6 +76,15 @@ SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::Re
     sr.delta = delta != Null<Real>() ? delta : 0;
     Real gamma = boost::get<Real>(entries[9]);
     sr.gamma = gamma != Null<Real>() ? gamma : 0;
+
+    // Theta is the last column if present (size 11 or 15)
+    if (entries.size() == 11) {
+        Real theta = boost::get<Real>(entries[10]);
+        sr.theta = theta;
+    } else if (entries.size() == 15) {
+        Real theta = boost::get<Real>(entries[14]);
+        sr.theta = theta;
+    }
 
     return sr;
 }

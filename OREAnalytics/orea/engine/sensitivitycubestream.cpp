@@ -92,6 +92,12 @@ SensitivityRecord SensitivityCubeStream::next() {
     sr.tradeCurrency = currentTradeCurrency_;
     sr.baseNpv = cubes_[currentCubeIdx_]->npv(tradeIdx);
 
+    // Populate theta if available (same value for all records of a given trade)
+    if (cubes_[currentCubeIdx_]->hasTheta())
+        sr.theta = cubes_[currentCubeIdx_]->theta(sr.tradeId);
+    else
+        sr.theta = Null<Real>();
+
     if (currentDeltaKey_ != currentDeltaKeys_.end()) {
         auto const& fd = cubes_[currentCubeIdx_]->upThenDownFactorData(*currentDeltaKey_);
         sr.key_1 = *currentDeltaKey_;

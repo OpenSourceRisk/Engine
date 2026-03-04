@@ -150,6 +150,15 @@ public:
     //! Get the relevant risk factors
     std::set<RiskFactorKey> relevantRiskFactors() const;
 
+    //! Check if theta values are available
+    bool hasTheta() const { return !thetaMap_.empty(); }
+
+    //! Set theta values (tradeId -> theta)
+    void setThetaMap(const std::map<std::string, QuantLib::Real>& thetaMap) { thetaMap_ = thetaMap; }
+
+    //! Get the trade theta for trade with ID \p tradeId
+    QuantLib::Real theta(const std::string& tradeId) const;
+
 private:
     //! Initialise method used by the constructors
     void initialise();
@@ -178,6 +187,9 @@ private:
     std::map<QuantLib::Size, RiskFactorKey> upIndexToKey_;
     std::map<QuantLib::Size, RiskFactorKey> downIndexToKey_;
     std::map<QuantLib::Size, crossPair> crossIndexToKey_;
+
+    // theta values per trade (tradeId -> theta)
+    std::map<std::string, QuantLib::Real> thetaMap_;
 
 };
 

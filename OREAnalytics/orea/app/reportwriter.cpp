@@ -878,6 +878,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     report.addColumn("Base NPV(Trade)", double(), amountPrecision);
     report.addColumn("Delta(Trade)", double(), amountPrecision);
     report.addColumn("Gamma(Trade)", double(), amountPrecision);
+    report.addColumn("Theta", double(), amountPrecision);
 
     // Make sure that we are starting from the start
     ss->reset();
@@ -912,6 +913,11 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
                 report.add(sr.gamma);
             } else {
                 report.add(sr.gamma * fx);
+            }
+            if (sr.theta == Null<Real>()) {
+                report.add(sr.theta);
+            } else {
+                report.add(sr.theta);
             }
         } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
             // TODO: Again, is this needed?
