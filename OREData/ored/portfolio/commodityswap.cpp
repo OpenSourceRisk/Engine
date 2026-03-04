@@ -59,18 +59,9 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     // Check if cross-currency
     isXCCY_ = false;
-    Currency firstCcy = parseCurrencyWithMinors(legData_[0].currency());
-    std::vector<Currency> currencies;
-    std::vector<Currency> uniqueCurrencies;
     for (size_t i = 1; i < legData_.size(); ++i) {
-        Currency ccy = parseCurrencyWithMinors(legData_[i].currency());
-        currencies.push_back(ccy);
-        isXCCY_ = isXCCY_ || (ccy != firstCcy);
+        isXCCY_ = isXCCY_ || legData_[i].currency() != legData_[0].currency();
     }
-
-    // Disallow netting for cross-currency commodity swaps
-    QL_REQUIRE(!(isXCCY_ && roundNettedFloatingLegs_),
-               "Netting of floating legs is not supported for cross currency commodity swaps");
 
     // Set notional to N/A for now, but reset this for a commodity fixed respectively floating leg below.
     notional_ = Null<Real>();
@@ -194,12 +185,17 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         buildNettedLegs(engineFactory, configuration);
     }
 
+    std::vector<Currency> currencies;
+    for (const auto& legCurrency : legCurrencies_) {
+        currencies.push_back(parseCurrencyWithMinors(legCurrency));
+    }
+
     // Create the instrument and assign pricing engine
     QuantLib::ext::shared_ptr<QuantLib::Instrument> swap;
     QuantLib::ext::shared_ptr<PricingEngine> engine;
     if (isXCCY_) {
-        swap = QuantLib::ext::make_shared<QuantExt::CurrencySwap>(legs_, legPayers_, legCurrencies_);
-        auto xccyBuilder = QuantLib::ext::dynamic_pointer_cast<CrossCurrencyCommoditySwapEngineBuilderBase>(builder);
+        swap = QuantLib::ext::make_shared<QuantExt::CurrencySwap>(legs_, legPayers_, currencies);
+        auto xccyBuilder = QuantLib::ext::dynamic_pointer_cast<CrossCurrencyCommoditySwapEngineBuilder>(builder);
         QL_REQUIRE(xccyBuilder, "No builder found for CrossCurrencyCommoditySwap " << id());
         engine = xccyBuilder->engine(currencies, npvCurrency);
     } else {
@@ -361,11 +357,17 @@ const std::map<std::string,QuantLib::ext::any>& CommoditySwap::additionalData() 
         additionalData_["payCurrency[" + legID + "]"] = legData_[i].currency();
 
         // Add netted leg additional data
-        if (roundNettedFloatingLegs_ && nettedLegId_ != Null<Size>()) {
-            if (swap){
-                additionalData_["nettedLegPV"] = swap->legNPV(nettedLegId_);
-            } else {
-                ALOG("commodity swap underlying instrument not set, skip netted leg npv reporting");
+        if (roundNettedFloatingLegs_ && !nettedLegIds_.empty()) {
+            for (const auto& nid : nettedLegIds_) {
+                string nettedId = to_string(nid + 1);
+                if (swap) {
+                    additionalData_["nettedLegPV[" + nettedId + "]"] = swap->legNPV(nid);
+                } else if (cswap) {
+                    additionalData_["nettedLegPV[" + nettedId + "]"] = cswap->legNPV(nid);
+                    additionalData_["nettedLegPVCCY[" + nettedId + "]"] = cswap->inCcyLegNPV(nid);
+                } else {
+                    ALOG("commodity swap underlying instrument not set, skip netted leg npv reporting");
+                }
             }
             if (nettingPrecision_ != Null<Natural>()) {
                 additionalData_["nettedLegPrecision"] = static_cast<int>(nettingPrecision_);
@@ -505,43 +507,55 @@ void CommoditySwap::buildNettedLegs(const QuantLib::ext::shared_ptr<EngineFactor
     vector<bool> legPayers;
     vector<string> legCurrencies;
     
-    // Collect floating legs and add fixed legs directly to the result
+    // Collect fixed legs directly to the result
     for (const auto& fixedLegId: fixedLegIds_) {
         legs.push_back(originalLegsBeforeNetting_[fixedLegId]);
         legPayers.push_back(originalLegPayersBeforeNetting_[fixedLegId]);
         legCurrencies.push_back(originalLegCurrenciesBeforeNetting_[fixedLegId]);
     }
-    // Check floating legs are compatible for netting and collect their ids
-    const size_t firstFloatingLegId = *floatingLegIds_.begin();
+
+    // Group floating legs by currency
+    map<string, vector<Size>> floatingLegsByCcy;
     for (const auto& i : floatingLegIds_) {
-        QL_REQUIRE(legData_[i].currency() == legData_[firstFloatingLegId].currency(),
-                   "All floating legs to be netted must have the same currency");
-        QL_REQUIRE(originalLegsBeforeNetting_[i].size() == originalLegsBeforeNetting_[firstFloatingLegId].size(),
-                   "All floating legs to be netted must have the same number of cashflows");
-        QL_REQUIRE(legData_[i].settlementFxIndex() == legData_[firstFloatingLegId].settlementFxIndex(),
-                   "All floating legs to be netted must have the same FX settlement configuration");
+        floatingLegsByCcy[legData_[i].currency()].push_back(i);
     }
 
-    // net cashflows 
-    Leg nettedLeg;
-    size_t numberFloatingCashflows = originalLegsBeforeNetting_[firstFloatingLegId].size();
-    for (Size i = 0; i < numberFloatingCashflows; ++i) {
-        vector<ext::shared_ptr<CommodityCashFlow>> cfs;
-        vector<bool> payers;
-        for(const auto& legId : floatingLegIds_) {
-            cfs.push_back(ext::dynamic_pointer_cast<CommodityCashFlow>(
-                unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i])));
-            QL_REQUIRE(cfs.back(), "NettedCommodityCashFlow: underlying cashflow is not a CommodityCashFlow type");
-            payers.push_back(originalLegPayersBeforeNetting_[legId]);
+    // Create one netted leg per currency group
+    for (const auto& [ccy, legIds] : floatingLegsByCcy) {
+        // Validate legs within this currency group are compatible for netting
+        const Size firstId = legIds.front();
+        for (const auto& i : legIds) {
+            QL_REQUIRE(originalLegsBeforeNetting_[i].size() == originalLegsBeforeNetting_[firstId].size(),
+                       "All floating legs in currency " << ccy << " to be netted must have the same number of cashflows");
+            QL_REQUIRE(legData_[i].settlementFxIndex() == legData_[firstId].settlementFxIndex(),
+                       "All floating legs in currency " << ccy << " to be netted must have the same FX settlement configuration");
         }
-        nettedLeg.push_back(ext::make_shared<NettedCommodityCashFlow>(cfs, payers, nettingPrecision_));    
+
+        // Net cashflows for this currency group
+        Leg nettedLeg;
+        size_t numberCashflows = originalLegsBeforeNetting_[firstId].size();
+        for (Size i = 0; i < numberCashflows; ++i) {
+            vector<ext::shared_ptr<CommodityCashFlow>> cfs;
+            vector<bool> payers;
+            for (const auto& legId : legIds) {
+                cfs.push_back(ext::dynamic_pointer_cast<CommodityCashFlow>(
+                    unpackIndexWrappedCashFlow(originalLegsBeforeNetting_[legId][i])));
+                QL_REQUIRE(cfs.back(), "NettedCommodityCashFlow: underlying cashflow is not a CommodityCashFlow type");
+                payers.push_back(originalLegPayersBeforeNetting_[legId]);
+            }
+            nettedLeg.push_back(ext::make_shared<NettedCommodityCashFlow>(cfs, payers, nettingPrecision_));
+        }
+        // Apply FX Settlement if any
+        nettedLeg = fxSettledLeg(nettedLeg, legData_[firstId], ef, configuration);
+        legs.push_back(nettedLeg);
+        nettedLegIds_.insert(legs.size() - 1);
+        legPayers.push_back(false); // Payer flag not relevant for netted leg
+        legCurrencies.push_back(ccy);
+        DLOG("CommoditySwap::netFloatingFlows() created netted leg for currency " << ccy
+             << " from " << legIds.size() << " floating legs");
     }
-    // Apply FX Settlement if any
-    nettedLeg = fxSettledLeg(nettedLeg, legData_[firstFloatingLegId], ef, configuration);
-    legs.push_back(nettedLeg);
+    // Keep nettedLegId_ pointing to the last one for backwards compatibility
     nettedLegId_ = legs.size() - 1;
-    legPayers.push_back(false); // Payer flag not relevant for netted leg
-    legCurrencies.push_back(originalLegCurrenciesBeforeNetting_[firstFloatingLegId]);
     
     legs_.swap(legs);
     legPayers_.swap(legPayers);

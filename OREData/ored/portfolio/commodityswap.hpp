@@ -90,6 +90,7 @@ private:
     std::vector<bool> originalLegPayersBeforeNetting_;
     std::vector<std::string> originalLegCurrenciesBeforeNetting_;
     QuantLib::Size nettedLegId_ = QuantLib::Null<QuantLib::Size>();
+    std::set<QuantLib::Size> nettedLegIds_;
     std::set<QuantLib::Size> fixedLegIds_, floatingLegIds_;
 };
 

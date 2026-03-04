@@ -64,14 +64,14 @@ protected:
 
 //! Discounted Cashflows Engine Builder for Cross Currency Commodity Swaps
 class CrossCurrencyCommoditySwapEngineBuilder
-    : public CachingEngineBuilder<std::string, const std::vector<QuantLib::Currency>&, const QuantLib::Currency&> {
+    : public CachingPricingEngineBuilder<std::string, const std::vector<QuantLib::Currency>&, const QuantLib::Currency&> {
 public:
     CrossCurrencyCommoditySwapEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencyCommoditySwapEngine",
                                {"CrossCurrencyCommoditySwap"}) {}
 
 protected:
-    std::string keyImpl(const std::vector<Currency>& ccys, const Currency& npvCcy) {
+    virtual std::string keyImpl(const std::vector<Currency>& ccys, const Currency& npvCcy) override {
         std::ostringstream ccyskey;
         ccyskey << npvCcy << "/";
         for (Size i = 0; i < ccys.size(); ++i)
@@ -79,8 +79,8 @@ protected:
         return ccyskey.str();
     }
 
-    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::vector<Currency>& ccys,
-                                                                  const Currency& npvCcy) {
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::vector<Currency>& ccys,
+                                                                          const Currency& npvCcy) override {
         std::string config = configuration(MarketContext::pricing);
         std::string npvCcyCode = npvCcy.code();
         std::vector<QuantLib::Handle<QuantLib::YieldTermStructure>> discountCurves;
