@@ -116,7 +116,7 @@ class CDSOptionTest(unittest.TestCase):
         self.cds.setPricingEngine(self.cds_engine)
         self.cds_option = QLECdsOption(self.cds, self.exercise)
         self.engine = QLEBlackCdsOptionEngine(self.probability_curve, self.recovery_rate,
-                                              self.discount_curve, self.creditVolHandle)
+                                              self.discount_curve, self.discount_curve, self.creditVolHandle)
         self.cds_option.setPricingEngine(self.engine)
         
     def testSimpleInspectors(self):
