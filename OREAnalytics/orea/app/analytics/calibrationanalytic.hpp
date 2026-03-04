@@ -36,7 +36,7 @@ class HwHistoricalCalibrationModelBuilder;
 namespace ore {
 namespace analytics {
 
-class InputParameters;;
+class InputParameters;
 
 struct CalibrationVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;

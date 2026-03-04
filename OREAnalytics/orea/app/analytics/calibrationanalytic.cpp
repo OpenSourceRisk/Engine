@@ -487,7 +487,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
         ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "CrossAssetModel", xml);
         analytic()->addReport("CALIBRATION", "calibration", report);
     } else if (calibrationVars->calibrationModel_ == "HW") {
-        if (calibrationVars->hwCalibrationMode_ == "Historical") {
+        if (calibrationVars->hwCalibrationMode_ == "historical") {
             msg = "Calibration: Read data";
             LOG(msg);
             CONSOLEW(msg);
@@ -573,7 +573,7 @@ bool CalibrationAnalytic::requiresMarketData() const {
     if (calibrationVars->calibrationModel_ == "CAM")
         return true;
     else if (calibrationVars->calibrationModel_ == "HW") {
-        if (calibrationVars->hwCalibrationMode_ == "Historical")
+        if (calibrationVars->hwCalibrationMode_ == "historical")
             return false;
         else
             QL_FAIL("CalibrationAnalytic::requiresMarketData(): Unknown HW calibration mode "
