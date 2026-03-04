@@ -1,3 +1,5 @@
+ARG DOCKER_REPO
+ARG ORE_BUILD_VERSION
 FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION}
 
 ARG WHEEL_ARCH
@@ -19,4 +21,5 @@ python ../ore/Docker/update_version_number.py -f setup.py -v ${WHEELS_VERSION} &
 cibuildwheel --output-dir wheelhouse ORE-SWIG
 
 COPY wheelhouse /wheelhouse
+
 
