@@ -53,8 +53,9 @@ class QLECdsOption : public Instrument {
                                            QuantLib::Volatility maxVol = 4.0) const;
 };
 
-% shared_ptr(QLEBlackCdsOptionEngine) class QLEBlackCdsOptionEngine : public PricingEngine {
-public:
+%shared_ptr(QLEBlackCdsOptionEngine)
+class QLEBlackCdsOptionEngine : public PricingEngine {
+  public:
     QLEBlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
                             QuantLib::Real recovery,
                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discountSwapCurrency,
