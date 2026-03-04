@@ -44,7 +44,7 @@ struct CalibrationVariables : public InputVariables {
     QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
 
-    std::string calibrationModel_;
+    std::string calibrationModel_ = "CAM";
     std::string hwCalibrationMode_;
     bool pcaCalibration_ = false;
     bool meanReversionCalibration_ = false;
