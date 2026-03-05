@@ -1,8 +1,8 @@
 \subsubsection{Composite Trade}
 
-A composite trade is a hybrid position consisting of multiple component trades. As such it inherits the characteristics of the trades defined within it. Examples of Composite Trades include combinations of vanilla options like straddles.
+A composite trade is a hybrid position consisting of multiple component subtrades. As such it inherits the characteristics of the trades defined within it. Examples of Composite Trades include combinations of vanilla options like straddles.
 
-The \lstinline!CompositeTradeData!  node is the trade data container for the  \emph{CompositeTrade} trade type.   A composite trade is a hybrid position consisting of multiple component trades. The structure of an example \lstinline!CompositeTradeData! node for a commodity option is shown in 
+The \lstinline!CompositeTradeData!  node is the trade data container for the  \emph{CompositeTrade} trade type.   A composite trade is a hybrid position consisting of multiple component subtrades. The structure of an example \lstinline!CompositeTradeData! node for a commodity option is shown in 
 Listing \ref{lst:compositetrade_data}.
 
 \begin{listing}[H]
@@ -12,12 +12,12 @@ Listing \ref{lst:compositetrade_data}.
 		  <Currency>USD</Currency>
 		  <NotionalCalculation>Sum</NotionalCalculation>
 		  <Components>
-		    <Trade id="">
+		    <SubTrade id="">
 		      <!-- A valid trade xml -->
-		    </Trade>
-		    <Trade id="">
+		    </SubTrade>
+		    <SubTrade id="">
 		      <!-- A valid trade xml -->
-		    </Trade>
+		    </SubTrade>
 		  </Components>
 		</CompositeTradeData>
 	\end{minted}

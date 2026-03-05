@@ -463,6 +463,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CommoditySwaptionMonteCarloEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDigitalBarrierOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CommoditySwapEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CrossCurrencyCommoditySwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCompositeEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxForwardEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(DiscountingBondRepoEngineBuilder, false)
