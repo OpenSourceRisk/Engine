@@ -587,6 +587,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \item \lstinline!OptionletTenorInArrears!:
 If true, the tenor in the market data is the maturiy of the optionlet, if false, it is the start date of the optionlet instead. Default is true.
 
+\item \lstinline!OptionletVolIsEffective!:
+Applies to overnight indices only. If true, the input volatility is interpreted as effective volatility and converted to stripped volatility before inserting it into the optionlet surface.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -613,6 +616,7 @@ If true, the tenor in the market data is the maturiy of the optionlet, if false,
   <BootstrapConfig>...</BootstrapConfig>
   <InputType>OptionletVolatilities</InputType>
   <OptionletTenorInArrears>...</OptionletTenorInArrears>
+  <OptionletVolIsEffective>...</OptionletVolIsEffective>
 </CapFloorVolatility>
 \end{minted}
 \caption{ATM cap floor configuration with optionlet volatilities input.}
@@ -692,6 +696,9 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \item \lstinline!OptionletTenorInArrears!:
 If true, the tenor in the market data is the maturiy of the optionlet, if false, it is the start date of the optionlet instead. Default is true.
 
+\item \lstinline!OptionletVolIsEffective!:
+Applies to overnight indices only. If true, the input volatility is interpreted as effective volatility and converted to stripped volatility before inserting it into the optionlet surface.
+
 \end{itemize}
 
 \begin{longlisting}
@@ -719,6 +726,7 @@ If true, the tenor in the market data is the maturiy of the optionlet, if false,
   <QuoteIncludesIndexName>...</QuoteIncludesIndexName>
   <InputType>OptionletVolatilities</InputType>
   <OptionletTenorInArrears>...</OptionletTenorInArrears>
+  <OptionletVolIsEffective>...</OptionletVolIsEffective>
 </CapFloorVolatility>
 \end{minted}
 \caption{Cap floor surface with optionlet volatilities input.}
