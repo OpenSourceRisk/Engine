@@ -128,8 +128,11 @@ bool SingleBarrierOptionWrapper::exercise() const {
                     ? QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_)
                     : QuantLib::ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_);
             if (eqfxIndex) {
+                // Cap at the contract exercise date (expiry) - barrier monitoring ends at expiry,
+                // and requiredFixings only provides fixings up to that date.
+                Date endDate = std::min(today, contractExerciseDates_[0]);
                 Date d = calendar_.adjust(startDate_);
-                while (d < today && !trigger) {
+                while (d < endDate && !trigger) {
                     
                     Real fixing = Null<Real>();
                     if (eqfxIndexLowHigh == nullptr) {
@@ -202,8 +205,13 @@ bool DoubleBarrierOptionWrapper::exercise() const {
             auto indexL = indexLows_ != nullptr ? ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexLows_) : nullptr;
             auto indexH = indexHighs_ != nullptr ? ext::dynamic_pointer_cast<QuantExt::EqFxIndexBase>(indexHighs_) : nullptr;;
             if (eqfxIndex) {
+                // Cap at the contract exercise date (expiry) - barrier monitoring ends at expiry,
+                // and requiredFixings only provides fixings up to that date.
+                // Get the Max Exercise Date"
+                auto max = *std::max_element(contractExerciseDates_.begin(), contractExerciseDates_.end());
+                Date endDate = std::min(today, max);
                 Date d = calendar_.adjust(startDate_);
-                while (d < today && !trigger) {
+                while (d < endDate && !trigger) {
                     double dailyLow, dailyHigh = Null<Real>();
 
                     if (indexL == nullptr){
@@ -221,6 +229,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                     } 
                     
                     if (dailyLow == Null<Real>() || dailyHigh == Null<Real>()) {
+                        // std::cout<<"Error = "<<today<<"|date="<<d<<std::endl;
                         StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
@@ -228,6 +237,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                             std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
                     }else{
+                        // std::cout<<"Pass = "<<today<<"|date="<<d<<std::endl;
                         trigger = checkBarrier(dailyLow, dailyHigh, strictBarrier_);
                     }
                     d = calendar_.advance(d, 1, Days);
