@@ -2,7 +2,6 @@
 	path = QuantLib
 	url = ../QuantLib
 	branch = master
-	ignore = dirty
 [submodule "ORE-SWIG/QuantLib-SWIG"]
 	path = ORE-SWIG/QuantLib-SWIG
 	url = ../QuantLib-SWIG
