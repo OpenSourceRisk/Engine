@@ -130,7 +130,8 @@ bool SingleBarrierOptionWrapper::exercise() const {
             if (eqfxIndex) {
                 // Cap at the contract exercise date (expiry) - barrier monitoring ends at expiry,
                 // and requiredFixings only provides fixings up to that date.
-                Date endDate = std::min(today, contractExerciseDates_[0]);
+                auto maxDate = *std::max_element(contractExerciseDates_.begin(), contractExerciseDates_.end());
+                Date endDate = std::min(today, maxDate);
                 Date d = calendar_.adjust(startDate_);
                 while (d < endDate && !trigger) {
                     
@@ -208,8 +209,8 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                 // Cap at the contract exercise date (expiry) - barrier monitoring ends at expiry,
                 // and requiredFixings only provides fixings up to that date.
                 // Get the Max Exercise Date
-                auto max = *std::max_element(contractExerciseDates_.begin(), contractExerciseDates_.end());
-                Date endDate = std::min(today, max);
+                auto maxDate = *std::max_element(contractExerciseDates_.begin(), contractExerciseDates_.end());
+                Date endDate = std::min(today, maxDate);
                 Date d = calendar_.adjust(startDate_);
                 while (d < endDate && !trigger) {
                     double dailyLow, dailyHigh = Null<Real>();
