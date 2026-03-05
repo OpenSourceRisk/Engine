@@ -232,11 +232,9 @@ void SensitivityAnalysis::generateSensitivities() {
 
             // Compute theta separately: build a new sim market at thetaDate, reprice, store in a map
             std::map<std::string, Real> thetaMap;
-            std::cout<<"computeTheta = "<<sensitivityData_->computeTheta()<<std::endl;
             if (sensitivityData_->computeTheta()) {
                 LOG("Computing theta for " << pf->size() << " trades, shifting eval date by "
                                            << sensitivityData_->thetaPeriod());
-                std::cout<<"thetaPeriod = "<<sensitivityData_->thetaPeriod()<<std::endl;
                 Date thetaDate = asof_ + sensitivityData_->thetaPeriod(); //Calendar??
                 // Shift evaluation date asof + 1D
                 Settings::instance().evaluationDate() = thetaDate;

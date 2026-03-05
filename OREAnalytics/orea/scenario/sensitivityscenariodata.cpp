@@ -936,9 +936,11 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
-    XMLUtils::addChild(doc, root, "ComputeTheta", computeTheta_);
-    if (computeTheta_)
+    if (computeTheta_){
+        XMLUtils::addChild(doc, root, "ComputeTheta", computeTheta_);
         XMLUtils::addChild(doc, root, "ThetaPeriod", ore::data::to_string(thetaPeriod_));
+    }
+
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 
     // If not par, no more to do
