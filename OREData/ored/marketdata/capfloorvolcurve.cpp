@@ -572,7 +572,10 @@ void CapFloorVolCurve::optAtmOptCurve(const Date& asof, CapFloorVolatilityCurveC
                                                                            << config.curveID());
             tenor_itr++;
         }
-        vols_tenor.push_back(vols_outer.second);
+        Real vol = vols_outer.second;
+        if (config.optionletVolIsEffective())
+            vol = strippedVolFromEffectiveVol(asof, config, index, vols_outer.first, vol, shift);
+        vols_tenor.push_back(vol);
     }
     // Find the fixing date of the term quotes
     vector<Date> fixingDates = populateFixingDates(asof, config, index, configTenors);
@@ -856,7 +859,10 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     vector<Handle<Quote>> vols_tenor;
     for (auto const& vols_outer : capfloorVols) {
         for (auto const& vols_inner : vols_outer.second) {
-            vols_tenor.push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(vols_inner.second)));
+            Real vol = vols_inner.second;
+            if (config.optionletVolIsEffective())
+                vol = strippedVolFromEffectiveVol(asof, config, iborIndex, vols_outer.first, vol, shift);
+            vols_tenor.push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(vol)));
             strikes_tenor.push_back(vols_inner.first);
         }
         tenors.push_back(vols_outer.first);
