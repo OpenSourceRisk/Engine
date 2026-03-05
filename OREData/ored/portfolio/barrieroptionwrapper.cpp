@@ -207,7 +207,7 @@ bool DoubleBarrierOptionWrapper::exercise() const {
             if (eqfxIndex) {
                 // Cap at the contract exercise date (expiry) - barrier monitoring ends at expiry,
                 // and requiredFixings only provides fixings up to that date.
-                // Get the Max Exercise Date"
+                // Get the Max Exercise Date
                 auto max = *std::max_element(contractExerciseDates_.begin(), contractExerciseDates_.end());
                 Date endDate = std::min(today, max);
                 Date d = calendar_.adjust(startDate_);
@@ -229,7 +229,6 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                     } 
                     
                     if (dailyLow == Null<Real>() || dailyHigh == Null<Real>()) {
-                        // std::cout<<"Error = "<<today<<"|date="<<d<<std::endl;
                         StructuredMessage(
                             StructuredMessage::Category::Error, StructuredMessage::Group::Fixing,
                             "Missing fixing for index " + index_->name() + " on " + ore::data::to_string(d) +
@@ -237,7 +236,6 @@ bool DoubleBarrierOptionWrapper::exercise() const {
                             std::map<std::string, std::string>({{"exceptionType", "Invalid or missing fixings"}}))
                             .log();
                     }else{
-                        // std::cout<<"Pass = "<<today<<"|date="<<d<<std::endl;
                         trigger = checkBarrier(dailyLow, dailyHigh, strictBarrier_);
                     }
                     d = calendar_.advance(d, 1, Days);
