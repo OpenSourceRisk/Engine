@@ -540,7 +540,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     DLOG("Get theta period");
     if (auto n = XMLUtils::getChildNode(node, "ThetaPeriod"))
-        thetaPeriod_ = parsePeriod(XMLUtils::getNodeValue(n));
+        thetaPeriod_ = data::parsePeriod(XMLUtils::getNodeValue(n));
     else
         thetaPeriod_ = Period(1,Days);
 
