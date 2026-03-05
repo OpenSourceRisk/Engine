@@ -141,7 +141,7 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*", bool computeTheta = false, QuantLib::Period thetaPeriod = Period(1,Days),
+    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*", bool computeTheta = false, QuantLib::Period thetaPeriod = Period(1, QuantLib::TimeUnit::Days),
                             ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation = ore::data::ParConversionMatrixRegularisation::Silent)
         : computeGamma_(true), computeTheta_(computeTheta), thetaPeriod_(thetaPeriod),
           useSpreadedTermStructures_(false), parConversion_(parConversion), 
