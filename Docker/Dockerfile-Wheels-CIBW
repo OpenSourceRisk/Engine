@@ -13,7 +13,7 @@ ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
 ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
 ENV CIBW_BEFORE_ALL="/opt/python/cp310-cp310/bin/pip3 install setuptools docker && chmod +x ORE-SWIG/Wheels-gitlab/before_all_linux.sh && PATH=/opt/python/cp310-cp310/bin:$PATH ORE-SWIG/Wheels-gitlab/before_all_linux.sh"
 ENV CIBW_BEFORE_BUILD="pip install setuptools"
-ENV CIBW_ENVIRONMENT="PATH=/usr/lib64/ccache:/usr/lib/ccache:$PATH CCACHE_DIR=/project/.ccache CCACHE_MAXSIZE=5G"
+ENV CIBW_ENVIRONMENT="PATH=/usr/lib64/ccache:/usr/lib/ccache:\$PATH CCACHE_DIR=/project/.ccache CCACHE_MAXSIZE=5G"
 
 WORKDIR /builds/qs/oreplus/ore
 RUN \
