@@ -187,6 +187,10 @@ public:
     Real effectiveCapletVolatility() const;
     //! effective floorlet volatility
     Real effectiveFloorletVolatility() const;
+    //! stripped caplet volatility
+    Real strippedCapletVolatility() const;
+    //! stripped floorlet volatility
+    Real strippedFloorletVolatility() const;
     //@}
     //! \name Visitability
     //@{
@@ -206,6 +210,8 @@ protected:
     bool localCapFloor_;
     mutable Real effectiveCapletVolatility_;
     mutable Real effectiveFloorletVolatility_;
+    mutable Real strippedCapletVolatility_;
+    mutable Real strippedFloorletVolatility_;
 };
 
 //! capped floored overnight indexed coupon pricer base class

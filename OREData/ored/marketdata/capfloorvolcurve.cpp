@@ -1291,6 +1291,33 @@ vector<Date> CapFloorVolCurve::populateFixingDates(const QuantLib::Date& asof, C
     }
     return fixingDates;
 }
+
+double CapFloorVolCurve::strippedVolFromEffectiveVol(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config,
+                                                     QuantLib::ext::shared_ptr<QuantLib::IborIndex> iborIndex,
+                                                     const Period& tenor, const Real effectiveVol, const Real shift) {
+    bool isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
+    if (isOis) {
+        Period effTenor = config.optionletTenorInArrears() ? tenor : tenor + config.rateComputationPeriod();
+        Leg dummyCap =
+            MakeOISCapFloor(CapFloor::Cap, effTenor, QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
+                            config.rateComputationPeriod(), 0.04)
+                .withTelescopicValueDates(true)
+                .withSettlementDays(config.onCapSettlementDays())
+                .withRule(DateGeneration::Rule::Forward);
+        auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
+        QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
+        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(
+            Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
+                0, NullCalendar(), Unadjusted, effectiveVol, Actual365Fixed(), volatilityType(config.volatilityType()),
+                shift)),
+            true);
+        lastCoupon->setPricer(pricer);
+        return lastCoupon->strippedCapletVolatility();
+    } else {
+        return effectiveVol;
+    }
+}
+
 void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
                                             const QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig> config,
                                             const QuantLib::ext::shared_ptr<IborIndex>& index) {
