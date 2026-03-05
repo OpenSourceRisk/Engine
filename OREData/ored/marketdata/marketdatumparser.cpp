@@ -148,14 +148,7 @@ static FXForwardQuote::FxFwdString parseFxString(const string& s) {
         QL_FAIL("Cannot convert \"" << s << "\" to FxFwdString");
     }
 }
-boost::variant<QuantLib::Period, QuantLib::Date> parseCdsPeriod(const string& s) {
-    Date d;
-    if (tryParse(s, d, std::function<Date(const string&)>(parseDate))) {
-        return d;
-    } else {
-        return parsePeriod(s);
-    }
-}
+
 boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> parseFxPeriod(const string& s) {
     Date d;
     Period p;
@@ -169,18 +162,6 @@ boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> pa
 }
 
 namespace {
-
-struct CdsTermGetter : boost::static_visitor<Period> {
-    CdsTermGetter() {}
-    Period operator()(const Date&) const { QL_FAIL("CdsTermGetter: internal error, can not convert date to period"); }
-    Period operator()(const Period& p) const { return p; }
-};
-
-struct CdsDateGetter : boost::static_visitor<Date> {
-    CdsDateGetter() {}
-    Date operator()(const Date& d) const { return d; }
-    Date operator()(const Period& p) const { return Date(); }
-};
 
 struct FxTenorGetter : boost::static_visitor<Period> {
     FxTenorGetter() {}
@@ -243,12 +224,6 @@ struct FxFwdStringCompare : boost::static_visitor<bool> {
 };
 
 } // namespace
-
-QuantLib::Period cdsQuoteTenor(const boost::variant<QuantLib::Period, QuantLib::Date>& term){
-    return boost::apply_visitor(CdsTermGetter(), term);} 
-
-QuantLib::Date cdsQuoteDate(const boost::variant<QuantLib::Period, QuantLib::Date>& term){
-    return boost::apply_visitor(CdsDateGetter(), term);}
 
 QuantLib::Period
 fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term) {
@@ -452,35 +427,44 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         // CDS/[CONV_]CREDIT_SPREAD/Name/Seniority/ccy/doc/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/term
         // CDS/PRICE/Name/Seniority/ccy/term/runningSpread
-        // CDS/PRICE/Name/Seniority/ccy/expiryDate/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/doc/term
         // CDS/PRICE/Name/Seniority/ccy/doc/term/runningSpread
-        // CDS/PRICE/Name/Seniority/ccy/expiryDate/runningSpread
-        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
-            "6, 7 or 8 tokens expected in " << datumName);
+        // CDS/PRICE/Name/ccy          -- for new MDX quote, using reference datum to build schedule in Cds Helper
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
+            "4, 6, 7 or 8 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
-        const string& seniority = tokens[3];
-        const string& ccy = tokens[4];
-
         string docClause;
-        boost::variant<QuantLib::Period, QuantLib::Date> term;
+        Period term;
         Date expiryDate;
         Real runningSpread = Null<Real>();
         
+        if (tokens.size() == 4)
+        {
+            const string& ccy = tokens[3];
+            // build from reference data, no seniority, no term
+            // e.g. for MDX swap
+            return QuantLib::ext::make_shared<CdsQuote>(value, asof, datumName, quoteType, underlyingName, "",
+                                                        ccy, term, docClause, runningSpread);
+        }
+        const string& seniority = tokens[3];
+        const string& ccy = tokens[4];
+
+        
+        
         if (tokens.size() == 6) {
-            term = parseCdsPeriod(tokens[5]);
+            term = parsePeriod(tokens[5]);
         } else if (tokens.size() == 8) {
             docClause = tokens[5];
-            term = parseCdsPeriod(tokens[6]);
+            term = parsePeriod(tokens[6]);
             runningSpread = parseReal(tokens[7]) / 10000;
         } else {
             // 7 tokens => [5]/[6] = doc/term or term/runningSpread
             CdsDocClause cdsDocClause;
             if (tryParse<CdsDocClause>(tokens[5], cdsDocClause, &parseCdsDocClause)) {
                 docClause = tokens[5];
-                term = parseCdsPeriod(tokens[6]);
+                term = parsePeriod(tokens[6]);
             } else {
-                term = parseCdsPeriod(tokens[5]);
+                term = parsePeriod(tokens[5]);
                 runningSpread = parseReal(tokens[6]) / 10000;
             }
         }

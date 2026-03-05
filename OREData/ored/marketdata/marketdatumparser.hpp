@@ -52,16 +52,11 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const strin
 Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal = QuantLib::WeekendsOnly(), 
     QuantLib::BusinessDayConvention bdc = QuantLib::BusinessDayConvention::Following);
 
-
-
 //! Convert text to QuantLib::Period of Fx forward string
 /*!
   \ingroup marketdata
  */
 boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date> parseFxPeriod(const string& s);
-
-QuantLib::Period cdsQuoteTenor(const boost::variant<QuantLib::Period, QuantLib::Date>& term);
-QuantLib::Date cdsQuoteDate(const boost::variant<QuantLib::Period, QuantLib::Date>& term);
 
 QuantLib::Period
 fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString, QuantLib::Date>& term);

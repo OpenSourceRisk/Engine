@@ -41,6 +41,7 @@
 #include <ql/pricingengines/credit/isdacdsengine.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/schedule.hpp>
 // #include <ql/termstructures/yield/bootstraptraits.hpp>
 // #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 
@@ -57,10 +58,10 @@ using namespace ore::data;
 struct QuoteData {
     QuoteData() : value(Null<Real>()), runningSpread(Null<Real>()) {}
 
-    QuoteData(const boost::variant<Period, Date>& t, Real v, string s, string c, string d, Real rs = Null<Real>())
+    QuoteData(const Period& t, Real v, string s, string c, string d, Real rs = Null<Real>())
         : term(t), value(v), seniority(s), ccy(c), docClause(d), runningSpread(rs) {}
 
-    boost::variant<Period, Date> term;
+    Period term;
     Real value;
     string seniority;
     string ccy;
@@ -70,7 +71,7 @@ struct QuoteData {
 
 bool operator<(const QuoteData& lhs, const QuoteData& rhs) { return lhs.term < rhs.term; }
 
-void addQuote(set<QuoteData>& quotes, const string& configId, const string& name, const boost::variant<Period, Date>& tenor, Real value,
+void addQuote(set<QuoteData>& quotes, const string& configId, const string& name, const Period& tenor, Real value,
               string seniority, string ccy, string docClause, Real runningSpread = Null<Real>()) {
 
     // Add to quotes, with a check that we have no duplicate tenors
@@ -235,7 +236,8 @@ namespace data {
 DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader,
                            const CurveConfigurations& curveConfigs,
                            map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                           map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves) {
+                           map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
+                           QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData) {
     const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
     bool built = false;
     std::string errors;
@@ -284,7 +286,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 case DefaultCurveConfig::Config::Type::ConvSpreadCDS:
                 case DefaultCurveConfig::Config::Type::Price:
                     buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves,
-                                  implyDefaultFromMarket);
+                                  implyDefaultFromMarket, referenceData);
                     break;
                 case DefaultCurveConfig::Config::Type::HazardRate:
                     buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
@@ -330,7 +332,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
                                  const DefaultCurveSpec& spec, const Loader& loader,
                                  map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                                 bool implyDefaultFromMarket) {
+                                 bool implyDefaultFromMarket,
+                                 QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData) {
 
     LOG("Start building default curve of type SpreadCDS for curve " << curveID << "and  implyDefaultFromMarket = "
         << to_string(implyDefaultFromMarket));
@@ -410,13 +413,10 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         refData.type = "SpreadCDS";
         for (auto quote : quotes) {
             try {
-                Date maturity = cdsQuoteDate(quote.term) != Date()
-                    ? cdsQuoteDate(quote.term) : cdsMaturity(asof, cdsQuoteTenor(quote.term),
-                     cdsConv->rule());
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
-                    maturity <= asof + 1 * Days) {
-                    //auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                    cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
+                    auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                     WLOG("DefaultCurve:: SKIP cds with term "
                          << quote.term << " because cds maturity (" << io::iso_date(maturity)
                          << ") is <= T + 1 (T =" << io::iso_date(asof)
@@ -425,19 +425,19 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                     continue;
                 };
                 helpers.push_back(QuantLib::ext::make_shared<SpreadCdsHelper>(
-                                      quote.value, maturity, cdsConv->settlementDays(), cdsConv->calendar(),
+                                      quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                                       cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(),
                                       cdsConv->dayCounter(), recoveryRate_, discountCurve,
                                       CreditDefaultSwap::PricingModel::Midpoint, cdsConv->settlesAccrual(), ppt,
                                       config.startDate(), cdsConv->lastPeriodDayCounter()));
                 runningSpread = config.runningSpread();
-                helperQuoteTerms[helpers.back()->latestDate()] = cdsQuoteTenor(quote.term);
+                helperQuoteTerms[helpers.back()->latestDate()] = quote.term;
             } catch (exception& e) {
-                if (cdsQuoteTenor(quote.term) == Period(0, Months)) {
+                if (quote.term == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
                                                                                     << asof);
                 } else {
-                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << cdsQuoteTenor(quote.term) << " to CDS curve " << curveID
+                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << quote.term << " to CDS curve " << curveID
                                                                           << " for asof date " << asof
                                                                           << ", with error: " << e.what());
                 }
@@ -447,14 +447,13 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         refData.type = "ConvSpreadCDS";
         for (auto quote : quotes) {
             try {
-                Date maturity = cdsQuoteDate(quote.term) != Date()
-                                    ? cdsQuoteDate(quote.term)
-                                    : cdsMaturity(asof, cdsQuoteTenor(quote.term), cdsConv->rule());
                 if ((cdsConv->rule() == DateGeneration::CDS || cdsConv->rule() == DateGeneration::CDS2015 ||
                      cdsConv->rule() == DateGeneration::OldCDS) &&
-                    maturity <= asof + 1 * Days) {
+                    cdsMaturity(asof, quote.term, cdsConv->rule()) <= asof + 1 * Days) {
+                    auto maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                    
                     WLOG("DefaultCurve:: SKIP cds with term "
-                         << cdsQuoteTenor(quote.term) << " because cds maturity (" << io::iso_date(maturity)
+                         << quote.term << " because cds maturity (" << io::iso_date(maturity)
                          << ") is <= T + 1 (T =" << io::iso_date(asof)
                          << "), but by standard conventioons the first CDS payment is the next IMM payment"
                             "date strictly after T + 1.");
@@ -463,7 +462,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 Real notional = 1000000;
                 auto convSpread = quote.value;
                 // Use configured/convention start date and calendar
-                //Date maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
+                Date maturity = cdsMaturity(asof, quote.term, cdsConv->rule());
                 Schedule schedule(asof, maturity, Period(cdsConv->frequency()), cdsConv->calendar(),  cdsConv->paymentConvention(), 
                                  cdsConv->paymentConvention(), cdsConv->rule(), false);
                 
@@ -520,9 +519,9 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
                 if (tmp->latestDate() > asof) {
                     helpers.push_back(tmp);
                 }
-                helperQuoteTerms[tmp->latestDate()] = cdsQuoteTenor(quote.term);
+                helperQuoteTerms[tmp->latestDate()] = quote.term;
             } catch (exception& e) {
-                if (cdsQuoteTenor(quote.term) == Period(0, Months)) {
+                if (quote.term == Period(0, Months)) {
                     WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << " for asof date "
                                                                                     << asof);
                 } else {
@@ -534,25 +533,47 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
         }
     }else {
         refData.type = "Upfront";
+
         for (auto quote : quotes) {
             // If there is no running spread encoded in the quote, the config must have one.
             runningSpread = quote.runningSpread;
-            if (runningSpread == Null<Real>()) {
+            if (runningSpread == Null<Real>() && !cdsConv->usesReferenceData()) {
                 QL_REQUIRE(config.runningSpread() != Null<Real>(),
                            "A running spread was not provided in the quote "
                                << "string so it must be provided in the config for CDS upfront curve " << curveID);
                 runningSpread = config.runningSpread();
             }
-            auto tmp = QuantLib::ext::make_shared<UpfrontCdsHelper>(
-                    quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
-                    cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                    recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
-                    config.startDate(), cdsConv->lastPeriodDayCounter());        
-
-            if (tmp->latestDate() > asof) {
-                helpers.push_back(tmp);
+            QuantLib::ext::shared_ptr<UpfrontCdsHelper> helper;
+            if (cdsConv->usesReferenceData()) {
+                QuantLib::ext::shared_ptr<BondReferenceDatum> refDatum = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
+                    referenceData->getData(BondReferenceDatum::TYPE, curveID));
+                
+                auto legData = refDatum->bondData().legData.front();
+                if(runningSpread == Null<Real>()) {
+                    QuantLib::ext::shared_ptr<FixedLegData> fixedLegData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(refDatum->bondData().legData.front().concreteLegData());
+                    QL_REQUIRE(fixedLegData->rates().size() > 0,
+                                "A running spread was not provided in the quote string, the config for the CDS upfront curve " << curveID 
+                                << " or the reference datum " <<refDatum->id());
+                    
+                    runningSpread = fixedLegData->rates().back();
+                }
+                ScheduleData scheduleData = legData.schedule();
+                QuantLib::Schedule schedule = makeSchedule(scheduleData);
+                Integer settlementDays = refDatum->bondData().settlementDays.empty() ? 0 : parseInteger(refDatum->bondData().settlementDays);
+                helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
+                    quote.value, runningSpread, recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint,
+                    schedule, settlementDays, parseDayCounter(legData.dayCounter()), true, ppt);
+            }else {
+                helper = QuantLib::ext::make_shared<UpfrontCdsHelper>(
+                        quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
+                        cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
+                        recoveryRate_, discountCurve, CreditDefaultSwap::PricingModel::Midpoint, cdsConv->upfrontSettlementDays(), cdsConv->settlesAccrual(), ppt,
+                        config.startDate(), cdsConv->lastPeriodDayCounter());        
             }
-            helperQuoteTerms[tmp->latestDate()] = cdsQuoteTenor(quote.term);
+            if (helper->latestDate() > asof) {
+                helpers.push_back(helper);
+            }
+            helperQuoteTerms[helper->latestDate()] = quote.term;
         }
     }
 
@@ -701,7 +722,7 @@ void DefaultCurve::buildHazardRateCurve(const std::string& curveID, const Defaul
     vector<Real> quoteValues;
 
     // If first term is not zero, add asof point
-    if (cdsQuoteTenor(quotes.begin()->term) != 0 * Days) {
+    if (quotes.begin()->term != 0 * Days) {
         LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << quotes.begin()->value << ", as not given");
         dates.push_back(asof);
         quoteValues.push_back(quotes.begin()->value);
@@ -709,7 +730,7 @@ void DefaultCurve::buildHazardRateCurve(const std::string& curveID, const Defaul
 
     for (auto quote : quotes) {
         
-        dates.push_back(cdsQuoteDate(quote.term) != Date() ? cdsQuoteDate(quote.term) : cal.advance(asof, cdsQuoteTenor(quote.term), Following, false));
+        dates.push_back(cal.advance(asof, quote.term, Following, false));
         quoteValues.push_back(quote.value);
     }
 

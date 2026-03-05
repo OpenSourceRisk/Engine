@@ -1099,6 +1099,9 @@ public:
     //! Default constructor
     CdsConvention();
 
+    //Reference Data based constructor
+    CdsConvention(const string& id, const bool usesReferenceData);
+
     //! Detailed constructor
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
@@ -1108,6 +1111,7 @@ public:
 
     //! \name Inspectors
     //@{
+    bool usesReferenceData() const { return usesReferenceData_; }
     Natural settlementDays() const { return settlementDays_; }
     const Calendar& calendar() const { return calendar_; }
     Frequency frequency() const { return frequency_; }
@@ -1127,6 +1131,7 @@ public:
     virtual void build() override;
     //@}
 private:
+    bool usesReferenceData_;
     Natural settlementDays_;
     Calendar calendar_;
     Frequency frequency_;

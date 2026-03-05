@@ -1264,6 +1264,9 @@ QuantLib::ext::shared_ptr<QuantLib::IborIndex> CrossCcyFixFloatSwapConvention::i
 CdsConvention::CdsConvention() : settlementDays_(0), frequency_(Quarterly), paymentConvention_(Following),
     rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3) {}
 
+CdsConvention::CdsConvention(const string& id, const bool usesReferenceData)
+    : Convention(id, Type::CDS), usesReferenceData_(usesReferenceData) {}
+
 CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                              const string& strDayCounter, const string& strSettlesAccrual,
@@ -1278,22 +1281,26 @@ CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, 
 }
 
 void CdsConvention::build() {
-    settlementDays_ = lexical_cast<Natural>(strSettlementDays_);
-    calendar_ = parseCalendar(strCalendar_);
-    frequency_ = parseFrequency(strFrequency_);
-    paymentConvention_ = parseBusinessDayConvention(strPaymentConvention_);
-    rule_ = parseDateGenerationRule(strRule_);
-    dayCounter_ = parseDayCounter(strDayCounter_);
-    settlesAccrual_ = parseBool(strSettlesAccrual_);
-    paysAtDefaultTime_ = parseBool(strPaysAtDefaultTime_);
+    if (!usesReferenceData_) {
+    
+        settlementDays_ = lexical_cast<Natural>(strSettlementDays_);
+        calendar_ = parseCalendar(strCalendar_);
+        frequency_ = parseFrequency(strFrequency_);
+        paymentConvention_ = parseBusinessDayConvention(strPaymentConvention_);
+        rule_ = parseDateGenerationRule(strRule_);
+        dayCounter_ = parseDayCounter(strDayCounter_);
+        settlesAccrual_ = parseBool(strSettlesAccrual_);
+        paysAtDefaultTime_ = parseBool(strPaysAtDefaultTime_);
 
-    upfrontSettlementDays_ = 3;
-    if (!strUpfrontSettlementDays_.empty())
-        upfrontSettlementDays_ = lexical_cast<Natural>(strUpfrontSettlementDays_);
+        upfrontSettlementDays_ = 3;
+        if (!strUpfrontSettlementDays_.empty())
+            upfrontSettlementDays_ = lexical_cast<Natural>(strUpfrontSettlementDays_);
 
-    lastPeriodDayCounter_ = DayCounter();
-    if (!strLastPeriodDayCounter_.empty())
-        lastPeriodDayCounter_ = parseDayCounter(strLastPeriodDayCounter_);
+        lastPeriodDayCounter_ = DayCounter();
+        if (!strLastPeriodDayCounter_.empty())
+            lastPeriodDayCounter_ = parseDayCounter(strLastPeriodDayCounter_);
+        
+    }
 }
 
 void CdsConvention::fromXML(XMLNode* node) {
@@ -1301,18 +1308,21 @@ void CdsConvention::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CDS");
     type_ = Type::CDS;
     id_ = XMLUtils::getChildValue(node, "Id", true);
-
-    // Get string values from xml
-    strSettlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", true);
-    strCalendar_ = XMLUtils::getChildValue(node, "Calendar", true);
-    strFrequency_ = XMLUtils::getChildValue(node, "Frequency", true);
-    strPaymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention", true);
-    strRule_ = XMLUtils::getChildValue(node, "Rule", true);
-    strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
-    strSettlesAccrual_ = XMLUtils::getChildValue(node, "SettlesAccrual", true);
-    strPaysAtDefaultTime_ = XMLUtils::getChildValue(node, "PaysAtDefaultTime", true);
-    strUpfrontSettlementDays_ = XMLUtils::getChildValue(node, "UpfrontSettlementDays", false);
-    strLastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
+    usesReferenceData_ = XMLUtils::getChildValueAsBool(node, "UsesReferenceData", false, false);
+    if (!usesReferenceData_) {
+    
+        // Get string values from xml
+        strSettlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", true);
+        strCalendar_ = XMLUtils::getChildValue(node, "Calendar", true);
+        strFrequency_ = XMLUtils::getChildValue(node, "Frequency", true);
+        strPaymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention", true);
+        strRule_ = XMLUtils::getChildValue(node, "Rule", true);
+        strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
+        strSettlesAccrual_ = XMLUtils::getChildValue(node, "SettlesAccrual", true);
+        strPaysAtDefaultTime_ = XMLUtils::getChildValue(node, "PaysAtDefaultTime", true);
+        strUpfrontSettlementDays_ = XMLUtils::getChildValue(node, "UpfrontSettlementDays", false);
+        strLastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
+    }
     build();
 }
 
