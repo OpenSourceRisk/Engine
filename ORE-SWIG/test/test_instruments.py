@@ -143,7 +143,7 @@ class CDSOptionTest(unittest.TestCase):
         buyer_cds_option.setPricingEngine(self.engine)
         seller_cds_option.setPricingEngine(self.engine)
         self.assertFalse(abs(buyer_cds_option.NPV() - seller_cds_option.NPV()) > tolerance)
-        implied_vol = self.cds_option.impliedVolatility(self.cds_option.NPV(), self.discount_curve,
+        implied_vol = self.cds_option.impliedVolatility(self.cds_option.NPV(), self.discount_curve, self.discount_curve,
                                                         self.probability_curve, self.recovery_rate)
         self.assertFalse(abs(implied_vol - self.vol) > 1.0e-5)
         
