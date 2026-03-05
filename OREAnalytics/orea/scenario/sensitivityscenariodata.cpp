@@ -536,7 +536,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
 
     DLOG("Get compute theta flag");
-    computeTheta_ =  XMLUtils::getChildValueAsBool(node, "ComputeTheta", false); // defaults to true
+    computeTheta_ =  XMLUtils::getChildValueAsBool(node, "ComputeTheta", false, false); // defaults to true
 
     DLOG("Get theta period");
     if (auto n = XMLUtils::getChildNode(node, "ThetaPeriod"))

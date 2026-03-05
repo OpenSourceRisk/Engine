@@ -490,6 +490,8 @@ public:
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
     void setParSensi(bool b) { parSensi_ = b; }
+    void setComputeTheta(bool b) { computeTheta_ = b; }
+    void setThetaPeriod(Period b) { thetaPeriod_ = b; }
     void setOptimiseRiskFactors(bool b) { optimiseRiskFactors_ = b; }
     void setAlignPillars(bool b) { alignPillars_ = b; }
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
@@ -956,6 +958,8 @@ public:
      *****************************/
     bool xbsParConversion() { return xbsParConversion_; }
     bool parSensi() const { return parSensi_; };
+    bool computeTheta() const { return computeTheta_; };
+    Period thetaPeriod() const { return thetaPeriod_; };
     bool optimiseRiskFactors() const { return optimiseRiskFactors_; }
     bool alignPillars() const { return alignPillars_; };
     bool outputJacobi() const { return outputJacobi_; };
@@ -1231,6 +1235,7 @@ protected:
      **********************/
     bool xbsParConversion_ = false;
     bool parSensi_ = false;
+    bool computeTheta_ = false;
     bool optimiseRiskFactors_ = false;
     bool outputJacobi_ = false;
     bool alignPillars_ = false;
@@ -1244,6 +1249,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
     // QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> sensiTodaysMarketParams_;
     QuantLib::Size sensiOutputPrecision_ = 2;
+    QuantLib::Period thetaPeriod_ = QuantLib::Period(1, QuantLib::Days);
 
     /**********************
      * SCENARIO analytic
