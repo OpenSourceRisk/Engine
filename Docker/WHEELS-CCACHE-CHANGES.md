@@ -1,12 +1,11 @@
-# Wheels Docker Build — ccache & Performance Changes
+# Wheels Docker Build — Pre-compilation & Performance Changes
 
 ## Problem
 
 The `Dockerfile-Wheels-CIBW` build was slow because:
 
-1. **No ccache** was configured inside the cibuildwheel-spawned containers, so the
-   compilation of `oreanalytics_wrap.cpp` (a large SWIG-generated C++ file) happened
-   from scratch for every Python version (cp310, cp312).
+1. **`oreanalytics_wrap.cpp` was compiled serially** for each Python version (cp310,
+   then cp312), each taking ~25 minutes. Total: ~50 minutes.
 2. **SWIG generation ran redundantly** — `before_all_linux.sh` was set as
    `CIBW_BEFORE_BUILD`, which runs before *each* wheel, not once per platform.
 3. **`Dockerfile-Wheels-ORE`** had ccache configured, but the `PATH` pointed to
@@ -15,6 +14,20 @@ The `Dockerfile-Wheels-CIBW` build was slow because:
 4. **Both Dockerfiles shared the same BuildKit cache mount** (`--mount=type=cache,target=/ccache/`),
    but their CMake flags differed (e.g. `-fPIC`, different `-D` defines), so cached
    objects from one build never produced hits in the other.
+
+### Why ccache doesn't help inside cibuildwheel
+
+ccache hashes the preprocessed output of a source file. Because `oreanalytics_wrap.cpp`
+includes `<Python.h>`, and `Python.h` content differs between Python 3.10 and 3.12,
+the preprocessed output is different for each version — resulting in guaranteed cache
+misses. ccache cannot speed up cross-Python-version builds for SWIG wrappers.
+
+## Solution: Parallel Pre-compilation
+
+Instead of ccache, we **pre-compile `oreanalytics_wrap.cpp` for all Python versions
+in parallel** during `CIBW_BEFORE_ALL` (which runs once per platform). When
+`setup.py build_ext` subsequently runs for each version, it finds the pre-built `.o`
+file and **only links** (~30 seconds) instead of compiling (~25 minutes).
 
 ## Changes
 
@@ -35,28 +48,32 @@ The `Dockerfile-Wheels-CIBW` build was slow because:
 
 | Change | Why |
 |--------|-----|
-| Added `# syntax = docker/dockerfile:1.2` | Enables BuildKit features |
 | Added `ARG DOCKER_REPO` and `ARG ORE_BUILD_VERSION` before `FROM` | Docker requires ARGs used in `FROM` to be declared before it |
 | Moved `before_all_linux.sh` from `CIBW_BEFORE_BUILD` to `CIBW_BEFORE_ALL` | SWIG wrapping (`setup.py wrap`) is Python-version-independent — now runs once per platform instead of once per wheel |
 | `CIBW_BEFORE_ALL` uses `/opt/python/cp310-cp310/bin/pip3` and prepends `/opt/python/cp310-cp310/bin` to `PATH` | `CIBW_BEFORE_ALL` runs in the raw manylinux container where `pip3`/`python3` are not on `PATH`; only versioned interpreters under `/opt/python/` exist |
-| Added `CIBW_BEFORE_BUILD="pip install setuptools"` | Ensures setuptools is available in each per-Python-version venv for `setup.py build_ext` |
-| Added `CIBW_ENVIRONMENT` with ccache config | Routes compiler calls through ccache inside cibuildwheel containers (see details below) |
+| `CIBW_BEFORE_ALL` runs `precompile.sh cp310-cp310 cp312-cp312` | Pre-compiles `oreanalytics_wrap.cpp` for both Python versions in parallel |
+| Added `CIBW_BEFORE_BUILD="pip install setuptools"` | Ensures setuptools is available in each per-Python-version venv |
+| `CIBW_ENVIRONMENT` sets `ORE_PREBUILT_DIR` | Tells `setup.py` where to find the pre-built `.o` files |
+| Removed ccache from `CIBW_ENVIRONMENT` | ccache cannot produce cross-Python-version hits (different `Python.h` ? different hash) |
+| `$PATH` in `CIBW_BEFORE_ALL` escaped as `\$PATH` | Prevents Docker `ENV` from expanding at build time; cibuildwheel expands at runtime |
 
-#### `CIBW_ENVIRONMENT` details
+### `ore/ORE-SWIG/Wheels-gitlab/precompile.sh` (new)
 
-```
-PATH=/usr/lib64/ccache:/usr/lib/ccache:$PATH
-CCACHE_DIR=/project/.ccache
-CCACHE_MAXSIZE=5G
-```
+Compiles `oreanalytics_wrap.cpp` for each target Python version in parallel.
+For each version it:
+1. Queries `sysconfig` for the Python include path and `CFLAGS`
+2. Runs `g++` with the same flags `setuptools` would use
+3. Stores the `.o` in `.prebuilt/<platform>-<pytag>/oreanalytics_wrap.o`
 
-- **`PATH`** — Prepends ccache symlink directories so compiler invocations from
-  `setup.py build_ext` are intercepted by ccache. The `wheels_ore2` image already
-  has ccache installed via `dnf`.
-- **`CCACHE_DIR=/project/.ccache`** — Uses the project mount directory (`/project`),
-  which persists across Python versions within a single cibuildwheel run. This means
-  cp312 gets cache hits from cp310's compilation of the same `oreanalytics_wrap.cpp`.
-- **`CCACHE_MAXSIZE=5G`** — Reasonable limit for the SWIG wrapper cache.
+Both compilations run as background processes, so they execute in parallel.
+
+### `ore/ORE-SWIG/setup.py`
+
+| Change | Why |
+|--------|-----|
+| Added `build_extension()` override to `my_build_ext` | Checks for pre-built `.o` in `ORE_PREBUILT_DIR`, copies it to the build temp directory, and skips compilation (link-only) |
+| Added `import shutil, platform` | Needed for the pre-built object file handling |
+| No-op when `ORE_PREBUILT_DIR` is not set | Normal (non-wheel) builds are completely unaffected |
 
 ### `ore/ORE-SWIG/Wheels-gitlab/before_all_linux.sh`
 
@@ -64,51 +81,56 @@ CCACHE_MAXSIZE=5G
 |--------|-----|
 | Removed `setuptools` from `pip3 install` | Now handled by `CIBW_BEFORE_ALL` and `CIBW_BEFORE_BUILD` in the Dockerfile |
 
-## How ccache works in the pipeline
+## How it works
 
-### `Dockerfile-ORE` (the main ORE build)
+### Pre-compilation flow
 
-- Debian-based image, ccache symlinks at `/usr/lib/ccache`.
-- CMake is configured with `-DCMAKE_CXX_COMPILER_LAUNCHER=ccache`.
-- BuildKit cache mount `id=ccache-ore` persists the ccache directory across builds.
-- On repeat builds with identical source, ccache produces direct hits.
+```
+CIBW_BEFORE_ALL (runs once per platform, inside manylinux container)
+??? before_all_linux.sh
+?   ??? pip3 install docker
+?   ??? cp oreanalytics-config
+?   ??? python3 setup.py wrap          # generates oreanalytics_wrap.cpp
+??? precompile.sh cp310-cp310 cp312-cp312
+    ??? [background] g++ ... -I/opt/python/cp310-cp310/include/python3.10 ... ? .prebuilt/linux-x86_64-cpython-310/oreanalytics_wrap.o
+    ??? [background] g++ ... -I/opt/python/cp312-cp312/include/python3.12 ... ? .prebuilt/linux-x86_64-cpython-312/oreanalytics_wrap.o
+    (both run in parallel)
+```
 
-### `Dockerfile-Wheels-ORE` (the wheels ORE library build)
+### Per-version build flow
 
-- `dnf`-based manylinux image, ccache symlinks at `/usr/lib64/ccache`.
-- CMake is configured with `-DCMAKE_CXX_COMPILER_LAUNCHER=ccache`.
-- BuildKit cache mount `id=ccache-wheels` gives this build its own cache volume,
-  separate from the main ORE build (different flags like `-fPIC`).
-- On repeat builds with identical source and flags, ccache produces direct hits.
-
-### `Dockerfile-Wheels-CIBW` (cibuildwheel — the Python wheel packaging step)
-
-- Runs inside the `ore-build-dependencies` image.
-- `cibuildwheel` launches its own Docker containers from the `wheels_ore2` image.
-- Inside those containers, `setup.py build_ext` compiles `oreanalytics_wrap.cpp`.
-- `CIBW_ENVIRONMENT` sets up ccache in those containers:
-  - Compiler calls go through ccache symlinks in PATH.
-  - Cache stored at `/project/.ccache` (shared across Python versions).
-- **First Python version** (e.g. cp310): cache miss, full compilation.
-- **Second Python version** (e.g. cp312): cache hit on the bulk of compilation
-  (same `oreanalytics_wrap.cpp`, same ORE headers, same compiler flags).
+```
+CIBW per-version (e.g. cp312)
+??? pip install setuptools              # CIBW_BEFORE_BUILD
+??? setup.py build_ext
+    ??? my_build_ext.build_extension()
+        ??? Finds .prebuilt/linux-x86_64-cpython-312/oreanalytics_wrap.o
+        ??? Copies to build/temp.linux-x86_64-cpython-312/oreanalytics_wrap.o
+        ??? Runs link only (~30 seconds)
+```
 
 ## Expected speedup
 
 | Area | Before | After |
 |------|--------|-------|
 | SWIG generation | Runs once per Python version (2×) | Runs once per platform (1×) |
-| `oreanalytics_wrap.cpp` compilation (cp310) | Full compile | Full compile (cold cache) |
-| `oreanalytics_wrap.cpp` compilation (cp312) | Full compile | ccache hit (fast) |
-| Subsequent CI runs (same source) | Full compile | ccache hits in `Dockerfile-Wheels-ORE` via BuildKit cache mount |
+| `oreanalytics_wrap.cpp` compilation | ~25 min × 2 versions (serial) = ~50 min | ~25 min (parallel, both at once) |
+| Link step per version | ~30s (included above) | ~30s × 2 |
+| **Total wheel build time** | **~50 min** | **~26 min** |
 
-## Cache isolation
+## ccache in Dockerfile-ORE and Dockerfile-Wheels-ORE
+
+ccache remains useful for the C++ library builds (`Dockerfile-ORE` and
+`Dockerfile-Wheels-ORE`) where it caches across CI runs via BuildKit cache mounts.
+It was only removed from the cibuildwheel step where it provided no benefit.
+
+### Cache isolation
 
 | Dockerfile | Cache mount `id` | Why separate |
 |------------|-----------------|--------------|
 | `Dockerfile-ORE` | `ccache-ore` | Flags include `-DORE_BUILD_SWIG=ON`, no `-fPIC`, `-DORE_ENABLE_OPENCL=ON` |
 | `Dockerfile-Wheels-ORE` | `ccache-wheels` | Flags include `-fPIC`, `-DORE_ENABLE_OPENCL=OFF`, tests disabled |
-| `Dockerfile-Wheels-CIBW` | N/A (ephemeral `/project/.ccache`) | Only lives within a single cibuildwheel run; shares across Python versions |
+| `Dockerfile-Wheels-CIBW` | N/A (pre-compilation) | Uses parallel pre-compilation instead of ccache |
 
 ## Bug Fix: `build-wheels-cibw` missing `check-out` dependency
 
@@ -131,4 +153,4 @@ not find the Dockerfile.
    `build-wheels-cibw` so that the `ore/` artifacts are available.
 2. **`ore/Docker/Dockerfile-Wheels-CIBW`**: Added `ARG DOCKER_REPO` and
    `ARG ORE_BUILD_VERSION` before the `FROM` line, matching the pattern in
-   `Dockerfile-ORE`. Docker requires ARGs used in `FROM` to be declared before it.
+   `Dockerfile-ORE`. Docker requires ARGs used in `FROM` to be declared before it`.
