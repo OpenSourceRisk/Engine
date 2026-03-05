@@ -94,7 +94,7 @@ void SensitivityCube::initialise() {
     for (Size i = 0; i < scenarioDescriptions_.size(); i++) {
         auto des = scenarioDescriptions_[i];
         FactorData fd;
-        // Don't info add for base - missing from shift size maps
+        // Don't info add for base - missing from maps
         if (des.type() != ShiftScenarioDescription::Type::Base) {
             fd.index = i;
             fd.targetShiftSize = targetShiftSize(des.key1());

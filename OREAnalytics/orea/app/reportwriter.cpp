@@ -33,6 +33,7 @@
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/math/distributioncount.hpp>
+#include <qle/utilities/time.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 
@@ -901,19 +902,9 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
                 thetaWritten.insert(sr.tradeId);
                 // Build a proper RiskFactorKey-style string: Theta/<currency>/0/<period>
                 std::ostringstream thetaFactor;
-                thetaFactor << "Theta/" << sr.currency << "/0";
-                Real thetaShiftSize = Null<Real>();
-                if (sr.thetaPeriod != Period()) {
-                    thetaFactor << "/" << ore::data::to_string(sr.thetaPeriod);
-                    // Convert period to year fraction
-                    thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length()) / 365.0;
-                    if (sr.thetaPeriod.units() == Weeks)
-                        thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length()) * 7.0 / 365.0;
-                    else if (sr.thetaPeriod.units() == Months)
-                        thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length()) / 12.0;
-                    else if (sr.thetaPeriod.units() == Years)
-                        thetaShiftSize = static_cast<Real>(sr.thetaPeriod.length());
-                }
+                thetaFactor << "Theta/" << sr.currency << "/0/" << ore::data::to_string(sr.thetaPeriod);
+                auto thetaShiftSize = QuantExt::periodToTime(sr.thetaPeriod);
+
                 report.next();
                 report.add(sr.tradeId);
                 report.add(ore::data::to_string(sr.isPar));
