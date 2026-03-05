@@ -620,24 +620,24 @@ public:
     void setCollateralBalances(const QuantLib::ext::shared_ptr<CollateralBalances>& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setReportBufferSize(Size s) { setupVariables_.reportBufferSize_ = s; }
     void setCounterpartyManager(const std::string& xml);
-    void setCalibrationModel(const std::string& s);
-    void setHwCalibrationMode(const std::string& s);
-    void setPcaCalibration(bool b);
-    void setMeanReversionCalibration(bool b);
-    void setForeignCurrencies(const std::string& s);
-    void setCurveTenors(const std::string& s);
-    void setScenarioInputFile(const std::string& fileName);
-    void setStartDate(const Date& d);
-    void setEndDate(const Date& d);
-    void setUseForwardOrZeroRate(const std::string& s);
-    void setLambda(Real r);
-    void setVarianceRetained(Real r);
-    void setPcaInputFiles(const std::string& fileName, const std::filesystem::path& inputPath);
-    void setBasisFunctionNumber(Size s);
-    void setKappaUpperBound(Real r);
-    void setHaltonMaxGuess(Size s);
-    void setPcaOutputFileName(const std::string& fileName);
-    void setMeanReversionOutputFileName(const std::string& fileName);
+    void setCalibrationModel(const std::string& s) { parameters_.set("calibration", "model", s); }
+    void setHwCalibrationMode(const std::string& s) { parameters_.set("calibration", "mode", s); }
+    void setPcaCalibration(bool b) { parameters_.set("calibration", "pcaCalibration", b); }
+    void setMeanReversionCalibration(bool b) { parameters_.set("calibration", "meanReversionCalibration", b); }
+    void setForeignCurrencies(const std::string& s) { parameters_.set("calibration", "foreignCurrencies", s); }
+    void setCurveTenors(const std::string& s) { parameters_.set("calibration", "curveTenors", s); }
+    void setScenarioInputFile(const std::string& fileName) { parameters_.set("calibration", "scenarioInputFile", fileName); }
+    void setStartDate(const Date& d) { parameters_.set("calibration", "startDate", d); }
+    void setEndDate(const Date& d) { parameters_.set("calibration", "endDate", d); }
+    void setUseForwardOrZeroRate(const std::string& s) { parameters_.set("calibration", "useForwardOrZeroRate", s); }
+    void setLambda(Real r) { parameters_.set("calibration", "lambda", r); }
+    void setVarianceRetained(Real r) { parameters_.set("calibration", "varianceRetained", r); }
+    void setPcaInputFiles(const std::string& fileName, const std::filesystem::path& inputPath) { parameters_.set("calibration", "pcaInputFileName", inputPath); }
+    void setBasisFunctionNumber(Size s) { parameters_.set("calibration", "basisFunctionNumber", s); }
+    void setKappaUpperBound(Real r) { parameters_.set("calibration", "kappaUpperBound", r); }
+    void setHaltonMaxGuess(Size s) { parameters_.set("calibration", "haltonMaxGuess", s); }
+    void setPcaOutputFileName(const std::string& fileName) { parameters_.set("calibration", "pcaOutputFileName", fileName); }
+    void setMeanReversionOutputFileName(const std::string& fileName) { parameters_.set("calibration", "meanReversionOutputFileName", fileName); }
 
     // Setters for xva
     void setXvaUseDoublePrecisionCubes(const bool b) { parameters_.set("xva", "useDoublePrecisionCubes", b); };
@@ -957,8 +957,8 @@ public:
     bool xbsParConversion() { return xbsParConversion_; }
     bool parSensi() const { return parSensi_; };
     bool optimiseRiskFactors() const { return optimiseRiskFactors_; }
-    bool alignPillars() const { return alignPillars_; };
-    bool outputJacobi() const { return outputJacobi_; };
+    bool alignPillars() const { return alignPillars_; }
+    bool outputJacobi() const { return outputJacobi_; }
     bool useSensiSpreadedTermStructures() const { return useSensiSpreadedTermStructures_; }
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
@@ -1012,29 +1012,7 @@ public:
     
     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const {
         return setupVariables_.counterpartyManager_;
-    }
-    
-    /*********************************
-     * Getters for calibration
-     *********************************/
-    const std::string& calibrationModel() const { return calibrationModel_; }
-    const std::string& hwCalibrationMode() const { return hwCalibrationMode_; }
-    bool pcaCalibration() const { return pcaCalibration_; }
-    bool meanReversionCalibration() const { return meanReversionCalibration_; }
-    const std::vector<std::string>& foreignCurrencies() const { return foreignCurrencies_; }
-    const std::vector<Period>& curveTenors() const { return curveTenors_; }
-    const std::string& scenarioInputFile() const { return scenarioInputFile_; }
-    const Date& startDate() const { return startDate_; }
-    const Date& endDate() const { return endDate_; }
-    const std::vector<std::string>& pcaInputFiles() const { return pcaInputFiles_; }
-    bool useForwardRate() const { return useForwardRate_; }
-    Real lambda() const { return lambda_; }
-    Real varianceRetained() const { return varianceRetained_; }
-    Size basisFunctionNumber() const { return basisFunctionNumber_; }
-    Real kappaUpperBound() const { return kappaUpperBound_; }
-    Size haltonMaxGuess() const { return haltonMaxGuess_; }
-    const std::string& pcaOutputFileName() const { return pcaOutputFileName_; }
-    const std::string& meanReversionOutputFileName() const { return meanReversionOutputFileName_; }
+    }    
 
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& xvaStressSimMarketParams() const {
         return xvaStressSimMarketParams_;
@@ -1275,30 +1253,6 @@ protected:
     std::string benchmarkVarPeriod_;
     bool outputHistoricalScenarios_ = false;
 
-    /*************
-     * Calibration analytics
-     *************/
-    std::string calibrationModel_;
-    std::string hwCalibrationMode_;
-    bool pcaCalibration_;
-    bool meanReversionCalibration_;
-    std::vector<std::string> foreignCurrencies_;
-    std::vector<Period> curveTenors_;
-    Date startDate_;
-    Date endDate_;
-    std::string scenarioInputFile_;
-    bool useForwardRate_;
-    Real lambda_;
-    std::vector<std::string> pcaInputFiles_;
-    Real varianceRetained_;
-    Size basisFunctionNumber_;
-    Real kappaUpperBound_;
-    Size haltonMaxGuess_;
-    std::string pcaOutputFileName_;
-    std::string meanReversionOutputFileName_;
-
-    
-
     /***************
      * SIMM analytic
      ***************/
@@ -1398,6 +1352,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
     double xvaExplainShiftThreshold_ = 0;
 };
+
 
 std::vector<std::string> getFileNames(const std::string& fileString, const std::filesystem::path& path);
     
