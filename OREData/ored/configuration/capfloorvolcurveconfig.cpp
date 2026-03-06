@@ -233,7 +233,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         optionletTenorInArrears_ = XMLUtils::getChildValueAsBool(node, "OptionletTenorInArrears", false, true);
 
         // for optionlet quotes, is the vol input effective (true) or stripped (false) vol?
-        optionletVolIsEffective_ = XMLUtils::getChildValueAsBool(node, "OptionletVolIsEffective", false, true);
+        optionletVolIsEffective_ = XMLUtils::getChildValueAsBool(node, "OptionletVolIsEffective", false, false);
 
         // Set type_
         configureType();
@@ -321,7 +321,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "FlatFirstPeriod", flatFirstPeriod_);
         if (!optionletTenorInArrears_)
             XMLUtils::addChild(doc, node, "OptionletTenorInArrears", optionletTenorInArrears_);
-        if (!optionletVolIsEffective_)
+        if (optionletVolIsEffective_)
             XMLUtils::addChild(doc, node, "OptionletVolIsEffective", optionletTenorInArrears_);
         if (modelShift_ != Null<Real>())
             XMLUtils::addChild(doc, node, "ModelShift", modelShift_);
