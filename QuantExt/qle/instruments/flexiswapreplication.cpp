@@ -123,12 +123,12 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
         }
     }
 
-    // build the vector of (decreasing) notionals and lower bound levels and their last index in the ref schedule
+    // build the vector of (decreasing) notionals and lower bound levels and their first index in the ref schedule
 
     std::vector<Size> notionalLevelIndices, lowerBoundLevelIndices;
-    std::vector<Size> thisNotionalLevelIndices, thisLowerBoundLevelIndices;
     std::vector<std::vector<Real>> notionalLevels, lowerBoundLevels;
 
+    std::vector<Size> thisNotionalLevelIndices, thisLowerBoundLevelIndices;
     for (Size i = 0; i < legs.size(); ++i) {
         auto [tmpNotionalLevels, tmpNotionalIndices] =
             buildLevels(legNotionals[i], "notionals leg #" + std::to_string(i + 1));
@@ -149,9 +149,61 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
             QL_REQUIRE(tmpLowerBoundIndices == lowerBoundLevelIndices,
                        "generateFlexiSwapReplication(): lowerBound level changes are inconsistent on leg #"
                            << i << " vs leg #0");
-
     }
 
+    notionalLevelIndices.push_back(referenceSchedule.size());
+    lowerBoundLevelIndices.push_back(referenceSchedule.size());
+
+    notionalLevels.push_back(std::vector<Real>(referenceSchedule.size(), 0.0));
+    lowerBoundLevels.push_back(std::vector<Real>(referenceSchedule.size(), 0.0));
+
+    // build the replication basket
+
+    struct ReplicationData {
+        Size start, end;
+        Real amount;
+    };
+
+    std::vector<ReplicationData> replicationData;
+
+    Size n0 = 0, l0 = 0;
+    Size legNo = 0;
+
+    Real workingNotional = notionalLevels[legNo][0];
+
+    do {
+
+        Real nextNotional = notionalLevels[legNo][n0 + 1];
+        Real currentLowerBound = lowerBoundLevels[legNo][l0];
+
+        if (currentLowerBound < workingNotional) {
+
+            Real amount;
+            Size start = lowerBoundLevelIndices[l0];
+            Size end = notionalLevelIndices[n0 + 1];
+
+            if (currentLowerBound < nextNotional) {
+                amount = workingNotional - nextNotional;
+                workingNotional = nextNotional;
+                ++n0;
+            } else {
+                amount = workingNotional - currentLowerBound;
+                workingNotional = currentLowerBound;
+                ++l0;
+            }
+
+            replicationData.push_back({start, end, amount});
+
+        } else {
+            ++l0;
+        }
+
+        while(notionalLevelIndices[n0] < lowerBoundLevelIndices[l0])
+            ++n0;
+
+    } while (n0 < notionalLevelIndices.size() - 1);
+
+  
     return {};
 }
 
