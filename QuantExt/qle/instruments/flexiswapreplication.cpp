@@ -28,24 +28,25 @@ namespace {
 Size locateDateInReferenceSchedule(const std::set<Date>& referenceSchedule, const Date& d) {
     constexpr Size gracePeriod = 5; // calendar days
     return std::distance(referenceSchedule.begin(),
-                         std::lower_bound(referenceSchedule.begin(), referenceSchedule.end(), d - gracePeriod));
+                         std::lower_bound(referenceSchedule.begin(), referenceSchedule.end(), d + gracePeriod)) -
+           1;
 }
 
-std::pair<std::vector<Real>, std::vector<Size>> buildLevels(const std::vector<Real>& values) {
+std::pair<std::vector<Real>, std::vector<Size>> buildLevels(const std::vector<Real>& values, const std::string& label) {
     std::vector<Real> levels;
     std::vector<Size> indices;
     if (!values.empty()) {
-        Real currentLevel = values.front();
+        Real previousValue = QL_MAX_REAL;
         for (Size currentIndex = 0; currentIndex < values.size(); ++currentIndex) {
-            Real thisValue = currentIndex < values.size() - 1 ? values[currentIndex + 1] : -QL_MAX_REAL;
-            QL_REQUIRE(thisValue < currentLevel || close_enough(values[currentIndex + 1], currentLevel),
+            QL_REQUIRE(values[currentIndex] < previousValue || close_enough(values[currentIndex], previousValue),
                        "generateFlexiSwapReplication(): increasing notionals / lower bounds are not allowed: "
-                           << thisValue << " > " << currentLevel);
-            if (!close_enough(thisValue, currentLevel)) {
-                levels.push_back(currentLevel);
+                           << values[currentIndex] << " > " << previousValue << " for " << label << " at index "
+                           << currentIndex);
+            if (!close_enough(values[currentIndex], previousValue)) {
+                levels.push_back(values[currentIndex]);
                 indices.push_back(currentIndex);
             }
-            currentLevel = thisValue;
+            previousValue = values[currentIndex];
         }
     }
     return std::make_pair(levels, indices);
@@ -96,10 +97,9 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
 
     // for each leg, set up current notional and lower bond on the reference accrual schedule
 
-    std::vector<std::vector<Real>> legNotionals(legs.size(),
-                                                std::vector<Real>(referenceSchedule.size() + 1, Null<Real>()));
+    std::vector<std::vector<Real>> legNotionals(legs.size(), std::vector<Real>(referenceSchedule.size(), Null<Real>()));
     std::vector<std::vector<Real>> legLowerBounds(legs.size(),
-                                                  std::vector<Real>(referenceSchedule.size() + 1, Null<Real>()));
+                                                  std::vector<Real>(referenceSchedule.size(), Null<Real>()));
 
     // the min accrual start dates (include a grace period) across all legs for the reference accrual schedule
 
@@ -108,7 +108,7 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
             if (auto cpn = ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
-                if (cpn->date() <= referenceDate)
+                if (cpn->accrualStartDate() <= referenceDate)
                     continue;
                 Size index = locateDateInReferenceSchedule(referenceSchedule, cpn->accrualStartDate());
                 QL_REQUIRE(legNotionals[i][index] == Null<Real>() ||
@@ -130,7 +130,8 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
     std::vector<std::vector<Real>> notionalLevels, lowerBoundLevels;
 
     for (Size i = 0; i < legs.size(); ++i) {
-        auto [tmpNotionalLevels, tmpNotionalIndices] = buildLevels(legNotionals[i]);
+        auto [tmpNotionalLevels, tmpNotionalIndices] =
+            buildLevels(legNotionals[i], "notionals leg #" + std::to_string(i + 1));
         notionalLevels.push_back(tmpNotionalLevels);
         if (i == 0)
             notionalLevelIndices = tmpNotionalIndices;
@@ -139,7 +140,8 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
                        "generateFlexiSwapReplication(): notional level changes are inconsistent on leg #"
                            << i << " vs leg #0");
 
-        auto [tmpLowerBoundLevels, tmpLowerBoundIndices] = buildLevels(legLowerBounds[i]);
+        auto [tmpLowerBoundLevels, tmpLowerBoundIndices] =
+            buildLevels(legLowerBounds[i], "lower bounds leg #" + std::to_string(i + 1));
         lowerBoundLevels.push_back(tmpLowerBoundLevels);
         if (i == 0)
             lowerBoundLevelIndices = tmpLowerBoundIndices;
@@ -147,6 +149,7 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
             QL_REQUIRE(tmpLowerBoundIndices == lowerBoundLevelIndices,
                        "generateFlexiSwapReplication(): lowerBound level changes are inconsistent on leg #"
                            << i << " vs leg #0");
+
     }
 
     return {};
