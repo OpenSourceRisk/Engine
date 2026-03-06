@@ -15,6 +15,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/instruments/flexiswapreplication.hpp>
 
 #include <ql/cashflows/coupon.hpp>
@@ -25,8 +26,14 @@ namespace QuantExt {
 
 namespace {
 
+constexpr double tolerance = 2E-2;
+constexpr Size gracePeriod = 5; // calendar days
+
+bool lessThanTol(double a, double b) { return a + tolerance < b; }
+
+bool equalTol(double a, double b) { return std::abs(a - b) < tolerance; }
+
 Size locateDateInReferenceSchedule(const std::set<Date>& referenceSchedule, const Date& d) {
-    constexpr Size gracePeriod = 5; // calendar days
     return std::distance(referenceSchedule.begin(),
                          std::lower_bound(referenceSchedule.begin(), referenceSchedule.end(), d + gracePeriod)) -
            1;
@@ -38,11 +45,12 @@ std::pair<std::vector<Real>, std::vector<Size>> buildLevels(const std::vector<Re
     if (!values.empty()) {
         Real previousValue = QL_MAX_REAL;
         for (Size currentIndex = 0; currentIndex < values.size(); ++currentIndex) {
-            QL_REQUIRE(values[currentIndex] < previousValue || close_enough(values[currentIndex], previousValue),
+            QL_REQUIRE(lessThanTol(values[currentIndex], previousValue) ||
+                           equalTol(values[currentIndex], previousValue),
                        "generateFlexiSwapReplication(): increasing notionals / lower bounds are not allowed: "
                            << values[currentIndex] << " > " << previousValue << " for " << label << " at index "
                            << currentIndex);
-            if (!close_enough(values[currentIndex], previousValue)) {
+            if (!equalTol(values[currentIndex], previousValue)) {
                 levels.push_back(values[currentIndex]);
                 indices.push_back(currentIndex);
             }
@@ -50,6 +58,22 @@ std::pair<std::vector<Real>, std::vector<Size>> buildLevels(const std::vector<Re
         }
     }
     return std::make_pair(levels, indices);
+}
+
+Leg filterLeg(const Leg& l, Size start, Size end, const std::vector<Size>& refIndices) {
+    Leg result;
+    for (Size i = 0; i < l.size(); ++i) {
+        if (refIndices[i] >= start and refIndices[i] < end)
+            result.push_back(l[i]);
+    }
+    return result;
+}
+
+void rescaleLeg(Leg& l, Real amount) {
+    std::for_each(l.begin(), l.end(), [amount](ext::shared_ptr<CashFlow>& c) {
+        if (auto cpn = ext::dynamic_pointer_cast<Coupon>(c))
+            c = ext::make_shared<ScaledCoupon>(amount / cpn->nominal(), cpn);
+    });
 }
 
 } // namespace
@@ -95,29 +119,32 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
                       }
                   });
 
-    // for each leg, set up current notional and lower bond on the reference accrual schedule
+    /* a) for each leg, set up:
+       - current notional and lower bond on the reference accrual schedule
+       - indices of leg coupons in reference schedule
+       b) in addition determine:
+       - the min accrual start dates (include a grace period) across all legs for the reference accrual schedule */
 
     std::vector<std::vector<Real>> legNotionals(legs.size(), std::vector<Real>(referenceSchedule.size(), Null<Real>()));
     std::vector<std::vector<Real>> legLowerBounds(legs.size(),
                                                   std::vector<Real>(referenceSchedule.size(), Null<Real>()));
-
-    // the min accrual start dates (include a grace period) across all legs for the reference accrual schedule
-
+    std::vector<std::vector<Size>> legCouponRefScheduleIndices(legs.size());
     std::vector<Date> minAccrualStartDate(referenceSchedule.begin(), referenceSchedule.end());
 
     for (Size i = 0; i < legs.size(); ++i) {
+        legCouponRefScheduleIndices[i].resize(legs[i].size());
         for (Size j = 0; j < legs[i].size(); ++j) {
             if (auto cpn = ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
                 if (cpn->accrualStartDate() <= referenceDate)
                     continue;
                 Size index = locateDateInReferenceSchedule(referenceSchedule, cpn->accrualStartDate());
-                QL_REQUIRE(legNotionals[i][index] == Null<Real>() ||
-                               close_enough(cpn->nominal(), legNotionals[i][index]),
+                QL_REQUIRE(legNotionals[i][index] == Null<Real>() || equalTol(cpn->nominal(), legNotionals[i][index]),
                            "generateFlexiSwapReplication(): leg #"
                                << i << " at accrual start date " << cpn->accrualStartDate() << " with notional "
                                << cpn->nominal() << " conflicts with reference notional " << legNotionals[i][index]);
                 legNotionals[i][index] = cpn->nominal();
                 legLowerBounds[i][index] = lowerNotionalBounds[i][j];
+                legCouponRefScheduleIndices[i][j] = index;
                 minAccrualStartDate[index] = std::min(minAccrualStartDate[index], cpn->accrualStartDate());
             }
         }
@@ -157,54 +184,97 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
     notionalLevels.push_back(std::vector<Real>(referenceSchedule.size(), 0.0));
     lowerBoundLevels.push_back(std::vector<Real>(referenceSchedule.size(), 0.0));
 
-    // build the replication basket
+    // build the replication data per leg
 
     struct ReplicationData {
         Size start, end;
         Real amount;
     };
 
-    std::vector<ReplicationData> replicationData;
+    std::vector<std::vector<ReplicationData>> replicationData(legs.size());
 
-    Size n0 = 0, l0 = 0;
-    Size legNo = 0;
+    for (Size legNo = 0; legNo < legs.size(); ++legNo) {
 
-    Real workingNotional = notionalLevels[legNo][0];
+        Size n0 = 0, l0 = 0;
 
-    do {
+        Real workingNotional = notionalLevels[legNo][0];
 
-        Real nextNotional = notionalLevels[legNo][n0 + 1];
-        Real currentLowerBound = lowerBoundLevels[legNo][l0];
+        do {
 
-        if (currentLowerBound < workingNotional) {
+            Real nextNotional = notionalLevels[legNo][n0 + 1];
+            Real currentLowerBound = lowerBoundLevels[legNo][l0];
 
-            Real amount;
-            Size start = lowerBoundLevelIndices[l0];
-            Size end = notionalLevelIndices[n0 + 1];
-
-            if (currentLowerBound < nextNotional) {
-                amount = workingNotional - nextNotional;
-                workingNotional = nextNotional;
-                ++n0;
+            if (lessThanTol(currentLowerBound, workingNotional)) {
+                Real amount;
+                Size start = lowerBoundLevelIndices[l0];
+                Size end = notionalLevelIndices[n0 + 1];
+                if (currentLowerBound < nextNotional - 1E-5) {
+                    amount = workingNotional - nextNotional;
+                    workingNotional = nextNotional;
+                    ++n0;
+                } else {
+                    amount = workingNotional - currentLowerBound;
+                    workingNotional = currentLowerBound;
+                    ++l0;
+                }
+                replicationData[legNo].push_back({start, end, amount});
             } else {
-                amount = workingNotional - currentLowerBound;
-                workingNotional = currentLowerBound;
                 ++l0;
             }
 
-            replicationData.push_back({start, end, amount});
+            while (notionalLevelIndices[n0] < lowerBoundLevelIndices[l0])
+                ++n0;
 
-        } else {
-            ++l0;
+        } while (n0 < notionalLevelIndices.size() - 1);
+    }
+
+    // check the consistency of repcliation data across legs (same size, same start, end indices)
+
+    for (Size legNo = 1; legNo < legs.size(); ++legNo) {
+
+        QL_REQUIRE(replicationData[0].size() == replicationData[legNo].size(),
+                   "generateFlexiSwapReplication(): replication data for leg #1 (size "
+                       << replicationData[0].size() << ") inconsistent with leg #" << (legNo + 1) << " (size "
+                       << replicationData[legNo].size() << ")");
+
+        for (Size i = 0; i < replicationData[0].size(); ++i) {
+            QL_REQUIRE(replicationData[0][i].start == replicationData[legNo][i].start &&
+                           replicationData[0][i].end == replicationData[legNo][i].end,
+                       "generateFlexiSwapReplication(): replication data entry at index #"
+                           << i << " is inconsistent for leg #1 (" << replicationData[0][i].start << ","
+                           << replicationData[0][i].end << "), leg #" << (legNo + 1) << " ("
+                           << replicationData[legNo][i].start << "," << replicationData[legNo][i].end << ")");
+        }
+    }
+
+    // build the replication basket of multileg option instruments
+
+    std::vector<ext::shared_ptr<MultiLegOption>> basket;
+
+    for (Size i = 0; i < replicationData[0].size(); ++i) {
+
+        std::vector<Leg> tmpLegs;
+
+        for (Size legNo = 0; legNo < legs.size(); ++legNo) {
+            auto tmp = filterLeg(legs[legNo], replicationData[legNo][i].start, replicationData[legNo][i].end,
+                                 legCouponRefScheduleIndices[legNo]);
+            rescaleLeg(tmp, replicationData[legNo][i].amount);
+            tmpLegs.push_back(tmp);
         }
 
-        while(notionalLevelIndices[n0] < lowerBoundLevelIndices[l0])
-            ++n0;
+        std::vector<Date> exerciseDates;
+        for (Size j = replicationData[0][i].start; j < replicationData[0][i].end; ++j) {
+            exerciseDates.push_back(minAccrualStartDate[j]);
+        }
 
-    } while (n0 < notionalLevelIndices.size() - 1);
+        auto exercise = ext::make_shared<BermudanExercise>(exerciseDates);
 
-  
-    return {};
+        basket.push_back(ext::make_shared<MultiLegOption>(legs, payer, currency, exercise));
+    }
+
+    // return the basket
+
+    return basket;
 }
 
 } // namespace QuantExt
