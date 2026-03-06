@@ -1106,7 +1106,7 @@ public:
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                   const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime,
-                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "");
+                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "", bool usesReferenceData = false);
     //@}
 
     //! \name Inspectors
@@ -1131,7 +1131,6 @@ public:
     virtual void build() override;
     //@}
 private:
-    bool usesReferenceData_;
     Natural settlementDays_;
     Calendar calendar_;
     Frequency frequency_;
@@ -1154,6 +1153,8 @@ private:
     string strPaysAtDefaultTime_;
     string strUpfrontSettlementDays_;
     string strLastPeriodDayCounter_;
+
+    bool usesReferenceData_;
 };
 
 class InflationSwapConvention : public Convention {

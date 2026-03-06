@@ -1271,12 +1271,12 @@ CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, 
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                              const string& strDayCounter, const string& strSettlesAccrual,
                              const string& strPaysAtDefaultTime, const string& strUpfrontSettlementDays,
-                             const string& lastPeriodDayCounter)
+                             const string& lastPeriodDayCounter, bool usesReferenceData)
     : Convention(id, Type::CDS), strSettlementDays_(strSettlementDays), strCalendar_(strCalendar),
       strFrequency_(strFrequency), strPaymentConvention_(strPaymentConvention), strRule_(strRule),
       strDayCounter_(strDayCounter), strSettlesAccrual_(strSettlesAccrual),
       strPaysAtDefaultTime_(strPaysAtDefaultTime), strUpfrontSettlementDays_(strUpfrontSettlementDays),
-      strLastPeriodDayCounter_(lastPeriodDayCounter) {
+      strLastPeriodDayCounter_(lastPeriodDayCounter), usesReferenceData_(usesReferenceData) {
     build();
 }
 
