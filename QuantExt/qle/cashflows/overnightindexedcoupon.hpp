@@ -187,6 +187,10 @@ public:
     Real effectiveCapletVolatility() const;
     //! effective floorlet volatility
     Real effectiveFloorletVolatility() const;
+    //! stripped caplet volatility
+    Real strippedCapletVolatility() const;
+    //! stripped floorlet volatility
+    Real strippedFloorletVolatility() const;
     //@}
     //! \name Visitability
     //@{
@@ -206,6 +210,8 @@ protected:
     bool localCapFloor_;
     mutable Real effectiveCapletVolatility_;
     mutable Real effectiveFloorletVolatility_;
+    mutable Real strippedCapletVolatility_;
+    mutable Real strippedFloorletVolatility_;
 };
 
 //! capped floored overnight indexed coupon pricer base class
@@ -217,12 +223,16 @@ public:
     bool effectiveVolatilityInput() const;
     Real effectiveCapletVolatility() const;   // only available after capletRate() was called
     Real effectiveFloorletVolatility() const; // only available after floorletRate() was called
+    Real strippedCapletVolatility() const;    // only available after capletRate() was called
+    Real strippedFloorletVolatility() const;  // only available after floorletRate() was called
 
 protected:
     Handle<OptionletVolatilityStructure> capletVol_;
     bool effectiveVolatilityInput_;
     mutable Real effectiveCapletVolatility_ = Null<Real>();
     mutable Real effectiveFloorletVolatility_ = Null<Real>();
+    mutable Real strippedCapletVolatility_ = Null<Real>();
+    mutable Real strippedFloorletVolatility_ = Null<Real>();
 };
 
 //! helper class building a sequence of overnight coupons
