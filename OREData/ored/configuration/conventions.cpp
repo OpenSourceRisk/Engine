@@ -1278,6 +1278,7 @@ CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, 
       strPaysAtDefaultTime_(strPaysAtDefaultTime), strUpfrontSettlementDays_(strUpfrontSettlementDays),
       strLastPeriodDayCounter_(lastPeriodDayCounter), usesReferenceData_(usesReferenceData) {
     build();
+    // dummy change to revert
 }
 
 void CdsConvention::build() {
