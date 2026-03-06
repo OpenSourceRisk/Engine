@@ -43,7 +43,8 @@ class QLECdsOption : public Instrument {
     QuantLib::Rate atmRate() const;
     QuantLib::Real riskyAnnuity() const;
     QuantLib::Volatility impliedVolatility(QuantLib::Real price,
-                                           const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructure,
+                                           const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureSwapCurrency,
+                                           const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureTradeCollateral,
                                            const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
                                            QuantLib::Real recoveryRate,
                                            QuantLib::Real accuracy = 1.e-4,
@@ -56,9 +57,10 @@ class QLECdsOption : public Instrument {
 class QLEBlackCdsOptionEngine : public PricingEngine {
   public:
     QLEBlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
-			    QuantLib::Real recoveryRate,
-			    const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructure,
-			    const QuantLib::Handle<QuantExt::CreditVolCurve>& vol);
+                            QuantLib::Real recovery,
+                            const QuantLib::Handle<QuantLib::YieldTermStructure>& discountSwapCurrency,
+                            const QuantLib::Handle<QuantLib::YieldTermStructure>& discountTradeCollateral,
+                            const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
 };
 
 #endif
