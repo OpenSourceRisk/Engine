@@ -18,6 +18,8 @@
 
 #include <ored/portfolio/builders/flexiswap.hpp>
 #include <ored/portfolio/flexiswap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/swaption.hpp>
 
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
@@ -42,11 +44,15 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
 
+    // checks
+
     QL_REQUIRE(!underlyingData_.empty(), "MultiLegOption: no underlying given");
 
+    // get engine builder
+
     auto builder =
-        QuantLib::ext::dynamic_pointer_cast<FlexiSwapBGSEngineBuilderBase>(engineFactory->builder("FlexiSwap"));
-    QL_REQUIRE(builder, "Flexi-Swap builder is null");
+        QuantLib::ext::dynamic_pointer_cast<SwaptionEngineBuilder>(engineFactory->builder("BermudanSwaption"));
+    QL_REQUIRE(builder, "BermudanSwaption builder is null");
 
     // build underlying legs
 
@@ -65,6 +71,10 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         DLOG("Added leg of type " << underlyingData_[i].legType() << " in currency " << underlyingData_[i].currency()
                                   << " is payer " << underlyingData_[i].isPayer());
     }
+
+    // set npv currency
+
+    npvCurrency_ = legCurrencies_.front();
 
     // set single currency flag
 
@@ -92,81 +102,30 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             buildScheduledVectorNormalised(tmpLowerNotionalBounds, tmpLowerNotionalBoundDates, schedule, 0.0));
     }
 
-    // TEST flexi swap replication
+    // flexi swap replication
 
     Date today = Settings::instance().evaluationDate();
 
     bool generateNotionalExchanges = true;
-    generateFlexiSwapReplication(today, underlyingLegs, underlyingPayers, underlyingCurrencies, lowerNotionalBounds,
-                                 generateNotionalExchanges);
+    auto basket = generateFlexiSwapReplication(today, underlyingLegs, underlyingPayers, underlyingCurrencies,
+                                               lowerNotionalBounds, generateNotionalExchanges);
 
-    // optionality is given by exercise dates, types, values
+    for (Size i = 0; i < basket.size(); ++i) {
+        auto index = getInterestRateIndexFromLegs(basket[i]->legs());
+        string qualifier =
+            index.empty() ? npvCurrency_ : IndexNameTranslator::instance().oreName(index.front()->name());
+        auto dates = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())->dates();
+        std::vector<Date> maturities(dates.size(), basket[i]->maturityDate());
+        auto strikes = getCalibrationStrikesFromLegs(basket[i]->legs(), dates);
+        basket[i]->setPricingEngine(builder->engine(id() + "_" + std::to_string(i), qualifier, dates, maturities,
+                                                    strikes, false, std::string(), std::string()));
+    }
 
-    // FIXME this is an approximation, we build an approximate instrument here using the global lower
-    // notional bounds; for a correct representation we would need local bounds that depend on the
-    // current notional of the swap; see below where the approximation occurs specifically
+    // set trade members
 
-    // if (!exerciseDates_.empty()) {
-    //     DLOG("optionality is given by exercise dates, types, values");
+    setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
-    //     // FIXME: we also ignore the notice period at this stage of the implementation, the notice day
-    //     // is always assumed to lie on the fixing date of the corresponding float period of the swap
-
-    //     // start with no optionality
-    //     notionalCanBeDecreased = std::vector<bool>(fixedNominal.size(), false);
-
-    //     // loop over exercise dates and update lower notional bounds belonging to that exercise
-    //     Date previousExerciseDate = Null<Date>();
-    //     for (Size i = 0; i < exerciseDates_.size(); ++i) {
-    //         Date d = parseDate(exerciseDates_[i]);
-    //         QL_REQUIRE(exerciseValues_[i] > 0.0 || close_enough(exerciseValues_[i], 0.0),
-    //                    "exercise value #" << i << " (" << exerciseValues_[i] << ") must be non-negative");
-    //         QL_REQUIRE(i == 0 || previousExerciseDate < d, "exercise dates must be strictly increasing, got "
-    //                                                            << QuantLib::io::iso_date(previousExerciseDate)
-    //                                                            << " and " << QuantLib::io::iso_date(d) << " as #" <<
-    //                                                            i
-    //                                                            << " and #" << i + 1);
-    //         previousExerciseDate = d;
-    //         // determine the fixed period that follows the exercise date
-    //         Size exerciseIdx = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), d) -
-    //                            fixedSchedule.dates().begin();
-    //         if (exerciseIdx >= fixedSchedule.dates().size() - 1) {
-    //             DLOG("exercise date "
-    //                  << QuantLib::io::iso_date(d)
-    //                  << " ignored since there is no whole fixed leg period with accrual start >= exercise date");
-    //             continue;
-    //         }
-    //         notionalCanBeDecreased[exerciseIdx] = true;
-    //         if (exerciseTypes_[i] == "ReductionUpToLowerBound") {
-    //             for (Size j = exerciseIdx; j < lowerNotionalBounds.size(); ++j) {
-    //                 lowerNotionalBounds[j] = std::min(lowerNotionalBounds[j], exerciseValues_[i]);
-    //             }
-    //         } else if (exerciseTypes_[i] == "ReductionByAbsoluteAmount" ||
-    //                    exerciseTypes_[i] == "ReductionUpToAbsoluteAmount") {
-    //             // FIXME we just assume that all prepayment option before this one here were exercised
-    //             // and reduce the lower notional bounds by the current exercise amount; we also treat
-    //             // "by" the same as "up to"
-    //             for (Size j = exerciseIdx; j < lowerNotionalBounds.size(); ++j) {
-    //                 lowerNotionalBounds[j] = std::max(lowerNotionalBounds[j] - exerciseValues_[i], 0.0);
-    //             }
-    //         } else {
-    //             QL_FAIL("exercise type '" << exerciseTypes_[i]
-    //                                       << "' unknown, expected ReductionUpToLowerBound, ReductionByAbsoluteAmount,
-    //                                       "
-    //                                          "ReductionUpToAbsoluteAmount");
-    //         }
-    //     }
-    // }
-
-    // set pricing engine, init instrument and other trade members
-
-    // flexiSwap->setPricingEngine(
-    //     builder->engine(id(), "", index.empty() ? ccy_str : IndexNameTranslator::instance().oreName(index->name()),
-    //                     expiryDates, flexiSwap->maturityDate(), strikes));
-    // setSensitivityTemplate(*builder);
-    // addProductModelEngine(*builder);
-
-    // // FIXME this won't work for exposure, currently not supported
     // instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(flexiSwap);
 
     // npvCurrency_ = ccy_str;
