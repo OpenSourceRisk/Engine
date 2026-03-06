@@ -85,5 +85,12 @@ private:
     Settlement::Method settlementMethod_;
 };
 
+//! utility function to extract index from underlying legs
+std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> getInterestRateIndexFromLegs(const std::vector<Leg>& legs);
+
+//! utility function to determine calibration strikes from legs, simple approach
+std::vector<QuantLib::Real> getCalibrationStrikesFromLegs(const std::vector<Leg>& legs,
+                                                          const std::vector<QuantLib::Date>& dates);
+
 } // namespace data
 } // namespace ore
