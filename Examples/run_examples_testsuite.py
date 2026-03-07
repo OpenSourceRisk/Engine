@@ -5,8 +5,6 @@ import logging
 import unittest
 from pathlib import Path
 import pytest
-import collections
-#collections.Callable = collections.abc.Callable
 
 examples_exempt_from_scenariogenerator_samples_overwrite = [
     'Performance',
