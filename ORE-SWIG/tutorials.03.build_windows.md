@@ -92,7 +92,7 @@ setup.py.
     python -m venv env1
     .\env1\Scripts\activate.bat
     python -m pip install --upgrade pip
-    python -m pip install build pynose pytest setuptools
+    python -m pip install build pytest setuptools
     python setup.py wrap
     python setup.py build
     python setup.py test
