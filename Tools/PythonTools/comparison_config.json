@@ -1161,6 +1161,7 @@
         ],
         "use_cols": [
           "Base NPV",
+          "Base Currency",
           "ShiftSize_1",
           "Scenario NPV",
           "Difference"
@@ -1181,6 +1182,13 @@
             ],
             "abs_tol": 0.05,
             "rel_tol": 0.0001
+          },
+          {
+            "names": [
+              "Base Currency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
@@ -1192,6 +1200,7 @@
         ],
         "use_cols": [
           "Base NPV",
+          "Base Currency",
           "Scenario NPV",
           "Difference"
         ],
@@ -1211,6 +1220,13 @@
             ],
             "abs_tol": 0.03,
             "rel_tol": 1e-09
+          },
+          {
+            "names": [
+              "Base Currency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
