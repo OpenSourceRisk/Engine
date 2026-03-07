@@ -112,6 +112,7 @@ public:
 
     virtual void writeScenarioReport(ore::data::Report& report,
                                      const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& sensitivityCubes,
+                                     const std::string& baseCurrency,
                                      QuantLib::Real outputThreshold = 0.0);
 
     virtual void writeSensitivityReport(ore::data::Report& report,
