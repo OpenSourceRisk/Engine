@@ -52,7 +52,8 @@ ccache -s
 # in the page cache and the compilation is dramatically faster than doing it
 # cold inside the cibuildwheel container.
 WORKDIR /ore/ORE-SWIG
-RUN PATH="/opt/python/cp310-cp310/bin:$PATH" && \
+RUN --mount=type=cache,id=ccache-wheels,target=/ccache/ \
+    PATH="/opt/python/cp310-cp310/bin:$PATH" && \
     pip3 install setuptools && \
     cp Wheels-gitlab/oreanalytics-config . && \
     chmod +x oreanalytics-config && \
