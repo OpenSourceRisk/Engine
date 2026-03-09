@@ -171,6 +171,18 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     instrument_ = ext::make_shared<VanillaInstrument>(qlInstr);
 
+    // log replication basket details
+
+    DLOG("replicatingSwaptionNo,firstExerciseDate,notional,start,end");
+    for (Size i = 0; i < basket.size(); ++i) {
+        // description string, for logging
+        auto cpnf = ext::dynamic_pointer_cast<Coupon>(basket[i]->legs().front().front());
+        auto cpnl = ext::dynamic_pointer_cast<Coupon>(basket[i]->legs().front().back());
+        DLOG(i << "," << QuantLib::io::iso_date(basket[i]->exercise()->dates().front()) << "," << cpnf->nominal() << ","
+               << QuantLib::io::iso_date(cpnf->accrualStartDate()) << ","
+               << QuantLib::io::iso_date(cpnl->accrualEndDate()));
+    }
+
     // set sensi template and pme info
 
     setSensitivityTemplate(*builder);
