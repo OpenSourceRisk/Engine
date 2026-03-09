@@ -104,6 +104,8 @@ FROM manylinux-ore AS final
 # Copy pre-compiled wrapper objects from the Debian stage.
 COPY --from=debian-compile /ore/ORE-SWIG/.prebuilt /ore-swig-prebuilt
 
-# Copy the generated wrapper source from Stage 1.
-RUN cp /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore-swig-prebuilt/
+# Copy the generated wrapper source from the Debian stage (where it was
+# COPY'd from manylinux-ore). Using debian-compile as the source avoids any
+# Kaniko snapshot issues with reusing manylinux-ore as both base and --from.
+COPY --from=debian-compile /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore-swig-prebuilt/oreanalytics_wrap.cpp
 
