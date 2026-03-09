@@ -181,8 +181,10 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
     notionalLevelIndices.push_back(referenceSchedule.size());
     lowerBoundLevelIndices.push_back(referenceSchedule.size());
 
-    notionalLevels.push_back(std::vector<Real>(referenceSchedule.size(), 0.0));
-    lowerBoundLevels.push_back(std::vector<Real>(referenceSchedule.size(), 0.0));
+    for (Size i = 0; i < legs.size(); ++i) {
+        notionalLevels[i].push_back(0.0);
+        lowerBoundLevels[i].push_back(0.0);
+    }
 
     // build the replication data per leg
 
@@ -205,10 +207,10 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
             Real currentLowerBound = lowerBoundLevels[legNo][l0];
 
             if (lessThanTol(currentLowerBound, workingNotional)) {
-                Real amount;
+                Real amount = 0.0;
                 Size start = lowerBoundLevelIndices[l0];
                 Size end = notionalLevelIndices[n0 + 1];
-                if (currentLowerBound < nextNotional - 1E-5) {
+                if (lessThanTol(currentLowerBound, nextNotional)) {
                     amount = workingNotional - nextNotional;
                     workingNotional = nextNotional;
                     ++n0;
@@ -224,6 +226,8 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
 
             while (notionalLevelIndices[n0] < lowerBoundLevelIndices[l0])
                 ++n0;
+
+            workingNotional = std::min(workingNotional, notionalLevels[legNo][n0]);
 
         } while (n0 < notionalLevelIndices.size() - 1);
     }
