@@ -16,14 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/timer/timer.hpp>
 #include <ored/utilities/formulaparser.hpp>
 #include <qle/math/compiledformula.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <ored/utilities/toplevelfixture.hpp>
 
 using namespace ore::data;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::data::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(FormulaParserTest)
 
