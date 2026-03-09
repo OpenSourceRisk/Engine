@@ -164,7 +164,17 @@ std::vector<QuantLib::Real> getCalibrationStrikesFromLegs(const std::vector<Leg>
         Real firstGearing = Null<Real>(), lastGearing = Null<Real>();
 
         for (auto const& l : legs) {
-            for (auto const& c : l) {
+            for (auto const& ci : l) {
+
+                auto c = ci;
+
+                // unpack scaled coupons
+                if (auto scf = QuantLib::ext::dynamic_pointer_cast<ScaledCashFlow>(c)) {
+                    c = scf->underlyingCashFlow();
+                } else if (auto scp = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                    c = scp->underlyingCoupon();
+                }
+
                 if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
                     if (cpn->accrualStartDate() >= dates[i] && firstFixedRate == Null<Real>())
                         firstFixedRate = cpn->rate();
