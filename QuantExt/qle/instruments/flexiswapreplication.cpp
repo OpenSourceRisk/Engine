@@ -269,7 +269,7 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
 
         auto exercise = ext::make_shared<BermudanExercise>(exerciseDates);
 
-        basket.push_back(ext::make_shared<MultiLegOption>(legs, payer, currency, exercise));
+        basket.push_back(ext::make_shared<MultiLegOption>(tmpLegs, payer, currency, exercise));
     }
 
     // return the basket
