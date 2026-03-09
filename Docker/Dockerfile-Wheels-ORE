@@ -98,14 +98,15 @@ RUN --mount=type=cache,id=ccache-wheels-swig,target=/ccache/ \
     chmod +x Wheels-gitlab/precompile.sh && \
     Wheels-gitlab/precompile.sh cp310-cp310 cp312-cp312
 
+# Stage the final artifacts: copy oreanalytics_wrap.cpp into .prebuilt so that
+# a single COPY in Stage 3 brings everything needed into /ore-swig-prebuilt.
+# (Two separate COPY --from to the same destination can cause Kaniko to
+# overwrite the directory on the second COPY instead of merging.)
+RUN cp /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore/ORE-SWIG/.prebuilt/oreanalytics_wrap.cpp
+
 # ?? Stage 3: Final manylinux image with everything ?????????????????????????
 FROM manylinux-ore AS final
 
-# Copy pre-compiled wrapper objects from the Debian stage.
+# Single COPY brings pre-compiled .o files and the generated .cpp wrapper.
 COPY --from=debian-compile /ore/ORE-SWIG/.prebuilt /ore-swig-prebuilt
-
-# Copy the generated wrapper source from the Debian stage (where it was
-# COPY'd from manylinux-ore). Using debian-compile as the source avoids any
-# Kaniko snapshot issues with reusing manylinux-ore as both base and --from.
-COPY --from=debian-compile /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore-swig-prebuilt/oreanalytics_wrap.cpp
 
