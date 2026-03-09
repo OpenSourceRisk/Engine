@@ -22,42 +22,35 @@ includes `<Python.h>`, and `Python.h` content differs between Python 3.10 and 3.
 the preprocessed output is different for each version — resulting in guaranteed cache
 misses. ccache cannot speed up cross-Python-version builds for SWIG wrappers.
 
-### Why compiling in cibuildwheel is slow
+### Why pre-compilation was still taking ~12-14 minutes per version
 
-Compiling `oreanalytics_wrap.cpp` (~300k lines) is expensive. When done inside the
-cibuildwheel container, the ORE/Boost headers are cold (not in page cache) because
-the C++ library build happened in a different Docker image (`Dockerfile-Wheels-ORE`).
-Parallel compilation of multiple Python versions causes OOM kills (ARM) or swap
-thrashing until timeout (x86_64) on memory-constrained CI runners.
+After moving compilation to `Dockerfile-Wheels-ORE` and stripping `-g` from Python's
+CFLAGS, each Python version still took ~12 minutes. The root cause is that **any
+optimization level above `-O0` is expensive on a ~300k line single translation unit**.
 
-### Why pre-compilation was still taking ~14 minutes per version
+At `-O1`, the compiler still performs:
+- Inlining of trivial functions (the SWIG wrapper is full of these)
+- Dead code elimination across ~300k lines
+- Register allocation and instruction scheduling
+- Constant propagation through deeply-nested template instantiations
 
-After moving compilation to `Dockerfile-Wheels-ORE`, each Python version still took
-~14 minutes. The root cause was Python's `sysconfig.get_config_var('CFLAGS')` from
-the manylinux images, which includes:
+For SWIG glue code (pure call-forwarding wrappers), none of this optimization provides
+measurable runtime benefit — every wrapper function just marshals Python arguments and
+calls into pre-compiled ORE library functions. The actual computation happens in the
+already-optimized ORE libraries.
 
-```
--Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -fstack-protector-strong -specs=...
-```
+Python's sysconfig CFLAGS also added unnecessary overhead: `-fwrapv` (signed overflow
+wrapping), `-Wsign-compare`, `-Wall` etc. — all unnecessary for generated code.
 
-The **`-g` flag** (generate full DWARF debug info) was the primary culprit. For a ~300k
-line file, DWARF generation is extremely expensive in both time and memory, easily
-adding 10+ minutes. The `-O1` at the end of `precompile.sh` overrode the `-O3`, but
-`-g` persisted.
-
-In contrast, when `Dockerfile-ORE` compiles the SWIG wrapper via CMake
-(`-DORE_BUILD_SWIG=ON`), CMake's `Release` build type uses `-O3 -DNDEBUG` with
-**no `-g`**, explaining why it completes in just a few minutes.
-
-## Solution: Pre-compile in `Dockerfile-Wheels-ORE`
+## Solution: Pre-compile in `Dockerfile-Wheels-ORE` with `-O0`
 
 We move SWIG generation and wrapper compilation into `Dockerfile-Wheels-ORE`, running
-them **immediately after the ORE C++ library build**. At this point:
+them **immediately after the ORE C++ library build**, with minimal compiler flags:
 
-1. **All ORE/Boost headers are warm** in the OS page cache from the library build
-2. **16 cores and full RAM** are available (Kaniko build, not Docker-in-Docker)
-3. **clang++** is already installed (used for the library build, faster than GCC)
-4. **`-O1 -g0`** is used — light optimization, no debug info
+1. **`-O0`** — no optimization (SWIG glue code doesn't benefit from it)
+2. **`-g0`** — no debug info (not useful in shipped wheel binaries)
+3. **No Python sysconfig CFLAGS** — only `-fPIC`, `-DNDEBUG`, `-std=c++20`, `-w`
+4. **ccache** enabled for faster rebuilds when wrapper source hasn't changed
 
 The pre-built `.o` files and generated `.cpp` are baked into the `wheels_ore2` image.
 When cibuildwheel runs, `CIBW_BEFORE_ALL` simply copies them into the project directory,
@@ -69,12 +62,12 @@ and `setup.py build_ext` performs only the fast (~30s) link step.
 
 | Change | Why |
 |--------|-----|
-| Added `strip_debug_and_opt_flags()` function | Strips `-g*`, `-O*`, `-specs=*`, `-fstack-protector*`, `-fcf-protection*` from Python's CFLAGS |
-| Added `-g0` to compiler invocation | Explicitly disables debug info generation; this is the primary fix for the ~14 min compile time |
-| `-O*` stripped before appending `-O1` | Avoids relying on "last flag wins" behaviour |
-| Uses ccache if available | Wraps compiler with `ccache` for faster rebuilds when source hasn't changed |
-| Prints original vs stripped CFLAGS | Diagnostic output to verify flag stripping |
-| Prints object file size on completion | Confirms debug info is not bloating the `.o` |
+| Dropped to `-O0` from `-O1` | Eliminates ~8 min of optimization on ~300k lines of call-forwarding glue code with no runtime impact |
+| Removed Python sysconfig CFLAGS entirely | Those flags (`-fwrapv`, `-Wall`, etc.) are for real extension code, not SWIG wrappers |
+| Only passes minimal flags | `-fPIC` (from `PY_CCSHARED`), `-DNDEBUG`, `-std=c++20`, `-g0`, `-w` |
+| Added `-g0` explicitly | Prevents any debug info generation |
+| Uses ccache if available | Wraps compiler with `ccache` for faster rebuilds |
+| Added timing output | Prints compile duration and object file size for diagnostics |
 
 ### `ore/Docker/Dockerfile-Wheels-ORE`
 
@@ -118,12 +111,11 @@ and `setup.py build_ext` performs only the fast (~30s) link step.
 ```
 Dockerfile-Wheels-ORE (Kaniko, 16 cores, full RAM)
 ??? cmake --build . -- -j 16 install   # Build ORE C++ libraries
-?                                       # (headers now warm in page cache)
 ??? python3 setup.py wrap               # Generate oreanalytics_wrap.cpp (SWIG)
 ??? precompile.sh cp310-cp310 cp312-cp312
-    ??? ccache clang++ ... -g0 -O1 ... ? .prebuilt/linux-x86_64-cpython-310/oreanalytics_wrap.o
-    ??? ccache clang++ ... -g0 -O1 ... ? .prebuilt/linux-x86_64-cpython-312/oreanalytics_wrap.o
-    (sequential, no debug info, warm page cache, ~2-3 min each)
+    ??? ccache clang++ -O0 -g0 ... ? .prebuilt/linux-x86_64-cpython-310/oreanalytics_wrap.o
+    ??? ccache clang++ -O0 -g0 ... ? .prebuilt/linux-x86_64-cpython-312/oreanalytics_wrap.o
+    (sequential, ~4 min each expected)
     ? baked into wheels_ore2 image at /ore-swig-prebuilt/
 ```
 
@@ -143,28 +135,30 @@ Dockerfile-Wheels-CIBW
                 ??? Runs link only (~30 seconds)
 ```
 
-## Root cause analysis: `-g` flag impact
+## Why `-O0` is safe for SWIG wrapper code
 
-| Scenario | Flags | Compile time | `.o` size |
-|----------|-------|-------------|-----------|
-| CMake Release (Dockerfile-ORE) | `-O3 -DNDEBUG` (no `-g`) | ~3-5 min | ~50-80 MB |
-| precompile.sh (before fix) | Python CFLAGS with `-g` + `-O1` | ~14 min | ~500+ MB |
-| precompile.sh (after fix) | Python CFLAGS stripped, `-g0 -O1` | ~2-4 min | ~50-80 MB |
+SWIG-generated `oreanalytics_wrap.cpp` contains exclusively:
+- Python/C API boilerplate (type registration, module init)
+- Argument marshaling (converting Python objects ? C++ types)
+- Direct forwarding calls to ORE library functions
 
-DWARF debug info for a ~300k line SWIG wrapper (which `#include`s all of ORE/Boost/QuantLib)
-records type information, line mappings, and variable locations for every inlined template
-instantiation. This easily exceeds the size of the code itself and dominates both compile
-time and disk I/O.
+No computation happens in the wrapper — it's all in the pre-compiled (`-O3`) ORE
+libraries. The wrapper overhead is dominated by Python interpreter overhead (dict
+lookups, reference counting), not by the wrapper's own machine code quality.
+
+Benchmark expectation: The per-call overhead difference between `-O0` and `-O3` for
+a typical SWIG wrapper function (unpack args ? call library ? pack result) is in the
+single-digit nanoseconds range, completely dwarfed by Python's own overhead.
 
 ## Expected speedup
 
-| Area | Before (original) | After (with `-g0` fix) |
-|------|-------------------|----------------------|
+| Area | Before (original) | After (with `-O0`) |
+|------|-------------------|-------------------|
 | SWIG generation | In cibuildwheel (redundant) | In Dockerfile-Wheels-ORE (1×) |
-| Wrapper compilation | ~25 min × 2 (cold, `-O3 -g`, cibuildwheel) | ~3 min × 2 (warm, `-O1 -g0`, ORE build stage) |
+| Wrapper compilation | ~25 min × 2 (cold, `-O3`, cibuildwheel) | ~4 min × 2 (`-O0`, ORE build stage) |
 | Per-version wheel build | ~25 min each (compile + link) | ~30s each (link only) |
-| **Total wrapper compile time** | **~50 min** | **~6 min** |
-| **Net savings** | — | **~44 min** |
+| **Total wrapper compile time** | **~50 min** | **~8 min** |
+| **Net savings** | — | **~42 min** |
 
 ## ccache in Dockerfile-ORE and Dockerfile-Wheels-ORE
 

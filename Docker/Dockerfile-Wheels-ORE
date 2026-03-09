@@ -1,5 +1,12 @@
+# syntax = docker/dockerfile:1.2
+#
+# Stage 1: Build ORE libraries on manylinux (required for correct ABI/linking)
+# Stage 2: Compile SWIG wrapper on Debian (fast clang-19 compiler)
+# Stage 3: Final manylinux image with ORE libs + pre-built wrapper objects
+
+# ?? Stage 1: Build ORE C++ libraries on manylinux ??????????????????????????
 ARG WHEEL_IMG
-FROM ${WHEEL_IMG}
+FROM ${WHEEL_IMG} AS manylinux-ore
 
 ARG CMAKE_BUILD_TYPE=Release
 ARG NUM_CORES=16
@@ -15,21 +22,9 @@ COPY ThirdPartyLibs /ore/ThirdPartyLibs
 COPY cmake /ore/cmake
 COPY Docker/update_version_number.py /ore
 
-# Copy ORE-SWIG sources needed for SWIG generation and pre-compilation
-COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
-COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
-COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
-COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
-COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
-COPY ORE-SWIG/setup.py /ore/ORE-SWIG/setup.py
-COPY ORE-SWIG/LICENSE.txt /ore/ORE-SWIG/LICENSE.txt
-COPY ORE-SWIG/Wheels-gitlab /ore/ORE-SWIG/Wheels-gitlab
-
 RUN \
-dnf -y install clang && \
-dnf -y install ccache && \
-dnf -y install ninja-build && \
-dnf -y install swig
+dnf -y install clang ccache ninja-build swig && \
+dnf clean all
 
 ENV PATH="/usr/lib64/ccache:/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
@@ -47,20 +42,67 @@ RUN --mount=type=cache,id=ccache-wheels,target=/ccache/ ccache -z && \
 cmake --build . -- -j ${NUM_CORES} install && \
 ccache -s
 
-# Generate SWIG wrapper and pre-compile for all target Python versions.
-# This runs right after the ORE library build, so all headers are still warm
-# in the page cache and the compilation is dramatically faster than doing it
-# cold inside the cibuildwheel container.
+# Generate SWIG wrapper source (needs SWIG + Python + ORE headers).
+COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
+COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
+COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
+COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
+COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
+COPY ORE-SWIG/setup.py /ore/ORE-SWIG/setup.py
+COPY ORE-SWIG/LICENSE.txt /ore/ORE-SWIG/LICENSE.txt
+COPY ORE-SWIG/Wheels-gitlab /ore/ORE-SWIG/Wheels-gitlab
+
 WORKDIR /ore/ORE-SWIG
-RUN --mount=type=cache,id=ccache-wheels,target=/ccache/ \
-    PATH="/opt/python/cp310-cp310/bin:$PATH" && \
-    pip3 install setuptools && \
-    cp Wheels-gitlab/oreanalytics-config . && \
-    chmod +x oreanalytics-config && \
-    python3 setup.py wrap && \
+RUN \
+PATH="/opt/python/cp310-cp310/bin:$PATH" && \
+pip3 install setuptools && \
+cp Wheels-gitlab/oreanalytics-config . && \
+chmod +x oreanalytics-config && \
+python3 setup.py wrap
+
+# ?? Stage 2: Compile SWIG wrapper on Debian (clang-19, fast) ???????????????
+ARG DOCKER_REPO
+ARG ORE_BUILD_VERSION
+FROM ${DOCKER_REPO}ore-build-dependencies:${ORE_BUILD_VERSION} AS debian-compile
+
+# Recreate the /ore/ORE-SWIG layout that precompile.sh expects.
+# precompile.sh derives PROJECT_DIR as SCRIPT_DIR/../.. which gives /ore,
+# then sets SWIG_DIR=$PROJECT_DIR/ORE-SWIG and WRAP_SRC=$SWIG_DIR/oreanalytics_wrap.cpp.
+
+# Copy installed ORE/Boost headers from the manylinux build (already at
+# /usr/local/include). These must match what the ORE libraries were built with.
+COPY --from=manylinux-ore /usr/local/include/ql /usr/local/include/ql
+COPY --from=manylinux-ore /usr/local/include/qle /usr/local/include/qle
+COPY --from=manylinux-ore /usr/local/include/ored /usr/local/include/ored
+COPY --from=manylinux-ore /usr/local/include/orea /usr/local/include/orea
+COPY --from=manylinux-ore /usr/local/include/boost /usr/local/include/boost
+
+# Copy the generated wrapper source.
+COPY --from=manylinux-ore /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore/ORE-SWIG/oreanalytics_wrap.cpp
+
+# Copy the manylinux Python installations (executables + headers).
+# The manylinux Python binaries run fine on Debian (lower glibc requirement).
+COPY --from=manylinux-ore /opt/python /opt/python
+
+# Copy the precompile script.
+COPY ORE-SWIG/Wheels-gitlab /ore/ORE-SWIG/Wheels-gitlab
+
+ENV PATH="/usr/lib/ccache:$PATH"
+ENV CCACHE_DIR="/ccache"
+ENV CCACHE_MAXSIZE="10G"
+
+WORKDIR /ore/ORE-SWIG
+RUN --mount=type=cache,id=ccache-wheels-swig,target=/ccache/ \
     chmod +x Wheels-gitlab/precompile.sh && \
-    Wheels-gitlab/precompile.sh cp310-cp310 cp312-cp312 && \
-    mkdir -p /ore-swig-prebuilt && \
-    cp -r .prebuilt/* /ore-swig-prebuilt/ && \
-    cp oreanalytics_wrap.cpp /ore-swig-prebuilt/
+    Wheels-gitlab/precompile.sh cp310-cp310 cp312-cp312
+
+# ?? Stage 3: Final manylinux image with everything ?????????????????????????
+FROM manylinux-ore AS final
+
+# Copy pre-compiled wrapper objects from the Debian stage.
+COPY --from=debian-compile /ore/ORE-SWIG/.prebuilt /ore/ORE-SWIG/.prebuilt
+
+RUN mkdir -p /ore-swig-prebuilt && \
+    cp -r /ore/ORE-SWIG/.prebuilt/* /ore-swig-prebuilt/ && \
+    cp /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore-swig-prebuilt/
 
