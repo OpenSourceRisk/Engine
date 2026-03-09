@@ -1,0 +1,7 @@
+RUN portfolio2.py
+[2026-03-09 16:06:48.604354] [0x00007930] [info]    { "category": "Error", "group": "Configuration", "message": "" }
+[2026-03-09 16:06:48.604354] [0x00007930] [info]    { "category": "Warning", "group": "Configuration", "message": "" }
+[2026-03-09 16:06:48.604354] [0x00007930] [info]    { "category": "Error", "group": "Trade", "message": "", "sub_fields": [ { "name": "tradeType", "value": "Bond" } ] }
+[2026-03-09 16:06:48.604354] [0x00007930] [info]    { "category": "Error", "group": "Trade", "message": "" }
+[2026-03-09 16:06:48.604354] [0x00007930] [info]    { "category": "Warning", "group": "Trade", "message": "", "sub_fields": [ { "name": "tradeType", "value": "Bond" } ] }
+[2026-03-09 16:06:48.604354] [0x00007930] [info]    { "category": "Warning", "group": "Trade", "message": "" }
