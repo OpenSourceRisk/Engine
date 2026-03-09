@@ -15,10 +15,21 @@ COPY ThirdPartyLibs /ore/ThirdPartyLibs
 COPY cmake /ore/cmake
 COPY Docker/update_version_number.py /ore
 
+# Copy ORE-SWIG sources needed for SWIG generation and pre-compilation
+COPY ORE-SWIG/CMakeLists.txt /ore/ORE-SWIG/CMakeLists.txt
+COPY ORE-SWIG/OREAnalytics-SWIG /ore/ORE-SWIG/OREAnalytics-SWIG
+COPY ORE-SWIG/OREData-SWIG /ore/ORE-SWIG/OREData-SWIG
+COPY ORE-SWIG/QuantExt-SWIG /ore/ORE-SWIG/QuantExt-SWIG
+COPY ORE-SWIG/QuantLib-SWIG /ore/ORE-SWIG/QuantLib-SWIG
+COPY ORE-SWIG/setup.py /ore/ORE-SWIG/setup.py
+COPY ORE-SWIG/LICENSE.txt /ore/ORE-SWIG/LICENSE.txt
+COPY ORE-SWIG/Wheels-gitlab /ore/ORE-SWIG/Wheels-gitlab
+
 RUN \
 dnf -y install clang && \
 dnf -y install ccache && \
-dnf -y install ninja-build
+dnf -y install ninja-build && \
+dnf -y install swig
 
 ENV PATH="/usr/lib64/ccache:/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
@@ -35,4 +46,20 @@ WORKDIR /ore/build
 RUN --mount=type=cache,id=ccache-wheels,target=/ccache/ ccache -z && \
 cmake --build . -- -j ${NUM_CORES} install && \
 ccache -s
+
+# Generate SWIG wrapper and pre-compile for all target Python versions.
+# This runs right after the ORE library build, so all headers are still warm
+# in the page cache and the compilation is dramatically faster than doing it
+# cold inside the cibuildwheel container.
+WORKDIR /ore/ORE-SWIG
+RUN PATH="/opt/python/cp310-cp310/bin:$PATH" && \
+    pip3 install setuptools && \
+    cp Wheels-gitlab/oreanalytics-config . && \
+    chmod +x oreanalytics-config && \
+    python3 setup.py wrap && \
+    chmod +x Wheels-gitlab/precompile.sh && \
+    Wheels-gitlab/precompile.sh cp310-cp310 cp312-cp312 && \
+    mkdir -p /ore-swig-prebuilt && \
+    cp -r .prebuilt/* /ore-swig-prebuilt/ && \
+    cp oreanalytics_wrap.cpp /ore-swig-prebuilt/
 

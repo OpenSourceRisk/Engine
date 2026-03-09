@@ -1,17 +1,17 @@
 #!/bin/bash
 # Pre-compile oreanalytics_wrap.cpp for all target Python versions.
 #
-# This script runs during CIBW_BEFORE_ALL (once per platform) and compiles
-# the SWIG-generated wrapper for each Python version sequentially.
-# When setup.py build_ext later runs for each version, it finds the pre-built
-# .o file and skips the expensive compilation, only performing the fast link step.
+# This script runs during the Dockerfile-Wheels-ORE build, right after the
+# ORE C++ library build completes. At this point all ORE/Boost headers are
+# warm in the OS page cache, making compilation dramatically faster than
+# doing it cold in a separate container.
 #
 # Compilations run sequentially to avoid OOM on memory-constrained CI runners
 # (a single compilation of this ~300k-line file needs most of available RAM).
 #
-# We override -O3 (from Python's sysconfig) with -O1 because this is SWIG glue
-# code that just forwards calls to pre-compiled ORE libraries — heavy optimization
-# provides no runtime benefit but significantly increases compile time and memory.
+# We use -O1 because this is SWIG glue code that just forwards calls to
+# pre-compiled ORE libraries — heavy optimization provides no runtime benefit
+# but significantly increases compile time and memory usage.
 #
 # Usage: precompile.sh <python_version> [<python_version> ...]
 #   e.g. precompile.sh cp310-cp310 cp312-cp312
@@ -32,6 +32,14 @@ fi
 mkdir -p "$PREBUILT_DIR"
 
 ARCH=$(uname -m)
+
+# Use clang++ if available (matches the ORE library build), fall back to g++.
+if command -v clang++ &> /dev/null; then
+    CXX=clang++
+else
+    CXX=g++
+fi
+echo "Using compiler: $CXX"
 
 for PYVER in "$@"; do
     PYBIN="/opt/python/${PYVER}/bin"
@@ -66,8 +74,8 @@ for PYVER in "$@"; do
     echo "Compiling oreanalytics_wrap.cpp for $PYVER ($PY_TAG) ..."
 
     # Compile sequentially (one at a time to avoid OOM).
-    # -O1 appended after PY_CFLAGS overrides -O3 (GCC uses the last -O flag).
-    g++ -pthread $PY_CFLAGS $PY_CCSHARED -DNDEBUG \
+    # -O1 appended after PY_CFLAGS overrides any -O3 (compilers use the last -O flag).
+    $CXX -pthread $PY_CFLAGS $PY_CCSHARED -DNDEBUG \
         -I"$PY_INCLUDE" -I"$PY_PLATINCLUDE" \
         -c "$WRAP_SRC" \
         -o "$OBJ_FILE" \
