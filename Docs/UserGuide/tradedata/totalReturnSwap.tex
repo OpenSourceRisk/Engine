@@ -160,7 +160,9 @@ indices.
       \begin{itemize}
       \item Percentage of Par: the InitialPrice should be given as e.g. $1.02$ for $102\%$ relative dirty price
       \item Currency per Unit: the InitialPrice should be given as e.g. $0.51$ for a dirty amount of $51$ USD per unit
-        of the bond worth (say) $50.0$ USD.
+        of the bond worth (say) $50.0$ USD. 
+        
+        Note that Korean bonds typically use Currency per Unit quotation method, whereas other bonds typically use Percentage of Par.
       \end{itemize}
       \item the weighted price of one unit of the bond underlying basket, notice that this is always a ``percentage of
         par'' price regardless of the quotation style of the single bonds in the basket
@@ -248,6 +250,7 @@ Allowable values: \emph{Start}, \emph{End}. Defaults to \emph{Start} if omitted.
   \item Floating
   \item CMS
   \item CMB
+  \item ZeroCouponFixed
   \end{itemize}
   The number of coupons defined by the legs often match the number of periods of the return schedule, but this is not a
   strict requirement. All funding legs must share the same payment currency.

@@ -292,6 +292,7 @@ pricingengines/discountingbondfutureengine.cpp
 pricingengines/discountingbondrepoengine.cpp
 pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
+pricingengines/discountingcommoditycurrencyswapengine.cpp
 pricingengines/discountingcreditlinkedswapengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
 pricingengines/discountingcurrencyswapenginedeltagamma.cpp
@@ -308,6 +309,7 @@ pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
 pricingengines/forwardenabledbondengine.cpp
+pricingengines/forwardriskyannuitystrike.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
@@ -875,6 +877,7 @@ pricingengines/discountingbondfutureengine.hpp
 pricingengines/discountingbondrepoengine.hpp
 pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
+pricingengines/discountingcommoditycurrencyswapengine.hpp
 pricingengines/discountingcreditlinkedswapengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingcurrencyswapenginedeltagamma.hpp
@@ -891,6 +894,7 @@ pricingengines/fdcallablebondevents.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
 pricingengines/forwardenabledbondengine.hpp
+pricingengines/forwardriskyannuitystrike.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
