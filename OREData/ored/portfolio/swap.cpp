@@ -131,49 +131,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
     }
 
-
-    // The npv currency, notional currency and current notional are taken from the first leg that
-    // appears in the XML that has a notional. If no such leg exists the notional currency
-    // and current notional are left empty and the npv currency is set to the first leg's currency
-
-    notionalTakenFromLeg_ = 0;
-    for (; notionalTakenFromLeg_ < legData_.size(); ++notionalTakenFromLeg_) {
-        const LegData& d = legData_[notionalTakenFromLeg_];
-        if (!d.notionals().empty())
-            break;
-    }
-
-    if (notionalTakenFromLeg_ == legData_.size()) {
-        ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
-        notional_ = Null<Real>();
-        notionalCurrency_ = "";
-        // parse for currency in case first leg is Equity, we only want the major currency for NPV
-        npvCurrency_ = parseCurrencyWithMinors(legData_.front().currency()).code();
-    } else {
-        if (legData_[notionalTakenFromLeg_].schedule().hasData()) {
-            Schedule schedule = makeSchedule(legData_[notionalTakenFromLeg_].schedule());
-            auto notional =
-                buildScheduledVectorNormalised(legData_[notionalTakenFromLeg_].notionals(),
-                                               legData_[notionalTakenFromLeg_].notionalDates(), schedule, 0.0);
-            Date today = Settings::instance().evaluationDate();
-            auto d = std::upper_bound(schedule.dates().begin(), schedule.dates().end(), today);
-            // forward starting => take first notional
-            // on or after last schedule date => zero notional
-            // in between => notional of current period
-            if (d == schedule.dates().begin())
-                notional_ = notional.at(0);
-            else if (d == schedule.dates().end())
-                notional_ = 0.0;
-            else
-                notional_ = notional.at(std::distance(schedule.dates().begin(), d) - 1);
-        } else {
-            notional_ = legData_[notionalTakenFromLeg_].notionals().at(0);
-        }
-        // parse for currency in case leg is Equity, we only want the major currency for NPV and Notional
-        notionalCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
-        npvCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
-        DLOG("Notional is " << notional_ << " " << notionalCurrency_);
-    }
+    std::tie(notionalTakenFromLeg_, notional_, npvCurrency_, notionalCurrency_) = getSwapNpvAndNotionalInfo(legData_);
 
     Currency npvCcy = parseCurrency(npvCurrency_);
     DLOG("npv currency is " << npvCurrency_);
@@ -233,21 +191,9 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     for (Size i = 0; i < currencies.size(); i++)
         legCurrencies_[i] = currencies[i].code();
 
-    // set maturity
-    maturity_ = Date::minDate();
-    Date startDate = Date::maxDate();
-    for (auto const& l : legs_) {
-        if (!l.empty()) {
-            maturity_ = std::max(maturity_, l.back()->date());
-            if (maturity_ == l.back()->date())
-                maturityType_ = "Leg End Date";
-            startDate = std::min(startDate, l.front()->date());
-            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
-            if (coupon)
-                startDate = std::min(startDate, coupon->accrualStartDate());
-        }
-    }
-
+    // set start and maturity dates
+    Date startDate;
+    std::tie(startDate, maturity_, maturityType_) = getSwapStartMaturity(legs_);
     additionalData_["startDate"] = to_string(startDate);
 
     // Store discount curves and FX spots for fair rate calculation
@@ -399,28 +345,8 @@ std::string Swap::notionalCurrency() const {
 
 map<AssetClass, set<string>>
 Swap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
-
-    map<AssetClass, set<string>> result;
-    for (const auto& ld : legData_) {
-        for (auto ind : ld.indices()) {
-            // only handle equity and commodity for now
-            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
-                continue;
-
-            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
-
-            if (auto ei = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(index)) {
-                result[AssetClass::EQ].insert(ei->name());
-            } else if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
-                result[AssetClass::COM].insert(ci->name());
-            }
-        }
-    }
-
-    if (auto s = envelope().additionalField("security_spread", false); !s.empty())
-        result[AssetClass::BOND] = {s};
-
-    return result;
+    return getSwapUnderlyingIndices(referenceDataManager, legData_,
+                                    envelope().additionalField("security_spread", false));
 }
 
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData) {
@@ -478,13 +404,11 @@ void Swap::fromXML(XMLNode* node) {
 
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
-        auto ld = createLegData();
+        auto ld = ext::make_shared<LegData>();
         ld->fromXML(nodes[i]);
         legData_.push_back(*QuantLib::ext::static_pointer_cast<LegData>(ld));
     }
 }
-
-QuantLib::ext::shared_ptr<LegData> Swap::createLegData() const { return QuantLib::ext::make_shared<LegData>(); }
 
 XMLNode* Swap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
@@ -496,6 +420,104 @@ XMLNode* Swap::toXML(XMLDocument& doc) const {
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
+}
+
+std::tuple<Size, Real, std::string, std::string> getSwapNpvAndNotionalInfo(const std::vector<LegData>& legData) {
+
+    // The npv currency, notional currency and current notional are taken from the first leg that
+    // appears in the XML that has a notional. If no such leg exists the notional currency
+    // and current notional are left empty and the npv currency is set to the first leg's currency
+
+    Size notionalTakenFromLeg = 0;
+    for (; notionalTakenFromLeg < legData.size(); ++notionalTakenFromLeg) {
+        const LegData& d = legData[notionalTakenFromLeg];
+        if (!d.notionals().empty())
+            break;
+    }
+
+    Real notional;
+    std::string npvCurrency;
+    std::string notionalCurrency;
+
+    if (notionalTakenFromLeg == legData.size()) {
+        ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
+        notional = Null<Real>();
+        notionalCurrency = "";
+        // parse for currency in case first leg is Equity, we only want the major currency for NPV
+        npvCurrency = parseCurrencyWithMinors(legData.front().currency()).code();
+    } else {
+        if (legData[notionalTakenFromLeg].schedule().hasData()) {
+            Schedule schedule = makeSchedule(legData[notionalTakenFromLeg].schedule());
+            auto notionalSchedule =
+                buildScheduledVectorNormalised(legData[notionalTakenFromLeg].notionals(),
+                                               legData[notionalTakenFromLeg].notionalDates(), schedule, 0.0);
+            Date today = Settings::instance().evaluationDate();
+            auto d = std::upper_bound(schedule.dates().begin(), schedule.dates().end(), today);
+            // forward starting => take first notional
+            // on or after last schedule date => zero notional
+            // in between => notional of current period
+            if (d == schedule.dates().begin())
+                notional = notionalSchedule.at(0);
+            else if (d == schedule.dates().end())
+                notional = 0.0;
+            else
+                notional = notionalSchedule.at(std::distance(schedule.dates().begin(), d) - 1);
+        } else {
+            notional = legData[notionalTakenFromLeg].notionals().at(0);
+        }
+        // parse for currency in case leg is Equity, we only want the major currency for NPV and Notional
+        notionalCurrency = parseCurrencyWithMinors(legData[notionalTakenFromLeg].currency()).code();
+        npvCurrency = parseCurrencyWithMinors(legData[notionalTakenFromLeg].currency()).code();
+    }
+
+    DLOG("Notional is taken from leg " << notionalTakenFromLeg << ", notional is " << notional << ", npvCurrency is "
+                                       << npvCurrency << ", notionalCurrency is " << notionalCurrency);
+    return std::make_tuple(notionalTakenFromLeg, notional, npvCurrency, notionalCurrency);
+}
+
+std::map<AssetClass, std::set<std::string>>
+getSwapUnderlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                         const std::vector<LegData>& legData, const std::string& security) {
+
+    map<AssetClass, set<string>> result;
+    for (const auto& ld : legData) {
+        for (auto ind : ld.indices()) {
+            // only handle equity and commodity for now
+            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
+                continue;
+
+            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
+
+            if (auto ei = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(index)) {
+                result[AssetClass::EQ].insert(ei->name());
+            } else if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+                result[AssetClass::COM].insert(ci->name());
+            }
+        }
+    }
+
+    if (security.empty())
+        result[AssetClass::BOND] = {security};
+
+    return result;
+}
+
+std::tuple<Date, Date, std::string> getSwapStartMaturity(const std::vector<Leg>& legs) {
+    Date maturity = Date::minDate();
+    Date startDate = Date::maxDate();
+    std::string maturityType;
+    for (auto const& l : legs) {
+        if (!l.empty()) {
+            maturity = std::max(maturity, l.back()->date());
+            if (maturity == l.back()->date())
+                maturityType = "Leg End Date";
+            startDate = std::min(startDate, l.front()->date());
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
+            if (coupon)
+                startDate = std::min(startDate, coupon->accrualStartDate());
+        }
+    }
+    return std::make_tuple(startDate, maturity, maturityType);
 }
 
 } // namespace data
