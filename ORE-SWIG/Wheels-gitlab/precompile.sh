@@ -14,6 +14,11 @@
 #
 # Usage: precompile.sh <python_version> [<python_version> ...]
 #   e.g. precompile.sh cp310-cp310 cp312-cp312
+#
+# The python_version argument is a manylinux cpython tag like "cp310-cp310".
+# The script derives include paths and version tags from this string without
+# executing the Python binary, so it can run on a different OS (e.g. Debian)
+# with just the manylinux Python headers copied in.
 
 set -e
 
@@ -48,27 +53,22 @@ else
 fi
 
 for PYVER in "$@"; do
-    PYBIN="/opt/python/${PYVER}/bin"
-    if [ ! -d "$PYBIN" ]; then
-        echo "WARNING: $PYBIN not found, skipping $PYVER"
+    # Parse the cpython tag: "cp310-cp310" ? major=3, minor=10
+    CPVER="${PYVER%%-*}"       # "cp310"
+    DIGITS="${CPVER#cp}"       # "310"
+    PY_MAJOR="${DIGITS:0:1}"   # "3"
+    PY_MINOR="${DIGITS:1}"     # "10"
+
+    # Derive include path from the well-known manylinux layout.
+    # /opt/python/cp310-cp310/include/python3.10/
+    PY_INCLUDE="/opt/python/${PYVER}/include/python${PY_MAJOR}.${PY_MINOR}"
+    if [ ! -d "$PY_INCLUDE" ]; then
+        echo "WARNING: $PY_INCLUDE not found, skipping $PYVER"
         continue
     fi
-
-    PYTHON="$PYBIN/python"
-    if [ ! -x "$PYTHON" ]; then
-        echo "WARNING: $PYTHON not found, skipping $PYVER"
-        continue
-    fi
-
-    # Extract sysconfig variables matching what setuptools uses for compilation.
-    PY_INCLUDE=$($PYTHON -c "import sysconfig; print(sysconfig.get_path('include'))")
-    PY_PLATINCLUDE=$($PYTHON -c "import sysconfig; print(sysconfig.get_path('platinclude'))")
-
-    # CCSHARED provides -fPIC on Linux.
-    PY_CCSHARED=$($PYTHON -c "import sysconfig; print(sysconfig.get_config_var('CCSHARED') or '')")
 
     # Build the output object name matching what setuptools generates.
-    PY_TAG=$($PYTHON -c "import sys; print(f'cpython-{sys.version_info.major}{sys.version_info.minor}')")
+    PY_TAG="cpython-${PY_MAJOR}${PY_MINOR}"
     PLATFORM_TAG="linux-${ARCH}"
     OBJ_DIR="$PREBUILT_DIR/${PLATFORM_TAG}-${PY_TAG}"
     OBJ_FILE="$OBJ_DIR/oreanalytics_wrap.o"
@@ -76,6 +76,7 @@ for PYVER in "$@"; do
     mkdir -p "$OBJ_DIR"
 
     echo "Compiling oreanalytics_wrap.cpp for $PYVER ($PY_TAG) ..."
+    echo "  Include: $PY_INCLUDE"
     START_TIME=$(date +%s)
 
     # Compile sequentially (one at a time to avoid OOM).
@@ -96,8 +97,8 @@ for PYVER in "$@"; do
     #   -fPIC:   Position-independent code (required for shared libraries).
     #   -w:      Suppress warnings (SWIG-generated code triggers many).
     #
-    $CXX -pthread $PY_CCSHARED -DNDEBUG \
-        -I"$PY_INCLUDE" -I"$PY_PLATINCLUDE" \
+    $CXX -pthread -fPIC -DNDEBUG \
+        -I"$PY_INCLUDE" \
         -c "$WRAP_SRC" \
         -o "$OBJ_FILE" \
         -w -std=c++20 -g0 -O0

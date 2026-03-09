@@ -80,9 +80,11 @@ COPY --from=manylinux-ore /usr/local/include/boost /usr/local/include/boost
 # Copy the generated wrapper source.
 COPY --from=manylinux-ore /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore/ORE-SWIG/oreanalytics_wrap.cpp
 
-# Copy the manylinux Python installations (executables + headers).
-# The manylinux Python binaries run fine on Debian (lower glibc requirement).
-COPY --from=manylinux-ore /opt/python /opt/python
+# Copy only the manylinux Python headers (not executables — they may not run
+# on Debian). precompile.sh derives include paths from the cpython tag string
+# and does not need to execute the Python binary.
+COPY --from=manylinux-ore /opt/python/cp310-cp310/include /opt/python/cp310-cp310/include
+COPY --from=manylinux-ore /opt/python/cp312-cp312/include /opt/python/cp312-cp312/include
 
 # Copy the precompile script.
 COPY ORE-SWIG/Wheels-gitlab /ore/ORE-SWIG/Wheels-gitlab
@@ -100,9 +102,8 @@ RUN --mount=type=cache,id=ccache-wheels-swig,target=/ccache/ \
 FROM manylinux-ore AS final
 
 # Copy pre-compiled wrapper objects from the Debian stage.
-COPY --from=debian-compile /ore/ORE-SWIG/.prebuilt /ore/ORE-SWIG/.prebuilt
+COPY --from=debian-compile /ore/ORE-SWIG/.prebuilt /ore-swig-prebuilt
 
-RUN mkdir -p /ore-swig-prebuilt && \
-    cp -r /ore/ORE-SWIG/.prebuilt/* /ore-swig-prebuilt/ && \
-    cp /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore-swig-prebuilt/
+# Copy the generated wrapper source from Stage 1.
+RUN cp /ore/ORE-SWIG/oreanalytics_wrap.cpp /ore-swig-prebuilt/
 
