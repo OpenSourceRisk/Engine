@@ -496,7 +496,7 @@ getSwapUnderlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& 
         }
     }
 
-    if (security.empty())
+    if (!security.empty())
         result[AssetClass::BOND] = {security};
 
     return result;
