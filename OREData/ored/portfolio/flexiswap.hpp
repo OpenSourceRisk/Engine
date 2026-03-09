@@ -45,56 +45,28 @@ public:
         : Trade("FlexiSwap", env), underlyingData_(underlyingData), lowerNotionalBounds_(lowerNotionalBounds),
           optionLongShort_(optionLongShort) {}
 
-    /*! the optionality is described by exercise dates / types and values */
-    // FlexiSwap(const ore::data::Envelope& env, const std::vector<ore::data::LegData>& swap,
-    //           const std::string& noticePeriod, const std::string& noticeCalendar, const std::string& noticeConvention,
-    //           const std::vector<std::string>& exerciseDates, const std::vector<std::string>& exerciseTypes,
-    //           const std::vector<double>& exerciseValues, const std::string& optionLongShort)
-    //     : Trade("FlexiSwap", env), swap_(swap), noticePeriod_(noticePeriod), noticeCalendar_(noticeCalendar),
-    //       noticeConvention_(noticeConvention), exerciseDates_(exerciseDates), exerciseTypes_(exerciseTypes),
-    //       exerciseValues_(exerciseValues), optionLongShort_(optionLongShort) {
-    //     QL_REQUIRE(exerciseDates_.size() == exerciseTypes.size(), "exercise dates (" << exerciseDates_.size()
-    //                                                                                  << ") must match exercise types ("
-    //                                                                                  << exerciseTypes.size() << ")");
-    //     QL_REQUIRE(exerciseDates_.size() == exerciseValues.size(),
-    //                "exercise dates (" << exerciseDates_.size() << ") must match exercise values ("
-    //                                   << exerciseTypes.size() << ")");
-    // }
-
     void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
 
-    //! \name Inspectors
-    //@{
-    // const std::vector<ore::data::LegData>& swap() const { return swap_; }
-    // optionality described by lower notional bounds
-    // const std::vector<double>& lowerNotionalBounds() const { return lowerNotionalBounds_; }
-    // const std::vector<std::string>& lowerNotionalBoundsDates() const { return lowerNotionalBoundsDates_; }
-    // // optionality described by exercise dates, types, values
-    // const std::string& noticePeriod() const { return noticePeriod_; }
-    // const std::string& noticeCalendar() const { return noticeCalendar_; }
-    // const std::string& noticeConvention() const { return noticeConvention_; }
-    // const std::vector<std::string>& exerciseDates() const { return exerciseDates_; }
-    // const std::vector<std::string>& exerciseTypes() const { return exerciseTypes_; }
-    // const std::vector<double>& exerciseValues() const { return exerciseValues_; }
-    // // option long / short flag
-    // const std::string& optionLongShort() const { return optionLongShort_; }
-    //@}
+    QuantLib::Real notional() const override;
 
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
+
+    //! Add underlying index names
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
 private:
     std::vector<ore::data::LegData> underlyingData_;
     // optionality given by lower notional boudns
     std::map<std::string, std::pair<std::vector<double>, std::vector<std::string>>> lowerNotionalBounds_;
-    // optionality given by exercise dates, types and values
-    // std::string noticePeriod_, noticeCalendar_, noticeConvention_;
-    // std::vector<std::string> exerciseDates_, exerciseTypes_;
-    // std::vector<double> exerciseValues_;
     // long or short option
     std::string optionLongShort_;
+    // notional info
+    Size notionalTakenFromLeg_;
 };
 
 } // namespace data

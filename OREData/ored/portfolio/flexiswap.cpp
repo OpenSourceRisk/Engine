@@ -17,16 +17,21 @@
 */
 
 #include <ored/portfolio/builders/flexiswap.hpp>
-#include <ored/portfolio/flexiswap.hpp>
+#include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/flexiswap.hpp>
 #include <ored/portfolio/swaption.hpp>
 
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/instruments/currencyswap.hpp>
 #include <qle/instruments/flexiswap.hpp>
 #include <qle/instruments/flexiswapreplication.hpp>
+
+#include <ql/instruments/compositeinstrument.hpp>
+#include <ql/instruments/swap.hpp>
 
 using namespace QuantLib;
 
@@ -50,31 +55,44 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     // get engine builder
 
-    auto builder =
-        QuantLib::ext::dynamic_pointer_cast<SwaptionEngineBuilder>(engineFactory->builder("BermudanSwaption"));
-    QL_REQUIRE(builder, "BermudanSwaption builder is null");
+    bool isXCcy = std::any_of(underlyingData_.begin(), underlyingData_.end(),
+                              [this](const LegData& d) { return d.currency() != underlyingData_.front().currency(); });
+    auto builder = QuantLib::ext::dynamic_pointer_cast<SwaptionEngineBuilder>(
+        engineFactory->builder("BermudanSwaption" + (isXCcy ? std::string("_XCcy") : std::string(""))));
+    auto configuration = builder->configuration(MarketContext::pricing);
+
+    QL_REQUIRE(builder, "FlexiSwap::build(): BermudanSwaption builder is null");
 
     // build underlying legs
 
-    vector<Leg> underlyingLegs;
-    vector<bool> underlyingPayers;
-    vector<Currency> underlyingCurrencies;
-    legCurrencies_.clear();
+    legs_.resize(underlyingData_.size());
+    legPayers_.resize(underlyingData_.size());
+    legCurrencies_.resize(underlyingData_.size());
 
     for (Size i = 0; i < underlyingData_.size(); ++i) {
         auto legBuilder = engineFactory->legBuilder(underlyingData_[i].legType());
-        underlyingLegs.push_back(legBuilder->buildLeg(underlyingData_[i], engineFactory, requiredFixings_,
-                                                      builder->configuration(MarketContext::pricing)));
-        underlyingCurrencies.push_back(parseCurrency(underlyingData_[i].currency()));
-        legCurrencies_.push_back(underlyingData_[i].currency());
-        underlyingPayers.push_back(underlyingData_[i].isPayer());
-        DLOG("Added leg of type " << underlyingData_[i].legType() << " in currency " << underlyingData_[i].currency()
-                                  << " is payer " << underlyingData_[i].isPayer());
+        legs_[i] = legBuilder->buildLeg(underlyingData_[i], engineFactory, requiredFixings_,
+                                        builder->configuration(MarketContext::pricing));
+        legCurrencies_[i] = underlyingData_[i].currency();
+        legPayers_[i] = underlyingData_[i].isPayer();
+
+        auto leg =
+            buildNotionalLeg(underlyingData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
+        if (!leg.empty()) {
+            legs_.push_back(leg);
+            legPayers_.push_back(legPayers_[i]);
+            legCurrencies_.push_back(legCurrencies_[i]);
+        }
     }
 
-    // set npv currency
+    // set trade members
 
-    npvCurrency_ = legCurrencies_.front();
+    std::tie(notionalTakenFromLeg_, notional_, npvCurrency_, notionalCurrency_) =
+        getSwapNpvAndNotionalInfo(underlyingData_);
+
+    Date startDate;
+    std::tie(startDate, maturity_, maturityType_) = getSwapStartMaturity(legs_);
+    additionalData_["startDate"] = to_string(startDate);
 
     // set single currency flag
 
@@ -102,13 +120,42 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             buildScheduledVectorNormalised(tmpLowerNotionalBounds, tmpLowerNotionalBoundDates, schedule, 0.0));
     }
 
-    // flexi swap replication
+    // build swap part
+
+    Currency npvCcy = parseCurrency(npvCurrency_);
+    std::vector<Currency> legCcys;
+    std::transform(legCurrencies_.begin(), legCurrencies_.end(), std::back_inserter(legCcys),
+                   [](const std::string& ccy) { return parseCurrency(ccy); });
+
+    ext::shared_ptr<Instrument> swap;
+    if (isXCcy) {
+        swap = ext::make_shared<QuantExt::CurrencySwap>(legs_, legPayers_, legCcys);
+        auto swapBuilder =
+            ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilder>(engineFactory->builder("CrossCurrencySwap"));
+        swap->setPricingEngine(swapBuilder->engine(legCcys, npvCcy, false, {}));
+    } else {
+        swap = ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
+        auto swapBuilder = ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
+        swap->setPricingEngine(swapBuilder->engine(npvCcy, {}, {}, {}));
+    }
+
+    auto qlInstr = ext::make_shared<CompositeInstrument>();
+    qlInstr->add(swap);
+
+    // flexi swap replication, build ql instrument and instrument wrapper
 
     Date today = Settings::instance().evaluationDate();
 
-    bool generateNotionalExchanges = true;
-    auto basket = generateFlexiSwapReplication(today, underlyingLegs, underlyingPayers, underlyingCurrencies,
-                                               lowerNotionalBounds, generateNotionalExchanges);
+    bool generateNotionalExchanges = std::any_of(underlyingData_.begin(), underlyingData_.end(),
+                                                 [](const LegData& d) { return d.notionalAmortizingExchange(); });
+
+    auto positionType = parsePositionType(optionLongShort_);
+
+    auto basket = generateFlexiSwapReplication(
+        today, std::vector<Leg>(legs_.begin(), std::next(legs_.begin(), underlyingData_.size())),
+        std::vector<bool>(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size())),
+        std::vector<Currency>(legCcys.begin(), std::next(legCcys.begin(), underlyingData_.size())), lowerNotionalBounds,
+        generateNotionalExchanges);
 
     for (Size i = 0; i < basket.size(); ++i) {
         auto index = getInterestRateIndexFromLegs(basket[i]->legs());
@@ -119,24 +166,26 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         auto strikes = getCalibrationStrikesFromLegs(basket[i]->legs(), dates);
         basket[i]->setPricingEngine(builder->engine(id() + "_" + std::to_string(i), qualifier, dates, maturities,
                                                     strikes, false, std::string(), std::string()));
+        positionType == Position::Type::Long ? qlInstr->add(basket[i]) : qlInstr->subtract(basket[i]);
     }
 
-    // set trade members
+    instrument_ = ext::make_shared<VanillaInstrument>(qlInstr);
+
+    // set sensi template and pme info
 
     setSensitivityTemplate(*builder);
     addProductModelEngine(*builder);
+}
 
-    // instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(flexiSwap);
-
-    // npvCurrency_ = ccy_str;
-    // notional_ = std::max(currentNotional(fixLeg), currentNotional(fltLeg));
-    // notionalCurrency_ = ccy_str;
-    // legCurrencies_ = vector<string>(2, ccy_str);
-    // legs_ = {fixLeg, fltLeg};
-    // legPayers_ = {swap_[fixedLegIndex].isPayer(), swap_[floatingLegIndex].isPayer()};
-    // maturity_ = flexiSwap->maturityDate();
-    // maturityType_ = "FlexiSwap Leg Maturity Date";
-    // addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
+QuantLib::Real FlexiSwap::notional() const {
+    if (notionalTakenFromLeg_ < legs_.size()) {
+        Real n = currentNotional(legs_[notionalTakenFromLeg_]);
+        if (fabs(n) > QL_EPSILON) {
+            return n;
+        }
+    }
+    DLOG("swap does not provide coupon notionals, using face value");
+    return notional_;
 }
 
 void FlexiSwap::fromXML(XMLNode* node) {
@@ -151,26 +200,6 @@ void FlexiSwap::fromXML(XMLNode* node) {
                                                                          tmpDates, &parseReal);
         lowerNotionalBounds_[ccy] = std::make_pair(tmpBounds, tmpDates);
     }
-    // optionality given by exercise dates, types and values
-    // noticePeriod_ = noticeCalendar_ = noticeConvention_ = "";
-    // exerciseDates_.clear();
-    // exerciseTypes_.clear();
-    // exerciseValues_.clear();
-    // XMLNode* prepayNode = XMLUtils::getChildNode(swapNode, "Prepayment");
-    // if (prepayNode) {
-    //     noticePeriod_ = XMLUtils::getChildValue(prepayNode, "NoticePeriod", false);
-    //     noticeCalendar_ = XMLUtils::getChildValue(prepayNode, "NoticeCalendar", false);
-    //     noticeConvention_ = XMLUtils::getChildValue(prepayNode, "NoticeConvention", false);
-    //     XMLNode* optionsNode = XMLUtils::getChildNode(prepayNode, "PrepaymentOptions");
-    //     if (optionsNode) {
-    //         auto prepayOptionNodes = XMLUtils::getChildrenNodes(optionsNode, "PrepaymentOption");
-    //         for (auto const n : prepayOptionNodes) {
-    //             exerciseDates_.push_back(XMLUtils::getChildValue(n, "ExerciseDate", true));
-    //             exerciseTypes_.push_back(XMLUtils::getChildValue(n, "Type", true));
-    //             exerciseValues_.push_back(parseReal(XMLUtils::getChildValue(n, "Value", true)));
-    //         }
-    //     }
-    // }
     // long short flag
     optionLongShort_ = XMLUtils::getChildValue(swapNode, "OptionLongShort", true);
     // underlying legs
@@ -193,32 +222,18 @@ XMLNode* FlexiSwap::toXML(XMLDocument& doc) const {
         XMLUtils::addAttribute(doc, n, "currency", ccy);
         XMLUtils::addChildrenWithOptionalAttributes(doc, n, std::string(), "Notional", l.first, "startDate", l.second);
     }
-    // optionality given by exercise dates, types and values
-    // if (!exerciseDates_.empty()) {
-    //     XMLNode* prepayNode = doc.allocNode("Prepayment");
-    //     XMLUtils::appendNode(swapNode, prepayNode);
-    //     if (!noticePeriod_.empty())
-    //         XMLUtils::addChild(doc, prepayNode, "NoticePeriod", noticePeriod_);
-    //     if (!noticeCalendar_.empty())
-    //         XMLUtils::addChild(doc, prepayNode, "NoticeCalendar", noticeCalendar_);
-    //     if (!noticeConvention_.empty())
-    //         XMLUtils::addChild(doc, prepayNode, "NoticeConvention", noticeConvention_);
-    //     XMLNode* optionsNode = doc.allocNode("PrepaymentOptions");
-    //     XMLUtils::appendNode(prepayNode, optionsNode);
-    //     for (Size i = 0; i < exerciseDates_.size(); ++i) {
-    //         XMLNode* exerciseNode = doc.allocNode("PrepaymentOption");
-    //         XMLUtils::appendNode(optionsNode, exerciseNode);
-    //         XMLUtils::addChild(doc, exerciseNode, "ExerciseDate", exerciseDates_.at(i));
-    //         XMLUtils::addChild(doc, exerciseNode, "Type", exerciseTypes_.at(i));
-    //         XMLUtils::addChild(doc, exerciseNode, "Value", exerciseValues_.at(i));
-    //     }
-    // }
     // long short option flag
     XMLUtils::addChild(doc, swapNode, "OptionLongShort", optionLongShort_);
     // underlying legs
     for (Size i = 0; i < underlyingData_.size(); i++)
         XMLUtils::appendNode(swapNode, underlyingData_[i].toXML(doc));
     return node;
+}
+
+std::map<AssetClass, std::set<std::string>>
+FlexiSwap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return getSwapUnderlyingIndices(referenceDataManager, underlyingData_,
+                                    envelope().additionalField("security_spread", false));
 }
 
 } // namespace data
