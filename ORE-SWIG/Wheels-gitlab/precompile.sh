@@ -1,11 +1,17 @@
 #!/bin/bash
-# Pre-compile oreanalytics_wrap.cpp for all target Python versions in parallel.
+# Pre-compile oreanalytics_wrap.cpp for all target Python versions.
 #
 # This script runs during CIBW_BEFORE_ALL (once per platform) and compiles
-# the SWIG-generated wrapper for each Python version simultaneously.
+# the SWIG-generated wrapper for each Python version sequentially.
 # When setup.py build_ext later runs for each version, it finds the pre-built
-# .o file and skips the expensive (~25 min) compilation, only performing the
-# fast (~30s) link step.
+# .o file and skips the expensive compilation, only performing the fast link step.
+#
+# Compilations run sequentially to avoid OOM on memory-constrained CI runners
+# (a single compilation of this ~300k-line file needs most of available RAM).
+#
+# We override -O3 (from Python's sysconfig) with -O1 because this is SWIG glue
+# code that just forwards calls to pre-compiled ORE libraries — heavy optimization
+# provides no runtime benefit but significantly increases compile time and memory.
 #
 # Usage: precompile.sh <python_version> [<python_version> ...]
 #   e.g. precompile.sh cp310-cp310 cp312-cp312
@@ -26,8 +32,6 @@ fi
 mkdir -p "$PREBUILT_DIR"
 
 ARCH=$(uname -m)
-PIDS=()
-PYVERS=()
 
 for PYVER in "$@"; do
     PYBIN="/opt/python/${PYVER}/bin"
@@ -47,7 +51,6 @@ for PYVER in "$@"; do
     PY_PLATINCLUDE=$($PYTHON -c "import sysconfig; print(sysconfig.get_path('platinclude'))")
 
     # Get compiler flags from sysconfig (same source as setuptools/distutils).
-    # CFLAGS includes optimization, warning, and debug flags.
     PY_CFLAGS=$($PYTHON -c "import sysconfig; print(sysconfig.get_config_var('CFLAGS') or '')")
     # CCSHARED provides -fPIC on Linux.
     PY_CCSHARED=$($PYTHON -c "import sysconfig; print(sysconfig.get_config_var('CCSHARED') or '')")
@@ -62,39 +65,16 @@ for PYVER in "$@"; do
 
     echo "Compiling oreanalytics_wrap.cpp for $PYVER ($PY_TAG) ..."
 
-    # Compile in background for parallelism.
-    # Flags match what setuptools/distutils would generate:
-    #   - PY_CFLAGS: from sysconfig CFLAGS (includes -O3 -g -Wall etc.)
-    #   - PY_CCSHARED: -fPIC
-    #   - -DNDEBUG: defined by setup.py for non-debug builds
-    #   - -I for Python headers
-    #   - -w -Wno-unused -std=c++20: from oreanalytics-config --cflags + setup.py
-    (
-        g++ -pthread $PY_CFLAGS $PY_CCSHARED -DNDEBUG \
-            -I"$PY_INCLUDE" -I"$PY_PLATINCLUDE" \
-            -c "$WRAP_SRC" \
-            -o "$OBJ_FILE" \
-            -w -Wno-unused -std=c++20 \
-        && echo "  ? $PYVER compiled successfully" \
-        || { echo "  ? $PYVER compilation FAILED"; exit 1; }
-    ) &
-    PIDS+=($!)
-    PYVERS+=("$PYVER")
-done
+    # Compile sequentially (one at a time to avoid OOM).
+    # -O1 appended after PY_CFLAGS overrides -O3 (GCC uses the last -O flag).
+    g++ -pthread $PY_CFLAGS $PY_CCSHARED -DNDEBUG \
+        -I"$PY_INCLUDE" -I"$PY_PLATINCLUDE" \
+        -c "$WRAP_SRC" \
+        -o "$OBJ_FILE" \
+        -w -Wno-unused -std=c++20 -O1
 
-# Wait for all compilations to finish
-FAILED=0
-for i in "${!PIDS[@]}"; do
-    if ! wait "${PIDS[$i]}"; then
-        echo "ERROR: Compilation failed for ${PYVERS[$i]}"
-        FAILED=1
-    fi
+    echo "  ? $PYVER compiled successfully"
 done
-
-if [ "$FAILED" -ne 0 ]; then
-    echo "ERROR: One or more pre-compilations failed."
-    exit 1
-fi
 
 echo "All pre-compilations complete. Objects in $PREBUILT_DIR:"
 find "$PREBUILT_DIR" -name '*.o' -ls
