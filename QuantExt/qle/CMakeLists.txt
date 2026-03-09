@@ -1169,7 +1169,7 @@ if (ORE_PYTHON_INTEGRATION)
         find_package(Python REQUIRED COMPONENTS Interpreter Development)
     endif()
     target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Module)
-    target_compile_definitions(${QLE_LIB_NAME} PUBLIC ORE_PYTHON_INTEGRATION)
+    target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_PYTHON_INTEGRATION)
 endif()
 
 
