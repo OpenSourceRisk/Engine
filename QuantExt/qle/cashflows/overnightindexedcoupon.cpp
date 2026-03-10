@@ -47,6 +47,9 @@
 #include <algorithm>
 #include <iterator>
 
+using std::pair;
+using std::tie;
+using std::tuple;
 using std::vector;
 
 namespace QuantExt {
@@ -166,7 +169,7 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
             //    for this underlying overnight period.
             Date fixStartPlusOne = onFixCal.advance(fixStart, 1, Days, Following);
             if ((fixStart < fixEnd && (rateCutoff_ == 0 || fixStartPlusOne < rateCutOffStart)) &&
-                (cachedEvalDate_ == fixStart || (!applyObservationShift_ && intStart != adjIntStart))) {
+                (cachedEvalDate_ == fixStart || (intStart != adjIntStart))) {
                 fixingDates_.push_back(fixStartPlusOne);
                 valueDates_.push_back(overnightIndex->valueDate(fixingDates_.back()));
                 if (!applyObservationShift_) {
@@ -212,19 +215,7 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
         checkForAllDates();
     }
 
-    QL_ENSURE(valueDates_.size() >= 2, "OvernightIndexedCoupon: degenerate schedule, only have " <<
-        valueDates_.size() << " value date(s).");
-
-    // Number of overnight periods in the coupon.
-    n_ = valueDates_.size() - 1;
-
-    QL_ENSURE(valueDates_.size() == interestDates_.size(), "OvernightIndexedCoupon: mismatch in value dates and " <<
-        " interest dates schedule sizes: " << valueDates_.size() << " vs. " << interestDates_.size() << ".");
-    QL_ENSURE(n_ == fixingDates_.size(), "OvernightIndexedCoupon: size of fixing dates (" <<
-        fixingDates_.size() << ") should equal size of value dates (" << valueDates_.size() << ") - 1.");
-    QL_REQUIRE(rateCutoff_ < n_, "Number of rate cut-off days (" << rateCutoff_ <<
-        ") must be less than the number of fixings (" << n_ << ").");
-
+    validateDates();
     populateAccruals();
 
     // Set the pricer.
@@ -280,10 +271,10 @@ const vector<Rate>& OvernightIndexedCoupon::indexFixings() const {
 }
 
 Real OvernightIndexedCoupon::accruedAmount(const Date& d) const {
+    // Note: no facility in OvernightIndexedCoupon ctor to pass in an ex-coupon date so we don't check
+    // tradingExCoupon(d). Don't believe it applies for overnight indexed coupons in any case.
     if (d <= accrualStartDate_ || d > paymentDate_)
         return 0.0;
-    else if (tradingExCoupon(d))
-        return nominal() * effectiveRate(d) * accruedPeriod(d);
     else
         return nominal() * effectiveRate(std::min(d, accrualEndDate_)) * accruedPeriod(d);
 }
@@ -403,7 +394,7 @@ void OvernightIndexedCoupon::updateSchedules() const {
             if (rateCutoff_ != 0)
                 // erase up to but not incl. start of rate cut-off.
                 itFixDelTo = std::prev(fixingDates_.end(), rateCutoff_ + 1);
-            else if (onFixCal.isHoliday(interestDates_.back()))
+            else if (onFixCal.isHoliday(accrualEndDate_))
                 // erase up to but not incl. start of back stub for holiday.
                 itFixDelTo = prev(fixingDates_.end());
             else
@@ -423,7 +414,7 @@ void OvernightIndexedCoupon::updateSchedules() const {
         // => upper_bound != fixingDates_.end() => can add 1, may be end().
         vector<Date>::iterator itFixDelFrom;
         if (evalDate < fixingDates_.front()) {
-            if (!applyObservationShift_ && onFixCal.isHoliday(interestDates_.front())) {
+            if (onFixCal.isHoliday(accrualStartDate_)) {
                 itFixDelFrom = next(fixingDates_.begin(), std::min(fixingDates_.size(), static_cast<size_t>(2)));
             } else {
                 itFixDelFrom = next(fixingDates_.begin());
@@ -449,14 +440,14 @@ void OvernightIndexedCoupon::updateSchedules() const {
         tsStartIdx_ = viIdxFrom - 1;
     }
 
-    // Update the dt_ values and update the cached evaluation date.
+    // Check date schedule sizes, update n_ and dt_ and update the cached evaluation date.
+    validateDates();
     populateAccruals();
     cachedEvalDate_ = evalDate;
 }
 
 Rate OvernightIndexedCoupon::effectiveRate(const Date& d) const {
-    QL_FAIL("Not implemented yet!");
-    // Should be "oicPricer()->effectiveRate(d);"
+    return oicPricer()->effectiveRate(d);
 }
 
 ext::shared_ptr<OvernightIndexedCouponPricer> OvernightIndexedCoupon::oicPricer() const {
@@ -538,13 +529,18 @@ void OvernightIndexedCoupon::addTelescopeBackStub(Date fixEnd, Date rcoStart, Da
     auto onFixCal = overnightIndex_->fixingCalendar();
     if (rateCutoff_ == 0) {
         // Add final dates.
-        if (fixingDates_.back() < fixEnd && (!applyObservationShift_ && !onFixCal.isBusinessDay(intEnd))) {
+        if (fixingDates_.back() < fixEnd && !onFixCal.isBusinessDay(intEnd)) {
             // We need an overnight period stub here because everything does not collapse.
             fixingDates_.push_back(fixEnd);
             valueDates_.push_back(overnightIndex_->valueDate(fixEnd));
             valueDates_.push_back(onFixCal.advance(valueDates_.back(), 1, Days, Following));
-            interestDates_.push_back(adjIntEnd);
-            interestDates_.push_back(intEnd);
+            if (applyObservationShift_) {
+                interestDates_.push_back(*prev(valueDates_.end(), 2));
+                interestDates_.push_back(valueDates_.back());
+            } else {
+                interestDates_.push_back(adjIntEnd);
+                interestDates_.push_back(intEnd);
+            }
         } else {
             if (applyObservationShift_) {
                 valueDates_.push_back(onFixCal.advance(lbEnd, 1, Days, Following));
@@ -578,6 +574,21 @@ void OvernightIndexedCoupon::checkForAllDates() const {
     }
 }
 
+void OvernightIndexedCoupon::validateDates() const {
+    QL_ENSURE(valueDates_.size() >= 2, "OvernightIndexedCoupon: degenerate schedule, only have " <<
+        valueDates_.size() << " value date(s).");
+
+    // Number of overnight periods in the coupon.
+    n_ = valueDates_.size() - 1;
+
+    QL_ENSURE(valueDates_.size() == interestDates_.size(), "OvernightIndexedCoupon: mismatch in value dates and " <<
+        " interest dates schedule sizes: " << valueDates_.size() << " vs. " << interestDates_.size() << ".");
+    QL_ENSURE(n_ == fixingDates_.size(), "OvernightIndexedCoupon: size of fixing dates (" <<
+        fixingDates_.size() << ") should equal size of value dates (" << valueDates_.size() << ") - 1.");
+    QL_REQUIRE(rateCutoff_ < n_, "Number of rate cut-off days (" << rateCutoff_ <<
+        ") must be less than the number of fixings (" << n_ << ").");
+}
+
 void OvernightIndexedCoupon::populateAccruals() const {
     // Day count fractions for each overnight _interest_ period in the coupon. These are the daily periods from input
     // start date to input end date if observation shift is `false` and are the daily lookback periods corresponding to
@@ -589,119 +600,332 @@ void OvernightIndexedCoupon::populateAccruals() const {
 }
 
 // OvernightIndexedCouponPricer implementation
+namespace {
+    // Helper functions.
+
+    // Determine the number of underlying overnight periods up to date `date`.
+    Size numberPeriods(const Date& date, const vector<Date>& intDates)
+    {
+        // We determine the number of _original_ interest periods up to and including date. In other words, suppose 
+        // that (i_0, i_1), (i_1, i_2), ..., (i_{n-1}, i_n) are the original interest periods with i_0 = input start 
+        // date and i_n = input end date. Note that i_0 and i_n may be holidays but i_1, ..., i_{n-1} are all 
+        // business days. If there is a lookback with observation shift then the interest period (i_{j-1}, i_{j}) 
+        // corresponds to the lookback period (LB(i_{j-1}), LB(i_{j})) := (i^'_{j-1}, i^'_{j}) where 
+        // LB(x) := x - lookback overnight index fixing BDs. Note i_0 is adjusted to preceding BD if necessary and 
+        // i_n to following BD if necessary before applying the lookback. Obviously, if lookback is 0, then LB(x) = x.
+        // These i^'_{j} are our coupon's interestDates_. So result is:
+        // - LB(date) <= i^'_{0} => res = 0
+        // - LB(date) \in (i^'_{0}, i^'_{1}] => res = 1
+        // - ...
+        // - LB(date) \in (i^'_{n-2}, i^'_{n-1}] => res = n - 1
+        // - LB(date) > i^'_{n-1} => res = n
+        auto it = std::lower_bound(intDates.begin(), intDates.end(), date);
+        return it != intDates.end() ? std::distance(intDates.begin(), it) : intDates.size() - 1;
+    }
+}
 
 void OvernightIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) {
     coupon_ = dynamic_cast<const OvernightIndexedCoupon*>(&coupon);
-    QL_ENSURE(coupon_, "wrong coupon type");
+    QL_ENSURE(coupon_, "OvernightIndexedCouponPricer::initialize: expected an OvernightIndexedCoupon.");
 }
 
 void OvernightIndexedCouponPricer::compute() const {
-    ext::shared_ptr<OvernightIndex> index = ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
+    tie(swapletRate_, effectiveSpread_, effectiveIndexFixing_) = compute(coupon_->accrualEndDate());
+}
 
-    const vector<Date>& fixingDates = coupon_->fixingDates();
+tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date) const
+{
+    // Variables needed in the calcs below.
+    auto onFixCal = coupon_->index()->fixingCalendar();
+    const vector<Date>& intDates = coupon_->interestDates();
+
+    // See note in `numberPeriods` about this date.
+    Date refDate = date;
+    if (coupon_->applyObservationShift())
+        refDate = onFixCal.advance(onFixCal.adjust(refDate, Following), -coupon_->lookback(), Preceding);
+
+    // Number of periods we will need to compound over - note the usage of refDate and not date.
+    const Size numPeriods = numberPeriods(refDate, intDates);
+
+    // If we are before the start of the first interest period, then return zeros.
+    if (numPeriods == 0)
+        return {0.0, 0.0, 0.0};
+
+    // --- 1. Variable set-up ---
+    const Date today = Settings::instance().evaluationDate();
+    auto index = ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
+    const vector<Date>& fixDates = coupon_->fixingDates();
+    const vector<Date>& valDates = coupon_->valueDates();
     const vector<Time>& dt = coupon_->dt();
+    const Period& lookback = coupon_->lookback();
+    const bool obsShift = coupon_->applyObservationShift();
+    const bool incSpread = coupon_->includeSpread();
+    const Real spread = coupon_->spread();
+    const Natural rco = coupon_->rateCutoff();
+    Handle<YieldTermStructure> curve = index->forwardingTermStructure();
+    const Date& cpnAccStart = coupon_->accrualStartDate();
+    const Date& cpnAccEnd = coupon_->accrualEndDate();
+    const DayCounter& indexDc = index->dayCounter();
+    const Natural indexFixDays = index->fixingDays();
+    const Natural cpnFixDays = coupon_->fixingDays();
 
-    Size n = dt.size();
-    Size i = 0;
-    QL_REQUIRE(coupon_->rateCutoff() < n, "rate cutoff (" << coupon_->rateCutoff()
-                                                          << ") must be less than number of fixings in period (" << n
-                                                          << ")");
-    Size nCutoff = n - coupon_->rateCutoff();
+    // Compound factor with and without spread which will be calculated below.
+    Real compFac = 1.0;
+    Real compFacNoSpd = 1.0;
+    Size currPeriodIdx = 0;
+    // --- End of variable set-up ---
 
-    Real compoundFactor = 1.0, compoundFactorWithoutSpread = 1.0;
-
-    // already fixed part
-    Date today = Settings::instance().evaluationDate();
-    while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
-        // rate must have been fixed
-        Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
-        QL_REQUIRE(pastFixing != Null<Real>(),
-                   "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
-        if (coupon_->includeSpread()) {
-            compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
-            pastFixing += coupon_->spread();
+    // --- 2. Lambdas to help with the logic below ---
+    auto brokenPeriodScale = [&]() {
+        // Note: intDates[periodIdx] < refDate <= intDates[periodIdx + 1]
+        //   <=> Unshifted(intDates[periodIdx]) < date <= Unshifted(intDates[periodIdx])
+        if (!obsShift) {
+            // No observation shift.
+            if (date == intDates[currPeriodIdx + 1])
+                // Full period, return 1.
+                return 1.0;
+            else
+                // Broken period, calculate dcf from interest period start to date.
+                return indexDc.yearFraction(intDates[currPeriodIdx], date) /
+                    indexDc.yearFraction(intDates[currPeriodIdx], intDates[currPeriodIdx + 1]);
+        } else {
+            // Observation shift.
+            const Date& intEnd = intDates[currPeriodIdx + 1];
+            Date usIntEnd = currPeriodIdx == fixDates.size() - 1 ? cpnAccEnd :
+                onFixCal.advance(intEnd, lookback, Following);
+            if (date == usIntEnd) {
+                // Full period, return 1.
+                return 1.0;
+            } else {
+                // Broken period, scale dcf by portion of d in the unshifted period.
+                const Date& intStart = intDates[currPeriodIdx];
+                Date usIntStart = currPeriodIdx == 0 ? cpnAccStart :
+                    onFixCal.advance(intStart, lookback, Following);
+                return indexDc.yearFraction(usIntStart, date) / indexDc.yearFraction(usIntStart, usIntEnd);
+            }
         }
-        compoundFactor *= (1.0 + pastFixing * dt[i]);
-        ++i;
+    };
+
+    auto updateFactorsRate = [&](Rate onRate) {
+        Time dcf = dt[currPeriodIdx];
+        Real scale = currPeriodIdx < numPeriods - 1 ? 1.0 : brokenPeriodScale();
+        if (incSpread) {
+            compFacNoSpd *= 1.0 + onRate * scale * dcf;
+            compFac *= 1.0 + (onRate + spread) * scale * dcf;
+        } else {
+            compFac *= 1.0 + onRate * scale * dcf;
+        }
+        currPeriodIdx++;
+    };
+
+    auto updateFactorsGrowth = [&](Real onFactor) {
+        // If the compounding factor can be applied directly, apply it. The coupon cannot include spread, can't be in the 
+        // last period we are calculating (as that may be broken), if it has a lookback it must have observation shift, 
+        // can't have an externally supplied fixing lag different from the fixing lag of the index.
+        if (!incSpread
+            && (currPeriodIdx < numPeriods - 1)
+            && (lookback.length() == 0 || obsShift)
+            && cpnFixDays == indexFixDays)
+        {
+            compFac *= onFactor;
+            currPeriodIdx++;
+        } else {
+            bool inRcoPeriod = rco > 0 && fixDates.size() - rco - 1 <= currPeriodIdx;
+            Date endValDate = inRcoPeriod ? valDates.back() : valDates[currPeriodIdx + 1];
+            Time dcf = indexDc.yearFraction(valDates[currPeriodIdx], endValDate);
+            Rate onRate = (onFactor - 1.0) / dcf;
+            updateFactorsRate(onRate);
+        }
+    };
+
+    auto inRateCutoffPeriod = [&]() {
+        return rco > 0 && fixDates.size() - rco - 1 <= currPeriodIdx;
+    };
+
+    auto onRate = [&](bool inRcoPeriod = false) {
+        Date endValDate = inRcoPeriod ? valDates.back() : valDates[currPeriodIdx + 1];
+        DiscountFactor startDiscount = curve->discount(valDates[currPeriodIdx]);
+        DiscountFactor endDiscount = curve->discount(endValDate);
+        Real factor = startDiscount / endDiscount;
+        Time dcf = indexDc.yearFraction(valDates[currPeriodIdx], endValDate);
+        return (factor - 1.0) / dcf;
+    };
+
+    auto onRateRcoInd = [&]() -> pair<Rate, bool> {
+        bool inRcoPeriod = inRateCutoffPeriod();
+        return {onRate(inRcoPeriod), inRcoPeriod};
+    };
+
+    auto applyTsFormula = [&](const Date& start, const Date& end) {
+        Real factor = curve->discount(start) / curve->discount(end);
+        if (incSpread) {
+            compFacNoSpd *= factor;
+            compFac *= factor;
+            // Approximation from formula (1.5) in DAILY SPREAD CURVES AND ESTER at https://ssrn.com/abstract=3500090.
+            Integer numCalDays = end - start;
+            Real avgDailyDcf = indexDc.yearFraction(start, end) / numCalDays;
+            compFac *= std::pow(1.0 + avgDailyDcf * spread, numCalDays);
+        } else {
+            compFac *= factor;
+        }
+    };
+    // --- End of helper lambdas ---
+
+    // --- 3. Start of main valuation loop ---
+    // Evaluation date, EVD, is the threshold.
+    // - fixing date < EVD: assume fixing is known. Not necessarily true e.g. valuing SOFR coupon on business day in 
+    //                      Europe that is a SOFR US holiday, the fixing for the previous SOFR business day (i.e. 
+    //                      fixing date < EVD) will not be available until 08:00 ET the next SOFR business day.
+    // - fixing date = EVD: try to get fixing and use it, if not available forecast.
+    // - fixing date > EVD: forecast.
+
+    // If at any point we are in the rate cut-off period, we will use this variable to indicate it and also to store 
+    // the rate. We will skip any further calculations below and perform the rate cut-off logic at the end.
+    ext::optional<Rate> rcoRate;
+
+    // Already fixed part with the caveat in the comment above.
+    while (currPeriodIdx < numPeriods && fixDates[currPeriodIdx] < today) {
+        const Date& fixDate = fixDates[currPeriodIdx];
+        Rate fixing = index->pastFixing(fixDate);
+        QL_REQUIRE(fixing != Null<Real>(), "OvernightIndexedCouponPricer: missing " << index->name() <<
+            " fixing for fixing date " << fixDate << ".");
+        // Check if in rate cut-off period before updating currPeriodIdx in call to updateFactorsRate.
+        if (inRateCutoffPeriod())
+            rcoRate = fixing;
+        updateFactorsRate(fixing);
+        // If we are in the rate cut-off period, remaining periods will be handled below.
+        if (rcoRate)
+            break;
     }
 
-    // today is a border case
-    if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
-        // might have been fixed
+    // If the fixing date for the current period is today, try to get the fixing and use it. If it is not available, we
+    // don't update the current period index and we will forecast it below.
+    if (!rcoRate && currPeriodIdx < numPeriods && fixDates[currPeriodIdx] == today) {
         try {
-            Rate pastFixing = index->pastFixing(fixingDates[std::min(i, nCutoff)]);
-            if (pastFixing != Null<Real>()) {
-                if (coupon_->includeSpread()) {
-                    compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
-                    pastFixing += coupon_->spread();
-                }
-                compoundFactor *= (1.0 + pastFixing * dt[i]);
-                ++i;
-            } else {
-                ; // fall through and forecast
+            Rate fixing = index->pastFixing(today);
+            if (fixing != Null<Real>()) {
+                if (inRateCutoffPeriod())
+                    rcoRate = fixing;
+                updateFactorsRate(fixing);
             }
         } catch (Error&) {
-            ; // fall through and forecast
         }
     }
 
-    // forward part using telescopic property in order
-    // to avoid the evaluation of multiple forward fixings
-    const vector<Date>& dates = coupon_->valueDates();
-    if (i < n) {
-        Handle<YieldTermStructure> curve = index->forwardingTermStructure();
-        QL_REQUIRE(!curve.empty(), "null term structure set to this instance of " << index->name());
+    // We need a valid curve after this point (unless we have the rate cut-off rate).
+    QL_REQUIRE(rcoRate || !curve.empty(), "OvernightIndexedCouponPricer: null term structure set for the " <<
+        "instance of " << index->name() << " in the overnight index coupon.");
 
-        // handle the part until the rate cutoff (might be empty, i.e. startDiscount = endDiscount)
-        DiscountFactor startDiscount = curve->discount(dates[i]);
-        DiscountFactor endDiscount = curve->discount(dates[std::max(nCutoff, i)]);
+    // If we still have fixDates[currPeriodIdx] == today after previous if branch (and no rate cut-off rate), the 
+    // fixing look up failed and we need to forecast today's fixing. We have the value dates for it, so we do it.
+    if (!rcoRate && currPeriodIdx < numPeriods && fixDates[currPeriodIdx] == today) {
+        auto [onRate, inRcoPeriod] = onRateRcoInd();
+        updateFactorsRate(onRate);
+        if (inRcoPeriod)
+            rcoRate = onRate;
+    }
 
-        // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
-        if (nCutoff < n) {
-            // forward discount factor for one calendar day on the cutoff date
-            DiscountFactor discountCutoffDate = curve->discount(dates[nCutoff] + 1) / curve->discount(dates[nCutoff]);
-            // keep the above forward discount factor constant during the cutoff period
-            endDiscount *= std::pow(discountCutoffDate, dates[n] - dates[nCutoff]);
+    // Fixing dates in the future.
+    if (!rcoRate && !coupon_->telescopicDates()) {
+        // If can't apply telescopic formula, loop over remaining periods and forecast the fixings.
+        while (currPeriodIdx < numPeriods) {
+            auto [onRate, inRcoPeriod] = onRateRcoInd();
+            updateFactorsRate(onRate);
+            if (inRcoPeriod) {
+                rcoRate = onRate;
+                break;
+            }
         }
+    } else if (!rcoRate) {
+        while (currPeriodIdx < numPeriods) {
+            Date currValDateOneBd = onFixCal.advance(valDates[currPeriodIdx], 1, Days, Following);
+            if (currPeriodIdx == numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
+                // Telescopic formula and date d is in the period associated with the telescopic period.
 
-        compoundFactor *= startDiscount / endDiscount;
+                // Get the value dates associated with the fixing date for the underlying overnight period that 
+                // contains `date`. We may need an extra stub below if `date` is not an index business day.
+                Date adjDate = onFixCal.adjust(date, Preceding);
+                Date valDateUndStart = lookback != 0 * Days ? onFixCal.advance(adjDate, -lookback, Preceding) : adjDate;
 
-        if (coupon_->includeSpread()) {
-            compoundFactorWithoutSpread *= startDiscount / endDiscount;
-            // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE":
-            // set tau to an average value
-            Real tau = index->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
-            // now use formula (4) from the paper
-            compoundFactor *= std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates.back() - dates[i]));
+                // Piece from value date at start of telescopic period to valDateUndStart.
+                applyTsFormula(std::min(valDates[currPeriodIdx], valDateUndStart), valDateUndStart);
+
+                // If d is a holiday, compound the additional piece.
+                if (!onFixCal.isBusinessDay(date)) {
+                    // Get the next business day after `date` and the value date associated with it.
+                    Date valDateUndEnd = onFixCal.advance(valDateUndStart, 1, Days, Following);
+                    Date nextDate = onFixCal.advance(adjDate, 1, Days, Following);
+                    Real scale = indexDc.yearFraction(adjDate, date) / indexDc.yearFraction(adjDate, nextDate);
+
+                    DiscountFactor startDisc = curve->discount(valDateUndStart);
+                    DiscountFactor endDisc = curve->discount(valDateUndEnd);
+                    Real factor = startDisc / endDisc;
+
+                    Time fullDcf = indexDc.yearFraction(valDateUndStart, valDateUndEnd);
+                    Rate onRate = (factor - 1.0) / fullDcf;
+
+                    if (incSpread) {
+                        compFacNoSpd *= 1.0 + onRate * scale * fullDcf;
+                        compFac *= 1.0 + (onRate + spread) * scale * fullDcf;
+                    } else {
+                        compFac *= 1.0 + onRate * scale * fullDcf;
+                    }
+                }
+
+                // Still may not be finished so update currPeriodIdx.
+                currPeriodIdx++;
+
+            } else if (currPeriodIdx < numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
+                // Telescopic formula but date d is not in the period associated with the telescopic period.
+                // So can just apply the full factor.
+                applyTsFormula(valDates[currPeriodIdx], valDates[currPeriodIdx + 1]);
+                currPeriodIdx++;
+            } else {
+                // May have rate cut-off periods, final / initial stub period or telescopic period may have been 1D.
+                auto [onRate, inRcoPeriod] = onRateRcoInd();
+                updateFactorsRate(onRate);
+                if (inRcoPeriod) {
+                    rcoRate = onRate;
+                    break;
+                }
+            }
         }
     }
 
-    Rate tau = index->dayCounter().yearFraction(dates.front(), dates.back());
-    Rate rate = (compoundFactor - 1.0) / tau;
-    swapletRate_ = coupon_->gearing() * rate;
-    if (!coupon_->includeSpread()) {
-        swapletRate_ += coupon_->spread();
-        effectiveSpread_ = coupon_->spread();
-        effectiveIndexFixing_ = rate;
-    } else {
-        effectiveSpread_ = rate - (compoundFactorWithoutSpread - 1.0) / tau;
-        effectiveIndexFixing_ = rate - effectiveSpread_;
+    // We may still have rate cut-off periods to cover.
+    if (rcoRate) {
+        while (currPeriodIdx < numPeriods) {
+            updateFactorsRate(*rcoRate);
+        }
     }
+
+    // Give the final result
+    const Time cpnDcf = coupon_->accruedPeriod(date);
+    const Rate rate = (compFac - 1.0) / cpnDcf;
+    Rate swapletRate = !incSpread ? coupon_->gearing() * rate + spread : coupon_->gearing() * rate;
+    Spread effectiveSpread = !incSpread ? spread : rate - (compFacNoSpd - 1.0) / cpnDcf;
+    Rate effectiveIndexFixing = !incSpread ? rate : rate - effectiveSpread;
+
+    return {swapletRate, effectiveSpread, effectiveIndexFixing};
 }
 
 Rate OvernightIndexedCouponPricer::swapletRate() const {
-    compute();
+    tie(swapletRate_, std::ignore, std::ignore) = compute(coupon_->accrualEndDate());
     return swapletRate_;
 }
 
 Rate OvernightIndexedCouponPricer::effectiveSpread() const {
-    compute();
+    tie(std::ignore, effectiveSpread_, std::ignore) = compute(coupon_->accrualEndDate());
     return effectiveSpread_;
 }
 
 Rate OvernightIndexedCouponPricer::effectiveIndexFixing() const {
-    compute();
+    tie(std::ignore, std::ignore, effectiveIndexFixing_) = compute(coupon_->accrualEndDate());
     return effectiveIndexFixing_;
+}
+
+Rate OvernightIndexedCouponPricer::effectiveRate(const Date& date) const {
+    return std::get<0>(compute(date));
 }
 
 // CappedFlooredOvernightIndexedCoupon implementation
@@ -868,11 +1092,11 @@ Handle<OptionletVolatilityStructure> CappedFlooredOvernightIndexedCouponPricer::
 }
 
 // OvernightLeg implementation
-
 OvernightLeg::OvernightLeg(const Schedule& schedule, const ext::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()), paymentAdjustment_(Following),
       paymentLag_(0), telescopicValueDates_(false), includeSpread_(false), lookback_(0 * Days), rateCutoff_(0),
-      fixingDays_(Null<Size>()), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
+      fixingDays_(Null<Size>()), nakedOption_(false), localCapFloor_(false), inArrears_(true),
+      observationShift_(false) {}
 
 OvernightLeg& OvernightLeg::withNotionals(Real notional) {
     notionals_ = vector<Real>(1, notional);
@@ -999,8 +1223,8 @@ OvernightLeg& OvernightLeg::withPaymentDates(const std::vector<Date>& paymentDat
     return *this;
 }
 
-OvernightLeg&
-OvernightLeg::withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer) {
+OvernightLeg& OvernightLeg::withOvernightIndexedCouponPricer(
+    const ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
     return *this;
 }
@@ -1008,6 +1232,11 @@ OvernightLeg::withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<O
 OvernightLeg& OvernightLeg::withCapFlooredOvernightIndexedCouponPricer(
     const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer) {
     capFlooredCouponPricer_ = couponPricer;
+    return *this;
+}
+
+OvernightLeg& OvernightLeg::withObservationShift(bool observationShift) {
+    observationShift_ = observationShift;
     return *this;
 }
 
@@ -1102,7 +1331,7 @@ OvernightLeg::operator Leg() const {
                 paymentDate, detail::get(notionals_, i, 1.0), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), refStart, refEnd, paymentDayCounter_,
                 telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_, rateComputationStartDate,
-                rateComputationEndDate);
+                rateComputationEndDate, observationShift_);
             if (couponPricer_) {
                 cpn->setPricer(couponPricer_);
             }

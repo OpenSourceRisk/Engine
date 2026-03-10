@@ -20,6 +20,7 @@
 
 #include <boost/assign/std/vector.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <ql/indexes/ibor/sofr.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
@@ -31,7 +32,11 @@
 // clang-format on
 #include <boost/timer/timer.hpp>
 #include <map>
-#include <ranges>
+#include <format>
+#include <fstream>
+#include <oret/util/datapaths.hpp>
+#include <oret/util/fileutilities.hpp>
+#include <string>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -1192,6 +1197,8 @@ void loadFixingsUpToDate(const Date& d, ext::shared_ptr<OvernightIndex> index, b
 {
     // Initialise SOFR data
     static map<Date, Real> sofrRates = {
+        { Date( 2, Dec, 2025), 0.0401 },
+        { Date( 1, Dec, 2025), 0.0412 },
         { Date(28, Nov, 2025), 0.0412 },
         { Date(26, Nov, 2025), 0.0405 },
         { Date(25, Nov, 2025), 0.0401 },
@@ -1211,7 +1218,12 @@ void loadFixingsUpToDate(const Date& d, ext::shared_ptr<OvernightIndex> index, b
         { Date( 4, Nov, 2025), 0.0400 },
         { Date( 3, Nov, 2025), 0.0413 },
         { Date(31, Oct, 2025), 0.0422 },
-        { Date(30, Oct, 2025), 0.0404 }
+        { Date(30, Oct, 2025), 0.0404 },
+        { Date(29, Oct, 2025), 0.0427 },
+        { Date(28, Oct, 2025), 0.0431 },
+        { Date(27, Oct, 2025), 0.0427 },
+        { Date(24, Oct, 2025), 0.0424 },
+        { Date(24, Oct, 2025), 0.0424 }
     };
 
     // Load fixings
@@ -1222,6 +1234,33 @@ void loadFixingsUpToDate(const Date& d, ext::shared_ptr<OvernightIndex> index, b
         index->addFixing(it->first, it->second);
         ++it;
     }
+}
+
+// Make discount curve for tests.
+ext::shared_ptr<YieldTermStructure> makeDiscCurve()
+{
+    static map<Size, DiscountFactor> dateDfs = {
+        { 0, 1.000000000}, { 1, 0.999969863}, { 2, 0.999937353}, { 3, 0.999903139}, { 4, 0.999864017},
+        { 5, 0.999824880}, { 6, 0.999784156}, { 7, 0.999739477}, { 8, 0.999688193}, { 9, 0.999632828},
+        {10, 0.999576202}, {11, 0.999519599}, {12, 0.999462613}, {13, 0.999405507}, {14, 0.999335271},
+        {15, 0.999266198}, {16, 0.999203719}, {17, 0.999134111}, {18, 0.999065005}, {19, 0.998996331},
+        {20, 0.998915909}, {21, 0.998823996}, {22, 0.998726216}, {23, 0.998637407}, {24, 0.998545094},
+        {25, 0.998455406}, {26, 0.998367992}, {27, 0.998267186}, {28, 0.998175836}, {29, 0.998065381},
+        {30, 0.997956526}, {31, 0.997860354}, {32, 0.997758343}, {33, 0.997643778}, {34, 0.997544354},
+        {35, 0.997435933}, {36, 0.997333220}, {37, 0.997189585}, {38, 0.996938409}, {39, 0.996571583},
+        {40, 0.996081047}
+    };
+
+    vector<Time> times;
+    vector<Handle<Quote>> dfs;
+    times.reserve(dateDfs.size());
+    dfs.reserve(dateDfs.size());
+    for (const auto& [numDays, df] : dateDfs) {
+        times.push_back(numDays / 365.0);
+        dfs.push_back(Handle<Quote>(ext::make_shared<SimpleQuote>(df)));
+    }
+
+    return ext::make_shared<InterpolatedDiscountCurve2>(times, dfs, Actual365Fixed());
 }
 
 // Hold test data for coupon creation in tests below.
@@ -1235,8 +1274,9 @@ struct TestCouponData {
 
     TestCouponData() {
 
-        // Actual values in the yield term structure don't matter for these tests.
-        Handle<YieldTermStructure> sofrCurve(ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+        // When it comes to coupon calculations, a flat forward curve may hide issues with dates so we use a curve 
+        // with a slope. Only need discount factors out to a month or so for the tests below.
+        Handle<YieldTermStructure> sofrCurve(makeDiscCurve());
         sofr = ext::make_shared<Sofr>(sofrCurve);
 
         start = Date(1, Nov, 2025); // Saturday
@@ -1714,8 +1754,16 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
 
     // Expected dates at this point. Note dates at back end of the period remain constant.
     vector<Date> expValDates{Date(29, Oct, 2025)};
+    if (!adjustStart) {
+        expValDates.push_back(Date(30, Oct, 2025));
+    }
     vector<Date> expTsIntDates = expValDates;
+
     if (rcoDays == 0) {
+        if (!adjustEnd) {
+            expValDates.push_back(Date(25, Nov, 2025));
+            expTsIntDates.push_back(Date(25, Nov, 2025));
+        }
         expValDates.push_back(Date(26, Nov, 2025));
         expTsIntDates.push_back(Date(26, Nov, 2025));
     } else {
@@ -1728,9 +1776,11 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
 
     // Update evaluation date to first fixing date.
     Settings::instance().evaluationDate() = Date(29, Oct, 2025);
-    expFixDates.insert(expFixDates.begin() + 1, Date(30, Oct, 2025));
-    expValDates.insert(expValDates.begin() + 1, Date(30, Oct, 2025));
-    expTsIntDates.insert(expTsIntDates.begin() + 1, Date(30, Oct, 2025));
+    if (adjustStart) {
+        expFixDates.insert(expFixDates.begin() + 1, Date(30, Oct, 2025));
+        expValDates.insert(expValDates.begin() + 1, Date(30, Oct, 2025));
+        expTsIntDates.insert(expTsIntDates.begin() + 1, Date(30, Oct, 2025));
+    }
     checkDates(cpn, expFixDates, expTsIntDates, expValDates);
 
     // Step over evaluation dates up to 3 Dec 2025 (all coupon dates in the past).
@@ -1742,7 +1792,8 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
         if (onFixCal.isBusinessDay(evalDate)) {
             auto nextBd = onFixCal.advance(evalDate, 1, Days, Following);
             if ((rcoDays > 0 && evalDate < Date(19, Nov, 2025))
-                || (rcoDays == 0 && evalDate < Date(25, Nov, 2025))) {
+                || (rcoDays == 0 && ((adjustEnd && evalDate < Date(25, Nov, 2025))
+                    || (!adjustEnd && evalDate < Date(24, Nov, 2025))))) {
                 expFixDates.insert(expFixDates.begin() + ++pos, nextBd);
                 expValDates.insert(expValDates.begin() + pos, nextBd);
                 expTsIntDates.insert(expTsIntDates.begin() + pos, nextBd);
@@ -1761,7 +1812,7 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
             it = prev(expFixDates.end(), rcoDays + 1);
             cmpDate = *it;
         } else {
-            it = expFixDates.end();
+            it = adjustEnd ? expFixDates.end() : prev(expFixDates.end());
             cmpDate = *prev(it);
         }
 
@@ -1782,12 +1833,16 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
     // We just index into this full date set for the expected results.
     vector<Date> fullDateSet = {Date(29, Oct, 2025), Date(30, Oct, 2025), Date(31, Oct, 2025), Date( 3, Nov, 2025), Date( 4, Nov, 2025), Date( 5, Nov, 2025), Date( 6, Nov, 2025), Date( 7, Nov, 2025), Date(10, Nov, 2025), Date(12, Nov, 2025), Date(13, Nov, 2025), Date(14, Nov, 2025), Date(17, Nov, 2025), Date(18, Nov, 2025), Date(19, Nov, 2025), Date(20, Nov, 2025), Date(21, Nov, 2025), Date(24, Nov, 2025), Date(25, Nov, 2025), Date(26, Nov, 2025)};
 
-    auto setupExpDates = [rcoDays, &fullDateSet, &expValDates, &expTsIntDates, &expFixDates](size_t idx) {
+    auto setupExpDates = [rcoDays, adjustEnd, &fullDateSet, &expValDates, &expTsIntDates, &expFixDates](size_t idx) {
         idx = rcoDays == 0 ? min(idx, fullDateSet.size() - 1) : min(idx, static_cast<size_t>(15));
         expValDates.assign(fullDateSet.begin(), fullDateSet.begin() + idx);
         expTsIntDates.assign(fullDateSet.begin(), fullDateSet.begin() + idx);
 
         if (rcoDays == 0) {
+            if (!adjustEnd && expValDates.back() != Date(25, Nov, 2025)) {
+                expValDates.push_back(Date(25, Nov, 2025));
+                expTsIntDates.push_back(Date(25, Nov, 2025));
+            }
             expValDates.push_back(Date(26, Nov, 2025));
             expTsIntDates.push_back(Date(26, Nov, 2025));
         } else {
@@ -1798,7 +1853,7 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
         expFixDates.assign(expValDates.begin(), prev(expValDates.end()));
     };
 
-    // Jump to some random evaluation dates and check (adjust interest start and end dates in the checks).
+    // Jump to some random evaluation dates and check.
     vector<pair<Date, size_t>> evalDateIdx = {
         {Date(7, Nov, 2025), 9},
         {Date(16, Nov, 2025), 13},
@@ -1806,7 +1861,7 @@ BOOST_DATA_TEST_CASE(testCpn_Lb_Os_NoFd_Ts,
         {Date(11, Nov, 2025), 10},
         {Date(2, Dec, 2025), 20},
         {Date(4, Nov, 2025), 6},
-        {Date(3, Oct, 2025), 1}
+        {Date(3, Oct, 2025), adjustStart ? 1 : 2}
     };
 
     for (const auto& [evalDate, idx] : evalDateIdx) {
@@ -1827,7 +1882,7 @@ BOOST_AUTO_TEST_CASE(testShortCouponsTs)
     {
         bool obsShift = lbDays != 0;
         return OIC(tcd.pmt, tcd.notional, start, end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
-                lbDays * Days, rcoDays, Null<Size>(), Null<Date>(), Null<Date>(), obsShift);
+                lbDays * Days, rcoDays, Null<Natural>(), Null<Date>(), Null<Date>(), obsShift);
     };
 
     // 1 period coupon, start and end business days.
@@ -1897,6 +1952,169 @@ BOOST_AUTO_TEST_CASE(testShortCouponsTs)
     }
 }
 
+// When telescopic dates is requested, it can be turned off if it is not possible to use it. Test this here.
+BOOST_AUTO_TEST_CASE(testTelescopicSetting)
+{
+    TestCouponData tcd;
+
+    OIC cpn(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+            0 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), false);
+    BOOST_CHECK_MESSAGE(cpn.telescopicDates(), "Expected telescopic dates to be true when no lookback, no "
+        "observation shift, and no external fixing lag.");
+
+    cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+        2 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), true);
+    BOOST_CHECK_MESSAGE(cpn.telescopicDates(), "Expected telescopic dates to be true when non-zero lookback with "
+        "observation shift, and no external fixing lag.");
+
+    cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+        2 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), false);
+    BOOST_CHECK_MESSAGE(!cpn.telescopicDates(), "Expected telescopic dates to be false when non-zero lookback "
+        "without observation shift, and no external fixing lag.");
+
+    cpn = OIC(tcd.pmt, 1.0, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), true, false,
+        0 * Days, 0, 1, Null<Date>(), Null<Date>(), false);
+    BOOST_CHECK_MESSAGE(!cpn.telescopicDates(), "Expected telescopic dates to be false when there is an external "
+        "fixing lag different from the index fixing lag.");
+}
+
+// Parameter sets for coupon testCouponAccruals below.
+auto lookbacks   = bdata::make({    0,     0,     2,    2,     2});
+auto obsShifts   = bdata::make({false, false,  true, true, false});
+auto telescopic  = bdata::make({false,  true, false, true, false});
+auto rateCutoffs = bdata::make({0, 3});
+
+// Selection of the above parameters.
+auto cpnVariants = (lookbacks ^ obsShifts ^ telescopic) * rateCutoffs;
+
+// Use this so that I can have an index available in the test body below.
+// Could use auto idx = boost::unit_test::framework::current_test_case().p_id; in test body but may be brittle across 
+// different versions of Boost.
+auto idxCpnVariants = cpnVariants ^ bdata::xrange(cpnVariants.size().value());
+
+void runCpnAccrualTest(const OIC& cpn, const string& cpnName) {
+    // For each evaluation date from before the coupon accrual start date until after the coupon payment date, check 
+    // the accrued amount for each of those dates.
+    const Date& cpnAccStart = cpn.accrualStartDate();
+    const Date& cpnPmt = cpn.date();
+    Date startAccDate = cpnAccStart - 1;
+    Date startEvalDate = cpn.fixingDates().front() - 1;
+    Date stopDate = cpnPmt + 1;
+
+    // Open output file for the calculated results.
+    auto filePath = TEST_OUTPUT_PATH / path(cpnName + ".csv");
+    ofstream outFile(filePath);
+    BOOST_REQUIRE_MESSAGE(outFile.is_open(), "OvernightIndexCouponTests/testCouponAccruals: "
+        "failed to open file at: " << filePath);
+
+    // Write header.
+    outFile << "eval / acc";
+    for (Date accDate = startAccDate; accDate <= stopDate; ++accDate)
+        outFile << "," << io::iso_date(accDate);
+    outFile << ",full_coupon";
+    outFile << endl;
+
+    // Calculate and write the test results.
+    for (Date evalDate = startEvalDate; evalDate <= stopDate; ++evalDate) {
+        Settings::instance().evaluationDate() = evalDate;
+        outFile << io::iso_date(evalDate);
+
+        // Load fixings up to but not equal to evalDate. This is not always what will happen in practice. For example, 
+        // 11 Nov 2025 is Veteran's Day holiday in the US but is a good business day in Europe. Valuing on 11 Nov 2025,
+        // we would not get the fixing for 10 Nov 2025 until 08:00 ET on 12 Nov 2025 (the next good SOFR business day 
+        // after the 10 Nov 2025). The valuation would throw if a fixing is not entered for 10 Nov 2025 and this is 
+        // handled outside of ORE / QuantLib.
+        loadFixingsUpToDate(evalDate, cpn.overnightIndex());
+
+        for (Date accDate = startAccDate; accDate <= stopDate; ++accDate) {
+            outFile << "," << format("{:.4f}", cpn.accruedAmount(accDate));
+        }
+
+        // Tag on the coupon amount as well.
+        outFile << "," << format("{:.4f}", cpn.amount());
+
+        outFile << endl;
+    }
+    outFile.close();
+
+    // Compare against expected results. The results have been validated in Excel.
+    auto expFilePath = TEST_INPUT_PATH / path(cpnName + ".csv");
+    BOOST_CHECK(compareFiles(filePath.string(), expFilePath.string()));
+}
+
+#ifdef __INTELLISENSE__
+void testCpnAccruals(Natural lb, bool os, bool ts, Natural rco, size_t idx)
+#else
+BOOST_DATA_TEST_CASE(testCpnAccruals, idxCpnVariants, lb, os, ts, rco, idx)
+#endif
+{
+    // Create the coupon ID for output file.
+    string strOs = os ? "os" : "nos";
+    string strTs = ts ? "ts" : "nts";
+    string cpnName = format("{:02d}_lb-{}_{}_rco-{}_{}", idx, lb, strOs, rco, strTs);
+
+    // Create the coupon.
+    TestCouponData tcd;
+    Real notional = 100000000;
+
+    OIC cpn(tcd.pmt, notional, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), ts, false,
+            lb * Days, rco, Null<Natural>(), Null<Date>(), Null<Date>(), os);
+
+    runCpnAccrualTest(cpn, cpnName);
+}
+
+// Test gearings and spreads with different settings for whether start / end date of coupon is a business day.
+auto gearings  = bdata::make({  2.0,  1.0});
+auto spreads   = bdata::make({ 10.0, 10.0});
+auto incSpread = bdata::make({false, true});
+auto startBd   = bdata::make({false, true});
+auto endBd     = bdata::make({ true, false});
+auto gsCpnVariants = (gearings ^ spreads ^ incSpread ^ startBd ^ endBd) * bdata::make({ true, false});
+auto idxGsCpnVariants = gsCpnVariants ^ bdata::xrange(gsCpnVariants.size().value());
+
+#ifdef __INTELLISENSE__
+void testCpnAccrualsGearingSpread(Real gearing, Spread spread, bool incSpr, bool sibd, bool eibd, bool ts, size_t idx)
+#else
+BOOST_DATA_TEST_CASE(testCpnAccrualsGearingSpread, idxGsCpnVariants, gearing, spread, incSpr, sibd, eibd, ts, idx)
+#endif
+{
+    // Create the coupon ID for output file, maintaining format of previous tests with additional fields.
+    string strTs = ts ? "ts" : "nts";
+    string strIncSpr = incSpr ? "inc-spr" : "exc-spr";
+    string strSibd = sibd ? "sibd" : "sih";
+    string strEibd = eibd ? "eibd" : "eih";
+    string cpnName = format("{:02d}_lb-0_nos_rco-0_{}_g-{:g}_s-{:g}_{}_{}_{}",
+        idx, strTs, gearing, spread, strIncSpr, strSibd, strEibd);
+
+    // Create the coupon.
+    TestCouponData tcd;
+    Real notional = 100000000;
+    Date start = sibd ? Date(3, Nov, 2025) : tcd.start;
+    Date end = eibd ? Date(28, Nov, 2025) : tcd.end;
+    OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, gearing, spread / 10000, Date(), Date(), DayCounter(), ts, incSpr,
+            0 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), false);
+
+    runCpnAccrualTest(cpn, cpnName);
+}
+
+// Test coupon with all non-standard arguments set. Include spread must be false because gearing != 1 and telescoping 
+// must be false because an external fixing lag of 1 BD is specified != index fixing days.
+BOOST_AUTO_TEST_CASE(testCpnAccrualsAll)
+{
+    // Create the coupon ID for output file, maintaining format of previous tests with additional fields.
+    // fl-1 indicates fixing lag of 1 BD.
+    string cpnName("lb-2_os_rco-3_nts_g-1p5_s-10_exc-spr_sibd_eibd_fl-1");
+
+    // Create the coupon.
+    TestCouponData tcd;
+    Real notional = 100000000;
+    Date start = Date(3, Nov, 2025);
+    Date end = Date(28, Nov, 2025);
+    OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, 1.5, 0.0010, Date(), Date(), DayCounter(), false, false, 2 * Days,
+            3, 1, Null<Date>(), Null<Date>(), true);
+
+    runCpnAccrualTest(cpn, cpnName);
+}
 // clang-format on
 
 BOOST_AUTO_TEST_SUITE_END()

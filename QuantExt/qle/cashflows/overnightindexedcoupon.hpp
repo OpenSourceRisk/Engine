@@ -108,10 +108,12 @@ public:
     bool hasLookback() const { return lookback_.length() != 0; }
     //! the underlying index
     const ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
+    //! the underlying index
+    bool telescopicDates() const { return telescopicDates_; }
+    //@}
     //! \name LazyObject interface
     //@{
     void performCalculations() const override;
-    //@}
     //@}
     //! \name FloatingRateCoupon interface
     //@{
@@ -132,7 +134,7 @@ private:
     // The interestDates_ define the overnight periods against which the overnight rate is applied.
     mutable std::vector<Date> interestDates_;
     mutable std::vector<Rate> fixings_;
-    Size n_;
+    mutable Size n_;
     mutable std::vector<Time> dt_;
     bool includeSpread_;
     Period lookback_;
@@ -184,6 +186,9 @@ private:
     // After adding dates in telescopic period, check if we have all dates and update tsStartIdx_ accordingly.
     void checkForAllDates() const;
 
+    // Validate date schedule sizes and populate number of periods.
+    void validateDates() const;
+
     // Populate accrual values dt_.
     void populateAccruals() const;
 };
@@ -196,6 +201,7 @@ public:
     Rate swapletRate() const override;
     Rate effectiveSpread() const;
     Rate effectiveIndexFixing() const;
+    Rate effectiveRate(const Date& date) const;
     Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
     Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }
     Rate capletRate(Rate) const override { QL_FAIL("capletRate not available"); }
@@ -203,6 +209,7 @@ public:
     Rate floorletRate(Rate) const override { QL_FAIL("floorletRate not available"); }
 
 protected:
+    std::tuple<Rate, Spread, Rate> compute(const QuantLib::Date& date) const;
     const OvernightIndexedCoupon* coupon_;
     mutable Real swapletRate_, effectiveSpread_, effectiveIndexFixing_;
 };
@@ -312,10 +319,12 @@ public:
     OvernightLeg& withInArrears(const bool inArrears);
     OvernightLeg& withLastRecentPeriod(const QuantLib::ext::optional<Period>& lastRecentPeriod);
     OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
-    OvernightLeg& withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withOvernightIndexedCouponPricer(
+        const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer);
     OvernightLeg& withPaymentDates(const std::vector<Date>& paymentDates);
     OvernightLeg& withCapFlooredOvernightIndexedCouponPricer(
         const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer);
+    OvernightLeg& withObservationShift(bool observationShift);
     operator Leg() const;
 
 private:
@@ -342,6 +351,7 @@ private:
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> couponPricer_;
     QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> capFlooredCouponPricer_;
+    bool observationShift_;
 };
 
 } // namespace QuantExt
