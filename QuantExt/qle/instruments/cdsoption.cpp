@@ -55,14 +55,15 @@ namespace {
 class ImpliedVolHelper {
 public:
     ImpliedVolHelper(const CdsOption& cdsoption, const Handle<DefaultProbabilityTermStructure>& probability,
-                     Real recoveryRate, const Handle<YieldTermStructure>& termStructure, Real targetValue)
+                     Real recoveryRate, const Handle<YieldTermStructure>& termStructureSwapCurrency,
+                     const Handle<YieldTermStructure>& termStructureTradeCollateral, Real targetValue)
         : targetValue_(targetValue) {
 
         vol_ = QuantLib::ext::shared_ptr<SimpleQuote>(new SimpleQuote(0.0));
         Handle<BlackVolTermStructure> h(
             QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(vol_), Actual365Fixed()));
         engine_ = QuantLib::ext::shared_ptr<PricingEngine>(
-            new QuantExt::BlackCdsOptionEngine(probability, recoveryRate, termStructure,
+            new QuantExt::BlackCdsOptionEngine(probability, recoveryRate, termStructureSwapCurrency, termStructureTradeCollateral,
                                                Handle<CreditVolCurve>(QuantLib::ext::make_shared<CreditVolCurveWrapper>(h))));
         cdsoption.setupArguments(engine_->getArguments());
 
@@ -82,10 +83,12 @@ private:
 };
 } // namespace
 
-CdsOption::CdsOption(const QuantLib::ext::shared_ptr<CreditDefaultSwap>& swap, const QuantLib::ext::shared_ptr<Exercise>& exercise,
-                     bool knocksOut, const Real strike, const StrikeType strikeType)
+CdsOption::CdsOption(const QuantLib::ext::shared_ptr<CreditDefaultSwap>& swap,
+                     const QuantLib::ext::shared_ptr<Exercise>& exercise, bool knocksOut, const Real strike,
+                     const StrikeType strikeType, const Settlement::Type settlementType)
     : Option(QuantLib::ext::shared_ptr<Payoff>(new NullPayoff), exercise), swap_(swap), knocksOut_(knocksOut),
-      strike_(strike == Null<Real>() ? swap_->runningSpread() : strike), strikeType_(strikeType) {
+      strike_(strike == Null<Real>() ? swap_->runningSpread() : strike), strikeType_(strikeType),
+      settlementType_(settlementType) {
     registerWith(swap_);
 }
 
@@ -108,6 +111,7 @@ void CdsOption::setupArguments(PricingEngine::arguments* args) const {
     arguments->knocksOut = knocksOut_;
     arguments->strike = strike_;
     arguments->strikeType = strikeType_;
+    arguments->settlementType = settlementType_;
 }
 
 void CdsOption::fetchResults(const PricingEngine::results* r) const {
@@ -125,16 +129,19 @@ Real CdsOption::riskyAnnuity() const {
     return riskyAnnuity_;
 }
 
-Volatility CdsOption::impliedVolatility(Real targetValue, const Handle<YieldTermStructure>& termStructure,
-                                        const Handle<DefaultProbabilityTermStructure>& probability, Real recoveryRate,
-                                        Real accuracy, Size maxEvaluations, Volatility minVol,
-                                        Volatility maxVol) const {
+Volatility
+CdsOption::impliedVolatility(Real targetValue,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureSwapCurrency,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& termStructureTradeCollateral,
+                             const Handle<DefaultProbabilityTermStructure>& probability, Real recoveryRate,
+                             Real accuracy, Size maxEvaluations, Volatility minVol, Volatility maxVol) const {
     calculate();
     QL_REQUIRE(!isExpired(), "instrument expired");
 
     Volatility guess = 0.10;
 
-    ImpliedVolHelper f(*this, probability, recoveryRate, termStructure, targetValue);
+    ImpliedVolHelper f(*this, probability, recoveryRate, termStructureSwapCurrency, termStructureTradeCollateral,
+                       targetValue);
     Brent solver;
     solver.setMaxEvaluations(maxEvaluations);
     return solver.solve(f, accuracy, guess, minVol, maxVol);

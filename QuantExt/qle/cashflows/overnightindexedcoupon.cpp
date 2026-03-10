@@ -379,6 +379,8 @@ void CappedFlooredOvernightIndexedCoupon::performCalculations() const {
                   "CappedFlooredOvernightIndexedCouponPricer");
     effectiveCapletVolatility_ = p->effectiveCapletVolatility();
     effectiveFloorletVolatility_ = p->effectiveFloorletVolatility();
+    strippedCapletVolatility_ = p->strippedCapletVolatility();
+    strippedFloorletVolatility_ = p->strippedFloorletVolatility();
 }
 
 Rate CappedFlooredOvernightIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
@@ -452,6 +454,16 @@ Real CappedFlooredOvernightIndexedCoupon::effectiveFloorletVolatility() const {
     return effectiveFloorletVolatility_;
 }
 
+Real CappedFlooredOvernightIndexedCoupon::strippedCapletVolatility() const {
+    calculate();
+    return strippedCapletVolatility_;
+}
+
+Real CappedFlooredOvernightIndexedCoupon::strippedFloorletVolatility() const {
+    calculate();
+    return strippedFloorletVolatility_;
+}
+
 void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredOvernightIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredOvernightIndexedCoupon>*>(&v);
     if (v1 != 0)
@@ -474,6 +486,12 @@ Real CappedFlooredOvernightIndexedCouponPricer::effectiveCapletVolatility() cons
 
 Real CappedFlooredOvernightIndexedCouponPricer::effectiveFloorletVolatility() const {
     return effectiveFloorletVolatility_;
+}
+
+Real CappedFlooredOvernightIndexedCouponPricer::strippedCapletVolatility() const { return strippedCapletVolatility_; }
+
+Real CappedFlooredOvernightIndexedCouponPricer::strippedFloorletVolatility() const {
+    return strippedFloorletVolatility_;
 }
 
 Handle<OptionletVolatilityStructure> CappedFlooredOvernightIndexedCouponPricer::capletVolatility() const {

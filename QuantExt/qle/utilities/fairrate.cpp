@@ -31,12 +31,12 @@ namespace QuantExt {
 namespace {
 const Spread basisPoint = 1.0e-4;
 
-enum class LegKind { FixedLike, FloatingNoSpread, FloatingWithSpread, Other };
+enum class LegKind { FixedLike, Floating, Other };
 
 LegKind classifyLeg(const Leg& leg) {
     for (const auto& cf : leg) {
         if (auto frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf)) {
-            return std::fabs(frc->spread()) > QL_EPSILON ? LegKind::FloatingWithSpread : LegKind::FloatingNoSpread;
+            return LegKind::Floating;
         }
         if (QuantLib::ext::dynamic_pointer_cast<Coupon>(cf)) {
             return LegKind::FixedLike;
@@ -45,24 +45,21 @@ LegKind classifyLeg(const Leg& leg) {
     return LegKind::Other;
 }
 
-std::pair<Size, std::vector<Size>> selectReferenceLeg(const std::vector<Leg>& legs) {
+std::pair<Size, std::vector<Size>> selectReferenceLeg(const std::vector<Leg>& legs, const std::vector<bool>& isPayer) {
     QL_REQUIRE(!legs.empty(), "selectReferenceLeg: empty leg data");
 
     std::vector<Size> fixedIndices;
-    Size firstFloatingWithSpread = Null<Size>();
+    Size firstFloatingIsPayer = Null<Size>();
     Size firstFloating = Null<Size>();
 
     for (Size i = 0; i < legs.size(); ++i) {
         LegKind kind = classifyLeg(legs[i]);
         if (kind == LegKind::FixedLike) {
             fixedIndices.push_back(i);
-        } else if (kind == LegKind::FloatingWithSpread) {
-            if (firstFloatingWithSpread == Null<Size>())
-                firstFloatingWithSpread = i;
-            if (firstFloating == Null<Size>())
-                firstFloating = i;
-        } else if (kind == LegKind::FloatingNoSpread) {
-            if (firstFloating == Null<Size>())
+        } else if (kind == LegKind::Floating) {
+            if(isPayer[i] && firstFloatingIsPayer == Null<Size>())
+                firstFloatingIsPayer = i;
+            if(firstFloating == Null<Size>())
                 firstFloating = i;
         }
     }
@@ -73,8 +70,8 @@ std::pair<Size, std::vector<Size>> selectReferenceLeg(const std::vector<Leg>& le
         return {ref, exclude};
     }
 
-    if (firstFloatingWithSpread != Null<Size>())
-        return {firstFloatingWithSpread, {}};
+    if (firstFloatingIsPayer != Null<Size>())
+        return {firstFloatingIsPayer, {}};
 
     if (firstFloating != Null<Size>())
         return {firstFloating, {}};
@@ -107,7 +104,7 @@ std::pair<Real, Real> fairRate(const std::vector<Leg>& legs,
 
     Date valuationDate = discountCurve(0)->referenceDate();
 
-    auto [referenceLegIdx, excludeIndices] = selectReferenceLeg(legs);
+    auto [referenceLegIdx, excludeIndices] = selectReferenceLeg(legs, isPayer);
     std::vector<bool> exclude(n, false);
     for (const auto i : excludeIndices)
         exclude[i] = true;

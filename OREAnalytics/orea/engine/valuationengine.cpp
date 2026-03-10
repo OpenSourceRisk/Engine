@@ -62,11 +62,12 @@ ValuationEngine::ValuationEngine(const Date& today, const QuantLib::ext::shared_
 void ValuationEngine::recalibrateModels() {
     ObservationMode::Mode om = ObservationMode::instance().mode();
     for (auto const& b : modelBuilders_) {
-        if (om == ObservationMode::Mode::Disable)
-            b.second->forceRecalculate();
-        if (recalibrate_)
-            b.second->recalibrate();
-        else
+        if (recalibrate_) {
+            if (om == ObservationMode::Mode::Disable)
+                b.second->forceRecalculate();
+            else
+                b.second->recalibrate();
+        } else
             b.second->newCalcWithoutRecalibration();
     }
 }

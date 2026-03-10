@@ -113,6 +113,7 @@ public:
     string indexTenor() const;
     bool flatFirstPeriod() const { return flatFirstPeriod_; }
     bool optionletTenorInArrears() const { return optionletTenorInArrears_; }
+    bool optionletVolIsEffective() const { return optionletVolIsEffective_; }
     //
     const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
     const std::string& proxySourceIndex() const { return proxySourceIndex_; }
@@ -162,6 +163,7 @@ private:
     std::string inputType_;
     bool flatFirstPeriod_ = true;
     bool optionletTenorInArrears_ = true;
+    bool optionletVolIsEffective_ = true;
     //
     std::string proxySourceCurveId_;
     std::string proxySourceIndex_;
