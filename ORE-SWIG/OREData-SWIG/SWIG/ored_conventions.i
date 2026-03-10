@@ -368,7 +368,7 @@ class TenorBasisSwapConvention : public Convention {
     TenorBasisSwapConvention();
     TenorBasisSwapConvention(const string& id, const string& payIndex, const string& receiveIndex,
                              const string& receiveFrequency = "", const string& payFrequency = "",
-                             const string& spreadOnRec = "", const string& includeSpread = "", 
+                             const string& spreadOnRec = "", const string& includeSpread = "",
                              const string& subPeriodsCouponType = "");
     const ext::shared_ptr<IborIndex> payIndex() const;
     const ext::shared_ptr<IborIndex> receiveIndex() const;
@@ -606,7 +606,7 @@ class CmsSpreadOptionConvention : public Convention {
     CmsSpreadOptionConvention(const std::string& id, const std::string& strForwardStart, const std::string& strSpotDays,
                             const std::string& strSwapTenor, const std::string& strFixingDays, const std::string& strCalendar,
                             const std::string& strDayCounter, const std::string& strConvention);
-    
+
     const QuantLib::Period& forwardStart() const;
     const QuantLib::Period spotDays() const;
     const QuantLib::Period& swapTenor();
@@ -631,7 +631,7 @@ class CommodityForwardConvention : public Convention {
     CommodityForwardConvention(const std::string& id, const std::string& spotDays = "", const std::string& pointsFactor = "",
                             const std::string& advanceCalendar = "", const std::string& spotRelative = "",
                             QuantLib::BusinessDayConvention bdc = Following, bool outright = true);
-    
+
     QuantLib::Natural spotDays() const;
     QuantLib::Real pointsFactor() const;
     const QuantLib::Calendar& advanceCalendar() const;
@@ -649,7 +649,6 @@ class CommodityForwardConvention : public Convention {
     }
 };
 
-%feature("flatnested");
 //%rename (CommodityFutureConvention_AveragingData) CommodityFutureConvention::AveragingData;
 %shared_ptr(CommodityFutureConvention)
 %shared_ptr(CommodityFutureConvention::AveragingData)
@@ -668,11 +667,11 @@ class CommodityFutureConvention : public Convention {
     struct CalendarDaysBefore {
         CalendarDaysBefore(const std::string& calendarDaysBefore) : calendarDaysBefore_(calendarDaysBefore) {}
     };
-    
+
     struct BusinessDaysBefore {
         BusinessDaysBefore(const std::string& daysBefore) : businessDaysBefore_(daysBefore) {}
     };
-    
+
     struct BusinessDaysAfter {
         BusinessDaysAfter(const std::string& businessDaysAfter) : businessDaysAfter_(businessDaysAfter) {}
     };
@@ -747,7 +746,7 @@ class CommodityFutureConvention : public Convention {
 
     };
 
-    //! Class to store conventions for creating an off peak power index 
+    //! Class to store conventions for creating an off peak power index
     class OffPeakPowerIndexData : public XMLSerializable {
     public:
         //! Constructor.
@@ -844,7 +843,7 @@ class CommodityFutureConvention : public Convention {
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const QuantLib::ext::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = QuantLib::ext::nullopt,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
-    
+
     //! Business days before based constructor
     CommodityFutureConvention(const std::string& id, const BusinessDaysAfter& businessDaysAfter,
                               const std::string& contractFrequency, const std::string& calendar,

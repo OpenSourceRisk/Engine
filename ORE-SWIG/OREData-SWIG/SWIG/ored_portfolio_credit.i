@@ -26,7 +26,6 @@ using ore::data::BasketConstituent;
 using ore::data::BasketData;
 using ore::data::IndexCreditDefaultSwapData;
 using ore::data::SyntheticCDO;
-using namespace std;
 %}
 
 %extend CreditDefaultSwap {
@@ -41,7 +40,7 @@ using namespace std;
 class CreditDefaultSwapData : public XMLSerializable {
 public:
     using PPT = QuantLib::CreditDefaultSwap::ProtectionPaymentTime;
-    CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
+    CreditDefaultSwapData(const std::string& issuerId, const std::string& creditCurveId, const LegData& leg,
                           const bool settlesAccrual = true,
                           const PPT protectionPaymentTime = PPT::atDefault,
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
@@ -78,7 +77,7 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
-%template(BasketConstituentVector) vector<ext::shared_ptr<BasketConstituent>>;
+%template(BasketConstituentVector) std::vector<ext::shared_ptr<BasketConstituent>>;
 
 %shared_ptr(BasketData)
 class BasketData : public XMLSerializable {
@@ -113,11 +112,11 @@ public:
 %shared_ptr(SyntheticCDO)
 class SyntheticCDO : public Trade {
 public:
-    SyntheticCDO(const Envelope& env, const LegData& leg, const string& qualifier, const BasketData& basketData,
+    SyntheticCDO(const Envelope& env, const LegData& leg, const std::string& qualifier, const BasketData& basketData,
                  double attachmentPoint, double detachmentPoint, const bool settlesAccrual = true,
                  const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
                      QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
-                 const string& protectionStart = string(), const string& upfrontDate = string(),
+                 const std::string& protectionStart = std::string(), const std::string& upfrontDate = std::string(),
                  const Real upfrontFee = Null<Real>(), const bool rebatesAccrual = true,
                  Real recoveryRate = Null<Real>());
     void build(const ext::shared_ptr<EngineFactory>&) override;

@@ -33,7 +33,6 @@ using ore::data::InflationSwap;
 using ore::data::TradeBarrier;
 using ore::data::BarrierData;
 using ore::data::XMLSerializable;
-using namespace std;
 %}
 
 %shared_ptr(TradeMonetary)
@@ -48,7 +47,7 @@ public:
 class PremiumData : public XMLSerializable {
 public:
     PremiumData();
-    PremiumData(double amount, const string& ccy, const QuantLib::Date& payDate);
+    PremiumData(double amount, const std::string& ccy, const QuantLib::Date& payDate);
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -56,14 +55,14 @@ public:
 %shared_ptr(OptionData)
 class OptionData : public XMLSerializable {
 public:
-    OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
-               string settlement = "Cash", string settlementMethod = std::string(), const PremiumData& premiumData = {},
-               vector<double> exerciseFees = vector<Real>(), vector<double> exercisePrices = vector<Real>(),
-               string noticePeriod = std::string(), string noticeCalendar = std::string(), string noticeConvention = std::string(),
-               const vector<string>& exerciseFeeDates = vector<string>(),
-               const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = std::string(),
-               string exerciseFeeSettlementCalendar = std::string(), string exerciseFeeSettlementConvention = std::string(),
-               string payoffType = std::string(), string payoffType2 = std::string(),
+    OptionData(std::string longShort, std::string callPut, std::string style, bool payoffAtExpiry, std::vector<std::string> exerciseDates,
+               std::string settlement = "Cash", std::string settlementMethod = std::string(), const PremiumData& premiumData = {},
+               std::vector<double> exerciseFees = std::vector<Real>(), std::vector<double> exercisePrices = std::vector<Real>(),
+               std::string noticePeriod = std::string(), std::string noticeCalendar = std::string(), std::string noticeConvention = std::string(),
+               const std::vector<std::string>& exerciseFeeDates = std::vector<std::string>(),
+               const std::vector<std::string>& exerciseFeeTypes = std::vector<std::string>(), std::string exerciseFeeSettlementPeriod = std::string(),
+               std::string exerciseFeeSettlementCalendar = std::string(), std::string exerciseFeeSettlementConvention = std::string(),
+               std::string payoffType = std::string(), std::string payoffType2 = std::string(),
                const QuantLib::ext::optional<bool>& automaticExercise = QuantLib::ext::nullopt,
                const QuantLib::ext::optional<OptionExerciseData>& exerciseData = QuantLib::ext::nullopt,
                const QuantLib::ext::optional<OptionPaymentData>& paymentData = QuantLib::ext::nullopt,
@@ -103,7 +102,7 @@ class TradeBarrier : public TradeMonetary {
 public:
     TradeBarrier(QuantLib::Real value, std::string currency);
 };
-%template(TradeBarrierVector) vector<ext::shared_ptr<TradeBarrier>>;
+%template(TradeBarrierVector) std::vector<ext::shared_ptr<TradeBarrier>>;
 
 %shared_ptr(BarrierData)
 class BarrierData : public XMLSerializable {
@@ -114,7 +113,8 @@ public:
 %extend BarrierData {
     BarrierData(const std::string& barrierType, const std::vector<double>& levels, const double rebate,
                 const std::vector<ext::shared_ptr<TradeBarrier>>& tradeBarriers, const std::string& style = std::string(),
-                const std::optional<string>& strictComparison = std::nullopt, const std::optional<bool>& overrideTriggered = std::nullopt) {
+                const std::optional<std::string>& strictComparison = std::nullopt,
+                const std::optional<bool>& overrideTriggered = std::nullopt) {
         return new BarrierData(barrierType, levels, rebate, VECTOR_SWIG_TO_ORE(tradeBarriers),
             style, strictComparison, overrideTriggered);
     }
@@ -127,7 +127,7 @@ public:
     void build(const ext::shared_ptr<EngineFactory>&) override;
 };
 %extend EquitySwap {
-    EquitySwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
+    EquitySwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& legData) {
         return new EquitySwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }
@@ -139,7 +139,7 @@ public:
     void build(const ext::shared_ptr<EngineFactory>&) override;
 };
 %extend InflationSwap {
-    InflationSwap(const Envelope& env, const vector<ext::shared_ptr<LegData>>& legData) {
+    InflationSwap(const Envelope& env, const std::vector<ext::shared_ptr<LegData>>& legData) {
         return new InflationSwap(env, VECTOR_SWIG_TO_ORE(legData));
     }
 }

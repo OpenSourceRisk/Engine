@@ -24,7 +24,6 @@ using ore::data::ScriptedTradeEventData;
 using ore::data::ScriptedTradeValueTypeData;
 using ore::data::ScriptedTradeScriptData;
 using ore::data::ScriptedTrade;
-using namespace std;
 %}
 
 %shared_ptr(ScriptedTradeEventData)

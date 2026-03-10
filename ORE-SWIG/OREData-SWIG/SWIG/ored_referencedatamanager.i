@@ -33,7 +33,6 @@ using ore::data::EquityIndexReferenceDatum;
 using ore::data::CommodityIndexReferenceDatum;
 using ore::data::ReferenceDataManager;
 using ore::data::BasicReferenceDataManager;
-using namespace std;
 %}
 
 
@@ -95,8 +94,8 @@ public:
 class BondReferenceDatum : public ReferenceDatum {
 public:
     BondReferenceDatum();
-    BondReferenceDatum(const string& id);
-    BondReferenceDatum(const string& id, const QuantLib::Date& validFrom);
+    BondReferenceDatum(const std::string& id);
+    BondReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -121,7 +120,7 @@ class CreditIndexReferenceDatum : public ReferenceDatum {
 public:
     CreditIndexReferenceDatum();
     CreditIndexReferenceDatum(const std::string& name);
-    CreditIndexReferenceDatum(const string& id, const QuantLib::Date& validFrom);
+    CreditIndexReferenceDatum(const std::string& id, const QuantLib::Date& validFrom);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
@@ -130,24 +129,24 @@ public:
 class EquityIndexReferenceDatum : public ReferenceDatum {
 public:
     EquityIndexReferenceDatum();
-    EquityIndexReferenceDatum(const string& name);
-    EquityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom);
+    EquityIndexReferenceDatum(const std::string& name);
+    EquityIndexReferenceDatum(const std::string& name, const QuantLib::Date& validFrom);
 };
 
 %shared_ptr(CommodityIndexReferenceDatum)
 class CommodityIndexReferenceDatum : public ReferenceDatum {
 public:
     CommodityIndexReferenceDatum();
-    CommodityIndexReferenceDatum(const string& name);
-    CommodityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom);
+    CommodityIndexReferenceDatum(const std::string& name);
+    CommodityIndexReferenceDatum(const std::string& name, const QuantLib::Date& validFrom);
 };
 
 %shared_ptr(CurrencyHedgedEquityIndexReferenceDatum)
 class CurrencyHedgedEquityIndexReferenceDatum : public ReferenceDatum {
 public:
     CurrencyHedgedEquityIndexReferenceDatum();
-    CurrencyHedgedEquityIndexReferenceDatum(const string& name);
-    CurrencyHedgedEquityIndexReferenceDatum(const string& name, const QuantLib::Date& validFrom);
+    CurrencyHedgedEquityIndexReferenceDatum(const std::string& name);
+    CurrencyHedgedEquityIndexReferenceDatum(const std::string& name, const QuantLib::Date& validFrom);
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };

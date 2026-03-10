@@ -26,7 +26,6 @@ using ore::data::GenericYieldVolCurve;
 using ore::data::SwaptionVolCurve;
 using ore::data::AssetModelBuilderBase;
 using ore::data::LocalVolModelBuilder;
-using namespace std;
 %}
 
 %template(DateSet) std::set<Date>;

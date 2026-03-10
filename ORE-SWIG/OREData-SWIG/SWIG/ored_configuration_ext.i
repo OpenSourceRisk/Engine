@@ -26,7 +26,6 @@ using ore::data::BootstrapConfig;
 using ore::data::SecurityConfig;
 using ore::data::CommodityVolatilityConfig;
 using ore::data::InflationCapFloorVolatilityCurveConfig;
-using namespace std;
 %}
 
 %shared_ptr(BootstrapConfig)
@@ -44,9 +43,9 @@ public:
 %shared_ptr(SecurityConfig)
 class SecurityConfig : public CurveConfig {
 public:
-    SecurityConfig(const string& curveID, const string& curveDescription, const string& spreadQuote = "",
-                   const string& recoveryQuote = "", const string& cprQuote = "", const string& priceQuote = "",
-                   const string& conversionFactor = "");
+    SecurityConfig(const std::string& curveID, const std::string& curveDescription, const std::string& spreadQuote = "",
+                   const std::string& recoveryQuote = "", const std::string& cprQuote = "", const std::string& priceQuote = "",
+                   const std::string& conversionFactor = "");
     SecurityConfig();
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -78,12 +77,12 @@ public:
 
     InflationCapFloorVolatilityCurveConfig();
     InflationCapFloorVolatilityCurveConfig(
-        const string& curveID, const string& curveDescription, const Type type, const QuoteType& quoteType,
-        const VolatilityType& volatilityType, const bool extrapolate, const vector<string>& tenors,
-        const vector<string>& capStrikes, const vector<string>& floorStrikes, const vector<string>& strikes,
+        const std::string& curveID, const std::string& curveDescription, const Type type, const QuoteType& quoteType,
+        const VolatilityType& volatilityType, const bool extrapolate, const std::vector<std::string>& tenors,
+        const std::vector<std::string>& capStrikes, const std::vector<std::string>& floorStrikes, const std::vector<std::string>& strikes,
         const QuantLib::DayCounter& dayCounter, QuantLib::Natural settleDays, const QuantLib::Calendar& calendar,
-        const QuantLib::BusinessDayConvention& businessDayConvention, const string& index, const string& indexCurve,
-        const string& yieldTermStructure, const QuantLib::Period& observationLag, const std::string& quoteIndex = "",
+        const QuantLib::BusinessDayConvention& businessDayConvention, const std::string& index, const std::string& indexCurve,
+        const std::string& yieldTermStructure, const QuantLib::Period& observationLag, const std::string& quoteIndex = "",
         const std::string& conventions = "", const bool useLastAvailableFixingDate = false);
 
     void fromXML(XMLNode* node) override;

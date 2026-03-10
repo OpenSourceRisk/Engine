@@ -24,7 +24,6 @@ using ore::data::CommodityDigitalOption;
 using ore::data::CommoditySpreadOptionData;
 using ore::data::CommoditySpreadOption;
 using ore::data::CommodityAveragePriceOption;
-using namespace std;
 %}
 
 %shared_ptr(CommodityDigitalOption)

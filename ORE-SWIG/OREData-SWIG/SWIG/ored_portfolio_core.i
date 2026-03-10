@@ -37,13 +37,9 @@ using ore::data::TradeFactory;
 using ore::data::InstrumentWrapper;
 using ore::data::XMLSerializable;
 using QuantLib::CashFlow;
-using namespace std;
 %}
 
 %include std_string.i
-%inline %{
-using namespace std;
-%}
 
 %template(TradeVector) std::vector<ext::shared_ptr<Trade>>;
 %template(StringStringMap) std::map<std::string, std::string>;
@@ -133,8 +129,8 @@ public:
     const std::set<std::string>& portfolioIds() const;
     const std::map<std::string, std::string> additionalFields() const;
     const std::map<std::string, QuantLib::ext::any>& fullAdditionalFields() const;
-    string additionalField(const std::string& name, const bool mandatory = true,
-                           const std::string& defaultValue = std::string()) const;
+    std::string additionalField(const std::string& name, const bool mandatory = true,
+                  const std::string& defaultValue = std::string()) const;
     QuantLib::ext::any additionalAnyField(const std::string& name, const bool mandatory = true,
                                   const QuantLib::ext::any& defaultValue = boost::none) const;
     void setAdditionalField(const std::string& key, const QuantLib::ext::any& value);
