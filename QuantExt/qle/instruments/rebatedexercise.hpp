@@ -59,6 +59,7 @@ public:
     BusinessDayConvention rebatePaymentConvention() const { return rebatePaymentConvention_; }
     Real rebate(Size index, Size no = 0) const;
     Currency rebateCurrency(Size no = 0) const;
+    const std::vector<Currency>& rebateCurrencies() const { return rebateCurrencies_; }
     Date rebatePaymentDate(Size index) const;
     Date rebatePaymentDate(const Date& exerciseDate) const;
     const std::vector<std::vector<Real>>& rebates() const { return rebates_; }
