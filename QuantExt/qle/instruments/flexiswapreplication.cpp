@@ -82,7 +82,7 @@ std::vector<ext::shared_ptr<MultiLegOption>>
 generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& legs, const std::vector<bool>& payer,
                              const std::vector<Currency>& currency,
                              const std::vector<std::vector<Real>>& lowerNotionalBounds,
-                             const bool generateNotionalExchanges) {
+                             const bool generateNotionalExchangeOnExercise, const bool generateFinalNotionalExchange) {
 
     // check consistency of input data
 

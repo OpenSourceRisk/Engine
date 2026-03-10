@@ -25,10 +25,13 @@
 
 namespace QuantExt {
 
+/*! Note: the passed legs should only be coupon legs, no notional legs. The replicating basket consists of
+    constant notional swaptions. Inclusion of notional exchanges on exercise and at maturity are controlled
+    by the flags generateNotionalExchangeOnExercise and generateFinalNotionalExchange */
 std::vector<QuantLib::ext::shared_ptr<MultiLegOption>>
 generateFlexiSwapReplication(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Leg>& legs,
                              const std::vector<bool>& payer, const std::vector<QuantLib::Currency>& currency,
                              const std::vector<std::vector<QuantLib::Real>>& lowerNotionalBounds,
-                             const bool generateNotionalExchanges);
+                             const bool generateNotionalExchangeOnExercise, const bool generateFinalNotionalExchange);
 
 } // namespace QuantExt
