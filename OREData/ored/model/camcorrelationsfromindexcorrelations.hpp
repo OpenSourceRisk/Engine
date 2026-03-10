@@ -16,17 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#pragma once
+
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <qle/termstructures/correlationtermstructure.hpp>
 
 #include <ql/quote.hpp>
+#include <ql/handle.hpp>
 
 namespace ore::data {
 
-std::map<CorrelationKey, Handle<Quote>> getCamCorrelationsFromIndexCorrelations(
-    const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& indexCorrelations,
+std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> getCamCorrelationsFromIndexCorrelations(
+    const std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::CorrelationTermStructure>>&
+        indexCorrelations,
     const std::string& infModeltype = "JY");
 
 } // namespace ore::data

@@ -19,6 +19,8 @@
 #include <ored/model/camcorrelationsfromindexcorrelations.hpp>
 #include <ored/model/utilities.hpp>
 
+using namespace QuantLib;
+
 namespace ore::data {
 
 map<CorrelationKey, Handle<Quote>> getCamCorrelationsFromIndexCorrelations(
