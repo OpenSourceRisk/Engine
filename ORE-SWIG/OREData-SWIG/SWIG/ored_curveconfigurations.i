@@ -60,7 +60,208 @@ using ore::data::ParametricSmileConfiguration;
 
 %}
 
+%shared_ptr(ReportConfig)
+class ReportConfig : public XMLSerializable {
+public:
+    ReportConfig();
+
+    const QuantLib::ext::optional<bool> reportOnDeltaGrid() const;
+    const QuantLib::ext::optional<bool> reportOnMoneynessGrid() const;
+    const QuantLib::ext::optional<bool> reportOnStrikeGrid() const;
+    const QuantLib::ext::optional<bool> reportOnStrikeSpreadGrid() const;
+    const QuantLib::ext::optional<std::vector<std::string>>& deltas() const;
+    const QuantLib::ext::optional<std::vector<Real>>& moneyness() const;
+    const QuantLib::ext::optional<std::vector<Real>>& strikes() const;
+    const QuantLib::ext::optional<std::vector<Real>>& strikeSpreads() const;
+    const QuantLib::ext::optional<std::vector<Period>>& expiries() const;
+    const QuantLib::ext::optional<std::vector<Date>>& pillarDates() const;
+    const QuantLib::ext::optional<std::vector<Period>>& underlyingTenors() const;
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%feature("flatnested") PriceSegment;
+%rename(PriceSegmentOffPeakDaily) PriceSegment::OffPeakDaily;
+%shared_ptr(PriceSegment)
+%shared_ptr(PriceSegment::OffPeakDaily)
+class PriceSegment : public XMLSerializable {
+public:
+    enum class Type { Future, AveragingFuture, AveragingSpot, AveragingOffPeakPower, OffPeakPowerDaily };
+
+    class OffPeakDaily : public XMLSerializable {
+    public:
+        OffPeakDaily();
+        OffPeakDaily(const std::vector<std::string>& offPeakQuotes, const std::vector<std::string>& peakQuotes);
+
+        const std::vector<std::string>& offPeakQuotes() const;
+        const std::vector<std::string>& peakQuotes() const;
+
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    PriceSegment();
+    PriceSegment(const std::string& type, const std::string& conventionsId, const std::vector<std::string>& quotes,
+                 const QuantLib::ext::optional<unsigned short>& priority = QuantLib::ext::nullopt,
+                 const QuantLib::ext::optional<OffPeakDaily>& offPeakDaily = QuantLib::ext::nullopt,
+                 const std::string& peakPriceCurveId = "", const std::string& peakPriceCalendar = "");
+
+    Type type() const;
+    const std::string& conventionsId() const;
+    const std::vector<std::string>& quotes() const;
+    const QuantLib::ext::optional<unsigned short>& priority() const;
+    const QuantLib::ext::optional<OffPeakDaily>& offPeakDaily() const;
+    const std::string& peakPriceCurveId() const;
+    const std::string& peakPriceCalendar() const;
+    bool empty() const;
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+
+    %extend {
+        static PriceSegment withOffPeakDaily(const std::string& conventionsId,
+                                             const std::vector<std::string>& offPeakQuotes,
+                                             const std::vector<std::string>& peakQuotes,
+                                             const QuantLib::ext::optional<unsigned short>& priority = QuantLib::ext::nullopt,
+                                             const std::string& peakPriceCurveId = "",
+                                             const std::string& peakPriceCalendar = "") {
+            return ore::data::PriceSegment(
+                "OffPeakPowerDaily", conventionsId, {}, priority,
+                ore::data::PriceSegment::OffPeakDaily(offPeakQuotes, peakQuotes), peakPriceCurveId,
+                peakPriceCalendar);
+        }
+    }
+};
+
+%feature("flatnested") ParametricSmileConfiguration;
+%rename(ParametricSmileParameter) ParametricSmileConfiguration::Parameter;
+%rename(ParametricSmileCalibration) ParametricSmileConfiguration::Calibration;
+%shared_ptr(ParametricSmileConfiguration)
+%shared_ptr(ParametricSmileConfiguration::Parameter)
+%shared_ptr(ParametricSmileConfiguration::Calibration)
+class ParametricSmileConfiguration : public XMLSerializable {
+public:
+    class Parameter : public XMLSerializable {
+    public:
+        Parameter();
+
+        void fromXML(ore::data::XMLNode* node) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+        %extend {
+            const std::string& name() const {
+                return self->name;
+            }
+            void setName(const std::string& name) {
+                self->name = name;
+            }
+            const std::vector<double>& initialValue() const {
+                return self->initialValue;
+            }
+            void setInitialValue(const std::vector<double>& initialValue) {
+                self->initialValue = initialValue;
+            }
+            std::string calibration() const {
+                std::ostringstream os;
+                os << self->calibration;
+                return os.str();
+            }
+            void setCalibration(const std::string& calibration) {
+                self->calibration = QuantExt::parseParametricSmileParameterCalibration(calibration);
+            }
+        }
+    };
+
+    class Calibration : public XMLSerializable {
+    public:
+        Calibration();
+
+        void fromXML(ore::data::XMLNode* node) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+        %extend {
+            std::size_t maxCalibrationAttempts() const {
+                return self->maxCalibrationAttempts;
+            }
+            void setMaxCalibrationAttempts(std::size_t maxCalibrationAttempts) {
+                self->maxCalibrationAttempts = maxCalibrationAttempts;
+            }
+            double exitEarlyErrorThreshold() const {
+                return self->exitEarlyErrorThreshold;
+            }
+            void setExitEarlyErrorThreshold(double exitEarlyErrorThreshold) {
+                self->exitEarlyErrorThreshold = exitEarlyErrorThreshold;
+            }
+            double maxAcceptableError() const {
+                return self->maxAcceptableError;
+            }
+            void setMaxAcceptableError(double maxAcceptableError) {
+                self->maxAcceptableError = maxAcceptableError;
+            }
+        }
+    };
+
+    ParametricSmileConfiguration();
+    ParametricSmileConfiguration(std::vector<Parameter> parameters, Calibration calibration);
+
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    const Parameter& parameter(const std::string& name) const;
+    const Calibration& calibration() const;
+
+    %extend {
+        static ParametricSmileConfiguration fromData(const std::vector<std::string>& names,
+                                                     const std::vector<std::vector<double>>& initialValues,
+                                                     const std::vector<std::string>& calibrations,
+                                                     std::size_t maxCalibrationAttempts = 10,
+                                                     double exitEarlyErrorThreshold = 0.0050,
+                                                     double maxAcceptableError = 0.05) {
+            QL_REQUIRE(names.size() == initialValues.size(),
+                       "names and initialValues must have the same length");
+            QL_REQUIRE(names.size() == calibrations.size(),
+                       "names and calibrations must have the same length");
+            std::vector<ore::data::ParametricSmileConfiguration::Parameter> parameters;
+            parameters.reserve(names.size());
+            for (std::size_t i = 0; i < names.size(); ++i) {
+                ore::data::ParametricSmileConfiguration::Parameter parameter;
+                parameter.name = names[i];
+                parameter.initialValue = initialValues[i];
+                parameter.calibration = QuantExt::parseParametricSmileParameterCalibration(calibrations[i]);
+                parameters.push_back(parameter);
+            }
+
+            ore::data::ParametricSmileConfiguration::Calibration calibration;
+            calibration.maxCalibrationAttempts = maxCalibrationAttempts;
+            calibration.exitEarlyErrorThreshold = exitEarlyErrorThreshold;
+            calibration.maxAcceptableError = maxAcceptableError;
+
+            return ore::data::ParametricSmileConfiguration(parameters, calibration);
+        }
+
+        std::vector<double> parameterInitialValue(const std::string& name) const {
+            return self->parameter(name).initialValue;
+        }
+
+        std::string parameterCalibration(const std::string& name) const {
+            std::ostringstream os;
+            os << self->parameter(name).calibration;
+            return os.str();
+        }
+
+        std::size_t maxCalibrationAttempts() const {
+            return self->calibration().maxCalibrationAttempts;
+        }
+    }
+};
+
 %template(CurveTypeStringSet) std::map<CurveSpec::CurveType, std::set<std::string>>;
+%template(PriceSegmentVector) std::vector<PriceSegment>;
+%template(PriceSegmentMap) std::map<unsigned short, PriceSegment>;
+%template(ParametricSmileParameterVector) std::vector<ParametricSmileConfiguration::Parameter>;
+%template(DoubleVectorVector) std::vector<std::vector<double>>;
+%template(StringBoolPairVector) std::vector<std::pair<std::string, bool>>;
 
 %shared_ptr(CurveConfigurations)
 class CurveConfigurations  : public XMLSerializable  {
@@ -309,9 +510,77 @@ public:
 };
 
 %shared_ptr(DefaultCurveConfig)
+%shared_ptr(DefaultCurveConfig::Config)
+%feature("flatnested") DefaultCurveConfig;
+%rename(DefaultCurveConfigConfig) DefaultCurveConfig::Config;
 class DefaultCurveConfig : public CurveConfig {
 public:
-    class Config;
+    class Config : public XMLSerializable {
+    public:
+        enum class Type { SpreadCDS, ConvSpreadCDS, HazardRate, Benchmark, Price, MultiSection, TransitionMatrix, Null, YieldCurve };
+
+        Config(const Type& type, const std::string& discountCurveID, const std::string& recoveryRateQuote,
+               const DayCounter& dayCounter, const std::string& conventionID,
+               const std::vector<std::pair<std::string, bool>>& cdsQuotes = {}, bool extrapolation = true,
+               const std::string& benchmarkCurveID = "", const std::string& sourceCurveID = "",
+               const std::vector<std::string>& pillars = std::vector<std::string>(),
+               const Calendar& calendar = Calendar(), const Size spotLag = 0,
+               const QuantLib::Date& startDate = QuantLib::Date(),
+               const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
+               QuantLib::Real runningSpread = QuantLib::Null<Real>(),
+               const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
+               const QuantLib::ext::optional<bool>& implyDefaultFromMarket = QuantLib::ext::nullopt,
+               const bool allowNegativeRates = false, const int priority = 0);
+        Config();
+
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+
+        const int priority() const;
+        const Type& type() const;
+        const std::string& discountCurveID() const;
+        const std::string& benchmarkCurveID() const;
+        const std::string& sourceCurveID() const;
+        const std::string& recoveryRateQuote() const;
+        const std::string& conventionID() const;
+        const DayCounter& dayCounter() const;
+        const std::vector<std::string>& pillars() const;
+        const Calendar& calendar() const;
+        const Size& spotLag() const;
+        bool extrapolation() const;
+        const std::vector<std::pair<std::string, bool>>& cdsQuotes() const;
+        const QuantLib::Date& startDate() const;
+        const BootstrapConfig& bootstrapConfig() const;
+        const Real runningSpread() const;
+        const QuantLib::Period& indexTerm() const;
+        const QuantLib::ext::optional<bool>& implyDefaultFromMarket() const;
+        const vector<string>& multiSectionSourceCurveIds() const;
+        const vector<string>& multiSectionSwitchDates() const;
+        const bool allowNegativeRates() const;
+        const string& initialState() const;
+        const vector<string>& states() const;
+        const string& reinterpretedYieldCurveID() const;
+
+        int& priority();
+        Type& type();
+        string& discountCurveID();
+        string& benchmarkCurveID();
+        string& sourceCurveID();
+        string& recoveryRateQuote();
+        string& conventionID();
+        DayCounter& dayCounter();
+        std::vector<string> pillars();
+        Calendar calendar();
+        Size spotLag();
+        bool& extrapolation();
+        QuantLib::Date& startDate();
+        void setBootstrapConfig(const BootstrapConfig& bootstrapConfig);
+        Real& runningSpread();
+        QuantLib::Period& indexTerm();
+        QuantLib::ext::optional<bool>& implyDefaultFromMarket();
+        bool& allowNegativeRates();
+        std::string& reinterpretedYieldCurveID();
+    };
     DefaultCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
                        const std::map<int, Config>& configs);
     DefaultCurveConfig(const std::string& curveID, const std::string& curveDescription, const std::string& currency,
@@ -323,7 +592,69 @@ public:
 
     const std::string& currency() const;
     const std::map<int, Config>& configs() const;
+
+    %extend {
+        static DefaultCurveConfig fromSingleConfig(
+            const std::string& curveId, const std::string& curveDescription, const std::string& currency,
+            const std::string& type, const std::string& discountCurveID, const std::string& recoveryRateQuote,
+            const DayCounter& dayCounter, const std::string& conventionID,
+            const std::vector<std::pair<std::string, bool>>& cdsQuotes = {}, bool extrapolation = true,
+            const std::string& benchmarkCurveID = "", const std::string& sourceCurveID = "",
+            const std::vector<std::string>& pillars = std::vector<std::string>(),
+            const Calendar& calendar = Calendar(), const Size spotLag = 0,
+            const QuantLib::Date& startDate = QuantLib::Date(),
+            const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
+            QuantLib::Real runningSpread = QuantLib::Null<Real>(),
+            const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
+            const QuantLib::ext::optional<bool>& implyDefaultFromMarket = QuantLib::ext::nullopt,
+            const bool allowNegativeRates = false, const int priority = 0) {
+            ore::data::DefaultCurveConfig::Config::Type configType;
+            if (type == "SpreadCDS")
+                configType = ore::data::DefaultCurveConfig::Config::Type::SpreadCDS;
+            else if (type == "ConvSpreadCDS")
+                configType = ore::data::DefaultCurveConfig::Config::Type::ConvSpreadCDS;
+            else if (type == "HazardRate")
+                configType = ore::data::DefaultCurveConfig::Config::Type::HazardRate;
+            else if (type == "Benchmark")
+                configType = ore::data::DefaultCurveConfig::Config::Type::Benchmark;
+            else if (type == "Price")
+                configType = ore::data::DefaultCurveConfig::Config::Type::Price;
+            else if (type == "MultiSection")
+                configType = ore::data::DefaultCurveConfig::Config::Type::MultiSection;
+            else if (type == "TransitionMatrix")
+                configType = ore::data::DefaultCurveConfig::Config::Type::TransitionMatrix;
+            else if (type == "Null")
+                configType = ore::data::DefaultCurveConfig::Config::Type::Null;
+            else if (type == "YieldCurve")
+                configType = ore::data::DefaultCurveConfig::Config::Type::YieldCurve;
+            else
+                QL_FAIL("unsupported default curve config type '" << type << "'");
+
+            return ore::data::DefaultCurveConfig(
+                curveId, curveDescription, currency,
+                ore::data::DefaultCurveConfig::Config(
+                    configType, discountCurveID, recoveryRateQuote, dayCounter, conventionID, cdsQuotes,
+                    extrapolation, benchmarkCurveID, sourceCurveID, pillars, calendar, spotLag, startDate,
+                    bootstrapConfig, runningSpread, indexTerm, implyDefaultFromMarket, allowNegativeRates,
+                    priority));
+        }
+    }
 };
+
+%template(IntDefaultCurveConfigMap) std::map<int, DefaultCurveConfig::Config>;
+
+#if defined(SWIGPYTHON)
+%pythoncode %{
+if 'PriceSegmentOffPeakDaily' in globals():
+    PriceSegment.OffPeakDaily = PriceSegmentOffPeakDaily
+if 'ParametricSmileParameter' in globals():
+    ParametricSmileConfiguration.Parameter = ParametricSmileParameter
+if 'ParametricSmileCalibration' in globals():
+    ParametricSmileConfiguration.Calibration = ParametricSmileCalibration
+if 'DefaultCurveConfigConfig' in globals():
+    DefaultCurveConfig.Config = DefaultCurveConfigConfig
+%}
+#endif
 
 %shared_ptr(GenericYieldVolatilityCurveConfig)
 class GenericYieldVolatilityCurveConfig : public CurveConfig {

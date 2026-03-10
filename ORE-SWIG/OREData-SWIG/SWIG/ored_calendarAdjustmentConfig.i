@@ -19,9 +19,12 @@
 #ifndef ored_CalendarAdjustmentConfig_i
 #define ored_CalendarAdjustmentConfig_i
 
+%include ored_xmlutils.i
+
 %{
 
 using ore::data::CalendarAdjustmentConfig;
+using ore::data::CurrencyConfig;
 using std::map;
 using std::set;
 using std::string;
@@ -54,6 +57,18 @@ class CalendarAdjustmentConfig {
 
     void fromFile(const std::string& name);
 
+};
+
+%shared_ptr(CurrencyConfig)
+class CurrencyConfig : public XMLSerializable {
+  public:
+
+    CurrencyConfig();
+
+    void addCurrencies();
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 };
 
 
