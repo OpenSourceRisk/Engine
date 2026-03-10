@@ -20,6 +20,8 @@
 
 #include <ql/currency.hpp>
 
+using namespace QuantLib;
+
 namespace QuantExt {
 
 namespace {
