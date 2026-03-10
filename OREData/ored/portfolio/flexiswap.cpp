@@ -155,7 +155,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         today, std::vector<Leg>(legs_.begin(), std::next(legs_.begin(), underlyingData_.size())),
         std::vector<bool>(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size())),
         std::vector<Currency>(legCcys.begin(), std::next(legCcys.begin(), underlyingData_.size())), lowerNotionalBounds,
-        generateNotionalExchanges);
+        generateNotionalExchanges, generateNotionalExchanges);
 
     for (Size i = 0; i < basket.size(); ++i) {
         auto index = getInterestRateIndexFromLegs(basket[i]->legs());
