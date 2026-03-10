@@ -11,6 +11,9 @@ ENV PATH="/venv/bin:$PATH"
 ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH}"
 ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
 ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
+# Force cibuildwheel to pull the image fresh every time, rather than reusing a
+# stale locally-cached version that may lack /ore-swig-prebuilt/.
+ENV CIBW_CONTAINER_ENGINE="docker; create_args: --pull=always"
 # The SWIG wrapper .cpp and pre-built .o files are baked into the wheel image
 # by Dockerfile-Wheels-ORE at /ore-swig-prebuilt/. CIBW_BEFORE_ALL copies them
 # into the project directory so setup.py can find them.
