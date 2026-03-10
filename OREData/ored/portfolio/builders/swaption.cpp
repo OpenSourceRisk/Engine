@@ -16,10 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/model/camcorrelationsfromindexcorrelations.hpp>
+#include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/dependencies.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -42,65 +46,59 @@ using namespace ore::data;
 
 namespace {
 
-QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(
-    const std::function<string(string, const std::vector<std::string>&, const bool, const string&)>& engineParameter,
-    const QuantLib::ext::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
-    const std::vector<Size>& externalModelIndices, const std::vector<QuantLib::Date>& simulationDates,
-    const std::vector<QuantLib::Date>& stickyCloseOutDates) {
-
+QuantLib::ext::shared_ptr<PricingEngine>
+buildMcEngine(const Handle<CrossAssetModel>& model, const std::vector<Handle<YieldTermStructure>>& discountCurves,
+              const std::vector<Size>& externalModelIndices, const std::vector<QuantLib::Date>& simulationDates,
+              const std::vector<QuantLib::Date>& stickyCloseOutDates, const EngineBuilder* builder) {
     return QuantLib::ext::make_shared<QuantExt::McMultiLegOptionEngine>(
-        lgm, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
-        parseSequenceType(engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
-        parseInteger(engineParameter("Training.Samples", {}, true, std::string())),
-        parseInteger(engineParameter("Pricing.Samples", {}, false, "0")),
-        parseInteger(engineParameter("Training.Seed", {}, true, std::string())),
-        parseInteger(engineParameter("Pricing.Seed", {}, false, "42")),
-        parseInteger(engineParameter("Training.BasisFunctionOrder", {}, true, std::string())),
-        parsePolynomType(engineParameter("Training.BasisFunction", {}, true, std::string())),
-        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")), discountCurve,
-        simulationDates, stickyCloseOutDates, externalModelIndices,
-        parseBool(engineParameter("MinObsDate", {}, false, "true")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
-        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
-        parseInteger(engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
-        parsePeriod(engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
-        parseInteger(engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
-        parseInteger(engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
-        parseInteger(engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
-        parseVarGroupMode(engineParameter("Regression.VarGroupMode", {}, false, "Global")));
+        model, parseSequenceType(builder->engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
+        parseSequenceType(builder->engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
+        parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())),
+        parseInteger(builder->engineParameter("Pricing.Samples", {}, false, "0")),
+        parseInteger(builder->engineParameter("Training.Seed", {}, true, std::string())),
+        parseInteger(builder->engineParameter("Pricing.Seed", {}, false, "42")),
+        parseInteger(builder->engineParameter("Training.BasisFunctionOrder", {}, true, std::string())),
+        parsePolynomType(builder->engineParameter("Training.BasisFunction", {}, true, std::string())),
+        parseSobolBrownianGeneratorOrdering(builder->engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
+        parseSobolRsgDirectionIntegers(builder->engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")),
+        discountCurves, simulationDates, stickyCloseOutDates, externalModelIndices,
+        parseBool(builder->engineParameter("MinObsDate", {}, false, "true")),
+        parseRegressorModel(builder->engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(builder->engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(builder->engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(builder->engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")),
+        parseInteger(builder->engineParameter("CashflowGeneration.OnCpnMaxSimTimes", {}, false, "1")),
+        parsePeriod(builder->engineParameter("CashflowGeneration.OnCpnAddSimTimesCutoff", {}, false, "0D")),
+        parseInteger(builder->engineParameter("Regression.MaxSimTimesIR", {}, false, "0")),
+        parseInteger(builder->engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
+        parseInteger(builder->engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
+        parseVarGroupMode(builder->engineParameter("Regression.VarGroupMode", {}, false, "Global")));
 }
 
-QuantLib::ext::shared_ptr<QuantExt::IrModel>
-model(const string& id, const string& key, const std::vector<Date>& expiries, const std::vector<Date>& maturities,
-      const std::vector<Real>& strikes, const bool isAmerican, const EngineBuilder* builder) {
-    QuantLib::ext::shared_ptr<IborIndex> index;
-    std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
+std::variant<Handle<CrossAssetModel>, ext::shared_ptr<QuantExt::LGM>>
+model(const string& id, const std::vector<string>& keys, const std::vector<Date>& expiries,
+      const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+      const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const EngineBuilder* builder) {
 
-    DLOG("Get model data");
     auto calibration = parseCalibrationType(builder->modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(builder->modelParameter("CalibrationStrategy"));
-    // required for american options to set up calibration basket
-    std::string referenceCalibrationGrid = builder->modelParameter("ReferenceCalibrationGrid", {}, isAmerican, "");
-    Real lambda = parseReal(builder->modelParameter("Reversion", {key, ccy}));
-    vector<Real> sigma = parseListOfValues<Real>(builder->modelParameter("Volatility"), &parseReal);
-    vector<Real> sigmaTimes = parseListOfValues<Real>(builder->modelParameter("VolatilityTimes", {}, false), &parseReal);
-    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
-                                                                                         << ") for n volatility times ("
-                                                                                         << sigmaTimes.size() << ")");
+    bool continueOnCalibrationError = builder->globalParameters().count("ContinueOnCalibrationError") > 0 &&
+                                      parseBool(builder->globalParameters().at("ContinueOnCalibrationError"));
+
+    auto fxCalibration = parseCalibrationType(builder->modelParameter("FxCalibration", {}, false, "Bootstrap"));
+    QL_REQUIRE(fxCalibration == CalibrationType::None || fxCalibration == CalibrationType::Bootstrap,
+               "Unsupported FxCalibration (" << fxCalibration << ")");
+
     Real tolerance = parseReal(builder->modelParameter("Tolerance"));
     auto reversionType = parseReversionType(builder->modelParameter("ReversionType"));
     auto volatilityType = parseVolatilityType(builder->modelParameter("VolatilityType"));
-    bool continueOnCalibrationError = builder->globalParameters().count("ContinueOnCalibrationError") > 0 &&
-                                      parseBool(builder->globalParameters().at("ContinueOnCalibrationError"));
-    bool allowModelFallbacks =
-        builder->globalParameters().count("AllowModelFallbacks") > 0 && parseBool(builder->globalParameters().at("AllowModelFallbacks"));
+    auto floatSpreadMapping =
+        parseFloatSpreadMapping(builder->modelParameter("FloatSpreadMapping", {}, false, "proRata"));
+    bool allowModelFallbacks = builder->globalParameters().count("AllowModelFallbacks") > 0 &&
+                               parseBool(builder->globalParameters().at("AllowModelFallbacks"));
 
-    auto floatSpreadMapping = parseFloatSpreadMapping(builder->modelParameter("FloatSpreadMapping", {}, false, "proRata"));
-
-    auto data = QuantLib::ext::make_shared<IrLgmData>();
+    // required for american options to set up calibration basket
+    std::string referenceCalibrationGrid = builder->modelParameter("ReferenceCalibrationGrid", {}, isAmerican, "");
 
     // check for allowed calibration / bermudan strategy settings
     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
@@ -121,119 +119,246 @@ model(const string& id, const string& key, const std::vector<Date>& expiries, co
     Date today = Settings::instance().evaluationDate();
     shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturities.back()) * shiftHorizon;
 
-    // Default: no calibration, constant lambda and sigma from engine configuration
-    data->reset();
-    data->qualifier() = key;
-    data->calibrateH() = false;
-    data->hParamType() = ParamType::Constant;
-    data->hValues() = {lambda};
-    data->reversionType() = reversionType;
-    data->calibrateA() = false;
-    data->aParamType() = ParamType::Piecewise;
-    data->aValues() = sigma;
-    data->aTimes() = sigmaTimes;
-    data->volatilityType() = volatilityType;
-    data->calibrationType() = calibration;
-    data->shiftHorizon() = shiftHorizon;
-    data->floatSpreadMapping() = floatSpreadMapping;
+    // option expires, maturities (ir, fx)
 
     std::vector<Date> effExpiries;
-    std::vector<Real> effStrikes;
     std::vector<Date> effMaturities;
-
     if (!isAmerican) {
         effExpiries = expiries;
-        effStrikes = strikes;
         effMaturities = maturities;
     } else {
-        QL_REQUIRE(expiries.size() == 2 && strikes.size() == 2 && maturities.size() == 2,
-                   "LGMBermudanAmericanSwaptionEngineBuilder::model(): expected 2 expiries and strikes for exercise "
+        QL_REQUIRE(maturities.size() == 2,
+                   "LGMBermudanAmericanSwaptionEngineBuilder::model(): expected 2 expiries for exercise "
                    "style 'American', got "
-                       << expiries.size() << " expiries and " << strikes.size() << " strikes.");
+                       << expiries.size() << " expiries");
         // keep one calibration instrument per reference grid interval
         DateGrid grid(referenceCalibrationGrid);
         std::copy_if(grid.dates().begin(), grid.dates().end(), std::back_inserter(effExpiries),
                      [&expiries](const Date& d) { return d >= expiries[0] && d < expiries[1]; });
 
         effMaturities.resize(effExpiries.size(), maturities.back());
-
-        // simple linear interpolation of calibration strikes between endpoints, this can be refined obviously // TODO
-        effStrikes.resize(effExpiries.size(), Null<Real>());
-        if (strikes[0] != Null<Real>() && strikes[1] != Null<Real>()) {
-            Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
-            Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
-            for (Size i = 0; i < effExpiries.size(); ++i) {
-                Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
-                effStrikes[i] = strikes[0] + (strikes[1] - strikes[0]) / (t1 - t0) * (t - t0);
-            }
-        }
     }
 
-    if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
-        calibrationStrategy == CalibrationStrategy::CoterminalDealStrike ||
-        calibrationStrategy == CalibrationStrategy::DeltaGammaAdjusted) {
-        DLOG("Build LgmData for co-terminal specification");
+    vector<string> expiryDates, termDates;
+    for (Size i = 0; i < effExpiries.size(); ++i) {
+        expiryDates.push_back(to_string(effExpiries[i]));
+        termDates.push_back(to_string(effMaturities[i]));
+    }
 
-        vector<string> expiryDates, termDates;
-        for (Size i = 0; i < effExpiries.size(); ++i) {
-            expiryDates.push_back(to_string(effExpiries[i]));
-            termDates.push_back(to_string(effMaturities[i]));
+    // index names (ir, fx) that are later used to build correlation matrix
+
+    std::set<std::string> correlationIndices;
+
+    // loop over currencies and set up ir model data
+
+    std::vector<ext::shared_ptr<IrModelData>> irData;
+    std::vector<std::string> currencies;
+
+    for (Size i = 0; i < keys.size(); ++i) {
+
+        std::string key = keys[i];
+        QuantLib::ext::shared_ptr<IborIndex> index;
+        std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
+        currencies.push_back(ccy);
+
+        if (tryParseIborIndex(key, index))
+            correlationIndices.insert(key);
+        else
+            correlationIndices.insert(swapIndexDiscountCurve(key, std::string(), std::string()));
+
+        Real lambda = parseReal(builder->modelParameter("Reversion", {key, ccy}));
+        vector<Real> sigma = parseListOfValues<Real>(builder->modelParameter("Volatility", {key, ccy}), &parseReal);
+        vector<Real> sigmaTimes =
+            parseListOfValues<Real>(builder->modelParameter("VolatilityTimes", {key, ccy}, false), &parseReal);
+        QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities ("
+                                                              << sigma.size() << ") for n volatility times ("
+                                                              << sigmaTimes.size() << ")");
+
+        auto data = QuantLib::ext::make_shared<IrLgmData>();
+        // Default: no calibration, constant lambda and sigma from engine configuration
+        data->reset();
+        data->qualifier() = key;
+        data->calibrateH() = false;
+        data->hParamType() = ParamType::Constant;
+        data->hValues() = {lambda};
+        data->reversionType() = reversionType;
+        data->calibrateA() = false;
+        data->aParamType() = ParamType::Piecewise;
+        data->aValues() = sigma;
+        data->aTimes() = sigmaTimes;
+        data->volatilityType() = volatilityType;
+        data->calibrationType() = calibration;
+        data->shiftHorizon() = shiftHorizon;
+        data->floatSpreadMapping() = floatSpreadMapping;
+
+        std::vector<Real> effStrikes;
+
+        if (!isAmerican) {
+            effStrikes = strikes[i];
+        } else {
+            effStrikes.resize(effExpiries.size(), Null<Real>());
+            if (strikes[i][0] != Null<Real>() && strikes[i][1] != Null<Real>()) {
+                Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
+                Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
+                for (Size i = 0; i < effExpiries.size(); ++i) {
+                    Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
+                    effStrikes[i] = strikes[i][0] + (strikes[i][1] - strikes[i][0]) / (t1 - t0) * (t - t0);
+                }
+            }
         }
-        data->optionExpiries() = expiryDates;
-        data->optionTerms() = termDates;
-        data->optionStrikes().resize(expiryDates.size(), "ATM");
-        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike ||
+
+        if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
+            calibrationStrategy == CalibrationStrategy::CoterminalDealStrike ||
             calibrationStrategy == CalibrationStrategy::DeltaGammaAdjusted) {
-            for (Size i = 0; i < effExpiries.size(); ++i) {
-                if (effStrikes[i] != Null<Real>())
-                    data->optionStrikes()[i] = std::to_string(effStrikes[i]);
+
+            data->optionExpiries() = expiryDates;
+            data->optionTerms() = termDates;
+            data->optionStrikes().resize(expiryDates.size(), "ATM");
+            if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike ||
+                calibrationStrategy == CalibrationStrategy::DeltaGammaAdjusted) {
+                for (Size i = 0; i < effExpiries.size(); ++i) {
+                    if (effStrikes[i] != Null<Real>())
+                        data->optionStrikes()[i] = std::to_string(effStrikes[i]);
+                }
+            }
+            if (calibration == CalibrationType::Bootstrap) {
+                DLOG("Calibrate piecewise alpha");
+                data->calibrationType() = CalibrationType::Bootstrap;
+                data->calibrateH() = false;
+                data->hParamType() = ParamType::Constant;
+                data->hValues() = {lambda};
+                data->calibrateA() = true;
+                data->aParamType() = ParamType::Piecewise;
+                data->aValues() = {sigma};
+            } else if (calibration == CalibrationType::BestFit) {
+                DLOG("Calibrate constant sigma");
+                data->calibrationType() = CalibrationType::BestFit;
+                data->calibrateH() = false;
+                data->hParamType() = ParamType::Constant;
+                data->hValues() = {lambda};
+                data->calibrateA() = true;
+                data->aParamType() = ParamType::Constant;
+                data->aValues() = {sigma};
+            } else
+                QL_FAIL("choice of calibration type invalid");
+        }
+
+        irData.push_back(data);
+
+    } // loop over currencies
+
+    // set up fx model data
+
+    std::vector<QuantLib::ext::shared_ptr<FxData>> fxData;
+
+    for (Size i = 1; i < currencies.size(); ++i) {
+        string ccyPair = currencies[i] + currencies.front();
+        auto bsData = QuantLib::ext::make_shared<FxBsData>();
+        vector<Real> vols =
+            parseListOfValues<Real>(builder->modelParameter("FxVolatility", {ccyPair}, true), &parseReal);
+        vector<Real> volTimes =
+            parseListOfValues<Real>(builder->modelParameter("FxVolatilityTimes", {ccyPair}, false), &parseReal);
+        QL_REQUIRE(vols.size() == volTimes.size() + 1, "there must be n+1 FX volatilities ("
+                                                           << vols.size() << ") for n volatility times ("
+                                                           << volTimes.size() << "), for pair " << ccyPair);
+
+        std::vector<Real> effStrikes;
+        if (!isAmerican) {
+            effStrikes = fxStrikes[i - 1];
+        } else {
+            effStrikes.resize(effExpiries.size(), Null<Real>());
+            if (fxStrikes[i][0] != Null<Real>() && fxStrikes[i][1] != Null<Real>()) {
+                Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
+                Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
+                for (Size i = 0; i < effExpiries.size(); ++i) {
+                    Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
+                    effStrikes[i] = fxStrikes[i][0] + (fxStrikes[i][1] - fxStrikes[i][0]) / (t1 - t0) * (t - t0);
+                }
             }
         }
-        if (calibration == CalibrationType::Bootstrap) {
-            DLOG("Calibrate piecewise alpha");
-            data->calibrationType() = CalibrationType::Bootstrap;
-            data->calibrateH() = false;
-            data->hParamType() = ParamType::Constant;
-            data->hValues() = {lambda};
-            data->calibrateA() = true;
-            data->aParamType() = ParamType::Piecewise;
-            data->aValues() = {sigma};
-        } else if (calibration == CalibrationType::BestFit) {
-            DLOG("Calibrate constant sigma");
-            data->calibrationType() = CalibrationType::BestFit;
-            data->calibrateH() = false;
-            data->hParamType() = ParamType::Constant;
-            data->hValues() = {lambda};
-            data->calibrateA() = true;
-            data->aParamType() = ParamType::Constant;
-            data->aValues() = {sigma};
-        } else
-            QL_FAIL("choice of calibration type invalid");
+
+        bsData->setDomesticCcy(currencies.front());
+        bsData->setForeignCcy(currencies[i]);
+        bsData->setCalibrationType(fxCalibration);
+        bsData->setCalibrateSigma(fxCalibration == CalibrationType::Bootstrap);
+        bsData->setSigmaParamType(ParamType::Piecewise);
+        bsData->setSigmaTimes(volTimes);
+        bsData->setSigmaValues(vols);
+        bsData->setOptionExpiries(expiryDates);
+        std::vector<std::string> strikes(expiryDates.size(), "ATMF");
+        for (Size i = 0; i < effExpiries.size(); ++i) {
+            if (effStrikes[i] != Null<Real>())
+                strikes[i] = std::to_string(effStrikes[i]);
+        }
+        bsData->setOptionStrikes(strikes);
+
+        fxData.push_back(bsData);
+
+        correlationIndices.insert("FX-GENERIC-" + currencies[i] + "-" + currencies[0]);
+
+    } // loop over currency pairs
+
+    // correlations
+
+    std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> indexCorrelations;
+    for (Size i = 0; i < correlationIndices.size(); ++i) {
+        for (Size j = 0; j < i; ++j) {
+            std::string p1 = *std::next(correlationIndices.begin(), i);
+            std::string p2 = *std::next(correlationIndices.begin(), j);
+            indexCorrelations[std::make_pair(p1, p2)] =
+                builder->market()->correlationCurve(p1, p2, builder->configuration(MarketContext::pricing));
+        }
     }
+
+    auto camCorr = getCamCorrelationsFromIndexCorrelations(indexCorrelations);
+
+    // set some flags
 
     bool generateAdditionalResults = false;
-    auto p = builder->globalParameters().find("GenerateAdditionalResults");
-    if (p != builder->globalParameters().end()) {
+    if (auto p = builder->globalParameters().find("GenerateAdditionalResults");
+        p != builder->globalParameters().end()) {
         generateAdditionalResults = parseBool(p->second);
     }
 
-    // Build and calibrate model
-    DLOG("Build LGM model");
-
     auto rt = builder->globalParameters().find("RunType");
-    bool allowChangingFallbacks =
-        rt != builder->globalParameters().end() && rt->second != "SensitivityDelta" && rt->second != "SensitivityDeltaGamma";
+    bool allowChangingFallbacks = rt != builder->globalParameters().end() && rt->second != "SensitivityDelta" &&
+                                  rt->second != "SensitivityDeltaGamma";
 
-    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
-        builder->market(), data, builder->configuration(MarketContext::irCalibration), tolerance,
-        continueOnCalibrationError, referenceCalibrationGrid, generateAdditionalResults, id,
-        BlackCalibrationHelper::RelativePriceError, allowChangingFallbacks, allowModelFallbacks,
-        builder->globalParameters().count("Calibrate") != 0 && !parseBool(builder->globalParameters().at("Calibrate")));
+    auto dc = builder->globalParameters().find("Calibrate");
+    bool dontCalibrate = dc != builder->globalParameters().end() && !parseBool(dc->second);
 
-    builder->engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
+    // build model
 
-    return calib->model();
-}
+    if (irData.size() == 1) {
+
+        auto calib = ext::make_shared<LgmBuilder>(
+            builder->market(), ext::dynamic_pointer_cast<IrLgmData>(irData.front()),
+            builder->configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
+            referenceCalibrationGrid, generateAdditionalResults, id, BlackCalibrationHelper::RelativePriceError,
+            allowChangingFallbacks, allowModelFallbacks, dontCalibrate);
+
+        builder->engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
+        return ext::dynamic_pointer_cast<LGM>(calib->model());
+
+    } else {
+
+        std::string configurationInCcy = builder->configuration(MarketContext::irCalibration);
+        std::string configurationXois = builder->configuration(MarketContext::pricing);
+
+        auto calib = ext::make_shared<CrossAssetModelBuilder>(
+            builder->market(),
+            ext::make_shared<CrossAssetModelData>(irData, fxData, camCorr, tolerance, "LGM",
+                                                  CrossAssetModel::Discretization::Exact,
+                                                  QuantLib::SalvagingAlgorithm::Spectral),
+            configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
+            configurationXois, dontCalibrate, continueOnCalibrationError, "", id, allowChangingFallbacks,
+            allowModelFallbacks);
+
+        builder->engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
+        return calib->model();
+    }
+
+} // model()
 
 } // namespace
 
@@ -281,8 +406,7 @@ LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<str
     DLOG("Building LGM Grid Swaption engine for trade " << id);
     QL_REQUIRE(keys.size() == 1, "LGMGridSwaptionEngineBuilder::engingImpl(): multiple ccys are not supported.");
 
-    auto lgm = QuantLib::ext::dynamic_pointer_cast<LGM>(
-        ::model(id, keys.front(), dates, maturities, strikes.front(), isAmerican, this));
+    auto lgm = std::get<ext::shared_ptr<LGM>>(::model(id, keys, dates, maturities, strikes, {}, isAmerican, this));
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -290,8 +414,6 @@ LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<str
     Real sx = parseReal(engineParameter("sx"));
     Size nx = parseInteger(engineParameter("nx"));
 
-    // Build engine
-    DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(keys.front(), index) ? index->currency().code() : keys.front();
     Handle<YieldTermStructure> yts =
@@ -300,6 +422,7 @@ LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<str
     if (!securitySpread.empty())
         yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
+
     return QuantLib::ext::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, sy, ny, sx, nx, yts, isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0);
 }
@@ -313,10 +436,8 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<strin
     DLOG("Building LGM FD Swaption engine for trade " << id);
     QL_REQUIRE(keys.size() == 1, "LGMFDSwaptionEngineBuilder::engingImpl(): multiple ccys are not supported.");
 
-    auto lgm = QuantLib::ext::dynamic_pointer_cast<LGM>(
-        ::model(id, keys.front(), dates, maturities, strikes.front(), isAmerican, this));
+    auto lgm = std::get<ext::shared_ptr<LGM>>(::model(id, keys, dates, maturities, strikes, {}, isAmerican, this));
 
-    DLOG("Get engine data");
     QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
     Size stateGridPoints = parseInteger(engineParameter("StateGridPoints"));
     Size timeStepsPerYear = parseInteger(engineParameter("TimeStepsPerYear"));
@@ -324,7 +445,6 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<strin
 
     Real maxTime = lgm->termStructure()->timeFromReference(maturities.back());
 
-    DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
     QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(keys.front(), index) ? index->currency().code() : keys.front();
     Handle<YieldTermStructure> yts =
@@ -345,24 +465,25 @@ CamMCSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<strin
                                        const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican,
                                        const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building CAM MC Swaption engine for trade " << id);
-    QL_REQUIRE(keys.size() == 1, "CamMCSwapptionEngineBuilder::engingImpl(): multiple ccys are not supported. TODO.");
 
-    auto lgm = QuantLib::ext::dynamic_pointer_cast<LGM>(
-        ::model(id, keys.front(), dates, maturities, strikes.front(), isAmerican, this));
+    auto cam =
+        std::get<Handle<CrossAssetModel>>(::model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican, this));
 
-    // Build engine
-    DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    QuantLib::ext::shared_ptr<IborIndex> index;
-    std::string ccy = tryParseIborIndex(keys.front(), index) ? index->currency().code() : keys.front();
-    Handle<YieldTermStructure> yts =
-        discountCurve.empty() ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
-                              : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
-    if (!securitySpread.empty())
-        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
-            yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-    return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
-                                const std::string& d) { return this->engineParameter(p, q, m, d); },
-                         lgm, yts, std::vector<Size>(), {}, {});
+    std::vector<Handle<YieldTermStructure>> discountCurves;
+    for (Size i = 0; i < keys.size(); ++i) {
+        QuantLib::ext::shared_ptr<IborIndex> index;
+        std::string ccy = tryParseIborIndex(keys[i], index) ? index->currency().code() : keys[i];
+        Handle<YieldTermStructure> yts =
+            discountCurve.empty() || i > 0
+                ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
+        if (!securitySpread.empty())
+            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+                yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
+        discountCurves.push_back(yts);
+    }
+
+    return buildMcEngine(cam, discountCurves, std::vector<Size>(), {}, {}, this);
 } // LgmMc engineImpl()
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -371,28 +492,32 @@ AmcSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>
                                      const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican,
                                      const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building AMC Swaption engine for trade " << id << " from external CAM");
-    QL_REQUIRE(keys.size() == 1, "AmcSwapptionEngineBuilder::engingImpl(): multiple ccys are not supported. TODO.");
 
-    QuantLib::ext::shared_ptr<IborIndex> index;
-    std::string ccy = tryParseIborIndex(keys.front(), index) ? index->currency().code() : keys.front();
-    Currency curr = parseCurrency(ccy);
+    std::vector<std::string> currencies;
+    for (Size i = 0; i < keys.size(); ++i) {
+        QuantLib::ext::shared_ptr<IborIndex> index;
+        std::string ccy = tryParseIborIndex(keys[i], index) ? index->currency().code() : keys[i];
+        currencies.push_back(ccy);
+    }
 
+    bool needBaseCcy = currencies.size() > 1;
+
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if (needBaseCcy) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
+    }
+    for (auto const& c : currencies) {
+        Size ccyIdx = cam_->ccyIndex(parseCurrency(c));
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
+    }
     std::vector<Size> externalModelIndices;
-    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
-        cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(curr))}, externalModelIndices));
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
-    // Build engine
-    DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    Handle<YieldTermStructure> yts =
-        discountCurve.empty() ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
-                              : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
-    if (!securitySpread.empty())
-        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
-            yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-    return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
-                                const std::string& d) { return this->engineParameter(p, q, m, d); },
-                         model->lgm(0), yts, externalModelIndices, simulationDates_, stickyCloseOutDates_);
-} // LgmCam engineImpl
+    return buildMcEngine(model, {}, externalModelIndices, simulationDates_, stickyCloseOutDates_, this);
+} // Amc engineImpl
 
 QuantLib::ext::shared_ptr<PricingEngine>
 AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>& keys,
@@ -408,7 +533,7 @@ AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<strin
     return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
         std::vector<std::string>{ccy}, modelCg_, simulationDates_,
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
-}
+} // AmcCg engineImpl
 
 } // namespace data
 } // namespace ore

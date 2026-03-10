@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/marketdata/market.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
 
 namespace ore {
 namespace data {
