@@ -17,8 +17,10 @@
 
 #include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/instruments/flexiswapreplication.hpp>
+#include <qle/instruments/rebatedexercise.hpp>
 
 #include <ql/cashflows/coupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 
 using namespace QuantLib;
 
@@ -261,11 +263,21 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
     for (Size i = 0; i < replicationData[0].size(); ++i) {
 
         std::vector<Leg> tmpLegs;
+        std::vector<Real> rebates;
 
         for (Size legNo = 0; legNo < legs.size(); ++legNo) {
             auto tmp = filterLeg(legs[legNo], replicationData[legNo][i].start, replicationData[legNo][i].end,
                                  legCouponRefScheduleIndices[legNo]);
             rescaleLeg(tmp, replicationData[legNo][i].amount);
+
+            if(generateFinalNotionalExchange) {
+                tmp.push_back(ext::make_shared<SimpleCashFlow>(replicationData[legNo][i].amount, tmp.back()->date()));
+            }
+
+            if (generateNotionalExchangeOnExercise) {
+                rebates.push_back((reversedPayer[legNo] ? 1.0 : -1.0) * replicationData[legNo][i].amount);
+            }
+
             tmpLegs.push_back(tmp);
         }
 
@@ -274,7 +286,12 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
             exerciseDates.push_back(minAccrualStartDate[j]);
         }
 
-        auto exercise = ext::make_shared<BermudanExercise>(exerciseDates);
+        ext::shared_ptr<Exercise> exercise = ext::make_shared<BermudanExercise>(exerciseDates);
+        if(generateNotionalExchangeOnExercise) {
+            exercise = ext::make_shared<QuantExt::RebatedExercise>(
+                *exercise, exercise->dates(), std::vector<std::vector<Real>>(exercise->dates().size(), rebates),
+                currency, 0 * Days);
+        }
 
         basket.push_back(ext::make_shared<MultiLegOption>(tmpLegs, reversedPayer, currency, exercise));
     }
