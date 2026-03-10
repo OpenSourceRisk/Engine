@@ -17,6 +17,11 @@
 */
 
 #include <ored/utilities/correlationmatrix.hpp>
+#include <ored/utilities/log.hpp>
+
+#include <qle/termstructures/correlationtermstructure.hpp>
+
+#include <ql/quote.hpp>
 
 namespace ore::data {
 
