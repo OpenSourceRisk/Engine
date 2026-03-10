@@ -1165,12 +1165,14 @@ if (ORE_PYTHON_INTEGRATION)
     # manylinux environments do not have Development.Embed which will cause failure, but all other platforms require it
     if(MANYLINUX)
         find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+        target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Module)
     else()
         find_package(Python REQUIRED COMPONENTS Interpreter Development)
+        target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Python)
     endif()
-    target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Python)
     target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_PYTHON_INTEGRATION)
 endif()
+
 
 # ORE_EIGEN_WAS_FOUND is recorded here to be used in OreConfig.cmake.in.
 # Need CACHE because configure_file is called from the top level ORE CMakeLists.txt file.
