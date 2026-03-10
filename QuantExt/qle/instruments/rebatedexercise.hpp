@@ -50,34 +50,46 @@ public:
     RebatedExercise(const Exercise& exercise, const std::vector<Real>& rebates, const Period& rebateSettlementPeriod,
                     const Calendar& rebatePaymentCalendar, const BusinessDayConvention rebatePaymentConvention);
     //! ctor that takes exercise dates != notification dates and a rebate settlement period
-    RebatedExercise(const Exercise& exercise, const std::vector<Date>& exerciseDates, const std::vector<Real>& rebates,
+    RebatedExercise(const Exercise& exercise, const std::vector<Date>& exerciseDates,
+                    const std::vector<std::vector<Real>>& rebates, const std::vector<Currency>& rebateCurrencies,
                     const Period& rebateSettlementPeriod, const Calendar& rebatePaymentCalendar = NullCalendar(),
                     const BusinessDayConvention rebatePaymentConvention = Following);
     const Period& rebateSettlementPeriod() const { return rebateSettlementPeriod_; }
     const Calendar& rebatePaymentCalendar() const { return rebatePaymentCalendar_; }
     BusinessDayConvention rebatePaymentConvention() const { return rebatePaymentConvention_; }
-    Real rebate(Size index) const;
+    Real rebate(Size index, Size no = 0) const;
+    Currency rebateCurrency(Size no = 0) const;
     Date rebatePaymentDate(Size index) const;
     Date rebatePaymentDate(const Date& exerciseDate) const;
-    const std::vector<Real>& rebates() const { return rebates_; }
+    const std::vector<std::vector<Real>>& rebates() const { return rebates_; }
 
 private:
     std::vector<Date> exerciseDates_;
-    std::vector<Real> rebates_;
+    std::vector<std::vector<Real>> rebates_;
+    std::vector<Currency> rebateCurrencies_;
     Period rebateSettlementPeriod_;
     Calendar rebatePaymentCalendar_;
     BusinessDayConvention rebatePaymentConvention_;
 };
 
-inline Real RebatedExercise::rebate(Size index) const {
+inline Real RebatedExercise::rebate(Size index, Size no) const {
     QL_REQUIRE(index < rebates_.size(),
                "rebate with index " << index << " does not exist (0..." << (rebates_.size() - 1) << ")");
-    return rebates_[index];
+    QL_REQUIRE(no < rebateCurrencies_.size(), "rebate with index " << index << " and no " << no
+                                                                   << " does not exist, no must be 0..."
+                                                                   << (rebateCurrencies_.size() - 1));
+    return rebates_[index][no];
+}
+
+inline Currency RebatedExercise::rebateCurrency(Size no) const {
+    QL_REQUIRE(no < rebateCurrencies_.size(),
+               "no rebate currency for no " << no << " (0..." << (rebateCurrencies_.size() - 1));
+    return rebateCurrencies_[no];
 }
 
 inline Date RebatedExercise::rebatePaymentDate(Size index) const {
-    QL_REQUIRE(type_ == European || type_ == Bermudan, "for american style exercises the rebate payment date "
-                                                           << "has to be calculted in the client code");
+    QL_REQUIRE(type_ == European || type_ == Bermudan,
+               "for american style exercises the rebate payment date " << "has to be calculted in the client code");
     return rebatePaymentCalendar_.advance(exerciseDates_[index], rebateSettlementPeriod_, rebatePaymentConvention_);
 }
 
