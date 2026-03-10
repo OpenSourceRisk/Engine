@@ -23,9 +23,14 @@
 
 #pragma once
 
+#include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/marketdata/market.hpp>
 #include <ored/marketdata/strike.hpp>
 
+#include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/models/commodityschwartzparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
@@ -35,9 +40,11 @@
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/irmodelcalibrationinfo.hpp>
 
-#include <boost/variant.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+
+#include <boost/variant.hpp>
 
 #include <vector>
 
