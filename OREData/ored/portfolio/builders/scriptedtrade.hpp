@@ -25,6 +25,7 @@
 #include <ored/scripting/staticanalyser.hpp>
 #include <ored/scripting/utilities.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
+#include <ored/model/utilities.hpp>
 
 #include <ored/portfolio/enginefactory.hpp>
 

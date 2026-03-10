@@ -16,30 +16,30 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/configuration/correlationcurveconfig.hpp>
+#include <ored/marketdata/strike.hpp>
+#include <ored/model/blackscholesmodelbuilder.hpp>
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
+#include <ored/model/camcorrelationsfromindexcorrelations.hpp>
+#include <ored/model/hestonmodelbuilder.hpp>
+#include <ored/model/irlgmdata.hpp>
+#include <ored/model/localvolmodelbuilder.hpp>
 #include <ored/portfolio/builders/scriptedtrade.hpp>
+#include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/schedule.hpp>
 #include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/context.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingengine.hpp>
 #include <ored/scripting/engines/scriptedinstrumentpricingenginecg.hpp>
 #include <ored/scripting/models/blackscholes.hpp>
-#include <ored/scripting/models/localvol.hpp>
-#include <ored/scripting/models/heston.hpp>
 #include <ored/scripting/models/blackscholescg.hpp>
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
+#include <ored/scripting/models/heston.hpp>
+#include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
 #include <ored/scripting/scriptparser.hpp>
-
-#include <ored/configuration/correlationcurveconfig.hpp>
-#include <ored/marketdata/strike.hpp>
-#include <ored/model/blackscholesmodelbuilder.hpp>
-#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
-#include <ored/model/hestonmodelbuilder.hpp>
-#include <ored/model/irlgmdata.hpp>
-#include <ored/model/localvolmodelbuilder.hpp>
-#include <ored/portfolio/referencedata.hpp>
-#include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -1494,55 +1494,10 @@ std::string getFirstIrIndexOrCcy(const std::string& ccy, const std::set<IndexInf
 void ScriptedTradeEngineBuilder::buildGaussianCam(
     const std::string& id, const QuantLib::ext::shared_ptr<IborFallbackConfig>& iborFallbackConfig,
     const std::vector<std::string>& conditionalExpectationModelStates) {
-    // compile cam correlation matrix
-    // - we want to use the maximum tenor of an ir index in a correlation pair if several are given (to have
-    //   a well defined rule how to derive the LGM IR correlations); to get there we store the correlations
-    //   together with the index tenors (or null if not applicatble), so that we can decide if we overwrite
-    //   an existing correlation with another candidate or not
-    // - correlations are for index pair names and must be constant; if not given for a pair, we assume zero
-    //   correlation;
-    // - correlations for IR processes are taken from IR index correlations, if several indices exist
-    //   for one ccy, the index with the longest tenor T is selected; we do not apply an LGM adjustment for this
-    //   value due to time dependent volatility, since this is usually negligible
-    // - for inf we do not apply an adjustment either => TODO is that suitable for both DK and JY approximately?
-    // - for inf JY we have two driving factors (f1,f2) where f1 drives the real rate process and f2 drives the
-    //   inflation index ("fx") process; we assume the correlation between f1 and any other factor (including f2)
-    //   to be zero and set the correlation between f2 and any other factor to the correlation read from the
-    //   market data for the inflation index, TODO is that assumption reasonable?
-    std::map<std::pair<std::string, std::string>,
-             std::tuple<Handle<QuantExt::CorrelationTermStructure>, Period, Period>>
-        tmpCorrelations;
-    for (auto const& c : correlations_) {
-        std::pair<std::string, Period> firstEntry = convertIndexToCamCorrelationEntry(c.first.first);
-        std::pair<std::string, Period> secondEntry = convertIndexToCamCorrelationEntry(c.first.second);
-        // if we have identical CAM entries (e.g. IR:EUR, IR:EUR) we skip this pair, since we can't specify a
-        // correlation in this case
-        if (firstEntry.first == secondEntry.first)
-            continue;
-        auto e = tmpCorrelations.find(std::make_pair(firstEntry.first, secondEntry.first));
-        if (e == tmpCorrelations.end() ||
-            (firstEntry.second > std::get<1>(e->second) && secondEntry.second > std::get<2>(e->second))) {
-            tmpCorrelations[std::make_pair(firstEntry.first, secondEntry.first)] =
-                std::make_tuple(c.second, firstEntry.second, secondEntry.second);
-        }
-    }
 
-    map<CorrelationKey, Handle<Quote>> camCorrelations;
-    for (auto const& c : tmpCorrelations) {
-        CorrelationFactor f_1 = parseCorrelationFactor(c.first.first, '#');
-        CorrelationFactor f_2 = parseCorrelationFactor(c.first.second, '#');
-        // update index for JY from 0 to 1 (i.e. to the factor driving the inf index ("fx") process)
-        // in all other cases the index 0 is fine, since there is only one driving factor always
-        if (infModelType_ == "JY") {
-            if (f_1.type == CrossAssetModel::AssetType::INF)
-                f_1.index = 1;
-            if (f_2.type == CrossAssetModel::AssetType::INF)
-                f_2.index = 1;
-        }
-        auto q = Handle<Quote>(QuantLib::ext::make_shared<CorrelationValue>(std::get<0>(c.second), 0.0));
-        camCorrelations[std::make_pair(f_1, f_2)] = q;
-        DLOG("added correlation for " << c.first.first << "/" << c.first.second << ": " << q->value());
-    }
+    // build cam correlations
+
+    auto camCorrelations = getCamCorrelationsFromIndexCorrelations(correlations_, infModelType_);
 
     // correlation overwrite from pricing engine parameters
 
