@@ -253,6 +253,9 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
 
     // build the replication basket of multileg option instruments
 
+    std::vector<bool> reversedPayer(payer.size());
+    std::transform(payer.begin(), payer.end(), reversedPayer.begin(), std::logical_not<bool>());
+
     std::vector<ext::shared_ptr<MultiLegOption>> basket;
 
     for (Size i = 0; i < replicationData[0].size(); ++i) {
@@ -273,7 +276,7 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
 
         auto exercise = ext::make_shared<BermudanExercise>(exerciseDates);
 
-        basket.push_back(ext::make_shared<MultiLegOption>(tmpLegs, payer, currency, exercise));
+        basket.push_back(ext::make_shared<MultiLegOption>(tmpLegs, reversedPayer, currency, exercise));
     }
 
     // return the basket
