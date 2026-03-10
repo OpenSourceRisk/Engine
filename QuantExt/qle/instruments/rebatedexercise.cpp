@@ -18,6 +18,8 @@
 
 #include <qle/instruments/rebatedexercise.hpp>
 
+#include <ql/currency.hpp>
+
 namespace QuantExt {
 
 namespace {
