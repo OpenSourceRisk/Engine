@@ -34,20 +34,27 @@
 namespace ore {
 namespace data {
 
-//! Swaption engine builder base class
+/*! Swaption engine builder base class. This is for the general xccy case, i.e. keys and strikes have one element per
+    supported underlying currency. FX strikes are against base ccy, where base ccy is the first currenc resp. the base
+    ccy of an external CAM (AMC builders). For the single currency case, keys and strikes have one entry and fxStrikes
+   is empty. */
 class SwaptionEngineBuilder
-    : public CachingPricingEngineBuilder<string, const string&, const string&, const std::vector<Date>&, const std::vector<Date>&,
-                                         const std::vector<Real>&, const bool, const string&, const string&> {
+    : public CachingPricingEngineBuilder<string, const string&, const std::vector<string>&, const std::vector<Date>&,
+                                         const std::vector<Date>&, const std::vector<std::vector<Real>>&,
+                                         const std::vector<std::vector<Real>>&, const bool, const string&,
+                                         const string&> {
 public:
-    SwaptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
-        : CachingEngineBuilder(model, engine, tradeTypes) {}
+    SwaptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
+                          const bool idBasedKey = true)
+        : CachingEngineBuilder(model, engine, tradeTypes), idBasedKey_(idBasedKey) {}
 
-protected:
-    string keyImpl(const string& id, const string& key, const std::vector<Date>& dates, const std::vector<Date>& maturities,
-                   const std::vector<Real>& strikes, const bool isAmerican, const std::string& discountCurve,
-                   const std::string& securitySpread) override {
-        return id;
-    }
+private:
+    string keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+                   const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+                   const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican,
+                   const std::string& discountCurve, const std::string& securitySpread) override;
+
+    bool idBasedKey_ = true;
 };
 
 //! European Swaption Engine Builder
@@ -56,109 +63,113 @@ protected:
 class EuropeanSwaptionEngineBuilder final : public SwaptionEngineBuilder {
 public:
     EuropeanSwaptionEngineBuilder()
-        : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption", "EuropeanSwaption_NonStandard"}) {}
+        : SwaptionEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine",
+                                {"EuropeanSwaption", "EuropeanSwaption_NonStandard"}) {}
 
 private:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                                const bool isAmerican, const std::string& discountCurve,
-                                                const std::string& securitySpread) override;
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread) override;
 };
 
-//! Abstract LGMSwaptionEngineBuilder class
+//! LGM based builders, base class
 class LGMSwaptionEngineBuilder : public SwaptionEngineBuilder {
 public:
     LGMSwaptionEngineBuilder(const string& engine)
         : SwaptionEngineBuilder("LGM", engine,
                                 {"EuropeanSwaption", "EuropeanSwaption_NonStandard", "BermudanSwaption",
                                  "BermudanSwaption_NonStandard", "AmericanSwaption", "AmericanSwaption_NonStandard"}) {}
-
-protected:
-    QuantLib::ext::shared_ptr<QuantExt::IrModel> model(const string& id, const string& key,
-                                                       const std::vector<Date>& dates,
-                                                       const std::vector<Date>& maturities,
-                                                       const std::vector<Real>& strikes, const bool isAmerican);
 };
 
-//! Implementation of BermudanAmericanSwaptionEngineBuilder using LGM Grid pricer
+//! LGM Grid engine
 class LGMGridSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
 public:
     LGMGridSwaptionEngineBuilder() : LGMSwaptionEngineBuilder("Grid") {}
 
 private:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                                const bool isAmerican, const std::string& discountCurve,
-                                                const std::string& securitySpread) override;
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread) override;
 };
 
-//! Implementation of BermudanAmericanSwaptionEngineBuilder using LGM FD pricer
+//! LGM FD engine
 class LGMFDSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
 public:
     LGMFDSwaptionEngineBuilder() : LGMSwaptionEngineBuilder("FD") {}
 
 private:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                                const bool isAmerican, const std::string& discountCurve,
-                                                const std::string& securitySpread) override;
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread) override;
 };
 
-//! Implementation of LGMBermudanAmericanSwaptionEngineBuilder using MC pricer
-class LGMMCSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
+//!
+
+//! CAM based engines, base class
+class CamSwaptionEngineBuilder : public SwaptionEngineBuilder {
 public:
-    LGMMCSwaptionEngineBuilder() : LGMSwaptionEngineBuilder("MC") {}
+    explicit CamSwaptionEngineBuilder(const std::string& engine, const bool idBasedKey = true)
+        : SwaptionEngineBuilder("LGM", engine,
+                                {"EuropeanSwaption", "EuropeanSwaption_NonStandard", "BermudanSwaption",
+                                 "BermudanSwaption_NonStandard", "AmericanSwaption", "AmericanSwaption_NonStandard",
+                                 "EuropeanSwaption_XCcy", "EuropeanSwaption_NonStandard_XCcy", "BermudanSwaption_XCcy",
+                                 "BermudanSwaption_NonStandard_XCcy", "AmericanSwaption_XCcy",
+                                 "AmericanSwaption_NonStandard_XCcy"},
+                                idBasedKey) {}
+};
+
+// CAM MC engine
+class CamMCSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
+public:
+    CamMCSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MC") {}
 
 private:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                                const bool isAmerican, const std::string& discountCurve,
-                                                const std::string& securitySpread) override;
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread) override;
 };
 
-//! Implementation of BermudanAmericanSwaptionEngineBuilder for external cam, with additional simulation dates (AMC)
-class LGMAmcSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
+//! CAM AMC engine
+class AmcSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
-    LGMAmcSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
-        : LGMSwaptionEngineBuilder("AMC"), cam_(cam), simulationDates_(simulationDates),
+    AmcSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                             const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : CamSwaptionEngineBuilder("AMC", false), cam_(cam), simulationDates_(simulationDates),
           stickyCloseOutDates_(stickyCloseOutDates) {}
 
 private:
-    string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const std::vector<Date>& maturities,
-                   const std::vector<Real>& strikes, const bool isAmerican, const std::string& discountCurve,
-                   const std::string& securitySpread) override {
-        return ccy + "_" + std::to_string(isAmerican) + discountCurve + securitySpread;
-    }
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
-                                                const std::vector<Date>& maturities, const std::vector<Real>& strikes,
-                                                const bool isAmerican, const std::string& discountCurve,
-                                                const std::string& securitySpread) override;
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread) override;
 
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
     const std::vector<Date> stickyCloseOutDates_;
 };
 
-//! Implementation of BermudanAmericanSwaptionEngineBuilder (AMC-CG)
-class AmcCgSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
+//! CAM AMC-CG engine
+class AmcCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
     AmcCgSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
                                const std::vector<Date>& simulationDates)
-        : LGMSwaptionEngineBuilder("AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
+        : CamSwaptionEngineBuilder("AMCCG", false), modelCg_(modelCg), simulationDates_(simulationDates) {}
 
 private:
-    string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const std::vector<Date>& maturities,
-                   const std::vector<Real>& strikes, const bool isAmerican, const std::string& discountCurve,
-                   const std::string& securitySpread) override {
-        return ccy + "_" + std::to_string(isAmerican) + discountCurve + securitySpread;
-    }
-
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key,
-                                                        const std::vector<Date>& dates, const std::vector<Date>& maturities,
-                                                        const std::vector<Real>& strikes, const bool isAmerican,
-                                                        const std::string& discountCurve,
-                                                        const std::string& securitySpread) override;
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread) override;
 
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;

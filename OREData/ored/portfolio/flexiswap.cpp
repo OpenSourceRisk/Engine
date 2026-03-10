@@ -164,8 +164,8 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         auto dates = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())->dates();
         std::vector<Date> maturities(dates.size(), basket[i]->maturityDate());
         auto strikes = getCalibrationStrikesFromLegs(basket[i]->legs(), dates);
-        basket[i]->setPricingEngine(builder->engine(id() + "_" + std::to_string(i), qualifier, dates, maturities,
-                                                    strikes, false, std::string(), std::string()));
+        basket[i]->setPricingEngine(builder->engine(id() + "_" + std::to_string(i), {qualifier}, dates, maturities,
+                                                    {strikes}, {}, false, std::string(), std::string()));
         positionType == Position::Type::Long ? qlInstr->add(basket[i]) : qlInstr->subtract(basket[i]);
     }
 

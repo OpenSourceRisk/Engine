@@ -549,8 +549,8 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     // use ibor / ois index as key, if possible, otherwise the npv currency
     swaptionEngine = swaptionBuilder->engine(
-        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
-        exerciseBuilder_->noticeDates(), maturitiesEngine, strikesEngine, exerciseType_ == Exercise::American,
+        id(), {index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name())},
+        exerciseBuilder_->noticeDates(), maturitiesEngine, {strikesEngine}, {}, exerciseType_ == Exercise::American,
         envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
 
     timer.stop();

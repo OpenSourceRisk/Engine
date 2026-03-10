@@ -415,7 +415,7 @@ void dataBuilders() {
     ORE_REGISTER_LEGBUILDER("FormulaBasedLegBuilder", FormulaBasedLegBuilder, false)
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
-    ORE_REGISTER_AMC_ENGINE_BUILDER(LGMAmcSwaptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(AmcSwaptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcBondEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFwdBondEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder, false)
@@ -474,7 +474,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EuropeanSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LGMGridSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LGMFDSwaptionEngineBuilder, false)
-    ORE_REGISTER_ENGINE_BUILDER(LGMMCSwaptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(CamMCSwaptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(VarSwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDoubleTouchOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDoubleBarrierOptionAnalyticEngineBuilder, false)
