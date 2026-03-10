@@ -4,7 +4,7 @@
 # for each target Python version — all on the manylinux image.
 
 ARG WHEEL_IMG
-FROM ${WHEEL_IMG} AS manylinux-ore
+FROM ${WHEEL_IMG}
 
 ARG CMAKE_BUILD_TYPE=Release
 ARG NUM_CORES=16
