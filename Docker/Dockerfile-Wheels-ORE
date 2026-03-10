@@ -62,7 +62,7 @@ python3 setup.py wrap
 # ccache is mounted to speed up rebuilds when the wrapper source hasn't changed.
 RUN --mount=type=cache,id=ccache-wheels-swig,target=/ccache/ \
     chmod +x Wheels-gitlab/precompile.sh && \
-    Wheels-gitlab/precompile.sh cp310-cp310 cp312-cp312
+    Wheels-gitlab/precompile.sh cp310-cp310 cp311-cp311 cp312-cp312 cp313-cp313 cp314-cp314
 
 # Stage all artifacts into /ore-swig-prebuilt/ for use by cibuildwheel.
 # This is a separate RUN (no --mount) to ensure Kaniko commits the layer.

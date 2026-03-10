@@ -8,7 +8,7 @@ ARG WHEELS_VERSION
 
 ENV PATH="/venv/bin:$PATH"
 
-ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH}"
+ENV CIBW_BUILD="cp310-manylinux_${WHEEL_ARCH} cp311-manylinux_${WHEEL_ARCH} cp312-manylinux_${WHEEL_ARCH} cp313-manylinux_${WHEEL_ARCH} cp314-manylinux_${WHEEL_ARCH}"
 ENV CIBW_MANYLINUX_X86_64_IMAGE=${WHEEL_IMAGE}
 ENV CIBW_MANYLINUX_AARCH64_IMAGE=${WHEEL_IMAGE}
 # Force cibuildwheel to pull the image fresh every time, rather than reusing a
