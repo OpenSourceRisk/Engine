@@ -27,6 +27,7 @@
 #include <ql/time/calendars/nullcalendar.hpp>
 
 #include <ql/optional.hpp>
+#include <ql/currency.hpp>
 
 namespace QuantExt {
 
