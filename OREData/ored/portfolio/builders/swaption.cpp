@@ -267,12 +267,13 @@ model(const string& id, const std::vector<string>& keys, const std::vector<Date>
             effStrikes = fxStrikes[i - 1];
         } else {
             effStrikes.resize(effExpiries.size(), Null<Real>());
-            if (fxStrikes[i][0] != Null<Real>() && fxStrikes[i][1] != Null<Real>()) {
+            if (fxStrikes[i - 1][0] != Null<Real>() && fxStrikes[i - 1][1] != Null<Real>()) {
                 Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
                 Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
-                for (Size i = 0; i < effExpiries.size(); ++i) {
-                    Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
-                    effStrikes[i] = fxStrikes[i][0] + (fxStrikes[i][1] - fxStrikes[i][0]) / (t1 - t0) * (t - t0);
+                for (Size k = 0; k < effExpiries.size(); ++k) {
+                    Real t = Actual365Fixed().yearFraction(today, effExpiries[k]);
+                    effStrikes[k] =
+                        fxStrikes[i - 1][0] + (fxStrikes[i - 1][1] - fxStrikes[i - 1][0]) / (t1 - t0) * (t - t0);
                 }
             }
         }
