@@ -21,6 +21,8 @@
 
 %{
 using ore::data::ScheduleRules;
+using ore::data::ScheduleDates;
+using ore::data::ScheduleDerived;
 using ore::data::ScheduleData;
 using ore::data::LegAdditionalData;
 using ore::data::FixedLegData;
@@ -46,6 +48,7 @@ using ore::data::XMLSerializable;
 %shared_ptr(ScheduleRules)
 class ScheduleRules : public XMLSerializable {
 public:
+  ScheduleRules();
   ScheduleRules(const std::string& startDate, const std::string& endDate, const std::string& tenor, const std::string& calendar,
           const std::string& convention, const std::string& termConvention, const std::string& rule,
           const std::string& endOfMonth = "N", const std::string& firstDate = "", const std::string& lastDate = "",
@@ -55,10 +58,35 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+%shared_ptr(ScheduleDates)
+class ScheduleDates : public XMLSerializable {
+public:
+  ScheduleDates();
+  ScheduleDates(const std::string& calendar, const std::string& convention, const std::string& tenor,
+                const std::vector<std::string>& dates, const std::string& endOfMonth = "",
+                const std::string& endOfMonthConvention = "", bool includeDuplicateDates = false);
+  virtual void fromXML(XMLNode* node) override;
+  virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(ScheduleDerived)
+class ScheduleDerived : public XMLSerializable {
+public:
+  ScheduleDerived();
+  ScheduleDerived(const std::string& baseSchedule, const std::string& calendar,
+                  const std::string& convention, const std::string& shift,
+                  const bool removeFirstDate = false, const bool removeLastDate = false);
+  virtual void fromXML(XMLNode* node) override;
+  virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
 %shared_ptr(ScheduleData)
 class ScheduleData : public XMLSerializable {
 public:
+  ScheduleData();
+  ScheduleData(const ScheduleDates& dates, const std::string& name = "");
   ScheduleData(const ScheduleRules& rules, const std::string& name = "");
+  ScheduleData(const ScheduleDerived& derived, const std::string& name = "");
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };

@@ -23,8 +23,14 @@
 using ore::data::ScriptedTradeEventData;
 using ore::data::ScriptedTradeValueTypeData;
 using ore::data::ScriptedTradeScriptData;
+using ore::data::ScriptLibraryData;
 using ore::data::ScriptedTrade;
 %}
+
+%template(ScriptedTradeNewScheduleDataVector)
+std::vector<ext::shared_ptr<ScriptedTradeScriptData::NewScheduleData>>;
+%template(ScriptedTradeCalibrationDataVector)
+std::vector<ext::shared_ptr<ScriptedTradeScriptData::CalibrationData>>;
 
 %shared_ptr(ScriptedTradeEventData)
 class ScriptedTradeEventData : public XMLSerializable {
@@ -49,13 +55,61 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+%feature("flatnested") ScriptedTradeScriptData;
+%rename(ScriptedTradeNewScheduleData) ScriptedTradeScriptData::NewScheduleData;
+%rename(ScriptedTradeCalibrationData) ScriptedTradeScriptData::CalibrationData;
 %shared_ptr(ScriptedTradeScriptData)
+%shared_ptr(ScriptedTradeScriptData::NewScheduleData)
+%shared_ptr(ScriptedTradeScriptData::CalibrationData)
 class ScriptedTradeScriptData : public XMLSerializable {
 public:
+    class NewScheduleData : public XMLSerializable {
+    public:
+        NewScheduleData();
+        NewScheduleData(const std::string& name, const std::string& operation,
+                        const std::vector<std::string>& sourceSchedules);
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+        const std::string& name() const;
+        const std::string& operation() const;
+        const std::vector<std::string>& sourceSchedules() const;
+    };
+
+    class CalibrationData : public XMLSerializable {
+    public:
+        CalibrationData();
+        CalibrationData(const std::string& index, const std::vector<std::string>& strikes);
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+        const std::string& index() const;
+        const std::vector<std::string>& strikes() const;
+    };
+
     ScriptedTradeScriptData();
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 };
+
+%shared_ptr(ScriptLibraryData)
+class ScriptLibraryData : public XMLSerializable {
+public:
+    ScriptLibraryData();
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    bool has(const std::string& scriptName, const std::string& purpose,
+             const bool fallBackOnEmptyPurpose = true) const;
+};
+%extend ScriptLibraryData {
+    std::string productTag(const std::string& scriptName, const std::string& purpose,
+                           const bool fallBackOnEmptyPurpose = true) const {
+        return self->get(scriptName, purpose, fallBackOnEmptyPurpose).first;
+    }
+
+    ScriptedTradeScriptData scriptData(const std::string& scriptName, const std::string& purpose,
+                                       const bool fallBackOnEmptyPurpose = true) const {
+        return self->get(scriptName, purpose, fallBackOnEmptyPurpose).second;
+    }
+}
 
 %shared_ptr(ScriptedTrade)
 class ScriptedTrade : public Trade {

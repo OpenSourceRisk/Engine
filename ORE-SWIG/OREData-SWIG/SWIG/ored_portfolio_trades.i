@@ -37,6 +37,11 @@ using ORECommodityOption = ore::data::CommodityOption;
 using ore::data::ForwardBond;
 using ore::data::BondOption;
 using ore::data::TRS;
+using ore::data::CallableBondData;
+using ORECallableBond = ore::data::CallableBond;
+using ore::data::ConvertibleBondData;
+using OREConvertibleBond = ore::data::ConvertibleBond;
+using ore::data::parseTrsFundingNotionalType;
 using ore::data::FxDoubleBarrierOption;
 using ore::data::FxEuropeanBarrierOption;
 using ore::data::FxBarrierOption;
@@ -258,14 +263,364 @@ public:
     XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+%feature("flatnested") TRS;
+%rename(TRSReturnData) TRS::ReturnData;
+%rename(TRSFundingData) TRS::FundingData;
+%rename(TRSAdditionalCashflowData) TRS::AdditionalCashflowData;
 %shared_ptr(TRS)
+%shared_ptr(TRS::ReturnData)
+%shared_ptr(TRS::FundingData)
+%shared_ptr(TRS::AdditionalCashflowData)
 class TRS : public Trade {
 public:
+    enum class FXConversion { Start, End };
+
+    class ReturnData : public XMLSerializable {
+    public:
+        ReturnData();
+        ReturnData(const bool payer, const std::string& currency, const ScheduleData& scheduleData,
+                   const std::string& observationLag, const std::string& observationConvention,
+                   const std::string& observationCalendar, const std::string& paymentLag,
+                   const std::string& paymentConvention, const std::string& paymentCalendar,
+                   const std::vector<std::string>& paymentDates, const QuantLib::Real initialPrice,
+                   const std::string& initialPriceCurrency, const std::vector<std::string>& fxTerms,
+                   const QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately,
+                   const QuantLib::ext::optional<FXConversion> fxConversion);
+
+        bool payer() const;
+        const std::string& currency() const;
+        const ScheduleData& scheduleData() const;
+        const std::string& observationLag() const;
+        const std::string& observationConvention() const;
+        const std::string& observationCalendar() const;
+        const std::string& paymentLag() const;
+        const std::string& paymentConvention() const;
+        const std::string& paymentCalendar() const;
+        const std::vector<std::string>& paymentDates() const;
+        QuantLib::Real initialPrice() const;
+        const std::string& initialPriceCurrency() const;
+        const std::vector<std::string>& fxTerms() const;
+        QuantLib::ext::optional<bool> payUnderlyingCashFlowsImmediately() const;
+        QuantLib::ext::optional<FXConversion> fxConversionAtPeriodEnd() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+        FXConversion parseFXConversion(std::string fxConv_);
+    };
+
+    class FundingData : public XMLSerializable {
+    public:
+        enum class NotionalType { PeriodReset, DailyReset, Fixed };
+
+        FundingData();
+        explicit FundingData(const std::vector<LegData>& legData,
+                             const std::vector<NotionalType>& notionalType = {},
+                             const QuantLib::Size fundingResetGracePeriod = 0);
+
+        const std::vector<LegData>& legData() const;
+        const std::vector<NotionalType>& notionalType() const;
+        QuantLib::Size fundingResetGracePeriod() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    class AdditionalCashflowData : public XMLSerializable {
+    public:
+        AdditionalCashflowData();
+        AdditionalCashflowData(const LegData& legData);
+        const LegData& legData() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
     TRS();
     void build(const ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
+};
+%extend TRS::FundingData {
+    FundingData(const std::vector<ext::shared_ptr<LegData>>& legData,
+                const std::vector<TRS::FundingData::NotionalType>& notionalType = {},
+                const QuantLib::Size fundingResetGracePeriod = 0) {
+        return new TRS::FundingData(VECTOR_SWIG_TO_ORE(legData), notionalType, fundingResetGracePeriod);
+    }
+}
+%extend TRS {
+    TRS(const Envelope& env, const std::vector<ext::shared_ptr<Trade>>& underlying,
+        const std::vector<std::string>& underlyingDerivativeId, const TRS::ReturnData& returnData,
+        const TRS::FundingData& fundingData,
+        const TRS::AdditionalCashflowData& additionalCashflowData) {
+        return new TRS(env, underlying, underlyingDerivativeId, returnData, fundingData,
+                       additionalCashflowData);
+    }
+}
+
+TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);
+
+%feature("flatnested") CallableBondData;
+%rename(CallableBondCallabilityData) CallableBondData::CallabilityData;
+%shared_ptr(CallableBondData)
+%shared_ptr(CallableBondData::CallabilityData)
+class CallableBondData : public XMLSerializable {
+public:
+    class CallabilityData : public XMLSerializable {
+    public:
+        explicit CallabilityData(const std::string& nodeName);
+        bool initialised() const;
+        const ScheduleData& dates() const;
+        const std::vector<std::string>& styles() const;
+        const std::vector<std::string>& styleDates() const;
+        const std::vector<double>& prices() const;
+        const std::vector<std::string>& priceDates() const;
+        const std::vector<std::string>& priceTypes() const;
+        const std::vector<std::string>& priceTypeDates() const;
+        const std::vector<bool>& includeAccrual() const;
+        const std::vector<std::string>& includeAccrualDates() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    CallableBondData();
+    explicit CallableBondData(const BondData& bondData);
+    const BondData& bondData() const;
+    const CallabilityData& callData() const;
+    const CallabilityData& putData() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void populateFromBondReferenceData(const ext::shared_ptr<ReferenceDataManager>& referenceData);
+};
+
+%shared_ptr(ORECallableBond)
+class ORECallableBond : public Trade {
+public:
+    ORECallableBond();
+    ORECallableBond(const Envelope& env, const CallableBondData& data);
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    const CallableBondData& data() const;
+    const BondData& bondData() const;
+};
+
+%feature("flatnested") ConvertibleBondData;
+%rename(ConvertibleBondCallabilityData) ConvertibleBondData::CallabilityData;
+%rename(ConvertibleBondConversionData) ConvertibleBondData::ConversionData;
+%rename(ConvertibleBondDividendProtectionData) ConvertibleBondData::DividendProtectionData;
+%feature("flatnested") ConvertibleBondData::CallabilityData;
+%rename(ConvertibleBondMakeWholeData) ConvertibleBondData::CallabilityData::MakeWholeData;
+%feature("flatnested") ConvertibleBondData::CallabilityData::MakeWholeData;
+%rename(ConvertibleBondConversionRatioIncreaseData)
+    ConvertibleBondData::CallabilityData::MakeWholeData::ConversionRatioIncreaseData;
+%feature("flatnested") ConvertibleBondData::ConversionData;
+%rename(ConvertibleBondContingentConversionData)
+    ConvertibleBondData::ConversionData::ContingentConversionData;
+%rename(ConvertibleBondMandatoryConversionData)
+    ConvertibleBondData::ConversionData::MandatoryConversionData;
+%rename(ConvertibleBondConversionResetData)
+    ConvertibleBondData::ConversionData::ConversionResetData;
+%rename(ConvertibleBondExchangeableData)
+    ConvertibleBondData::ConversionData::ExchangeableData;
+%rename(ConvertibleBondFixedAmountConversionData)
+    ConvertibleBondData::ConversionData::FixedAmountConversionData;
+%feature("flatnested") ConvertibleBondData::ConversionData::MandatoryConversionData;
+%rename(ConvertibleBondPepsData)
+    ConvertibleBondData::ConversionData::MandatoryConversionData::PepsData;
+%shared_ptr(ConvertibleBondData)
+%shared_ptr(ConvertibleBondData::CallabilityData)
+%shared_ptr(ConvertibleBondData::CallabilityData::MakeWholeData)
+%shared_ptr(ConvertibleBondData::CallabilityData::MakeWholeData::ConversionRatioIncreaseData)
+%shared_ptr(ConvertibleBondData::ConversionData)
+%shared_ptr(ConvertibleBondData::ConversionData::ContingentConversionData)
+%shared_ptr(ConvertibleBondData::ConversionData::MandatoryConversionData)
+%shared_ptr(ConvertibleBondData::ConversionData::MandatoryConversionData::PepsData)
+%shared_ptr(ConvertibleBondData::ConversionData::ConversionResetData)
+%shared_ptr(ConvertibleBondData::ConversionData::ExchangeableData)
+%shared_ptr(ConvertibleBondData::ConversionData::FixedAmountConversionData)
+%shared_ptr(ConvertibleBondData::DividendProtectionData)
+class ConvertibleBondData : public XMLSerializable {
+public:
+    class CallabilityData : public XMLSerializable {
+    public:
+        class MakeWholeData : public XMLSerializable {
+        public:
+            class ConversionRatioIncreaseData : public XMLSerializable {
+            public:
+                ConversionRatioIncreaseData();
+                bool initialised() const;
+                const std::string& cap() const;
+                const std::vector<double>& stockPrices() const;
+                const std::vector<std::vector<double>>& crIncrease() const;
+                const std::vector<std::string>& crIncreaseDates() const;
+                void fromXML(XMLNode* node) override;
+                XMLNode* toXML(XMLDocument& doc) const override;
+            };
+
+            MakeWholeData();
+            bool initialised() const;
+            const ConversionRatioIncreaseData& conversionRatioIncreaseData() const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(XMLDocument& doc) const override;
+        };
+
+        explicit CallabilityData(const std::string& nodeName);
+        bool initialised() const;
+        const ScheduleData& dates() const;
+        const std::vector<std::string>& styles() const;
+        const std::vector<std::string>& styleDates() const;
+        const std::vector<double>& prices() const;
+        const std::vector<std::string>& priceDates() const;
+        const std::vector<std::string>& priceTypes() const;
+        const std::vector<std::string>& priceTypeDates() const;
+        const std::vector<bool>& includeAccrual() const;
+        const std::vector<std::string>& includeAccrualDates() const;
+        const std::vector<bool>& isSoft() const;
+        const std::vector<std::string>& isSoftDates() const;
+        const std::vector<double>& triggerRatios() const;
+        const std::vector<std::string>& triggerRatioDates() const;
+        const std::vector<std::string>& nOfMTriggers() const;
+        const std::vector<std::string>& nOfMTriggerDates() const;
+        const MakeWholeData& makeWholeData() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    class ConversionData : public XMLSerializable {
+    public:
+        class ContingentConversionData : public XMLSerializable {
+        public:
+            ContingentConversionData();
+            bool initialised() const;
+            const std::vector<std::string>& observations() const;
+            const std::vector<std::string>& observationDates() const;
+            const std::vector<double>& barriers() const;
+            const std::vector<std::string>& barrierDates() const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(XMLDocument& doc) const override;
+        };
+
+        class MandatoryConversionData : public XMLSerializable {
+        public:
+            class PepsData : public XMLSerializable {
+            public:
+                PepsData();
+                bool initialised() const;
+                double upperBarrier() const;
+                double lowerBarrier() const;
+                double upperConversionRatio() const;
+                double lowerConversionRatio() const;
+                void fromXML(XMLNode* node) override;
+                XMLNode* toXML(XMLDocument& doc) const override;
+            };
+
+            MandatoryConversionData();
+            bool initialised() const;
+            const std::string& date() const;
+            const std::string& type() const;
+            const PepsData& pepsData() const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(XMLDocument& doc) const override;
+        };
+
+        class ConversionResetData : public XMLSerializable {
+        public:
+            ConversionResetData();
+            bool initialised() const;
+            const ScheduleData& dates() const;
+            const std::vector<std::string>& references() const;
+            const std::vector<std::string>& referenceDates() const;
+            const std::vector<double>& thresholds() const;
+            const std::vector<std::string>& thresholdDates() const;
+            const std::vector<double>& gearings() const;
+            const std::vector<std::string>& gearingDates() const;
+            const std::vector<double>& floors() const;
+            const std::vector<std::string>& floorDates() const;
+            const std::vector<double>& globalFloors() const;
+            const std::vector<std::string>& globalFloorDates() const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(XMLDocument& doc) const override;
+        };
+
+        class ExchangeableData : public XMLSerializable {
+        public:
+            ExchangeableData();
+            bool initialised() const;
+            bool isExchangeable() const;
+            const std::string& equityCreditCurve() const;
+            bool secured() const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(XMLDocument& doc) const override;
+        };
+
+        class FixedAmountConversionData : public XMLSerializable {
+        public:
+            FixedAmountConversionData();
+            bool initialised() const;
+            const std::string& currency() const;
+            const std::vector<double>& amounts() const;
+            const std::vector<std::string>& amountDates() const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(XMLDocument& doc) const override;
+        };
+
+        ConversionData();
+        bool initialised() const;
+        const ScheduleData& dates() const;
+        const std::vector<std::string>& styles() const;
+        const std::vector<std::string>& styleDates() const;
+        const std::vector<double>& conversionRatios() const;
+        const std::vector<std::string>& conversionRatioDates() const;
+        const ContingentConversionData& contingentConversionData() const;
+        const MandatoryConversionData& mandatoryConversionData() const;
+        const ConversionResetData& conversionResetData() const;
+        const EquityUnderlying equityUnderlying() const;
+        const std::string fxIndex() const;
+        const ExchangeableData& exchangeableData() const;
+        const FixedAmountConversionData& fixedAmountConversionData() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    class DividendProtectionData : public XMLSerializable {
+    public:
+        DividendProtectionData();
+        bool initialised() const;
+        const ScheduleData& dates() const;
+        const std::vector<std::string>& adjustmentStyles() const;
+        const std::vector<std::string>& adjustmentStyleDates() const;
+        const std::vector<std::string>& dividendTypes() const;
+        const std::vector<std::string>& dividendTypeDates() const;
+        const std::vector<double>& thresholds() const;
+        const std::vector<std::string>& thresholdDates() const;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) const override;
+    };
+
+    ConvertibleBondData();
+    explicit ConvertibleBondData(const BondData& bondData);
+    const BondData& bondData() const;
+    const CallabilityData& callData() const;
+    const CallabilityData& putData() const;
+    const ConversionData& conversionData() const;
+    const DividendProtectionData& dividendProtectionData() const;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    void populateFromBondReferenceData(const ext::shared_ptr<ReferenceDataManager>& referenceData);
+};
+
+%shared_ptr(OREConvertibleBond)
+class OREConvertibleBond : public Trade {
+public:
+    OREConvertibleBond();
+    OREConvertibleBond(const Envelope& env, const ConvertibleBondData& data);
+    void build(const ext::shared_ptr<EngineFactory>&) override;
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    const ConvertibleBondData& data() const;
+    const BondData& bondData() const;
 };
 
 %shared_ptr(FxDoubleBarrierOption)

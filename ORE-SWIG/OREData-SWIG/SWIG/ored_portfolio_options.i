@@ -52,6 +52,37 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 };
 
+%shared_ptr(OptionExerciseData)
+class OptionExerciseData : public XMLSerializable {
+public:
+    OptionExerciseData();
+    OptionExerciseData(const std::string& date, const std::string& price);
+    const QuantLib::Date& date() const;
+    QuantLib::Real price() const;
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
+%shared_ptr(OptionPaymentData)
+class OptionPaymentData : public XMLSerializable {
+public:
+    enum class RelativeTo { Expiry, Exercise };
+
+    OptionPaymentData();
+    OptionPaymentData(const std::vector<std::string>& dates);
+    OptionPaymentData(const std::string& lag, const std::string& calendar,
+                      const std::string& convention,
+                      const std::string& relativeTo = "Expiry");
+    bool rulesBased() const;
+    const std::vector<QuantLib::Date>& dates() const;
+    QuantLib::Natural lag() const;
+    const QuantLib::Calendar& calendar() const;
+    QuantLib::BusinessDayConvention convention() const;
+    RelativeTo relativeTo() const;
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+};
+
 %shared_ptr(OptionData)
 class OptionData : public XMLSerializable {
 public:

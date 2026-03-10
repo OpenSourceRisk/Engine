@@ -341,13 +341,13 @@ class CurveConfigurations  : public XMLSerializable  {
     std::map<CurveSpec::CurveType, std::set<std::string>> requiredCurveIds(const CurveSpec::CurveType& type,
                                                                       const std::string& curveId) const;
 
-    void add(const CurveSpec::CurveType& type, const std::string& curveId, const ext::shared_ptr<CurveConfig>& config);    
+    void add(const CurveSpec::CurveType& type, const std::string& curveId, const ext::shared_ptr<CurveConfig>& config);
     bool has(const CurveSpec::CurveType& type, const std::string& curveId) const;
     const ext::shared_ptr<CurveConfig>& get(const CurveSpec::CurveType& type, const std::string& curveId) const;
     void parseAll();
 
     void addAdditionalCurveConfigs(const CurveConfigurations& c);
-    
+
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 
@@ -467,7 +467,7 @@ public:
                          const std::vector<PriceSegment>& priceSegments, const std::string& dayCountId = "A365",
                          const std::string& interpolationMethod = "Linear", bool extrapolation = true,
                          const QuantLib::ext::optional<BootstrapConfig>& bootstrapConfig = QuantLib::ext::nullopt);
-    
+
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
 
@@ -723,13 +723,13 @@ public:
     const std::vector<std::string>& smileSpreads() const;
     const std::string& quoteTag() const;
     const std::vector<std::string>& quotes();
-    
+
     const std::string& proxySourceCurveId() const;
     const std::string& proxySourceShortSwapIndexBase() const;
     const std::string& proxySourceSwapIndexBase() const;
     const std::string& proxyTargetShortSwapIndexBase() const;
     const std::string& proxyTargetSwapIndexBase() const;
-    
+
     const QuantLib::ext::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const;
     const ReportConfig& reportConfig() const;
 

@@ -22,6 +22,7 @@
 %include ored_portfolio_core.i
 %include ored_portfolio_legs.i
 %include ored_portfolio_options.i
+%include ored_portfolio_support.i
 %include ored_portfolio_credit.i
 %include ored_portfolio_trades.i
 %include ored_portfolio_commodity.i
