@@ -66,6 +66,7 @@ class NPVCube;
 class SimmCalibrationData;
 class SimmConfiguration;
 class SensitivityFileStream;
+class ReturnConfiguration;
 
 struct SetupVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
@@ -561,6 +562,7 @@ public:
     void setTradePnl(bool b) { parameters_.set("historicalSimulationVar", "tradePnl", b); }
     void setRiskFactorBreakdown(bool b) { parameters_.set("historicalSimulationVar", "riskFactorBreakdown", b); }
     void setIncludeExpectedShortfall(bool b) { parameters_.set("historicalSimulationVar", "includeExpectedShortfall", b); }
+    void setHistVarReturnConfiguration(const QuantLib::ext::shared_ptr<ReturnConfiguration>& rc) { parameters_.set("historicalSimulationVar", "returnConfigFile", rc); }
 
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
