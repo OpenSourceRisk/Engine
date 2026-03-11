@@ -266,6 +266,38 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
             compFac *= factor;
         }
     };
+
+    auto applyTsFormulaWithStub = [&]() {
+        // Get the value dates associated with the fixing date for the underlying overnight period that
+        // contains `date`. We may need an extra stub below if `date` is not an index business day.
+        Date adjDate = onFixCal.adjust(date, Preceding);
+        Date valDateUndStart = lookback != 0 * Days ? onFixCal.advance(adjDate, -lookback, Preceding) : adjDate;
+
+        // Piece from value date at start of telescopic period to valDateUndStart.
+        applyTsFormula(std::min(valDates[currPeriodIdx], valDateUndStart), valDateUndStart);
+
+        // If d is a holiday, compound the additional piece.
+        if (!onFixCal.isBusinessDay(date)) {
+            // Get the next business day after `date` and the value date associated with it.
+            Date valDateUndEnd = onFixCal.advance(valDateUndStart, 1, Days, Following);
+            Date nextDate = onFixCal.advance(adjDate, 1, Days, Following);
+            Real scale = indexDc.yearFraction(adjDate, date) / indexDc.yearFraction(adjDate, nextDate);
+
+            DiscountFactor startDisc = curve->discount(valDateUndStart);
+            DiscountFactor endDisc = curve->discount(valDateUndEnd);
+            Real factor = startDisc / endDisc;
+
+            Time fullDcf = indexDc.yearFraction(valDateUndStart, valDateUndEnd);
+            Rate onRate = (factor - 1.0) / fullDcf;
+
+            if (incSpread) {
+                compFacNoSpd *= 1.0 + onRate * scale * fullDcf;
+                compFac *= 1.0 + (onRate + spread) * scale * fullDcf;
+            } else {
+                compFac *= 1.0 + onRate * scale * fullDcf;
+            }
+        }
+    };
     // --- End of helper lambdas ---
 
     // --- 3. Start of main valuation loop ---
@@ -338,40 +370,8 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
             Date currValDateOneBd = onFixCal.advance(valDates[currPeriodIdx], 1, Days, Following);
             if (currPeriodIdx == numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
                 // Telescopic formula and date d is in the period associated with the telescopic period.
-
-                // Get the value dates associated with the fixing date for the underlying overnight period that 
-                // contains `date`. We may need an extra stub below if `date` is not an index business day.
-                Date adjDate = onFixCal.adjust(date, Preceding);
-                Date valDateUndStart = lookback != 0 * Days ? onFixCal.advance(adjDate, -lookback, Preceding) : adjDate;
-
-                // Piece from value date at start of telescopic period to valDateUndStart.
-                applyTsFormula(std::min(valDates[currPeriodIdx], valDateUndStart), valDateUndStart);
-
-                // If d is a holiday, compound the additional piece.
-                if (!onFixCal.isBusinessDay(date)) {
-                    // Get the next business day after `date` and the value date associated with it.
-                    Date valDateUndEnd = onFixCal.advance(valDateUndStart, 1, Days, Following);
-                    Date nextDate = onFixCal.advance(adjDate, 1, Days, Following);
-                    Real scale = indexDc.yearFraction(adjDate, date) / indexDc.yearFraction(adjDate, nextDate);
-
-                    DiscountFactor startDisc = curve->discount(valDateUndStart);
-                    DiscountFactor endDisc = curve->discount(valDateUndEnd);
-                    Real factor = startDisc / endDisc;
-
-                    Time fullDcf = indexDc.yearFraction(valDateUndStart, valDateUndEnd);
-                    Rate onRate = (factor - 1.0) / fullDcf;
-
-                    if (incSpread) {
-                        compFacNoSpd *= 1.0 + onRate * scale * fullDcf;
-                        compFac *= 1.0 + (onRate + spread) * scale * fullDcf;
-                    } else {
-                        compFac *= 1.0 + onRate * scale * fullDcf;
-                    }
-                }
-
-                // Still may not be finished so update currPeriodIdx.
+                applyTsFormulaWithStub();
                 currPeriodIdx++;
-
             } else if (currPeriodIdx < numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
                 // Telescopic formula but date d is not in the period associated with the telescopic period.
                 // So can just apply the full factor.
