@@ -33,15 +33,10 @@ namespace analytics {
 class InputParameters;
 class Crif;
 
-std::pair<QuantLib::ext::shared_ptr<ore::analytics::SensitivityStream>,
-          std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>
-computeSensitivities(QuantLib::ext::shared_ptr<ore::analytics::SensitivityAnalysis>& sensiAnalysis,
-                     const QuantLib::ext::shared_ptr<InputParameters>& plusInputs, ore::analytics::Analytic* analytic,
-                     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const bool writeReports);
-
 class CrifAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CRIF";
+    static constexpr const char* sensitivityLookUpKey = "SENSITIVITY";
 
     CrifAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
@@ -49,6 +44,7 @@ public:
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+    void buildDependencies() override;
 
 private:
     bool applySimmExemptions_ = true;
