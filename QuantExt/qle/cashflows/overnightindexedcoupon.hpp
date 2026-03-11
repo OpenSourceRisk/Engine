@@ -38,33 +38,23 @@
 */
 
 /*! \file overnightindexedcoupon.hpp
-    \brief coupon paying the compounded daily overnight rate,
-           copy of QL class, added includeSpread flag
+    \brief paying the compounded interest due to daily overnight fixings.
 */
-
 #pragma once
-
+#include <qle/cashflows/overnightindexedcouponbase.hpp>
 #include <ql/cashflows/couponpricer.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <ql/time/schedule.hpp>
-
-namespace QuantLib {
-class OptionletVolatilityStructure;
-}
 
 namespace QuantExt {
-using namespace QuantLib;
 
+using namespace QuantLib;
+class QuantLib::OptionletVolatilityStructure;
 class OvernightIndexedCouponPricer;
 
-//! overnight coupon
-/*! %Coupon paying the compounded interest due to daily overnight fixings.
-
-    if includeSpread = true, the spread is included in the daily compounding,
-    otherwise it is added to the effective coupon rate after the compounding
-*/
-class OvernightIndexedCoupon : public FloatingRateCoupon {
+//! Overnight (compounding) coupon
+/** %Coupon paying the compounded interest due to daily overnight fixings.
+ *  \ingroup cashflows
+ */
+class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
 public:
     OvernightIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            const ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
@@ -75,125 +65,35 @@ public:
                            const Date& rateComputationEndDate = Null<Date>(), bool applyObservationShift = false);
     //! \name Inspectors
     //@{
-    //! fixing dates for the rates to be compounded
-    const std::vector<Date>& fixingDates() const;
-    //! accrual (compounding) periods
-    const std::vector<Time>& dt() const;
-    //! fixings to be compounded
-    const std::vector<Rate>& indexFixings() const;
-    //! value dates, associated with the fixing dates, for the rates to be compounded
-    const std::vector<Date>& valueDates() const;
-    //! interest dates against which the overnight rates are applied.
-    const std::vector<Date>& interestDates() const;
-    //! include spread in compounding?
+    /** If `true`, the spread is included in the daily compounding. If `false` the compounding is performed without the 
+     *   spread and the spread is added to the final rate.
+     */
     bool includeSpread() const { return includeSpread_; }
-    /*! effectiveSpread and effectiveIndexFixing are set such that
-        coupon amount = notional * accrualPeriod * ( gearing * effectiveIndexFixing + effectiveSpread )
-        notice that
-        - gearing = 1 is required if includeSpread = true
-        - effectiveSpread = spread() if includeSpread = false */
+    /** The `effectiveSpread` \f$s^*\f$ and `effectiveIndexFixing` \f$f^*\f$ are set such that the coupon amount is 
+     *  \f$\Pi\f$ is given by:
+     *  \f[
+     *      N \tau(t_s, t_e) ( g f^* + s^* )
+     *  \f]
+     * 
+     *   \note
+     *   - a `gearing` value of 1 is required if `includeSpread` is set to `true`.
+     *   - the `effectiveSpread` is equal to the input `spread` if `includeSpread` is set to `false`.
+     */
     Real effectiveSpread() const;
     Real effectiveIndexFixing() const;
-    //! lookback period
-    const Period& lookback() const { return lookback_; }
-    //! rate cutoff
-    Natural rateCutoff() const { return rateCutoff_; }
-    //! rate computation start date
-    const Date& rateComputationStartDate() const { return rateComputationStartDate_; }
-    //! rate computation end date
-    const Date& rateComputationEndDate() const { return rateComputationEndDate_; }
-    //! Is there an observation shift.
-    bool applyObservationShift() const { return applyObservationShift_; }
-    //! Is there a lookback.
-    bool hasLookback() const { return lookback_.length() != 0; }
-    //! the underlying index
-    const ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
-    //! True is telescopic dates were requested and can be applied, false otherwise.
-    bool telescopicDates() const { return telescopicDates_; }
-    //! True if there is a rate computation period separate from the main coupon accrual period.
-    bool separateRateCompPeriod() const { return separateRateCompPeriod_; }
-    //@}
-    //! \name LazyObject interface
-    //@{
-    void performCalculations() const override;
-    //@}
-    //! \name FloatingRateCoupon interface
-    //@{
-    //! the date when the coupon is fully determined
-    Date fixingDate() const override { return fixingDates_.back(); }
-    Real accruedAmount(const Date&) const override;
     //@}
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
     //@}
 private:
-    QuantLib::ext::shared_ptr<OvernightIndex> overnightIndex_;
-    // The valueDates_ are the value dates associated with the corresponding fixing date.
-    mutable std::vector<Date> valueDates_;
-    // The fixingDates_ are the dates on which the overnight index fixings are observed.
-    mutable std::vector<Date> fixingDates_;
-    // The interestDates_ define the overnight periods against which the overnight rate is applied.
-    mutable std::vector<Date> interestDates_;
-    mutable std::vector<Rate> fixings_;
-    mutable Size n_;
-    mutable std::vector<Time> dt_;
     bool includeSpread_;
-    Period lookback_;
-    Natural rateCutoff_;
-    Date rateComputationStartDate_;
-    Date rateComputationEndDate_;
-    bool applyObservationShift_;
-    bool separateRateCompPeriod_;
-
-    // Record last possible fixing date.
-    QuantLib::Date lastFixingDate_;
-    // Index into fixing dates for current start of telescopic period. If not set, all dates are present.
-    mutable QuantLib::ext::optional<std::size_t> tsStartIdx_;
-
-    // True if telescopic dates requested and can be applied.
-    bool telescopicDates_;
-
-    // Cached adjusted evaluation date i.e. first business day preceding the evaluation date for which the 
-    // current date schedules were calculated.
-    mutable QuantLib::Date cachedEvalDate_;
-
-    // Set value of telescopicDates_ according to whether it can be used or not.
-    void setTelescopicDates();
-
-    // Check if (telescopic) date schedules are stale.
-    bool haveStaleDates() const;
-
-    // Update (telescopic) date schedules that are stale.
-    void updateSchedules() const;
 
     // Calculate the effective rate up to a given date.
-    QuantLib::Rate effectiveRate(const QuantLib::Date& date) const;
+    QuantLib::Rate effectiveRate(const QuantLib::Date& date) const override;
 
     // Check for overnight index coupon pricer, throw if not and return shared pointer to it if valid.
     QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer> oicPricer() const;
-
-    // Add schedule dates corresponding to all fixing dates from `fixStart` up to `fixEnd`.
-    void addScheduleDates(QuantLib::Date fixEnd, QuantLib::Date fixStart, QuantLib::Date intStart,
-        QuantLib::Date lbStart, bool exclEnd = false);
-
-    // Add rate cut-off dates
-    void addRateCutoffDates(QuantLib::Date fixEnd, QuantLib::Date rcoStart, QuantLib::Date rcoIntStart,
-        QuantLib::Date rcoLbStart, bool exclEnd = false);
-
-    // Add final dates in telescopic period.
-    void addTelescopeBackStub(QuantLib::Date fixEnd, QuantLib::Date rcoStart, QuantLib::Date rcoIntStart,
-                              QuantLib::Date rcoLbStart, const QuantLib::Date& intEnd, const QuantLib::Date& adjIntEnd,
-                              const QuantLib::Date& lbEnd);
-
-    // After adding dates in telescopic period, check if we have all dates and update tsStartIdx_ accordingly.
-    void checkForAllDates() const;
-
-    // Validate date schedule sizes and populate number of periods.
-    void validateDates() const;
-
-    // Populate accrual values dt_.
-    void populateAccruals() const;
 };
 
 //! OvernightIndexedCoupon pricer
