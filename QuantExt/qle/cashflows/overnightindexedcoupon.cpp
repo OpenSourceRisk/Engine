@@ -78,6 +78,10 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
     // If we have no lookback, observation shift should be false if it isn't already.
     applyObservationShift_ = applyObservationShift_ && lookback.length() != 0;
 
+    // Record if we have a rate computation period separate from the main coupon accrual period.
+    separateRateCompPeriod_ = (rateComputationStartDate_ != Null<Date>() && rateComputationStartDate_ != startDate) ||
+        (rateComputationEndDate_ != Null<Date>() && rateComputationEndDate_ != endDate);
+
     // Unadjusted interest start and end dates.
     Date intStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
     Date intEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
@@ -271,6 +275,12 @@ const vector<Rate>& OvernightIndexedCoupon::indexFixings() const {
 }
 
 Real OvernightIndexedCoupon::accruedAmount(const Date& d) const {
+    // For non-standard coupons with a rate computation period separate from the main accrual period, we use the old 
+    // style accrued amount i.e. calculate the full accrual and scale it via the accrued period. To try to calculate 
+    // the accrual with the new method below via effectiveRate(d) makes no sense.
+    if (separateRateCompPeriod())
+        return FloatingRateCoupon::accruedAmount(d);
+
     // Note: no facility in OvernightIndexedCoupon ctor to pass in an ex-coupon date so we don't check
     // tradingExCoupon(d). Don't believe it applies for overnight indexed coupons in any case.
     if (d <= accrualStartDate_ || d > paymentDate_)
@@ -630,7 +640,8 @@ void OvernightIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) 
 }
 
 void OvernightIndexedCouponPricer::compute() const {
-    tie(swapletRate_, effectiveSpread_, effectiveIndexFixing_) = compute(coupon_->accrualEndDate());
+    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
+    tie(swapletRate_, effectiveSpread_, effectiveIndexFixing_) = compute(d);
 }
 
 tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date) const
@@ -663,8 +674,8 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     const Real spread = coupon_->spread();
     const Natural rco = coupon_->rateCutoff();
     Handle<YieldTermStructure> curve = index->forwardingTermStructure();
-    const Date& cpnAccStart = coupon_->accrualStartDate();
-    const Date& cpnAccEnd = coupon_->accrualEndDate();
+    const Date& cpnAccStart = coupon_->separateRateCompPeriod() ? intDates.front() : coupon_->accrualStartDate();
+    const Date& cpnAccEnd = coupon_->separateRateCompPeriod() ? intDates.back() : coupon_->accrualEndDate();
     const DayCounter& indexDc = index->dayCounter();
     const Natural indexFixDays = index->fixingDays();
     const Natural cpnFixDays = coupon_->fixingDays();
@@ -812,9 +823,9 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
         }
     }
 
-    // We need a valid curve after this point (unless we have the rate cut-off rate).
-    QL_REQUIRE(rcoRate || !curve.empty(), "OvernightIndexedCouponPricer: null term structure set for the " <<
-        "instance of " << index->name() << " in the overnight index coupon.");
+    // We need a valid curve after this point, unless we have the rate cut-off rate or gone through all periods.
+    QL_REQUIRE((rcoRate || currPeriodIdx == numPeriods) || !curve.empty(), "OvernightIndexedCouponPricer: null term "
+        "structure set for the instance of " << index->name() << " in the overnight index coupon.");
 
     // If we still have fixDates[currPeriodIdx] == today after previous if branch (and no rate cut-off rate), the 
     // fixing look up failed and we need to forecast today's fixing. We have the value dates for it, so we do it.
@@ -900,7 +911,11 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     }
 
     // Give the final result
-    const Time cpnDcf = coupon_->accruedPeriod(date);
+    // Again: if non-standard rate computation period, use the day count fraction from the full rate computation period 
+    //        on the index day counter (not that of the coupon) rather than the day count fraction from coupon accrual 
+    //        start date to coupon accrual end date.
+    const Time cpnDcf = coupon_->separateRateCompPeriod() ?
+        indexDc.yearFraction(intDates.front(), intDates.back()) : coupon_->accruedPeriod(date);
     const Rate rate = (compFac - 1.0) / cpnDcf;
     Rate swapletRate = !incSpread ? coupon_->gearing() * rate + spread : coupon_->gearing() * rate;
     Spread effectiveSpread = !incSpread ? spread : rate - (compFacNoSpd - 1.0) / cpnDcf;
@@ -910,22 +925,26 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
 }
 
 Rate OvernightIndexedCouponPricer::swapletRate() const {
-    tie(swapletRate_, std::ignore, std::ignore) = compute(coupon_->accrualEndDate());
+    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
+    tie(swapletRate_, std::ignore, std::ignore) = compute(d);
     return swapletRate_;
 }
 
 Rate OvernightIndexedCouponPricer::effectiveSpread() const {
-    tie(std::ignore, effectiveSpread_, std::ignore) = compute(coupon_->accrualEndDate());
+    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
+    tie(std::ignore, effectiveSpread_, std::ignore) = compute(d);
     return effectiveSpread_;
 }
 
 Rate OvernightIndexedCouponPricer::effectiveIndexFixing() const {
-    tie(std::ignore, std::ignore, effectiveIndexFixing_) = compute(coupon_->accrualEndDate());
+    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
+    tie(std::ignore, std::ignore, effectiveIndexFixing_) = compute(d);
     return effectiveIndexFixing_;
 }
 
 Rate OvernightIndexedCouponPricer::effectiveRate(const Date& date) const {
-    return std::get<0>(compute(date));
+    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : date;
+    return std::get<0>(compute(d));
 }
 
 // CappedFlooredOvernightIndexedCoupon implementation

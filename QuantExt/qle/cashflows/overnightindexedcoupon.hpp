@@ -108,8 +108,10 @@ public:
     bool hasLookback() const { return lookback_.length() != 0; }
     //! the underlying index
     const ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
-    //! the underlying index
+    //! True is telescopic dates were requested and can be applied, false otherwise.
     bool telescopicDates() const { return telescopicDates_; }
+    //! True if there is a rate computation period separate from the main coupon accrual period.
+    bool separateRateCompPeriod() const { return separateRateCompPeriod_; }
     //@}
     //! \name LazyObject interface
     //@{
@@ -142,6 +144,7 @@ private:
     Date rateComputationStartDate_;
     Date rateComputationEndDate_;
     bool applyObservationShift_;
+    bool separateRateCompPeriod_;
 
     // Record last possible fixing date.
     QuantLib::Date lastFixingDate_;
