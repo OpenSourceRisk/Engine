@@ -115,21 +115,21 @@ public:
     //! \name Constructors
     //@{
     PiecewiseOptionletCurve(const QuantLib::Date& referenceDate,
-                            const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
+                            const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
                             const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
                             const QuantLib::DayCounter& dayCounter,
                             QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                             QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                            const Interpolator& i = Interpolator(),
+                            bool useEffectiveVolatility = false, const Interpolator& i = Interpolator(),
                             const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
 
     PiecewiseOptionletCurve(QuantLib::Natural settlementDays,
-                            const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
+                            const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
                             const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc,
                             const QuantLib::DayCounter& dayCounter,
                             QuantLib::VolatilityType volatilityType = QuantLib::Normal,
                             QuantLib::Real displacement = 0.0, bool flatFirstPeriod = true,
-                            const Interpolator& i = Interpolator(),
+                            bool useEffectiveVolatility = false, const Interpolator& i = Interpolator(),
                             const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
     //@}
 
@@ -178,22 +178,24 @@ private:
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
-    const QuantLib::Date& referenceDate, const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
+    const QuantLib::Date& referenceDate, const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
     const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
-    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod, const Interpolator& i,
-    const Bootstrap<this_curve>& bootstrap)
-    : base_curve(referenceDate, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod, i),
+    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod,
+    bool useEffectiveVolatility, const Interpolator& i, const Bootstrap<this_curve>& bootstrap)
+    : base_curve(referenceDate, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod,
+                 useEffectiveVolatility, i),
       instruments_(instruments), accuracy_(1e-12), bootstrap_(bootstrap) {
     bootstrap_.setup(this);
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
-    QuantLib::Natural settlementDays, const std::vector<QuantLib::ext::shared_ptr<helper> >& instruments,
+    QuantLib::Natural settlementDays, const std::vector<QuantLib::ext::shared_ptr<helper>>& instruments,
     const QuantLib::Calendar& calendar, QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dayCounter,
-    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod, const Interpolator& i,
-    const Bootstrap<this_curve>& bootstrap)
-    : base_curve(settlementDays, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod, i),
+    QuantLib::VolatilityType volatilityType, QuantLib::Real displacement, bool flatFirstPeriod,
+    bool useEffectiveVolatility, const Interpolator& i, const Bootstrap<this_curve>& bootstrap)
+    : base_curve(settlementDays, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod,
+                 useEffectiveVolatility, i),
       instruments_(instruments), accuracy_(1e-12), bootstrap_(bootstrap) {
     bootstrap_.setup(this);
 }

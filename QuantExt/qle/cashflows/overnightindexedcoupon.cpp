@@ -475,12 +475,10 @@ void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
 // CappedFlooredOvernightIndexedCouponPricer implementation (this is the base class only)
 
 CappedFlooredOvernightIndexedCouponPricer::CappedFlooredOvernightIndexedCouponPricer(
-    const Handle<OptionletVolatilityStructure>& v, const bool effectiveVolatilityInput)
-    : capletVol_(v), effectiveVolatilityInput_(effectiveVolatilityInput) {
+    const Handle<OptionletVolatilityStructure>& v)
+    : capletVol_(v) {
     registerWith(capletVol_);
 }
-
-bool CappedFlooredOvernightIndexedCouponPricer::effectiveVolatilityInput() const { return effectiveVolatilityInput_; }
 
 Real CappedFlooredOvernightIndexedCouponPricer::effectiveCapletVolatility() const { return effectiveCapletVolatility_; }
 

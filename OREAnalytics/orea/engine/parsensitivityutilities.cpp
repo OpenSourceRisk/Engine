@@ -356,14 +356,14 @@ public:
         if (volType == ShiftedLognormal) {
             constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
                 0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), ShiftedLognormal,
-                volDisplacement));
+                volDisplacement, true));
         } else {
             minVol = 1.0e-9;
             maxVol = 0.05;
             constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
-                0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), Normal));
+                0, NullCalendar(), Unadjusted, Handle<Quote>(implVolQuote), Actual365Fixed(), Normal, 0.0, true));
         }
-        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts, true);
+        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts);
 
         const auto& cap = cap_;
         Real price = cap->NPV();

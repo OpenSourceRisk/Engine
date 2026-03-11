@@ -377,7 +377,7 @@ OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction
     Handle<OptionletVolatilityStructure> spreadedOvs = Handle<OptionletVolatilityStructure>(
         QuantLib::ext::make_shared<QuantExt::SpreadedOptionletVolatility>(ovs, Handle<Quote>(spreadQuote_)));
 
-    auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(spreadedOvs, false);
+    auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(spreadedOvs);
     for (auto& c : cap_) {
         if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c))
             f->setPricer(pricer);

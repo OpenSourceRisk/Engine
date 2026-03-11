@@ -386,36 +386,42 @@ TradeCashflowReportData getCashflowReportData(
     } else if (auto tmp = ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(c)) {
         floorStrike = tmp->effectiveFloor();
         capStrike = tmp->effectiveCap();
-        volFixingDate = tmp->underlying()->fixingDates().front();
         qlIndexName = tmp->index()->name();
-        usesCapVol = true;
-        if (floorStrike != Null<Real>())
+        if (floorStrike != Null<Real>()) {
             effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-        if (capStrike != Null<Real>())
+            floorVolatility = tmp->strippedFloorletVolatility();
+        }
+        if (capStrike != Null<Real>()) {
             effectiveCapVolatility = tmp->effectiveCapletVolatility();
+            capVolatility = tmp->strippedCapletVolatility();
+        }
     } else if (auto tmp = ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(c)) {
         floorStrike = tmp->effectiveFloor();
         capStrike = tmp->effectiveCap();
-        volFixingDate = tmp->underlying()->fixingDates().front();
         qlIndexName = tmp->index()->name();
-        usesCapVol = true;
-        if (floorStrike != Null<Real>())
+        if (floorStrike != Null<Real>()) {
             effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-        if (capStrike != Null<Real>())
+            floorVolatility = tmp->strippedFloorletVolatility();
+        }
+        if (capStrike != Null<Real>()) {
             effectiveCapVolatility = tmp->effectiveCapletVolatility();
+            capVolatility = tmp->strippedCapletVolatility();
+        }
     } else if (auto tmp = ext::dynamic_pointer_cast<QuantExt::CappedFlooredAverageBMACoupon>(c)) {
         floorStrike = tmp->effectiveFloor();
         capStrike = tmp->effectiveCap();
-        volFixingDate = tmp->underlying()->fixingDates().front();
         qlIndexName = tmp->index()->name();
-        usesCapVol = true;
-        if (floorStrike != Null<Real>())
+        if (floorStrike != Null<Real>()) {
             effectiveFloorVolatility = tmp->effectiveFloorletVolatility();
-        if (capStrike != Null<Real>())
+            floorVolatility = tmp->strippedFloorletVolatility();
+        }
+        if (capStrike != Null<Real>()) {
             effectiveCapVolatility = tmp->effectiveCapletVolatility();
+            capVolatility = tmp->strippedCapletVolatility();
+        }
     }
 
-    // get market volaility for cap / floor
+    // get market volaility for swaption and cap / floor (some cf variants are handled above already though)
 
     if (volFixingDate != Date() && fixingDate > asof) {
         volFixingDate = std::max(volFixingDate, asof + 1);

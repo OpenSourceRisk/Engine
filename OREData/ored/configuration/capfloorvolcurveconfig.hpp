@@ -112,6 +112,7 @@ public:
     const string& currency() const;
     string indexTenor() const;
     bool flatFirstPeriod() const { return flatFirstPeriod_; }
+    bool useEffectiveVolatility() const { return useEffectiveVolatility_; }
     //
     const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
     const std::string& proxySourceIndex() const { return proxySourceIndex_; }
@@ -160,6 +161,7 @@ private:
     std::string extrapolation_;
     std::string inputType_;
     bool flatFirstPeriod_ = true;
+    bool useEffectiveVolatility_ = true;
     //
     std::string proxySourceCurveId_;
     std::string proxySourceIndex_;

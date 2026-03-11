@@ -473,6 +473,7 @@
       </xs:element>
       <xs:element type="bool" name="QuoteIncludesIndexName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FlatFirstPeriod" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="UseEffeciveVolatility" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
