@@ -147,7 +147,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
                 helpers_[j].push_back(QuantLib::ext::make_shared<CapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], strikes[j], Handle<Quote>(quotes_[i].back()), index_,
                     discount_, true, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_,
-                    useEffectiveVolatility));
+                    useEffectiveVolatility_));
             }
         }
     }
