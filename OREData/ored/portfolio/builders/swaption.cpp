@@ -80,6 +80,29 @@ model(const string& id, const std::vector<string>& keys, const std::vector<Date>
       const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
       const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const EngineBuilder* builder) {
 
+    // check inputs
+
+    QL_REQUIRE(strikes.size() == keys.size(),
+               "SwaptionBuilder::model(): strikes (" << strikes.size() << "), keys (" << keys.size() << ") mismatch.");
+    QL_REQUIRE(fxStrikes.size() == keys.size() - 1, "SwaptionBuilder::model(): fxStrikes ("
+                                                        << fxStrikes.size() << "), keys (" << keys.size()
+                                                        << ") mismatch.");
+    QL_REQUIRE(expiries.size() == maturities.size(), "SwaptionBuilder::model(): expiries ("
+                                                         << expiries.size() << "), maturities (" << maturities.size()
+                                                         << ") mismatch.");
+    for (Size i = 0; i < keys.size(); ++i) {
+        QL_REQUIRE(expiries.size() == strikes[i].size(), "SwaptionBuilder::model(): expiries ("
+                                                             << expiries.size() << "), strikes[" << i << "] ("
+                                                             << maturities.size() << ") mismatch.");
+    }
+    for (Size i = 0; i < keys.size() - 1; ++i) {
+        QL_REQUIRE(expiries.size() == fxStrikes[i].size(), "SwaptionBuilder::model(): expiries ("
+                                                               << expiries.size() << "), fxStrikes[" << i << "] ("
+                                                               << maturities.size() << ") mismatch.");
+    }
+
+    // read som model parameters
+
     auto calibration = parseCalibrationType(builder->modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(builder->modelParameter("CalibrationStrategy"));
     bool continueOnCalibrationError = builder->globalParameters().count("ContinueOnCalibrationError") > 0 &&
@@ -115,6 +138,7 @@ model(const string& id, const std::vector<string>& keys, const std::vector<Date>
                                << ") are not allowed in this combination");
 
     // compute horizon shift
+
     Real shiftHorizon = parseReal(builder->modelParameter("ShiftHorizon", {}, false, "0.5"));
     Date today = Settings::instance().evaluationDate();
     shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturities.back()) * shiftHorizon;
@@ -127,7 +151,7 @@ model(const string& id, const std::vector<string>& keys, const std::vector<Date>
         effExpiries = expiries;
         effMaturities = maturities;
     } else {
-        QL_REQUIRE(maturities.size() == 2,
+        QL_REQUIRE(expiries.size() == 2,
                    "LGMBermudanAmericanSwaptionEngineBuilder::model(): expected 2 expiries for exercise "
                    "style 'American', got "
                        << expiries.size() << " expiries");
@@ -200,9 +224,9 @@ model(const string& id, const std::vector<string>& keys, const std::vector<Date>
             if (strikes[i][0] != Null<Real>() && strikes[i][1] != Null<Real>()) {
                 Real t0 = Actual365Fixed().yearFraction(today, expiries[0]);
                 Real t1 = Actual365Fixed().yearFraction(today, expiries[1]);
-                for (Size i = 0; i < effExpiries.size(); ++i) {
-                    Real t = Actual365Fixed().yearFraction(today, effExpiries[i]);
-                    effStrikes[i] = strikes[i][0] + (strikes[i][1] - strikes[i][0]) / (t1 - t0) * (t - t0);
+                for (Size k = 0; k < effExpiries.size(); ++k) {
+                    Real t = Actual365Fixed().yearFraction(today, effExpiries[k]);
+                    effStrikes[k] = strikes[i][0] + (strikes[i][1] - strikes[i][0]) / (t1 - t0) * (t - t0);
                 }
             }
         }
