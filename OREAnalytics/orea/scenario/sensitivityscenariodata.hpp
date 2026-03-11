@@ -141,9 +141,9 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*", bool computeTheta = false, QuantLib::Period thetaPeriod = Period(1, QuantLib::TimeUnit::Days),
+    SensitivityScenarioData(bool parConversion = true, std::string parConversionExcludeFixings = ".*",
                             ore::data::ParConversionMatrixRegularisation parConversionMatrixRegularisation = ore::data::ParConversionMatrixRegularisation::Silent)
-        : computeGamma_(true), computeTheta_(computeTheta), thetaPeriod_(thetaPeriod),
+        : computeGamma_(true),
           useSpreadedTermStructures_(false), parConversion_(parConversion), 
           parConversionExcludeFixings_(parConversionExcludeFixings), parConversionMatrixRegularisation_(parConversionMatrixRegularisation){};
 
@@ -196,8 +196,6 @@ public:
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
     const bool computeGamma() const { return computeGamma_; }
-    const bool computeTheta() const { return computeTheta_; }
-    const QuantLib::Period& thetaPeriod() const { return thetaPeriod_; }
     const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
@@ -247,8 +245,6 @@ public:
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
-    bool& computeTheta() { return computeTheta_; }
-    QuantLib::Period& thetaPeriod() { return thetaPeriod_; }
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
 
     void setParConversion(const bool b) { parConversion_ = b; }
@@ -307,8 +303,6 @@ public:
 
     void setCrossGammaFilter(const vector<pair<string, string>>& d) { crossGammaFilter_ = d; }
     void setComputeGamma(const bool b) { computeGamma_ = b; }
-    void setComputeTheta(const bool b) { computeTheta_ = b; }
-    void setThetaPeriod(const QuantLib::Period& p) { thetaPeriod_ = p; }
     void setUseSpreadedTermStructures(const bool b) { useSpreadedTermStructures_ = b; }
     void setParConversionExcludeFixings(const std::string b) { parConversionExcludeFixings_ = b; }
 
@@ -371,8 +365,6 @@ protected:
 
     vector<pair<string, string>> crossGammaFilter_;
     bool computeGamma_;
-    bool computeTheta_;
-    QuantLib::Period thetaPeriod_;
     bool useSpreadedTermStructures_;
     bool parConversion_;
     set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;

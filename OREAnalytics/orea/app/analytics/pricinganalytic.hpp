@@ -23,12 +23,24 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/inputvariables.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
 
 namespace ore {
 namespace analytics {
 
 class InputParameters;
+
+ struct PricingVariables : public InputVariables {
+    void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
+
+    bool computeTheta_ = true;
+    Period thetaPeriod_ = Period(1, Days);
+    bool outputCurves_ = false;
+    std::string curvesMarketConfig_ = Market::defaultConfiguration;
+    std::string curvesGrid_ = "240,1M";
+    std::string curvesCalendar_ = "TARGET";
+};
 
 /*! Pricing-type analytics
   \todo align pillars for par sensitivity analysis
@@ -37,7 +49,8 @@ class PricingAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PRICING";
 
-    PricingAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    PricingAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs, QuantLib::ext::make_shared<PricingVariables>()) { setLabel(LABEL); }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::set<std::string>& runTypes = {}) override;
 
@@ -59,10 +72,6 @@ public:
 private:
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
     QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
-    bool outputCurves_ = false;
-    std::string curvesMarketConfig_ = Market::defaultConfiguration;
-    std::string curvesGrid_ = "240,1M";
-    std::string curvesCalendar_ = "TARGET";
 
 protected:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;

@@ -35,6 +35,19 @@ namespace analytics {
  * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
  *******************************************************************/
 
+ void PricingVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs){
+    inputs->loadParameter<bool>(computeTheta_, "sensitivity", "computeTheta", false, parseBool);
+    inputs->loadParameter<Period>(thetaPeriod_, "sensitivity", "thetaPeriod", false, parsePeriod);
+    inputs->loadParameter<bool>(outputCurves_, "curves", "active", false,
+                                std::function<bool(const string&)>(parseBool));
+    if (!outputCurves_)
+        inputs->loadParameter<bool>(outputCurves_, "npv", "outputCurves", false,
+                                    std::function<bool(const string&)>(parseBool));
+    inputs->loadParameter<string>(curvesGrid_, "curves", "grid", false);
+    inputs->loadParameter<string>(curvesMarketConfig_, "curves", "configuration", false);
+    inputs->loadParameter<string>(curvesCalendar_, "curves", "calendar", false);
+ }
+
 void PricingAnalyticImpl::overwriteResultCurrency(const std::string& ccy) { overwriteResultCurrency_ = ccy; }
 
 void PricingAnalyticImpl::setUpConfigurations() {    
@@ -49,15 +62,6 @@ void PricingAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 
     setGenerateAdditionalResults(true);
-
-    inputs_->loadParameter<bool>(outputCurves_, "curves", "active", false,
-                                 std::function<bool(const string&)>(parseBool));
-    if (!outputCurves_)
-        inputs_->loadParameter<bool>(outputCurves_, "npv", "outputCurves", false,
-                                 std::function<bool(const string&)>(parseBool));
-    inputs_->loadParameter<string>(curvesGrid_, "curves", "grid", false);
-    inputs_->loadParameter<string>(curvesMarketConfig_, "curves", "configuration", false);
-    inputs_->loadParameter<string>(curvesCalendar_, "curves", "calendar", false);
 }
 
 void PricingAnalyticImpl::runAnalytic( 
@@ -137,12 +141,13 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "assetmodel_paths", pathReport);
                 CONSOLE("OK");
             }
-            if (outputCurves_) {
+            auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
+            if (pVars && pVars->outputCurves_) {
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                DateGrid grid(curvesGrid_, parseCalendar(curvesCalendar_));
-                std::string config = curvesMarketConfig_;
+                DateGrid grid(pVars->curvesGrid_, parseCalendar(pVars->curvesCalendar_));
+                std::string config = pVars->curvesMarketConfig_;
                 ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());
@@ -181,7 +186,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
                     inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun(),
-                    inputs_->useAtParCouponsTrades());
+                    inputs_->useAtParCouponsTrades(), inputs_->computeTheta(), inputs_->thetaPeriod());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -193,7 +198,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     inputs_->iborFallbackConfig(), true, inputs_->dryRun(), "sensi analysis",
-                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades());
+                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), inputs_->computeTheta(), inputs_->thetaPeriod());
                 LOG("Multi-threaded sensi analysis created");
             }
 
