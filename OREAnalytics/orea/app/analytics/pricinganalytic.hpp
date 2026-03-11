@@ -49,8 +49,7 @@ class PricingAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PRICING";
 
-    PricingAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic::Impl(inputs, QuantLib::ext::make_shared<PricingVariables>()) { setLabel(LABEL); }
+    PricingAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs, QuantLib::ext::make_shared<PricingVariables>()) { setLabel(LABEL); }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::set<std::string>& runTypes = {}) override;
 
