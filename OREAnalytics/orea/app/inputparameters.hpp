@@ -616,6 +616,9 @@ public:
     void setAmcCgPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) { parameters_.set("simulation", "amcCgPricingEnginesFile", engineData); };
     void setNettingSetManager(const std::string& xml) { parameters_.set("xva", "csaFile", xml); };
     void setNettingSetManager(const QuantLib::ext::shared_ptr<NettingSetManager>& xml) { parameters_.set("xva", "csaFile", xml); };
+    void setWriteCubeFile(bool b) { parameters_.set("simulation", "writeCube", b); };
+    void setWriteRawCubeFile(bool b) { parameters_.set("xva", "rawCubeOutput", b); };
+    void setWriteNetCubeFile(bool b) { parameters_.set("xva", "netCubeOutput", b); };
     void setCollateralBalances(const std::string& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setCollateralBalances(const QuantLib::ext::shared_ptr<CollateralBalances>& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setReportBufferSize(Size s) { setupVariables_.reportBufferSize_ = s; }
