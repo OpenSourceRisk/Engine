@@ -314,7 +314,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
         Real shift = capletVolatility()->displacement();
         Real stdDev, strippedVol;
         Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
-        if (effectiveVolatilityInput()) {
+        if (capletVolatility()->useEffectiveVolatility()) {
             // vol input is effective, i.e. we use a plain black model
             strippedVol = capletVolatility()->volatility(fixingDates.back(), effStrike);
             stdDev = strippedVol * std::sqrt(effectiveTime);

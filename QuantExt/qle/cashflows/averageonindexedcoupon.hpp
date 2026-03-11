@@ -166,7 +166,6 @@ class CapFlooredAverageONIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
     CapFlooredAverageONIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
     Handle<OptionletVolatilityStructure> capletVolatility() const;
-    bool effectiveVolatilityInput() const;
     Real effectiveCapletVolatility() const;   // only available after capletRate() was called
     Real effectiveFloorletVolatility() const; // only available after floorletRate() was called
     Real strippedCapletVolatility() const;    // only available after capletRate() was called
@@ -174,7 +173,6 @@ public:
 
 protected:
     Handle<OptionletVolatilityStructure> capletVol_;
-    bool effectiveVolatilityInput_;
     mutable Real effectiveCapletVolatility_ = Null<Real>();
     mutable Real effectiveFloorletVolatility_ = Null<Real>();
     mutable Real strippedCapletVolatility_ = Null<Real>();

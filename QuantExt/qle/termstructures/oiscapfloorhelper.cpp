@@ -160,7 +160,7 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
                 true));
         } else {
             constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
-                0, NullCalendar(), Unadjusted, rawQuote_, Actual365Fixed(), Normal, true));
+                0, NullCalendar(), Unadjusted, rawQuote_, Actual365Fixed(), Normal, 0.0, true));
         }
         auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts);
         for (auto c : capFloorCopy_) {

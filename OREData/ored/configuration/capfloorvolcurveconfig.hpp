@@ -161,7 +161,7 @@ private:
     std::string extrapolation_;
     std::string inputType_;
     bool flatFirstPeriod_ = true;
-    bool useEffectiveVolatility_ = true;
+    bool useEffectiveVolatility_ = false;
     //
     std::string proxySourceCurveId_;
     std::string proxySourceIndex_;

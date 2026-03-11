@@ -296,8 +296,6 @@ CapFlooredAverageONIndexedCouponPricer::CapFlooredAverageONIndexedCouponPricer(
     registerWith(capletVol_);
 }
 
-bool CapFlooredAverageONIndexedCouponPricer::effectiveVolatilityInput() const { return effectiveVolatilityInput_; }
-
 Real CapFlooredAverageONIndexedCouponPricer::effectiveCapletVolatility() const { return effectiveCapletVolatility_; }
 
 Real CapFlooredAverageONIndexedCouponPricer::effectiveFloorletVolatility() const {
