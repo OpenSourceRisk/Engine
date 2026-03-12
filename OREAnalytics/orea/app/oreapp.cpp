@@ -1225,99 +1225,11 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->getString("calibration", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("CALIBRATION");
-        tmp = params_->getString("calibration", "model", false);
-        if (tmp.empty() || tmp == "CAM") {
-            setCalibrationModel("CAM");
-        } else if (tmp == "HW") {
-            setCalibrationModel("HW");
-            tmp = params_->getString("calibration", "mode", false);
-            if (tmp == "historical") {
-                setHwCalibrationMode("Historical");
-
-                tmp = params_->getString("calibration", "foreignCurrencies", false);
-                setForeignCurrencies(tmp);
-
-                tmp = params_->getString("calibration", "curveTenors", false);
-                QL_REQUIRE(!tmp.empty(), "Curve tenor must be provided for Calibration Analytics");
-                setCurveTenors(tmp);
-
-                tmp = params_->getString("calibration", "useForwardOrZeroRate", false);
-                QL_REQUIRE(tmp == "forward" || tmp == "zero",
-                           "useForwardOrZeroRate must be either forward or zero for Calibration Analytics");
-                setUseForwardOrZeroRate(tmp);
-
-                // pca calibration
-                tmp = params_->getString("calibration", "pcaCalibration", false);
-                if (!tmp.empty() && parseBool(tmp)) {
-                    setPcaCalibration(true);
-
-                    tmp = params_->getString("calibration", "scenarioInputFile", false);
-                    QL_REQUIRE(!tmp.empty(), "Scenario input files must be provided for Calibration Analytics");
-                    setScenarioInputFile((setupVariables_.inputPath_ / tmp).generic_string());
-
-                    tmp = params_->getString("calibration", "startDate", false);
-                    QL_REQUIRE(!tmp.empty(), "Start date must be provided for Calibration Analytics");
-                    setStartDate(parseDate(tmp));
-
-                    tmp = params_->getString("calibration", "endDate", false);
-                    QL_REQUIRE(!tmp.empty(), "End date must be provided for Calibration Analytics");
-                    setEndDate(parseDate(tmp));
-
-                    tmp = params_->getString("calibration", "lambda", false);
-                    if (tmp.empty())
-                        tmp = "1.0";
-                    Real tmpReal = parseReal(tmp);
-                    QL_REQUIRE(tmpReal > 0.0 && tmpReal <= 1.0, "Lambda must be 0 < lambda <= 1");
-                    setLambda(tmpReal);
-
-                    tmp = params_->getString("calibration", "varianceRetained", false);
-                    QL_REQUIRE(!tmp.empty(), "Variance retained must be provided for Calibration Analytics");
-                    tmpReal = parseReal(tmp);
-                    QL_REQUIRE(tmpReal > 0.0 && tmpReal <= 1.0, "Variance retained must be 0 < lambda <= 1");
-                    setVarianceRetained(tmpReal);
-
-                    tmp = params_->getString("calibration", "pcaOutputFileName", false);
-                    setPcaOutputFileName((setupVariables_.resultsPath_ / tmp).generic_string());
-                } else {
-                    setPcaCalibration(false);
-                }
-                tmp = params_->getString("calibration", "meanReversionCalibration", false);
-                if (!tmp.empty() && parseBool(tmp)) {
-                    setMeanReversionCalibration(true);
-
-                    tmp = params_->getString("calibration", "pcaInputFileName", false);
-                    //filesystem::path inputPath = setupVariables_.inputPath_;
-                    if (!tmp.empty()) {
-                        setPcaInputFiles(tmp, setupVariables_.inputPath_);
-                    }
-                    tmp = params_->getString("calibration", "basisFunctionNumber", false);
-                    Size tmpInt = parseInteger(tmp);
-                    QL_REQUIRE(tmpInt > 0, "Basis function number must be > 0 for Calibration Analytics");
-                    setBasisFunctionNumber(tmpInt);
-
-                    tmp = params_->getString("calibration", "kappaUpperBound", false);
-                    setKappaUpperBound(parseReal(tmp));
-
-                    tmp = params_->getString("calibration", "haltonMaxGuess", false);
-                    setHaltonMaxGuess(parseInteger(tmp));
-
-                    tmp = params_->getString("calibration", "meanReversionOutputFileName", false);
-                    setMeanReversionOutputFileName((setupVariables_.resultsPath_ / tmp).generic_string());
-                } else {
-                    setMeanReversionCalibration(false);
-                }
-            } else if (tmp == "riskNeutral") {
-                // TODO
-            } else {
-                ALOG("In Calibration Analytics, only historical or riskNeutral mode are supported for HW model, got "
-                     << tmp);
-            }
-        }
     }
 
     /*************
-    * Correlation
-    *************/
+     * Correlation
+     *************/
     tmp = params_->getString("correlation", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("CORRELATION");    

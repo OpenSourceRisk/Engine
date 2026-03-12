@@ -341,7 +341,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
             iw.push_back(dkoInstrument);
             fxRates.push_back(fx);
         }
-        instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new CompositeInstrumentWrapper(iw, fxRates, today));
+        instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new CompositeInstrumentWrapper(iw, fxRates));
     }
 
     if (start != Date()) {

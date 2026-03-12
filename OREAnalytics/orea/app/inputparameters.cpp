@@ -896,57 +896,6 @@ void InputParameters::setRiskFactorLevel(bool b) {
     parameters_.set("pnl", "riskFactorLevelReporting", b);
 }
 
-void InputParameters::setCalibrationModel(const std::string& s) {
-    calibrationModel_ = s; 
-}
-
-void InputParameters::setHwCalibrationMode(const std::string& s) {
-    hwCalibrationMode_ = s; 
-}
-
-void InputParameters::setPcaCalibration(bool b) { pcaCalibration_ = b; }
-
-void InputParameters::setMeanReversionCalibration(bool b) { meanReversionCalibration_ = b; }
-
-void InputParameters::setForeignCurrencies(const std::string& s) { foreignCurrencies_ = parseListOfValues(s); }
-
-void InputParameters::setCurveTenors(const std::string& s) { curveTenors_ = parseListOfValues<Period>(s, &parsePeriod); }
-
-void InputParameters::setScenarioInputFile(const std::string& s) { 
-    scenarioInputFile_ = s;
-}
-
-void InputParameters::setStartDate(const Date& d) { startDate_ = d; }
-
-void InputParameters::setEndDate(const Date& d) { endDate_ = d; }
-
-void InputParameters::setUseForwardOrZeroRate(const std::string& s) {
-    // value checked in oreapp.cpp
-    if (s == "forward")
-        useForwardRate_ = true;
-    else
-        useForwardRate_ = false;
-}
-
-void InputParameters::setLambda(Real r) { lambda_ = r; }
-
-void InputParameters::setVarianceRetained(Real r) { varianceRetained_ = r; }
-
-void InputParameters::setPcaInputFiles(const std::string& fileString, const std::filesystem::path& inputPath) {
-    pcaInputFiles_ = getFileNames(fileString, inputPath);
-}
-
-void InputParameters::setBasisFunctionNumber(Size s) { basisFunctionNumber_ = s; }
-
-void InputParameters::setKappaUpperBound(Real r) { kappaUpperBound_ = r; }
-
-void InputParameters::setHaltonMaxGuess(Size s) { haltonMaxGuess_ = s; }
-
-void InputParameters::setPcaOutputFileName(const std::string& s) { pcaOutputFileName_ = s; }
-
-void InputParameters::setMeanReversionOutputFileName(const std::string& s) { meanReversionOutputFileName_ = s; }
-
-
 OutputParameters::OutputParameters(const ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->getString("npv", "outputFileName", false);

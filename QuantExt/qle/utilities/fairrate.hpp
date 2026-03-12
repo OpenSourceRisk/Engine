@@ -37,8 +37,8 @@ namespace QuantExt {
     The reference leg is selected internally according to the following rules:
     1. If a fixed leg is present, use the first fixed leg.
     2. If multiple fixed legs are present, only the first is used as reference.
-    3. If no fixed leg is present, use the first floating leg with non-zero spread.
-    4. If none has non-zero spread, use the first floating leg.
+    3. If no fixed leg is present, use the first floating leg with payer = true
+    4. If none has payer = true, use the first floating leg.
 
     If the reference leg is fixed, the first return component is the par fixed rate.
     If the reference leg is floating, the first return component is the fair spread.

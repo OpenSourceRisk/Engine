@@ -34,6 +34,7 @@ StrippedOptionlet::StrippedOptionlet(Natural settlementDays,
                                      DayCounter dc,
                                      VolatilityType type,
                                      Real displacement,
+                                     bool useEffectiveVolatility,
                                      const vector<Real>& atmOptionletRates)
     : StrippedOptionlet(settlementDays,
                         calendar,
@@ -46,6 +47,7 @@ StrippedOptionlet::StrippedOptionlet(Natural settlementDays,
                         std::move(dc),
                         type,
                         displacement,
+                        useEffectiveVolatility,
                         atmOptionletRates) {}
 
 StrippedOptionlet::StrippedOptionlet(Natural settlementDays,
@@ -59,11 +61,12 @@ StrippedOptionlet::StrippedOptionlet(Natural settlementDays,
                                      DayCounter dc,
                                      VolatilityType type,
                                      Real displacement,
+                                     bool useEffectiveVolatility,
                                      const vector<Real>& atmOptionletRates)
     : QuantLib::StrippedOptionlet(settlementDays, calendar, bdc, iborIndex, optionletDates,
                                   strikes,
                                   quotes,
-                                  dc, type, displacement, atmOptionletRates),
+                                  dc, type, displacement,useEffectiveVolatility, atmOptionletRates),
                                   baseVol_(baseVol), quotes_(quotes) {
     registerWith(baseVol);
     for (auto x : quotes_)

@@ -42,7 +42,8 @@ public:
         const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,
         const Schedule& schedule, const BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
         const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
-        const Handle<YieldTermStructure>& termStructure, const Rate spread = Null<Rate>(),
+        const Handle<YieldTermStructure>& termStructureSwapCurrency,
+        const Handle<YieldTermStructure>& termStructureTradeCollateral, const Rate spread = Null<Rate>(),
         const Rate upfront = Null<Rate>(), const bool settlesAccrual = true,
         const CreditDefaultSwap::ProtectionPaymentTime proteectionPaymentTime =
             CreditDefaultSwap::ProtectionPaymentTime::atDefault,
@@ -58,7 +59,6 @@ public:
     QuantLib::ext::shared_ptr<QuantExt::CdsOption> option() const { return option_; }
 
 private:
-    Handle<YieldTermStructure> termStructure_;
     QuantLib::ext::shared_ptr<CreditDefaultSwap> cds_;
     QuantLib::ext::shared_ptr<QuantExt::CdsOption> option_;
     QuantLib::ext::shared_ptr<SimpleQuote> blackVol_;

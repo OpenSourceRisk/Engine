@@ -163,22 +163,22 @@ void CapFloorVolCurve::buildProxyCurve(
                 volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, INTINSTANCE,       \
                 my_curve_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},       \
                                            !flatFirstPeriod),                                                          \
-                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+                config.rateComputationPeriod(), config.onCapSettlementDays(), useEffectiveVolatility);                 \
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(             \
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),      \
                                 tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),               \
-                                tmp->volatilityType(), tmp->displacement()));                                          \
+                                tmp->volatilityType(), tmp->displacement(), tmp->useEffectiveVolatility()));           \
         } else {                                                                                                       \
             auto tmp = QuantLib::ext::make_shared<my_curve_1>(                                                         \
                 config.settleDays(), cftvc, index, discountCurve, flatFirstPeriod,                                     \
                 volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt, INTINSTANCE,       \
                 my_curve_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,     \
                                            dontThrowSteps),                                                            \
-                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+                config.rateComputationPeriod(), config.onCapSettlementDays(), useEffectiveVolatility);                 \
             capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<INTMETH, INTMETH>>(             \
                 asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),      \
                                 tmp->calendar(), tmp->businessDayConvention(), index, tmp->dayCounter(),               \
-                                tmp->volatilityType(), tmp->displacement()));                                          \
+                                tmp->volatilityType(), tmp->displacement(), tmp->useEffectiveVolatility()));           \
         }                                                                                                              \
     }
 
@@ -208,6 +208,7 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolCurve> cftvc = atmCurve(asof, config, loader);
 
     bool flatFirstPeriod = config.flatFirstPeriod();
+    bool useEffectiveVolatility = config.useEffectiveVolatility();
     VolatilityType optVolType = volatilityType(config.outputVolatilityType());
     Real optDisplacement = 0.0;
     if (optVolType == QuantLib::ShiftedLognormal) {
@@ -277,14 +278,14 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
                 INTINSTANCE,                                                                                           \
                 my_stripper_2::bootstrap_type({}, {}, additionalPenalties, accuracy, nullptr, nullptr, nullptr, {},    \
                                               !flatFirstPeriod),                                                       \
-                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+                config.rateComputationPeriod(), config.onCapSettlementDays(), useEffectiveVolatility);                 \
         } else {                                                                                                       \
             optionletStripper = QuantLib::ext::make_shared<my_stripper_1>(                                             \
                 cftvs, index, discountCurve, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,      \
                 INTINSTANCE,                                                                                           \
                 my_stripper_1::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,  \
                                               dontThrowSteps),                                                         \
-                config.rateComputationPeriod(), config.onCapSettlementDays());                                         \
+                config.rateComputationPeriod(), config.onCapSettlementDays(), useEffectiveVolatility);                 \
         }                                                                                                              \
     }
 
@@ -319,6 +320,7 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface> cftvs = capSurface(asof, config, loader);
 
     bool flatFirstPeriod = config.flatFirstPeriod();
+    bool useEffectiveVolatility = config.useEffectiveVolatility();
 
     // Get the ATM cap floor term vol curve if we are including an ATM curve
     bool includeAtm = config.includeAtm();
@@ -581,29 +583,29 @@ void CapFloorVolCurve::optAtmOptCurve(const Date& asof, CapFloorVolatilityCurveC
     // Note: second template argument in StrippedOptionletAdapter doesn't matter so just use Linear here.
     if (config.timeInterpolation() == "Linear") {
         capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-            asof, transform(asof, fixingDates, vols_tenor, config.settleDays(),
-                            config.calendar(), config.businessDayConvention(), index, config.dayCounter(),
-                            volatilityType(config.volatilityType()), shift));
+            asof, transform(asof, fixingDates, vols_tenor, config.settleDays(), config.calendar(),
+                            config.businessDayConvention(), index, config.dayCounter(),
+                            volatilityType(config.volatilityType()), shift, config.useEffectiveVolatility()));
     } else if (config.timeInterpolation() == "LinearFlat") {
         capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
             asof, transform(asof, fixingDates, vols_tenor, config.settleDays(), config.calendar(),
                             config.businessDayConvention(), index, config.dayCounter(),
-                            volatilityType(config.volatilityType()), shift));
+                            volatilityType(config.volatilityType()), shift, config.useEffectiveVolatility()));
     } else if (config.timeInterpolation() == "BackwardFlat") {
         capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Linear>>(
             asof, transform(asof, fixingDates, vols_tenor, config.settleDays(), config.calendar(),
                             config.businessDayConvention(), index, config.dayCounter(),
-                            volatilityType(config.volatilityType()), shift));
+                            volatilityType(config.volatilityType()), shift, config.useEffectiveVolatility()));
     } else if (config.timeInterpolation() == "Cubic") {
         capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
             asof, transform(asof, fixingDates, vols_tenor, config.settleDays(), config.calendar(),
                             config.businessDayConvention(), index, config.dayCounter(),
-                            volatilityType(config.volatilityType()), shift));
+                            volatilityType(config.volatilityType()), shift, config.useEffectiveVolatility()));
     } else if (config.timeInterpolation() == "CubicFlat") {
         capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
             asof, transform(asof, fixingDates, vols_tenor, config.settleDays(), config.calendar(),
                             config.businessDayConvention(), index, config.dayCounter(),
-                            volatilityType(config.volatilityType()), shift));
+                            volatilityType(config.volatilityType()), shift, config.useEffectiveVolatility()));
     } else {
         QL_FAIL("Cap floor config " << config.curveID() << " has unexpected time interpolation "
                                     << config.timeInterpolation());
@@ -871,7 +873,7 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     // Return for the cap floor term volatility surface
     optionletSurface = QuantLib::ext::make_shared<StrippedOptionlet>(
         config.settleDays(), config.calendar(), config.businessDayConvention(), iborIndex, fixingDates, strikes_vec,
-        vols_vec, config.dayCounter(), volType, shift);
+        vols_vec, config.dayCounter(), volType, shift, config.useEffectiveVolatility());
 
     // This is not pretty but can't think of a better way (with template functions and or classes)
     if (config.timeInterpolation() == "Linear") {
@@ -1227,7 +1229,8 @@ QuantLib::ext::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const Q
 
     QuantLib::ext::shared_ptr<StrippedOptionlet> res = QuantLib::ext::make_shared<StrippedOptionlet>(
         os.settlementDays(), os.calendar(), os.businessDayConvention(), os.index(), os.optionletFixingDates(),
-        optionletStrikes, vols, os.dayCounter(), os.volatilityType(), os.displacement(), os.atmOptionletRates());
+        optionletStrikes, vols, os.dayCounter(), os.volatilityType(), os.displacement(), os.useEffectiveVolatility(),
+        os.atmOptionletRates());
 
     res->unregisterWithAll();
 
@@ -1238,7 +1241,7 @@ QuantLib::ext::shared_ptr<StrippedOptionlet>
 CapFloorVolCurve::transform(const Date& asof, vector<Date> dates, const vector<Volatility>& volatilities,
                             Natural settleDays, const Calendar& cal, BusinessDayConvention bdc,
                             QuantLib::ext::shared_ptr<IborIndex> index, const DayCounter& dc, VolatilityType type,
-                            Real displacement) const {
+                            Real displacement, bool useEffectiveVolatility) const {
 
     vector<vector<Handle<Quote>>> vols(dates.size());
     for (Size i = 0; i < dates.size(); i++) {
@@ -1253,7 +1256,7 @@ CapFloorVolCurve::transform(const Date& asof, vector<Date> dates, const vector<V
 
     vector<Rate> strikes = {0.0};
     QuantLib::ext::shared_ptr<StrippedOptionlet> res = QuantLib::ext::make_shared<StrippedOptionlet>(
-        settleDays, cal, bdc, index, dates, strikes, vols, dc, type, displacement);
+        settleDays, cal, bdc, index, dates, strikes, vols, dc, type, displacement, useEffectiveVolatility);
 
     res->unregisterWithAll();
 
@@ -1269,28 +1272,27 @@ vector<Date> CapFloorVolCurve::populateFixingDates(const QuantLib::Date& asof, C
         QuantLib::ext::make_shared<BlackCapFloorEngine>(iborIndex->forwardingTermStructure(), 0.20, config.dayCounter());
     for (Size i = 0; i < configTenors.size(); i++) {
         if (isOis) {
-            Period effTenor =
-                config.optionletTenorInArrears() ? configTenors[i] : configTenors[i] + config.rateComputationPeriod();
-            Leg dummyCap =
-                MakeOISCapFloor(CapFloor::Cap, effTenor, QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
-                                config.rateComputationPeriod(), 0.04)
-                    .withTelescopicValueDates(true)
-                    .withSettlementDays(config.onCapSettlementDays())
-                    .withRule(DateGeneration::Rule::Forward);
+            Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, configTenors[i],
+                                           QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex),
+                                           config.rateComputationPeriod(), 0.04)
+                               .withTelescopicValueDates(true)
+                               .withSettlementDays(config.settleDays())
+                               .withRule(DateGeneration::Rule::Forward);
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
-            fixingDates.push_back(std::max(asof + 1, lastCoupon->underlying()->fixingDates().front()));
+            fixingDates.push_back(std::max(asof + 1, config.useEffectiveVolatility()
+                                                         ? lastCoupon->underlying()->fixingDates().back()
+                                                         : lastCoupon->underlying()->fixingDates().front()));
         } else {
-            Period effTenor =
-                config.optionletTenorInArrears() ? configTenors[i] : configTenors[i] + iborIndex->tenor();
             CapFloor dummyCap =
-                MakeCapFloor(CapFloor::Cap, effTenor, iborIndex, 0.04, 0 * Days).withPricingEngine(dummyEngine);
+                MakeCapFloor(CapFloor::Cap, configTenors[i], iborIndex, 0.04, 0 * Days).withPricingEngine(dummyEngine);
             QuantLib::ext::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
             fixingDates.push_back(std::max(asof + 1, lastCoupon->fixingDate()));
         }
     }
     return fixingDates;
 }
+
 void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
                                             const QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig> config,
                                             const QuantLib::ext::shared_ptr<IborIndex>& index) {
@@ -1333,7 +1335,9 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                 continue;
             auto lastCoupon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
-            fixingDate = std::max(asof + 1, lastCoupon->underlying()->fixingDates().front());
+            fixingDate =
+                std::max(asof + 1, config->useEffectiveVolatility() ? lastCoupon->underlying()->fixingDates().back()
+                                                                    : lastCoupon->underlying()->fixingDates().front());
             forward = lastCoupon->underlying()->rate();
         } else {
             CapFloor dummyCap = MakeCapFloor(CapFloor::Cap, p, index, 0.04, 0 * Days);
