@@ -178,6 +178,9 @@ void PricingAnalyticImpl::runAnalytic(
             LOG("Sensi Analysis - Initialise");
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
+            auto pVars = QuantLib::ext::dynamic_pointer_cast<PricingVariables>(inputVariables_);
+            bool computeTheta = pVars ? pVars->computeTheta_ : inputs_->computeTheta();
+            Period thetaPeriod = pVars ? pVars->thetaPeriod_ : inputs_->thetaPeriod();
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
@@ -186,7 +189,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
                     inputs_->refDataManager(), inputs_->iborFallbackConfig(), true, inputs_->dryRun(),
-                    inputs_->useAtParCouponsTrades(), inputs_->computeTheta(), inputs_->thetaPeriod());
+                    inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -198,7 +201,7 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     inputs_->iborFallbackConfig(), true, inputs_->dryRun(), "sensi analysis",
-                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), inputs_->computeTheta(), inputs_->thetaPeriod());
+                    inputs_->useAtParCouponsCurves(), inputs_->useAtParCouponsTrades(), computeTheta, thetaPeriod);
                 LOG("Multi-threaded sensi analysis created");
             }
 

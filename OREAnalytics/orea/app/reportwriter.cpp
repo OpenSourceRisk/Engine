@@ -880,9 +880,31 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     report.addColumn("Delta(Trade)", double(), amountPrecision);
     report.addColumn("Gamma(Trade)", double(), amountPrecision);
 
+    // Lambda to write a single sensitivity row
+    auto writeRow = [&report](const SensitivityRecord& r, Real fx, const std::string& tradeCcy) {
+        report.next();
+        report.add(r.tradeId);
+        report.add(ore::data::to_string(r.isPar));
+        report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(r.key_1, r.desc_1)));
+        report.add(r.shift_1);
+        report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(r.key_2, r.desc_2)));
+        report.add(r.shift_2);
+        report.add(r.currency);
+        report.add(r.baseNpv);
+        report.add(r.delta);
+        report.add(r.gamma);
+        report.add(tradeCcy);
+        report.add(r.baseNpv * fx);
+        report.add(r.delta * fx);
+        if (r.gamma == Null<Real>())
+            report.add(r.gamma);
+        else
+            report.add(r.gamma * fx);
+    };
+
     // Make sure that we are starting from the start
     ss->reset();
-    std::set<std::string> thetaWritten; // track which trades already have a Theta row
+    std::set<std::string> thetaWritten;
     while (SensitivityRecord sr = ss->next()) {
         if ((outputThreshold == Null<Real>()) ||
             (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
@@ -896,52 +918,22 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
             } else
                 tradeCcy = sr.currency;
 
-            // Write a dedicated Theta row once per trade, before the first regular sensitivity row
-            // Theta value goes into the Delta column; Gamma and trade-level fields are #N/A
+            // Write a Theta row once per trade by modifying the record fields
             if (sr.theta != Null<Real>() && thetaWritten.find(sr.tradeId) == thetaWritten.end()) {
                 thetaWritten.insert(sr.tradeId);
-                // Build a proper RiskFactorKey-style string: Theta/<currency>/0/<period>
-                std::ostringstream thetaFactor;
-                thetaFactor << "Theta/" << sr.currency << "/0/" << ore::data::to_string(sr.thetaPeriod);
-                auto thetaShiftSize = QuantExt::periodToTime(sr.thetaPeriod);
-
-                report.next();
-                report.add(sr.tradeId);
-                report.add(ore::data::to_string(sr.isPar));
-                report.add(thetaFactor.str());
-                report.add(thetaShiftSize);
-                report.add(string(""));
-                report.add(Null<Real>());       // ShiftSize_2 = #N/A
-                report.add(sr.currency);
-                report.add(sr.baseNpv);
-                report.add(sr.theta);           // Theta value in the Delta column
-                report.add(Null<Real>());       // Gamma = #N/A
-                report.add(tradeCcy);
-                report.add(Null<Real>());       // Base NPV(Trade) = #N/A
-                report.add(Null<Real>());       // Delta(Trade) = #N/A
-                report.add(Null<Real>());       // Gamma(Trade) = #N/A
+                SensitivityRecord thetaSr = sr;
+                thetaSr.key_1 = RiskFactorKey(RiskFactorKey::KeyType::Theta, sr.currency, 0);
+                thetaSr.desc_1 = ore::data::to_string(sr.thetaPeriod);
+                thetaSr.shift_1 = QuantExt::periodToTime(sr.thetaPeriod);
+                thetaSr.key_2 = RiskFactorKey();
+                thetaSr.desc_2 = "";
+                thetaSr.shift_2 = Null<Real>();
+                thetaSr.delta = sr.theta;
+                thetaSr.gamma = Null<Real>();
+                writeRow(thetaSr, fx, tradeCcy);
             }
 
-            // Write the regular sensitivity row
-            report.next();
-            report.add(sr.tradeId);
-            report.add(ore::data::to_string(sr.isPar));
-            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_1, sr.desc_1)));
-            report.add(sr.shift_1);
-            report.add(prettyPrintInternalCurveName(QuantExt::reconstructFactor(sr.key_2, sr.desc_2)));
-            report.add(sr.shift_2);
-            report.add(sr.currency);
-            report.add(sr.baseNpv);
-            report.add(sr.delta);
-            report.add(sr.gamma);
-            report.add(tradeCcy);
-            report.add(sr.baseNpv * fx);
-            report.add(sr.delta * fx);
-            if (sr.gamma == Null<Real>()) {
-                report.add(sr.gamma);
-            } else {
-                report.add(sr.gamma * fx);
-            }
+            writeRow(sr, fx, tradeCcy);
         } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
             // TODO: Again, is this needed?
             ALOG("sensitivity record has infinite values: " << sr);
