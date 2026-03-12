@@ -158,14 +158,39 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         generateNotionalExchanges, generateNotionalExchanges);
 
     for (Size i = 0; i < basket.size(); ++i) {
-        auto index = getInterestRateIndexFromLegs(basket[i]->legs());
-        string qualifier =
-            index.empty() ? npvCurrency_ : IndexNameTranslator::instance().oreName(index.front()->name());
+
+        // determine qualifiers, calibration strikes ir, fx (latter is set to ATMF)
+
+        std::vector<std::string> ccys;
+        std::vector<std::vector<Leg>> legsPerCcy;
+
+        for(Size j=0;j<basket[i]->legs().size();++j) {
+            Size idx =
+                std::distance(ccys.begin(), std::find(ccys.begin(), ccys.end(), basket[i]->currency()[j].code()));
+            if(idx == ccys.size()) {
+                ccys.push_back(basket[i]->currency()[j].code());
+                legsPerCcy.push_back({});
+            }
+            legsPerCcy[idx].push_back(basket[i]->legs()[j]);
+        }
+
         auto dates = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())->dates();
         std::vector<Date> maturities(dates.size(), basket[i]->maturityDate());
-        auto strikes = getCalibrationStrikesFromLegs(basket[i]->legs(), dates);
-        basket[i]->setPricingEngine(builder->engine(id() + "_" + std::to_string(i), {qualifier}, dates, maturities,
-                                                    {strikes}, {}, false, std::string(), std::string()));
+
+        std::vector<std::string> qualifiers;
+        std::vector<std::vector<Real>> strikes;
+
+        for (Size j = 0; j < ccys.size(); ++j) {
+            auto index = getInterestRateIndexFromLegs(legsPerCcy[j]);
+            qualifiers.push_back(index.empty() ? ccys[j]
+                                               : IndexNameTranslator::instance().oreName(index.front()->name()));
+            strikes.push_back(getCalibrationStrikesFromLegs(legsPerCcy[j], dates));
+        }
+
+        basket[i]->setPricingEngine(builder->engine(
+            id() + "_" + std::to_string(i), qualifiers, dates, maturities, strikes,
+            std::vector<std::vector<Real>>(ccys.size() - 1, std::vector<Real>(dates.size(), Null<Real>())), false,
+            std::string(), std::string()));
         positionType == Position::Type::Long ? qlInstr->add(basket[i]) : qlInstr->subtract(basket[i]);
     }
 
