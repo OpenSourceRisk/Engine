@@ -394,18 +394,18 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Cubic> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Cubic>>(
                         settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                        flatFirstPeriod, Cubic(),
+                        flatFirstPeriod, false, Cubic(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::this_curve>(accuracy,
                                                                                                       globalAccuracy)));
             } else {
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Cubic> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<Cubic>>(
                         referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                        flatFirstPeriod, Cubic(),
+                        flatFirstPeriod, false, Cubic(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::this_curve>(accuracy,
                                                                                                       globalAccuracy)));
@@ -415,18 +415,18 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<CubicFlat>>(
                         settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                        flatFirstPeriod, CubicFlat(),
+                        flatFirstPeriod, false, CubicFlat(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(
                             accuracy, globalAccuracy)));
             } else {
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(
-                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
+                    ovCurve = QuantLib::ext::make_shared<PiecewiseOptionletCurve<CubicFlat>>(
                         referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                        flatFirstPeriod, CubicFlat(),
+                        flatFirstPeriod, false, CubicFlat(),
                         QuantExt::IterativeBootstrap<
                             PiecewiseOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(
                             accuracy, globalAccuracy)));

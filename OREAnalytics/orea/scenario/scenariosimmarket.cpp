@@ -1296,8 +1296,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                    "when building optionlet vol for '"
                                                                        << name << "' (index=" << iborIndex->name()
                                                                        << ")");
-                                            optionDates[i] =
-                                                std::max(asof_ + 1, lastCoupon->underlying()->fixingDates().front());
+                                            optionDates[i] = std::max(
+                                                asof_ + 1, wrapper->useEffectiveVolatility()
+                                                               ? lastCoupon->underlying()->fixingDates().back()
+                                                               : lastCoupon->underlying()->fixingDates().front());
                                         }
                                     } else {
                                         QuantLib::ext::shared_ptr<CapFloor> capFloor =
