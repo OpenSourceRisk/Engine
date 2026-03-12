@@ -33,7 +33,6 @@
 
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/math/distributioncount.hpp>
-#include <qle/utilities/time.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 
