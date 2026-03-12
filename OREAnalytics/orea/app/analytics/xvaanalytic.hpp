@@ -125,6 +125,7 @@ struct XvaVariables : public InputVariables {
     std::string dvaName_ = "";
     bool rawCubeOutput_ = false;
     bool netCubeOutput_ = false;
+    bool cubeOutput_ = false;
     bool timeAveragedNettedExposureOutput_ = false;
     std::string rawCubeOutputFile_, netCubeOutputFile_, timeAveragedNettedExposureOutputFile_;
     // funding value adjustment details
