@@ -229,11 +229,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         // Flag whether first period is flat
         flatFirstPeriod_ = XMLUtils::getChildValueAsBool(node, "FlatFirstPeriod", false, true);
 
-        // for optionlet quotes, is the quote term in arrears or in advance?
-        optionletTenorInArrears_ = XMLUtils::getChildValueAsBool(node, "OptionletTenorInArrears", false, true);
-
-        // for optionlet quotes, is the vol input effective (true) or stripped (false) vol?
-        optionletVolIsEffective_ = XMLUtils::getChildValueAsBool(node, "OptionletVolIsEffective", false, false);
+        // Flag whether to use effective vols or stripped vols on surface
+        useEffectiveVolatility_ = XMLUtils::getChildValueAsBool(node, "UseEffectiveVolatility", false, false);
 
         // Set type_
         configureType();
@@ -319,10 +316,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
         XMLUtils::addChild(doc, node, "InputType", inputType_);
         XMLUtils::addChild(doc, node, "FlatFirstPeriod", flatFirstPeriod_);
-        if (!optionletTenorInArrears_)
-            XMLUtils::addChild(doc, node, "OptionletTenorInArrears", optionletTenorInArrears_);
-        if (optionletVolIsEffective_)
-            XMLUtils::addChild(doc, node, "OptionletVolIsEffective", optionletTenorInArrears_);
+        XMLUtils::addChild(doc, node, "UseEffectiveVolatility", useEffectiveVolatility_);
         if (modelShift_ != Null<Real>())
             XMLUtils::addChild(doc, node, "ModelShift", modelShift_);
         if (outputShift_ != Null<Real>())

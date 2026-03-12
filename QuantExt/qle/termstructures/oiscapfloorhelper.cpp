@@ -40,14 +40,15 @@ OISCapFloorHelper::OISCapFloorHelper(CapFloorHelper::Type type, const Period& te
                                      const QuantLib::ext::shared_ptr<QuantLib::OvernightIndex>& index,
                                      const Handle<YieldTermStructure>& discountingCurve, bool moving,
                                      const QuantLib::Date& effectiveDate, CapFloorHelper::QuoteType quoteType,
-                                     QuantLib::VolatilityType quoteVolatilityType, QuantLib::Real quoteDisplacement)
+                                     QuantLib::VolatilityType quoteVolatilityType, QuantLib::Real quoteDisplacement,
+                                     const bool useEffectiveVolatility)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
           Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<std::function<Real(Real)>>>(
               quote, std::bind(&OISCapFloorHelper::npv, this, std::placeholders::_1)))),
       type_(type), tenor_(tenor), rateComputationPeriod_(rateComputationPeriod), strike_(strike), index_(index),
       discountHandle_(discountingCurve), moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType),
-      quoteVolatilityType_(quoteVolatilityType), quoteDisplacement_(quoteDisplacement), rawQuote_(quote),
-      initialised_(false) {
+      quoteVolatilityType_(quoteVolatilityType), quoteDisplacement_(quoteDisplacement),
+      useEffectiveVolatility_(useEffectiveVolatility), rawQuote_(quote), initialised_(false) {
 
     if (quoteType_ == CapFloorHelper::Premium) {
         QL_REQUIRE(type_ != CapFloorHelper::Automatic,
@@ -92,13 +93,16 @@ void OISCapFloorHelper::initializeDates() {
         auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(capFloor_.front());
         QL_REQUIRE(cfon, "OISCapFloorHelper: Expected the first cashflow on the ois cap floor instrument to be a "
                          "CappedFlooredOvernightIndexedCoupon");
-        earliestDate_ = std::max(today, cfon->underlying()->fixingDates().front());
+        earliestDate_ = std::max(today, useEffectiveVolatility_ ? cfon->underlying()->fixingDates().back()
+                                                                : cfon->underlying()->fixingDates().front());
 
         // Remaining dates are each equal to the fixing date on the final optionlet
         auto cfon2 = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(capFloor_.back());
         QL_REQUIRE(cfon2, "OISCapFloorHelper: Expected the final cashflow on the cap floor instrument to be a "
                           "CappedFlooredOvernightIndexedCoupon");
-        pillarDate_ = latestDate_ = latestRelevantDate_ = cfon2->underlying()->fixingDates().front();
+        pillarDate_ = latestDate_ = latestRelevantDate_ = useEffectiveVolatility_
+                                                              ? cfon2->underlying()->fixingDates().back()
+                                                              : cfon2->underlying()->fixingDates().front();
     }
 }
 
@@ -152,12 +156,13 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
         Handle<OptionletVolatilityStructure> constOvts;
         if (quoteVolatilityType_ == ShiftedLognormal) {
             constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
-                0, NullCalendar(), Unadjusted, rawQuote_, Actual365Fixed(), ShiftedLognormal, quoteDisplacement_));
+                0, NullCalendar(), Unadjusted, rawQuote_, Actual365Fixed(), ShiftedLognormal, quoteDisplacement_,
+                true));
         } else {
             constOvts = Handle<OptionletVolatilityStructure>(QuantLib::ext::make_shared<ConstantOptionletVolatility>(
-                0, NullCalendar(), Unadjusted, rawQuote_, Actual365Fixed(), Normal));
+                0, NullCalendar(), Unadjusted, rawQuote_, Actual365Fixed(), Normal, 0.0, true));
         }
-        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts, true);
+        auto pricer = QuantLib::ext::make_shared<BlackOvernightIndexedCouponPricer>(constOvts);
         for (auto c : capFloorCopy_) {
             auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c);
             if (f) {
