@@ -1951,7 +1951,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
                         if (regulationsCrifMap.second.find(comb) != regulationsCrifMap.second.end()) {
                             duplicateFound = true;
 
-                            regulationsCrifMap.second[comb]->addRecords(*regulationsCrifMap.second[regs]);
+                            regulationsCrifMap.second[comb]->addRecords(*regulationsCrifMap.second[regs], true);
 
                             // For the remaining regulations that were not transferred, check if already in the map.
                             // If already exists, move the records there, otherwise we relabel/update the key.
@@ -1962,7 +1962,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
                             }
 
                             if (regulationsCrifMap.second.find(newRegs) != regulationsCrifMap.second.end()) {
-                                regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs]);
+                                regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs], true);
                             } else {
                                 regulationsCrifMap.second[newRegs] = regulationsCrifMap.second[regs];
                             }
@@ -1978,7 +1978,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
                                         newRegs.insert(reg);
                                 }
                                 if (regulationsCrifMap.second.find(newRegs) != regulationsCrifMap.second.end()) {
-                                    regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs]);
+                                    regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs], true);
                                 } else {
                                     regulationsCrifMap.second[newRegs] = regulationsCrifMap.second[regs];
                                 }
