@@ -20,6 +20,8 @@
 
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <qle/utilities/time.hpp>
 
 using QuantLib::Real;
 
@@ -38,7 +40,7 @@ SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<Sen
 SensitivityCubeStream::SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes,
                                              const string& currency,
                                              const QuantLib::ext::shared_ptr<Portfolio>& portfolio)
-    : cubes_(cubes), currency_(currency), portfolio_(portfolio), canComputeGamma_(false) {
+    : cubes_(cubes), currency_(currency), portfolio_(portfolio), canComputeGamma_(false), emitThetaNext_(false) {
     // Set the value of canComputeGamma_ based on up and down risk factors.
 
     canComputeGamma_ = true;
@@ -67,7 +69,8 @@ SensitivityRecord SensitivityCubeStream::next() {
     if (cubes_.size() == 0)
         return SensitivityRecord();
 
-    while (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end() && currentDeltaKey_ == currentDeltaKeys_.end() &&
+    while (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end() && !emitThetaNext_ &&
+           currentDeltaKey_ == currentDeltaKeys_.end() &&
            currentCrossGammaKey_ == currentCrossGammaKeys_.end()) {
         ++tradeIdx_;
         updateForNewTrade();
@@ -92,12 +95,17 @@ SensitivityRecord SensitivityCubeStream::next() {
     sr.tradeCurrency = currentTradeCurrency_;
     sr.baseNpv = cubes_[currentCubeIdx_]->npv(tradeIdx);
 
-    // Populate theta if available (same value for all records of a given trade)
-    if (cubes_[currentCubeIdx_]->hasTheta()) {
-        sr.theta = cubes_[currentCubeIdx_]->theta(sr.tradeId);
-        sr.thetaPeriod = cubes_[currentCubeIdx_]->thetaPeriod();
-    } else {
-        sr.theta = Null<Real>();
+    // Emit a dedicated theta record as the first record for each new trade
+    if (emitThetaNext_) {
+        emitThetaNext_ = false;
+        auto thetaPeriod = cubes_[currentCubeIdx_]->thetaPeriod();
+        sr.key_1 = RiskFactorKey(RiskFactorKey::KeyType::Theta, sr.currency, 0);
+        sr.desc_1 = ore::data::to_string(thetaPeriod);
+        sr.shift_1 = QuantExt::periodToTime(thetaPeriod);
+        sr.delta = cubes_[currentCubeIdx_]->theta(sr.tradeId);
+        sr.gamma = Null<Real>();
+        TLOG("Next record is: " << sr);
+        return sr;
     }
 
     if (currentDeltaKey_ != currentDeltaKeys_.end()) {
@@ -162,6 +170,14 @@ void SensitivityCubeStream::updateForNewTrade() {
 
     currentDeltaKey_ = currentDeltaKeys_.begin();
     currentCrossGammaKey_ = currentCrossGammaKeys_.begin();
+
+    // Set flag to emit theta record if available for this trade
+    if (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end() && cubes_[currentCubeIdx_]->hasTheta()) {
+        Real theta = cubes_[currentCubeIdx_]->theta(tradeIdx_->first);
+        emitThetaNext_ = theta != Null<Real>();
+    } else {
+        emitThetaNext_ = false;
+    }
 }
 
 void SensitivityCubeStream::reset() {

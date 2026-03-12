@@ -34,7 +34,7 @@ class InputParameters;
  struct PricingVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
 
-    bool computeTheta_ = true;
+    bool computeTheta_ = false;
     Period thetaPeriod_ = Period(1, Days);
     bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
