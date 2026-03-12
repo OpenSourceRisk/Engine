@@ -63,11 +63,12 @@ Real BlackAverageBMACouponPricer::optionletRate(Option::Type optionType, Real ef
         QL_REQUIRE(!fixingDates.empty(), "BlackAverageBMACouponPricer: empty fixing dates");
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Real shift = capletVolatility()->displacement();
-        Real stdDev;
+        Real stdDev, strippedVol;
         Real effectiveTime = capletVolatility()->timeFromReference(fixingDates.back());
-        if (effectiveVolatilityInput()) {
+        if (capletVolatility()->useEffectiveVolatility()) {
             // vol input is effective, i.e. we use a plain black model
-            stdDev = capletVolatility()->volatility(fixingDates.back(), effStrike) * std::sqrt(effectiveTime);
+            strippedVol = capletVolatility()->volatility(coupon_->underlying()->fixingDate(), effStrike);
+            stdDev = strippedVol * std::sqrt(effectiveTime);
         } else {
             // vol input is not effective: we proceed similarly to average on coupon pricing:
             // for the standard deviation see Lyashenko, Mercurio, Looking forward to backward looking rates,
@@ -75,17 +76,21 @@ Real BlackAverageBMACouponPricer::optionletRate(Option::Type optionType, Real ef
             // date by a linear function going from (fixing start, 1) to (fixing end, 0)
             Real fixingStartTime = capletVolatility()->timeFromReference(fixingDates.front());
             Real fixingEndTime = capletVolatility()->timeFromReference(fixingDates.back());
-            Real sigma = capletVolatility()->volatility(
+            strippedVol = capletVolatility()->volatility(
                 std::max(fixingDates.front(), capletVolatility()->referenceDate() + 1), effStrike);
             Real T = std::max(fixingStartTime, 0.0);
             if (!close_enough(fixingEndTime, T))
                 T += std::pow(fixingEndTime - T, 3.0) / std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0;
-            stdDev = sigma * std::sqrt(T);
+            stdDev = strippedVol * std::sqrt(T);
         }
-        if (optionType == Option::Type::Call)
+        if (optionType == Option::Type::Call) {
             effectiveCapletVolatility_ = stdDev / std::sqrt(effectiveTime);
-        else
+            strippedCapletVolatility_ = strippedVol;
+        }
+        else {
             effectiveFloorletVolatility_ = stdDev / std::sqrt(effectiveTime);
+            strippedFloorletVolatility_ = strippedVol;
+        }
         Real fixing = shiftedLn ? blackFormula(optionType, effStrike, forwardRate_, stdDev, 1.0, shift)
                                 : bachelierBlackFormula(optionType, effStrike, forwardRate_, stdDev, 1.0);
         return gearing_ * fixing;

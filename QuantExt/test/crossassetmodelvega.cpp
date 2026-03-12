@@ -24,7 +24,6 @@
 // clang-format on
 #include <qle/indexes/equityindex.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/commodityschwartzmodel.hpp>
 #include <qle/models/commodityschwartzparametrization.hpp>

@@ -34,11 +34,14 @@ OptionletStripper1::OptionletStripper1(const shared_ptr<QuantExt::CapFloorTermVo
                                        const shared_ptr<IborIndex>& index, Rate switchStrike, Real accuracy,
                                        Natural maxIter, const Handle<YieldTermStructure>& discount,
                                        const VolatilityType type, const Real displacement,
+                                       const Period& rateComputationPeriod, const Size onCapSettlementDays,
+                                       const bool useEffectiveVolatility,
                                        const optional<VolatilityType> targetVolatilityType,
                                        const optional<Real> targetDisplacement)
     : OptionletStripper(termVolSurface, index, discount, targetVolatilityType ? *targetVolatilityType : type,
-                        targetDisplacement ? *targetDisplacement : displacement),
-      volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote> >(nStrikes_)),
+                        targetDisplacement ? *targetDisplacement : displacement, rateComputationPeriod,
+                        onCapSettlementDays, useEffectiveVolatility),
+      volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote>>(nStrikes_)),
       floatingSwitchStrike_(switchStrike == Null<Rate>() ? true : false), capFlooMatrixNotInitialized_(true),
       switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), inputVolatilityType_(type),
       inputDisplacement_(displacement) {

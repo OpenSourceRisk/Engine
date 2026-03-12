@@ -44,7 +44,7 @@ RUN cd /ore \
     -DORE_ENABLE_OPENCL=ON -DORE_MULTITHREADING_CPU_AFFINITY=ON -DCMAKE_POLICY_DEFAULT_CMP0167=NEW
 
 WORKDIR /ore/build.ore
-RUN --mount=type=cache,target=/ccache/ ccache -z \
+RUN --mount=type=cache,id=ccache-ore,target=/ccache/ ccache -z \
   && cmake --build . -- -j ${NUM_CORES} \
   && cmake --install . \
   && ccache -s

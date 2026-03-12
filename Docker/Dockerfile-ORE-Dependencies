@@ -2,6 +2,8 @@
 ARG DEBIAN_TAG
 FROM ${DOCKER_TAG}debian:${DEBIAN_TAG}
 
+ARG CCACHE_VERSION=4.13
+
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
   apt-get install -y --no-install-recommends \
@@ -17,7 +19,6 @@ RUN apt-get update \
     libboost-all-dev \
     doxygen \
     graphviz \
-    ccache \
     libeigen3-dev \
     clang \
     swig \
@@ -26,11 +27,29 @@ RUN apt-get update \
     python3-pip \
     python3-venv \
     curl \
+    libzstd-dev \
     -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && mv /usr/bin/ld /usr/bin/ld.backup \
   && ln -s /usr/bin/lld /usr/bin/ld
+
+# Install ccache from source (Trixie only provides 4.11.2)
+RUN curl -sSL https://github.com/ccache/ccache/releases/download/v${CCACHE_VERSION}/ccache-${CCACHE_VERSION}.tar.gz \
+    | tar -xz \
+  && cd ccache-${CCACHE_VERSION} \
+  && mkdir build && cd build \
+  && cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DREDIS_STORAGE_BACKEND=OFF \
+  && ninja \
+  && ninja install \
+  && cd ../.. \
+  && rm -rf ccache-${CCACHE_VERSION}
+
+# Create ccache compiler symlinks in /usr/lib/ccache for compatibility with downstream Dockerfiles
+RUN mkdir -p /usr/lib/ccache \
+  && for cc in cc c++ gcc g++ clang clang++; do \
+       ln -sf /usr/local/bin/ccache /usr/lib/ccache/$cc; \
+     done
 
 RUN \
 curl -sSL https://get.docker.com -o install-docker.sh && \
