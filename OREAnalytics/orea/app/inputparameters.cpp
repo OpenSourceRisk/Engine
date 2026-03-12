@@ -31,9 +31,11 @@
 #include <ored/configuration/baseltrafficlightconfig.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
+#include <ql/indexes/iborindex.hpp>
 
 using namespace QuantLib;
 
@@ -58,8 +60,22 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
     inputs->loadParameter<string>(baseCurrency_, "setup", "baseCurrency");
     if (baseCurrency_.empty())
         inputs->loadParameter<string>(baseCurrency_, "npv", "baseCurrency");
+        
+    inputs->loadParameter<string>(discountIndex_, "setup", "discountingIndex");
+    if (baseCurrency_.empty() && !discountIndex_.empty()) {
+        QuantLib::ext::shared_ptr<IborIndex> ind;
+        if (tryParseIborIndex(discountIndex_, ind)) {
+            baseCurrency_ = ind->currency().code();
+            StructuredMessage(StructuredMessage::Category::Warning, StructuredMessage::Group::Input,
+                              "Deriving BaseCurrency of " + baseCurrency_ + " from discountIndex",
+                              std::pair<std::string, std::string>({"exceptionType", "No BaseCurrency provided"}));
+        }
+    }
+    // If basecurrency is still empty, default to USD
     if (baseCurrency_.empty()) {
-    	WLOG("baseCurrency not set, defaulting to USD");
+        StructuredMessage(StructuredMessage::Category::Warning, StructuredMessage::Group::Input,
+                          "Defaulting BaseCurrency to " + baseCurrency_,
+                          std::pair<std::string, std::string>({"exceptionType", "No BaseCurrency provided"}));
         baseCurrency_ = "USD";
     }
 
