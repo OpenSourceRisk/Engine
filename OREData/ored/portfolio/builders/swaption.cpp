@@ -22,6 +22,7 @@
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
+#include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/dependencies.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -73,6 +74,20 @@ buildMcEngine(const Handle<CrossAssetModel>& model, const std::vector<Handle<Yie
         parseInteger(builder->engineParameter("Regression.MaxSimTimesFX", {}, false, "0")),
         parseInteger(builder->engineParameter("Regression.MaxSimTimesEQ", {}, false, "0")),
         parseVarGroupMode(builder->engineParameter("Regression.VarGroupMode", {}, false, "Global")));
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+buildMcCgEngine(const Handle<CrossAssetModel>& model, const std::vector<std::string>& currencies,
+                const std::vector<Handle<YieldTermStructure>>& discountCurves,
+                const std::vector<Handle<Quote>>& fxSpots,
+                const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+                const EngineBuilder* builder) {
+    auto camCg = QuantLib::ext::make_shared<GaussianCamCG>(
+        model, parseInteger(builder->engineParameter("Training.Samples", {}, true, std::string())), currencies,
+        discountCurves, fxSpots, irIndices,
+        std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>{},
+        std::vector<std::string>{}, std::vector<std::string>{}, std::set<Date>{});
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(currencies, camCg, std::vector<Date>{}, false);
 }
 
 std::variant<Handle<CrossAssetModel>, ext::shared_ptr<QuantExt::LGM>>
@@ -509,7 +524,7 @@ CamMCSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<strin
     }
 
     return buildMcEngine(cam, discountCurves, std::vector<Size>(), {}, {}, this);
-} // LgmMc engineImpl()
+}
 
 QuantLib::ext::shared_ptr<PricingEngine>
 AmcSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
@@ -542,7 +557,52 @@ AmcSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
     return buildMcEngine(model, {}, externalModelIndices, simulationDates_, stickyCloseOutDates_, this);
-} // Amc engineImpl
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamMCCgSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>& keys,
+                                         const std::vector<Date>& dates, const std::vector<Date>& maturities,
+                                         const std::vector<std::vector<Real>>& strikes,
+                                         const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican,
+                                         const std::string& discountCurve, const std::string& securitySpread) {
+    DLOG("Building CAM MCCG Swaption engine for trade " << id);
+
+    auto cam =
+        std::get<Handle<CrossAssetModel>>(::model(id, keys, dates, maturities, strikes, fxStrikes, isAmerican, this));
+
+    std::vector<std::string> currencies;
+    std::vector<Handle<YieldTermStructure>> discountCurves;
+    std::vector<Handle<Quote>> fxSpots;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;
+
+    for (Size i = 0; i < keys.size(); ++i) {
+
+        QuantLib::ext::shared_ptr<IborIndex> index;
+        std::string ccy = tryParseIborIndex(keys[i], index) ? index->currency().code() : keys[i];
+        currencies.push_back(ccy);
+
+        if(index) {
+            // FIXME if more than one index is required per currency, the gaussian cam cg will fail
+            irIndices.push_back(
+                std::make_pair(keys[i], *market_->iborIndex(keys[i], configuration(MarketContext::pricing))));
+        }
+
+        Handle<YieldTermStructure> yts =
+            discountCurve.empty() || i > 0
+                ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
+                : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
+        if (!securitySpread.empty())
+            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+                yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
+        discountCurves.push_back(yts);
+
+        if (i > 0)
+            fxSpots.push_back(market_->fxRate(ccy + currencies.front(), configuration(MarketContext::pricing)));
+    }
+
+    return buildMcCgEngine(cam, currencies, discountCurves, fxSpots, irIndices, this);
+
+} // LgmMc engineImpl()
 
 QuantLib::ext::shared_ptr<PricingEngine>
 AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<string>& keys,
@@ -558,7 +618,7 @@ AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const std::vector<strin
     return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
         std::vector<std::string>{ccy}, modelCg_, simulationDates_,
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
-} // AmcCg engineImpl
+}
 
 } // namespace data
 } // namespace ore

@@ -157,6 +157,19 @@ private:
     const std::vector<Date> stickyCloseOutDates_;
 };
 
+// CAM MCCG engine
+class CamMCCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
+public:
+    CamMCCgSwaptionEngineBuilder() : CamSwaptionEngineBuilder("MCCG") {}
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
+               const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+               const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
+               const std::string& securitySpread) override;
+};
+
 //! CAM AMC-CG engine
 class AmcCgSwaptionEngineBuilder final : public CamSwaptionEngineBuilder {
 public:
