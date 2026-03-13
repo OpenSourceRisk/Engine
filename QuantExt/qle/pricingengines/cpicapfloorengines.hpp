@@ -37,7 +37,7 @@
 /*!
     \file cpicapfloorengines.hpp
     \brief Extended version of the QuantLib engine, strike adjustment for seasoned CPI Cap/Floor pricing
-    \ingroup PricingEngines
+    \ingroup engines
 */
 
 #ifndef quantext_cpicapfloorengines_hpp
