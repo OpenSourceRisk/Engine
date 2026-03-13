@@ -54,6 +54,10 @@ RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
   && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
+  && mkdir /doxy_tagfiles \
+  && cp /ore/QuantExt/doc/quantext.tag /doxy_tagfiles/quantext.tag \
+  && cp /ore/OREData/doc/ored.tag /doxy_tagfiles/ored.tag \
+  && cp /ore/OREAnalytics/doc/orea.tag /doxy_tagfiles/orea.tag \
   && mkdir -p oreswig/pythonlib \
   && mv /ore/build.ore/ORE-SWIG/ORE.py /oreswig/pythonlib \
   && mv /ore/build.ore/ORE-SWIG/_OREP.so /oreswig/pythonlib \
@@ -76,6 +80,7 @@ COPY --from=orebuild /usr/lib/llvm-19/ /usr/lib/llvm-19
 COPY --from=orebuild /usr/include/boost/ /usr/include/boost
 COPY --from=orebuild /usr/include/CL /usr/include/CL
 COPY --from=orebuild /oreswig /oreswig
+COPY --from=orebuild /doxy_tagfiles /doxy_tagfiles
 
 RUN ldconfig
 CMD bash
