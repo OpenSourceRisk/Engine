@@ -105,11 +105,14 @@ private:
 class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
     void initialize(const FloatingRateCoupon& coupon) override;
-    void compute() const;
     Rate swapletRate() const override;
     Rate effectiveSpread() const;
     Rate effectiveIndexFixing() const;
     Rate effectiveRate(const Date& date) const;
+
+    // Since there is no caching, this method returns swaplet rate, effective spread and effective index fixing tuple.
+    std::tuple<Rate, Spread, Rate> rateSpreadFixing() const;
+
     Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
     Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }
     Rate capletRate(Rate) const override { QL_FAIL("capletRate not available"); }
@@ -119,7 +122,6 @@ public:
 protected:
     std::tuple<Rate, Spread, Rate> compute(const QuantLib::Date& date) const;
     const OvernightIndexedCoupon* coupon_;
-    mutable Real swapletRate_, effectiveSpread_, effectiveIndexFixing_;
 };
 
 //! capped floored overnight indexed coupon

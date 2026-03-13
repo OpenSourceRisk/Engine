@@ -47,7 +47,6 @@
 #include <iterator>
 
 using std::pair;
-using std::tie;
 using std::tuple;
 using std::vector;
 
@@ -128,11 +127,6 @@ namespace {
 void OvernightIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) {
     coupon_ = dynamic_cast<const OvernightIndexedCoupon*>(&coupon);
     QL_ENSURE(coupon_, "OvernightIndexedCouponPricer::initialize: expected an OvernightIndexedCoupon.");
-}
-
-void OvernightIndexedCouponPricer::compute() const {
-    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
-    tie(swapletRate_, effectiveSpread_, effectiveIndexFixing_) = compute(d);
 }
 
 tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date) const
@@ -413,25 +407,24 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
 }
 
 Rate OvernightIndexedCouponPricer::swapletRate() const {
-    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
-    tie(swapletRate_, std::ignore, std::ignore) = compute(d);
-    return swapletRate_;
+    return std::get<0>(rateSpreadFixing());
 }
 
 Rate OvernightIndexedCouponPricer::effectiveSpread() const {
-    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
-    tie(std::ignore, effectiveSpread_, std::ignore) = compute(d);
-    return effectiveSpread_;
+    return std::get<1>(rateSpreadFixing());
 }
 
 Rate OvernightIndexedCouponPricer::effectiveIndexFixing() const {
-    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
-    tie(std::ignore, std::ignore, effectiveIndexFixing_) = compute(d);
-    return effectiveIndexFixing_;
+    return std::get<2>(rateSpreadFixing());
 }
 
 Rate OvernightIndexedCouponPricer::effectiveRate(const Date& date) const {
     return std::get<0>(compute(date));
+}
+
+tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::rateSpreadFixing() const {
+    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : coupon_->accrualEndDate();
+    return compute(d);
 }
 
 // CappedFlooredOvernightIndexedCoupon implementation
