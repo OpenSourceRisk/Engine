@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file models/blackscholesmodelwrapper.hpp
+/*! \file qle/models/assetmodelwrapper.hpp
     \brief wrapper around a vector of BS processes
     \ingroup utilities
 */

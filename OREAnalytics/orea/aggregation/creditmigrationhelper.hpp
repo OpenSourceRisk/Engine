@@ -18,7 +18,7 @@
 
 /*! \file aggregation/creditmigrationhelper.hpp
     \brief Credit migration helper class
-    \ingroup engine
+    \ingroup analytics
 */
 
 #pragma once
