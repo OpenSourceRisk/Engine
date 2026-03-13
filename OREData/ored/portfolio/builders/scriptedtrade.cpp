@@ -388,7 +388,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
             script.npv(), script.results(), modelCG_, std::set<std::string>(modelCcys_.begin(), modelCcys_.end()),
             script.amcCgComponents(), script.amcCgTargetValue(), script.amcCgTargetDerivative(), ast_, context, params_,
             indicatorSmoothingForValues_, indicatorSmoothingForDerivatives_, script.code(), interactive_,
-            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
+            buildingAmcCg_, generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
             useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);

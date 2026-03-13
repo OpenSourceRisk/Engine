@@ -76,15 +76,17 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& amcCgTargetDerivative, const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context,
     const Model::Params& params, const double indicatorSmoothingForValues,
     const double indicatorSmoothingForDerivatives, const std::string& script, const bool interactive,
-    const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
-    const bool useExternalComputeFramework, const bool useDoublePrecisionForExternalCalculation)
+    const bool amcEnabled, const bool generateAdditionalResults, const bool includePastCashflows,
+    const bool useCachedSensis, const bool useExternalComputeFramework,
+    const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys),
       amcCgComponents_(amcCgComponents), amcCgTargetValue_(amcCgTargetValue),
       amcCgTargetDerivative_(amcCgTargetDerivative), ast_(ast), context_(context), params_(params),
       indicatorSmoothingForValues_(indicatorSmoothingForValues),
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
-      generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
-      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
+      amcEnabled_(amcEnabled), generateAdditionalResults_(generateAdditionalResults),
+      includePastCashflows_(includePastCashflows), useCachedSensis_(useCachedSensis),
+      useExternalComputeFramework_(useExternalComputeFramework),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
 
     // register with model
@@ -280,6 +282,9 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(const bool stickyC
 }
 
 void ScriptedInstrumentPricingEngineCG::calculate() const {
+
+    if (amcEnabled_)
+        return;
 
     // TODOs
     QL_REQUIRE(!useExternalComputeFramework_ || !generateAdditionalResults_,

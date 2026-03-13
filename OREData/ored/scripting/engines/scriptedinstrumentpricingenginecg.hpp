@@ -48,9 +48,10 @@ public:
         const std::string& amcCgTargetDerivative, const ASTNodePtr ast,
         const QuantLib::ext::shared_ptr<Context>& context, const Model::Params& mcParams,
         const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
-        const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
-        const bool includePastCashflows = false, const bool useCachedSensis = false,
-        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
+        const std::string& script = "", const bool interactive = false, const bool amcEnabled = false,
+        const bool generateAdditionalResults = false, const bool includePastCashflows = false,
+        const bool useCachedSensis = false, const bool useExternalComputeFramework = false,
+        const bool useDoublePrecisionForExternalCalculation = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
@@ -119,6 +120,7 @@ private:
     double indicatorSmoothingForDerivatives_;
     std::string script_;
     bool interactive_;
+    bool amcEnabled_;
     bool generateAdditionalResults_;
     bool includePastCashflows_;
     bool useCachedSensis_;
