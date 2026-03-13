@@ -69,10 +69,14 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     legPayers_.resize(underlyingData_.size());
     legCurrencies_.resize(underlyingData_.size());
 
+    std::vector<Leg> couponLegCopies(legs_.size());
+
     for (Size i = 0; i < underlyingData_.size(); ++i) {
         auto legBuilder = engineFactory->legBuilder(underlyingData_[i].legType());
         legs_[i] = legBuilder->buildLeg(underlyingData_[i], engineFactory, requiredFixings_,
                                         builder->configuration(MarketContext::pricing));
+        couponLegCopies[i] = legBuilder->buildLeg(underlyingData_[i], engineFactory, requiredFixings_,
+                                                   builder->configuration(MarketContext::pricing));
         legCurrencies_[i] = underlyingData_[i].currency();
         legPayers_[i] = underlyingData_[i].isPayer();
 
@@ -152,7 +156,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     auto positionType = parsePositionType(optionLongShort_);
 
     auto basket = generateFlexiSwapReplication(
-        today, std::vector<Leg>(legs_.begin(), std::next(legs_.begin(), underlyingData_.size())),
+        today, couponLegCopies,
         std::vector<bool>(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size())),
         std::vector<Currency>(legCcys.begin(), std::next(legCcys.begin(), underlyingData_.size())), lowerNotionalBounds,
         generateNotionalExchanges, generateNotionalExchanges);

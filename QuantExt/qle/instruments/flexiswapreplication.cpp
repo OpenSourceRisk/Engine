@@ -19,7 +19,8 @@
 #include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 
-#include <ql/cashflows/coupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 using namespace QuantLib;
@@ -75,6 +76,14 @@ void rescaleLeg(Leg& l, Real amount) {
     std::for_each(l.begin(), l.end(), [amount](ext::shared_ptr<CashFlow>& c) {
         if (auto cpn = ext::dynamic_pointer_cast<Coupon>(c))
             c = ext::make_shared<ScaledCoupon>(amount / cpn->nominal(), cpn);
+    });
+}
+
+void unregisterWithCouponPricers(Leg& l) {
+    std::for_each(l.begin(), l.end(), [](ext::shared_ptr<CashFlow>& c) {
+        if (auto cpn = ext::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(c)) {
+            cpn->unregisterWith(cpn->pricer());
+        }
     });
 }
 
@@ -268,6 +277,7 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
         for (Size legNo = 0; legNo < legs.size(); ++legNo) {
             auto tmp = filterLeg(legs[legNo], replicationData[legNo][i].start, replicationData[legNo][i].end,
                                  legCouponRefScheduleIndices[legNo]);
+            unregisterWithCouponPricers(tmp);
             rescaleLeg(tmp, replicationData[legNo][i].amount);
 
             if(generateFinalNotionalExchange) {
