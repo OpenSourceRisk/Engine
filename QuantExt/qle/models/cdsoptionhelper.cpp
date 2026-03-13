@@ -33,17 +33,17 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
                                  const Schedule& schedule, const BusinessDayConvention paymentConvention,
                                  const DayCounter& dayCounter,
                                  const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
-                                 const Handle<YieldTermStructure>& termStructure, const Rate spread, const Rate upfront,
-                                 const bool settlesAccrual,
+                                 const Handle<YieldTermStructure>& termStructureSwapCurrency,
+                                 const Handle<YieldTermStructure>& termStructureTradeCollateral, const Rate spread,
+                                 const Rate upfront, const bool settlesAccrual,
                                  const CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
                                  const Date protectionStart, const Date upfrontDate,
                                  const QuantLib::ext::shared_ptr<Claim>& claim,
                                  const BlackCalibrationHelper::CalibrationErrorType errorType)
-    : BlackCalibrationHelper(volatility, errorType), termStructure_(termStructure),
-      blackVol_(QuantLib::ext::make_shared<SimpleQuote>(0.0)) {
+    : BlackCalibrationHelper(volatility, errorType), blackVol_(QuantLib::ext::make_shared<SimpleQuote>(0.0)) {
 
     QuantLib::ext::shared_ptr<PricingEngine> cdsEngine =
-        QuantLib::ext::make_shared<QuantExt::MidPointCdsEngine>(probability, recoveryRate, termStructure);
+        QuantLib::ext::make_shared<QuantExt::MidPointCdsEngine>(probability, recoveryRate, termStructureSwapCurrency);
 
     QuantLib::ext::shared_ptr<CreditDefaultSwap> tmp;
     if (upfront == Null<Real>())
@@ -75,7 +75,8 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
         QuantLib::ext::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(blackVol_), Actual365Fixed()));
 
     blackEngine_ = QuantLib::ext::make_shared<BlackCdsOptionEngine>(
-        probability, recoveryRate, termStructure, Handle<CreditVolCurve>(QuantLib::ext::make_shared<CreditVolCurveWrapper>(h)));
+        probability, recoveryRate, termStructureSwapCurrency, termStructureTradeCollateral,
+        Handle<CreditVolCurve>(QuantLib::ext::make_shared<CreditVolCurveWrapper>(h)));
 }
 
 Real CdsOptionHelper::modelValue() const {

@@ -58,6 +58,8 @@
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/pricingengines/commodityschwartzfutureoptionengine.hpp>
 
+#include <qle/termstructures/simplemclocalvolstochasticratescorrection.hpp>
+
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -592,13 +594,13 @@ void CrossAssetModelBuilder::buildModel() const {
         parametrizations.push_back(irParametrizations[i]);
     for (Size i = 0; i < fxParametrizations.size(); i++)
         parametrizations.push_back(fxParametrizations[i]);
-    for (Size i = 0; i < eqParametrizations.size(); i++)
-        parametrizations.push_back(eqParametrizations[i]);
     parametrizations.insert(parametrizations.end(), infParameterizations.begin(), infParameterizations.end());
     for (Size i = 0; i < crLgmParametrizations.size(); i++)
         parametrizations.push_back(crLgmParametrizations[i]);
     for (Size i = 0; i < crCirParametrizations.size(); i++)
         parametrizations.push_back(crCirParametrizations[i]);
+    for (Size i = 0; i < eqParametrizations.size(); i++)
+        parametrizations.push_back(eqParametrizations[i]);
     for (Size i = 0; i < comParametrizations.size(); i++)
         parametrizations.push_back(comParametrizations[i]);
     for (Size i = 0; i < crStateParametrizations.size(); i++)
@@ -666,7 +668,8 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!fxBuilder[i]->requiresRecalibration() &&
             recalibratedCurrencies.find(fxParametrizations[i]->currency().code()) == recalibratedCurrencies.end() &&
-            recalibratedCurrencies.find(domesticCcy.code()) == recalibratedCurrencies.end()) {
+            recalibratedCurrencies.find(domesticCcy.code()) == recalibratedCurrencies.end() &&
+            !fxLocalVolHandle[i].empty()) {
             DLOG("FX Calibration "
                  << i << " skipped, since neither fx builder nor ir models in dom / for ccy were recalibrated.");
             continue;
@@ -720,7 +723,32 @@ void CrossAssetModelBuilder::buildModel() const {
             builder->setCalibrationDone();
 
         } else if (auto builder = QuantLib::ext::dynamic_pointer_cast<ore::data::LocalVolModelBuilder>(fxBuilder[i])) {
-            fxLocalVolHandle[i].linkTo(*builder->model()->generalizedBlackScholesProcesses().front()->localVolatility());
+
+            auto config = QuantLib::ext::dynamic_pointer_cast<FxLvData>(config_->fxConfigs()[i]);
+
+            if (config->stochasticRatesCorrection() == "None") {
+
+                fxLocalVolHandle[i].linkTo(
+                    *builder->model()->generalizedBlackScholesProcesses().front()->localVolatility());
+
+            } else if (config->stochasticRatesCorrection() == "SimpleMc") {
+
+                Real maxTime = irDiscountCurves[0]->timeFromReference(*builder->simulationDates().rbegin());
+
+                fxLocalVolHandle[i].linkTo(QuantLib::ext::make_shared<SimpleMcLocalVolStochasticRatesCorrection>(
+                    builder->model()->generalizedBlackScholesProcesses().front()->blackVolatility(),
+                    builder->model()->generalizedBlackScholesProcesses().front()->localVolatility(), model_->irModel(0),
+                    model_->irModel(i + 1), model_->fxModel(i), irDiscountCurves[0], irDiscountCurves[i + 1],
+                    model_->correlation(), maxTime, config->simpleMcParameters().calibrationMoneynessMin(),
+                    config->simpleMcParameters().calibrationMoneynessMax(),
+                    config->simpleMcParameters().timeStepsPerYear(), config->simpleMcParameters().nStrikes(),
+                    config->simpleMcParameters().samples(), config->simpleMcParameters().d2CdK2Threshold(),
+                    config->simpleMcParameters().nPasses()));
+
+            } else {
+                QL_FAIL("FxLv model: StochasticRatesCorrection '" << config->stochasticRatesCorrection()
+                                                                  << "' not known, expected 'None', 'SimpleMc'");
+            }
         }
     }
 

@@ -29,6 +29,7 @@
 #include <ql/currencies/exchangeratemanager.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
 namespace ore {
 namespace data {
 
@@ -764,8 +765,46 @@ void TRSWrapperAccrualEngine::calculate() const {
                         }
                     }
                     fundingLegNotionalFactor = accruedInterest / localFundingLegNpv;
+                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
+                           QuantLib::ext::dynamic_pointer_cast<QuantExt::ZeroFixedCoupon>(cpn) != nullptr) {
+                    auto zeroCpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::ZeroFixedCoupon>(cpn);
+                    double rate = zeroCpn->rate();
+                    DayCounter dc = zeroCpn->dayCounter();
+                    Compounding comp = zeroCpn->compounding();
+                    Date endDate = std::min(cpn->accrualEndDate(), today);
+                    double accruedFunding = 0.0;
+                    double prevPriceFx = 0.0;
+                    for (QuantLib::Date d = cpn->accrualStartDate(); d < endDate; ++d) {
+                        Date fixingDate =
+                            arguments_.underlyingIndex_[j]->fixingCalendar().adjust(d, Preceding);
+                        Real localNotional =
+                            getUnderlyingFixing(j, fixingDate, false) * arguments_.underlyingMultiplier_[j];
+                        Real localFxFactor = getFxConversionRate(fixingDate, arguments_.assetCurrency_[j],
+                                                                 arguments_.fundingCurrency_, false);
+                        Real priceFx = localNotional * localFxFactor;
+                        Real deltaPriceFx = priceFx - prevPriceFx;
+                        double tau = dc.yearFraction(d, endDate);
+                        double compFactor = (comp == QuantLib::Compounded) ? std::pow(1.0 + rate, tau)
+                                                                            : (1.0 + rate * tau);
+                        accruedFunding += deltaPriceFx * compFactor;
+                        results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = localNotional;
+                        results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = localFxFactor;
+                        results_.additionalResults["fundingLegDeltaNotionalFx" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = deltaPriceFx;
+                        results_.additionalResults["fundingLegCompoundFactor" + resultSuffix + resultSuffix2 + "_" +
+                                                   ore::data::to_string(d)] = compFactor;
+                        prevPriceFx = priceFx;
+                    }
+                    // When subtractNotional=true the coupon's accruedAmount (=localFundingLegNpv) subtracts
+                    // the notional. It would be Sum delta * (compFactor - 1), which yields to a telescopic sum
+                    // and only the last priceFx remains.
+                    if (zeroCpn->subtractNotional())
+                        accruedFunding -= prevPriceFx;
+                    fundingLegNotionalFactor += accruedFunding / localFundingLegNpv;
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset) {
-                    QL_FAIL("daily reset funding legs support fixed rate, ibor and overnight indexed coupons only");
+                    QL_FAIL("daily reset funding legs support fixed rate, ibor, overnight indexed and zero coupon fixed coupons only");
                 } else {
                     QL_FAIL("internal error: unknown notional type, contact dev");
                 }

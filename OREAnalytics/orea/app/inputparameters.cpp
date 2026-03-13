@@ -252,8 +252,12 @@ ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(const std::s
     loadParameter<string>(s, analytic, param);
     if (s.empty())
         return nullptr;
+    
+    std::filesystem::path ps(s);
     std::filesystem::path baseScenarioPath(setupVariables_.inputPath_ / s);
-    if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
+    if (exists(ps) && is_regular_file(ps)) {
+        return ext::make_shared<ScenarioFileReader>(s, ext::make_shared<SimpleScenarioFactory>(false));
+    } else if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath)) {
         return ext::make_shared<ScenarioFileReader>(baseScenarioPath.string(), ext::make_shared<SimpleScenarioFactory>(false));
     } else {
         // If the file does not exist or fails, assume it is a scenario string
@@ -285,6 +289,45 @@ QuantLib::ext::shared_ptr<ScenarioReader> InputParameters::loadScenarioReader(co
  InputParameters::loadScenarioReader(const std::vector<std::string>& analytics, const std::string& param, 
      const Date& startDate, const Date& endDate) {
     return loadScenarioReader(analytics, vector<string>({param}), startDate, endDate);
+}
+
+QuantLib::ext::shared_ptr<SensitivityStream> InputParameters::loadSensitivityStream(const std::string& analytic,
+    const std::string& param) {
+    string s;
+    loadParameter<string>(s, analytic, param);
+    if (s.empty())
+        return nullptr;
+    std::filesystem::path baseScenarioPath(setupVariables_.inputPath_ / s);
+    if (exists(baseScenarioPath) && is_regular_file(baseScenarioPath))
+        return ext::make_shared<SensitivityFileStream>(baseScenarioPath.string(), setupVariables_.csvSeparator_,
+                                                setupVariables_.csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
+    else
+        // If the file does not exist or fails, assume it is a scenario string
+        return ext::make_shared<SensitivityBufferStream>(s, setupVariables_.csvSeparator_,
+                                                  setupVariables_.csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
+}
+
+QuantLib::ext::shared_ptr<SensitivityStream> InputParameters::loadSensitivityStream(const std::string& analytic,
+    const std::vector<std::string>& params) {
+
+    return loadSensitivityStream(vector<string>({analytic}), params);
+}
+
+QuantLib::ext::shared_ptr<SensitivityStream> InputParameters::loadSensitivityStream(const std::vector<std::string>& analytics,
+    const std::string& param) {
+    return loadSensitivityStream(analytics, vector<string>({param}));
+}
+
+QuantLib::ext::shared_ptr<SensitivityStream> InputParameters::loadSensitivityStream(const std::vector<std::string>& analytics,
+    const std::vector<std::string>& params) {
+    for (const auto& a : analytics) {
+        for (const auto& p : params) {
+            auto sr = loadSensitivityStream(a, p);
+            if (sr)
+                return sr;
+        }
+    }
+    return nullptr;
 }
 
  const std::string& InputParameters::marketConfig(const std::string& context) {
@@ -492,6 +535,7 @@ void InputParameters::setMarketConfigs(const std::map<std::string, std::string>&
     
 void InputParameters::setMporCalendar(const std::string& s) {
     mporCalendar_ = parseCalendar(s);
+    parameters_.set("var", "mporCalendar", s);
     parameters_.set("pnl", "mporCalendar", s);
 }
 
@@ -528,16 +572,6 @@ void InputParameters::setScenarioSimMarketParams(const std::string& xml) {
 void InputParameters::setScenarioSimMarketParamsFromFile(const std::string& fileName) {
     scenarioSimMarketParams_ = ext::make_shared<ScenarioSimMarketParameters>();
     scenarioSimMarketParams_->fromFile(fileName);
-}
-
-void InputParameters::setHistVarSimMarketParams(const std::string& xml) {
-    histVarSimMarketParams_ = ext::make_shared<ScenarioSimMarketParameters>();
-    histVarSimMarketParams_->fromXMLString(xml);
-}
-
-void InputParameters::setHistVarSimMarketParamsFromFile(const std::string& fileName) {
-    histVarSimMarketParams_ = ext::make_shared<ScenarioSimMarketParameters>();
-    histVarSimMarketParams_->fromFile(fileName);
 }
 
 void InputParameters::setSensiPricingEngineFromFile(const std::string& fileName) {
@@ -767,49 +801,6 @@ void InputParameters::setXvaExplainSensitivityScenarioDataFromFile(const std::st
     xvaExplainSensitivityScenarioData_->fromFile(fileName);
 }
 
-void InputParameters::setVarQuantiles(const std::string& s) {
-    // parse to vector<Real>
-    varQuantiles_ = parseListOfValues<Real>(s, &parseReal);
-}
-
-void InputParameters::setCovarianceDataFromFile(const std::string& fileName) {
-    ore::data::CSVFileReader reader(fileName, false);
-    std::vector<std::string> dummy;
-    while (reader.next()) {
-        covarianceData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
-                                       *parseRiskFactorKey(reader.get(1), dummy))] =
-            ore::data::parseReal(reader.get(2));
-    }
-    LOG("Read " << covarianceData_.size() << " valid covariance data lines from " << fileName);
-}
-
-void InputParameters::setCovarianceData(ore::data::CSVReader& reader) {
-    std::vector<std::string> dummy;
-    while (reader.next()) { 
-        covarianceData_[std::make_pair(*parseRiskFactorKey(reader.get(0), dummy),
-                                       *parseRiskFactorKey(reader.get(1), dummy))] =
-            ore::data::parseReal(reader.get(2));
-    }
-    LOG("Read " << covarianceData_.size() << " valid covariance data lines");
-}
-
-void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
-    ore::data::CSVBufferReader reader(xml, false);
-    setCovarianceData(reader);
-}
-
-void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
-    sensitivityStream_ = ext::make_shared<SensitivityFileStream>(fileName, setupVariables_.csvSeparator_, setupVariables_.csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
-}
-
-void InputParameters::setSensitivityStreamFromBuffer(const std::string& buffer) {
-    sensitivityStream_ = ext::make_shared<SensitivityBufferStream>(buffer, setupVariables_.csvSeparator_, setupVariables_.csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
-}
-
-void InputParameters::setBenchmarkVarPeriod(const std::string& period) { 
-    benchmarkVarPeriod_ = period;
-}
-
 void InputParameters::setScenarioReader(const std::string& fileName) {
     std::filesystem::path baseScenarioPath;
     try {
@@ -823,6 +814,8 @@ void InputParameters::setScenarioReader(const std::string& fileName) {
         scenarioReader_ = ext::make_shared<ScenarioBufferReader>(
             fileName, ext::make_shared<SimpleScenarioFactory>(true));
     }
+
+    parameters_.set("var", "scenarioFile", fileName);
 }
 
 void InputParameters::setCashflowHorizon(const std::string& s) {
@@ -902,57 +895,6 @@ void InputParameters::setPnlDateAdjustedRiskFactors(const std::string& s) {
 void InputParameters::setRiskFactorLevel(bool b) {
     parameters_.set("pnl", "riskFactorLevelReporting", b);
 }
-
-void InputParameters::setCalibrationModel(const std::string& s) {
-    calibrationModel_ = s; 
-}
-
-void InputParameters::setHwCalibrationMode(const std::string& s) {
-    hwCalibrationMode_ = s; 
-}
-
-void InputParameters::setPcaCalibration(bool b) { pcaCalibration_ = b; }
-
-void InputParameters::setMeanReversionCalibration(bool b) { meanReversionCalibration_ = b; }
-
-void InputParameters::setForeignCurrencies(const std::string& s) { foreignCurrencies_ = parseListOfValues(s); }
-
-void InputParameters::setCurveTenors(const std::string& s) { curveTenors_ = parseListOfValues<Period>(s, &parsePeriod); }
-
-void InputParameters::setScenarioInputFile(const std::string& s) { 
-    scenarioInputFile_ = s;
-}
-
-void InputParameters::setStartDate(const Date& d) { startDate_ = d; }
-
-void InputParameters::setEndDate(const Date& d) { endDate_ = d; }
-
-void InputParameters::setUseForwardOrZeroRate(const std::string& s) {
-    // value checked in oreapp.cpp
-    if (s == "forward")
-        useForwardRate_ = true;
-    else
-        useForwardRate_ = false;
-}
-
-void InputParameters::setLambda(Real r) { lambda_ = r; }
-
-void InputParameters::setVarianceRetained(Real r) { varianceRetained_ = r; }
-
-void InputParameters::setPcaInputFiles(const std::string& fileString, const std::filesystem::path& inputPath) {
-    pcaInputFiles_ = getFileNames(fileString, inputPath);
-}
-
-void InputParameters::setBasisFunctionNumber(Size s) { basisFunctionNumber_ = s; }
-
-void InputParameters::setKappaUpperBound(Real r) { kappaUpperBound_ = r; }
-
-void InputParameters::setHaltonMaxGuess(Size s) { haltonMaxGuess_ = s; }
-
-void InputParameters::setPcaOutputFileName(const std::string& s) { pcaOutputFileName_ = s; }
-
-void InputParameters::setMeanReversionOutputFileName(const std::string& s) { meanReversionOutputFileName_ = s; }
-
 
 OutputParameters::OutputParameters(const ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");

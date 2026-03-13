@@ -218,6 +218,7 @@ models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
+models/fxlvmodel.cpp
 models/fxlvparametrization.cpp
 models/gaussian1dcrossassetadaptor.cpp
 models/gaussianlhplossmodel.cpp
@@ -292,6 +293,7 @@ pricingengines/discountingbondfutureengine.cpp
 pricingengines/discountingbondrepoengine.cpp
 pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
+pricingengines/discountingcommoditycurrencyswapengine.cpp
 pricingengines/discountingcreditlinkedswapengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
 pricingengines/discountingcurrencyswapenginedeltagamma.cpp
@@ -308,6 +310,7 @@ pricingengines/fdcallablebondevents.cpp
 pricingengines/fdconvertiblebondevents.cpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.cpp
 pricingengines/forwardenabledbondengine.cpp
+pricingengines/forwardriskyannuitystrike.cpp
 pricingengines/indexcdsoptionbaseengine.cpp
 pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
@@ -345,9 +348,9 @@ processes/crossassetstateprocess.cpp
 processes/hestonprocess.cpp
 processes/irhwstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
+processes/multiassetquantohestonprocess.cpp
 processes/ptdhestonprocess.cpp
 processes/quantohestonprocess.cpp
-processes/multiassetquantohestonprocess.cpp
 python_integration/pythonfunctions.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
@@ -416,6 +419,7 @@ termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
 termstructures/sabrparametricvolatility.cpp
 termstructures/scenario.cpp
+termstructures/simplemclocalvolstochasticratescorrection.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
@@ -875,6 +879,7 @@ pricingengines/discountingbondfutureengine.hpp
 pricingengines/discountingbondrepoengine.hpp
 pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
+pricingengines/discountingcommoditycurrencyswapengine.hpp
 pricingengines/discountingcreditlinkedswapengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingcurrencyswapenginedeltagamma.hpp
@@ -891,6 +896,7 @@ pricingengines/fdcallablebondevents.hpp
 pricingengines/fdconvertiblebondevents.hpp
 pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp
 pricingengines/forwardenabledbondengine.hpp
+pricingengines/forwardriskyannuitystrike.hpp
 pricingengines/indexcdsoptionbaseengine.hpp
 pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
@@ -929,9 +935,9 @@ processes/crossassetstateprocess.hpp
 processes/hestonprocess.hpp
 processes/irhwstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+processes/multiassetquantohestonprocess.hpp
 processes/ptdhestonprocess.hpp
 processes/quantohestonprocess.hpp
-processes/multiassetquantohestonprocess.hpp
 python_integration/pythonfunctions.hpp
 quotes/basecorrelationquote.hpp
 quotes/compositevectorquote.hpp
@@ -1046,6 +1052,7 @@ termstructures/proxyswaptionvolatility.hpp
 termstructures/sabrparametricvolatility.hpp
 termstructures/sabrstrippedoptionletadapter.hpp
 termstructures/scenario.hpp
+termstructures/simplemclocalvolstochasticratescorrection.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp
@@ -1160,12 +1167,14 @@ if (ORE_PYTHON_INTEGRATION)
     # manylinux environments do not have Development.Embed which will cause failure, but all other platforms require it
     if(MANYLINUX)
         find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+        target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Module)
     else()
         find_package(Python REQUIRED COMPONENTS Interpreter Development)
+        target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Python)
     endif()
-    target_link_libraries(${QLE_LIB_NAME} PUBLIC Python::Python)
     target_compile_definitions(${QLE_LIB_NAME} PRIVATE ORE_PYTHON_INTEGRATION)
 endif()
+
 
 # ORE_EIGEN_WAS_FOUND is recorded here to be used in OreConfig.cmake.in.
 # Need CACHE because configure_file is called from the top level ORE CMakeLists.txt file.

@@ -56,6 +56,9 @@ public:
     Real accruedAmount(const Date& accrualEnd) const override;
     //@}
 
+    Compounding compounding() const { return comp_; }
+    bool subtractNotional() const { return subtractNotional_; }
+    
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;

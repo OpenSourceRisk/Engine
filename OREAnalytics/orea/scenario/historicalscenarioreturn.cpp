@@ -204,8 +204,9 @@ ReturnConfiguration::ReturnType parseReturnType(const std::string& typeStr) {
 }
 
 void ReturnConfiguration::fromXML(XMLNode* node) {
-    returnType_.clear();
+    *this = ReturnConfiguration();
     XMLUtils::checkNode(node, "ReturnConfiguration");
+    std::set<std::pair<RiskFactorKey::KeyType, std::string>> xmlKeys;
     for (auto* rcNode : XMLUtils::getChildrenNodes(node, "Return")) {
         std::string keyStr = XMLUtils::getAttribute(rcNode, "key");
         std::vector<std::string> tokens;
@@ -219,8 +220,8 @@ void ReturnConfiguration::fromXML(XMLNode* node) {
         
         auto name = (tokens.size() == 2) ? tokens[1] : "";
         auto key = std::make_pair(QuantExt::parseRiskFactorKeyType(tokens[0]), name);
-        QL_REQUIRE(returnType_.find(key) == returnType_.end(),
-                   "ReturnConfiguration: key '" << keyStr << "' already defined as default return");
+        QL_REQUIRE(xmlKeys.insert(key).second,
+                   "ReturnConfiguration: key '" << keyStr << "' provided more than once in XML");
         returnType_[key] = historicalReturnConfig;
     }
 }

@@ -35,7 +35,7 @@ component sub-node.  These trade components are outlined in section \ref{ss:opti
 \vspace{5mm}
 Supported swaption exercise styles are \emph{European}, \emph{Bermudan}, \emph{American}. Swaptions of all exercise styles can have an arbitrary number of legs, with
 each leg represented by a \lstinline!LegData! sub-node.  Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
-have the same value for all \lstinline!LegData! sub-nodes of a swaption. There must be at least one full coupon period after the exercise date for European 
+have the same value for all \lstinline!LegData! sub-nodes of a swaption. Unless \lstinline!MidCouponExercise! isset to \emph{true}, there must be at least one full coupon period after the exercise date for European 
 Swaptions, and after the last exercise date for Bermudan and American Swaptions. See Table \ref{tab:swaption_requirements} for further details on requirements for
  swaptions.\\
 \vspace{5mm}
@@ -289,11 +289,20 @@ If a Swaption is cash-settled and has an \lstinline!ExerciseData! node with a \l
 \subsubsection{Swaption Straddle}
 \label{ss:swaption_straddle}
 
-A Swaption Straddle is a combination of a payer swaption and a receiver swaption with the same underlying swap characteristics. This structure gives the buyer the right to enter into either a payer swap (paying fixed, receiving floating) or a receiver swap (receiving fixed, paying floating) at expiry. Swaption Straddles are typically used when the buyer expects significant interest rate volatility but is uncertain about the direction.
+A Swaption Straddle is a combination of a payer swaption and a receiver swaption with the same underlying swap characteristics. This structure gives the buyer the right to enter 
+into either a payer swap (paying fixed, receiving floating) or a receiver swap (receiving fixed, paying floating) at expiry. 
+
+Note that only one side of the straddle needs to be represented,
+the system will internally for pricing create an additional Swaption identical to the booked one, but with all the leg directions on the underlying Swap reversed. The Straddle instrument is formed by the booked Swaption and the internally created Swaption together.
+
+Swaption Straddles are typically used when the buyer expects significant interest rate volatility but is uncertain about the direction.
 
 The \lstinline!SwaptionStraddleData! node is the trade data container for the \emph{SwaptionStraddle} trade type. The \lstinline!SwaptionStraddleData! node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade component sub-node. These trade components are outlined in section \ref{ss:option_data} and section \ref{ss:leg_data}.\\
 \vspace{5mm}
-The Swaption Straddle shares most characteristics with the standard Swaption (see section \ref{ss:swaption}). Supported exercise styles are \emph{European}, \emph{Bermudan}, and \emph{American}. Swaption Straddles of all exercise styles can have an arbitrary number of legs, with each leg represented by a \lstinline!LegData! sub-node. Cross currency swaption straddles are not supported for either exercise style, i.e. the Currency element must have the same value for all \lstinline!LegData! sub-nodes of a swaption straddle. There must be at least one full coupon period after the exercise date for European Swaption Straddles, and after the last exercise date for Bermudan and American Swaption Straddles. See Table \ref{tab:swaption_straddle_requirements} for further details on requirements for Swaption Straddles.\\
+The Swaption Straddle shares most characteristics with the standard Swaption (see section \ref{ss:swaption}). Supported exercise styles are \emph{European}, \emph{Bermudan}, 
+and \emph{American}. Swaption Straddles of all exercise styles can have an arbitrary number of legs, with each leg represented by a \lstinline!LegData! sub-node. 
+Cross currency swaption straddles are not supported for either exercise style, i.e. the Currency element must have the same value for all \lstinline!LegData! sub-nodes of a swaption straddle. 
+See Table \ref{tab:swaption_straddle_requirements} for further details on requirements for Swaption Straddles.\\
 \vspace{5mm}
 The structure of an example \lstinline!SwaptionStraddleData! node is shown in Listing \ref{lst:swaption_straddle_data}.
 

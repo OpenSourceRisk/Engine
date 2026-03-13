@@ -518,7 +518,7 @@ public:
     explicit ModelCG(const QuantLib::Size n);
 
     // computation graph
-    ext::make_shared<QuantExt::ComputationGraph> computationGraph() { return g_; }
+    QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> computationGraph() { return g_; }
 
     // result must be as of max(refdate, obsdate); refdate < paydate and obsdate <= paydate required
     virtual std::size_t pay(const std::size_t amount, const Date& obsdate, const Date& paydate,
@@ -714,7 +714,7 @@ as shown in listing \ref{lst:xvaenginecg}.
 
 \begin{listing}[hbt]
 \begin{minted}[fontsize=\scriptsize]{c++}
-void XvaAnalyticImpl::runAnalytic(const ext::make_shared<ore::data::InMemoryLoader>& loader,
+void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
     if(inputs_->amcCg()) {
         LOG("XVA analytic is running with amc cg engine (experimental).");

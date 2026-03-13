@@ -40,8 +40,9 @@ Array IrHwStateProcess::drift(Time t, const Array& s) const {
     Array ones(parametrization_->n(), 1.0);
     Array x(s.begin(), std::next(s.begin(), parametrization_->n()));
     Array drift_x = y * ones - parametrization_->kappa(t) * x;
-    if (!(evaluateBankAccount_ && measure_ == IrModel::Measure::BA))
+    if (!(evaluateBankAccount_ && measure_ == IrModel::Measure::BA)) {
         return drift_x;
+    }
     Array drift_int_x = x;
     Array result(2 * parametrization_->n());
     std::copy(drift_x.begin(), drift_x.end(), result.begin());

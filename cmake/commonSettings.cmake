@@ -1,5 +1,27 @@
 include_guard(GLOBAL)
 
+# Set the policy around find_package Boost: https://cmake.org/cmake/help/latest/policy/CMP0167.html
+if(DEFINED ENV{ORE_BOOST_DIR} OR DEFINED ENV{BOOST_DIR})
+    if(POLICY CMP0167)
+        cmake_policy(SET CMP0167 NEW)
+        set(CMAKE_POLICY_DEFAULT_CMP0167 NEW)
+    endif()
+    # Don't need to explicity set Boost_DIR if BOOST_DIR is defined as it will pick it up.
+    if(DEFINED ENV{ORE_BOOST_DIR})
+        set(Boost_DIR "$ENV{ORE_BOOST_DIR}" CACHE STRING "Initialized from environment variable ORE_BOOST_DIR")
+    endif()
+elseif(DEFINED ENV{BOOST} OR DEFINED ENV{BOOST_LIB64})
+    if(POLICY CMP0167)
+        cmake_policy(SET CMP0167 OLD)
+        set(CMAKE_POLICY_DEFAULT_CMP0167 OLD)
+    endif()
+    set(BOOST_INCLUDEDIR "$ENV{BOOST}" CACHE STRING "Initialized from environment variable BOOST")
+    set(BOOST_LIBRARYDIR "$ENV{BOOST_LIB64}" CACHE STRING "Initialized from environment variable BOOST_LIB64")
+else()
+    message(DEBUG "Neither ORE_BOOST_DIR nor BOOST_DIR nor BOOST/BOOST_LIB64 environment variables are set. 
+        Boost will be searched for in default locations and policy is not CMP0167 set.")
+endif()
+
 include(CheckCXXCompilerFlag)
 include(CheckLinkerFlag)
 
@@ -30,6 +52,7 @@ option(ORE_MULTITHREADING_CPU_AFFINITY "Set cpu affinitity in multithreaded calc
 option(ORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER "Enable the parallel unit test runner" OFF)
 option(ORE_ENABLE_OPENCL "Enable OpenCL" OFF)
 option(ORE_ENABLE_CUDA "Enable CUDA" OFF)
+option(ORE_PREVENT_BOOST_AUTO_LINKING "Prevent Boost auto-linking" ON)
 
 # Implies that we have built QuantLib (our fork thereof) separately and that we are importing it.
 option(ORE_BUILD_QL_SEPARATELY "Enable when building ORE separately." OFF)
@@ -156,13 +179,14 @@ else()
         -Werror=return-type
         -Werror=unused-function
         -Wno-unknown-pragmas
-        --system-header-prefix=boost/
+        $<$<CXX_COMPILER_ID:${clangs_to_check}>:--system-header-prefix=boost/>
         -Werror=unused-variable
         -Werror=uninitialized
         "$<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:${clangs_to_check}>>:SHELL:-Xclang -fno-pch-timestamp>"
         $<$<AND:$<BOOL:${QL_USE_PCH}>,$<CXX_COMPILER_ID:GNU>>:-fpch-preprocess>
         $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Wsometimes-uninitialized>
         $<$<CXX_COMPILER_ID:GNU>:-Wmaybe-uninitialized>
+        $<$<CXX_COMPILER_ID:GNU>:-Wno-error=maybe-uninitialized>
         $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Wunused-lambda-capture>
         $<$<CXX_COMPILER_ID:${clangs_to_check}>:-Winconsistent-missing-override>
     )
@@ -194,8 +218,10 @@ endif()
 
 if(ORE_BOOST_AUTO_LINK_SYSTEM)
     add_compile_definitions(BOOST_AUTO_LINK_SYSTEM)
-else()
-    # Avoid using Boost auto-linking unless it was explicitly asked for.
+endif()
+
+# Avoid using Boost auto-linking unless it was explicitly asked for.
+if(ORE_PREVENT_BOOST_AUTO_LINKING)
     add_compile_definitions(BOOST_ALL_NO_LIB)
 endif()
 

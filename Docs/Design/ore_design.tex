@@ -287,7 +287,7 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 	string inputFile(argv[1]);
-	ext::make_shared<Parameters> params = ext::make_shared<Parameters>();
+	ext::shared_ptr<Parameters> params = ext::make_shared<Parameters>();
 	try {
 		params->fromFile(inputFile);
 		OREApp ore(params);
@@ -504,24 +504,24 @@ The {\tt TodaysMarket} class is sufficient for portfolio pricing. Further derive
 class Portfolio {
 public:
 //! Get a Trade with the given trade id from the portfolio
-ext::make_shared<Trade> get(const std::string& id) const;
+ext::shared_ptr<Trade> get(const std::string& id) const;
 //! Load using a default or user supplied TradeFactory
 void load(const std::string& fileName,
-const ext::make_shared<TradeFactory>& tf = ext::make_shared<TradeFactory>());
+const ext::shared_ptr<TradeFactory>& tf = ext::make_shared<TradeFactory>());
 //! Load from an XML string using a default or user supplied TradeFactory
 void loadFromXMLString(const std::string& xmlString,
-const ext::make_shared<TradeFactory>& tf
+const ext::shared_ptr<TradeFactory>& tf
 = ext::make_shared<TradeFactory>());
 //! Load from XML Node
 void fromXML(XMLNode* node,
-const ext::make_shared<TradeFactory>& tf
+const ext::shared_ptr<TradeFactory>& tf
 = ext::make_shared<TradeFactory>());
 //! Save portfolio to an XML file
 void save(const std::string& fileName) const;
 //! Call build on all trades in the portfolio
-void build(const ext::make_shared<EngineFactory>&);
+void build(const ext::shared_ptr<EngineFactory>&);
 //! Return trade list
-const std::vector<ext::make_shared<Trade>>& trades() const { return trades_; }
+const std::vector<ext::shared_ptr<Trade>>& trades() const { return trades_; }
 // ...
 };
 \end{minted}
@@ -547,7 +547,7 @@ public:
 // Constructor
 // ....
 //! Build QuantLib/QuantExt instrument, link pricing engine
-virtual void build(const ext::make_shared<EngineFactory>&) = 0;
+virtual void build(const ext::shared_ptr<EngineFactory>&) = 0;
 //! Return fixings that are relevant for pricing
 virtual std::map<std::string, std::set<QuantLib::Date>>
 fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
@@ -563,7 +563,7 @@ const string& tradeType() const { return tradeType_; }
 const Envelope& envelope() const { return envelope_; }
 const set<string>& portfolioIds() const { return envelope().portfolioIds(); }
 const TradeActions& tradeActions() const { return tradeActions_; }
-const ext::make_shared<InstrumentWrapper>& instrument() { return instrument_; }
+const ext::shared_ptr<InstrumentWrapper>& instrument() { return instrument_; }
 const std::vector<QuantLib::Leg>& legs() { return legs_; }
 const std::vector<string>& legCurrencies() { return legCurrencies_; }
 const std::vector<bool>& legPayers() { return legPayers_; }
@@ -758,7 +758,7 @@ Real numeraire() { return numeraire_; }
 //! Reset sim market to initial state
 virtual void reset() = 0;
 //! Get the fixing manager
-virtual const ext::make_shared<FixingManager>& fixingManager() const = 0;
+virtual const ext::shared_ptr<FixingManager>& fixingManager() const = 0;
 protected:
 Real numeraire_;
 };
@@ -778,17 +778,17 @@ public:
 //! Constructors
 // ...
 //! Set scenario generator
-ext::make_shared<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
+ext::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
 //! Set aggregation data
-ext::make_shared<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
+ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
 //! Set scenarioFilter
-ext::make_shared<ScenarioFilter>& filter() { return filter_; }
+ext::shared_ptr<ScenarioFilter>& filter() { return filter_; }
 //! Update market snapshot and relevant fixing history
 void update(const Date& d) override;
 //! Reset sim market to initial state
 virtual void reset() override;
 //! Return the fixing manager
-const ext::make_shared<FixingManager>& fixingManager() const override { return fixingManager_; }
+const ext::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 // ...
 };
 \end{minted}
@@ -830,7 +830,7 @@ virtual void add(const RiskFactorKey& key, Real value) = 0;
 //! Get an element from the scenario
 virtual Real get(const RiskFactorKey& key) const = 0;
 //! clones a scenario and returns a pointer to the new object
-virtual ext::make_shared<Scenario> clone() const = 0;
+virtual ext::shared_ptr<Scenario> clone() const = 0;
 // ...
 };
 \end{minted}
@@ -1033,7 +1033,7 @@ ORE is used in Python.
 %\begin{listing}[H]
 %%\hrule\medskip
 %\begin{minted}[fontsize=\footnotesize]{cpp}
-%	ext::make_shared<XvaRunner> xva = getXvaRunner();
+%	ext::shared_ptr<XvaRunner> xva = getXvaRunner();
 %	xva->runXva(market_, true);
 %	postProcess_ = xva->postProcess();
 %	writeXVAReports();
@@ -1218,7 +1218,7 @@ all analytics.
 
 \begin{minted}[fontsize=\scriptsize]{c++}
 void PricingAnalyticImpl::runAnalytic( 
-    const ext::make_shared<ore::data::InMemoryLoader>& loader, 
+    const ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
     const std::set<std::string>& runTypes) {
 
     Settings::instance().evaluationDate() = inputs_->asof();

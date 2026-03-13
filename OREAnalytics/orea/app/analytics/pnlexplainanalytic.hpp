@@ -27,6 +27,7 @@
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/inputvariables.hpp>
+#include <orea/scenario/historicalscenarioreturn.hpp>
 
 namespace ore {
 namespace analytics {
@@ -40,6 +41,8 @@ struct PnlExplainVariables : public InputVariables {
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiScenarioData_;
     bool parSensitivity_ = false;
     bool riskFactorLevel_ = false;
+    std::string portfolioFilter_;
+    QuantLib::ext::shared_ptr<ReturnConfiguration> returnConfiguration_;
 };
 
 class PnlExplainAnalyticImpl : public Analytic::Impl {
