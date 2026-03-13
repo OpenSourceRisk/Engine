@@ -1860,7 +1860,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<GaussianCamCG>(
             camBuilder->model(), modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, std::vector<Size>(),
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
             camBuilder->model()->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     } else {
@@ -2027,7 +2027,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<GaussianCamCG>(
             projectedModel, modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_,
-            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig, projectedStateProcessIndices,
+            modelIndices_, modelIndicesCurrencies_, simulationDates_, iborFallbackConfig,
             conditionalExpectationModelStates, std::vector<Date>{},
             projectedModel->discretization() == CrossAssetModel::Discretization::Exact ? 0 : timeStepsPerYear_);
     } else {
