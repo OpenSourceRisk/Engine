@@ -274,8 +274,8 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
 
         // both Ibor or Overnight, both CMS, compare tenor, then name
         if (s1 == 3 || s1 == 4) {
-            return std::make_tuple(ore::data::to_string(i1.ir()->tenor()), i1.ir()->name()) <
-                   std::make_tuple(ore::data::to_string(i2.ir()->tenor()), i2.ir()->name());
+            return std::make_tuple(i1.ir()->tenor(), i1.ir()->name()) <
+                   std::make_tuple(i2.ir()->tenor(), i2.ir()->name());
         }
 
         // both Inf, Generic or other, compare name
