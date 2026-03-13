@@ -248,7 +248,7 @@ void CrossAssetModelBuilder::relinkIrDiscountCurves(const std::vector<QuantLib::
 
 void CrossAssetModelBuilder::buildModel() const {
 
-    LOG("Start building CrossAssetModel");
+    DLOG("Start building CrossAssetModel");
     
     QL_REQUIRE(market_.value() != NULL, "CrossAssetModelBuilder: no market given");
 
