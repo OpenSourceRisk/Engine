@@ -257,7 +257,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
         IndexInfo i2(index2);
 
         Size s1 = getIndexPriority(i1);
-        Size s2 = getIndexPriority(i1);
+        Size s2 = getIndexPriority(i2);
 
         if (s1 != s2)
             return s1 < s2;
