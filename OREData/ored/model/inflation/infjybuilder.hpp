@@ -46,6 +46,7 @@ public:
         \param data                     Jarrow Yildrim inflation model description
         \param configuration            Market configuration to use
         \param referenceCalibrationGrid The reference calibration grid
+        \param donCalibrate             If true, do not perform calibration
     */
     InfJyBuilder(const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<InfJyData>& data,
                  const std::string& configuration = Market::defaultConfiguration,

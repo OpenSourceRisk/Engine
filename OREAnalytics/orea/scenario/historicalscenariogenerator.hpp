@@ -87,6 +87,7 @@ public:
         const std::string& labelPrefix = "",
         //! indicates if the generated sceanrios will be absolute or difference
         const bool generateDifferenceScenarios = false,
+        //! whether or not to break down the scenario return into risk factor contributions
         const bool riskFactorBreakdown = false);
 
     //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scenario
@@ -103,6 +104,7 @@ public:
         const std::string& labelPrefix = "",
         //! indicates if the generated sceanrios will be absolute or difference
         const bool generateDifferenceScenarios = false,
+        //! whether or not to break down the scenario return into risk factor contributions
         const bool riskFactorBreakdown = false);
 
     //! Set base scenario, this also defines the asof date

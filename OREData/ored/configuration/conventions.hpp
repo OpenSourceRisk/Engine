@@ -110,7 +110,7 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type);
 
 //! Repository for currency dependent market conventions
 /*!
-  \ingroup market
+  \ingroup configuration
 */
 class Conventions : public XMLSerializable {
 public:
