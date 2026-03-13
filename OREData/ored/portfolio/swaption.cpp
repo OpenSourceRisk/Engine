@@ -136,7 +136,10 @@ bool areStandardLegs(const vector<vector<ext::shared_ptr<CashFlow>>>& legs) {
 std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> getInterestRateIndexFromLegs(const std::vector<Leg>& legs) {
     std::vector<QuantLib::ext::shared_ptr<InterestRateIndex>> result;
     for (auto const& l : legs) {
-        for (auto const& c : l) {
+        for (auto c : l) {
+            if (auto s = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                c = s->underlyingCoupon();
+            }
             if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                 if (auto tmp = QuantLib::ext::dynamic_pointer_cast<IborIndex>(cpn->index())) {
                     DLOG("found ibor / ois index '" << tmp->name() << "'");
