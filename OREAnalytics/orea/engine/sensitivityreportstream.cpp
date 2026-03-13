@@ -75,15 +75,8 @@ SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::Re
     Real delta = boost::get<Real>(entries[8]);
     Real gamma = boost::get<Real>(entries[9]);
 
-    // If this is a Theta row (Factor_1 key type is Theta), the theta value is in the Delta column
-    if (sr.key_1.keytype == RiskFactorKey::KeyType::Theta) {
-        sr.theta = delta != Null<Real>() ? delta : 0;
-        sr.delta = 0;
-        sr.gamma = 0;
-    } else {
-        sr.delta = delta != Null<Real>() ? delta : 0;
-        sr.gamma = gamma != Null<Real>() ? gamma : 0;
-    }
+    sr.delta = delta != Null<Real>() ? delta : 0;
+    sr.gamma = gamma != Null<Real>() ? gamma : 0;
 
     return sr;
 }

@@ -67,7 +67,7 @@ std::ostream& operator<<(ostream& out, const SensitivityRecord& sr) {
                << ", " << fixed << setprecision(6) << sr.shift_1 << ", " << sr.key_2 << ", " << sr.desc_2 << ", "
                << fixed << setprecision(6) << sr.shift_2 << ", " << sr.currency << ", " << sr.tradeCurrency << ", "
                << fixed << setprecision(2) << sr.baseNpv << ", " << fixed << setprecision(2) << sr.delta << ", "
-               << fixed << setprecision(2) << sr.gamma << ", " << fixed << setprecision(2) << sr.theta << "]";
+               << fixed << setprecision(2) << sr.gamma << "]";
 }
 
 } // namespace analytics

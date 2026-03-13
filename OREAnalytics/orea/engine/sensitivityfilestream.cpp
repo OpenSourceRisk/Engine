@@ -95,15 +95,8 @@ SensitivityRecord SensitivityInputStream::processRecord(const vector<string>& en
     Real gamma = Null<Real>();
     tryParseReal(entries[9], gamma); // might be #N/A, if not computed
 
-    // If this is a Theta row (Factor_1 key type is Theta), the theta value is in the Delta column
-    if (sr.key_1.keytype == RiskFactorKey::KeyType::Theta) {
-        sr.theta = delta;
-        sr.delta = 0;
-        sr.gamma = 0;
-    } else {
-        sr.delta = delta;
-        sr.gamma = gamma;
-    }
+    sr.delta = delta;
+    sr.gamma = gamma;
 
     return sr;
 }
