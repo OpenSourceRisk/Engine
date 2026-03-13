@@ -52,9 +52,13 @@ namespace QuantExt {
 
 //! Base overnight coupon class.
 class OvernightIndexedCouponBase : public QuantLib::FloatingRateCoupon {
+public:
+    enum class Type { Compounding, Averaging };
+
 protected:
     // Note: class is abstract (effectiveRate method) but make the ctor protected in any case.
     OvernightIndexedCouponBase(
+        Type type,
         const QuantLib::Date& paymentDate,
         QuantLib::Real nominal,
         const QuantLib::Date& startDate,
@@ -72,9 +76,6 @@ protected:
         const QuantLib::Date& rateComputationStartDate = QuantLib::Null<QuantLib::Date>(),
         const QuantLib::Date& rateComputationEndDate = QuantLib::Null<QuantLib::Date>(),
         bool applyObservationShift = false);
-
-    // True if telescopic dates requested and can be applied.
-    bool telescopicDates_;
 
 public:
     //! \name Inspectors
@@ -124,6 +125,8 @@ private:
     // Calculate the effective rate up to a given date. Must be implemented in derived classes.
     virtual QuantLib::Rate effectiveRate(const QuantLib::Date& date) const = 0;
 
+    // True if telescopic dates requested and can be applied.
+    bool telescopicDates_;
     QuantLib::ext::shared_ptr<QuantLib::OvernightIndex> overnightIndex_;
     // The valueDates_ are the value dates associated with the corresponding fixing date.
     mutable std::vector<QuantLib::Date> valueDates_;
@@ -152,7 +155,7 @@ private:
     mutable QuantLib::Date cachedEvalDate_;
 
     // Set value of telescopicDates_ according to whether telescoping can be used or not.
-    virtual void setTelescopicDates() { /* Default is to leave telescopicDates_ unchanged */ }
+    void setTelescopicDates(Type type);
 
     // Check if (telescopic) date schedules are stale.
     bool haveStaleDates() const;

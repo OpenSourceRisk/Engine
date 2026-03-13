@@ -89,11 +89,6 @@ public:
 private:
     bool includeSpread_;
 
-    // Can apply telescopic formula, without approximation, if either of the following hold:
-    // 1. no lookback and fixingDays_ align with overnight index fixing days.
-    // 2. have lookback, obs shift is true and fixingDays_ align with overnight index fixing days.
-    void setTelescopicDates() override;
-
     // Calculate the effective rate up to a given date.
     QuantLib::Rate effectiveRate(const QuantLib::Date& date) const override;
 

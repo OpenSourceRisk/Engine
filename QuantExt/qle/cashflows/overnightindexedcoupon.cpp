@@ -60,8 +60,8 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                bool includeSpread, const Period& lookback, const Natural rateCutoff,
                                                const Natural fixingDays, const Date& rateComputationStartDate,
                                                const Date& rateComputationEndDate, bool applyObservationShift)
-    : OvernightIndexedCouponBase(paymentDate, nominal, startDate, endDate, overnightIndex, gearing, spread,
-        refPeriodStart, refPeriodEnd, dayCounter, telescopicValueDates, lookback, rateCutoff, fixingDays,
+    : OvernightIndexedCouponBase(Type::Compounding, paymentDate, nominal, startDate, endDate, overnightIndex, gearing,
+        spread, refPeriodStart, refPeriodEnd, dayCounter, telescopicValueDates, lookback, rateCutoff, fixingDays,
         rateComputationStartDate, rateComputationEndDate, applyObservationShift), includeSpread_(includeSpread) {
     setPricer(ext::make_shared<OvernightIndexedCouponPricer>());
 }
@@ -79,11 +79,6 @@ Real OvernightIndexedCoupon::effectiveSpread() const {
 
 Real OvernightIndexedCoupon::effectiveIndexFixing() const {
     return oicPricer()->effectiveIndexFixing();
-}
-
-void OvernightIndexedCoupon::setTelescopicDates() {
-    telescopicDates_ = telescopicDates_ &&
-        ((!hasLookback() || applyObservationShift()) && fixingDays_ == index_->fixingDays());
 }
 
 Rate OvernightIndexedCoupon::effectiveRate(const Date& d) const {

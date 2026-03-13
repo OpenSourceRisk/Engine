@@ -50,11 +50,11 @@ using std::vector;
 
 namespace QuantExt {
 
-OvernightIndexedCouponBase::OvernightIndexedCouponBase(const Date& paymentDate, Real nominal, const Date& startDate,
-    const Date& endDate, const ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing, Spread spread,
-    const Date& refPeriodStart, const Date& refPeriodEnd, const DayCounter& dayCounter, bool telescopicValueDates,
-    const Period& lookback, const Natural rateCutoff, const Natural fixingDays, const Date& rateComputationStartDate,
-    const Date& rateComputationEndDate, bool applyObservationShift)
+OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& paymentDate, Real nominal,
+    const Date& startDate, const Date& endDate, const ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
+    Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, const DayCounter& dayCounter,
+    bool telescopicValueDates, const Period& lookback, const Natural rateCutoff, const Natural fixingDays,
+    const Date& rateComputationStartDate, const Date& rateComputationEndDate, bool applyObservationShift)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
         refPeriodStart, refPeriodEnd, dayCounter, false),
       telescopicDates_(telescopicValueDates), overnightIndex_(overnightIndex), lookback_(lookback),
@@ -80,7 +80,7 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(const Date& paymentDate, 
     QL_REQUIRE(intStart < intEnd, "OvernightIndexedCoupon: start date ("
         << intStart << ") must be earlier than end date (" << intEnd << ")");
 
-    setTelescopicDates();
+    setTelescopicDates(type);
     auto onFixCal = overnightIndex->fixingCalendar();
     cachedEvalDate_ = onFixCal.adjust(Settings::instance().evaluationDate(), Preceding);
 
@@ -271,6 +271,12 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
 
     Date upToDate = separateRateCompPeriod() ? std::min(d, interestDates_.back()) : std::min(d, accrualEndDate_);
     return nominal() * effectiveRate(upToDate) * accruedPeriod(d);
+}
+
+void OvernightIndexedCouponBase::setTelescopicDates(Type type) {
+    if (type == Type::Compounding)
+        telescopicDates_ = telescopicDates_ &&
+            ((!hasLookback() || applyObservationShift()) && fixingDays_ == index_->fixingDays());
 }
 
 bool OvernightIndexedCouponBase::haveStaleDates() const {
