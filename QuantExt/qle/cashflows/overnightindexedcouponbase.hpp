@@ -38,7 +38,7 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file overnightindexedcouponbase.hpp
+/*! \file qle/cashflows/overnightindexedcouponbase.hpp
     \brief base class for overnight indexed coupons
 */
 #pragma once
@@ -50,7 +50,76 @@
 
 namespace QuantExt {
 
-//! Base overnight coupon class.
+/** Base overnight coupon class.
+ *  This class is the base class for an overnight indexed coupon i.e. a coupon that generally spans a period longer 
+ *  than one day and has a sequence of underlying overnight periods with an associated overnight index. For example, a 
+ *  3 month coupon referencing SOFR with underlying overnight periods on the SOFR calendar. The overnight rate may be 
+ *  accumulated in different ways as specified by the type, currently either compounding or averaging - see the derived 
+ *  classes \ref OvernightIndexedCoupon and \ref AverageONIndexedCoupon respectively.
+ *
+ *  Let us denote \f$\hat{t}^i_0\f$ and \f$\hat{t}^i_n\f$ as the start and end dates of the coupon. They may or may not 
+ *  be holidays on the underlying overnight index calendar. Let \f$t^i_0\f$ be \f$\hat{t}^i_0\f$ adjusted to the 
+ *  preceding good index business day if necessary. Let \f$t^i_n\f$ be \f$\hat{t}^i_n\f$ adjusted to the following good 
+ *  index business day if necessary. We then define the \f$n\f$ underlying overnight interest periods as:
+ *  \f[
+ *      P^i_j = [t^i_{j-1}, t^i_j] \quad \text{for } j=1, \dots, n.
+ *  \f]
+ *
+ *  Each period \f$P^i_j\f$ is associated with an overnight fixing date \f$t^f_k\f$, where the indices are related by:
+ *  \f[
+ *      k = j - 1 \quad \text{for } j=1, \dots, n
+ *  \f]
+ *
+ *  Each overnight fixing date \f$t^f_k\f$ has its associated value date period \f$P^v_j\f$:
+ *  \f[
+ *      P^v_j = [t^v_{j-1}, t^v_j] \quad \text{for } j=1, \dots, n.
+ *  \f]
+ *  Note that \f$t^i_J\f$, \f$t^v_J\f$ for \f$J=0, \dots, n\f$ and \f$t^f_k\f$ are all good index business days.
+ *
+ *  There are a number of coupon features which impact the interest periods and value date periods, and in turn the 
+ *  fixing dates:
+ *  - if there is no lookback and no externally specified fixing days, i.e. the fixing lag is the natural fixing lag of 
+ *    the overnight index, then the value date periods and interest periods align. Under this setup, the overnight 
+ *    index fixing rate is applied over its natural interest period, modulo rate cut-off mentioned below and the 
+ *    coupon start or end dates being holidays in which case the rate is applied for a stub period that is a subset of 
+ *    the overnight value date period.
+ *  - if there is a non-zero lookback, \f$\delta_{LB}\f$, which must be a positive number of days, and there is no 
+ *    observation shift, then the value date periods and associated fixing dates are shifted back by \f$\delta_{LB}\f$ 
+ *    number of index business days. In other words, under this setup, the overnight rate applied for an underlying 
+ *    overnight interest period is the overnight rate fixing observed for an overnight period \f$\delta_{LB}\f$ index 
+ *    business days prior to the interest period.
+ *  - if there is a non-zero lookback, \f$\delta_{LB}\f$, and an observation shift, then the interest periods are 
+ *    shifted back also by \f$\delta_{LB}\f$ number of index business days. So we have new interest periods:
+ *    \f[
+ *        \begin{aligned}
+ *        \bar{P}^i_j &= [\bar{t}^i_{j-1}, \bar{t}^i_j] \\
+ *                    &= [LB(t^i_{j-1}, \delta_{LB}), LB(t^i_j, \delta_{LB})]
+ *        \end{aligned}
+ *    \f]
+ *    where \f$LB(t, \delta)\f$ is the function that shifts the business date \f$t\f$ back by \f$\delta\f$ index 
+ *    business days. So the overnight rate is applied over these new interest periods.
+ *  - if in any of the scenarios above, the coupon has an external fixing lag that is not equal to the fixing lag of 
+ *    the overnight index, then the value date periods and associated fixing dates are shifted back by this fixing lag,
+ *    which must be a positive number of business days.
+ *  - if there is a non-zero rate cut-off, \f$M\f$, then the last \f$M\f$ overnight fixing rates are frozen at the 
+ *    \f$M+1\f$ from last overnight fixing rate i.e. fixing rate observed at \f$t^f_{n-M-1}\f$. Clearly, we must have 
+ *    \f$M < n\f$.
+ *  - if there is a rate computation start or end date given, they are used as the starting point for the interest 
+ *    periods in the discussion above instead of the coupon start and end dates. In this case, the coupon start and end
+ *    dates are used only in the final coupon or accrual calculation i.e. the accumulated, either compounded or
+ *    averaged, overnight rate is applied to the coupon accrual period defined by the coupon start and end dates.
+ *
+ *  If telescopic dates is requested for the coupon, the coupon stores only the dates necessary for a calculations 
+ *  using a telescopic formula if such a calculation is possible.
+ *  - for coupon type `Compounding`, telescopic dates are allowed if there is no lookback or there is a lookback with 
+ *    observation shift and the coupon fixing lag is either not specified or if specified it is the same as the index 
+ *    fixing lag. As outlined above, in this case the value date periods align with the interest date periods and the 
+ *    telescopic formula gives the same result as the full calculation.
+ *  - for coupon type `Averaging`, telescopic dates are always allowed if requested. See 
+      \ref AverageONIndexedCouponPricer, if telescopic dates are requested, it implies use of the `Takada` 
+      approximation and in this case, because the valuation is an approximation in any case, telescopic dates are 
+      allowed even when value period dates do not align with interest period dates.
+ */
 class OvernightIndexedCouponBase : public QuantLib::FloatingRateCoupon {
 public:
     enum class Type { Compounding, Averaging };
