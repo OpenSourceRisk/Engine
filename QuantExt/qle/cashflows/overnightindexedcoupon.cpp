@@ -82,6 +82,11 @@ Real OvernightIndexedCoupon::effectiveIndexFixing() const {
     return oicPricer()->effectiveIndexFixing();
 }
 
+void OvernightIndexedCoupon::setTelescopicDates() {
+    telescopicDates_ = telescopicDates_ &&
+        ((!hasLookback() || applyObservationShift()) && fixingDays_ == index_->fixingDays());
+}
+
 Rate OvernightIndexedCoupon::effectiveRate(const Date& d) const {
     return oicPricer()->effectiveRate(d);
 }

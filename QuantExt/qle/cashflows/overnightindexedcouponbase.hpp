@@ -73,6 +73,9 @@ protected:
         const QuantLib::Date& rateComputationEndDate = QuantLib::Null<QuantLib::Date>(),
         bool applyObservationShift = false);
 
+    // True if telescopic dates requested and can be applied.
+    bool telescopicDates_;
+
 public:
     //! \name Inspectors
     //@{
@@ -144,15 +147,12 @@ private:
     // Index into fixing dates for current start of telescopic period. If not set, all dates are present.
     mutable QuantLib::ext::optional<QuantLib::Size> tsStartIdx_;
 
-    // True if telescopic dates requested and can be applied.
-    bool telescopicDates_;
-
     // Cached adjusted evaluation date i.e. first business day preceding the evaluation date for which the 
     // current date schedules were calculated.
     mutable QuantLib::Date cachedEvalDate_;
 
-    // Set value of telescopicDates_ according to whether it can be used or not.
-    void setTelescopicDates();
+    // Set value of telescopicDates_ according to whether telescoping can be used or not.
+    virtual void setTelescopicDates() { /* Default is to leave telescopicDates_ unchanged */ }
 
     // Check if (telescopic) date schedules are stale.
     bool haveStaleDates() const;

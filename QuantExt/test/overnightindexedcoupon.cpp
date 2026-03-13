@@ -15,27 +15,17 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
 #include "toplevelfixture.hpp"
-
-#include <boost/assign/std/vector.hpp>
-#include <qle/cashflows/overnightindexedcoupon.hpp>
-#include <qle/termstructures/interpolateddiscountcurve2.hpp>
-#include <ql/indexes/ibor/sofr.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/calendars/unitedstates.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
-#include <boost/make_shared.hpp>
+#include "onindexcouponutils.hpp"
 // clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
-#include <boost/timer/timer.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <map>
 #include <format>
-#include <fstream>
 #include <oret/util/datapaths.hpp>
-#include <oret/util/fileutilities.hpp>
 #include <string>
 
 using namespace QuantLib;
@@ -43,6 +33,7 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 namespace bdata = boost::unit_test::data;
+using OnIndexCouponTest::TestCouponData;
 
 namespace {
 struct TestData {
@@ -1193,99 +1184,6 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(OvernightIndexCouponTests)
 
-void loadFixingsUpToDate(const Date& d, ext::shared_ptr<OvernightIndex> index, bool includeDate = false)
-{
-    // Initialise SOFR data
-    static map<Date, Real> sofrRates = {
-        { Date( 2, Dec, 2025), 0.0401 },
-        { Date( 1, Dec, 2025), 0.0412 },
-        { Date(28, Nov, 2025), 0.0412 },
-        { Date(26, Nov, 2025), 0.0405 },
-        { Date(25, Nov, 2025), 0.0401 },
-        { Date(24, Nov, 2025), 0.0396 },
-        { Date(21, Nov, 2025), 0.0393 },
-        { Date(20, Nov, 2025), 0.0391 },
-        { Date(19, Nov, 2025), 0.0391 },
-        { Date(18, Nov, 2025), 0.0394 },
-        { Date(17, Nov, 2025), 0.0400 },
-        { Date(14, Nov, 2025), 0.0395 },
-        { Date(13, Nov, 2025), 0.0400 },
-        { Date(12, Nov, 2025), 0.0398 },
-        { Date(10, Nov, 2025), 0.0395 },
-        { Date( 7, Nov, 2025), 0.0393 },
-        { Date( 6, Nov, 2025), 0.0392 },
-        { Date( 5, Nov, 2025), 0.0391 },
-        { Date( 4, Nov, 2025), 0.0400 },
-        { Date( 3, Nov, 2025), 0.0413 },
-        { Date(31, Oct, 2025), 0.0422 },
-        { Date(30, Oct, 2025), 0.0404 },
-        { Date(29, Oct, 2025), 0.0427 },
-        { Date(28, Oct, 2025), 0.0431 },
-        { Date(27, Oct, 2025), 0.0427 },
-        { Date(24, Oct, 2025), 0.0424 },
-        { Date(24, Oct, 2025), 0.0424 }
-    };
-
-    // Load fixings
-    Date anchorDate = includeDate ? d : d - 1;
-    auto it = sofrRates.cbegin();
-    while (it != sofrRates.cend() && it->first <= anchorDate)
-    {
-        index->addFixing(it->first, it->second);
-        ++it;
-    }
-}
-
-// Make discount curve for tests.
-ext::shared_ptr<YieldTermStructure> makeDiscCurve()
-{
-    static map<Size, DiscountFactor> dateDfs = {
-        { 0, 1.000000000}, { 1, 0.999969863}, { 2, 0.999937353}, { 3, 0.999903139}, { 4, 0.999864017},
-        { 5, 0.999824880}, { 6, 0.999784156}, { 7, 0.999739477}, { 8, 0.999688193}, { 9, 0.999632828},
-        {10, 0.999576202}, {11, 0.999519599}, {12, 0.999462613}, {13, 0.999405507}, {14, 0.999335271},
-        {15, 0.999266198}, {16, 0.999203719}, {17, 0.999134111}, {18, 0.999065005}, {19, 0.998996331},
-        {20, 0.998915909}, {21, 0.998823996}, {22, 0.998726216}, {23, 0.998637407}, {24, 0.998545094},
-        {25, 0.998455406}, {26, 0.998367992}, {27, 0.998267186}, {28, 0.998175836}, {29, 0.998065381},
-        {30, 0.997956526}, {31, 0.997860354}, {32, 0.997758343}, {33, 0.997643778}, {34, 0.997544354},
-        {35, 0.997435933}, {36, 0.997333220}, {37, 0.997189585}, {38, 0.996938409}, {39, 0.996571583},
-        {40, 0.996081047}
-    };
-
-    vector<Time> times;
-    vector<Handle<Quote>> dfs;
-    times.reserve(dateDfs.size());
-    dfs.reserve(dateDfs.size());
-    for (const auto& [numDays, df] : dateDfs) {
-        times.push_back(numDays / 365.0);
-        dfs.push_back(Handle<Quote>(ext::make_shared<SimpleQuote>(df)));
-    }
-
-    return ext::make_shared<InterpolatedDiscountCurve2>(times, dfs, Actual365Fixed());
-}
-
-// Hold test data for coupon creation in tests below.
-struct TestCouponData {
-
-    ext::shared_ptr<Sofr> sofr;
-    Date start;
-    Date end;
-    Date pmt;
-    Real notional;
-
-    TestCouponData() {
-
-        // When it comes to coupon calculations, a flat forward curve may hide issues with dates so we use a curve 
-        // with a slope. Only need discount factors out to a month or so for the tests below.
-        Handle<YieldTermStructure> sofrCurve(makeDiscCurve());
-        sofr = ext::make_shared<Sofr>(sofrCurve);
-
-        start = Date(1, Nov, 2025); // Saturday
-        end = Date(30, Nov, 2025);  // Sunday
-        pmt = Date(1, Dec, 2025);
-        notional = 1;
-    }
-};
-
 // Valuation dates to test non-telescopic period coupons.
 vector<Date> valDatesToTestNoTs {
     Date(23, Oct, 2025), // Coupon in future even with 2BD lookback and 2BD fixing lag.
@@ -1978,6 +1876,13 @@ BOOST_AUTO_TEST_CASE(testTelescopicSetting)
         "fixing lag different from the index fixing lag.");
 }
 
+// Get the input and ouput file paths for the given coupon ID in the tests below.
+pair<path, path> filePaths(const string& cpnId) {
+    auto outPath = TEST_OUTPUT_PATH / path(cpnId + ".csv");
+    auto expPath = TEST_INPUT_PATH / path(cpnId + ".csv");
+    return {outPath, expPath};
+}
+
 // Parameter sets for coupon testCouponAccruals below.
 auto lookbacks   = bdata::make({    0,     0,     2,    2,     2});
 auto obsShifts   = bdata::make({false, false,  true, true, false});
@@ -1991,56 +1896,6 @@ auto cpnVariants = (lookbacks ^ obsShifts ^ telescopic) * rateCutoffs;
 // Could use auto idx = boost::unit_test::framework::current_test_case().p_id; in test body but may be brittle across 
 // different versions of Boost.
 auto idxCpnVariants = cpnVariants ^ bdata::xrange(cpnVariants.size().value());
-
-void runCpnAccrualTest(const OIC& cpn, const string& cpnName) {
-    // For each evaluation date from before the coupon accrual start date until after the coupon payment date, check 
-    // the accrued amount for each of those dates.
-    const Date& cpnAccStart = cpn.accrualStartDate();
-    const Date& cpnPmt = cpn.date();
-    Date startAccDate = cpnAccStart - 1;
-    Date startEvalDate = cpn.fixingDates().front() - 1;
-    Date stopDate = cpnPmt + 1;
-
-    // Open output file for the calculated results.
-    auto filePath = TEST_OUTPUT_PATH / path(cpnName + ".csv");
-    ofstream outFile(filePath);
-    BOOST_REQUIRE_MESSAGE(outFile.is_open(), "OvernightIndexCouponTests/testCouponAccruals: "
-        "failed to open file at: " << filePath);
-
-    // Write header.
-    outFile << "eval / acc";
-    for (Date accDate = startAccDate; accDate <= stopDate; ++accDate)
-        outFile << "," << io::iso_date(accDate);
-    outFile << ",full_coupon";
-    outFile << endl;
-
-    // Calculate and write the test results.
-    for (Date evalDate = startEvalDate; evalDate <= stopDate; ++evalDate) {
-        Settings::instance().evaluationDate() = evalDate;
-        outFile << io::iso_date(evalDate);
-
-        // Load fixings up to but not equal to evalDate. This is not always what will happen in practice. For example, 
-        // 11 Nov 2025 is Veteran's Day holiday in the US but is a good business day in Europe. Valuing on 11 Nov 2025,
-        // we would not get the fixing for 10 Nov 2025 until 08:00 ET on 12 Nov 2025 (the next good SOFR business day 
-        // after the 10 Nov 2025). The valuation would throw if a fixing is not entered for 10 Nov 2025 and this is 
-        // handled outside of ORE / QuantLib.
-        loadFixingsUpToDate(evalDate, cpn.overnightIndex());
-
-        for (Date accDate = startAccDate; accDate <= stopDate; ++accDate) {
-            outFile << "," << format("{:.4f}", cpn.accruedAmount(accDate));
-        }
-
-        // Tag on the coupon amount as well.
-        outFile << "," << format("{:.4f}", cpn.amount());
-
-        outFile << endl;
-    }
-    outFile.close();
-
-    // Compare against expected results. The results have been validated in Excel.
-    auto expFilePath = TEST_INPUT_PATH / path(cpnName + ".csv");
-    BOOST_CHECK(compareFiles(filePath.string(), expFilePath.string()));
-}
 
 #ifdef __INTELLISENSE__
 void testCpnAccruals(Natural lb, bool os, bool ts, Natural rco, size_t idx)
@@ -2060,7 +1915,8 @@ BOOST_DATA_TEST_CASE(testCpnAccruals, idxCpnVariants, lb, os, ts, rco, idx)
     OIC cpn(tcd.pmt, notional, tcd.start, tcd.end, tcd.sofr, 1.0, 0.0, Date(), Date(), DayCounter(), ts, false,
             lb * Days, rco, Null<Natural>(), Null<Date>(), Null<Date>(), os);
 
-    runCpnAccrualTest(cpn, cpnName);
+    auto [outFilePath, expFilePath] = filePaths(cpnName);
+    OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
 }
 
 // Test gearings and spreads with different settings for whether start / end date of coupon is a business day.
@@ -2094,7 +1950,8 @@ BOOST_DATA_TEST_CASE(testCpnAccrualsGearingSpread, idxGsCpnVariants, gearing, sp
     OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, gearing, spread / 10000, Date(), Date(), DayCounter(), ts, incSpr,
             0 * Days, 0, Null<Natural>(), Null<Date>(), Null<Date>(), false);
 
-    runCpnAccrualTest(cpn, cpnName);
+    auto [outFilePath, expFilePath] = filePaths(cpnName);
+    OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
 }
 
 // Test coupon with all non-standard arguments set. Include spread must be false because gearing != 1 and telescoping 
@@ -2113,7 +1970,8 @@ BOOST_AUTO_TEST_CASE(testCpnAccrualsAll)
     OIC cpn(tcd.pmt, notional, start, end, tcd.sofr, 1.5, 0.0010, Date(), Date(), DayCounter(), false, false, 2 * Days,
             3, 1, Null<Date>(), Null<Date>(), true);
 
-    runCpnAccrualTest(cpn, cpnName);
+    auto [outFilePath, expFilePath] = filePaths(cpnName);
+    OnIndexCouponTest::runCpnAccrualTest(cpn, outFilePath, expFilePath);
 }
 // clang-format on
 

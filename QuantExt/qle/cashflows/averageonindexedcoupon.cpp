@@ -38,10 +38,11 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                                                Real gearing, Spread spread, Natural rateCutoff,
                                                const DayCounter& dayCounter, const Period& lookback,
                                                const Size fixingDays, const Date& rateComputationStartDate,
-                                               const Date& rateComputationEndDate, const bool telescopicValueDates)
+                                               const Date& rateComputationEndDate, const bool telescopicValueDates,
+                                               bool applyObservationShift)
     : OvernightIndexedCouponBase(paymentDate, nominal, startDate, endDate, overnightIndex, gearing, spread, Date(),
         Date(), dayCounter, telescopicValueDates, lookback, rateCutoff, fixingDays, rateComputationStartDate,
-        rateComputationEndDate) {
+        rateComputationEndDate, applyObservationShift) {
     setPricer(ext::make_shared<AverageONIndexedCouponPricer>());
 }
 

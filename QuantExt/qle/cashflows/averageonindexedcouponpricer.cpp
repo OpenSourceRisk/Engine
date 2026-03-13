@@ -76,6 +76,8 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
     const Date& cpnAccStart = coupon_->separateRateCompPeriod() ? intDates.front() : coupon_->accrualStartDate();
     const Date& cpnAccEnd = coupon_->separateRateCompPeriod() ? intDates.back() : coupon_->accrualEndDate();
     const DayCounter& indexDc = index->dayCounter();
+    const Natural indexFixDays = index->fixingDays();
+    const Natural cpnFixDays = coupon_->fixingDays();
 
     // Average rate will be calculated below.
     Real avgRate = 0.0;
@@ -124,13 +126,15 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
         return rco > 0 && fixDates.size() - rco - 1 <= currPeriodIdx;
     };
 
+    auto onRateGivenDates = [&](const Date& start, const Date& end) {
+        return start == end ? 0.0 :
+            (curve->discount(start) / curve->discount(end) - 1.0) / indexDc.yearFraction(start, end);
+    };
+
     auto onRate = [&](bool inRcoPeriod = false) {
-        Date endValDate = inRcoPeriod ? valDates.back() : valDates[currPeriodIdx + 1];
-        DiscountFactor startDiscount = curve->discount(valDates[currPeriodIdx]);
-        DiscountFactor endDiscount = curve->discount(endValDate);
-        Real factor = startDiscount / endDiscount;
-        Time dcf = indexDc.yearFraction(valDates[currPeriodIdx], endValDate);
-        return (factor - 1.0) / dcf;
+        Date end = inRcoPeriod ? valDates.back() : valDates[currPeriodIdx + 1];
+        const Date& start = valDates[currPeriodIdx];
+        return (curve->discount(start) / curve->discount(end) - 1.0) / indexDc.yearFraction(start, end);
     };
 
     auto onRateRcoInd = [&]() -> pair<Rate, bool> {
@@ -138,8 +142,35 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
         return {onRate(inRcoPeriod), inRcoPeriod};
     };
 
-    auto applyTakadaFormula = [&](const Date& start, const Date& end) {
-        avgRate += log(curve->discount(start) / curve->discount(end));
+    auto intDatesValDatesAlign = [&]() {
+        return ((lookback.length() == 0 || obsShift) && cpnFixDays == indexFixDays);
+    };
+
+    auto applyTakadaFormula = [&](Size startIdx, Size endIdx) {
+        if (startIdx >= endIdx)
+            return;
+
+        const Date& start = valDates[startIdx];
+        const Date& end = valDates[endIdx];
+
+        if (onFixCal.advance(start, 1, Days, Following) == end) {
+            if (intDatesValDatesAlign()) {
+                avgRate += curve->discount(start) / curve->discount(end) - 1.0;
+            } else {
+                Time valDcf = indexDc.yearFraction(valDates[startIdx], valDates[endIdx]);
+                auto onRate = (curve->discount(start) / curve->discount(end) - 1.0) / valDcf;
+                avgRate += onRate * indexDc.yearFraction(intDates[startIdx], intDates[endIdx]);
+            }
+        } else {
+            if (intDatesValDatesAlign()) {
+                avgRate += log(curve->discount(start) / curve->discount(end));
+            } else {
+                Time valDcf = indexDc.yearFraction(start, end);
+                Time intDcf = indexDc.yearFraction(intDates[startIdx], intDates[endIdx]);
+                Real approx = log(curve->discount(start) / curve->discount(end));
+                avgRate += approx * intDcf / valDcf;
+            }
+        }
     };
 
     auto applyTakadaFormulaWithStub = [&]() {
@@ -147,22 +178,47 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
         // contains `date`. We may need an extra stub below if `date` is not an index business day.
         Date adjDate = onFixCal.adjust(date, Preceding);
         Date valDateUndStart = lookback != 0 * Days ? onFixCal.advance(adjDate, -lookback, Preceding) : adjDate;
+        Date intDateUndStart = obsShift ? valDateUndStart : adjDate;
+        valDateUndStart = cpnFixDays != indexFixDays ?
+            onFixCal.advance(valDateUndStart, -cpnFixDays, Days, Preceding) : valDateUndStart;
 
         // Piece from value date at start of telescopic period to valDateUndStart.
-        applyTakadaFormula(std::min(valDates[currPeriodIdx], valDateUndStart), valDateUndStart);
+        if (valDates[currPeriodIdx] < valDateUndStart) {
+            if (onFixCal.advance(valDates[currPeriodIdx], 1, Days, Following) == valDateUndStart) {
+                if (intDatesValDatesAlign()) {
+                    avgRate += curve->discount(valDates[currPeriodIdx]) / curve->discount(valDateUndStart) - 1.0;
+                } else {
+                    Time valDcf = indexDc.yearFraction(valDates[currPeriodIdx], valDateUndStart);
+                    Rate onRate = (curve->discount(valDates[currPeriodIdx]) 
+                        / curve->discount(valDateUndStart) - 1.0) / valDcf;
+                    avgRate += onRate * indexDc.yearFraction(intDates[currPeriodIdx], intDateUndStart);
+                }
+            } else {
+                if (intDatesValDatesAlign()) {
+                    avgRate += log(curve->discount(valDates[currPeriodIdx]) / curve->discount(valDateUndStart));
+                } else {
+                    Time valDcf = indexDc.yearFraction(valDates[currPeriodIdx], valDateUndStart);
+                    Time intDcf = indexDc.yearFraction(intDates[currPeriodIdx], intDateUndStart);
+                    Real approx = log(curve->discount(valDates[currPeriodIdx]) / curve->discount(valDateUndStart));
+                    avgRate += approx * intDcf / valDcf;
+                }
+            }
+        }
 
-        // If d is a holiday, add the additional piece.
+        // If d is a holiday, add the additional stub piece.
         if (!onFixCal.isBusinessDay(date)) {
-            // Get the next business day after `date` and the value date associated with it.
             Date valDateUndEnd = onFixCal.advance(valDateUndStart, 1, Days, Following);
-            Date nextDate = onFixCal.advance(adjDate, 1, Days, Following);
-            Real scale = indexDc.yearFraction(adjDate, date) / indexDc.yearFraction(adjDate, nextDate);
-
+            Time fullDcf = indexDc.yearFraction(valDateUndStart, valDateUndEnd);
             DiscountFactor startDisc = curve->discount(valDateUndStart);
             DiscountFactor endDisc = curve->discount(valDateUndEnd);
-            Time fullDcf = indexDc.yearFraction(valDateUndStart, valDateUndEnd);
             Rate onRate = (startDisc / endDisc - 1.0) / fullDcf;
-            avgRate += onRate * scale * fullDcf;
+            if (obsShift) {
+                Date nextDate = onFixCal.advance(adjDate, 1, Days, Following);
+                Real scale = indexDc.yearFraction(adjDate, date) / indexDc.yearFraction(adjDate, nextDate);
+                avgRate += onRate * scale * fullDcf;
+            } else {
+                avgRate += onRate * indexDc.yearFraction(adjDate, date);
+            }
         }
     };
     // --- End of helper lambdas ---
@@ -247,7 +303,7 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
             } else if (currPeriodIdx < numPeriods - 1 && currValDateOneBd < valDates[currPeriodIdx + 1]) {
                 // Telescopic formula but date d is not in the period associated with the telescopic period.
                 // So can just apply Takada formula on the full period.
-                applyTakadaFormula(valDates[currPeriodIdx], valDates[currPeriodIdx + 1]);
+                applyTakadaFormula(currPeriodIdx, currPeriodIdx + 1);
                 currPeriodIdx++;
             } else {
                 // May have rate cut-off periods, final / initial stub period or telescopic period may have been 1D.
@@ -262,19 +318,39 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
     } else if (!rcoRate) {
         // No telescopic dates, Takada approximation requested (and not in rate cut-off period).
         if (currPeriodIdx < numPeriods) {
-            // Index of the first period in the rate cut-off period or the last period if no rate cut-off.
-            Size rcoPeriodIdx = fixDates.size() - rco - 1;
-            if ((rco == 0 && numPeriods <= rcoPeriodIdx) || numPeriods < rcoPeriodIdx) {
-                // If rate cut-off and `date` is in a period before start of it or no rate cut-off, we just apply the 
-                // Takada approximation up to `date`.
-                applyTakadaFormulaWithStub();
-                currPeriodIdx = numPeriods;
-            } else {
-                // `date` is in rate cut-off period, so apply Takada approximation up to the start of the rate cut-off
-                // period and then apply rate cut-off value below.
-                applyTakadaFormula(valDates[currPeriodIdx], valDates[rcoPeriodIdx]);
-                currPeriodIdx = rcoPeriodIdx;
-                rcoRate = onRate(true);
+            // If we haven't processed the first underlying overnight period and it starts on a holiday, we 
+            // process it separately here.
+            if (currPeriodIdx == 0 && onFixCal.isHoliday(cpnAccStart)) {
+                auto [onRate, inRcoPeriod] = onRateRcoInd();
+                updateAvgRate(onRate);
+                if (inRcoPeriod)
+                    rcoRate = onRate;
+            }
+
+            if (!rcoRate && currPeriodIdx < numPeriods) {
+                // Index of the first period in the rate cut-off period or the last period if no rate cut-off.
+                Size rcoPeriodIdx = fixDates.size() - rco - 1;
+                if (rco == 0 && numPeriods == fixDates.size() && onFixCal.isHoliday(cpnAccEnd)) {
+                    // If we are proessing all periods and the last day of the last underlying overnight period (i.e.
+                    // coupon accrual end date) is a holiday, we need to apply approximation up to end of prior 
+                    // underlying overnight period and then handle the final stub.
+                    if (currPeriodIdx < numPeriods - 1) {
+                        applyTakadaFormula(currPeriodIdx, numPeriods - 1);
+                        currPeriodIdx = numPeriods - 1;
+                    }
+                    updateAvgRate(onRate(false));
+                } else if (rco == 0 || numPeriods <= rcoPeriodIdx) {
+                    // If rate cut-off and `date` is in a period before start of it or no rate cut-off, we just apply
+                    // the Takada approximation up to `date`.
+                    applyTakadaFormulaWithStub();
+                    currPeriodIdx = numPeriods - 1;
+                } else {
+                    // `date` is in rate cut-off period, so apply Takada approximation up to the start of the rate
+                    // cut-off period and then apply rate cut-off value below.
+                    applyTakadaFormula(currPeriodIdx, rcoPeriodIdx);
+                    currPeriodIdx = rcoPeriodIdx;
+                    rcoRate = onRate(true);
+                }
             }
         }
     }

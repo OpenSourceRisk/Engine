@@ -57,9 +57,9 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(const Date& paymentDate, 
     const Date& rateComputationEndDate, bool applyObservationShift)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
         refPeriodStart, refPeriodEnd, dayCounter, false),
-      overnightIndex_(overnightIndex), lookback_(lookback), rateCutoff_(rateCutoff),
-      rateComputationStartDate_(rateComputationStartDate), rateComputationEndDate_(rateComputationEndDate),
-      applyObservationShift_(applyObservationShift), telescopicDates_(telescopicValueDates) {
+      telescopicDates_(telescopicValueDates), overnightIndex_(overnightIndex), lookback_(lookback),
+      rateCutoff_(rateCutoff), rateComputationStartDate_(rateComputationStartDate),
+      rateComputationEndDate_(rateComputationEndDate), applyObservationShift_(applyObservationShift) {
 
     // Lookback was never intended to be positive i.e. it was designed to allow time to calculate the coupon before
     // a coupon payment date. QuantLib has it as Natural => non-negative but we won't change the interface now but just 
@@ -276,14 +276,6 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
         return 0.0;
     else
         return nominal() * effectiveRate(std::min(d, accrualEndDate_)) * accruedPeriod(d);
-}
-
-void OvernightIndexedCouponBase::setTelescopicDates() {
-    // Can apply telescopic formula if either of the following hold:
-    // 1. no lookback and fixingDays_ align with overnight index fixing days.
-    // 2. have lookback, obs shift is true and fixingDays_ align with overnight index fixing days.
-    telescopicDates_ = telescopicDates_ &&
-        ((!hasLookback() || applyObservationShift_) && fixingDays_ == index_->fixingDays());
 }
 
 bool OvernightIndexedCouponBase::haveStaleDates() const {
