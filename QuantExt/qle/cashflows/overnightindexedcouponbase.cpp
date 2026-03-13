@@ -264,18 +264,13 @@ const vector<Rate>& OvernightIndexedCouponBase::indexFixings() const {
 }
 
 Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
-    // For non-standard coupons with a rate computation period separate from the main accrual period, we use the old 
-    // style accrued amount i.e. calculate the full accrual and scale it via the accrued period. To try to calculate 
-    // the accrual with the new method below via effectiveRate(d) makes no sense.
-    if (separateRateCompPeriod())
-        return FloatingRateCoupon::accruedAmount(d);
-
     // Note: no facility in OvernightIndexedCoupon ctor to pass in an ex-coupon date so we don't check
     // tradingExCoupon(d). Don't believe it applies for overnight indexed coupons in any case.
     if (d <= accrualStartDate_ || d > paymentDate_)
         return 0.0;
-    else
-        return nominal() * effectiveRate(std::min(d, accrualEndDate_)) * accruedPeriod(d);
+
+    Date upToDate = separateRateCompPeriod() ? std::min(d, interestDates_.back()) : std::min(d, accrualEndDate_);
+    return nominal() * effectiveRate(upToDate) * accruedPeriod(d);
 }
 
 bool OvernightIndexedCouponBase::haveStaleDates() const {

@@ -402,12 +402,9 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     }
 
     // Give the final result
-    // Again: if non-standard rate computation period, use the day count fraction from the full rate computation period 
-    //        on the index day counter (not that of the coupon) rather than the day count fraction from coupon accrual 
-    //        start date to coupon accrual end date.
-    const Time cpnDcf = coupon_->separateRateCompPeriod() ?
-        indexDc.yearFraction(intDates.front(), intDates.back()) : coupon_->accruedPeriod(date);
-    const Rate rate = (compFac - 1.0) / cpnDcf;
+    Time cpnDcf = coupon_->separateRateCompPeriod() ?
+        indexDc.yearFraction(cpnAccStart, date) : coupon_->accruedPeriod(date);
+    Rate rate = (compFac - 1.0) / cpnDcf;
     Rate swapletRate = !incSpread ? coupon_->gearing() * rate + spread : coupon_->gearing() * rate;
     Spread effectiveSpread = !incSpread ? spread : rate - (compFacNoSpd - 1.0) / cpnDcf;
     Rate effectiveIndexFixing = !incSpread ? rate : rate - effectiveSpread;
@@ -434,8 +431,7 @@ Rate OvernightIndexedCouponPricer::effectiveIndexFixing() const {
 }
 
 Rate OvernightIndexedCouponPricer::effectiveRate(const Date& date) const {
-    Date d = coupon_->separateRateCompPeriod() ? coupon_->interestDates().back() : date;
-    return std::get<0>(compute(d));
+    return std::get<0>(compute(date));
 }
 
 // CappedFlooredOvernightIndexedCoupon implementation

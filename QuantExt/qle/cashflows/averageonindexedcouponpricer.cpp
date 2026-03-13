@@ -363,12 +363,8 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
     }
 
     // Give the final result
-    // Again: if non-standard rate computation period, use the day count fraction from the full rate computation period
-    //        on the index day counter (not that of the coupon) rather than the day count fraction from coupon accrual
-    //        start date to coupon accrual end date.
-    const Time cpnDcf = coupon_->separateRateCompPeriod() ? indexDc.yearFraction(intDates.front(), intDates.back())
-        : coupon_->accruedPeriod(date);
-
+    Time cpnDcf = coupon_->separateRateCompPeriod() ?
+        indexDc.yearFraction(intDates.front(), date) : coupon_->accruedPeriod(date);
     return coupon_->gearing() * avgRate / cpnDcf + coupon_->spread();
 }
 
