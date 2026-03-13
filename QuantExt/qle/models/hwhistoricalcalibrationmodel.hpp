@@ -5,7 +5,7 @@
 
 /*!
   \file qle/models/hwhistoricalcalibrationmodel.hpp
-  \calibrate parameter (kappa, sigma) for HW n-factor model
+  \brief calibrate parameter (kappa, sigma) for HW n-factor model
  */
 
 #pragma once
