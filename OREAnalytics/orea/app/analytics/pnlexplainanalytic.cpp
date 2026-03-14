@@ -46,6 +46,7 @@ void PnlExplainVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<Inpu
         inputs->setParSensi(parSensitivity_);
     inputs->loadParameter<bool>(riskFactorLevel_, "pnlExplain", "riskFactorLevelReporting", false, parseBool);
     inputs->loadParameter<string>(portfolioFilter_, "pnlExplain", "portfolioFilter", false);
+    inputs->loadParameterXML<ReturnConfiguration>(returnConfiguration_, "pnlExplain", "returnConfigFile");
 }
 
 void PnlExplainAnalyticImpl::setUpConfigurations() {
@@ -141,7 +142,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
         auto zeroScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
             scenarioLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(),
-            QuantLib::ext::make_shared<ReturnConfiguration>(), adjFactors, "hs_");
+            pnlExVars->returnConfiguration_ ? pnlExVars->returnConfiguration_ : QuantLib::ext::make_shared<ReturnConfiguration>(),
+            adjFactors, "hs_");
 
         zeroScenarios->baseScenario() = t0Scenario;
 
@@ -175,10 +177,12 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         } else
             scenarios = zeroScenarios;
     } else {
-        auto defaultReturnConfig = QuantLib::ext::make_shared<ReturnConfiguration>();
+        auto returnConfig = pnlExVars->returnConfiguration_
+                                ? pnlExVars->returnConfiguration_
+                                : QuantLib::ext::make_shared<ReturnConfiguration>();
         auto scenarios = buildHistoricalScenarioGenerator(
             pnlExVars->scenarioReader_, adjFactors, pnlDates, analytic()->configurations().simMarketParams,
-            analytic()->configurations().todaysMarketParams, defaultReturnConfig);
+            analytic()->configurations().todaysMarketParams, returnConfig);
         scenarios->baseScenario() = t0Scenario;
     }
 

@@ -66,6 +66,7 @@ class NPVCube;
 class SimmCalibrationData;
 class SimmConfiguration;
 class SensitivityFileStream;
+class ReturnConfiguration;
 
 struct SetupVariables : public InputVariables {
     void loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) override;
@@ -561,6 +562,7 @@ public:
     void setTradePnl(bool b) { parameters_.set("historicalSimulationVar", "tradePnl", b); }
     void setRiskFactorBreakdown(bool b) { parameters_.set("historicalSimulationVar", "riskFactorBreakdown", b); }
     void setIncludeExpectedShortfall(bool b) { parameters_.set("historicalSimulationVar", "includeExpectedShortfall", b); }
+    void setHistVarReturnConfiguration(const QuantLib::ext::shared_ptr<ReturnConfiguration>& rc) { parameters_.set("historicalSimulationVar", "returnConfigFile", rc); }
 
     // Setters for Correlation
     void setCorrelationMethod(const std::string& s) { parameters_.set("correlation", "correlationMethod", s); }
@@ -616,6 +618,9 @@ public:
     void setAmcCgPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) { parameters_.set("simulation", "amcCgPricingEnginesFile", engineData); };
     void setNettingSetManager(const std::string& xml) { parameters_.set("xva", "csaFile", xml); };
     void setNettingSetManager(const QuantLib::ext::shared_ptr<NettingSetManager>& xml) { parameters_.set("xva", "csaFile", xml); };
+    void setWriteCubeFile(bool b) { parameters_.set("simulation", "writeCube", b); };
+    void setWriteRawCubeFile(bool b) { parameters_.set("xva", "rawCubeOutput", b); };
+    void setWriteNetCubeFile(bool b) { parameters_.set("xva", "netCubeOutput", b); };
     void setCollateralBalances(const std::string& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setCollateralBalances(const QuantLib::ext::shared_ptr<CollateralBalances>& xml) { parameters_.set("xva", "collateralBalancesFile", xml); };
     void setReportBufferSize(Size s) { setupVariables_.reportBufferSize_ = s; }

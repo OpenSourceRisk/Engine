@@ -192,6 +192,7 @@ void XvaVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputParame
     inputs->loadParameter<Real>(cvaSensiShiftSize_, "xva", "cvaSensiShiftSize", false, parseReal);
     inputs->loadParameter<string>(dvaName_, "xva", "dvaName", false);
     
+    inputs->loadParameter<bool>(rawCubeOutput_, "xva", "rawCubeOutput", false, parseBool);
     inputs->loadParameter<string>(rawCubeOutputFile_, pfeAnalytics, "rawCubeOutputFile", false);
     if (!rawCubeOutputFile_.empty())
         rawCubeOutput_ = true;

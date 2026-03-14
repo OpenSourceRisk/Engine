@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/scenario/historicalscenarioloader.hpp
-    \brief historical scenario loader
+/*! \file orea/scenario/scenarioloader.hpp
+    \brief scenario loader
     \ingroup scenario
 */
 

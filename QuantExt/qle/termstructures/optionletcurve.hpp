@@ -57,6 +57,7 @@ public:
         \param flatFirstPeriod If the volatility between the first date and second date in \p dates is assumed constant
                                and equal to the second element of \p volatilities. This means that the first element of
                                \p volatilities is ignored.
+        \param useEffectiveVolatility Whether or not to use effective volatility
         \param interpolator    The interpolation object used to interpolate between the provided \p dates
     */
     InterpolatedOptionletCurve(const std::vector<QuantLib::Date>& dates,
