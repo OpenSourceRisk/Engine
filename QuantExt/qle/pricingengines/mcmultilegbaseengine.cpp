@@ -215,7 +215,7 @@ void McMultiLegBaseEngine::calculateModels(
                     if (payTime >= 0.0) {
                         auto tmpRebate = lgmVectorised_[0].reducedDiscountBond(
                                              *t, payTime, pathValues[simulationTimes_idx][0], discountCurves_[0]) *
-                                         rebatedExercise->rebate(rebateIndex);
+                                         rebatedExercise->rebate(rebateIndex,k);
                         if (ccyIndex > 0) {
                             tmpRebate *= exp(pathValues[simulationTimes_idx]
                                                        [model_->pIdx(CrossAssetModel::AssetType::FX, ccyIndex - 1)]);
