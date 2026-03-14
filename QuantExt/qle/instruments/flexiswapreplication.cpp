@@ -276,8 +276,10 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
         std::vector<Real> rebates;
 
         for (Size legNo = 0; legNo < legs.size(); ++legNo) {
+
             auto tmp = filterLeg(legs[legNo], replicationData[legNo][i].start, replicationData[legNo][i].end,
                                  legCouponRefScheduleIndices[legNo]);
+
             unregisterWithCouponPricers(tmp);
             rescaleLeg(tmp, replicationData[legNo][i].amount);
 
@@ -285,11 +287,11 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
                 tmp.push_back(ext::make_shared<SimpleCashFlow>(replicationData[legNo][i].amount, tmp.back()->date()));
             }
 
+            tmpLegs.push_back(tmp);
+
             if (generateNotionalExchangeOnExercise) {
                 rebates.push_back((effectivePayer[legNo] ? 1.0 : -1.0) * replicationData[legNo][i].amount);
             }
-
-            tmpLegs.push_back(tmp);
         }
 
         std::vector<Date> exerciseDates;
