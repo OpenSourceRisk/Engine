@@ -226,7 +226,7 @@ std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
     module: Expressions of the form 3) - 5) are resolved to one of the forms 1) and 2) using a given commodity
     future expiry calculator as follows:
 
-    3) COMM-name#N#D#Cal is resolved to the (N+1)th future with expiry greater than the given obsDate advanced by D
+    3) COMM-name\#N\#D\#Cal is resolved to the (N+1)th future with expiry greater than the given obsDate advanced by D
                          business days w.r.t. Calendar Cal, N >= 0
     4) as 3), Cal is taken as the commodity index's fixing calendar
     5) as 4), D is set to 0 if not given
