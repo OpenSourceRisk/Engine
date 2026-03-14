@@ -159,7 +159,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         today, couponLegCopies,
         std::vector<bool>(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size())),
         std::vector<Currency>(legCcys.begin(), std::next(legCcys.begin(), underlyingData_.size())), lowerNotionalBounds,
-        generateNotionalExchanges, generateNotionalExchanges);
+        positionType == Position::Type::Long, generateNotionalExchanges, generateNotionalExchanges);
 
     for (Size i = 0; i < basket.size(); ++i) {
 
