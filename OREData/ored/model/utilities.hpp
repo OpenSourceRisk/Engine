@@ -216,9 +216,9 @@ std::ostream& operator<<(std::ostream& o, const IndexInfo& i);
     1) COMM-name-YYYY-MM-DD
     2) COMM-name-YYYY-MM
     ===
-    3) CMMM-name#N#D#Cal
-    4) COMM-name#N#D
-    5) COMM-name#N
+    3) CMMM-name\#N\#D\#Cal
+    4) COMM-name\#N\#D
+    5) COMM-name\#N
     ===
     6) COMM-name!N
 
