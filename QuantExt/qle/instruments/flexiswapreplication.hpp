@@ -34,7 +34,7 @@ namespace QuantExt {
 std::vector<QuantLib::ext::shared_ptr<MultiLegOption>>
 generateFlexiSwapReplication(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Leg>& legs,
                              const std::vector<bool>& payer, const std::vector<QuantLib::Currency>& currency,
-                             const std::vector<std::vector<QuantLib::Real>>& lowerNotionalBounds,
+                             const std::vector<std::vector<QuantLib::Real>>& lowerNotionalBounds, const bool optionLong,
                              const bool generateNotionalExchangeOnExercise, const bool generateFinalNotionalExchange);
 
 } // namespace QuantExt

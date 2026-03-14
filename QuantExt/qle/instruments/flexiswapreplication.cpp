@@ -19,8 +19,8 @@
 #include <qle/instruments/flexiswapreplication.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 
-#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 using namespace QuantLib;
@@ -92,7 +92,7 @@ void unregisterWithCouponPricers(Leg& l) {
 std::vector<ext::shared_ptr<MultiLegOption>>
 generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& legs, const std::vector<bool>& payer,
                              const std::vector<Currency>& currency,
-                             const std::vector<std::vector<Real>>& lowerNotionalBounds,
+                             const std::vector<std::vector<Real>>& lowerNotionalBounds, const bool optionLong,
                              const bool generateNotionalExchangeOnExercise, const bool generateFinalNotionalExchange) {
 
     // check consistency of input data
@@ -264,8 +264,9 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
 
     // build the replication basket of multileg option instruments
 
-    std::vector<bool> reversedPayer(payer.size());
-    std::transform(payer.begin(), payer.end(), reversedPayer.begin(), std::logical_not<bool>());
+    std::vector<bool> effectivePayer(payer.size());
+    std::transform(payer.begin(), payer.end(), effectivePayer.begin(),
+                   [optionLong](bool b) { return optionLong ? !b : b; });
 
     std::vector<ext::shared_ptr<MultiLegOption>> basket;
 
@@ -280,12 +281,12 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
             unregisterWithCouponPricers(tmp);
             rescaleLeg(tmp, replicationData[legNo][i].amount);
 
-            if(generateFinalNotionalExchange) {
+            if (generateFinalNotionalExchange) {
                 tmp.push_back(ext::make_shared<SimpleCashFlow>(replicationData[legNo][i].amount, tmp.back()->date()));
             }
 
             if (generateNotionalExchangeOnExercise) {
-                rebates.push_back((reversedPayer[legNo] ? 1.0 : -1.0) * replicationData[legNo][i].amount);
+                rebates.push_back((effectivePayer[legNo] ? 1.0 : -1.0) * replicationData[legNo][i].amount);
             }
 
             tmpLegs.push_back(tmp);
@@ -297,13 +298,13 @@ generateFlexiSwapReplication(const Date& referenceDate, const std::vector<Leg>& 
         }
 
         ext::shared_ptr<Exercise> exercise = ext::make_shared<BermudanExercise>(exerciseDates);
-        if(generateNotionalExchangeOnExercise) {
+        if (generateNotionalExchangeOnExercise) {
             exercise = ext::make_shared<QuantExt::RebatedExercise>(
                 *exercise, exercise->dates(), std::vector<std::vector<Real>>(exercise->dates().size(), rebates),
                 currency, 0 * Days);
         }
 
-        basket.push_back(ext::make_shared<MultiLegOption>(tmpLegs, reversedPayer, currency, exercise));
+        basket.push_back(ext::make_shared<MultiLegOption>(tmpLegs, effectivePayer, currency, exercise));
     }
 
     // return the basket
