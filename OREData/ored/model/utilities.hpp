@@ -256,7 +256,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
        2,3) is the extended form including a flag indicating the interpolation F (flat, =1) or L (linear)
 
   The function returns a ql inflation index accounting for the interpolation (but without ts attached),
-  and the ORE index name without the #F, #L suffix.
+  and the ORE index name without the \#F, \#L suffix.
 */
 std::tuple<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>, std::string, bool>
 parseScriptedInflationIndex(const std::string& indexName);
