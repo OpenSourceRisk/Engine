@@ -172,9 +172,7 @@ std::vector<QuantLib::Real> getCalibrationStrikesFromLegs(const std::vector<Leg>
                 auto c = ci;
 
                 // unpack scaled coupons
-                if (auto scf = QuantLib::ext::dynamic_pointer_cast<ScaledCashFlow>(c)) {
-                    c = scf->underlyingCashFlow();
-                } else if (auto scp = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
+                if (auto scp = QuantLib::ext::dynamic_pointer_cast<ScaledCoupon>(c)) {
                     c = scp->underlyingCoupon();
                 }
 
