@@ -29,6 +29,7 @@
 #include <qle/instruments/currencyswap.hpp>
 #include <qle/instruments/flexiswap.hpp>
 #include <qle/instruments/flexiswapreplication.hpp>
+#include <qle/instruments/rebatedexercise.hpp>
 
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/swap.hpp>
@@ -178,7 +179,16 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             legsPerCcy[idx].push_back(basket[i]->legs()[j]);
         }
 
-        auto dates = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())->dates();
+        std::vector<Date> dates;
+        if (auto ex = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())) {
+            dates = ex->dates();
+        } else if (auto ex = ext::dynamic_pointer_cast<RebatedExercise>(basket[i]->exercise())) {
+            dates = ex->dates();
+        } else {
+            QL_FAIL(
+                "FlexiSwap::build(): could not cast exercise to BermudanExercise or RebatedExercise. Internal error.");
+        }
+
         std::vector<Date> maturities(dates.size(), basket[i]->maturityDate());
 
         std::vector<std::string> qualifiers;
@@ -206,7 +216,8 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     for (Size i = 0; i < basket.size(); ++i) {
         // description string, for logging
         auto cpnf = ext::dynamic_pointer_cast<Coupon>(basket[i]->legs().front().front());
-        auto cpnl = ext::dynamic_pointer_cast<Coupon>(basket[i]->legs().front().back());
+        auto cpnl = ext::dynamic_pointer_cast<Coupon>(
+            *std::next(basket[i]->legs().front().rbegin(), generateNotionalExchanges ? 1 : 0));
         DLOG(i << "," << QuantLib::io::iso_date(basket[i]->exercise()->dates().front()) << "," << cpnf->nominal() << ","
                << QuantLib::io::iso_date(cpnf->accrualStartDate()) << ","
                << QuantLib::io::iso_date(cpnl->accrualEndDate()));
