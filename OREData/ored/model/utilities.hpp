@@ -249,8 +249,8 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseScriptedCommodityIndex(
 /*! This method tries to parse an inflation index name used in the scripting context
 
   1) EUHICPXT
-  2) EUHICPXT#F
-  3) EUHICPXT#L
+  2) EUHICPXT\#F
+  3) EUHICPXT\#L
 
   Here 1)   is the original form used in ORE. This represents a non-interpolated index.
        2,3) is the extended form including a flag indicating the interpolation F (flat, =1) or L (linear)
