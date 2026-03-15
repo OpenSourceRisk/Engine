@@ -166,10 +166,10 @@ public:
     Real strippedCapletVolatility() const;
     //! stripped floorlet volatility
     Real strippedFloorletVolatility() const;
-    //@}
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&) override;
+    //@}
 
     bool isCapped() const { return cap_ != Null<Real>(); }
     bool isFloored() const { return floor_ != Null<Real>(); }
