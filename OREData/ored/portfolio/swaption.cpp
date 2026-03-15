@@ -552,7 +552,8 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     swaptionEngine = swaptionBuilder->engine(
         id(), {index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name())},
         exerciseBuilder_->noticeDates(), maturitiesEngine, {strikesEngine}, {}, exerciseType_ == Exercise::American,
-        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false));
+        envelope().additionalField("discount_curve", false), envelope().additionalField("security_spread", false),
+        std::monostate());
 
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");

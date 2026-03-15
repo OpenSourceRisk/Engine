@@ -206,7 +206,7 @@ protected:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 };
   
 } // namespace data

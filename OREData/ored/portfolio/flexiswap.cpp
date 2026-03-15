@@ -204,7 +204,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         basket[i]->setPricingEngine(builder->engine(
             id() + "_" + std::to_string(i), qualifiers, dates, maturities, strikes,
             std::vector<std::vector<Real>>(ccys.size() - 1, std::vector<Real>(dates.size(), Null<Real>())), false,
-            std::string(), std::string()));
+            std::string(), std::string(), std::monostate()));
         positionType == Position::Type::Long ? qlInstr->add(basket[i]) : qlInstr->subtract(basket[i]);
     }
 

@@ -31,8 +31,12 @@
 
 #include <boost/make_shared.hpp>
 
+#include <variant>
+
 namespace ore {
 namespace data {
+
+using SwaptionModel = std::variant<std::monostate, Handle<CrossAssetModel>, ext::shared_ptr<QuantExt::LGM>>;
 
 /*! Swaption engine builder base class. This is for the general xccy case, i.e. keys and strikes have one element per
     supported underlying currency. FX strikes are against base ccy, where base ccy is the first currenc resp. the base
@@ -42,17 +46,21 @@ class SwaptionEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const std::vector<string>&, const std::vector<Date>&,
                                          const std::vector<Date>&, const std::vector<std::vector<Real>>&,
                                          const std::vector<std::vector<Real>>&, const bool, const string&,
-                                         const string&> {
+                                         const string&, const SwaptionModel&> {
 public:
     SwaptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
                           const bool idBasedKey = true)
         : CachingEngineBuilder(model, engine, tradeTypes), idBasedKey_(idBasedKey) {}
 
+    SwaptionModel model(const string& id, const std::vector<string>& keys, const std::vector<Date>& expiries,
+                        const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
+                        const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican) const;
+
 private:
     string keyImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                    const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                    const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican,
-                   const std::string& discountCurve, const std::string& securitySpread) override;
+                   const std::string& discountCurve, const std::string& securitySpread, const SwaptionModel&) override;
 
     bool idBasedKey_ = true;
 };
@@ -71,7 +79,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 };
 
 //! LGM based builders, base class
@@ -93,7 +101,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 };
 
 //! LGM FD engine
@@ -106,7 +114,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 };
 
 //!
@@ -134,7 +142,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 };
 
 //! CAM AMC engine
@@ -150,7 +158,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
@@ -167,7 +175,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 };
 
 //! CAM AMC-CG engine
@@ -182,7 +190,7 @@ private:
     engineImpl(const string& id, const std::vector<string>& keys, const std::vector<Date>& dates,
                const std::vector<Date>& maturities, const std::vector<std::vector<Real>>& strikes,
                const std::vector<std::vector<Real>>& fxStrikes, const bool isAmerican, const std::string& discountCurve,
-               const std::string& securitySpread) override;
+               const std::string& securitySpread, const SwaptionModel&) override;
 
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
