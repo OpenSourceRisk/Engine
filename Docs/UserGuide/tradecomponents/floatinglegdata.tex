@@ -330,4 +330,19 @@ Note that rounding does not apply to interpolated fixing forecasts.
 \item \lstinline!StubUseOriginalCurve! [Optional]: Boolean flag to indicate whether the original index curve should be used for stub interpolation fixing forecasts.
   Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
+\item \lstinline!ObservationShift! [Optional]: Only applicable to OIS legs. If a non-zero \lstinline!Lookback! value 
+is used, \lstinline!ObservationShift! can be set to \lstinline!true! to indicate that the overnight fixing associated 
+with the underlying overnight period that has been shifted back is applied using the starting and end dates of that 
+shifted period. As an example, assume that the underlying index is SOFR and that the underlying overnight period is 
+from Tue 4 Nov 2025 to Wed 5 Nov 2025. Without a lookback, the fixing for this period is the SOFR fixing for 4 Nov 2025, 
+published at 08:00 ET on 5 Nov 2025. With a lookback of 2 days, the fixing for the period is the SOFR fixing for Fri 
+31 Oct 2025, published at 08:00 ET on 3 Nov 2025. With \lstinline!ObservationShift! set to \lstinline!false!, the rate 
+for Fri 31 Oct 2025 is applied to the period from Tue 4 Nov 2025 to Wed 5 Nov 2025 i.e. the contribution for period 
+from Tue 4 Nov 2025 to Wed 5 Nov 2025 in the averaging or compounding will be $r \times 1 / 360$. With 
+\lstinline!ObservationShift! set to \lstinline!true!, the rate for Fri 31 Oct 2025 is applied to the period from 
+Fri 31 Oct 2025 to Mon 3 Nov 2025 i.e. the contribution for period from Tue 4 Nov 2025 to Wed 5 Nov 2025 in the 
+averaging or compounding will be $r \times 3 / 360$.
+
+  Allowable values: \lstinline!true!, \lstinline!false!. Defaults to \lstinline!true! if left blank or omitted.
+
 \end{itemize}

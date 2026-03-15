@@ -28,8 +28,13 @@ namespace QuantExt {
 using namespace QuantLib;
 class AverageONIndexedCouponPricer;
 
-//! Overnight (averaging) coupon
-/** %Coupon paying the interest due to the weighted average of daily overnight fixings.
+/** Overnight (averaging) coupon.
+ *  %Coupon paying the interest due to the weighted, by overnight day count fraction, average of a series of overnight 
+ *  fixings over the coupon period.
+ *
+ *  For more details about the coupon structure, see OvernightIndexedCouponBase.
+ *
+ *  \see OvernightIndexedCouponBase
  *  \ingroup cashflows
  */
 class AverageONIndexedCoupon : public OvernightIndexedCouponBase {
@@ -40,7 +45,7 @@ public:
                            const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
                            const Date& rateComputationStartDate = Null<Date>(),
                            const Date& rateComputationEndDate = Null<Date>(), const bool telescopicValueDates = false,
-                           bool applyObservationShift = false);
+                           bool observationShift = true);
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
@@ -173,6 +178,7 @@ public:
     AverageONLeg& withAverageONIndexedCouponPricer(const QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
         const QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
+    AverageONLeg& withObservationShift(bool observationShift);
     operator Leg() const;
 
 private:
@@ -199,6 +205,7 @@ private:
     std::vector<QuantLib::Date> paymentDates_;
     QuantLib::ext::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
     QuantLib::ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
+    bool observationShift_;
 };
 
 } // namespace QuantExt

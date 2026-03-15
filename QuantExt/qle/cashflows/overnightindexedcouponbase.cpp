@@ -54,12 +54,12 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
     const Date& startDate, const Date& endDate, const ext::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
     Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, const DayCounter& dayCounter,
     bool telescopicValueDates, const Period& lookback, const Natural rateCutoff, const Natural fixingDays,
-    const Date& rateComputationStartDate, const Date& rateComputationEndDate, bool applyObservationShift)
+    const Date& rateComputationStartDate, const Date& rateComputationEndDate, bool observationShift)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
         refPeriodStart, refPeriodEnd, dayCounter, false),
       telescopicDates_(telescopicValueDates), overnightIndex_(overnightIndex), lookback_(lookback),
       rateCutoff_(rateCutoff), rateComputationStartDate_(rateComputationStartDate),
-      rateComputationEndDate_(rateComputationEndDate), applyObservationShift_(applyObservationShift) {
+      rateComputationEndDate_(rateComputationEndDate), observationShift_(observationShift) {
 
     // Lookback was never intended to be positive i.e. it was designed to allow time to calculate the coupon before
     // a coupon payment date. QuantLib has it as Natural => non-negative but we won't change the interface now but just 
@@ -68,7 +68,7 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
         "OvernightIndexedCoupon: lookback (" << lookback << ") must be non-negative number of days.");
 
     // If we have no lookback, observation shift should be false if it isn't already.
-    applyObservationShift_ = applyObservationShift_ && lookback.length() != 0;
+    observationShift_ = observationShift_ && lookback.length() != 0;
 
     // Record if we have a rate computation period separate from the main coupon accrual period.
     separateRateCompPeriod_ = (rateComputationStartDate_ != Null<Date>() && rateComputationStartDate_ != startDate) ||
@@ -129,11 +129,11 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
         QL_REQUIRE(!fixingDates_.empty(), "OvernightIndexedCoupon: no fixing dates generated!");
 
         // Update interest start date if necessary.
-        if (!applyObservationShift_ && intStart != adjIntStart)
+        if (!observationShift_ && intStart != adjIntStart)
             interestDates_.front() = intStart;
 
         // Add interest end date.
-        if (applyObservationShift_) {
+        if (observationShift_) {
             interestDates_.push_back(onFixCal.advance(interestDates_.back(), 1, Days, Following));
         } else {
             QL_REQUIRE(intEnd > interestDates_.back(), "OvernightIndexedCoupon: expected interest end date " <<
@@ -154,7 +154,7 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
             if (rateCutoff_ == 0 || fixStart < rateCutOffStart) {
                 fixingDates_ = {fixStart};
                 valueDates_ = {overnightIndex->valueDate(fixStart)};
-                interestDates_ = {applyObservationShift_ ? lbStart : intStart};
+                interestDates_ = {observationShift_ ? lbStart : intStart};
             }
 
             // We need an overnight period stub at start here for one of two reasons:
@@ -168,7 +168,7 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
                 (cachedEvalDate_ == fixStart || (intStart != adjIntStart))) {
                 fixingDates_.push_back(fixStartPlusOne);
                 valueDates_.push_back(overnightIndex->valueDate(fixingDates_.back()));
-                if (!applyObservationShift_) {
+                if (!observationShift_) {
                     if (intStart != adjIntStart)
                         interestDates_.push_back(onFixCal.adjust(intStart, Following));
                     else
@@ -204,7 +204,7 @@ OvernightIndexedCouponBase::OvernightIndexedCouponBase(Type type, const Date& pa
             addTelescopeBackStub(fixEnd, rateCutOffStart, rcoIntStart, rcoLbStart, intEnd, adjIntEnd, lbEnd);
 
             // Update interest start date if necessary.
-            if (!applyObservationShift_ && intStart != adjIntStart)
+            if (!observationShift_ && intStart != adjIntStart)
                 interestDates_.front() = intStart;
         }
 
@@ -276,7 +276,7 @@ Real OvernightIndexedCouponBase::accruedAmount(const Date& d) const {
 void OvernightIndexedCouponBase::setTelescopicDates(Type type) {
     if (type == Type::Compounding)
         telescopicDates_ = telescopicDates_ &&
-            ((!hasLookback() || applyObservationShift()) && fixingDays_ == index_->fixingDays());
+            ((!hasLookback() || observationShift()) && fixingDays_ == index_->fixingDays());
 }
 
 bool OvernightIndexedCouponBase::haveStaleDates() const {
@@ -436,7 +436,7 @@ void OvernightIndexedCouponBase::addScheduleDates(Date fixEnd, Date fixStart, Da
         fixStart = onFixCal.advance(fixStart, 1, Days, Following);
 
         // Interest dates.
-        if (applyObservationShift_) {
+        if (observationShift_) {
             if (fixSameAsLb) {
                 interestDates_.push_back(fixingDates_.back());
             } else {
@@ -475,7 +475,7 @@ void OvernightIndexedCouponBase::addRateCutoffDates(Date fixEnd,
     while (rcoStart <= fixEnd) {
         fixingDates_.push_back(frozenDate);
         valueDates_.push_back(frozenValueDate);
-        if (applyObservationShift_) {
+        if (observationShift_) {
             interestDates_.push_back(rcoLbStart);
             rcoLbStart = onFixCal.advance(rcoLbStart, 1, Days, Following);
         } else {
@@ -496,7 +496,7 @@ void OvernightIndexedCouponBase::addTelescopeBackStub(Date fixEnd, Date rcoStart
             fixingDates_.push_back(fixEnd);
             valueDates_.push_back(overnightIndex_->valueDate(fixEnd));
             valueDates_.push_back(onFixCal.advance(valueDates_.back(), 1, Days, Following));
-            if (applyObservationShift_) {
+            if (observationShift_) {
                 interestDates_.push_back(*prev(valueDates_.end(), 2));
                 interestDates_.push_back(valueDates_.back());
             } else {
@@ -504,7 +504,7 @@ void OvernightIndexedCouponBase::addTelescopeBackStub(Date fixEnd, Date rcoStart
                 interestDates_.push_back(intEnd);
             }
         } else {
-            if (applyObservationShift_) {
+            if (observationShift_) {
                 valueDates_.push_back(onFixCal.advance(lbEnd, 1, Days, Following));
                 interestDates_.push_back(valueDates_.back());
             } else {
@@ -516,7 +516,7 @@ void OvernightIndexedCouponBase::addTelescopeBackStub(Date fixEnd, Date rcoStart
         // Add rate cut-off dates up to and including final fixing end date.
         addRateCutoffDates(fixEnd, rcoStart, rcoIntStart, rcoLbStart);
         valueDates_.push_back(onFixCal.advance(valueDates_.back(), 1, Days, Following));
-        if (applyObservationShift_)
+        if (observationShift_)
             interestDates_.push_back(onFixCal.advance(interestDates_.back(), 1, Days, Following));
         else
             interestDates_.push_back(intEnd);

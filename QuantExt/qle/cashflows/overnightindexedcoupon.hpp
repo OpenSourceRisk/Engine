@@ -50,8 +50,12 @@ using namespace QuantLib;
 class QuantLib::OptionletVolatilityStructure;
 class OvernightIndexedCouponPricer;
 
-//! Overnight (compounding) coupon
-/** %Coupon paying the compounded interest due to daily overnight fixings.
+/** Overnight (compounding) coupon.
+ *  %Coupon paying the compounded interest due to a series of overnight fixings over the coupon period.
+ *
+ *  For more details about the coupon structure, see OvernightIndexedCouponBase.
+ *
+ *  \see OvernightIndexedCouponBase
  *  \ingroup cashflows
  */
 class OvernightIndexedCoupon : public OvernightIndexedCouponBase {
@@ -62,7 +66,7 @@ public:
                            const DayCounter& dayCounter = DayCounter(), bool telescopicValueDates = false,
                            bool includeSpread = false, const Period& lookback = 0 * Days, const Natural rateCutoff = 0,
                            const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Null<Date>(),
-                           const Date& rateComputationEndDate = Null<Date>(), bool applyObservationShift = false);
+                           const Date& rateComputationEndDate = Null<Date>(), bool observationShift = true);
     //! \name Inspectors
     //@{
     /** If `true`, the spread is included in the daily compounding. If `false` the compounding is performed without the 

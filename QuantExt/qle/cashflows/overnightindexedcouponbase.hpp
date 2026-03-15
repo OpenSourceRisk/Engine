@@ -144,7 +144,7 @@ protected:
         const QuantLib::Natural fixingDays = QuantLib::Null<QuantLib::Size>(),
         const QuantLib::Date& rateComputationStartDate = QuantLib::Null<QuantLib::Date>(),
         const QuantLib::Date& rateComputationEndDate = QuantLib::Null<QuantLib::Date>(),
-        bool applyObservationShift = false);
+        bool observationShift = true);
 
 public:
     //! \name Inspectors
@@ -168,7 +168,7 @@ public:
     //! Explicitly specified date for the end of underlying overnight rate computation.
     const QuantLib::Date& rateComputationEndDate() const { return rateComputationEndDate_; }
     //! Is there an observation shift.
-    bool applyObservationShift() const { return applyObservationShift_; }
+    bool observationShift() const { return observationShift_; }
     //! True if there is a lookback period, false otherwise.
     bool hasLookback() const { return lookback_.length() != 0; }
     //! The underlying overnight index.
@@ -210,7 +210,7 @@ private:
     QuantLib::Natural rateCutoff_;
     QuantLib::Date rateComputationStartDate_;
     QuantLib::Date rateComputationEndDate_;
-    bool applyObservationShift_;
+    bool observationShift_;
     bool separateRateCompPeriod_;
 
     // Record last possible fixing date.

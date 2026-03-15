@@ -59,10 +59,10 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                const DayCounter& dayCounter, bool telescopicValueDates,
                                                bool includeSpread, const Period& lookback, const Natural rateCutoff,
                                                const Natural fixingDays, const Date& rateComputationStartDate,
-                                               const Date& rateComputationEndDate, bool applyObservationShift)
+                                               const Date& rateComputationEndDate, bool observationShift)
     : OvernightIndexedCouponBase(Type::Compounding, paymentDate, nominal, startDate, endDate, overnightIndex, gearing,
         spread, refPeriodStart, refPeriodEnd, dayCounter, telescopicValueDates, lookback, rateCutoff, fixingDays,
-        rateComputationStartDate, rateComputationEndDate, applyObservationShift), includeSpread_(includeSpread) {
+        rateComputationStartDate, rateComputationEndDate, observationShift), includeSpread_(includeSpread) {
     setPricer(ext::make_shared<OvernightIndexedCouponPricer>());
 }
 
@@ -132,7 +132,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
 
     // See note in `numberPeriods` about this date.
     Date refDate = date;
-    if (coupon_->applyObservationShift())
+    if (coupon_->observationShift())
         refDate = onFixCal.advance(onFixCal.adjust(refDate, Following), -coupon_->lookback(), Preceding);
 
     // Number of periods we will need to compound over - note the usage of refDate and not date.
@@ -149,7 +149,7 @@ tuple<Rate, Spread, Rate> OvernightIndexedCouponPricer::compute(const Date& date
     const vector<Date>& valDates = coupon_->valueDates();
     const vector<Time>& dt = coupon_->dt();
     const Period& lookback = coupon_->lookback();
-    const bool obsShift = coupon_->applyObservationShift();
+    const bool obsShift = coupon_->observationShift();
     const bool incSpread = coupon_->includeSpread();
     const Real spread = coupon_->spread();
     const Natural rco = coupon_->rateCutoff();

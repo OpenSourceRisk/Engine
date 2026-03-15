@@ -114,7 +114,7 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
                     o->date(), o->nominal(), o->accrualStartDate(), o->accrualEndDate(), onIndexLinkedToModelCurve,
                     o->gearing(), o->spread(), o->referencePeriodStart(), o->referencePeriodEnd(), o->dayCounter(),
                     false, o->includeSpread(), o->lookback(), o->rateCutoff(), o->fixingDays(),
-                    o->rateComputationStartDate(), o->rateComputationEndDate());
+                    o->rateComputationStartDate(), o->rateComputationEndDate(), o->observationShift());
                 tmp->setPricer(QuantLib::ext::make_shared<OvernightIndexedCouponPricer>());
                 modelLinkedUnderlying_.push_back(tmp);
                 if (modelIborIndexToUse == nullptr) {
@@ -140,7 +140,7 @@ RepresentativeSwaptionMatcher::RepresentativeSwaptionMatcher(
                 auto tmp = QuantLib::ext::make_shared<QuantExt::AverageONIndexedCoupon>(
                     o->date(), o->nominal(), o->accrualStartDate(), o->accrualEndDate(), onIndexLinkedToModelCurve,
                     o->gearing(), o->spread(), o->rateCutoff(), o->dayCounter(), o->lookback(), o->fixingDays(),
-                    o->rateComputationStartDate(), o->rateComputationEndDate());
+                    o->rateComputationStartDate(), o->rateComputationEndDate(), false, o->observationShift());
                 tmp->setPricer(QuantLib::ext::make_shared<AverageONIndexedCouponPricer>());
                 modelLinkedUnderlying_.push_back(tmp);
                 if (modelIborIndexToUse == nullptr) {

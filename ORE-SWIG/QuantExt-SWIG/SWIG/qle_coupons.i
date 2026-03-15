@@ -39,7 +39,9 @@ class AverageONIndexedCoupon : public FloatingRateCoupon {
                                Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
                                const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
                                const Date& rateComputationStartDate = Null<Date>(),
-                               const Date& rateComputationEndDate = Null<Date>(), const bool telescopicValueDates = false);
+                               const Date& rateComputationEndDate = Null<Date>(),
+                               const bool telescopicValueDates = false,
+                               bool observationShift = true);
 
         const std::vector<QuantLib::Date>& fixingDates() const;
         const std::vector<Time>& dt() const;
@@ -107,5 +109,6 @@ class AverageONLeg {
     AverageONLeg& withAverageONIndexedCouponPricer(const ext::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
         const ext::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
+    AverageONLeg& withObservationShift(bool observationShift);
     operator Leg() const;
 };

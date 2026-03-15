@@ -53,7 +53,7 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
 
     // See note in `numberPeriods` about this date.
     Date refDate = date;
-    if (coupon_->applyObservationShift())
+    if (coupon_->observationShift())
         refDate = onFixCal.advance(onFixCal.adjust(refDate, Following), -coupon_->lookback(), Preceding);
 
     // Number of periods we will need to average over. Note the usage of refDate and not date.
@@ -70,7 +70,7 @@ Rate AverageONIndexedCouponPricer::effectiveRate(const Date& date) const {
     const vector<Date>& valDates = coupon_->valueDates();
     const vector<Time>& dt = coupon_->dt();
     const Period& lookback = coupon_->lookback();
-    const bool obsShift = coupon_->applyObservationShift();
+    const bool obsShift = coupon_->observationShift();
     const Natural rco = coupon_->rateCutoff();
     Handle<YieldTermStructure> curve = index->forwardingTermStructure();
     const Date& cpnAccStart = coupon_->separateRateCompPeriod() ? intDates.front() : coupon_->accrualStartDate();
