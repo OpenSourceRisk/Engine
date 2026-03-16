@@ -213,9 +213,6 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     // build global model if required
 
     bool useGlobalModel = parseBool(flexiSwapBuilder->modelParameter("GlobalModel", {}, true));
-
-    std::cout << "GlobalModel = " << std::boolalpha << useGlobalModel << std::endl;
-
     SwaptionModel globalModel;
 
     if (useGlobalModel) {
