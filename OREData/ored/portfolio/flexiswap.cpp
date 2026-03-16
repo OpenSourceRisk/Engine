@@ -322,6 +322,7 @@ XMLNode* FlexiSwap::toXML(XMLDocument& doc) const {
         auto n = doc.allocNode("LowerNotionalBounds");
         XMLUtils::addAttribute(doc, n, "currency", ccy);
         XMLUtils::addChildrenWithOptionalAttributes(doc, n, std::string(), "Notional", l.first, "startDate", l.second);
+        XMLUtils::appendNode(swapNode, n);
     }
     // long short option flag
     XMLUtils::addChild(doc, swapNode, "OptionLongShort", optionLongShort_);
