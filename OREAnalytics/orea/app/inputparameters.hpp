@@ -116,6 +116,9 @@ struct SetupVariables : public InputVariables {
     char csvCommentCharacter_ = '#';
     char csvSeparator_ = ',';
     Size reportBufferSize_ = 0;
+
+    QuantLib::Period thetaPeriod_ = QuantLib::Period(1, QuantLib::Days);
+    bool computeTheta_ = false;
     
 };
 
@@ -491,6 +494,8 @@ public:
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
     void setParSensi(bool b) { parSensi_ = b; }
+    void setComputeTheta(bool b) { parameters_.set("sensitivity", "computeTheta", b); }
+    void setThetaPeriod(Period b) { parameters_.set("sensitivity", "thetaPeriod", b); }
     void setOptimiseRiskFactors(bool b) { optimiseRiskFactors_ = b; }
     void setAlignPillars(bool b) { alignPillars_ = b; }
     void setOutputJacobi(bool b) { outputJacobi_ = b; }
@@ -923,6 +928,8 @@ public:
     char csvSeparator() const { return setupVariables_.csvSeparator_; }
     char csvEscapeChar() const { return csvEscapeChar_; }
     bool dryRun() const { return setupVariables_.dryRun_; }
+    bool computeTheta() const { return setupVariables_.computeTheta_; }
+    Period thetaPeriod() const { return setupVariables_.thetaPeriod_; }
     QuantLib::Size mporDays() const { return mporDays_; }
     QuantLib::Date mporDate();
     const QuantLib::Calendar mporCalendar() {
