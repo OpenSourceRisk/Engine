@@ -29,8 +29,6 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/lgm.hpp>
 
-#include <boost/make_shared.hpp>
-
 #include <variant>
 
 namespace ore {

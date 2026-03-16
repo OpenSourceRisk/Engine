@@ -577,8 +577,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(EquityOutperformanceOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(PairwiseVarSwapEngineBuilder, false)
 
-    ORE_REGISTER_ENGINE_BUILDER(FlexiSwapDiscountingEngineBuilder, false)
-    ORE_REGISTER_ENGINE_BUILDER(FlexiSwapLGMGridEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FlexiSwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BalanceGuaranteedSwapFlexiSwapLGMGridEngineBuilder, false)
 

@@ -56,13 +56,18 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     // get engine builder
 
+    auto flexiSwapBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FlexiSwapEngineBuilder>(engineFactory->builder("FlexiSwap"));
+
+    QL_REQUIRE(flexiSwapBuilder, "FlexiSwap::build(): FlexiSwapEngineBuilder is null");
+
     bool isXCcy = std::any_of(underlyingData_.begin(), underlyingData_.end(),
                               [this](const LegData& d) { return d.currency() != underlyingData_.front().currency(); });
     auto builder = QuantLib::ext::dynamic_pointer_cast<SwaptionEngineBuilder>(
         engineFactory->builder("BermudanSwaption" + (isXCcy ? std::string("_XCcy") : std::string(""))));
     auto configuration = builder->configuration(MarketContext::pricing);
 
-    QL_REQUIRE(builder, "FlexiSwap::build(): BermudanSwaption builder is null");
+    QL_REQUIRE(builder, "FlexiSwap::build(): SwaptionEngineBuilder is null");
 
     // build underlying legs
 
@@ -77,7 +82,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         legs_[i] = legBuilder->buildLeg(underlyingData_[i], engineFactory, requiredFixings_,
                                         builder->configuration(MarketContext::pricing));
         couponLegCopies[i] = legBuilder->buildLeg(underlyingData_[i], engineFactory, requiredFixings_,
-                                                   builder->configuration(MarketContext::pricing));
+                                                  builder->configuration(MarketContext::pricing));
         legCurrencies_[i] = underlyingData_[i].currency();
         legPayers_[i] = underlyingData_[i].isPayer();
 
@@ -156,55 +161,102 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     auto positionType = parsePositionType(optionLongShort_);
 
-    auto basket = generateFlexiSwapReplication(
-        today, couponLegCopies,
-        std::vector<bool>(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size())),
-        std::vector<Currency>(legCcys.begin(), std::next(legCcys.begin(), underlyingData_.size())), lowerNotionalBounds,
-        positionType == Position::Type::Long, generateNotionalExchanges, generateNotionalExchanges);
+    std::vector<Currency> couponLegCurrencies(legCcys.begin(), std::next(legCcys.begin(), underlyingData_.size()));
+    std::vector<bool> couponLegPayers(legPayers_.begin(), std::next(legPayers_.begin(), underlyingData_.size()));
 
-    for (Size i = 0; i < basket.size(); ++i) {
+    auto basket = generateFlexiSwapReplication(today, couponLegCopies, couponLegPayers, couponLegCurrencies,
+                                               lowerNotionalBounds, positionType == Position::Type::Long,
+                                               generateNotionalExchanges, generateNotionalExchanges);
 
-        // determine qualifiers, calibration strikes ir, fx (latter is set to ATMF)
+    // determine qualifiers, calibration strikes ir, fx (latter is set to ATMF), exercise dates, maturities
 
-        std::vector<std::string> ccys;
-        std::vector<std::vector<Leg>> legsPerCcy;
+    std::vector<std::string> differentCcys;
+    std::vector<std::vector<Leg>> legsPerCcy;
 
-        for(Size j=0;j<basket[i]->legs().size();++j) {
-            Size idx =
-                std::distance(ccys.begin(), std::find(ccys.begin(), ccys.end(), basket[i]->currency()[j].code()));
-            if(idx == ccys.size()) {
-                ccys.push_back(basket[i]->currency()[j].code());
-                legsPerCcy.push_back({});
-            }
-            legsPerCcy[idx].push_back(basket[i]->legs()[j]);
+    for (Size j = 0; j < couponLegCopies.size(); ++j) {
+        Size idx = std::distance(differentCcys.begin(),
+                                 std::find(differentCcys.begin(), differentCcys.end(), couponLegCurrencies[j].code()));
+        if (idx == differentCcys.size()) {
+            differentCcys.push_back(couponLegCurrencies[j].code());
+            legsPerCcy.push_back({});
         }
+        legsPerCcy[idx].push_back(couponLegCopies[j]);
+    }
 
-        std::vector<Date> dates;
-        if (auto ex = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())) {
-            dates = ex->dates();
-        } else if (auto ex = ext::dynamic_pointer_cast<RebatedExercise>(basket[i]->exercise())) {
-            dates = ex->dates();
+    std::set<Date> differentDates;
+    Date maxMaturityDate = Date::minDate();
+    for (auto const& b : basket) {
+        if (auto ex = ext::dynamic_pointer_cast<BermudanExercise>(b->exercise())) {
+            differentDates.insert(ex->dates().begin(), ex->dates().end());
+        } else if (auto ex = ext::dynamic_pointer_cast<RebatedExercise>(b->exercise())) {
+            differentDates.insert(ex->dates().begin(), ex->dates().end());
         } else {
             QL_FAIL(
                 "FlexiSwap::build(): could not cast exercise to BermudanExercise or RebatedExercise. Internal error.");
         }
+        maxMaturityDate = std::max(maxMaturityDate, b->maturityDate());
+    }
 
-        std::vector<Date> maturities(dates.size(), basket[i]->maturityDate());
+    std::vector<Date> dates(differentDates.begin(), differentDates.end());
+    std::vector<Date> maturities(dates.size(), maxMaturityDate);
 
-        std::vector<std::string> qualifiers;
-        std::vector<std::vector<Real>> strikes;
+    std::vector<std::string> qualifiers;
+    std::vector<std::vector<Real>> strikes;
 
-        for (Size j = 0; j < ccys.size(); ++j) {
-            auto index = getInterestRateIndexFromLegs(legsPerCcy[j]);
-            qualifiers.push_back(index.empty() ? ccys[j]
-                                               : IndexNameTranslator::instance().oreName(index.front()->name()));
-            strikes.push_back(getCalibrationStrikesFromLegs(legsPerCcy[j], dates));
+    for (Size j = 0; j < differentCcys.size(); ++j) {
+        auto index = getInterestRateIndexFromLegs(legsPerCcy[j]);
+        qualifiers.push_back(index.empty() ? differentCcys[j]
+                                           : IndexNameTranslator::instance().oreName(index.front()->name()));
+        strikes.push_back(getCalibrationStrikesFromLegs(legsPerCcy[j], dates));
+    }
+
+    // build global model if required
+
+    bool useGlobalModel = parseBool(flexiSwapBuilder->modelParameter("GlobalModel", {}, true));
+
+    std::cout << "GlobalModel = " << std::boolalpha << useGlobalModel << std::endl;
+
+    SwaptionModel globalModel;
+
+    if (useGlobalModel) {
+        globalModel = builder->model(
+            id() + "_0", qualifiers, dates, maturities, strikes,
+            std::vector<std::vector<Real>>(differentCcys.size() - 1, std::vector<Real>(dates.size(), Null<Real>())),
+            false);
+    }
+
+    // set pricing engine on basket constituents
+
+    for (Size i = 0; i < basket.size(); ++i) {
+
+        if (!useGlobalModel) {
+
+            // local dates
+
+            if (auto ex = ext::dynamic_pointer_cast<BermudanExercise>(basket[i]->exercise())) {
+                dates = ex->dates();
+            } else if (auto ex = ext::dynamic_pointer_cast<RebatedExercise>(basket[i]->exercise())) {
+                dates = ex->dates();
+            } else {
+                QL_FAIL("FlexiSwap::build(): could not cast exercise to BermudanExercise or RebatedExercise. Internal "
+                        "error.");
+            }
+            maturities = std::vector<Date> (dates.size(), basket[i]->maturityDate());
+
+            // local strikes
+
+            strikes.clear();
+            for (Size j = 0; j < differentCcys.size(); ++j) {
+                strikes.push_back(getCalibrationStrikesFromLegs(legsPerCcy[j], dates));
+            }
         }
+
+        // build engine
 
         basket[i]->setPricingEngine(builder->engine(
             id() + "_" + std::to_string(i), qualifiers, dates, maturities, strikes,
-            std::vector<std::vector<Real>>(ccys.size() - 1, std::vector<Real>(dates.size(), Null<Real>())), false,
-            std::string(), std::string(), std::monostate()));
+            std::vector<std::vector<Real>>(differentCcys.size() - 1, std::vector<Real>(dates.size(), Null<Real>())),
+            false, std::string(), std::string(), globalModel));
         positionType == Position::Type::Long ? qlInstr->add(basket[i]) : qlInstr->subtract(basket[i]);
     }
 

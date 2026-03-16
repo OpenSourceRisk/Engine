@@ -397,8 +397,8 @@ SwaptionModel SwaptionEngineBuilder::model(const string& id, const std::vector<s
                                                   CrossAssetModel::Discretization::Exact,
                                                   QuantLib::SalvagingAlgorithm::Spectral),
             configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-            configurationXois, dontCalibrate, continueOnCalibrationError, "", id, allowChangingFallbacks,
-            allowModelFallbacks);
+            configurationXois, dontCalibrate, continueOnCalibrationError, referenceCalibrationGrid, id,
+            allowChangingFallbacks, allowModelFallbacks);
 
         engineFactory()->modelBuilders().insert(std::make_pair(id, calib));
         return calib->model();
